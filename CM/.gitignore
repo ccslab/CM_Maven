@@ -1,2 +1,2 @@
-/cm-client.conf
-/cm-server.conf
+*.conf
+client-file-path/
