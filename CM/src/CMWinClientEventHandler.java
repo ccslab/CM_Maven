@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import javax.swing.JButton;
+
 import java.io.*;
 import java.awt.*;
 
@@ -183,14 +186,19 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			if(se.isValidUser() == 0)
 			{
 				//System.out.println("This client fails authentication by the default server.");
-				printMessage("This client fails authentication by the default server.\n");
+				printMessage("This client fails authentication by the default server.\n");				
 			}
 			else
 			{
 				//System.out.println("This client successfully logs in to the default server.");
 				printMessage("This client successfully logs in to the default server.\n");
 				CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+				
+				// Change the title of the client window
 				m_client.setTitle("CM Client ("+interInfo.getMyself().getName()+")");
+
+				// Set the appearance of buttons in the client frame window
+				m_client.setButtonsAccordingToClientState();
 			}
 			break;
 		case CMSessionEvent.RESPONSE_SESSION_INFO:
@@ -201,6 +209,9 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			printMessage("("+se.getHandlerSession()+")\n");
 			//System.out.println("<"+se.getUserName()+">: "+se.getTalk());
 			printMessage("<"+se.getUserName()+">: "+se.getTalk()+"\n");
+			break;
+		case CMSessionEvent.JOIN_SESSION_ACK:
+			m_client.setButtonsAccordingToClientState();
 			break;
 		case CMSessionEvent.ADD_CHANNEL_ACK:
 			if(se.getReturnCode() == 0)
