@@ -105,6 +105,18 @@ public class CMEventManager {
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
+		//////////////////////////////////////
+		// add some sleep in order to simulate transmission delay
+		/*
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
+		//////////////////////////////////////
+		
 		//// find a destination channel
 		
 		// check if the destination is the default server or additional server
