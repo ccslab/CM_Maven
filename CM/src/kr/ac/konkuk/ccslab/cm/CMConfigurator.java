@@ -35,6 +35,9 @@ public class CMConfigurator {
 				
 		// default download directory
 		confInfo.setFilePath(CMConfigurator.getConfiguration(fName, "FILE_PATH"));
+		
+		// added delay value for the simulation of transmission delay
+		confInfo.setSimTransDelay(Integer.parseInt(CMConfigurator.getConfiguration(fName, "SIM_TRANS_DELAY")));
 
 		if( confInfo.getSystemType().equals("SERVER") )
 		{
@@ -90,6 +93,7 @@ public class CMConfigurator {
 			System.out.println("MULTICAST_PORT: "+confInfo.getMulticastPort());
 			System.out.println("MY_ADDR: "+confInfo.getMyAddress());
 			System.out.println("FILE_PATH: "+confInfo.getFilePath());
+			System.out.println("SIM_TRANS_DELAY: "+confInfo.getSimTransDelay());
 			if( confInfo.getSystemType().equals("SERVER") )
 			{
 				//System.out.println("MY_ADDR: "+confInfo.getMyAddress());

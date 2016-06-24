@@ -36,6 +36,9 @@ public class CMConfigurationInfo {
 	// Default path for file transfer
 	private String m_strFilePath;
 	
+	// Simulation parameter for added transmission delay
+	private int m_nSimTransDelay;
+	
 	public CMConfigurationInfo()
 	{
 		m_strConfFileName = "";
@@ -68,6 +71,7 @@ public class CMConfigurationInfo {
 		m_strDBName = "";
 		
 		m_strFilePath = ".";
+		m_nSimTransDelay = 0;
 	}
 
 	// set/get methods
@@ -406,5 +410,17 @@ public class CMConfigurationInfo {
 	public String getFilePath()
 	{
 		return m_strFilePath;
+	}
+	
+	/////////////////////////////////////////////////////////////////////
+	
+	public void setSimTransDelay(int nDelay)
+	{
+		m_nSimTransDelay = nDelay;
+	}
+	
+	public int getSimTransDelay()
+	{
+		return m_nSimTransDelay;
 	}
 }

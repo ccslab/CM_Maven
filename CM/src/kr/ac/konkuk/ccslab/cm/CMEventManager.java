@@ -104,19 +104,7 @@ public class CMEventManager {
 		int nTargetPort = -1;
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		
-		//////////////////////////////////////
-		// add some sleep in order to simulate transmission delay
-		/*
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-		//////////////////////////////////////
-		
+				
 		//// find a destination channel
 		
 		// check if the destination is the default server or additional server
@@ -188,7 +176,9 @@ public class CMEventManager {
 				}
 			}
 		}
-		
+
+		sleepForSimTransDelay(cmInfo);
+
 		// marshall event
 		bufEvent = CMEventManager.marshallEvent(cme);
 		if( bufEvent == null )
@@ -234,7 +224,7 @@ public class CMEventManager {
 	public static boolean unicastEvent(CMEvent cme, SocketChannel sc)
 	{
 		int nSentBytes = -1;
-		
+
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
 		if(bufEvent == null)
 		{
@@ -291,7 +281,9 @@ public class CMEventManager {
 			System.err.println("CMEventManager.multicastEvent(), channel("+nChNum+") not found.");
 			return false;
 		}
-		
+
+		sleepForSimTransDelay(cmInfo);
+
 		bufEvent = CMEventManager.marshallEvent(cme);
 		
 		if(bufEvent == null)
@@ -383,6 +375,9 @@ public class CMEventManager {
 							+tuser.getName()+") is closed.");
 					continue;
 				}
+
+				sleepForSimTransDelay(cmInfo);
+
 				CMCommManager.sendMessage(bufEvent, sc);
 			}
 			break;
@@ -399,6 +394,9 @@ public class CMEventManager {
 			while(iter.hasNext())
 			{
 				tuser = iter.next();
+
+				sleepForSimTransDelay(cmInfo);
+
 				CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
 			}
 			break;
@@ -463,6 +461,9 @@ public class CMEventManager {
 							+tuser.getName()+") is closed.");
 					continue;
 				}
+
+				sleepForSimTransDelay(cmInfo);
+
 				CMCommManager.sendMessage(bufEvent, sc);
 			}
 			break;
@@ -479,6 +480,9 @@ public class CMEventManager {
 			while(iter.hasNext())
 			{
 				tuser = iter.next();
+				
+				sleepForSimTransDelay(cmInfo);
+
 				CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
 			}
 			break;
@@ -660,5 +664,23 @@ public class CMEventManager {
 		}
 		
 		return strUserName;
+	}
+
+	//////////////////////////////////////
+	// add some sleep in order to simulate transmission delay
+
+	private static void sleepForSimTransDelay(CMInfo cmInfo)
+	{
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		int nSimTransDelay = confInfo.getSimTransDelay();
+
+		try {
+			Thread.sleep(nSimTransDelay);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return;
 	}
 }
