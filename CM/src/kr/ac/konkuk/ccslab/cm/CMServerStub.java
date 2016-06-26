@@ -162,10 +162,7 @@ public class CMServerStub extends CMStub {
 		CMMember loginUsers = interInfo.getLoginUsers();
 		CMUser tuser = null;
 		int nPrevScheme = -1;
-		
-		// change current scheme in the configuration info
-		confInfo.setAttachDownloadScheme(nScheme);
-		
+				
 		// make an event
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.CHANGE_ATTACH_DOWNLOAD_SCHEME);
@@ -173,6 +170,9 @@ public class CMServerStub extends CMStub {
 
 		if(strUserName == null) // change all users
 		{
+			// change current scheme in the configuration info for late comers
+			confInfo.setAttachDownloadScheme(nScheme);
+
 			for(int i=0; i<loginUsers.getMemberNum(); i++)
 			{
 				tuser = loginUsers.getAllMembers().elementAt(i);

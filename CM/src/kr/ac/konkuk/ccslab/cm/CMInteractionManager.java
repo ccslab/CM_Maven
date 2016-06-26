@@ -596,6 +596,8 @@ public class CMInteractionManager {
 		{
 			// update client's state
 			interInfo.getMyself().setState(CMInfo.CM_LOGIN);
+			// set client's attachment download scheme
+			interInfo.getMyself().setAttachDownloadScheme(se.getAttachDownloadScheme());
 			// request session information if session scheme is not used.
 			if(!confInfo.isSessionScheme())
 			{
