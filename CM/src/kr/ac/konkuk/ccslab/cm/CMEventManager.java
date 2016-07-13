@@ -674,11 +674,14 @@ public class CMEventManager {
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		int nSimTransDelay = confInfo.getSimTransDelay();
 
-		try {
-			Thread.sleep(nSimTransDelay);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(nSimTransDelay > 0)
+		{
+			try {
+				Thread.sleep(nSimTransDelay);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
 		}
 
 		return;
