@@ -12,6 +12,9 @@ import java.util.Iterator;
 import java.util.Random;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.text.*;
 
 import kr.ac.konkuk.ccslab.cm.*;
@@ -21,6 +24,17 @@ public class CMWinClient extends JFrame {
 	private JTextPane m_outTextPane;
 	private JTextField m_inTextField;
 	private JButton m_startStopButton;
+	private JButton m_loginLogoutButton;
+	private JPanel m_leftButtonPanel;
+	private JScrollPane m_westScroll;
+	private JButton m_composeSNSContentButton;
+	private JButton m_readSNSContentButton;
+	private JButton m_findUserButton;
+	private JButton m_addFriendButton;
+	private JButton m_removeFriendButton;
+	private JButton m_friendsButton;
+	private JButton m_friendRequestersButton;
+	private JButton m_biFriendsButton;
 	private MyMouseListener cmMouseListener;
 	private CMClientStub m_clientStub;
 	private CMWinClientEventHandler m_eventHandler;
@@ -31,35 +45,88 @@ public class CMWinClient extends JFrame {
 		MyActionListener cmActionListener = new MyActionListener();
 		cmMouseListener = new MyMouseListener();
 		setTitle("CM Client");
-		setSize(500, 500);
+		setSize(600, 600);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		setLayout(new BorderLayout());
 
 		m_outTextPane = new JTextPane();
+		m_outTextPane.setBackground(new Color(245,245,245));
+		//m_outTextPane.setForeground(Color.WHITE);
 		m_outTextPane.setEditable(false);
 
 		StyledDocument doc = m_outTextPane.getStyledDocument();
 		addStylesToDocument(doc);
 		add(m_outTextPane, BorderLayout.CENTER);
-		JScrollPane scroll = new JScrollPane (m_outTextPane, 
+		JScrollPane centerScroll = new JScrollPane (m_outTextPane, 
 				   JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		
-		add(scroll);
+		//add(centerScroll);
+		getContentPane().add(centerScroll, BorderLayout.CENTER);
 		
 		m_inTextField = new JTextField();
 		m_inTextField.addKeyListener(cmKeyListener);
 		add(m_inTextField, BorderLayout.SOUTH);
 		
 		JPanel topButtonPanel = new JPanel();
+		topButtonPanel.setBackground(new Color(220,220,220));
 		topButtonPanel.setLayout(new FlowLayout());
 		add(topButtonPanel, BorderLayout.NORTH);
 		
 		m_startStopButton = new JButton("Start Client CM");
+		//m_startStopButton.setBackground(Color.LIGHT_GRAY);	// not work on Mac
 		m_startStopButton.addActionListener(cmActionListener);
 		//add(startStopButton, BorderLayout.NORTH);
 		topButtonPanel.add(m_startStopButton);
 		
+		m_loginLogoutButton = new JButton("Login");
+		m_loginLogoutButton.addActionListener(cmActionListener);
+		topButtonPanel.add(m_loginLogoutButton);
+		
+		m_leftButtonPanel = new JPanel();
+		m_leftButtonPanel.setBackground(new Color(220,220,220));
+		m_leftButtonPanel.setLayout(new BoxLayout(m_leftButtonPanel, BoxLayout.Y_AXIS));
+		add(m_leftButtonPanel, BorderLayout.WEST);
+		m_westScroll = new JScrollPane (m_leftButtonPanel, 
+				   JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		//add(westScroll);
+		getContentPane().add(m_westScroll, BorderLayout.WEST);
+
+		Border lineBorder = BorderFactory.createLineBorder(Color.BLACK);
+		TitledBorder titledBorder = BorderFactory.createTitledBorder(lineBorder, "SNS");
+		JPanel snsPanel = new JPanel();
+		snsPanel.setLayout(new BoxLayout(snsPanel, BoxLayout.Y_AXIS));
+		snsPanel.setBorder(titledBorder);
+		
+		m_composeSNSContentButton = new JButton("Compose");
+		m_composeSNSContentButton.addActionListener(cmActionListener);
+		m_readSNSContentButton = new JButton("Read");
+		m_readSNSContentButton.addActionListener(cmActionListener);
+		m_findUserButton = new JButton("Find user");
+		m_findUserButton.addActionListener(cmActionListener);
+		m_addFriendButton = new JButton("Add Friend");
+		m_addFriendButton.addActionListener(cmActionListener);
+		m_removeFriendButton = new JButton("Remove Friend");
+		//m_removeFriendButton.setMaximumSize(new Dimension(150,10));
+		m_removeFriendButton.addActionListener(cmActionListener);
+		m_friendsButton = new JButton("Friends");
+		m_friendsButton.addActionListener(cmActionListener);
+		m_friendRequestersButton = new JButton("Friend requests");
+		//m_friendRequestersButton.setMaximumSize(new Dimension(150,10));
+		m_friendRequestersButton.addActionListener(cmActionListener);
+		m_biFriendsButton = new JButton("Bi-friends");
+		m_biFriendsButton.addActionListener(cmActionListener);
+		snsPanel.add(m_composeSNSContentButton);
+		snsPanel.add(m_readSNSContentButton);
+		snsPanel.add(m_findUserButton);
+		snsPanel.add(m_addFriendButton);
+		snsPanel.add(m_removeFriendButton);
+		snsPanel.add(m_friendsButton);
+		snsPanel.add(m_friendRequestersButton);
+		snsPanel.add(m_biFriendsButton);
+		m_leftButtonPanel.add(snsPanel);
+		
+		m_leftButtonPanel.setVisible(false);
+		m_westScroll.setVisible(false);
 		setVisible(true);
 
 		m_clientStub = new CMClientStub();
@@ -89,6 +156,61 @@ public class CMWinClient extends JFrame {
 	public CMWinClientEventHandler getClientEventHandler()
 	{
 		return m_eventHandler;
+	}
+	
+	// initialize button titles
+	public void initializeButtons()
+	{
+		m_startStopButton.setText("Start Client CM");
+		m_loginLogoutButton.setText("Login");
+		m_leftButtonPanel.setVisible(false);
+		m_westScroll.setVisible(false);
+		revalidate();
+		repaint();
+	}
+	
+	// set button titles
+	public void setButtonsAccordingToClientState()
+	{
+		int nClientState;
+		nClientState = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getState();
+		
+		// nclientState: CMInfo.CM_INIT, CMInfo.CM_CONNECT, CMInfo.CM_LOGIN, CMInfo.CM_SESSION_JOIN
+		switch(nClientState)
+		{
+		case CMInfo.CM_INIT:
+			m_startStopButton.setText("Stop Client CM");
+			m_loginLogoutButton.setText("Login");
+			m_leftButtonPanel.setVisible(false);
+			m_westScroll.setVisible(false);
+			break;
+		case CMInfo.CM_CONNECT:
+			m_startStopButton.setText("Stop Client CM");
+			m_loginLogoutButton.setText("Login");
+			m_leftButtonPanel.setVisible(false);
+			m_westScroll.setVisible(false);
+			break;
+		case CMInfo.CM_LOGIN:
+			m_startStopButton.setText("Stop Client CM");
+			m_loginLogoutButton.setText("Logout");
+			m_leftButtonPanel.setVisible(false);
+			m_westScroll.setVisible(false);
+			break;
+		case CMInfo.CM_SESSION_JOIN:
+			m_startStopButton.setText("Stop Client CM");
+			m_loginLogoutButton.setText("Logout");
+			m_leftButtonPanel.setVisible(true);
+			m_westScroll.setVisible(true);
+			break;
+		default:
+			m_startStopButton.setText("Start Client CM");
+			m_loginLogoutButton.setText("Login");
+			m_leftButtonPanel.setVisible(false);
+			m_westScroll.setVisible(false);
+			break;
+		}
+		revalidate();
+		repaint();
 	}
 	
 	public void printMessage(String strText)
@@ -434,6 +556,7 @@ public class CMWinClient extends JFrame {
 		//System.out.println("======");
 		printMessage("======\n");
 		
+		setButtonsAccordingToClientState();
 		setTitle("CM Client");
 	}
 	
@@ -496,7 +619,9 @@ public class CMWinClient extends JFrame {
 		m_clientStub.logoutCM();
 		//System.out.println("======");
 		printMessage("======\n");
-		
+
+		// Change the title of the login button
+		setButtonsAccordingToClientState();
 		setTitle("CM Client");
 	}
 
@@ -504,9 +629,9 @@ public class CMWinClient extends JFrame {
 	{
 		m_clientStub.disconnectFromServer();
 		m_clientStub.terminateCM();
-		// change button to "start CM"
-		m_startStopButton.setText("Start Client CM");
-		
+		printMessage("Client CM terminates.\n");
+		// change the appearance of buttons in the client window frame
+		initializeButtons();
 		setTitle("CM Client");
 	}
 
@@ -548,6 +673,7 @@ public class CMWinClient extends JFrame {
 		m_clientStub.leaveSession();
 		//System.out.println("======");
 		printMessage("======\n");
+		setButtonsAccordingToClientState();
 	}
 
 	public void testUserPosition()
@@ -2881,22 +3007,58 @@ public class CMWinClient extends JFrame {
 				{
 					printStyledMessage("Client CM starts.\n", "bold");
 					printStyledMessage("Type \"0\" for menu.\n", "regular");
-					// change button to "stop CM"
-					button.setText("Stop Client CM");
+					// change the appearance of buttons in the client window frame
+					setButtonsAccordingToClientState();
 				}
-				m_inTextField.requestFocus();
 			}
 			else if(button.getText().equals("Stop Client CM"))
 			{
-				m_clientStub.disconnectFromServer();
-				// stop cm
-				m_clientStub.terminateCM();
-				printMessage("Client CM terminates.\n");
-				// change button to "start CM"
-				button.setText("Start Client CM");
-				
-				setTitle("CM Client");
+				testTermination();
 			}
+			else if(button.getText().equals("Login"))
+			{
+				// login to the default cm server
+				testLoginDS();
+			}
+			else if(button.getText().equals("Logout"))
+			{
+				// logout from the default cm server
+				testLogoutDS();
+			}
+			else if(button.equals(m_composeSNSContentButton))
+			{
+				testSNSContentUpload();
+			}
+			else if(button.equals(m_readSNSContentButton))
+			{
+				testSNSContentDownload();
+			}
+			else if(button.equals(m_findUserButton))
+			{
+				testFindRegisteredUser();
+			}
+			else if(button.equals(m_addFriendButton))
+			{
+				testAddNewFriend();
+			}
+			else if(button.equals(m_removeFriendButton))
+			{
+				testRemoveFriend();
+			}
+			else if(button.equals(m_friendsButton))
+			{
+				testRequestFriendsList();
+			}
+			else if(button.equals(m_friendRequestersButton))
+			{
+				testRequestFriendRequestersList();
+			}
+			else if(button.equals(m_biFriendsButton))
+			{
+				testRequestBiFriendsList();
+			}
+
+			m_inTextField.requestFocus();
 		}
 	}
 	
