@@ -239,6 +239,7 @@ public class CMSNSManager {
 			CMSNSEvent sevent = new CMSNSEvent();
 			sevent.setID(CMSNSEvent.CONTENT_DOWNLOAD_END);
 			sevent.setUserName( attachList.getUserName() );
+			sevent.setWriterName(attachList.getWriterName());
 			sevent.setContentOffset( attachList.getContentOffset() );
 			sevent.setNumContents( attachList.getNumContents() );
 
@@ -672,7 +673,7 @@ public class CMSNSManager {
 			// add each row to the content list
 			contentList.removeAllSNSContents();
 			try {
-				while( rs.next() )
+				while( rs != null && rs.next() )
 				{
 					nContID = rs.getInt("seqNum");
 					strDate = rs.getString("creationTime");
@@ -911,6 +912,7 @@ public class CMSNSManager {
 			sevent = new CMSNSEvent();
 			sevent.setID(CMSNSEvent.CONTENT_DOWNLOAD_END);
 			sevent.setUserName( se.getUserName() );
+			sevent.setWriterName(se.getWriterName());
 			sevent.setContentOffset( se.getContentOffset() );
 			sevent.setNumContents( contentList.getSNSContentNum() );
 
@@ -1029,6 +1031,16 @@ public class CMSNSManager {
 					+se.getUserName()+"), offset("+se.getContentOffset()+"), content num("
 					+se.getNumContents()+").");
 		}
+		
+		// if there is at least one content,...
+		if(se.getNumContents() > 0)
+		{
+			// save the information of the last content request
+			snsInfo.setLastlyReqWriter(se.getWriterName());
+			snsInfo.setLastlyReqOffset(se.getContentOffset());
+			snsInfo.setLastlyDownContentNum(se.getNumContents());			
+		}
+
 		
 		// check if all attached files have been received or not
 		CMSNSAttachList attachList = snsInfo.getSNSAttachListToBeRecv();

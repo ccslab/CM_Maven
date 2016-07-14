@@ -28,7 +28,9 @@ public class CMWinClient extends JFrame {
 	private JPanel m_leftButtonPanel;
 	private JScrollPane m_westScroll;
 	private JButton m_composeSNSContentButton;
-	private JButton m_readSNSContentButton;
+	private JButton m_readNewSNSContentButton;
+	private JButton m_readNextSNSContentButton;
+	private JButton m_readPreviousSNSContentButton;
 	private JButton m_findUserButton;
 	private JButton m_addFriendButton;
 	private JButton m_removeFriendButton;
@@ -99,8 +101,12 @@ public class CMWinClient extends JFrame {
 		
 		m_composeSNSContentButton = new JButton("Compose");
 		m_composeSNSContentButton.addActionListener(cmActionListener);
-		m_readSNSContentButton = new JButton("Read");
-		m_readSNSContentButton.addActionListener(cmActionListener);
+		m_readNewSNSContentButton = new JButton("Read New");
+		m_readNewSNSContentButton.addActionListener(cmActionListener);
+		m_readNextSNSContentButton = new JButton("Read Next");
+		m_readNextSNSContentButton.addActionListener(cmActionListener);
+		m_readPreviousSNSContentButton = new JButton("Read Prev");
+		m_readPreviousSNSContentButton.addActionListener(cmActionListener);
 		m_findUserButton = new JButton("Find user");
 		m_findUserButton.addActionListener(cmActionListener);
 		m_addFriendButton = new JButton("Add Friend");
@@ -116,7 +122,9 @@ public class CMWinClient extends JFrame {
 		m_biFriendsButton = new JButton("Bi-friends");
 		m_biFriendsButton.addActionListener(cmActionListener);
 		snsPanel.add(m_composeSNSContentButton);
-		snsPanel.add(m_readSNSContentButton);
+		snsPanel.add(m_readNewSNSContentButton);
+		snsPanel.add(m_readNextSNSContentButton);
+		snsPanel.add(m_readPreviousSNSContentButton);
 		snsPanel.add(m_findUserButton);
 		snsPanel.add(m_addFriendButton);
 		snsPanel.add(m_removeFriendButton);
@@ -437,7 +445,7 @@ public class CMWinClient extends JFrame {
 			testForwardingDelay();
 			break;
 		case 23: // test SNS content download
-			testSNSContentDownload();
+			testDownloadNewSNSContent();
 			break;
 		case 24: // test repeated downloading of SNS content
 			testRepeatedSNSContentDownload();
@@ -1720,7 +1728,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testSNSContentDownload()
+	public void testDownloadNewSNSContent()
 	{
 		//System.out.println("====== request downloading of SNS content (offset 0)");
 		printMessage("====== request downloading of SNS content (offset 0)\n");
@@ -1810,6 +1818,26 @@ public class CMWinClient extends JFrame {
 		m_clientStub.requestSNSContent(strUserName, "", 0);	// no specific writer, offset = 0
 
 		return;
+	}
+
+	// download the next SNS content list
+	// if this method is called without any previous download request, it requests the most recent list
+	public void testDownloadNextSNSContent()
+	{
+		printMessage("===== Request the next SNS content list\n");
+		m_clientStub.requestNextSNSContent();
+		
+		return;		
+	}
+	
+	// download the previous SNS content list
+	// if this method is called without any previous download request, it requests the most recent list
+	public void testDownloadPreviousSNSContent()
+	{
+		printMessage("===== Request the previous SNS content list\n");
+		m_clientStub.requestPreviousSNSContent();
+		
+		return;		
 	}
 
 	public void testSNSContentUpload()
@@ -3029,9 +3057,17 @@ public class CMWinClient extends JFrame {
 			{
 				testSNSContentUpload();
 			}
-			else if(button.equals(m_readSNSContentButton))
+			else if(button.equals(m_readNewSNSContentButton))
 			{
-				testSNSContentDownload();
+				testDownloadNewSNSContent();
+			}
+			else if(button.equals(m_readNextSNSContentButton))
+			{
+				testDownloadNextSNSContent();
+			}
+			else if(button.equals(m_readPreviousSNSContentButton))
+			{
+				testDownloadPreviousSNSContent();
 			}
 			else if(button.equals(m_findUserButton))
 			{

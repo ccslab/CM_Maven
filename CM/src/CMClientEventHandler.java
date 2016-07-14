@@ -18,7 +18,7 @@ public class CMClientEventHandler implements CMEventHandler {
 	private boolean m_bDistFileProc;	// for distributed file processing
 	private String m_strExt;			// for distributed file processing
 	private String[] m_filePieces;		// for distributed file processing
-	
+		
 	public CMClientEventHandler(CMClientStub stub)
 	{
 		m_clientStub = stub;
@@ -122,7 +122,7 @@ public class CMClientEventHandler implements CMEventHandler {
 	{
 		return m_filePieces;
 	}
-
+	
 	//////////////////////////////////////////////////////////////////////////////
 	
 	@Override

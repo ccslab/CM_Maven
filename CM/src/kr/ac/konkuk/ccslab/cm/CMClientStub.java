@@ -441,6 +441,12 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/* 
+	 * To request to download the list of SNS content.
+	 * strUser: requester name
+	 * strWriter: writer name (empty string for any writer)
+	 * nOffset: content offset (0 <= nOffset < total number of required content items), (0 for the most recent content) 
+	 */
 	public void requestSNSContent(String strUser, String strWriter, int nOffset)
 	{
 		int nState = m_cmInfo.getInteractionInfo().getMyself().getState();
@@ -457,6 +463,49 @@ public class CMClientStub extends CMStub {
 		send(se, "SERVER");
 
 		se = null;
+		return;
+	}
+
+	/*
+	 * To request to download the next list of SNS content from the previous request.
+	 */
+	public void requestNextSNSContent()
+	{
+		String strUser = m_cmInfo.getInteractionInfo().getMyself().getName();
+		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		// get the saved data
+		String strWriter = snsInfo.getLastlyReqWriter();
+		int nOffset = snsInfo.getLastlyReqOffset();
+		int nDownContentNum = snsInfo.getLastlyDownContentNum();
+		
+		// update next content offset
+		nOffset = nOffset+nDownContentNum;
+		
+		// request SNS content
+		requestSNSContent(strUser, strWriter, nOffset);
+		
+		return;
+	}
+	
+	/*
+	 * To request to download the previous list of SNS content from the previous request.
+	 */
+	public void requestPreviousSNSContent()
+	{
+		String strUser = m_cmInfo.getInteractionInfo().getMyself().getName();
+		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		// get the saved data
+		String strWriter = snsInfo.getLastlyReqWriter();
+		int nOffset = snsInfo.getLastlyReqOffset();
+		int nDownContentNum = snsInfo.getLastlyDownContentNum();
+		
+		// update next content offset
+		nOffset = nOffset-nDownContentNum;
+		//if(nOffset < 0) nOffset = 0;
+		
+		// request SNS content
+		requestSNSContent(strUser, strWriter, nOffset);
+		
 		return;
 	}
 	

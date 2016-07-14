@@ -67,7 +67,8 @@ public class CMClientApp {
 				System.out.println("18: set file path, 19: request file, 20: push file");
 				System.out.println("21: test forwarding schemes, 22: test delay of forwarding schemes");
 				System.out.println("---------------------------------------------------");
-				System.out.println("23: SNS content download, 50: request attached file of SNS content");
+				System.out.println("23: download new SNS content, 50: request attached file of SNS content");
+				System.out.println("51: download next SNS content, 52: download previous SNS content");
 				System.out.println("24: test repeated downloading of SNS content, 25: SNS content upload");
 				System.out.println("26: register user, 27: deregister user");
 				System.out.println("28: find registered user, 29: add a new friend, 30: remove a friend");
@@ -154,7 +155,7 @@ public class CMClientApp {
 				testForwardingDelay();
 				break;
 			case 23: // test SNS content download
-				testSNSContentDownload();
+				testDownloadNewSNSContent();
 				break;
 			case 24: // test repeated downloading of SNS content
 				testRepeatedSNSContentDownload();
@@ -230,6 +231,12 @@ public class CMClientApp {
 				break;
 			case 50: // test request for an attached file of SNS content
 				testRequestAttachedFileOfSNSContent();
+				break;
+			case 51: // test download next SNS content
+				testDownloadNextSNSContent();
+				break;
+			case 52: // test download previous SNS content
+				testDownloadPreviousSNSContent();
 				break;
 			case 99: // terminate CM
 				testTermination();
@@ -1020,24 +1027,28 @@ public class CMClientApp {
 		return;
 	}
 	
-	public void testSNSContentDownload()
+	public void testDownloadNewSNSContent()
 	{
 		System.out.println("====== request downloading of SNS content (offset 0)");
 
 		String strWriterName = null;
+		String strInput = null;
 		int nContentOffset = 0;
 		String strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		try {
-			System.out.print("Input offset(>= 0): ");
-			nContentOffset = Integer.parseInt(br.readLine());
+			System.out.print("Input offset(>= 0, Enter for 0): ");
+			strInput = br.readLine();
+			if(strInput.compareTo("") != 0)
+				nContentOffset = Integer.parseInt(strInput);
 			System.out.print("Content writer(Enter for no designation, "
 					+ "CM_MY_FRIEND for my friends, CM_BI_FRIEND for bi-friends, or specify a name): ");
 			strWriterName = br.readLine();
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.err.println("Input data is not a number!");
 			return;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -1109,6 +1120,26 @@ public class CMClientApp {
 		String strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
 		m_clientStub.requestSNSContent(strUserName, "", 0);	// no specific writer, offset = 0
 
+		return;
+	}
+	
+	// download the next SNS content list
+	// if this method is called without any previous download request, it requests the most recent list
+	public void testDownloadNextSNSContent()
+	{
+		System.out.println("===== Request the next SNS content list");
+		m_clientStub.requestNextSNSContent();
+		
+		return;
+	}
+
+	// download the previous SNS content list
+	// if this method is called without any previous download request, it requests the most recent list
+	public void testDownloadPreviousSNSContent()
+	{
+		System.out.println("===== Request the previous SNS content list");
+		m_clientStub.requestPreviousSNSContent();
+		
 		return;
 	}
 	
