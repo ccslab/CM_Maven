@@ -6,13 +6,28 @@ import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
+/**
+ * This class provides APIs, through which a client developer can access most of the communication services of CM.
+ * A client application can use this class in order to request client-specific communication services.
+ * 
+ * @author mlim
+ * @see CMStub, CMServerStub
+ */
 public class CMClientStub extends CMStub {
 
 	public CMClientStub()
 	{
 		super();
 	}
-	
+
+	/**
+	 * Initializes and starts the client CM.
+	 * <br> After the initialization process, the client CM also establishes a stream(TCP) connection to 
+	 * the default server, makes a default datagram(UDP) channel.
+	 *  
+	 * @return true if the initialization of CM succeeds, or false if the initialization of CM fails.
+	 * @see CMClientStub#terminateCM()
+	 */
 	public boolean startCM()
 	{
 		boolean bRet = false;
@@ -55,6 +70,13 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 	
+	/**
+	 * Terminates the client CM.
+	 * <br>A client application calls this method when it does not need to use CM. The client releases all 
+	 * the resources, logs out from the server, and disconnects all communication channels.
+	 * 
+	 * @see CMClientStub#startCM()
+	 */
 	public void terminateCM()
 	{
 		super.terminateCM();
@@ -63,16 +85,50 @@ public class CMClientStub extends CMStub {
 			System.out.println("CMClientStub.terminateCM(), succeeded.");
 	}
 	
+	/**
+	 * Connects to the default server.
+	 * <br> When a client application calls this method, the client CM opens a default stream(TCP)
+	 * channel and connects to the server CM used by the default server application.
+	 * 
+	 * @return true if the connection is established successfully, or false otherwise.
+	 * @see CMClientStub#disconnectFromServer()
+	 */
 	public boolean connectToServer()
 	{
 		return CMInteractionManager.connectDefaultServer(m_cmInfo);
 	}
 	
+	/**
+	 * Disconnects from the default server.
+	 * <br> When a client application calls this method, the client CM tries to disconnect all the  
+	 * stream(TCP) channels from the server CM used by the default server application.
+	 * 
+	 * @return true if the connection is successfully disconnected, or false otherwise.
+	 * @see CMClientStub#connectToServer()
+	 */
 	public boolean disconnectFromServer()
 	{
 		return CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
 	}
 	
+	/**
+	 * Logs in to the default server.
+	 * <br> For logging in to the server, the client first needs to register to the server by calling 
+	 * registerUser() method.
+	 * <p> The result of the login request can be caught asynchronously by the client event handler 
+	 * that deals with all the incoming CM events from the server. To check whether the login request is 
+	 * successful or not, the client event handler needs to catch the LOGIN_ACK event that belongs to 
+	 * the CMSessionEvent. 
+	 * In the LOGIN_ACK event, a result field of the Integer type is set, and the value can be retrieved by 
+	 * the isValidUser() method. If the value is 1, the login request successfully completes 
+	 * and the requesting client is in the CM_LOGIN state. Otherwise, the login process fails.
+	 * 
+	 * @param strUserName - the user name
+	 * @param strPassword - the password
+	 * @see {@link CMClientStub#logoutCM()}, {@link CMClientStub#registerUser(String, String)}
+	 * @see {@link CMSessionEvent#isValidUser()}, {@link CMSessionEvent#getCommArch()}, 
+	 * {@link CMSessionEvent#isLoginScheme()}, {@link CMSessionEvent#isSessionScheme()}
+	 */
 	public void loginCM(String strUserName, String strPassword)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -123,6 +179,12 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * 
+	 * @see {@link CMClientStub#loginCM()}, {@link CMClientStub#dereisterUser()}
+	 */
 	public void logoutCM()
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
