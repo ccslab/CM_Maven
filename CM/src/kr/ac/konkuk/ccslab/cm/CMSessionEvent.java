@@ -2,7 +2,14 @@ package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 import java.util.*;
 
+/**
+ * This class represents CM events that are used for session related tasks.
+ * 
+ * @author mlim
+ * @see CMEvent
+ */
 public class CMSessionEvent extends CMEvent {
+
 	public static final int LOGIN = 1;						// 로긴 요청 (c->s)
 	public static final int LOGOUT = 2;						// 로그아웃 (c->s)
 	public static final int LOGIN_ACK = 3;					// 로긴 응답 (s->c)

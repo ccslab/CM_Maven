@@ -7,7 +7,8 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 /**
- * This class provides APIs, through which a client developer can access most of the communication services of CM.
+ * This class provides APIs, through which a client developer can access most of the communication 
+ * services of CM.
  * A client application can use this class in order to request client-specific communication services.
  * 
  * @author mlim
@@ -118,16 +119,24 @@ public class CMClientStub extends CMStub {
 	 * <p> The result of the login request can be caught asynchronously by the client event handler 
 	 * that deals with all the incoming CM events from the server. To check whether the login request is 
 	 * successful or not, the client event handler needs to catch the LOGIN_ACK event that belongs to 
-	 * the CMSessionEvent. 
+	 * the {@link CMSessionEvent}. 
 	 * In the LOGIN_ACK event, a result field of the Integer type is set, and the value can be retrieved by 
-	 * the isValidUser() method. If the value is 1, the login request successfully completes 
+	 * the {@link CMSessionEvent#isValidUser()} method. If the value is 1, the login request successfully completes 
 	 * and the requesting client is in the CM_LOGIN state. Otherwise, the login process fails.
+	 * The LOGIN_ACK event also includes other CM information that can be returned by 
+	 * {@link CMSessionEvent#getCommArch()}, {@link CMSessionEvent#isLoginScheme()}, and 
+	 * {@link CMSessionEvent#isSessionScheme()}.
+	 * <p> When the server CM accepts the login request from a client, the server CM also notifies other 
+	 * participating clients of the information of the login user with the SESSION_ADD_USER event. 
+	 * A client application can catch this event in the event handler routine if it wants to use such 
+	 * information. The login user information is the user name and the host address that can be retrieved 
+	 * by {@link CMSessionEvent#getUserName()} and {@link CMSessionEvent#getHostAddress()} methods, 
+	 * respectively.
 	 * 
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
 	 * @see {@link CMClientStub#logoutCM()}, {@link CMClientStub#registerUser(String, String)}
-	 * @see {@link CMSessionEvent#isValidUser()}, {@link CMSessionEvent#getCommArch()}, 
-	 * {@link CMSessionEvent#isLoginScheme()}, {@link CMSessionEvent#isSessionScheme()}
+	 * 
 	 */
 	public void loginCM(String strUserName, String strPassword)
 	{
@@ -180,8 +189,15 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Logs out from the default server.
 	 * 
-	 * (from here)
+	 * <p> There is no result from the server about the logout request. 
+	 * <p> When the server CM completes the logout request from a client, the server CM also notifies 
+	 * other participating clients of the information of the logout user with the SESSION_REMOVE_USER event 
+	 * of the {@link CMSessionEvent}. 
+	 * A client application can catch this event in the event handler routine if it wants to use 
+	 * such information. The logout user information is just the user name, which can be returned by 
+	 * {@link CMSessionEvent#getUserName()} method.
 	 * 
 	 * @see {@link CMClientStub#loginCM()}, {@link CMClientStub#dereisterUser()}
 	 */
@@ -220,6 +236,24 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Requests available session information from the default server.
+	 * <br> For requesting the session information, the client first needs to log in to the server by calling 
+	 * loginCM() method. 
+	 * 
+	 * <p> The result of the session request can be caught asynchronously by the client event handler 
+	 * that deals with all the incoming CM events from the server. To receive the available session 
+	 * information, the client event handler needs to catch the RESPONSE_SESSION_INFO event that belongs to 
+	 * the {@link CMSessionEvent}. 
+	 * <br> The RESPONSE_SESSION_INFO event includes the number of available sessions and the vector of 
+	 * the {@link CMSessionInfo}. Such event fields can be returned by 
+	 * the {@link CMSessionEvent#getSessionNum()} and {@link CMSessionEvent#getSessionInfoList()}.
+	 * <br> Each element of the CMSessionInfo object includes information of an available session such as 
+	 * the session name, the session address and port number to which a client can join, and the current 
+	 * number of session members who already joined the session.
+	 * 
+	 * @see {@link CMClientStub#joinSession(String)}, {@link CMClientStub#joinSession(String, String)}
+	 */
 	// request available session information from the default server
 	public void requestSessionInfo()
 	{
@@ -244,6 +278,10 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 
+	/**
+	 * (from here)
+	 * @param sname
+	 */
 	public void joinSession(String sname)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
