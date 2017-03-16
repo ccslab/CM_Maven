@@ -365,8 +365,22 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * leaves the current session in the default server.
 	 * 
-	 * (from here)
+	 * <p> There is no result from the server about the session-leave request.
+	 * 
+	 * <p> When the server CM completes the session leaving request from a client, the server CM also 
+	 * notifies other participating clients of the information of the leaving user with the CHANGE_SESSION 
+	 * event of the {@link CMSessionEvent}. A client application can catch this event in the event handler 
+	 * routine if it wants to use such information. The CHANGE_SESSION event includes 
+	 * fields such as the user name and the session name, which can be returned by calling 
+	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
+	 * respectively.
+	 * If the session name field of this event is an empty space, a client can know that the user leaves 
+	 * his/her current session. 
+	 * 
+	 * @see {@link CMClientStub#leaveSession(String)}
+	 * @see {@link CMClientStub#joinSession(String)}, {@link CMClientStub#joinSession(String, String)}
 	 */
 	public void leaveSession()
 	{
@@ -405,6 +419,10 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * (from here)
+	 * @param pq
+	 */
 	// send position info to the group members
 	public void sendUserPosition(CMPosition pq)
 	{
