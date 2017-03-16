@@ -279,8 +279,54 @@ public class CMClientStub extends CMStub {
 	}
 
 	/**
-	 * (from here)
-	 * @param sname
+	 * joins a session in the default server.
+	 * <br> For joining a session, the client first needs to log in to the server by calling 
+	 * loginCM() method. The client can get available session information by calling 
+	 * the requestSessionInfo() method.
+	 * 
+	 * <p> After the login process has completed, a client application must join a session and a group of 
+	 * CM to finish entering the CM network. The session join process is different according to whether 
+	 * the server CM adopts single session or multiple sessions in the CM server configuration file 
+	 * (cm-server.conf).
+	 * <br> After the client CM completes to join a session, it automatically proceeds to enter the first 
+	 * group of the session. For example, if the client joins ¡°session1¡±, it also enters the group, ¡°g1¡±
+	 * that is the first group of the session, ¡°session1¡±.
+	 * 
+	 * <p> When the server CM completes the session joining request from a client, the server CM also 
+	 * notifies other participating clients of the information of the new session user with 
+	 * the CHANGE_SESSION event of the {@link CMSessionEvent}. A client application can catch this event 
+	 * in the event handler routine if it wants to use such information. The CHANGE_SESSION event includes 
+	 * fields such as the user name and the session name, which can be returned by calling 
+	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
+	 * respectively.
+	 * 
+	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
+	 * other participating clients of the information of the new group user with the NEW_USER event that 
+	 * belongs to {@link CMDataEvent}.
+	 * When the client CM receives this event, it stores the information of a new group user so that it 
+	 * can figure out current group members later. A client application also can catch this event in 
+	 * the event handler routine if it wants to use such information. The NEW_USER event includes fields 
+	 * such as the current session name, the current group name, the name of the new group user, the host 
+	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
+	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
+	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
+	 * 
+	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
+	 * the new user of the information of other existing group users with the series of INHABITANT events that 
+	 * belong to {@link CMDataEvent}. 
+	 * When the client CM receives this event, it stores the information of an existing group user so that 
+	 * it can figure out current group members later. A client application also can catch this event 
+	 * in the event handler routine if it wants to use such information. The INHABITANT event includes fields 
+	 * such as the current session name, the current group name, the name of the new group user, the host 
+	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
+	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
+	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
+	 * 
+	 * @param sname - the session name that a client requests to join
+	 * @see {@link CMClientStub#joinSession(String, String)}
+	 * @see {@link CMClientStub#leaveSession()}, {@link CMClientStub#leaveSession(String)}
 	 */
 	public void joinSession(String sname)
 	{
@@ -318,6 +364,10 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 */
 	public void leaveSession()
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
