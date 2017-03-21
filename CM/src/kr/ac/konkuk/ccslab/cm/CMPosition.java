@@ -1,5 +1,11 @@
 package kr.ac.konkuk.ccslab.cm;
 
+/**
+ * This class represents location information.
+ * <br> The location information consists of the position and orientation.
+ * @author mlim
+ *
+ */
 public class CMPosition {
 	public CMPoint3f m_p;
 	public CMQuat m_q;

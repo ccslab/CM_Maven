@@ -420,8 +420,13 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * (from here)
-	 * @param pq
+	 * sends location information of the client to the group members.
+	 * 
+	 * <p> The location information consists of the position and orientation. The position is represented 
+	 * by 3D coordinate (x,y,z). The orientation is represented by the quarternion (x,y,z,w) that includes 
+	 * the rotation axis and the rotation angle.  
+	 * @param pq - the new position and orientation of the client
+	 * @see CMPosition
 	 */
 	// send position info to the group members
 	public void sendUserPosition(CMPosition pq)
@@ -450,6 +455,11 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * (from here)
+	 * @param strTarget
+	 * @param strMessage
+	 */
 	public void chat(String strTarget, String strMessage)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
