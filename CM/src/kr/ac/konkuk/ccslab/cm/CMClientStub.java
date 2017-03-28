@@ -369,6 +369,11 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> There is no result from the server about the session-leave request.
 	 * 
+	 * <p> Before leaving the current session, the server first remove the client from its current group. 
+	 * The server notifies group members of the user leave by sending the REMOVE_USER event of 
+	 * the {@link CMDataEvent}. The REMOVE_USER event includes the user name field, which can be returned 
+	 * by the {@link CMDataEvent#getUserName()} method.
+	 * 
 	 * <p> When the server CM completes the session leaving request from a client, the server CM also 
 	 * notifies other participating clients of the information of the leaving user with the CHANGE_SESSION 
 	 * event of the {@link CMSessionEvent}. A client application can catch this event in the event handler 
@@ -456,9 +461,29 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * (from here)
-	 * @param strTarget
-	 * @param strMessage
+	 * sends a chat event.
+	 * <p> A CM application can receive the chat event by catching a pre-defined CM event in the event 
+	 * handler like other events. There are two types of CM chat events. One is the SESSION_TALK event of 
+	 * the {@link CMSessionEvent} class. A client can receive this event if it at least logs in to the default 
+	 * server. The SESSION_TALK event includes fields such as the sender name, the text message, and 
+	 * the session name of the sender, which can be returned by calling {@link CMSessionEvent#getUserName()}, 
+	 * {@link CMSessionEvent#getTalk()}, and {@link CMSessionEvent#getHandlerSession()} methods, respectively. 
+	 * <br>The other event is the USER_TALK event of the {@link CMInterestEvent} class. A client can 
+	 * receive this event only if it enters a group. The USER_TALK event includes fields such as the sender 
+	 * name, the text message, the session name of the sender, and the group name of the sender, which can 
+	 * be returned by calling {@link CMInterestEvent#getUserName()}, {@link CMInterestEvent#getTalk()}, 
+	 * {@link CMInterestEvent#getHandlerSession()}, and {@link CMInterestEvent#getHandlerGroup()} methods, 
+	 * respectively.
+	 * 
+	 * @param strTarget - the receiver name.
+	 * <br>This parameter must start with ¡®/¡¯ character and it specifies the range of recipients of the chat 
+	 * message as described below:
+	 * <br> /b - The chat message is sent to the all login users.
+	 * <br> /s - The chat message is sent to the all session members of the sending user.
+	 * <br> /g - The chat message is sent to the all group members of the sending user.
+	 * <br> /name - The chat message is sent to a specific CM node of which name is ¡®name¡¯. The name can be 
+	 * another user name or a server name. If ¡®name¡¯ is SERVER, the message is sent to the default server.
+	 * @param strMessage - the chat message.
 	 */
 	public void chat(String strTarget, String strMessage)
 	{
@@ -535,12 +560,31 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * changes the current group of the client.
+	 * 
+	 * <p> When a client calls this method, the client first leaves the current group and then requests to 
+	 * enter a new group. The CM server notifies previous group members of the left user by sending 
+	 * the REMOVE_USER event of the {@link CMDataEvent}, and the server also 
+	 * notifies new group members of the new user by sending the NEW_USER event of the {@link CMDataEvent}. 
+	 * The server also notifies the changing user of the existing member information of the new group by 
+	 * sending the INHABITANT event of the {@link CMDataEvent}.
+	 * 
+	 * @param gName - the name of a group that the client wants to enter.
+	 * @see CMClientStub#joinSession(String)
+	 */
 	public void changeGroup(String gName)
 	{
 		CMGroupManager.changeGroup(gName, m_cmInfo);
 		return;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * @param nChIndex
+	 * @param strServer
+	 */
 	public void addSocketChannel(int nChIndex, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
