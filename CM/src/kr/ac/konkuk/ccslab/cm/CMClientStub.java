@@ -279,7 +279,7 @@ public class CMClientStub extends CMStub {
 	}
 
 	/**
-	 * joins a session in the default server.
+	 * Joins a session in the default server.
 	 * <br> For joining a session, the client first needs to log in to the server by calling 
 	 * loginCM() method. The client can get available session information by calling 
 	 * the requestSessionInfo() method.
@@ -365,7 +365,7 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * leaves the current session in the default server.
+	 * Leaves the current session in the default server.
 	 * 
 	 * <p> There is no result from the server about the session-leave request.
 	 * 
@@ -425,7 +425,7 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * sends location information of the client to the group members.
+	 * Sends location information of the client to the group members.
 	 * 
 	 * <p> The location information consists of the position and orientation. The position is represented 
 	 * by 3D coordinate (x,y,z). The orientation is represented by the quarternion (x,y,z,w) that includes 
@@ -461,7 +461,7 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * sends a chat event.
+	 * Sends a chat event.
 	 * <p> A CM application can receive the chat event by catching a pre-defined CM event in the event 
 	 * handler like other events. There are two types of CM chat events. One is the SESSION_TALK event of 
 	 * the {@link CMSessionEvent} class. A client can receive this event if it at least logs in to the default 
@@ -561,7 +561,7 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * changes the current group of the client.
+	 * Changes the current group of the client.
 	 * 
 	 * <p> When a client calls this method, the client first leaves the current group and then requests to 
 	 * enter a new group. The CM server notifies previous group members of the left user by sending 
@@ -580,10 +580,14 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Adds a TCP channel to a server.
 	 * 
-	 * (from here)
-	 * @param nChIndex
-	 * @param strServer
+	 * @param nChIndex - the channel index which must be greater than 0.
+	 * The index 0 is occupied by the default TCP channel.
+	 * @param strServer - the server name to which the client adds a TCP channel. The name of the default 
+	 * server is 'SERVER'.
+	 * 
+	 * @see CMClientStub#removeAdditionalSocketChannel(int, String)
 	 */
 	public void addSocketChannel(int nChIndex, String strServer)
 	{
@@ -639,6 +643,14 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Removes an additional TCP channel from a server.
+	 * 
+	 * @param nChIndex - the index of the channel that is to be removed. The index must be greater than 0. 
+	 * If the default channel (0) is removed, the result is undefined. 
+	 * @param strServer - the server name from which the additional channel is removed.
+	 * @see CMClientStub#addSocketChannel(int, String)
+	 */
 	public void removeAdditionalSocketChannel(int nChIndex, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -662,7 +674,14 @@ public class CMClientStub extends CMStub {
 		scInfo.removeChannel(nChIndex);
 		return;
 	}
-	
+
+	/**
+	 * 
+	 * (from here)
+	 * @param strUser
+	 * @param strWriter
+	 * @param nOffset
+	 */
 	/* 
 	 * To request to download the list of SNS content.
 	 * strUser: requester name
