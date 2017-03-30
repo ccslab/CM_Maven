@@ -577,6 +577,8 @@ public class CMClientStub extends CMStub {
 	
 	/**
 	 * Adds a TCP channel to a server.
+	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
+	 * and multicast channels, both the client and the server can add an additional channel.
 	 * 
 	 * @param nChIndex - the channel index which must be greater than 0.
 	 * The index 0 is occupied by the default TCP channel.
@@ -672,19 +674,73 @@ public class CMClientStub extends CMStub {
 	}
 
 	/**
-	 * Requests to download the list of SNS content.
-	 * (from here)
-	 * @param strUser - the requester name
-	 * @param strWriter - the writer name
-	 * @param nOffset - the content offset
+	 * Requests to download the list of SNS content from the default server.
+	 * <p> The number of downloaded content items is determined by the server. In the configuration file of 
+	 * the server CM (cm-server.conf), the DOWNLOAD_NUM field specifies the number of downloaded content items.
+	 * 
+	 * <p> Each of the requested SNS content item is then sent to the requesting client as 
+	 * the CONTENT_DOWNLOAD event belongs to the {@link CMSNSEvent} class, and that can be caught in 
+	 * the client event handler. The CONTENT_DOWNLOAD event includes fields as below:
+	 * <table border=1>
+	 *   <tr>
+	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *   </tr>
+	 *   <tr> 
+	 *     <td> Event ID </td> <td> CMSNEEvent.CONTENT_DOWNLOAD </td> 
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event field </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Requester name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Requested content offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   </tr>
+	 *   <tr> 
+	 *     <td> Written date and time of the content </td> <td> {@link CMSNSEvent#getDate()} </td> 
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Writer name of the content </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Text message of the content </td> <td> {@link CMSNSEvent#getMessage()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Number of attachments </td> <td> {@link CMSNSEvent#getNumAttachedFiles()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Content ID to which this message replies (0 for no reply) </td>
+	 *     <td> {@link CMSNSEvent#getReplyOf()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Level of disclosure of the content
+	 *          <br> 0: open to public <br> 1: open only to friends <br> 2: open only to bi-friends 
+	 *          <br> 3: private 
+	 *     </td> 
+	 *     <td> {@link CMSNSEvent#getLevelOfDisclosure()} </td>
+	 *   </tr>
+	 * </table>
+	 * 
+	 * @param strWriter - the name of the writer whose content list will be downloaded.
+	 * <br> The client can designate a specific writer name or a friend group. If the parameter value is 
+	 * a specific user name, the client downloads only content that was uploaded by the specified name 
+	 * and that is accessible by the requester. If the parameter value is ¡®CM_MY_FRIEND¡¯, the client 
+	 * downloads content that was uploaded by the requester¡¯s friends. If the parameter is ¡®CM_BI_FRIEND¡¯, 
+	 * the client downloads content that was uploaded by the requester¡¯s bi-friends. If the ¡®strWriter¡¯ 
+	 * parameter is an empty string (¡°¡±), the client does not specify a writer name and it downloads all 
+	 * content that the requester is eligible to access.
+	 * @param nOffset - the offset from the beginning of the requested content list.
+	 * <br> The client can request to download some number of SNS messages starting from the nOffset-th 
+	 * most recent content. The nOffset value is greater than or equal to 0. The requested content list is 
+	 * sorted in reverse chronological order. If the searched content list has 5 items, they have index number 
+	 * starting with 0. The first item (index 0) is the most recent content, the second item (index 1) is 
+	 * the second most recent one, and so on.
 	 * 
 	 * @see CMClientStub#requestSNSContentUpload(String, String, int, int, int, ArrayList)
-	 */
-	/* 
-	 * To request to download the list of SNS content.
-	 * strUser: requester name
-	 * strWriter: writer name (empty string for any writer)
-	 * nOffset: content offset (0 <= nOffset < total number of required content items), (0 for the most recent content) 
 	 */
 	public void requestSNSContent(String strWriter, int nOffset)
 	{
@@ -709,6 +765,10 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 
+	/**
+	 * 
+	 * (from here)
+	 */
 	/*
 	 * To request to download the next list of SNS content from the previous request.
 	 */
