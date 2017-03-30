@@ -1059,7 +1059,7 @@ public class CMClientApp {
 		// start time of downloading contents
 		m_eventHandler.setStartTime(System.currentTimeMillis());
 
-		m_clientStub.requestSNSContent(strUserName, strWriterName, nContentOffset);
+		m_clientStub.requestSNSContent(strWriterName, nContentOffset);
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("["+strUserName+"] requests content of writer["+strWriterName
@@ -1117,8 +1117,7 @@ public class CMClientApp {
 		m_eventHandler.setPrintWriter(pw);
 		m_eventHandler.setSimNum(100);
 
-		String strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
-		m_clientStub.requestSNSContent(strUserName, "", 0);	// no specific writer, offset = 0
+		m_clientStub.requestSNSContent("", 0);	// no specific writer, offset = 0
 
 		return;
 	}

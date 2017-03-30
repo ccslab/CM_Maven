@@ -1735,7 +1735,7 @@ public class CMWinClient extends JFrame {
 
 		int nContentOffset = 0;
 		String strWriterName = null;
-		String strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+		String strUserName = m_clientStub.getMyself().getName();
 		
 		JTextField offsetField = new JTextField();
 		JTextField writerField = new JTextField();
@@ -1756,7 +1756,7 @@ public class CMWinClient extends JFrame {
 		// start time of downloading contents
 		m_eventHandler.setStartTime(System.currentTimeMillis());
 
-		m_clientStub.requestSNSContent(strUserName, strWriterName, nContentOffset);
+		m_clientStub.requestSNSContent(strWriterName, nContentOffset);
 		if(CMInfo._CM_DEBUG)
 		{
 			printMessage("["+strUserName+"] requests content of writer["+strWriterName+"] with offset("
@@ -1814,8 +1814,7 @@ public class CMWinClient extends JFrame {
 		m_eventHandler.setPrintWriter(pw);
 		m_eventHandler.setSimNum(100);
 
-		String strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
-		m_clientStub.requestSNSContent(strUserName, "", 0);	// no specific writer, offset = 0
+		m_clientStub.requestSNSContent("", 0);	// no specific writer, offset = 0
 
 		return;
 	}

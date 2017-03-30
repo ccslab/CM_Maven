@@ -140,11 +140,10 @@ public class CMClientStub extends CMStub {
 	 */
 	public void loginCM(String strUserName, String strPassword)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		
 		// check local state
-		int nUserState = interInfo.getMyself().getState();
+		int nUserState = getMyself().getState();
 		
 		// If the user is not connected to the default server, he/she connects to it first.
 		if(nUserState == CMInfo.CM_INIT)
@@ -175,7 +174,7 @@ public class CMClientStub extends CMStub {
 		se.setUDPPort(nMyUDPPort);
 		
 		// set information on the local user
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		myself.setName(strUserName);
 		myself.setPasswd(strPassword);
 		myself.setHost(strMyAddr);
@@ -206,7 +205,7 @@ public class CMClientStub extends CMStub {
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		
 		// check state of the local user
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		switch(myself.getState())
 		{
 		case CMInfo.CM_INIT:
@@ -257,10 +256,9 @@ public class CMClientStub extends CMStub {
 	// request available session information from the default server
 	public void requestSessionInfo()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		
 		// check local state
-		int nUserState = interInfo.getMyself().getState();
+		int nUserState = getMyself().getState();
 		if(nUserState == CMInfo.CM_INIT || nUserState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestSessionInfo(), you should log in to the default server.");
@@ -269,7 +267,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REQUEST_SESSION_INFO);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		if(CMInfo._CM_DEBUG)
@@ -333,7 +331,7 @@ public class CMClientStub extends CMStub {
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		
 		// check local state
-		switch( interInfo.getMyself().getState() )
+		switch( getMyself().getState() )
 		{
 		case CMInfo.CM_INIT:
 			System.out.println("You should connect and login server before session join.\n"); return;
@@ -355,10 +353,10 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.JOIN_SESSION);
 		se.setHandlerSession(sname);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		se.setSessionName(sname);
 		send(se, "SERVER");
-		interInfo.getMyself().setCurrentSession(sname);
+		getMyself().setCurrentSession(sname);
 		
 		se = null;
 		return;
@@ -389,8 +387,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public void leaveSession()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		// check local state
 		switch(myself.getState())
 		{
@@ -436,7 +433,7 @@ public class CMClientStub extends CMStub {
 	// send position info to the group members
 	public void sendUserPosition(CMPosition pq)
 	{
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = getMyself();
 		// check user's local state
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
@@ -487,8 +484,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public void chat(String strTarget, String strMessage)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		
 		// check target
 		if(strTarget.equals("/b"))	// broadcast
@@ -635,7 +631,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_CHANNEL);
-		se.setChannelName(interInfo.getMyself().getName());
+		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nChIndex);
 		send(se, strServer, CMInfo.CM_STREAM, nChIndex);
 		
@@ -676,11 +672,13 @@ public class CMClientStub extends CMStub {
 	}
 
 	/**
-	 * 
+	 * Requests to download the list of SNS content.
 	 * (from here)
-	 * @param strUser
-	 * @param strWriter
-	 * @param nOffset
+	 * @param strUser - the requester name
+	 * @param strWriter - the writer name
+	 * @param nOffset - the content offset
+	 * 
+	 * @see CMClientStub#requestSNSContentUpload(String, String, int, int, int, ArrayList)
 	 */
 	/* 
 	 * To request to download the list of SNS content.
@@ -688,14 +686,18 @@ public class CMClientStub extends CMStub {
 	 * strWriter: writer name (empty string for any writer)
 	 * nOffset: content offset (0 <= nOffset < total number of required content items), (0 for the most recent content) 
 	 */
-	public void requestSNSContent(String strUser, String strWriter, int nOffset)
+	public void requestSNSContent(String strWriter, int nOffset)
 	{
-		int nState = m_cmInfo.getInteractionInfo().getMyself().getState();
+		CMUser user = getMyself();
+		int nState = user.getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT )
 		{
 			System.out.println("CCMClientStub::requestSNSContents(), you must log in to the default server!");
 			return;
 		}
+		
+		String strUser = user.getName();
+		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.CONTENT_DOWNLOAD_REQUEST);
 		se.setUserName(strUser);
@@ -712,7 +714,6 @@ public class CMClientStub extends CMStub {
 	 */
 	public void requestNextSNSContent()
 	{
-		String strUser = m_cmInfo.getInteractionInfo().getMyself().getName();
 		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
@@ -723,7 +724,7 @@ public class CMClientStub extends CMStub {
 		nOffset = nOffset+nDownContentNum;
 		
 		// request SNS content
-		requestSNSContent(strUser, strWriter, nOffset);
+		requestSNSContent(strWriter, nOffset);
 		
 		return;
 	}
@@ -733,7 +734,6 @@ public class CMClientStub extends CMStub {
 	 */
 	public void requestPreviousSNSContent()
 	{
-		String strUser = m_cmInfo.getInteractionInfo().getMyself().getName();
 		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
@@ -745,7 +745,7 @@ public class CMClientStub extends CMStub {
 		//if(nOffset < 0) nOffset = 0;
 		
 		// request SNS content
-		requestSNSContent(strUser, strWriter, nOffset);
+		requestSNSContent(strWriter, nOffset);
 		
 		return;
 	}
@@ -755,7 +755,7 @@ public class CMClientStub extends CMStub {
 	{
 		ArrayList<String> fileNameList = null;
 		int i = -1;
-		int nState = m_cmInfo.getInteractionInfo().getMyself().getState();
+		int nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT )
 		{
 			System.out.println("CMClientStub.requestSNSContentUpload(), you must log in to the default server!");
@@ -856,7 +856,7 @@ public class CMClientStub extends CMStub {
 	
 	public void requestAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
-		String strUserName = m_cmInfo.getInteractionInfo().getMyself().getName();
+		String strUserName = getMyself().getName();
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_ATTACHED_FILE);
 		se.setUserName(strUserName);
@@ -912,7 +912,7 @@ public class CMClientStub extends CMStub {
 
 	public void accessAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
-		String strUserName = m_cmInfo.getInteractionInfo().getMyself().getName();
+		String strUserName = getMyself().getName();
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.ACCESS_ATTACHED_FILE);
 		se.setUserName(strUserName);
@@ -927,7 +927,7 @@ public class CMClientStub extends CMStub {
 
 	public void requestServerInfo()
 	{
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = getMyself();
 		int state = myself.getState();
 
 		if( state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT )
@@ -1075,7 +1075,7 @@ public class CMClientStub extends CMStub {
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
 		tmse.setID(CMMultiServerEvent.ADD_LOGOUT);
 		tmse.setServerName(strServer);
-		tmse.setUserName(interInfo.getMyself().getName());
+		tmse.setUserName(getMyself().getName());
 
 		send(tmse, strServer);
 
@@ -1119,7 +1119,7 @@ public class CMClientStub extends CMStub {
 
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_REQUEST_SESSION_INFO);
-		mse.setUserName(interInfo.getMyself().getName());
+		mse.setUserName(getMyself().getName());
 		send(mse, strServerName);
 
 		if(CMInfo._CM_DEBUG)
@@ -1180,7 +1180,7 @@ public class CMClientStub extends CMStub {
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_JOIN_SESSION);
 		mse.setServerName(strServer);
-		mse.setUserName(interInfo.getMyself().getName());
+		mse.setUserName(getMyself().getName());
 		mse.setSessionName(strSession);
 
 		// send the event
@@ -1234,7 +1234,7 @@ public class CMClientStub extends CMStub {
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_LEAVE_SESSION);
 		mse.setServerName(tserver.getServerName());
-		mse.setUserName(interInfo.getMyself().getName());
+		mse.setUserName(getMyself().getName());
 		mse.setSessionName( tserver.getCurrentSessionName() );
 
 		send(mse, strServer);
@@ -1248,11 +1248,10 @@ public class CMClientStub extends CMStub {
 	
 	public void registerUser(String strName, String strPasswd)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT )
 		{
 			System.out.println("CMClientStub.registerUser(), client is not connected to "
@@ -1278,11 +1277,10 @@ public class CMClientStub extends CMStub {
 	
 	public void deregisterUser(String strName, String strPasswd)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT )
 		{
 			System.out.println("CMClientStub.deregisterUser(), client is not connected to "
@@ -1310,11 +1308,10 @@ public class CMClientStub extends CMStub {
 	
 	public void findRegisteredUser(String strName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT )
 		{
 			System.out.println("CMClientStub.findRegisteredUser(), client is not connected to "
@@ -1341,11 +1338,10 @@ public class CMClientStub extends CMStub {
 	
 	public void addNewFriend(String strFriendName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.addNewFriend(), you should log in to "
@@ -1355,7 +1351,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.ADD_NEW_FRIEND);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		send(se, "SERVER");
 		
@@ -1365,11 +1361,10 @@ public class CMClientStub extends CMStub {
 	
 	public void removeFriend(String strFriendName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.removeFriend(), you should log in to "
@@ -1379,7 +1374,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REMOVE_FRIEND);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		send(se, "SERVER");
 		
@@ -1389,11 +1384,10 @@ public class CMClientStub extends CMStub {
 	
 	public void requestFriendsList()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestFriendsList(), you should log in to "
@@ -1403,7 +1397,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_FRIEND_LIST);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		se = null;
@@ -1412,11 +1406,10 @@ public class CMClientStub extends CMStub {
 	
 	public void requestFriendRequestersList()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestFriendRequestersList(), you should log in to "
@@ -1426,7 +1419,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		se = null;
@@ -1435,11 +1428,10 @@ public class CMClientStub extends CMStub {
 	
 	public void requestBiFriendsList()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestBiFriendsList(), you should log in to "
@@ -1449,7 +1441,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_BI_FRIEND_LIST);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		se = null;
