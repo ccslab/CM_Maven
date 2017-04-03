@@ -9,18 +9,6 @@ public class CMConfigurator {
 	// initialize field values of server configuration or client configuration
 	public static void init(String fName, CMInfo cmInfo) throws IOException
 	{
-		//// enumerate IP addresses bound to the local host
-		Enumeration en = NetworkInterface.getNetworkInterfaces();
-		while(en.hasMoreElements()){
-		    NetworkInterface ni=(NetworkInterface) en.nextElement();
-		    Enumeration ee = ni.getInetAddresses();
-		    while(ee.hasMoreElements()) {
-		        InetAddress ia= (InetAddress) ee.nextElement();
-		        System.out.println(ia.getHostAddress());
-		    }
-		 }
-		////
-
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
 		confInfo.setConfFileName(fName);
@@ -31,7 +19,8 @@ public class CMConfigurator {
 		confInfo.setUDPPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "UDP_PORT")));
 		confInfo.setMulticastAddress(CMConfigurator.getConfiguration(fName, "MULTICAST_ADDR"));
 		confInfo.setMulticastPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "MULTICAST_PORT")));
-		confInfo.setMyAddress(InetAddress.getLocalHost().getHostAddress());
+		//confInfo.setMyAddress(InetAddress.getLocalHost().getHostAddress());
+		confInfo.setMyAddress(CMCommManager.getLocalIP());
 				
 		// default download directory
 		confInfo.setFilePath(CMConfigurator.getConfiguration(fName, "FILE_PATH"));

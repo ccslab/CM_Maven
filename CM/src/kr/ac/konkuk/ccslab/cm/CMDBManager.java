@@ -35,6 +35,7 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return;
 		}
 		
 		dbInfo.setConnection(connect);

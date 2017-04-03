@@ -69,6 +69,42 @@ public class CMCommManager {
 			System.out.println("CMCommManager.terminate(), close and remove all channels.");
 	}
 	
+	public static String getLocalIP()
+	{
+		String strIP = null;
+		try{
+
+			/// enumerate IP addresses bound to the local host
+			Enumeration<NetworkInterface> nienum = NetworkInterface.getNetworkInterfaces();
+			while (nienum.hasMoreElements())
+			{
+				NetworkInterface ni = nienum.nextElement();
+				Enumeration<InetAddress> enumIA = ni.getInetAddresses();
+				while (enumIA.hasMoreElements())
+				{
+					InetAddress inetAddress = enumIA.nextElement();
+					if(CMInfo._CM_DEBUG)
+						System.out.println("detected inetAddress: " + inetAddress.getHostAddress());
+					if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress() && 
+					inetAddress.isSiteLocalAddress())
+					{
+						 strIP = inetAddress.getHostAddress().toString();
+					}
+				}
+			}
+
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		
+		if(strIP == null)
+		{
+			System.err.println("CMCommManager.getLocalIP(), cannot find local IP");
+		}
+
+		return strIP;
+	}
+	
 	public static SelectableChannel openChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
 	{
 		SelectableChannel ch = null;
