@@ -7,7 +7,7 @@ import java.nio.*;
  * fields of a CM event such as which session and group (handler session and group names) should handle 
  * this event and which session and group members (distribution session and group names) this event should be 
  * forwarded to.  
- * <p> CM nodes (a client or a server) communicates with each other by exchanging CM events. 
+ * <p> CM nodes (a client or a server) communicate with each other by exchanging CM events. 
  * @author mlim
  * @see {@link CMConcurrencyEvent}, {@link CMConsistencyEvent}, {@link CMDataEvent}, {@link CMDummyEvent}, 
  * {@link CMFileEvent}, {@link CMInterestEvent}, {@link CMMultiServerEvent}, {@link CMSessionEvent}, 
@@ -126,8 +126,9 @@ public class CMEvent extends CMObject {
 	/**
 	 * Sets a session of this event.
 	 * <br> The session name determines which session deals with this event.
-	 * <br> When the event object is initialized, the session is set to the empty string (""). The empty session name 
-	 * specifies that this event is internally handled by the CMInteractionManager of the receiver CM.
+	 * <br> When the event object is initialized, the session for handling this event is set to the empty string (""). 
+	 * The empty session name specifies that this event is internally handled by the CMInteractionManager of 
+	 * the receiver CM.
 	 * 
 	 * @param sName - the session name
 	 */
@@ -139,8 +140,9 @@ public class CMEvent extends CMObject {
 	/**
 	 * Sets a group of this event.
 	 * <br> The group name determines which group deals with this event.
-	 * <br> When the event object is initialized, the group is set to the empty string (""). If the group name is empty 
-	 * and the specific session name is set, this event is internally handled by the CMSessionManager of the receiver CM.
+	 * <br> When the event object is initialized, the group for handling this event is set to the empty string (""). 
+	 * If the group name is empty and the specific session name is set, this event is internally handled by 
+	 * the CMSessionManager of the receiver CM.
 	 * If both the group and the session are empty, this event is internally handled by the CMInteractionManager of 
 	 * the receiver CM. If both the group and the session are set to specific names, this event is internally handled by 
 	 * the CMGroupManager of the receiver CM.
@@ -153,20 +155,57 @@ public class CMEvent extends CMObject {
 	}
 	
 	/**
+	 * Sets a session to which this event will be forwarded by the server.
+	 * <br> The session name determines to which session the server will forward this event after it receives and processes 
+	 * this event. Normally, session and group for the distribution of the event are determined by CM when the client calls 
+	 * {@link CMStub#send(CMEvent, String)}, {@link CMStub#cast(CMEvent, String, String)}, or 
+	 * {@link CMStub#broadcast(CMEvent)} methods.
+	 * <p> When the event object is initialized, the session for distribution is set to the empty string ("").
+	 * If the session name is empty, the server does not forward this event. 
+	 * If the session is set to a specific name, the distribution target is determined by the group name for 
+	 * the distribution. 
+	 * If the session name is "CM_ALL_SESSION", the server forwards this event to members of all sessions and groups.
+	 * If the session name is "CM_ONE_USER", the distribution target is one user whose name should be set in the group 
+	 * name for the distribution.  
+	 *
+	 * @param sName - the session name for the distribution of this event.
+	 * <br> The sName value can be a session name, "CM_ALL_SESSION", or "CM_ONE_USER".
 	 * 
-	 * (from here)
-	 * @param sName
+	 * @see {@link CMEvent#setDistributionGroup(String)}, {@link CMEvent#getDistributionSession()}
 	 */
 	public void setDistributionSession(String sName)
 	{
 		m_strDistributionSession = sName;
 	}
 	
+	/**
+	 * Sets a group to which this event will be forwarded by the server.
+	 * <br> The group name determines to which group the server will forward this event after it receives and processes 
+	 * this event. Normally, session and group for the distribution of the event are determined by CM when the client calls 
+	 * {@link CMStub#send(CMEvent, String)}, {@link CMStub#cast(CMEvent, String, String)}, or
+	 * {@link CMStub#broadcast(CMEvent)} methods.
+	 * <p> When the event object is initialized, the group for distribution is set to the empty string ("").
+	 * If the group name is empty, the server does not forward this event.
+	 * If the group is set to a specific name, the server forwards this event to the corresponding group members.
+	 * If the group name is CM_ALL_GROUP", the server forwards this event to members of all groups.
+	 * If the group name is a specific user name (and if the session name is "CM_ONE_USER"), the server forwards this event 
+	 * to the corresponding specific user.
+	 * 
+	 * @param gName - the group name for the distribution of this event.
+	 * <br> The gName value can be a group name, "CM_ALL_GROUP", or a specific user name.
+	 * 
+	 * @see {@link CMEvent#setDistributionGroup(String)}, {@link CMEvent#getDistributionGroup()}
+	 */
 	public void setDistributionGroup(String gName)
 	{
 		m_strDistributionGroup = gName;
 	}
 
+	/**
+	 * 
+	 * (from here)
+	 * @return
+	 */
 	public String getHandlerSession()
 	{
 		return m_strHandlerSession;
