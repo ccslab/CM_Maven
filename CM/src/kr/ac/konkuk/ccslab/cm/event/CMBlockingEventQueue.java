@@ -1,6 +1,9 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.event;
 
 import java.util.List;
+
+import kr.ac.konkuk.ccslab.cm.CMMessage;
+
 import java.util.ArrayList;
 
 public class CMBlockingEventQueue {

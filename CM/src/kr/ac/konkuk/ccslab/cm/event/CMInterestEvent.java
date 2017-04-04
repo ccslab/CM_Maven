@@ -1,6 +1,8 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.event;
 import java.nio.*;
 
+import kr.ac.konkuk.ccslab.cm.CMPoint3f;
+import kr.ac.konkuk.ccslab.cm.CMPosition;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMInterestEvent extends CMEvent{

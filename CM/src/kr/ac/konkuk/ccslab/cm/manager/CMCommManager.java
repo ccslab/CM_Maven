@@ -5,12 +5,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.CMGroup;
 import kr.ac.konkuk.ccslab.cm.CMServer;
 import kr.ac.konkuk.ccslab.cm.CMSession;
 import kr.ac.konkuk.ccslab.cm.CMUser;
+import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;

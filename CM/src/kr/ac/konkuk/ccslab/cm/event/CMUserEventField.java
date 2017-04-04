@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.event;
 
 public class CMUserEventField {
 	public int nDataType;

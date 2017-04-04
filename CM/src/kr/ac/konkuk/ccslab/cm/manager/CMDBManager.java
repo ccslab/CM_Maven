@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.manager;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;

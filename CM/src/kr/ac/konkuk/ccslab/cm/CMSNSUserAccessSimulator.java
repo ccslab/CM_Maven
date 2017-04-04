@@ -7,6 +7,7 @@ import java.util.Calendar;
 import org.apache.commons.math3.distribution.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 
 public class CMSNSUserAccessSimulator {
 
