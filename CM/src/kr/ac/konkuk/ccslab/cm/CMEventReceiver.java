@@ -2,6 +2,10 @@ package kr.ac.konkuk.ccslab.cm;
 import java.nio.channels.*;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 

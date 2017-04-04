@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSEvent extends CMEvent{
 	public static final int CONTENT_UPLOAD_REQUEST = 1;			// C->S
 	public static final int CONTENT_UPLOAD_RESPONSE = 2;		// S->C

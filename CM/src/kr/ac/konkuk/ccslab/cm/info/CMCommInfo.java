@@ -1,6 +1,9 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.info;
 import java.io.IOException;
 import java.nio.channels.*;
+
+import kr.ac.konkuk.ccslab.cm.CMBlockingEventQueue;
+import kr.ac.konkuk.ccslab.cm.CMByteReceiver;
 
 public class CMCommInfo {
 	private ServerSocketChannel m_ssc;

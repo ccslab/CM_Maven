@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMMember extends CMObject{
 	private Vector<CMUser> m_memberList;
 

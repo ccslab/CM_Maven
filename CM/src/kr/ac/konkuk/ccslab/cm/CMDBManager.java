@@ -4,6 +4,10 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMDBInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMDBManager {
 
 	// open DB connection

@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMConsistencyEvent extends CMEvent {
 	public static final int TRANSLATION = 1;
 	public static final int ROTATION = 2;

@@ -1,5 +1,7 @@
 package kr.ac.konkuk.ccslab.cm;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMObject {
 	protected int m_nType;
 

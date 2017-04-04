@@ -4,24 +4,24 @@ import java.io.IOException;
 import java.nio.channels.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.CMEvent;
 import kr.ac.konkuk.ccslab.cm.CMGroup;
-import kr.ac.konkuk.ccslab.cm.CMGroupInfo;
-import kr.ac.konkuk.ccslab.cm.CMInfo;
-import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.CMMember;
 import kr.ac.konkuk.ccslab.cm.CMMessage;
 import kr.ac.konkuk.ccslab.cm.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.CMServer;
-import kr.ac.konkuk.ccslab.cm.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.CMSession;
 import kr.ac.konkuk.ccslab.cm.CMSessionEvent;
-import kr.ac.konkuk.ccslab.cm.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.CMUser;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMServerInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMSessionInfo;
 
 import java.sql.*;
 

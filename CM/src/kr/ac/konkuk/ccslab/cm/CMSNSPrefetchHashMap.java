@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm;
 
 import java.util.HashMap;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSPrefetchHashMap extends CMObject {
 	private HashMap<String, CMSNSPrefetchList> m_prefetchMap;
 	

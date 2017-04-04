@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm;
 
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSContent extends CMObject {
 	private int m_nContentID;
 	private String m_strDate;

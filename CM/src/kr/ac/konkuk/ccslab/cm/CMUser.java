@@ -2,6 +2,9 @@ package kr.ac.konkuk.ccslab.cm;
 
 import java.util.Calendar;
 
+import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMUser extends CMObject {
 	
 	private int m_nID;

@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMDummyEvent extends CMEvent{
 	
 	private String m_strDummyInfo;

@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm;
 
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSAttachList extends CMObject {
 	private Vector<CMSNSAttach> m_attachVector;
 	////////// event fields of CONTENT_DOWNLOAD_END

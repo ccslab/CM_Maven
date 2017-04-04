@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMInterestEvent extends CMEvent{
 	public static final int USER_ENTER = 1;
 	public static final int USER_LEAVE = 2;

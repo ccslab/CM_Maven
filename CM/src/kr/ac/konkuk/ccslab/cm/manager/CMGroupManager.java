@@ -1,13 +1,10 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.CMDataEvent;
 import kr.ac.konkuk.ccslab.cm.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.CMEvent;
 import kr.ac.konkuk.ccslab.cm.CMGroup;
-import kr.ac.konkuk.ccslab.cm.CMInfo;
-import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.CMMember;
 import kr.ac.konkuk.ccslab.cm.CMMessage;
@@ -17,6 +14,9 @@ import kr.ac.konkuk.ccslab.cm.CMSession;
 import kr.ac.konkuk.ccslab.cm.CMUser;
 import kr.ac.konkuk.ccslab.cm.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.CMUserEventField;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 
 import java.io.IOException;
 import java.nio.channels.*;

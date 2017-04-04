@@ -1,4 +1,10 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.info;
+
+import kr.ac.konkuk.ccslab.cm.CMSNSAttach;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttachHashMap;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttachList;
+import kr.ac.konkuk.ccslab.cm.CMSNSContentList;
+import kr.ac.konkuk.ccslab.cm.CMSNSPrefetchHashMap;
 
 public class CMSNSInfo {
 	private CMSNSContentList m_contentList;	// downloaded content for client, global content list for server

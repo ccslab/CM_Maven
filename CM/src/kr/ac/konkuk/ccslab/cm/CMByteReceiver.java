@@ -3,6 +3,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 import java.net.*;
 
 public class CMByteReceiver extends Thread {

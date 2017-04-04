@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSContentList extends CMObject {
 	private Vector<CMSNSContent> m_contentList;
 	

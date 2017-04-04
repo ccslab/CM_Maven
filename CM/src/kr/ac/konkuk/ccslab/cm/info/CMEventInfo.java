@@ -1,4 +1,6 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.info;
+
+import kr.ac.konkuk.ccslab.cm.CMEventReceiver;
 
 public class CMEventInfo {
 	private CMEventReceiver m_eventReceiver;

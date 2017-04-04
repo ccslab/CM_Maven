@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMUserEvent extends CMEvent {
 	private String m_strID;	// instead of int ID inherited from CMEvent, use this for this event ID
 	private Vector<CMUserEventField> m_eventFieldList;

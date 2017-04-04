@@ -1,5 +1,7 @@
 package kr.ac.konkuk.ccslab.cm;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMEndianness {
 	// test byte order of the current system
 	public static int testByteOrder()

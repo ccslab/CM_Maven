@@ -2,6 +2,10 @@ package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMSessionInfo;
+
 public class CMSessionEvent extends CMEvent {
 	public static final int LOGIN = 1;						// 로긴 요청 (c->s)
 	public static final int LOGOUT = 2;						// 로그아웃 (c->s)

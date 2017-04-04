@@ -1,6 +1,9 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.nio.channels.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMGroupInfo;
+
 public class CMGroup extends CMGroupInfo {
 	private CMMember m_groupUsers;
 	private CMChannelInfo m_mcInfo;

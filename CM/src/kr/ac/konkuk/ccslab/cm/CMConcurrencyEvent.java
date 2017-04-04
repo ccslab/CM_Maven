@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMConcurrencyEvent extends CMEvent {
 	public final static int OWNERSHIP_REQUEST = 1;
 	public final static int OWNERSHIP = 2;

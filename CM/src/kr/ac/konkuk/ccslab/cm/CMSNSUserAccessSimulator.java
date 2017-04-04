@@ -6,6 +6,8 @@ import java.util.Calendar;
 
 import org.apache.commons.math3.distribution.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSUserAccessSimulator {
 
 	private int m_nUserNum;	// the number of users participating in the simulation

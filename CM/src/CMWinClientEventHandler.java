@@ -7,6 +7,13 @@ import java.io.*;
 import java.awt.*;
 
 import kr.ac.konkuk.ccslab.cm.*;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMServerInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 

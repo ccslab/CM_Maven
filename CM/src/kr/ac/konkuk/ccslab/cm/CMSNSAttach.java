@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm;
 
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSAttach extends CMObject {
 	private int m_nNumCompleted;
 	private ArrayList<String> m_filePathList;

@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMDataEvent extends CMEvent{
 	public static final int INHABITANT = 1;
 	public static final int NEW_USER = 2;

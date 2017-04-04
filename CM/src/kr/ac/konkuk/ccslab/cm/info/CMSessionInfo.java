@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.info;
 
 public class CMSessionInfo {
 	protected String m_strSessionName;

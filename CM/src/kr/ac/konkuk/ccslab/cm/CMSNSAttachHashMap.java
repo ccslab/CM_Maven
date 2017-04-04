@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm;
 
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMSNSAttachHashMap extends CMObject {
 	private HashMap<String, CMSNSAttachList> m_attachMap;
 	

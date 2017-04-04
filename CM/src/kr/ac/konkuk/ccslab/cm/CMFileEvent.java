@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm;
 import java.nio.*;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 public class CMFileEvent extends CMEvent{
 	public static final int REQUEST_FILE_TRANSFER = 1;		// c -> s
 	public static final int REPLY_FILE_TRANSFER = 2;		// s -> c
