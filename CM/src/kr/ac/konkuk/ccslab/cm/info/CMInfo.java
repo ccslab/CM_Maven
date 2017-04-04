@@ -1,6 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
-import kr.ac.konkuk.ccslab.cm.CMEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.CMEventHandler;
 
 public class CMInfo {
 	//// global variables

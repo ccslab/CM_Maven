@@ -1,6 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
-
-import kr.ac.konkuk.ccslab.cm.event.CMEvent;
+package kr.ac.konkuk.ccslab.cm.event;
 
 public interface CMEventHandler {
 	void processEvent(CMEvent cme);
