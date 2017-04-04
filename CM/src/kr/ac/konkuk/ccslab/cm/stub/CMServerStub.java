@@ -1,8 +1,21 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.stub;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+
+import kr.ac.konkuk.ccslab.cm.CMCommManager;
+import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.CMEventManager;
+import kr.ac.konkuk.ccslab.cm.CMInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionManager;
+import kr.ac.konkuk.ccslab.cm.CMMember;
+import kr.ac.konkuk.ccslab.cm.CMMultiServerEvent;
+import kr.ac.konkuk.ccslab.cm.CMSNSEvent;
+import kr.ac.konkuk.ccslab.cm.CMSNSManager;
+import kr.ac.konkuk.ccslab.cm.CMUser;
 
 public class CMServerStub extends CMStub {
 	

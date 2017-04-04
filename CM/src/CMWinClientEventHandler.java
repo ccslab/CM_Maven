@@ -7,6 +7,7 @@ import java.io.*;
 import java.awt.*;
 
 import kr.ac.konkuk.ccslab.cm.*;
+import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
 public class CMWinClientEventHandler implements CMEventHandler{
 	//private JTextArea m_outTextArea;

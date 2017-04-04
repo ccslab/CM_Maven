@@ -1,4 +1,5 @@
 import kr.ac.konkuk.ccslab.cm.*;
+import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 import java.io.*;
 import java.util.*;

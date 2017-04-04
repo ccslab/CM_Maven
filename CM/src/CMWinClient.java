@@ -18,6 +18,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.text.*;
 
 import kr.ac.konkuk.ccslab.cm.*;
+import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
 public class CMWinClient extends JFrame {
 	//private JTextArea m_outTextArea;

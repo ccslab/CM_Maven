@@ -1,10 +1,32 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.stub;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.util.*;
+
+import kr.ac.konkuk.ccslab.cm.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.CMCommManager;
+import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.CMEventManager;
+import kr.ac.konkuk.ccslab.cm.CMGroupManager;
+import kr.ac.konkuk.ccslab.cm.CMInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionManager;
+import kr.ac.konkuk.ccslab.cm.CMInterestEvent;
+import kr.ac.konkuk.ccslab.cm.CMMultiServerEvent;
+import kr.ac.konkuk.ccslab.cm.CMPosition;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttach;
+import kr.ac.konkuk.ccslab.cm.CMSNSContent;
+import kr.ac.konkuk.ccslab.cm.CMSNSContentList;
+import kr.ac.konkuk.ccslab.cm.CMSNSEvent;
+import kr.ac.konkuk.ccslab.cm.CMSNSInfo;
+import kr.ac.konkuk.ccslab.cm.CMServer;
+import kr.ac.konkuk.ccslab.cm.CMSession;
+import kr.ac.konkuk.ccslab.cm.CMSessionEvent;
+import kr.ac.konkuk.ccslab.cm.CMUser;
 
 public class CMClientStub extends CMStub {
 

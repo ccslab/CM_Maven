@@ -16,8 +16,8 @@ import kr.ac.konkuk.ccslab.cm.CMGroup;
 import kr.ac.konkuk.ccslab.cm.CMInfo;
 import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.CMSNSUserAccessSimulator;
-import kr.ac.konkuk.ccslab.cm.CMServerStub;
 import kr.ac.konkuk.ccslab.cm.CMSession;
+import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 public class CMWinServer extends JFrame {
 	//private JTextArea m_outTextArea;

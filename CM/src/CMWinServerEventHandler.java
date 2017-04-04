@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.io.*;
 
 import kr.ac.konkuk.ccslab.cm.*;
+import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 public class CMWinServerEventHandler implements CMEventHandler {
 	private CMWinServer m_server;

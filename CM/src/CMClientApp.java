@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.*;
+import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
 
 public class CMClientApp {
