@@ -1,8 +1,32 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.manager;
 
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+
+import kr.ac.konkuk.ccslab.cm.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.CMCommInfo;
+import kr.ac.konkuk.ccslab.cm.CMConcurrencyEvent;
+import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.CMConsistencyEvent;
+import kr.ac.konkuk.ccslab.cm.CMDataEvent;
+import kr.ac.konkuk.ccslab.cm.CMDummyEvent;
+import kr.ac.konkuk.ccslab.cm.CMEvent;
+import kr.ac.konkuk.ccslab.cm.CMEventInfo;
+import kr.ac.konkuk.ccslab.cm.CMEventReceiver;
+import kr.ac.konkuk.ccslab.cm.CMFileEvent;
+import kr.ac.konkuk.ccslab.cm.CMGroup;
+import kr.ac.konkuk.ccslab.cm.CMInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.CMInterestEvent;
+import kr.ac.konkuk.ccslab.cm.CMMember;
+import kr.ac.konkuk.ccslab.cm.CMMultiServerEvent;
+import kr.ac.konkuk.ccslab.cm.CMSNSEvent;
+import kr.ac.konkuk.ccslab.cm.CMServer;
+import kr.ac.konkuk.ccslab.cm.CMSession;
+import kr.ac.konkuk.ccslab.cm.CMSessionEvent;
+import kr.ac.konkuk.ccslab.cm.CMUser;
+import kr.ac.konkuk.ccslab.cm.CMUserEvent;
 
 public class CMEventManager {
 

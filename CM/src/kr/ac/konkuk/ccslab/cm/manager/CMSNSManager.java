@@ -1,8 +1,32 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+
+import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.CMDBInfo;
+import kr.ac.konkuk.ccslab.cm.CMDBManager;
+import kr.ac.konkuk.ccslab.cm.CMFileEvent;
+import kr.ac.konkuk.ccslab.cm.CMFileTransferInfo;
+import kr.ac.konkuk.ccslab.cm.CMInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.CMMessage;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttach;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttachAccessHistory;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttachAccessHistoryList;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttachHashMap;
+import kr.ac.konkuk.ccslab.cm.CMSNSAttachList;
+import kr.ac.konkuk.ccslab.cm.CMSNSContent;
+import kr.ac.konkuk.ccslab.cm.CMSNSContentList;
+import kr.ac.konkuk.ccslab.cm.CMSNSEvent;
+import kr.ac.konkuk.ccslab.cm.CMSNSInfo;
+import kr.ac.konkuk.ccslab.cm.CMSNSPrefetchHashMap;
+import kr.ac.konkuk.ccslab.cm.CMSNSPrefetchList;
+import kr.ac.konkuk.ccslab.cm.CMUser;
+import kr.ac.konkuk.ccslab.cm.CMUtil;
+
 import java.text.*;
 
 public class CMSNSManager {

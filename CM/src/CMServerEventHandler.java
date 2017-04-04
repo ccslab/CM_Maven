@@ -2,6 +2,8 @@ import java.util.Iterator;
 import java.io.*;
 
 import kr.ac.konkuk.ccslab.cm.*;
+import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 

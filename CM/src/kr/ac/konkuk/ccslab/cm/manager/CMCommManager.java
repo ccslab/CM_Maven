@@ -1,9 +1,20 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+
+import kr.ac.konkuk.ccslab.cm.CMBlockingEventQueue;
+import kr.ac.konkuk.ccslab.cm.CMByteReceiver;
+import kr.ac.konkuk.ccslab.cm.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.CMCommInfo;
+import kr.ac.konkuk.ccslab.cm.CMGroup;
+import kr.ac.konkuk.ccslab.cm.CMInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.CMServer;
+import kr.ac.konkuk.ccslab.cm.CMSession;
+import kr.ac.konkuk.ccslab.cm.CMUser;
 
 public class CMCommManager {
 	

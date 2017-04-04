@@ -7,14 +7,10 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.CMChannelInfo;
-import kr.ac.konkuk.ccslab.cm.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.CMEventManager;
-import kr.ac.konkuk.ccslab.cm.CMGroupManager;
 import kr.ac.konkuk.ccslab.cm.CMInfo;
 import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
-import kr.ac.konkuk.ccslab.cm.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.CMPosition;
@@ -27,6 +23,10 @@ import kr.ac.konkuk.ccslab.cm.CMServer;
 import kr.ac.konkuk.ccslab.cm.CMSession;
 import kr.ac.konkuk.ccslab.cm.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.CMUser;
+import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMGroupManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
 public class CMClientStub extends CMStub {
 

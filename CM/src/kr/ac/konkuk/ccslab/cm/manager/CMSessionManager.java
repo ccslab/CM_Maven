@@ -1,6 +1,20 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.IOException;
 import java.util.*;
+
+import kr.ac.konkuk.ccslab.cm.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.CMEvent;
+import kr.ac.konkuk.ccslab.cm.CMGroup;
+import kr.ac.konkuk.ccslab.cm.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.CMInfo;
+import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.CMInterestEvent;
+import kr.ac.konkuk.ccslab.cm.CMMessage;
+import kr.ac.konkuk.ccslab.cm.CMMultiServerEvent;
+import kr.ac.konkuk.ccslab.cm.CMSession;
+import kr.ac.konkuk.ccslab.cm.CMSessionEvent;
+import kr.ac.konkuk.ccslab.cm.CMUser;
 
 public class CMSessionManager {
 

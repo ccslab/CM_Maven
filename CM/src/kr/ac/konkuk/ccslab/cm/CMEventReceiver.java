@@ -2,6 +2,9 @@ package kr.ac.konkuk.ccslab.cm;
 import java.nio.channels.*;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
+
 public class CMEventReceiver extends Thread {
 	private CMBlockingEventQueue m_queue;
 	private CMInfo m_cmInfo;

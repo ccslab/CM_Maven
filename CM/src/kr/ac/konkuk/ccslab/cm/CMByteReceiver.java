@@ -9,7 +9,7 @@ public class CMByteReceiver extends Thread {
 	private Selector m_selector = null;
 	private CMBlockingEventQueue m_queue = null;
 	
-	CMByteReceiver(Selector sel, CMBlockingEventQueue queue)
+	public CMByteReceiver(Selector sel, CMBlockingEventQueue queue)
 	{
 		m_selector = sel;
 		m_queue = queue;
