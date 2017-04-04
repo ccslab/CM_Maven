@@ -124,7 +124,7 @@ public class CMEvent extends CMObject {
 	}
 
 	/**
-	 * Sets a session of this event.
+	 * Sets a session for handling this event.
 	 * <br> The session name determines which session deals with this event.
 	 * <br> When the event object is initialized, the session for handling this event is set to the empty string (""). 
 	 * The empty session name specifies that this event is internally handled by the CMInteractionManager of 
@@ -138,7 +138,7 @@ public class CMEvent extends CMObject {
 	}
 	
 	/**
-	 * Sets a group of this event.
+	 * Sets a group for handling this event.
 	 * <br> The group name determines which group deals with this event.
 	 * <br> When the event object is initialized, the group for handling this event is set to the empty string (""). 
 	 * If the group name is empty and the specific session name is set, this event is internally handled by 
@@ -202,25 +202,48 @@ public class CMEvent extends CMObject {
 	}
 
 	/**
+	 * Returns a session name for handling this event.
+	 * <br> The session name determines which session deals with this event.
 	 * 
-	 * (from here)
-	 * @return
+	 * @return - a session name for handling this event.
+	 * @see CMEvent#getHandlerSession()
 	 */
 	public String getHandlerSession()
 	{
 		return m_strHandlerSession;
 	}
 	
+	/**
+	 * Returns a group name for handling this event.
+	 * <br> The group name determines which group deals with this event.
+	 * 
+	 * @return - a group name for handling this event.
+	 * @see CMEvent#getHandlerGroup()
+	 */
 	public String getHandlerGroup()
 	{
 		return m_strHandlerGroup;
 	}
 	
+	/**
+	 * Returns a target session to which the server forwards this event.
+	 * <br> The session name determines to which session the server will forward this event after it receives and processes 
+	 * this event.
+	 * @return - a session name for distributing this event.
+	 * @see CMEvent#setDistributionSession(String)
+	 */
 	public String getDistributionSession()
 	{
 		return m_strDistributionSession;
 	}
 	
+	/**
+	 * Returns a target group to which the server forwards this event.
+	 * <br> The group name determines to which group the server will forward this event after it receives and processes 
+	 * this event.
+	 * @return -  a group name for distributing this event.
+	 * @see CMEvent#setDistributionGroup(String)
+	 */
 	public String getDistributionGroup()
 	{
 		return m_strDistributionGroup;
