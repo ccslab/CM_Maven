@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.sns;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

@@ -20,6 +20,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
 

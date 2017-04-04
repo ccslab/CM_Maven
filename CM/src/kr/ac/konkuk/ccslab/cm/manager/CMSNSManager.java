@@ -6,15 +6,6 @@ import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.CMMessage;
-import kr.ac.konkuk.ccslab.cm.CMSNSAttach;
-import kr.ac.konkuk.ccslab.cm.CMSNSAttachAccessHistory;
-import kr.ac.konkuk.ccslab.cm.CMSNSAttachAccessHistoryList;
-import kr.ac.konkuk.ccslab.cm.CMSNSAttachHashMap;
-import kr.ac.konkuk.ccslab.cm.CMSNSAttachList;
-import kr.ac.konkuk.ccslab.cm.CMSNSContent;
-import kr.ac.konkuk.ccslab.cm.CMSNSContentList;
-import kr.ac.konkuk.ccslab.cm.CMSNSPrefetchHashMap;
-import kr.ac.konkuk.ccslab.cm.CMSNSPrefetchList;
 import kr.ac.konkuk.ccslab.cm.CMUser;
 import kr.ac.konkuk.ccslab.cm.CMUtil;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
@@ -25,6 +16,15 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistory;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashMap;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchHashMap;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchList;
 
 import java.text.*;
 

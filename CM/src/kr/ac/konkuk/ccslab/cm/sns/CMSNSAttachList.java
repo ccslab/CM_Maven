@@ -1,7 +1,8 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.sns;
 
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.CMObject;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMSNSAttachList extends CMObject {

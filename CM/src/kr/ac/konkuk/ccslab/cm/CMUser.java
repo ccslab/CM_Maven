@@ -4,6 +4,7 @@ import java.util.Calendar;
 
 import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
 
 public class CMUser extends CMObject {
 	

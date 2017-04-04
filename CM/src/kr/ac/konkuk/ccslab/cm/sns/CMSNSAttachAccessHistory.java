@@ -1,6 +1,8 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.sns;
 
 import java.util.Calendar;
+
+import kr.ac.konkuk.ccslab.cm.CMObject;
 
 public class CMSNSAttachAccessHistory extends CMObject {
 	private String m_strUserName;

@@ -12,11 +12,11 @@ import javax.swing.text.StyledDocument;
 
 import kr.ac.konkuk.ccslab.cm.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.CMGroup;
-import kr.ac.konkuk.ccslab.cm.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.CMSession;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 public class CMWinServer extends JFrame {
