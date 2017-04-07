@@ -2,7 +2,6 @@ package kr.ac.konkuk.ccslab.cm.entity;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMSessionInfo;
 
 public class CMSession extends CMSessionInfo {
 	private Vector<CMGroup> m_groupList;

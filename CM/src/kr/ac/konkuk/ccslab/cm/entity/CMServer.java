@@ -1,9 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMServerInfo;
 
 // server information managed by a client
 public class CMServer extends CMServerInfo {

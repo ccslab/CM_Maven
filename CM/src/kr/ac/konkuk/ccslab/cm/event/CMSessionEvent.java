@@ -2,9 +2,9 @@ package kr.ac.konkuk.ccslab.cm.event;
 import java.nio.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.info.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMSessionInfo;
 
 public class CMSessionEvent extends CMEvent {
 	public static final int LOGIN = 1;						// 로긴 요청 (c->s)

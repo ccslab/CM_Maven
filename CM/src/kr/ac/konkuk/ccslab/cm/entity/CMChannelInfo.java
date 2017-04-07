@@ -1,7 +1,10 @@
-package kr.ac.konkuk.ccslab.cm.info;
+package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.util.*;
 import java.util.Map.Entry;
+
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 import java.io.IOException;
 import java.nio.channels.*;
 

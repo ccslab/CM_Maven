@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm.info;
+package kr.ac.konkuk.ccslab.cm.entity;
 
 ////////////////////////////////////////////////////////
 //CMServerInfo (server info to be transfered in an event)

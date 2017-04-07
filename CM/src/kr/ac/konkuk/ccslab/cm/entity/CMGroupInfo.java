@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm.info;
+package kr.ac.konkuk.ccslab.cm.entity;
 
 public class CMGroupInfo {
 	protected String m_strGroupName;

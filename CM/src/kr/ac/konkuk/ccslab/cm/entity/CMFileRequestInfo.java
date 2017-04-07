@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm.info;
+package kr.ac.konkuk.ccslab.cm.entity;
 import java.io.*;
 
 //used by a sender

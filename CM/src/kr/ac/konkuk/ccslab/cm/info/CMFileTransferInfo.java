@@ -1,5 +1,9 @@
 package kr.ac.konkuk.ccslab.cm.info;
 import java.util.*;
+
+import kr.ac.konkuk.ccslab.cm.entity.CMFilePushInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileRequestInfo;
+
 import java.io.*;
 
 public class CMFileTransferInfo {

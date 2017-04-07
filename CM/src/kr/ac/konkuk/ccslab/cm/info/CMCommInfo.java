@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.info;
 import java.io.IOException;
 import java.nio.channels.*;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 
