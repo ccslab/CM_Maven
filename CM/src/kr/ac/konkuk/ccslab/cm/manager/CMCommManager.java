@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
@@ -15,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 
 public class CMCommManager {
 	

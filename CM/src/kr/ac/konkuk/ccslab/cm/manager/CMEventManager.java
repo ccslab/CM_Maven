@@ -4,7 +4,6 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMEventReceiver;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
@@ -27,6 +26,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 public class CMEventManager {
 

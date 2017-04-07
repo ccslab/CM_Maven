@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.thread;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;

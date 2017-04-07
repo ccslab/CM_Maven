@@ -1,8 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.stub;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMByteReceiver;
-import kr.ac.konkuk.ccslab.cm.CMEventReceiver;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
@@ -20,6 +18,8 @@ import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
+import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
+import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 import java.io.IOException;
 import java.nio.channels.*;
