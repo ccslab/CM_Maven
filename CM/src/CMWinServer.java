@@ -10,14 +10,14 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
-import kr.ac.konkuk.ccslab.cm.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.CMFileTransferInfo;
-import kr.ac.konkuk.ccslab.cm.CMGroup;
-import kr.ac.konkuk.ccslab.cm.CMInfo;
-import kr.ac.konkuk.ccslab.cm.CMInteractionInfo;
-import kr.ac.konkuk.ccslab.cm.CMSNSUserAccessSimulator;
-import kr.ac.konkuk.ccslab.cm.CMServerStub;
-import kr.ac.konkuk.ccslab.cm.CMSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMSession;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
+import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 public class CMWinServer extends JFrame {
 	//private JTextArea m_outTextArea;
