@@ -55,6 +55,12 @@ public class CMStub {
 		return m_cmInfo.getEventHandler();
 	}
 	
+	public CMUser getMyself()
+	{
+		CMUser user = m_cmInfo.getInteractionInfo().getMyself();
+		return user;
+	}
+	
 	////////////////////////////////////////////////////////////////////////
 	// add/remove channel (DatagramChannel or MulticastChannel)
 	// SocketChannel is available only in the ClientStub module

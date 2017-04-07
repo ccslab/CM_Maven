@@ -795,10 +795,10 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			// repeat the request of SNS content downloading
 			m_lStartTime = System.currentTimeMillis();
 			int nContentOffset = 0;
-			String strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+			String strUserName = m_clientStub.getMyself().getName();
 			String strWriterName = "";
 			
-			m_clientStub.requestSNSContent(strUserName, strWriterName, nContentOffset);
+			m_clientStub.requestSNSContent(strWriterName, nContentOffset);
 			if(CMInfo._CM_DEBUG)
 			{
 				//System.out.println("["+strUserName+"] requests content with offset("+nContentOffset+").");

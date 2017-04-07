@@ -6,13 +6,29 @@ import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
+/**
+ * This class provides APIs, through which a client developer can access most of the communication 
+ * services of CM.
+ * A client application can use this class in order to request client-specific communication services.
+ * 
+ * @author mlim
+ * @see CMStub, CMServerStub
+ */
 public class CMClientStub extends CMStub {
 
 	public CMClientStub()
 	{
 		super();
 	}
-	
+
+	/**
+	 * Initializes and starts the client CM.
+	 * <br> After the initialization process, the client CM also establishes a stream(TCP) connection to 
+	 * the default server, makes a default datagram(UDP) channel.
+	 *  
+	 * @return true if the initialization of CM succeeds, or false if the initialization of CM fails.
+	 * @see CMClientStub#terminateCM()
+	 */
 	public boolean startCM()
 	{
 		boolean bRet = false;
@@ -55,6 +71,13 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 	
+	/**
+	 * Terminates the client CM.
+	 * <br>A client application calls this method when it does not need to use CM. The client releases all 
+	 * the resources, logs out from the server, and disconnects all communication channels.
+	 * 
+	 * @see CMClientStub#startCM()
+	 */
 	public void terminateCM()
 	{
 		super.terminateCM();
@@ -63,23 +86,64 @@ public class CMClientStub extends CMStub {
 			System.out.println("CMClientStub.terminateCM(), succeeded.");
 	}
 	
+	/**
+	 * Connects to the default server.
+	 * <br> When a client application calls this method, the client CM opens a default stream(TCP)
+	 * channel and connects to the server CM used by the default server application.
+	 * 
+	 * @return true if the connection is established successfully, or false otherwise.
+	 * @see CMClientStub#disconnectFromServer()
+	 */
 	public boolean connectToServer()
 	{
 		return CMInteractionManager.connectDefaultServer(m_cmInfo);
 	}
 	
+	/**
+	 * Disconnects from the default server.
+	 * <br> When a client application calls this method, the client CM tries to disconnect all the  
+	 * stream(TCP) channels from the server CM used by the default server application.
+	 * 
+	 * @return true if the connection is successfully disconnected, or false otherwise.
+	 * @see CMClientStub#connectToServer()
+	 */
 	public boolean disconnectFromServer()
 	{
 		return CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
 	}
 	
+	/**
+	 * Logs in to the default server.
+	 * <br> For logging in to the server, the client first needs to register to the server by calling 
+	 * registerUser() method.
+	 * <p> The result of the login request can be caught asynchronously by the client event handler 
+	 * that deals with all the incoming CM events from the server. To check whether the login request is 
+	 * successful or not, the client event handler needs to catch the LOGIN_ACK event that belongs to 
+	 * the {@link CMSessionEvent}. 
+	 * In the LOGIN_ACK event, a result field of the Integer type is set, and the value can be retrieved by 
+	 * the {@link CMSessionEvent#isValidUser()} method. If the value is 1, the login request successfully completes 
+	 * and the requesting client is in the CM_LOGIN state. Otherwise, the login process fails.
+	 * The LOGIN_ACK event also includes other CM information that can be returned by 
+	 * {@link CMSessionEvent#getCommArch()}, {@link CMSessionEvent#isLoginScheme()}, and 
+	 * {@link CMSessionEvent#isSessionScheme()}.
+	 * <p> When the server CM accepts the login request from a client, the server CM also notifies other 
+	 * participating clients of the information of the login user with the SESSION_ADD_USER event. 
+	 * A client application can catch this event in the event handler routine if it wants to use such 
+	 * information. The login user information is the user name and the host address that can be retrieved 
+	 * by {@link CMSessionEvent#getUserName()} and {@link CMSessionEvent#getHostAddress()} methods, 
+	 * respectively.
+	 * 
+	 * @param strUserName - the user name
+	 * @param strPassword - the password
+	 * @see {@link CMClientStub#logoutCM()}, {@link CMClientStub#registerUser(String, String)}
+	 * 
+	 */
 	public void loginCM(String strUserName, String strPassword)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		
 		// check local state
-		int nUserState = interInfo.getMyself().getState();
+		int nUserState = getMyself().getState();
 		
 		// If the user is not connected to the default server, he/she connects to it first.
 		if(nUserState == CMInfo.CM_INIT)
@@ -110,7 +174,7 @@ public class CMClientStub extends CMStub {
 		se.setUDPPort(nMyUDPPort);
 		
 		// set information on the local user
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		myself.setName(strUserName);
 		myself.setPasswd(strPassword);
 		myself.setHost(strMyAddr);
@@ -123,12 +187,25 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Logs out from the default server.
+	 * 
+	 * <p> There is no result from the server about the logout request. 
+	 * <p> When the server CM completes the logout request from a client, the server CM also notifies 
+	 * other participating clients of the information of the logout user with the SESSION_REMOVE_USER event 
+	 * of the {@link CMSessionEvent}. 
+	 * A client application can catch this event in the event handler routine if it wants to use 
+	 * such information. The logout user information is just the user name, which can be returned by 
+	 * {@link CMSessionEvent#getUserName()} method.
+	 * 
+	 * @see {@link CMClientStub#loginCM()}, {@link CMClientStub#dereisterUser()}
+	 */
 	public void logoutCM()
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		
 		// check state of the local user
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		switch(myself.getState())
 		{
 		case CMInfo.CM_INIT:
@@ -158,13 +235,30 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Requests available session information from the default server.
+	 * <br> For requesting the session information, the client first needs to log in to the server by calling 
+	 * loginCM() method. 
+	 * 
+	 * <p> The result of the session request can be caught asynchronously by the client event handler 
+	 * that deals with all the incoming CM events from the server. To receive the available session 
+	 * information, the client event handler needs to catch the RESPONSE_SESSION_INFO event that belongs to 
+	 * the {@link CMSessionEvent}. 
+	 * <br> The RESPONSE_SESSION_INFO event includes the number of available sessions and the vector of 
+	 * the {@link CMSessionInfo}. Such event fields can be returned by 
+	 * the {@link CMSessionEvent#getSessionNum()} and {@link CMSessionEvent#getSessionInfoList()}.
+	 * <br> Each element of the CMSessionInfo object includes information of an available session such as 
+	 * the session name, the session address and port number to which a client can join, and the current 
+	 * number of session members who already joined the session.
+	 * 
+	 * @see {@link CMClientStub#joinSession(String)}, {@link CMClientStub#joinSession(String, String)}
+	 */
 	// request available session information from the default server
 	public void requestSessionInfo()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		
 		// check local state
-		int nUserState = interInfo.getMyself().getState();
+		int nUserState = getMyself().getState();
 		if(nUserState == CMInfo.CM_INIT || nUserState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestSessionInfo(), you should log in to the default server.");
@@ -173,7 +267,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REQUEST_SESSION_INFO);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		if(CMInfo._CM_DEBUG)
@@ -182,12 +276,62 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 
+	/**
+	 * Joins a session in the default server.
+	 * <br> For joining a session, the client first needs to log in to the server by calling 
+	 * loginCM() method. The client can get available session information by calling 
+	 * the requestSessionInfo() method.
+	 * 
+	 * <p> After the login process has completed, a client application must join a session and a group of 
+	 * CM to finish entering the CM network. The session join process is different according to whether 
+	 * the server CM adopts single session or multiple sessions in the CM server configuration file 
+	 * (cm-server.conf).
+	 * <br> After the client CM completes to join a session, it automatically proceeds to enter the first 
+	 * group of the session. For example, if the client joins ¡°session1¡±, it also enters the group, ¡°g1¡±
+	 * that is the first group of the session, ¡°session1¡±.
+	 * 
+	 * <p> When the server CM completes the session joining request from a client, the server CM also 
+	 * notifies other participating clients of the information of the new session user with 
+	 * the CHANGE_SESSION event of the {@link CMSessionEvent}. A client application can catch this event 
+	 * in the event handler routine if it wants to use such information. The CHANGE_SESSION event includes 
+	 * fields such as the user name and the session name, which can be returned by calling 
+	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
+	 * respectively.
+	 * 
+	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
+	 * other participating clients of the information of the new group user with the NEW_USER event that 
+	 * belongs to {@link CMDataEvent}.
+	 * When the client CM receives this event, it stores the information of a new group user so that it 
+	 * can figure out current group members later. A client application also can catch this event in 
+	 * the event handler routine if it wants to use such information. The NEW_USER event includes fields 
+	 * such as the current session name, the current group name, the name of the new group user, the host 
+	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
+	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
+	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
+	 * 
+	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
+	 * the new user of the information of other existing group users with the series of INHABITANT events that 
+	 * belong to {@link CMDataEvent}. 
+	 * When the client CM receives this event, it stores the information of an existing group user so that 
+	 * it can figure out current group members later. A client application also can catch this event 
+	 * in the event handler routine if it wants to use such information. The INHABITANT event includes fields 
+	 * such as the current session name, the current group name, the name of the new group user, the host 
+	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
+	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
+	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
+	 * 
+	 * @param sname - the session name that a client requests to join
+	 * @see {@link CMClientStub#joinSession(String, String)}
+	 * @see {@link CMClientStub#leaveSession()}, {@link CMClientStub#leaveSession(String)}
+	 */
 	public void joinSession(String sname)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		
 		// check local state
-		switch( interInfo.getMyself().getState() )
+		switch( getMyself().getState() )
 		{
 		case CMInfo.CM_INIT:
 			System.out.println("You should connect and login server before session join.\n"); return;
@@ -209,19 +353,41 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.JOIN_SESSION);
 		se.setHandlerSession(sname);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		se.setSessionName(sname);
 		send(se, "SERVER");
-		interInfo.getMyself().setCurrentSession(sname);
+		getMyself().setCurrentSession(sname);
 		
 		se = null;
 		return;
 	}
 	
+	/**
+	 * Leaves the current session in the default server.
+	 * 
+	 * <p> There is no result from the server about the session-leave request.
+	 * 
+	 * <p> Before leaving the current session, the server first remove the client from its current group. 
+	 * The server notifies group members of the user leave by sending the REMOVE_USER event of 
+	 * the {@link CMDataEvent}. The REMOVE_USER event includes the user name field, which can be returned 
+	 * by the {@link CMDataEvent#getUserName()} method.
+	 * 
+	 * <p> When the server CM completes the session leaving request from a client, the server CM also 
+	 * notifies other participating clients of the information of the leaving user with the CHANGE_SESSION 
+	 * event of the {@link CMSessionEvent}. A client application can catch this event in the event handler 
+	 * routine if it wants to use such information. The CHANGE_SESSION event includes 
+	 * fields such as the user name and the session name, which can be returned by calling 
+	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
+	 * respectively.
+	 * If the session name field of this event is an empty space, a client can know that the user leaves 
+	 * his/her current session. 
+	 * 
+	 * @see {@link CMClientStub#leaveSession(String)}
+	 * @see {@link CMClientStub#joinSession(String)}, {@link CMClientStub#joinSession(String, String)}
+	 */
 	public void leaveSession()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		// check local state
 		switch(myself.getState())
 		{
@@ -255,10 +421,19 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Sends location information of the client to the group members.
+	 * 
+	 * <p> The location information consists of the position and orientation. The position is represented 
+	 * by 3D coordinate (x,y,z). The orientation is represented by the quarternion (x,y,z,w) that includes 
+	 * the rotation axis and the rotation angle.  
+	 * @param pq - the new position and orientation of the client
+	 * @see CMPosition
+	 */
 	// send position info to the group members
 	public void sendUserPosition(CMPosition pq)
 	{
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = getMyself();
 		// check user's local state
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
@@ -282,10 +457,34 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Sends a chat event.
+	 * <p> A CM application can receive the chat event by catching a pre-defined CM event in the event 
+	 * handler like other events. There are two types of CM chat events. One is the SESSION_TALK event of 
+	 * the {@link CMSessionEvent} class. A client can receive this event if it at least logs in to the default 
+	 * server. The SESSION_TALK event includes fields such as the sender name, the text message, and 
+	 * the session name of the sender, which can be returned by calling {@link CMSessionEvent#getUserName()}, 
+	 * {@link CMSessionEvent#getTalk()}, and {@link CMSessionEvent#getHandlerSession()} methods, respectively. 
+	 * <br>The other event is the USER_TALK event of the {@link CMInterestEvent} class. A client can 
+	 * receive this event only if it enters a group. The USER_TALK event includes fields such as the sender 
+	 * name, the text message, the session name of the sender, and the group name of the sender, which can 
+	 * be returned by calling {@link CMInterestEvent#getUserName()}, {@link CMInterestEvent#getTalk()}, 
+	 * {@link CMInterestEvent#getHandlerSession()}, and {@link CMInterestEvent#getHandlerGroup()} methods, 
+	 * respectively.
+	 * 
+	 * @param strTarget - the receiver name.
+	 * <br>This parameter must start with ¡®/¡¯ character and it specifies the range of recipients of the chat 
+	 * message as described below:
+	 * <br> /b - The chat message is sent to the all login users.
+	 * <br> /s - The chat message is sent to the all session members of the sending user.
+	 * <br> /g - The chat message is sent to the all group members of the sending user.
+	 * <br> /name - The chat message is sent to a specific CM node of which name is ¡®name¡¯. The name can be 
+	 * another user name or a server name. If ¡®name¡¯ is SERVER, the message is sent to the default server.
+	 * @param strMessage - the chat message.
+	 */
 	public void chat(String strTarget, String strMessage)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMUser myself = interInfo.getMyself();
+		CMUser myself = getMyself();
 		
 		// check target
 		if(strTarget.equals("/b"))	// broadcast
@@ -357,12 +556,37 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Changes the current group of the client.
+	 * 
+	 * <p> When a client calls this method, the client first leaves the current group and then requests to 
+	 * enter a new group. The CM server notifies previous group members of the left user by sending 
+	 * the REMOVE_USER event of the {@link CMDataEvent}, and the server also 
+	 * notifies new group members of the new user by sending the NEW_USER event of the {@link CMDataEvent}. 
+	 * The server also notifies the changing user of the existing member information of the new group by 
+	 * sending the INHABITANT event of the {@link CMDataEvent}.
+	 * 
+	 * @param gName - the name of a group that the client wants to enter.
+	 * @see CMClientStub#joinSession(String)
+	 */
 	public void changeGroup(String gName)
 	{
 		CMGroupManager.changeGroup(gName, m_cmInfo);
 		return;
 	}
 	
+	/**
+	 * Adds a TCP channel to a server.
+	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
+	 * and multicast channels, both the client and the server can add an additional channel.
+	 * 
+	 * @param nChIndex - the channel index which must be greater than 0.
+	 * The index 0 is occupied by the default TCP channel.
+	 * @param strServer - the server name to which the client adds a TCP channel. The name of the default 
+	 * server is 'SERVER'.
+	 * 
+	 * @see CMClientStub#removeAdditionalSocketChannel(int, String)
+	 */
 	public void addSocketChannel(int nChIndex, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -409,7 +633,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_CHANNEL);
-		se.setChannelName(interInfo.getMyself().getName());
+		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nChIndex);
 		send(se, strServer, CMInfo.CM_STREAM, nChIndex);
 		
@@ -417,6 +641,14 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Removes an additional TCP channel from a server.
+	 * 
+	 * @param nChIndex - the index of the channel that is to be removed. The index must be greater than 0. 
+	 * If the default channel (0) is removed, the result is undefined. 
+	 * @param strServer - the server name from which the additional channel is removed.
+	 * @see CMClientStub#addSocketChannel(int, String)
+	 */
 	public void removeAdditionalSocketChannel(int nChIndex, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -440,21 +672,88 @@ public class CMClientStub extends CMStub {
 		scInfo.removeChannel(nChIndex);
 		return;
 	}
-	
-	/* 
-	 * To request to download the list of SNS content.
-	 * strUser: requester name
-	 * strWriter: writer name (empty string for any writer)
-	 * nOffset: content offset (0 <= nOffset < total number of required content items), (0 for the most recent content) 
+
+	/**
+	 * Requests to download the list of SNS content from the default server.
+	 * <p> The number of downloaded content items is determined by the server. In the configuration file of 
+	 * the server CM (cm-server.conf), the DOWNLOAD_NUM field specifies the number of downloaded content items.
+	 * 
+	 * <p> Each of the requested SNS content item is then sent to the requesting client as 
+	 * the CONTENT_DOWNLOAD event belongs to the {@link CMSNSEvent} class, and that can be caught in 
+	 * the client event handler. The CONTENT_DOWNLOAD event includes fields as below:
+	 * <table border=1>
+	 *   <tr>
+	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *   </tr>
+	 *   <tr> 
+	 *     <td> Event ID </td> <td> CMSNEEvent.CONTENT_DOWNLOAD </td> 
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event field </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Requester name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Requested content offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   </tr>
+	 *   <tr> 
+	 *     <td> Written date and time of the content </td> <td> {@link CMSNSEvent#getDate()} </td> 
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Writer name of the content </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Text message of the content </td> <td> {@link CMSNSEvent#getMessage()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Number of attachments </td> <td> {@link CMSNSEvent#getNumAttachedFiles()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Content ID to which this message replies (0 for no reply) </td>
+	 *     <td> {@link CMSNSEvent#getReplyOf()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Level of disclosure of the content
+	 *          <br> 0: open to public <br> 1: open only to friends <br> 2: open only to bi-friends 
+	 *          <br> 3: private 
+	 *     </td> 
+	 *     <td> {@link CMSNSEvent#getLevelOfDisclosure()} </td>
+	 *   </tr>
+	 * </table>
+	 * 
+	 * @param strWriter - the name of the writer whose content list will be downloaded.
+	 * <br> The client can designate a specific writer name or a friend group. If the parameter value is 
+	 * a specific user name, the client downloads only content that was uploaded by the specified name 
+	 * and that is accessible by the requester. If the parameter value is ¡®CM_MY_FRIEND¡¯, the client 
+	 * downloads content that was uploaded by the requester¡¯s friends. If the parameter is ¡®CM_BI_FRIEND¡¯, 
+	 * the client downloads content that was uploaded by the requester¡¯s bi-friends. If the ¡®strWriter¡¯ 
+	 * parameter is an empty string (¡°¡±), the client does not specify a writer name and it downloads all 
+	 * content that the requester is eligible to access.
+	 * @param nOffset - the offset from the beginning of the requested content list.
+	 * <br> The client can request to download some number of SNS messages starting from the nOffset-th 
+	 * most recent content. The nOffset value is greater than or equal to 0. The requested content list is 
+	 * sorted in reverse chronological order. If the searched content list has 5 items, they have index number 
+	 * starting with 0. The first item (index 0) is the most recent content, the second item (index 1) is 
+	 * the second most recent one, and so on.
+	 * 
+	 * @see CMClientStub#requestSNSContentUpload(String, String, int, int, int, ArrayList)
 	 */
-	public void requestSNSContent(String strUser, String strWriter, int nOffset)
+	public void requestSNSContent(String strWriter, int nOffset)
 	{
-		int nState = m_cmInfo.getInteractionInfo().getMyself().getState();
+		CMUser user = getMyself();
+		int nState = user.getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT )
 		{
 			System.out.println("CCMClientStub::requestSNSContents(), you must log in to the default server!");
 			return;
 		}
+		
+		String strUser = user.getName();
+		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.CONTENT_DOWNLOAD_REQUEST);
 		se.setUserName(strUser);
@@ -466,12 +765,15 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 
+	/**
+	 * 
+	 * (from here)
+	 */
 	/*
 	 * To request to download the next list of SNS content from the previous request.
 	 */
 	public void requestNextSNSContent()
 	{
-		String strUser = m_cmInfo.getInteractionInfo().getMyself().getName();
 		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
@@ -482,7 +784,7 @@ public class CMClientStub extends CMStub {
 		nOffset = nOffset+nDownContentNum;
 		
 		// request SNS content
-		requestSNSContent(strUser, strWriter, nOffset);
+		requestSNSContent(strWriter, nOffset);
 		
 		return;
 	}
@@ -492,7 +794,6 @@ public class CMClientStub extends CMStub {
 	 */
 	public void requestPreviousSNSContent()
 	{
-		String strUser = m_cmInfo.getInteractionInfo().getMyself().getName();
 		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
@@ -504,7 +805,7 @@ public class CMClientStub extends CMStub {
 		//if(nOffset < 0) nOffset = 0;
 		
 		// request SNS content
-		requestSNSContent(strUser, strWriter, nOffset);
+		requestSNSContent(strWriter, nOffset);
 		
 		return;
 	}
@@ -514,7 +815,7 @@ public class CMClientStub extends CMStub {
 	{
 		ArrayList<String> fileNameList = null;
 		int i = -1;
-		int nState = m_cmInfo.getInteractionInfo().getMyself().getState();
+		int nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT )
 		{
 			System.out.println("CMClientStub.requestSNSContentUpload(), you must log in to the default server!");
@@ -615,7 +916,7 @@ public class CMClientStub extends CMStub {
 	
 	public void requestAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
-		String strUserName = m_cmInfo.getInteractionInfo().getMyself().getName();
+		String strUserName = getMyself().getName();
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_ATTACHED_FILE);
 		se.setUserName(strUserName);
@@ -671,7 +972,7 @@ public class CMClientStub extends CMStub {
 
 	public void accessAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
-		String strUserName = m_cmInfo.getInteractionInfo().getMyself().getName();
+		String strUserName = getMyself().getName();
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.ACCESS_ATTACHED_FILE);
 		se.setUserName(strUserName);
@@ -686,7 +987,7 @@ public class CMClientStub extends CMStub {
 
 	public void requestServerInfo()
 	{
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = getMyself();
 		int state = myself.getState();
 
 		if( state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT )
@@ -834,7 +1135,7 @@ public class CMClientStub extends CMStub {
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
 		tmse.setID(CMMultiServerEvent.ADD_LOGOUT);
 		tmse.setServerName(strServer);
-		tmse.setUserName(interInfo.getMyself().getName());
+		tmse.setUserName(getMyself().getName());
 
 		send(tmse, strServer);
 
@@ -878,7 +1179,7 @@ public class CMClientStub extends CMStub {
 
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_REQUEST_SESSION_INFO);
-		mse.setUserName(interInfo.getMyself().getName());
+		mse.setUserName(getMyself().getName());
 		send(mse, strServerName);
 
 		if(CMInfo._CM_DEBUG)
@@ -939,7 +1240,7 @@ public class CMClientStub extends CMStub {
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_JOIN_SESSION);
 		mse.setServerName(strServer);
-		mse.setUserName(interInfo.getMyself().getName());
+		mse.setUserName(getMyself().getName());
 		mse.setSessionName(strSession);
 
 		// send the event
@@ -993,7 +1294,7 @@ public class CMClientStub extends CMStub {
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_LEAVE_SESSION);
 		mse.setServerName(tserver.getServerName());
-		mse.setUserName(interInfo.getMyself().getName());
+		mse.setUserName(getMyself().getName());
 		mse.setSessionName( tserver.getCurrentSessionName() );
 
 		send(mse, strServer);
@@ -1007,11 +1308,10 @@ public class CMClientStub extends CMStub {
 	
 	public void registerUser(String strName, String strPasswd)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT )
 		{
 			System.out.println("CMClientStub.registerUser(), client is not connected to "
@@ -1037,11 +1337,10 @@ public class CMClientStub extends CMStub {
 	
 	public void deregisterUser(String strName, String strPasswd)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT )
 		{
 			System.out.println("CMClientStub.deregisterUser(), client is not connected to "
@@ -1069,11 +1368,10 @@ public class CMClientStub extends CMStub {
 	
 	public void findRegisteredUser(String strName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT )
 		{
 			System.out.println("CMClientStub.findRegisteredUser(), client is not connected to "
@@ -1100,11 +1398,10 @@ public class CMClientStub extends CMStub {
 	
 	public void addNewFriend(String strFriendName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.addNewFriend(), you should log in to "
@@ -1114,7 +1411,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.ADD_NEW_FRIEND);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		send(se, "SERVER");
 		
@@ -1124,11 +1421,10 @@ public class CMClientStub extends CMStub {
 	
 	public void removeFriend(String strFriendName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.removeFriend(), you should log in to "
@@ -1138,7 +1434,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REMOVE_FRIEND);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		send(se, "SERVER");
 		
@@ -1148,11 +1444,10 @@ public class CMClientStub extends CMStub {
 	
 	public void requestFriendsList()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestFriendsList(), you should log in to "
@@ -1162,7 +1457,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_FRIEND_LIST);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		se = null;
@@ -1171,11 +1466,10 @@ public class CMClientStub extends CMStub {
 	
 	public void requestFriendRequestersList()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestFriendRequestersList(), you should log in to "
@@ -1185,7 +1479,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		se = null;
@@ -1194,11 +1488,10 @@ public class CMClientStub extends CMStub {
 	
 	public void requestBiFriendsList()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		int nState = -1;
 
 		// check if the user is connected to a default server
-		nState = interInfo.getMyself().getState();
+		nState = getMyself().getState();
 		if( nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestBiFriendsList(), you should log in to "
@@ -1208,7 +1501,7 @@ public class CMClientStub extends CMStub {
 		
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.REQUEST_BI_FRIEND_LIST);
-		se.setUserName(interInfo.getMyself().getName());
+		se.setUserName(getMyself().getName());
 		send(se, "SERVER");
 		
 		se = null;

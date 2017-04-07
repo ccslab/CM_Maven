@@ -1,8 +1,17 @@
 package kr.ac.konkuk.ccslab.cm;
 
+/**
+ * This class represents position information in 3D coordinate.
+ * @author mlim
+ *
+ */
 public class CMPoint3f {
 	public float m_x, m_y, m_z;
 	
+	/**
+	 * creates a default point object.
+	 * (x,y,z) is set to (0.0f, 0.0f, 0.0f)
+	 */
 	public CMPoint3f()
 	{
 		m_x = 0.0f;
@@ -10,6 +19,13 @@ public class CMPoint3f {
 		m_z = 0.0f;
 	}
 	
+	/**
+	 * creates an point object.
+	 * 
+	 * @param x - the value of x axis
+	 * @param y - the value of y axis
+	 * @param z - the value of z axis
+	 */
 	public CMPoint3f(float x, float y, float z)
 	{
 		m_x = x;
@@ -17,6 +33,12 @@ public class CMPoint3f {
 		m_z = z;
 	}
 	
+	/**
+	 * sets the position information of the point object.
+	 * @param x - the value of x axis
+	 * @param y - the value of y axis
+	 * @param z - the value of z axis
+	 */
 	public void setPoint(float x, float y, float z)
 	{
 		m_x = x;
@@ -24,6 +46,12 @@ public class CMPoint3f {
 		m_z = z;
 	}
 	
+	/**
+	 * calculates the Euclidean distance between this point and another point (p1).
+	 * 
+	 * @param p1 - the point object from which this object calculates distance.
+	 * @return - the distance between this object and p1.
+	 */
 	public float distance(CMPoint3f p1)
 	{
 		double sq;
@@ -33,7 +61,13 @@ public class CMPoint3f {
 		
 		return rt;
 	}
-	
+
+	/**
+	 * calculates the Euclidean squared distance between this point and another point (p1).
+	 * 
+	 * @param p1 - the point object from which this object calculates distance.
+	 * @return - the squared distance between this object and p1.
+	 */
 	public float distanceSquared(CMPoint3f p1)
 	{
 		double sq;
