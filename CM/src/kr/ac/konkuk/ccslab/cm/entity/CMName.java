@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.entity;
 
 public class CMName {
 	private String m_strName;

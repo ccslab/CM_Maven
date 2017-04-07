@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.entity;
 
 public class CMPosition {
 	public CMPoint3f m_p;

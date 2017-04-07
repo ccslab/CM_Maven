@@ -5,11 +5,11 @@ import java.nio.channels.*;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.CMEventReceiver;
-import kr.ac.konkuk.ccslab.cm.CMGroup;
-import kr.ac.konkuk.ccslab.cm.CMMember;
-import kr.ac.konkuk.ccslab.cm.CMServer;
-import kr.ac.konkuk.ccslab.cm.CMSession;
-import kr.ac.konkuk.ccslab.cm.CMUser;
+import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMServer;
+import kr.ac.konkuk.ccslab.cm.entity.CMSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMConcurrencyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMConsistencyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;

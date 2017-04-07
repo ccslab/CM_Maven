@@ -2,9 +2,8 @@ package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMMessage;
-import kr.ac.konkuk.ccslab.cm.CMUser;
-import kr.ac.konkuk.ccslab.cm.CMUtil;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -19,6 +18,7 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashMap;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 public class CMFileTransferManager {
 

@@ -2,7 +2,7 @@ package kr.ac.konkuk.ccslab.cm.event;
 
 import java.util.List;
 
-import kr.ac.konkuk.ccslab.cm.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 
 import java.util.ArrayList;
 

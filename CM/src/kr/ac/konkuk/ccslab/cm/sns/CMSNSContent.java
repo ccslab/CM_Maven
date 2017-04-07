@@ -2,7 +2,7 @@ package kr.ac.konkuk.ccslab.cm.sns;
 
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMObject;
+import kr.ac.konkuk.ccslab.cm.entity.CMObject;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMSNSContent extends CMObject {

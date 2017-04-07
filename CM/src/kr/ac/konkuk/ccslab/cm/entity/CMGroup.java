@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.entity;
 import java.nio.channels.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMChannelInfo;

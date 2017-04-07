@@ -2,7 +2,7 @@ package kr.ac.konkuk.ccslab.cm.sns;
 
 import java.util.ArrayList;
 
-import kr.ac.konkuk.ccslab.cm.CMObject;
+import kr.ac.konkuk.ccslab.cm.entity.CMObject;
 
 public class CMSNSPrefetchList extends CMObject {
 	private ArrayList<String> m_filePathList;

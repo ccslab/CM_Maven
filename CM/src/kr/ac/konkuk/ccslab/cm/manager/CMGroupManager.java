@@ -1,12 +1,12 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.CMGroup;
-import kr.ac.konkuk.ccslab.cm.CMMember;
-import kr.ac.konkuk.ccslab.cm.CMMessage;
-import kr.ac.konkuk.ccslab.cm.CMPosition;
-import kr.ac.konkuk.ccslab.cm.CMSession;
-import kr.ac.konkuk.ccslab.cm.CMUser;
+import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
+import kr.ac.konkuk.ccslab.cm.entity.CMSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;

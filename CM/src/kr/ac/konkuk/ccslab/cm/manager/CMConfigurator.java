@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -6,7 +6,6 @@ import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 
 public class CMConfigurator {
 	

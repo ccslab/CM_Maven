@@ -3,7 +3,7 @@ package kr.ac.konkuk.ccslab.cm.sns;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import kr.ac.konkuk.ccslab.cm.CMObject;
+import kr.ac.konkuk.ccslab.cm.entity.CMObject;
 
 public class CMSNSAttachAccessHistoryList extends CMObject {
 	private ArrayList<CMSNSAttachAccessHistory> m_historyList;

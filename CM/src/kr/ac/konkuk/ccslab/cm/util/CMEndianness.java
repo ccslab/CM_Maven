@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.util;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 

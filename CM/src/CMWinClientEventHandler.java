@@ -29,6 +29,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 public class CMWinClientEventHandler implements CMEventHandler{
 	//private JTextArea m_outTextArea;

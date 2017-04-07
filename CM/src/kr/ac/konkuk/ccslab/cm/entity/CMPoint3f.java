@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.entity;
 
 public class CMPoint3f {
 	public float m_x, m_y, m_z;

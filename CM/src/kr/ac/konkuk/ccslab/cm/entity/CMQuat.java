@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm;
+package kr.ac.konkuk.ccslab.cm.entity;
 
 public class CMQuat {
 	public	float m_w, m_x, m_y, m_z;
