@@ -1,7 +1,5 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;

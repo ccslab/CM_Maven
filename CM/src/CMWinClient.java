@@ -13,11 +13,9 @@ import java.util.Random;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.*;
 
-import kr.ac.konkuk.ccslab.cm.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
@@ -37,6 +35,8 @@ import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 public class CMWinClient extends JFrame {
+
+	private static final long serialVersionUID = 1L;
 	//private JTextArea m_outTextArea;
 	private JTextPane m_outTextPane;
 	private JTextField m_inTextField;
@@ -2747,7 +2747,6 @@ public class CMWinClient extends JFrame {
 	public void testDistFileProc()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		CMFileTransferInfo fileInfo = m_clientStub.getCMInfo().getFileTransferInfo();
 		String strFile = null;
 		long lFileSize = 0;
 		CMFileEvent fe = null;

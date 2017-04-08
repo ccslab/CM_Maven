@@ -1,7 +1,6 @@
 import java.io.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;

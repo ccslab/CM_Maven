@@ -20,6 +20,9 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 public class CMWinServer extends JFrame {
+
+	private static final long serialVersionUID = 1L;
+	
 	//private JTextArea m_outTextArea;
 	private JTextPane m_outTextPane;
 	private JTextField m_inTextField;

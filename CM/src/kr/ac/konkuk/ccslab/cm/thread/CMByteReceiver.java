@@ -96,7 +96,7 @@ public class CMByteReceiver extends Thread {
 		ByteBuffer bufEvent = null;
 		int ret = -1;
 		int nByteNum = -1;
-		int nReceivedByteNum = 0;
+		//int nReceivedByteNum = 0;
 		CMMessage msg = null;
 		
 		// create ByteBuffer
@@ -158,10 +158,10 @@ public class CMByteReceiver extends Thread {
 			//bufEvent = ByteBuffer.allocate(nByteNum);
 			bufEvent.clear();
 			bufEvent.putInt(nByteNum);	// put the first 4 bytes
-			nReceivedByteNum = Integer.BYTES;
+			//nReceivedByteNum = Integer.BYTES;
 			// read remaining event bytes
 			ret = readStreamBytes(sc, bufEvent);
-			nReceivedByteNum += ret;
+			//nReceivedByteNum += ret;
 			//while(bufEvent.hasRemaining() && ret != 0 && ret != -1)
 			/*
 			while(bufEvent.hasRemaining() && ret != -1)
@@ -179,9 +179,14 @@ public class CMByteReceiver extends Thread {
 			}
 			*/
 			
+			/*
 			if(CMInfo._CM_DEBUG_2)
 				System.out.println("---- CMByteReceiver.readEventBytes(), total read bytes: "
 								+nReceivedByteNum+" bytes.");
+			*/
+			if(CMInfo._CM_DEBUG_2)
+				System.out.println("---- CMByteReceiver.readEventBytes(), total read bytes: "
+								+Integer.BYTES+ret+" bytes.");
 		}
 		
 		// If the channel is disconnected, null message is delivered.
