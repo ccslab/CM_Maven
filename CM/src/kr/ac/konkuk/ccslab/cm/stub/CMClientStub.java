@@ -701,8 +701,9 @@ public class CMClientStub extends CMStub {
 	 * the server CM (cm-server.conf), the DOWNLOAD_NUM field specifies the number of downloaded content items.
 	 * 
 	 * <p> Each of the requested SNS content item is then sent to the requesting client as 
-	 * the CONTENT_DOWNLOAD event belongs to the {@link CMSNSEvent} class, and that can be caught in 
+	 * the CONTENT_DOWNLOAD event that belongs to the {@link CMSNSEvent} class, and that can be caught in 
 	 * the client event handler. The CONTENT_DOWNLOAD event includes fields as below:
+	 * 
 	 * <table border=1>
 	 *   <tr>
 	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
@@ -758,9 +759,9 @@ public class CMClientStub extends CMStub {
 	 * @param nOffset - the offset from the beginning of the requested content list.
 	 * <br> The client can request to download some number of SNS messages starting from the nOffset-th 
 	 * most recent content. The nOffset value is greater than or equal to 0. The requested content list is 
-	 * sorted in reverse chronological order. If the searched content list has 5 items, they have index number 
-	 * starting with 0. The first item (index 0) is the most recent content, the second item (index 1) is 
-	 * the second most recent one, and so on.
+	 * sorted in reverse chronological order (in reverse order of uploading time). If the searched content 
+	 * list has 5 items, they have index number starting with 0. The first item (index 0) is the most recent content, 
+	 * the second item (index 1) is the second most recent one, and so on.
 	 * 
 	 * @see CMClientStub#requestSNSContentUpload(String, String, int, int, int, ArrayList)
 	 */
@@ -788,11 +789,15 @@ public class CMClientStub extends CMStub {
 	}
 
 	/**
+	 * Requests to download the next list of SNS content.
 	 * 
-	 * (from here)
-	 */
-	/*
-	 * To request to download the next list of SNS content from the previous request.
+	 * <p> This method requests the next list after the last download request of SNS content.
+	 * If this method is called without any previous download request, it requests the most recent list of SNS content, 
+	 * which is the same as the result of {@link CMClientStub#requestSNSContent(String, int)}.
+	 * <br> If there is no more next list of SNS content, the server sends the CONTENT_DOWNLOAD_END event of 
+	 * {@link CMSNSEvent} without sending the CONTENT_DOWNLOAD event.
+	 * 
+	 * @see {@link CMClientStub#requestPreviousSNSContent()}, {@link CMClientStub#requestSNSContent(String, int)}
 	 */
 	public void requestNextSNSContent()
 	{
@@ -811,8 +816,16 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
-	/*
-	 * To request to download the previous list of SNS content from the previous request.
+	/**
+	 * Requests to download the previous list of SNS content.
+	 * 
+	 * <p> This method requests the previous list before the last download request of SNS content.
+	 * If this method is called without any previous download request, it requests the most recent list of SNS content, 
+	 * which is the same as the result of {@link CMClientStub#requestSNSContent(String, int)}.
+	 * <br> If there is no more previous list of SNS content, the server sends the CONTENT_DOWNLOAD_END event of 
+	 * {@link CMSNSEvent} without sending the CONTENT_DOWNLOAD event.
+	 * 
+	 * @see {@link CMClientStub#requestNextSNSContent()}, {@link CMClientStub#requestSNSContent(String, int)}
 	 */
 	public void requestPreviousSNSContent()
 	{
@@ -832,6 +845,16 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * @param user
+	 * @param message
+	 * @param nNumAttachedFiles
+	 * @param nReplyOf
+	 * @param nLevelOfDisclosure
+	 * @param filePathList
+	 */
 	public void requestSNSContentUpload(String user, String message, int nNumAttachedFiles, 
 			int nReplyOf, int nLevelOfDisclosure, ArrayList<String> filePathList)
 	{
