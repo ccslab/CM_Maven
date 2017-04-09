@@ -748,6 +748,37 @@ public class CMClientStub extends CMStub {
 	 *   </tr>
 	 * </table>
 	 * 
+	 * <p> In most cases, the server sends multiple CONTENT_DOWNLOAD events due to the corresponding number of SNS messages, 
+	 * and it sends the CONTENT_DOWNLOAD_END event of {@link CMSNSEvent} as the end signal of current download. 
+	 * This event contains a field that is the number of downloaded messages. A client event handler can catch this event, 
+	 * and the client can send another download request by updating the offset parameter with the number of previously 
+	 * downloaded messages. 
+	 * The detailed event fields of the CONTENT_DOWNLOAD_END event is described below.
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event ID </td> <td> CMSNSEvent.CONTENT_DOWNLOAD_END </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event field </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Number of downloaded items </td> <td> {@link CMSNSEvent#getNumContents()} </td>
+	 *   <tr>
+	 * </table>
+	 * 
 	 * @param strWriter - the name of the writer whose content list will be downloaded.
 	 * <br> The client can designate a specific writer name or a friend group. If the parameter value is 
 	 * a specific user name, the client downloads only content that was uploaded by the specified name 
