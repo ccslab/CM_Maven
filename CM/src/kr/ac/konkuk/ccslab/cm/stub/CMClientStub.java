@@ -764,6 +764,8 @@ public class CMClientStub extends CMStub {
 	 * the second item (index 1) is the second most recent one, and so on.
 	 * 
 	 * @see CMClientStub#requestSNSContentUpload(String, String, int, int, int, ArrayList)
+	 * @see CMClientStub#requestAttachedFileOfSNSContent(String)
+	 * @see CMClientStub#requestAttachedFileOfSNSContent(int, String, String)
 	 */
 	public void requestSNSContent(String strWriter, int nOffset)
 	{
@@ -846,14 +848,56 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Uploads SNS content.
+	 * <br> A client can call this method to upload a message to the default server.
 	 * 
-	 * (from here)
-	 * @param user
-	 * @param message
-	 * @param nNumAttachedFiles
-	 * @param nReplyOf
-	 * @param nLevelOfDisclosure
-	 * @param filePathList
+	 * <p> If the server receives the content upload request, it stores the requested message with the user name, 
+	 * the index of the content, the upload time, the number of attachments, the reply ID, and the level of disclosure. 
+	 * If the content has attached files, the client separately transfers them to the server. After the upload task is 
+	 * completed, the server sends the CONTENT_UPLOAD_RESPONSE event of {@link CMSNSEvent} to the requesting client 
+	 * so that the client handler can catch the result of the request. 
+	 * The detailed event fields of the CONTENT_UPLOAD_RESPONSE event is described below:
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *   </tr>
+	 *   <tr> 
+	 *     <td> Event ID </td> <td> CMSNEEvent.CONTENT_UPLOAD_RESPONSE </td> 
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event field </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Date and time </td> <td> {@link CMSNSEvent#getDate()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *   </tr>
+	 * </table>  
+	 * 
+	 * @param user - the name of a user who uploads a message
+	 * @param message - the text message
+	 * @param nNumAttachedFiles - the number of attached files in this message
+	 * <br> The value of nNumAttachedFiles must be the same as the number of elements in a given file path list 
+	 * as the last parameter, filePathList.
+	 * @param nReplyOf - an ID (greater than 0) of content to which this message replies
+	 * <br> If the value is 0, it means that the uploaded content is not a reply but an original one.
+	 * @param nLevelOfDisclosure - the level of disclosure (LoD) of the uploaded content
+	 * <br> CM provides four levels of disclosure of content from 0 to 3. LoD 0 is to open the uploaded content to public. 
+	 * LoD 1 allows only users who added the uploading user as friends to access the uploaded content. 
+	 * LoD 2 allows only bi-friends of the uploading user to access the uploaded content. (Refer to the friend management 
+	 * section for details of different friend concepts.) 
+	 * LoD 3 does not open the uploaded content and makes it private.
+	 * @param filePathList - the list of attached files
+	 * 
+	 * @see {@link CMClientStub#requestSNSContent(String, int)} 
 	 */
 	public void requestSNSContentUpload(String user, String message, int nNumAttachedFiles, 
 			int nReplyOf, int nLevelOfDisclosure, ArrayList<String> filePathList)
@@ -919,6 +963,12 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * @param strFileName
+	 * @return
+	 */
 	public boolean requestAttachedFileOfSNSContent(String strFileName)
 	{
 		int nContentID = -1;
