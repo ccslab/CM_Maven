@@ -13,6 +13,13 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		m_fos = null;
 	}
 	
+	public CMRecvFileInfo(String strFile, long lSize)
+	{
+		super(strFile, lSize, -1);
+		m_lRecvSize = -1;
+		m_fos = null;
+	}
+	
 	// set/get methods
 	
 	public void setRecvSize(long lSize)

@@ -23,6 +23,18 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_bReceivedAck = false;
 	}
 	
+	public CMSendFileInfo(String strFile, long lSize)
+	{
+		super(strFile, lSize, -1);
+		m_strRequesterName = null;
+		m_strFilePath = null;
+		m_fileSendThread = null;
+		m_fis = null;
+		m_bStarted = false;
+		m_bSentAll = false;
+		m_bReceivedAck = false;
+	}
+	
 	// set/get method
 	
 	public void setRequesterName(String strName)
