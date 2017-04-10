@@ -2,7 +2,7 @@ package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.entity.CMFilePushInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileRequestInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -445,7 +445,7 @@ public class CMFileTransferManager {
 		// init received size
 		long lRecvSize = 0;
 		// add the received file info in the push list
-		fInfo.addFilePushInfo(fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, fos);
+		fInfo.addRecvFileInfo(fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, fos);
 		
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
@@ -584,23 +584,23 @@ public class CMFileTransferManager {
 		}
 		*/
 
-		// find info in the push file list
-		CMFilePushInfo pushInfo = fInfo.findFilePushInfo(fe.getFileName(), fe.getContentID());
-		if( pushInfo == null )
+		// find info in the recv file list
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileName(), fe.getContentID());
+		if( recvInfo == null )
 		{
 			System.err.println("CMFileTransferManager.processCONTINUE_FILE_TRANSFER(), "
-					+ "file push info for file("+fe.getFileName()+") not found.");
+					+ "recv file info for file("+fe.getFileName()+") not found.");
 			return;
 		}
 
 		try {
-			pushInfo.m_fos.write(fe.getFileBlock(), 0, fe.getBlockSize());
+			recvInfo.getFileOutputStream().write(fe.getFileBlock(), 0, fe.getBlockSize());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
-		pushInfo.m_lRecvSize += fe.getBlockSize();
+		recvInfo.setRecvSize(recvInfo.getRecvSize()+fe.getBlockSize());
 
 		/*
 		if(CMInfo._CM_DEBUG)
@@ -617,17 +617,17 @@ public class CMFileTransferManager {
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		
-		// find info from push file list
-		CMFilePushInfo pushInfo = fInfo.findFilePushInfo(fe.getFileName(), fe.getContentID());
-		if(pushInfo == null)
+		// find info from recv file list
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileName(), fe.getContentID());
+		if(recvInfo == null)
 		{
-			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), push file info "
+			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), recv file info "
 					+"for file("+fe.getFileName()+") not found.");
 			return;
 		}
 		// close received file descriptor
 		try {
-			pushInfo.m_fos.close();
+			recvInfo.getFileOutputStream().close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -637,11 +637,11 @@ public class CMFileTransferManager {
 		{
 			System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER(), sender("+fe.getSenderName()
 					+"), file("+fe.getFileName()+"), contentID("+fe.getContentID()+"), file size("
-					+pushInfo.m_lFileSize+"), received size("+pushInfo.m_lRecvSize+").");
+					+recvInfo.getFileSize()+"), received size("+recvInfo.getRecvSize()+").");
 		}
 
 		// remove info from push file list
-		fInfo.removeFilePushInfo(fe.getFileName(), fe.getContentID());
+		fInfo.removeRecvFileInfo(fe.getFileName(), fe.getContentID());
 		
 		// send ack
 		CMFileEvent feAck = new CMFileEvent();

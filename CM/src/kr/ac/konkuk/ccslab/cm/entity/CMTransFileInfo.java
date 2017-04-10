@@ -14,35 +14,35 @@ public class CMTransFileInfo {
 	
 	// get/set methods
 	
-	void setFileName(String strName)
+	public void setFileName(String strName)
 	{
 		m_strFileName = strName;
 		return;
 	}
 	
-	String getFileName()
+	public String getFileName()
 	{
 		return m_strFileName;
 	}
 	
-	void setFileSize(long lSize)
+	public void setFileSize(long lSize)
 	{
 		m_lFileSize = lSize;
 		return;
 	}
 	
-	long getFileSize()
+	public long getFileSize()
 	{
 		return m_lFileSize;
 	}
 	
-	void setContentID(int nID)
+	public void setContentID(int nID)
 	{
 		m_nContentID = nID;
 		return;
 	}
 	
-	int getContentID()
+	public int getContentID()
 	{
 		return m_nContentID;
 	}

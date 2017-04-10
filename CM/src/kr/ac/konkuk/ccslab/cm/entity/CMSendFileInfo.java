@@ -13,6 +13,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 
 	public CMSendFileInfo()
 	{
+		super();
 		m_strUserName = null;
 		m_strFilePath = null;
 		m_fileSendThread = null;
@@ -24,79 +25,79 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	
 	// set/get method
 	
-	void setUserName(String strName)
+	public void setUserName(String strName)
 	{
 		m_strUserName = strName;
 		return;
 	}
 	
-	String getUserName()
+	public String getUserName()
 	{
 		return m_strUserName;
 	}
 	
-	void setFilePath(String strPath)
+	public void setFilePath(String strPath)
 	{
 		m_strFilePath = strPath;
 		return;
 	}
 	
-	String getFilePath()
+	public String getFilePath()
 	{
 		return m_strFilePath;
 	}
 	
-	void setFileSendThread(Thread thread)
+	public void setFileSendThread(Thread thread)
 	{
 		m_fileSendThread = thread;
 		return;
 	}
 	
-	Thread getFileSendThread()
+	public Thread getFileSendThread()
 	{
 		return m_fileSendThread;
 	}
 	
-	void setFileInputStream(FileInputStream fis)
+	public void setFileInputStream(FileInputStream fis)
 	{
 		m_fis = fis;
 		return;
 	}
 	
-	FileInputStream getFileInputStream()
+	public FileInputStream getFileInputStream()
 	{
 		return m_fis;
 	}
 	
-	void setStartedToSend(boolean bStarted)
+	public void setStartedToSend(boolean bStarted)
 	{
 		m_bStarted = bStarted;
 		return;
 	}
 	
-	boolean isStartedToSend()
+	public boolean isStartedToSend()
 	{
 		return m_bStarted;
 	}
 	
-	void setSentAll(boolean bSentAll)
+	public void setSentAll(boolean bSentAll)
 	{
 		m_bSentAll = bSentAll;
 		return;
 	}
 	
-	boolean isSentAll()
+	public boolean isSentAll()
 	{
 		return m_bSentAll;
 	}
 	
-	void setReceivedAck(boolean bAck)
+	public void setReceivedAck(boolean bAck)
 	{
 		m_bReceivedAck = bAck;
 		return;
 	}
 	
-	boolean isReceivedAck()
+	public boolean isReceivedAck()
 	{
 		return m_bReceivedAck;
 	}

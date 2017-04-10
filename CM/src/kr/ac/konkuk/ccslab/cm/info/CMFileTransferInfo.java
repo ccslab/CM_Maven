@@ -1,21 +1,22 @@
 package kr.ac.konkuk.ccslab.cm.info;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.entity.CMFilePushInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileRequestInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 
 import java.io.*;
 
 public class CMFileTransferInfo {
 	private String m_strFilePath;
 	private Vector<CMFileRequestInfo> m_requestList;
-	private Vector<CMFilePushInfo> m_pushList;
+	private Vector<CMRecvFileInfo> m_recvList;
 	
 	public CMFileTransferInfo()
 	{
 		m_strFilePath = null;
 		m_requestList = new Vector<CMFileRequestInfo>();
-		m_pushList = new Vector<CMFilePushInfo>();
+		//m_pushList = new Vector<CMFilePushInfo>();
+		m_recvList = new Vector<CMRecvFileInfo>();
 	}
 	
 	// set/get methods
@@ -102,58 +103,58 @@ public class CMFileTransferInfo {
 
 	// add/remove/find file push info
 
-	public boolean addFilePushInfo(String fName, long lSize, int nContentID, long lRecvSize, 
+	public boolean addRecvFileInfo(String fName, long lSize, int nContentID, long lRecvSize, 
 			FileOutputStream fos)
 	{
-		CMFilePushInfo pInfo = findFilePushInfo(fName, nContentID);
-		if( pInfo != null )
+		CMRecvFileInfo rInfo = findRecvFileInfo(fName, nContentID);
+		if( rInfo != null )
 		{
-			System.out.println("CMFileTransferInfo.addFilePushInfo(), already exists.");
+			System.out.println("CMFileTransferInfo.addRecvFileInfo(), already exists.");
 			System.out.println("file name: "+fName);
 			return false;
 		}
 
-		pInfo = new CMFilePushInfo();
-		pInfo.m_strFileName = fName;
-		pInfo.m_lFileSize = lSize;
-		pInfo.m_nContentID = nContentID;
-		pInfo.m_lRecvSize = lRecvSize;
-		pInfo.m_fos = fos;
+		rInfo = new CMRecvFileInfo();
+		rInfo.setFileName(fName);
+		rInfo.setFileSize(lSize);
+		rInfo.setContentID(nContentID);
+		rInfo.setRecvSize(lRecvSize);
+		rInfo.setFileOutputStream(fos);
 
-		m_pushList.addElement(pInfo);
+		m_recvList.addElement(rInfo);
 		return true;
 	}
 
-	public CMFilePushInfo findFilePushInfo(String fName, int nContentID)
+	public CMRecvFileInfo findRecvFileInfo(String fName, int nContentID)
 	{
-		CMFilePushInfo pInfo = null;
+		CMRecvFileInfo rInfo = null;
 		boolean bFound = false;
-		Iterator<CMFilePushInfo> iterPushList = m_pushList.iterator();
+		Iterator<CMRecvFileInfo> iterPushList = m_recvList.iterator();
 
 		while(iterPushList.hasNext() && !bFound)
 		{
-			pInfo = iterPushList.next();
-			if(fName.equals(pInfo.m_strFileName) && nContentID == pInfo.m_nContentID)
+			rInfo = iterPushList.next();
+			if(fName.equals(rInfo.getFileName()) && nContentID == rInfo.getContentID())
 				bFound = true;
 		}
 
 		if(bFound)
-			return pInfo;
+			return rInfo;
 		return null;
 	}
 
-	public boolean removeFilePushInfo(String fName, int nContentID)
+	public boolean removeRecvFileInfo(String fName, int nContentID)
 	{
-		CMFilePushInfo pInfo = null;
-		boolean bFound = false;
-		Iterator<CMFilePushInfo> iterPushList = m_pushList.iterator();
+		CMRecvFileInfo rInfo = null;
+		boolean bFound = false;		
+		Iterator<CMRecvFileInfo> iterRecvList = m_recvList.iterator();
 		
-		while(iterPushList.hasNext() && !bFound)
+		while(iterRecvList.hasNext() && !bFound)
 		{
-			pInfo = iterPushList.next();
-			if(fName.equals(pInfo.m_strFileName) && nContentID == pInfo.m_nContentID)
+			rInfo = iterRecvList.next();
+			if(fName.equals(rInfo.getFileName()) && nContentID == rInfo.getContentID())
 			{
-				iterPushList.remove();
+				iterRecvList.remove();
 				bFound = true;
 			}
 		}
@@ -161,8 +162,8 @@ public class CMFileTransferInfo {
 		return bFound;
 	}
 	
-	public Vector<CMFilePushInfo> getFilePushList()
+	public Vector<CMRecvFileInfo> getRecvFileList()
 	{
-		return m_pushList;
+		return m_recvList;
 	}
 }

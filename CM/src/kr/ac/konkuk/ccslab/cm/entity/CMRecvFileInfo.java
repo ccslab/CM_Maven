@@ -8,30 +8,31 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 
 	public CMRecvFileInfo()
 	{
+		super();
 		m_lRecvSize = -1;
 		m_fos = null;
 	}
 	
 	// set/get methods
 	
-	void setRecvSize(long lSize)
+	public void setRecvSize(long lSize)
 	{
 		m_lRecvSize = lSize;
 		return;
 	}
 	
-	long getRecvSize()
+	public long getRecvSize()
 	{
 		return m_lRecvSize;
 	}
 	
-	void setFileOutputStream(FileOutputStream fos)
+	public void setFileOutputStream(FileOutputStream fos)
 	{
 		m_fos = fos;
 		return;
 	}
 	
-	FileOutputStream getFileOutputStream()
+	public FileOutputStream getFileOutputStream()
 	{
 		return m_fos;
 	}
