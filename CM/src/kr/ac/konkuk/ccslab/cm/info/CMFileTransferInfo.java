@@ -1,21 +1,20 @@
 package kr.ac.konkuk.ccslab.cm.info;
 import java.util.*;
 
-import kr.ac.konkuk.ccslab.cm.entity.CMFileRequestInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 
 import java.io.*;
 
 public class CMFileTransferInfo {
 	private String m_strFilePath;
-	private Vector<CMFileRequestInfo> m_requestList;
+	private Vector<CMSendFileInfo> m_sendList;
 	private Vector<CMRecvFileInfo> m_recvList;
 	
 	public CMFileTransferInfo()
 	{
 		m_strFilePath = null;
-		m_requestList = new Vector<CMFileRequestInfo>();
-		//m_pushList = new Vector<CMFilePushInfo>();
+		m_sendList = new Vector<CMSendFileInfo>();
 		m_recvList = new Vector<CMRecvFileInfo>();
 	}
 	
@@ -32,63 +31,63 @@ public class CMFileTransferInfo {
 	
 	// add/remove/find request info
 	
-	public boolean addFileRequestInfo(String uName, String fPath, long lSize, int nContentID, Thread fThread)
+	public boolean addSendFileInfo(String uName, String fPath, long lSize, int nContentID, Thread fThread)
 	{
-		CMFileRequestInfo rInfo = findFileRequestInfo(uName, fPath, nContentID);
+		CMSendFileInfo sInfo = findSendFileInfo(uName, fPath, nContentID);
 
-		if( rInfo != null )
+		if( sInfo != null )
 		{
-			System.out.println("CMFileTransferInfo.addFileRequestInfo(), already exists.");
-			System.out.println("user name: "+uName+", file path: "+fPath+", content ID: "+nContentID);
+			System.out.println("CMFileTransferInfo.addSendFileInfo(), already exists.");
+			System.out.println("requester name: "+uName+", file path: "+fPath+", content ID: "+nContentID);
 			return false;
 		}
 		
-		rInfo = new CMFileRequestInfo();
-		rInfo.m_strUserName = uName;
-		rInfo.m_strFilePath = fPath;
-		rInfo.m_lFileSize = lSize;
-		rInfo.m_nContentID = nContentID;
-		rInfo.m_fileThread = fThread;
+		sInfo = new CMSendFileInfo();
+		sInfo.setRequesterName(uName);
+		sInfo.setFilePath(fPath);
+		sInfo.setFileSize(lSize);
+		sInfo.setContentID(nContentID);
+		sInfo.setFileSendThread(fThread);
 		
-		m_requestList.addElement(rInfo);
+		m_sendList.addElement(sInfo);
 
 		return true;
 	}
 
-	public CMFileRequestInfo findFileRequestInfo(String uName, String fName, int nContentID)
+	public CMSendFileInfo findSendFileInfo(String uName, String fName, int nContentID)
 	{
-		CMFileRequestInfo rInfo = null;
+		CMSendFileInfo sInfo = null;
 		boolean bFound = false;
-		Iterator<CMFileRequestInfo> iterRequestList = m_requestList.iterator();
+		Iterator<CMSendFileInfo> iterSendList = m_sendList.iterator();
 		
-		while(iterRequestList.hasNext() && !bFound)
+		while(iterSendList.hasNext() && !bFound)
 		{
-			rInfo = iterRequestList.next();
+			sInfo = iterSendList.next();
 			//if(uName.equals(rInfo.m_strUserName) && fName.equals(rInfo.m_strFileName))
-			if(uName.equals(rInfo.m_strUserName) && rInfo.m_strFilePath.endsWith(fName) && 
-					nContentID == rInfo.m_nContentID)	// not sure
+			if(uName.equals(sInfo.getRequesterName()) && sInfo.getFilePath().endsWith(fName) && 
+					nContentID == sInfo.getContentID())	// not sure
 				bFound = true;
 		}
 
 		if(bFound)
-			return rInfo;
+			return sInfo;
 		return null;
 	}
 
 	public boolean removeFileRequestInfo(String uName, String fName, int nContentID)
 	{
-		CMFileRequestInfo rInfo = null;
+		CMSendFileInfo sInfo = null;
 		boolean bFound = false;
-		Iterator<CMFileRequestInfo> iterRequestList = m_requestList.iterator();
+		Iterator<CMSendFileInfo> iterSendList = m_sendList.iterator();
 		
-		while(iterRequestList.hasNext() && !bFound)
+		while(iterSendList.hasNext() && !bFound)
 		{
-			rInfo = iterRequestList.next();
+			sInfo = iterSendList.next();
 			//if(uName.equals(rInfo.m_strUserName) && fName.equals(rInfo.m_strFileName))
-			if(uName.equals(rInfo.m_strUserName) && rInfo.m_strFilePath.endsWith(fName) &&
-					nContentID == rInfo.m_nContentID)	// not sure
+			if(uName.equals(sInfo.getRequesterName()) && sInfo.getFilePath().endsWith(fName) &&
+					nContentID == sInfo.getContentID())	// not sure
 			{
-				iterRequestList.remove();
+				iterSendList.remove();
 				bFound = true;
 			}
 		}
@@ -96,12 +95,12 @@ public class CMFileTransferInfo {
 		return bFound;
 	}
 	
-	public Vector<CMFileRequestInfo> getFileRequestList()
+	public Vector<CMSendFileInfo> getSendFileList()
 	{
-		return m_requestList;
+		return m_sendList;
 	}
 
-	// add/remove/find file push info
+	// add/remove/find recv file info
 
 	public boolean addRecvFileInfo(String fName, long lSize, int nContentID, long lRecvSize, 
 			FileOutputStream fos)

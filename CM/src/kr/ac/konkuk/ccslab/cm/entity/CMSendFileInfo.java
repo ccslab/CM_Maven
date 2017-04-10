@@ -3,7 +3,7 @@ package kr.ac.konkuk.ccslab.cm.entity;
 import java.io.FileInputStream;
 
 public class CMSendFileInfo extends CMTransFileInfo {
-	private String m_strUserName;	// the name of a sender who is sending the file
+	private String m_strRequesterName;	// the requester name of the sent file
 	private String m_strFilePath;	// the path of the sent file
 	private Thread m_fileSendThread;
 	private FileInputStream m_fis;	// the file input stream that is used to read data of the sent file
@@ -14,7 +14,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public CMSendFileInfo()
 	{
 		super();
-		m_strUserName = null;
+		m_strRequesterName = null;
 		m_strFilePath = null;
 		m_fileSendThread = null;
 		m_fis = null;
@@ -25,15 +25,15 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	
 	// set/get method
 	
-	public void setUserName(String strName)
+	public void setRequesterName(String strName)
 	{
-		m_strUserName = strName;
+		m_strRequesterName = strName;
 		return;
 	}
 	
-	public String getUserName()
+	public String getRequesterName()
 	{
-		return m_strUserName;
+		return m_strRequesterName;
 	}
 	
 	public void setFilePath(String strPath)

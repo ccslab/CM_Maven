@@ -3,7 +3,7 @@ import java.io.*;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMFileRequestInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
@@ -103,10 +103,10 @@ public class CMFileTransferManager {
 		}
 		long lFileSize = file.length();
 		
-		// add file request information
+		// add send file information
 		// target(requester) name, file path, size
 		// thread handle will be added when it starts to transmit file (not yet)
-		fInfo.addFileRequestInfo(strReceiver, strFilePath, lFileSize, nContentID, null);
+		fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID, null);
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
@@ -354,10 +354,10 @@ public class CMFileTransferManager {
 		// get the file size
 		long lFileSize = file.length();
 		
-		// add file request information
+		// add send file information
 		// requester name, file path, size
 		// thread reference will be added when it starts to transmit file (not yet)
-		fInfo.addFileRequestInfo(fe.getUserName(), strFullPath, lFileSize, fe.getContentID(), null);
+		fInfo.addSendFileInfo(fe.getUserName(), strFullPath, lFileSize, fe.getContentID(), null);
 
 		// start file transfer process
 		CMFileEvent feStart = new CMFileEvent();
@@ -474,21 +474,21 @@ public class CMFileTransferManager {
 		String strSenderName = null;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 
-		CMFileRequestInfo reqInfo = null;
+		CMSendFileInfo sInfo = null;
 		boolean bFound = false;
-		Iterator<CMFileRequestInfo> iter = fInfo.getFileRequestList().iterator();
+		Iterator<CMSendFileInfo> iter = fInfo.getSendFileList().iterator();
 		while(iter.hasNext() && !bFound)
 		{
-			reqInfo = iter.next();
-			if(!reqInfo.m_bStarted)
+			sInfo = iter.next();
+			if(!sInfo.isStartedToSend())
 			{
 				bFound = true;
-				reqInfo.m_bStarted = true;
-				strRequester = reqInfo.m_strUserName;
-				strFullFileName = reqInfo.m_strFilePath;
+				sInfo.setStartedToSend(true);
+				strRequester = sInfo.getRequesterName();
+				strFullFileName = sInfo.getFilePath();
 				strFileName = getFileNameFromPath(strFullFileName);
-				lFileSize = reqInfo.m_lFileSize;
-				nContentID = reqInfo.m_nContentID;
+				lFileSize = sInfo.getFileSize();
+				nContentID = sInfo.getContentID();
 			}
 		}
 		
@@ -496,7 +496,7 @@ public class CMFileTransferManager {
 
 		// open the file
 		try {
-			reqInfo.m_fis = new FileInputStream(strFullFileName);
+			sInfo.setFileInputStream(new FileInputStream(strFullFileName));
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -516,7 +516,7 @@ public class CMFileTransferManager {
 		while(lRemainBytes > 0)
 		{
 			try {
-				nReadBytes = reqInfo.m_fis.read(fileBlock);
+				nReadBytes = sInfo.getFileInputStream().read(fileBlock);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -538,7 +538,7 @@ public class CMFileTransferManager {
 		
 		if(lSentBytes == lFileSize)
 		{
-			reqInfo.m_bSentAll = true;
+			sInfo.setSentAll(true);
 		}
 		else
 		{
@@ -549,7 +549,7 @@ public class CMFileTransferManager {
 		
 		// close fis
 		try {
-			reqInfo.m_fis.close();
+			sInfo.getFileInputStream().close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -766,11 +766,11 @@ public class CMFileTransferManager {
 		String strFileName = fe.getFileName();
 		int nContentID = fe.getContentID();
 		
-		// find completed request info
-		CMFileRequestInfo reqInfo = fInfo.findFileRequestInfo(strUserName, strFileName, nContentID);
-		if(reqInfo == null)
+		// find completed send info
+		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strUserName, strFileName, nContentID);
+		if(sInfo == null)
 		{
-			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_ACK(), request info not found");
+			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_ACK(), send info not found");
 			System.err.println("requester("+strUserName+"), file("+strFileName+"), content ID("+nContentID+").");
 		}
 		else
