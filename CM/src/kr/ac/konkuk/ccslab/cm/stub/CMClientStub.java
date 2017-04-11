@@ -746,6 +746,9 @@ public class CMClientStub extends CMStub {
 	 *     </td> 
 	 *     <td> {@link CMSNSEvent#getLevelOfDisclosure()} </td>
 	 *   </tr>
+	 *   <tr>
+	 *     <td> List of attached file names </td> <td> {@link CMSNSEvent#getFileNameList()} </td>
+	 *   </tr>
 	 * </table>
 	 * 
 	 * <p> In most cases, the server sends multiple CONTENT_DOWNLOAD events due to the corresponding number of SNS messages, 
@@ -995,10 +998,61 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Requests an attached file of SNS content.
 	 * 
-	 * (from here)
-	 * @param strFileName
-	 * @return
+	 * <p> The client can request to download a file that is attached to a downloaded SNS content item from the server.
+	 * <br> After the client request to download SNS content by the {@link CMClientStub#requestSNSContent(String, int)} 
+	 * method, all attached files are automatically downloaded from the server. If an attached file is not available at 
+	 * the server, only the file name is downloaded so that the client can separately request such a file from 
+	 * the server later.
+	 * 
+	 * <p> If the server is requested to download an attached file, it sends the RESPONSE_ATTACHED_FILE event of 
+	 * the {@link CMSNSEvent}. The client event handler can catch this event, and can figure out the result of 
+	 * the request by getting the return code. If the return code is 1, the requested file is available at the server, 
+	 * and the server separately sends the requested file to the client using the {@link CMStub#pushFile(String, String)} 
+	 * method. If the return code is 0, the requested file does not exist at the server.
+	 * <br> The detailed event fields of the RESPONSE_ATTACHED_FILE event are described below:
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 *   <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
+	 * </tr>
+	 * <tr>
+	 *   <td> Event ID </td> <td> CMSNSEvent.RESPONSE_ATTACHED_FILE </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> Event field </td> <td> Get method </td> <td> Description </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
+	 *   <td> The requesting user name </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   <td> The ID of the SNS content that attached the requested file </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   <td> The writer name of the SNS content </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> File name </td> <td> {@link CMSNSEvent#getFileName()} </td>
+	 *   <td> The name of the attached file </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
+	 *   <td> The request result. If the value is 1, the requested file will be delivered to the client. If the value 
+	 *   is 0, the server does nothing further for the request. </td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param strFileName - the requested file name
+	 * <br> The list of attached file names can be got in the CONTENT_DOWNLOAD event of {@link CMSNSEvent} that is sent from 
+	 * the server. After the client event handler catch this event and get the list of attached file names, it can choose 
+	 * a file name that needs to separately download from the server.
+	 * 
+	 * @return true if the request is successfully sent, or false otherwise
+	 * @see {@link CMClientStub#requestAttachedFileOfSNSContent(int, String, String)}
 	 */
 	public boolean requestAttachedFileOfSNSContent(String strFileName)
 	{
@@ -1040,6 +1094,13 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * @param nContentID
+	 * @param strWriterName
+	 * @param strFileName
+	 */
 	public void requestAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
 		String strUserName = getMyself().getName();
