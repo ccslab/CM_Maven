@@ -21,7 +21,14 @@ public class CMConfigurator {
 		confInfo.setMulticastAddress(CMConfigurator.getConfiguration(fName, "MULTICAST_ADDR"));
 		confInfo.setMulticastPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "MULTICAST_PORT")));
 		//confInfo.setMyAddress(InetAddress.getLocalHost().getHostAddress());
-		confInfo.setMyAddress(CMCommManager.getLocalIP());
+		if(confInfo.getServerAddress().equals("localhost"))
+		{
+			confInfo.setMyAddress("localhost");
+		}
+		else
+		{
+			confInfo.setMyAddress(CMCommManager.getLocalIP());
+		}
 				
 		// default download directory
 		confInfo.setFilePath(CMConfigurator.getConfiguration(fName, "FILE_PATH"));
