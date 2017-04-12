@@ -25,6 +25,10 @@ public class CMConfigurator {
 		{
 			confInfo.setMyAddress("localhost");
 		}
+		else if(confInfo.getServerAddress().equals("127.0.0.1"))
+		{
+			confInfo.setMyAddress("127.0.0.1");
+		}
 		else
 		{
 			confInfo.setMyAddress(CMCommManager.getLocalIP());
