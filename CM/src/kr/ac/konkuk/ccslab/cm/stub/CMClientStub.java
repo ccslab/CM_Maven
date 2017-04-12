@@ -1121,6 +1121,50 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 
+	/**
+	 * Informs the server that the attached file has been accessed by the client.
+	 * 
+	 * <p> The client can call this method to report its access history of an attached file to the server. The access 
+	 * report is sent to the server as the ACCESS_ATTACHED_FILE event of the {@link CMSNSEvent}.  
+	 * If the server receives the event, it can use the access information for the analysis of the history of 
+	 * client behavior. The server event handler can catch the event.
+	 * 
+	 * <p> The detailed event fields of the ACCESS_ATTACHED_FILE event are described below:
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 *   <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
+	 * </tr>
+	 * <tr>
+	 *   <td> Event ID </td> <td> CMSNSEvent.ACCESS_ATTACHED_FILE </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> Event field </td> <td> Get method </td> <td> Description </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
+	 *   <td> The name of the file-accessing user </td> 
+	 * </tr>
+	 * <tr>
+	 *   <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   <td> ID of the SNS content of which attached file is accessed </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   <td> The writer name of the SNS content of which attached file is accessed </td>
+	 * </tr>
+	 * <tr>
+	 *   <td> Attached file name </td> <td> {@link CMSNSEvent#getFileName()} </td>
+	 *   <td> The name of an attached file that the user accessed </td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param strFileName - the name of an attached file that the user accessed
+	 * @return true if the file access information is successfully sent to the server and if the corresponding 
+	 * SNS content is found at the client. Otherwise, the return value is false.
+	 * 
+	 * @see {@link CMClientStub#accessAttachedFileOfSNSContent(int, String, String)}
+	 */
 	// find the downloaded content and inform the server that the attached file is accessed by the client
 	public boolean accessAttachedFileOfSNSContent(String strFileName)
 	{
@@ -1162,6 +1206,18 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 
+	/**
+	 * Informs the server that the attached file has been accessed by the client.
+	 * 
+	 * <p>	The detailed information about the access report of an attached file to the server can be found in 
+	 * the {@link CMClientStub#accessAttachedFileOfSNSContent(String)} method.
+	 * 
+	 * @param nContentID - the ID of the SNS content of which attached file is accessed
+	 * @param strWriterName - the writer name of the SNS content of which attached file is accessed
+	 * @param strFileName - the name of an attached file that the user accessed
+	 * 
+	 * @see {@link CMClientStub#accessAttachedFileOfSNSContent(String)}
+	 */
 	public void accessAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
 		String strUserName = getMyself().getName();
