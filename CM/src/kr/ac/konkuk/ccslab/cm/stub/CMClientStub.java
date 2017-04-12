@@ -1095,11 +1095,16 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Requests an attached file of SNS content.
 	 * 
-	 * (from here)
-	 * @param nContentID
-	 * @param strWriterName
-	 * @param strFileName
+	 * <p> The detailed information about the request for an attached file can be found in 
+	 * the {@link CMClientStub#requestAttachedFileOfSNSContent(String)} method.
+	 * 
+	 * @param nContentID - the ID of SNS content to which the requested file is attached
+	 * @param strWriterName - the name of a requesting user
+	 * @param strFileName - the requested file name
+	 * 
+	 * @see {@link CMClientStub#requestAttachedFileOfSNSContent(String)}
 	 */
 	public void requestAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
