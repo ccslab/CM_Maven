@@ -25,14 +25,34 @@ import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 import java.io.IOException;
 import java.nio.channels.*;
 
+/**
+ * This class provides CM APIs of the common communication services that can be called by both the server and the client 
+ * applications.
+ * This class is the super class of the CMClientStub and the CMServerStub classes.
+ * Application developers should generate an instance of the two sub-classes instead of the CMStub class.
+ * 
+ * @author mlim
+ * @see {@link CMClientStub}, {@link CMServerStub}
+ */
 public class CMStub {
 	protected CMInfo m_cmInfo;
 	
+	/**
+	 * Creates an instance of the CMStub class.
+	 * 
+	 * <p> This method is called first when the sub-classes of the CMStub class call the default constructor. 
+	 */
 	public CMStub()
 	{
 		m_cmInfo = new CMInfo();
 	}
 
+	/**
+	 * Terminates CM.
+	 * 
+	 * <p> This method is called first when the sub-classes of the CMStub class call the overridden methods.
+	 * All the termination procedure is processed by this method. 
+	 */
 	public void terminateCM()
 	{
 		CMInteractionManager.terminate(m_cmInfo);
@@ -62,11 +82,24 @@ public class CMStub {
 	
 	// set/get methods
 
+	/**
+	 * Returns a reference to the CMInfo object that the CMStub object has created.
+	 * 
+	 * <p> The CMInfo object includes all kinds of state information on the current CM.
+	 * 
+	 * @return a reference to the CMInfo object.
+	 * @see CMInfo
+	 */
 	public CMInfo getCMInfo()
 	{
 		return m_cmInfo;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * @param handler
+	 */
 	public void setEventHandler(CMEventHandler handler)
 	{
 		m_cmInfo.setEventHandler(handler);

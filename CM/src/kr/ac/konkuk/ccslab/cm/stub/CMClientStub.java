@@ -34,7 +34,7 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
  * A client application can use this class in order to request client-specific communication services.
  * 
  * @author mlim
- * @see CMStub, CMServerStub
+ * @see {@link CMStub}, {@link CMServerStub}
  */
 public class CMClientStub extends CMStub {
 
