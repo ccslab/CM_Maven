@@ -35,6 +35,8 @@ public class CMConfigurationInfo {
 	
 	// Default path for file transfer
 	private String m_strFilePath;
+	// File transfer scheme
+	private int m_bFileTransferScheme;
 	
 	// Simulation parameter for added transmission delay
 	private int m_nSimTransDelay;
@@ -71,6 +73,7 @@ public class CMConfigurationInfo {
 		m_strDBName = "";
 		
 		m_strFilePath = ".";
+		m_bFileTransferScheme = 0;
 		m_nSimTransDelay = 0;
 	}
 
@@ -410,6 +413,23 @@ public class CMConfigurationInfo {
 	public String getFilePath()
 	{
 		return m_strFilePath;
+	}
+	
+	public void setFileTransferScheme(int bScheme)
+	{
+		m_bFileTransferScheme = bScheme;
+	}
+	
+	public boolean isFileTransferScheme()
+	{
+		boolean bScheme = false;
+		
+		if(m_bFileTransferScheme == 0)
+			bScheme = false;
+		else
+			bScheme = true;
+		
+		return bScheme;		
 	}
 	
 	/////////////////////////////////////////////////////////////////////

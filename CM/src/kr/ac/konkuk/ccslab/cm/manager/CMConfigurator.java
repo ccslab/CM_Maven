@@ -45,6 +45,7 @@ public class CMConfigurator {
 			//confInfo.setMyAddress(CMConfigurator.getConfiguration(fName, "MY_ADDR"));
 			confInfo.setMyPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "MY_PORT")));
 			confInfo.setCommArch(CMConfigurator.getConfiguration(fName, "COMM_ARCH"));
+			confInfo.setFileTransferScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "FILE_TRANSFER_SCHEME")));
 			confInfo.setLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "LOGIN_SCHEME")));
 			confInfo.setSessionScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "SESSION_SCHEME")));
 			confInfo.setDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "DOWNLOAD_SCHEME")));
@@ -100,6 +101,7 @@ public class CMConfigurator {
 				//System.out.println("MY_ADDR: "+confInfo.getMyAddress());
 				System.out.println("MY_PORT: "+confInfo.getMyPort());
 				System.out.println("COMM_ARCH: "+confInfo.getCommArch());
+				System.out.println("FILE_TRANSFER_SCHEME: "+confInfo.isFileTransferScheme());
 				System.out.println("LOGIN_SCHEME: "+confInfo.isLoginScheme());
 				System.out.println("SESSION_SCHEME: "+confInfo.isSessionScheme());
 				System.out.println("DOWNLOAD_SCHEME: "+confInfo.isDownloadScheme());

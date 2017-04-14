@@ -55,6 +55,7 @@ public class CMSessionEvent extends CMEvent {
 	Vector< CMGroupInfo > m_groupList;
 
 	String m_strCommArch;						// communication architecture (CM_PS/CM_CS)
+	int m_bFileTransferScheme;
 	int m_bLoginScheme;
 	int m_bSessionScheme;
 	int m_nAttachDownloadScheme;
@@ -81,6 +82,7 @@ public class CMSessionEvent extends CMEvent {
 		m_nSessionNum = -1;
 		m_nGroupNum = -1;
 		m_strCommArch = "?";
+		m_bFileTransferScheme = -1;
 		m_bLoginScheme = -1;
 		m_bSessionScheme = -1;
 		m_nAttachDownloadScheme = -1;
@@ -109,6 +111,7 @@ public class CMSessionEvent extends CMEvent {
 		m_nSessionNum = -1;
 		m_nGroupNum = -1;
 		m_strCommArch = "?";
+		m_bFileTransferScheme = -1;
 		m_bLoginScheme = -1;
 		m_bSessionScheme = -1;
 		m_nAttachDownloadScheme = -1;
@@ -202,6 +205,16 @@ public class CMSessionEvent extends CMEvent {
 	public String getCommArch()
 	{
 		return m_strCommArch;
+	}
+	
+	public void setFileTransferScheme(int bFileTransferScheme)
+	{
+		m_bFileTransferScheme = bFileTransferScheme;
+	}
+	
+	public int isFileTransferScheme()
+	{
+		return m_bFileTransferScheme;
 	}
 	
 	public void setLoginScheme(int bLoginScheme)
@@ -641,7 +654,7 @@ public class CMSessionEvent extends CMEvent {
 			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
 			break;
 		case LOGIN_ACK:
-			nByteNum += 6*Integer.BYTES + m_strCommArch.getBytes().length;
+			nByteNum += 7*Integer.BYTES + m_strCommArch.getBytes().length;
 			break;
 		case REQUEST_SESSION_INFO:
 			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
@@ -752,6 +765,7 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.putInt(m_bValidUser);
 			m_bytes.putInt(m_strCommArch.getBytes().length);
 			m_bytes.put(m_strCommArch.getBytes());
+			m_bytes.putInt(m_bFileTransferScheme);
 			m_bytes.putInt(m_bLoginScheme);
 			m_bytes.putInt(m_bSessionScheme);
 			m_bytes.putInt(m_nAttachDownloadScheme);
@@ -935,6 +949,7 @@ public class CMSessionEvent extends CMEvent {
 		case LOGIN_ACK:
 			m_bValidUser = msg.getInt();
 			m_strCommArch = getStringFromByteBuffer(msg);
+			m_bFileTransferScheme = msg.getInt();
 			m_bLoginScheme = msg.getInt();
 			m_bSessionScheme = msg.getInt();
 			m_nAttachDownloadScheme = msg.getInt();

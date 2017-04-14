@@ -513,6 +513,12 @@ public class CMInteractionManager {
 			seAck.setValidUser(0);
 
 		seAck.setCommArch(confInfo.getCommArch());
+		
+		if(confInfo.isFileTransferScheme())
+			seAck.setFileTransferScheme(1);
+		else
+			seAck.setFileTransferScheme(0);
+		
 		if(confInfo.isLoginScheme())
 			seAck.setLoginScheme(1);
 		else
@@ -596,6 +602,7 @@ public class CMInteractionManager {
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		confInfo.setCommArch(se.getCommArch());
+		confInfo.setFileTransferScheme(se.isFileTransferScheme());
 		confInfo.setLoginScheme(se.isLoginScheme());
 		confInfo.setSessionScheme(se.isSessionScheme());
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
@@ -605,8 +612,9 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.processLOGIN_ACK(), received.");
 			System.out.println("bValidUser("+se.isValidUser()+"), comm arch("+se.getCommArch()
-					+"), bLoginScheme("+se.isLoginScheme()+"), bSessionScheme("+se.isSessionScheme()+
-					"), nAttachDwonloadScheme("+se.getAttachDownloadScheme()+"), server udp port("
+					+"), bFileTransferScheme("+se.isFileTransferScheme()+"), bLoginScheme("
+					+se.isLoginScheme()+"), bSessionScheme("+se.isSessionScheme()
+					+"), nAttachDwonloadScheme("+se.getAttachDownloadScheme()+"), server udp port("
 					+se.getUDPPort()+").");
 		}
 		
