@@ -146,26 +146,25 @@ public class CMConfigurator {
 	public static String getConfiguration(String fileName, String fieldName) throws IOException
 	{
 		FileInputStream fis = new FileInputStream(fileName);
-		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 		String strLine = null;
-		String[] strToken;
-		String delim = "\\s+";
 		String strValue = null;
-		
-		while( (strLine = br.readLine()) != null && strValue == null )
+		String[] strToken = null;
+		String delim = "\\s+";
+		Scanner scan = new Scanner(fis);
+
+		while(scan.hasNextLine() && strValue == null)
 		{
-			strLine = strLine.trim();
-			//System.out.println("line: "+strLine);
+			strLine = scan.nextLine();
 			if(strLine.equals("") || strLine.charAt(0) == '#' || strLine.charAt(0) == '!')
 				continue;
+			
 			strToken = strLine.split(delim);
-			//System.out.println(strToken.length+": "+strToken[0]+", "+strToken[1]);
-			if( strToken[0].equals(fieldName) )
+			if(strToken[0].equals(fieldName))
 				strValue = strToken[1];
 		}
 
-		br.close();
 		fis.close();
+		scan.close();
 		
 		return strValue;
 	}
