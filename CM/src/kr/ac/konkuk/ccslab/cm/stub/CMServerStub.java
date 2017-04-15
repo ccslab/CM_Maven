@@ -17,13 +17,33 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMSNSManager;
 
+/**
+ * This class provides APIs, through which a server developer can access the communication services of CM.
+ * A server application can use this class in order to request service-specific communication services.
+ * 
+ * @author mlim
+ * @see {@link CMClientStub}, {@link CMStub}
+ */
 public class CMServerStub extends CMStub {
-	
+
+	/**
+	 * Creates an instance of the CMServerStub class.
+	 * 
+	 * <p> This method just called the default constructor of the super class, CMStub. 
+	 */
 	public CMServerStub()
 	{
 		super();
 	}
 	
+	/**
+	 * Initializes and starts the server CM.
+	 * <p> Before the server CM starts, it initializes the configuration and the interaction manager. Then, 
+	 * it starts two separate threads for receiving and processing CM events.
+	 *  
+	 * @return true if the initialization of CM succeeds, or false if the initialization of CM fails.
+	 * @see CMServerStub#terminateCM()
+	 */
 	public boolean startCM()
 	{
 		boolean bRet = false;

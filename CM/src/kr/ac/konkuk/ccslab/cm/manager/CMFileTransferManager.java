@@ -570,7 +570,7 @@ public class CMFileTransferManager {
 		fe = null;
 		return;
 	}
-	
+		
 	private static void processCONTINUE_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();

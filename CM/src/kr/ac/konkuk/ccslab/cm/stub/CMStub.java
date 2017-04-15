@@ -96,7 +96,9 @@ public class CMStub {
 	}
 	
 	/**
+	 * Registers the event handler of an application.
 	 * 
+	 * <p> 
 	 * (from here)
 	 * @param handler
 	 */

@@ -38,6 +38,11 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
  */
 public class CMClientStub extends CMStub {
 
+	/**
+	 * Creates an instance of the CMClientStub class.
+	 * 
+	 * <p> This method just called the default constructor of the super class, CMStub. 
+	 */
 	public CMClientStub()
 	{
 		super();
@@ -45,8 +50,12 @@ public class CMClientStub extends CMStub {
 
 	/**
 	 * Initializes and starts the client CM.
+	 * 
+	 * <p> Before the server CM starts, it initializes the configuration and the interaction manager. Then, 
+	 * it starts two separate threads for receiving and processing CM events.
 	 * <br> After the initialization process, the client CM also establishes a stream(TCP) connection to 
-	 * the default server, makes a default datagram(UDP) channel.
+	 * the default server and makes a default datagram(UDP) channel.
+	 * 
 	 *  
 	 * @return true if the initialization of CM succeeds, or false if the initialization of CM fails.
 	 * @see CMClientStub#terminateCM()
