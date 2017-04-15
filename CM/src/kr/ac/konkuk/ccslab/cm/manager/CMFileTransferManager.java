@@ -464,8 +464,7 @@ public class CMFileTransferManager {
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		if(confInfo.isFileTransferScheme())
 		{
-			// need to be processed by a separate thread (not yet)
-			System.err.println("processSTART_FILE_TRANSFER_ACK(); multi-threaded transfer will be developed !!");
+			sendFileWithSepThread(cmInfo);
 		}
 		else
 		{
@@ -578,6 +577,13 @@ public class CMFileTransferManager {
 		
 		fe = null;
 		return;
+	}
+	
+	private static void sendFileWithSepThread(CMInfo cmInfo)
+	{
+		// need to be processed by a separate thread (not yet)
+		System.err.println("sendFileWithSepThread(); multi-threaded transfer will be developed !!");
+		
 	}
 	
 	private static void processCONTINUE_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
