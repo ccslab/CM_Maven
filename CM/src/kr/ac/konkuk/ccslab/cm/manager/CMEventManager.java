@@ -178,7 +178,7 @@ public class CMEventManager {
 			}
 			if(opt == CMInfo.CM_STREAM)
 			{
-				chInfo = user.getSocketChannelInfo();
+				chInfo = user.getNonBlockSocketChannelInfo();
 				sc = (SocketChannel) chInfo.findChannel(nChNum);
 				if( sc == null )
 				{
@@ -386,7 +386,7 @@ public class CMEventManager {
 			while(iter.hasNext())
 			{
 				tuser = iter.next();
-				SocketChannel sc = (SocketChannel) tuser.getSocketChannelInfo().findChannel(nChNum);
+				SocketChannel sc = (SocketChannel) tuser.getNonBlockSocketChannelInfo().findChannel(nChNum);
 				if( sc == null )
 				{
 					System.err.println("CMEventManager.broadcastEvent(), SocketChannel of user("
@@ -472,7 +472,7 @@ public class CMEventManager {
 			while(iter.hasNext())
 			{
 				tuser = iter.next();
-				SocketChannel sc = (SocketChannel) tuser.getSocketChannelInfo().findChannel(nChNum);
+				SocketChannel sc = (SocketChannel) tuser.getNonBlockSocketChannelInfo().findChannel(nChNum);
 				if( sc == null )
 				{
 					System.err.println("CMEventManager.castEvent(), SocketChannel of user("
@@ -545,7 +545,7 @@ public class CMEventManager {
 			return false;
 		}
 		
-		boolean result = user.getSocketChannelInfo().addChannel(ch, nChNum);
+		boolean result = user.getNonBlockSocketChannelInfo().addChannel(ch, nChNum);
 		
 		return result;
 	}
@@ -563,7 +563,7 @@ public class CMEventManager {
 			return false;
 		}
 		
-		boolean result = user.getSocketChannelInfo().removeChannel(nChNum);
+		boolean result = user.getNonBlockSocketChannelInfo().removeChannel(nChNum);
 		return result;
 	}
 
@@ -585,7 +585,7 @@ public class CMEventManager {
 		while(iter.hasNext() && !bFound)
 		{
 			tuser = iter.next();
-			nChNum = tuser.getSocketChannelInfo().findChannelIndex(ch);
+			nChNum = tuser.getNonBlockSocketChannelInfo().findChannelIndex(ch);
 			if(nChNum != -1)
 			{
 				bFound = true;
@@ -598,7 +598,7 @@ public class CMEventManager {
 			return false;
 		}
 		
-		boolean ret = tuser.getSocketChannelInfo().removeChannel(nChNum);
+		boolean ret = tuser.getNonBlockSocketChannelInfo().removeChannel(nChNum);
 		
 		return ret;
 	}
@@ -615,7 +615,7 @@ public class CMEventManager {
 			return false;
 		}
 		
-		user.getSocketChannelInfo().removeAllChannels();
+		user.getNonBlockSocketChannelInfo().removeAllChannels();
 		return true;
 	}
 	
@@ -631,7 +631,7 @@ public class CMEventManager {
 			return false;
 		}
 		
-		boolean ret = user.getSocketChannelInfo().removeAllAddedChannels();
+		boolean ret = user.getNonBlockSocketChannelInfo().removeAllAddedChannels();
 
 		return ret;
 	}
@@ -650,7 +650,7 @@ public class CMEventManager {
 			return null;
 		}
 		
-		ch = user.getSocketChannelInfo().findChannel(nChNum);
+		ch = user.getNonBlockSocketChannelInfo().findChannel(nChNum);
 		if(ch == null)
 		{
 			System.err.println("CMEventManager.findChannel(), user("+strUserName
@@ -677,7 +677,7 @@ public class CMEventManager {
 		while(iter.hasNext() && !bFound)
 		{
 			CMUser tuser = iter.next();
-			int nChNum = tuser.getSocketChannelInfo().findChannelIndex(ch);
+			int nChNum = tuser.getNonBlockSocketChannelInfo().findChannelIndex(ch);
 			if(nChNum != -1)
 			{
 				strUserName = tuser.getName();

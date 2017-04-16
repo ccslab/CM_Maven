@@ -58,7 +58,9 @@ public class CMCommManager {
 		while(iterUser.hasNext())
 		{
 			CMUser tUser = iterUser.next();
-			CMChannelInfo chInfo = tUser.getSocketChannelInfo();
+			CMChannelInfo chInfo = tUser.getNonBlockSocketChannelInfo();
+			chInfo.removeAllChannels();
+			chInfo = tUser.getBlockSocketChannelInfo();
 			chInfo.removeAllChannels();
 		}
 		

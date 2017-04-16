@@ -16,7 +16,8 @@ public class CMUser extends CMObject {
 	private String m_strCurrentSession;
 	private String m_strCurrentGroup;
 	private int m_nState;
-	private CMChannelInfo m_scInfo;
+	private CMChannelInfo m_nonBlockSocketChannelInfo;
+	private CMChannelInfo m_blockSocketChannelInfo;
 	private int m_nAttachDownloadScheme;	// used at SERVER
 	private CMSNSAttachAccessHistoryList m_historyList;	// used at SERVER
 	private Calendar m_lastLoginDate;		// used at SERVER
@@ -32,7 +33,8 @@ public class CMUser extends CMObject {
 		m_strCurrentSession = "?";
 		m_strCurrentGroup = "?";
 		m_nState = CMInfo.CM_INIT;
-		m_scInfo = new CMChannelInfo();
+		m_nonBlockSocketChannelInfo = new CMChannelInfo();
+		m_blockSocketChannelInfo = new CMChannelInfo();
 		m_nAttachDownloadScheme = -1;
 		m_historyList = new CMSNSAttachAccessHistoryList();
 		m_lastLoginDate = null;
@@ -49,7 +51,8 @@ public class CMUser extends CMObject {
 		m_strCurrentSession = "";
 		m_strCurrentGroup = "";
 		m_nState = CMInfo.CM_INIT;
-		m_scInfo = new CMChannelInfo();
+		m_nonBlockSocketChannelInfo = new CMChannelInfo();
+		m_blockSocketChannelInfo = new CMChannelInfo();
 		m_nAttachDownloadScheme = -1;
 		m_historyList = new CMSNSAttachAccessHistoryList();
 		m_lastLoginDate = null;
@@ -162,9 +165,14 @@ public class CMUser extends CMObject {
 		return m_nState;
 	}
 	
-	public CMChannelInfo getSocketChannelInfo()
+	public CMChannelInfo getNonBlockSocketChannelInfo()
 	{
-		return m_scInfo;
+		return m_nonBlockSocketChannelInfo;
+	}
+	
+	public CMChannelInfo getBlockSocketChannelInfo()
+	{
+		return m_blockSocketChannelInfo;
 	}
 	
 	public int getAttachDownloadScheme()

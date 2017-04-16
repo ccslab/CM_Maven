@@ -137,7 +137,7 @@ public class CMEventReceiver extends Thread {
 			{
 				CMUser user = interInfo.getLoginUsers().findMember(strUser);
 				// find channel index
-				nChIndex = user.getSocketChannelInfo().findChannelIndex(ch);
+				nChIndex = user.getNonBlockSocketChannelInfo().findChannelIndex(ch);
 				if(nChIndex == 0)
 				{
 					// if the removed channel is default channel (#ch:0), process logout of the user
@@ -154,7 +154,7 @@ public class CMEventReceiver extends Thread {
 				else if(nChIndex > 0)
 				{
 					// remove the channel
-					user.getSocketChannelInfo().removeChannel(nChIndex);
+					user.getNonBlockSocketChannelInfo().removeChannel(nChIndex);
 				}
 				
 			}

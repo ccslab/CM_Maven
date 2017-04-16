@@ -474,7 +474,7 @@ public class CMInteractionManager {
 			tuser.setHost(se.getHostAddress());
 			tuser.setUDPPort(se.getUDPPort());
 			
-			tuser.getSocketChannelInfo().addChannel(msg.m_ch, 0);
+			tuser.getNonBlockSocketChannelInfo().addChannel(msg.m_ch, 0);
 			loginUsers = interInfo.getLoginUsers();
 			loginUsers.addMember(tuser);
 			
@@ -561,7 +561,8 @@ public class CMInteractionManager {
 		}
 		else
 		{
-			user.getSocketChannelInfo().removeAllChannels();
+			user.getNonBlockSocketChannelInfo().removeAllChannels();
+			user.getBlockSocketChannelInfo().removeAllChannels();
 			interInfo.getLoginUsers().removeMember(user.getName());
 		}
 
@@ -729,8 +730,10 @@ public class CMInteractionManager {
 		// leave session and group
 		CMSessionManager.leaveSession(user, cmInfo);
 		
-		// close and remove all additional socket channels of the user
-		user.getSocketChannelInfo().removeAllAddedChannels();
+		// close and remove all additional nonblocking socket channels of the user
+		user.getNonBlockSocketChannelInfo().removeAllAddedChannels();
+		// close and remove all blocking socket channels of the user
+		user.getBlockSocketChannelInfo().removeAllChannels();
 		// remove the user from login user list
 		//interInfo.getLoginUsers().removeMember(user);
 		//user = null;
@@ -876,7 +879,7 @@ public class CMInteractionManager {
 			se = null;
 			return;
 		}
-		boolean ret = user.getSocketChannelInfo().addChannel(msg.m_ch, nChIndex);
+		boolean ret = user.getNonBlockSocketChannelInfo().addChannel(msg.m_ch, nChIndex);
 		if(ret)
 			seAck.setReturnCode(1);
 		else
@@ -1491,7 +1494,7 @@ public class CMInteractionManager {
 		user.setHost(mse.getHostAddress());
 		user.setUDPPort(mse.getUDPPort());
 
-		user.getSocketChannelInfo().addChannel(msg.m_ch, 0);
+		user.getNonBlockSocketChannelInfo().addChannel(msg.m_ch, 0);
 		interInfo.getLoginUsers().addMember(user);
 
 		if(CMInfo._CM_DEBUG)
@@ -1558,7 +1561,8 @@ public class CMInteractionManager {
 		}
 		else
 		{
-			user.getSocketChannelInfo().removeAllChannels();
+			user.getNonBlockSocketChannelInfo().removeAllChannels();
+			user.getBlockSocketChannelInfo().removeAllChannels();
 			interInfo.getLoginUsers().removeMember(mse.getUserName());
 		}
 		
@@ -1702,7 +1706,8 @@ public class CMInteractionManager {
 			CMSessionManager.leaveSession(user, cmInfo);
 		}
 		
-		user.getSocketChannelInfo().removeAllAddedChannels(); // main channel remained
+		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(); // main channel remained
+		user.getBlockSocketChannelInfo().removeAllChannels();
 		interInfo.getLoginUsers().removeMemberObject(mse.getUserName());
 		
 		if(CMInfo._CM_DEBUG)
