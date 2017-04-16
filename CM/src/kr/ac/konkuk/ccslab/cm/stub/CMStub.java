@@ -126,9 +126,9 @@ public class CMStub {
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		CMChannelInfo dcInfo = commInfo.getDatagramChannelInfo();
+		CMChannelInfo nonBlockDCInfo = commInfo.getNonBlockDatagramChannelInfo();
 		DatagramChannel dc = null;
-		if(dcInfo.findChannel(nChIndex) != null)
+		if(nonBlockDCInfo.findChannel(nChIndex) != null)
 		{
 			System.out.println("CMStub.addDatagramChannel(), channel index("+nChIndex+") already exists.");
 			return;
@@ -141,7 +141,7 @@ public class CMStub {
 				System.out.println("CMStub.addDatagramChannel(), failed.");
 				return;
 			}
-			dcInfo.addChannel(dc, nChIndex);
+			nonBlockDCInfo.addChannel(dc, nChIndex);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -153,7 +153,7 @@ public class CMStub {
 	public void removeAdditionalDatagramChannel(int nChIndex)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
-		CMChannelInfo dcInfo = commInfo.getDatagramChannelInfo();
+		CMChannelInfo dcInfo = commInfo.getNonBlockDatagramChannelInfo();
 
 		dcInfo.removeChannel(nChIndex);
 		return;

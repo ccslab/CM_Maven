@@ -52,8 +52,9 @@ public class CMInteractionManager {
 			myself.setName("SERVER");
 			ServerSocketChannel ssc = null;
 			try {
-				ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, confInfo.getMyAddress(), confInfo.getMyPort(), cmInfo);
-				commInfo.setServerSocketChannel(ssc);
+				ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, 
+						confInfo.getMyAddress(), confInfo.getMyPort(), cmInfo);
+				commInfo.setNonBlockServerSocketChannel(ssc);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -83,7 +84,7 @@ public class CMInteractionManager {
 			return false;
 		}
 		// store the datagram channel
-		commInfo.getDatagramChannelInfo().addChannel(dc, 0);	// default channel num: 0
+		commInfo.getNonBlockDatagramChannelInfo().addChannel(dc, 0);	// default channel num: 0
 		
 		// set session info
 		createSession(cmInfo);

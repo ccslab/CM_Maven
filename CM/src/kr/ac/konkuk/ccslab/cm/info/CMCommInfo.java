@@ -7,8 +7,9 @@ import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 
 public class CMCommInfo {
-	private ServerSocketChannel m_ssc;
-	private CMChannelInfo m_dcInfo;	// datagram channel list
+	private ServerSocketChannel m_nonBlockServerSocketChannel; // nonblocking server socket channel
+	private ServerSocketChannel m_blockServerSocketChannel; // blocking server socket channel
+	private CMChannelInfo m_nonBlockDCInfo;	// nonblocking datagram channel list
 	//private Vector<SocketChannel> m_scList;
 	//private Vector<DatagramChannel> m_dcList;
 	//private Vector<MulticastChannel> m_mcList;
@@ -30,8 +31,9 @@ public class CMCommInfo {
 	
 	public CMCommInfo()
 	{
-		m_ssc = null;
-		m_dcInfo = new CMChannelInfo();
+		m_nonBlockServerSocketChannel = null;
+		m_blockServerSocketChannel = null;
+		m_nonBlockDCInfo = new CMChannelInfo();
 		m_byteReceiver = null;
 		//m_scList = new Vector<SocketChannel>();
 		//m_dcList = new Vector<DatagramChannel>();
@@ -60,14 +62,24 @@ public class CMCommInfo {
 		return m_queue;
 	}
 	
-	public void setServerSocketChannel(ServerSocketChannel ssc)
+	public void setNonBlockServerSocketChannel(ServerSocketChannel ssc)
 	{
-		m_ssc = ssc;
+		m_nonBlockServerSocketChannel = ssc;
 	}
 	
-	public ServerSocketChannel getServerSocketChannel()
+	public ServerSocketChannel getNonBlockServerSocketChannel()
 	{
-		return m_ssc;
+		return m_nonBlockServerSocketChannel;
+	}
+	
+	public void setBlockServerSocketChannel(ServerSocketChannel ssc)
+	{
+		m_blockServerSocketChannel = ssc;
+	}
+	
+	public ServerSocketChannel getBlockServerSocketChannel()
+	{
+		return m_blockServerSocketChannel;
 	}
 	
 	public void setByteReceiver(CMByteReceiver receiver)
@@ -147,11 +159,11 @@ public class CMCommInfo {
 		return m_selector;
 	}
 	
-	public CMChannelInfo getDatagramChannelInfo()
+	public CMChannelInfo getNonBlockDatagramChannelInfo()
 	{
-		return m_dcInfo;
+		return m_nonBlockDCInfo;
 	}
-	
+		
 	/*
 	public Vector<SocketChannel> getSocketChannelList()
 	{

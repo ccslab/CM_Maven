@@ -219,7 +219,7 @@ public class CMEventManager {
 			nSentBytes = CMCommManager.sendMessage(bufEvent, sc);
 			break;
 		case CMInfo.CM_DATAGRAM:
-			dc = (DatagramChannel) commInfo.getDatagramChannelInfo().findChannel(nChNum);
+			dc = (DatagramChannel) commInfo.getNonBlockDatagramChannelInfo().findChannel(nChNum);
 			if(dc == null)
 			{
 				System.err.println("CMEventManager.unicastEvent(), datagramChannel("+nChNum+") not found.");
@@ -406,7 +406,7 @@ public class CMEventManager {
 			}
 			break;
 		case CMInfo.CM_DATAGRAM:
-			CMChannelInfo dcInfo = cmInfo.getCommInfo().getDatagramChannelInfo();
+			CMChannelInfo dcInfo = cmInfo.getCommInfo().getNonBlockDatagramChannelInfo();
 			DatagramChannel dc = (DatagramChannel) dcInfo.findChannel(nChNum);
 			if(dc == null)
 			{
@@ -492,7 +492,7 @@ public class CMEventManager {
 			}
 			break;
 		case CMInfo.CM_DATAGRAM:
-			CMChannelInfo dcInfo = cmInfo.getCommInfo().getDatagramChannelInfo();
+			CMChannelInfo dcInfo = cmInfo.getCommInfo().getNonBlockDatagramChannelInfo();
 			DatagramChannel dc = (DatagramChannel) dcInfo.findChannel(nChNum);
 			if(dc == null)
 			{

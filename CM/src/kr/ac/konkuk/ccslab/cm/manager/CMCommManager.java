@@ -23,8 +23,9 @@ public class CMCommManager {
 		// close all channels in CM
 		
 		CMCommInfo commInfo = cmInfo.getCommInfo();
-		//serversocket channel (server)
-		ServerSocketChannel ssc = commInfo.getServerSocketChannel();
+		
+		//nonblocking serversocket channel (server)
+		ServerSocketChannel ssc = commInfo.getNonBlockServerSocketChannel();
 		if(ssc != null && ssc.isOpen())
 		{
 			try {
@@ -35,8 +36,19 @@ public class CMCommManager {
 			}
 		}
 		
-		//datagram channel
-		CMChannelInfo dcInfo = commInfo.getDatagramChannelInfo();
+		// blocking serversocket channel (server)
+		ssc = commInfo.getBlockServerSocketChannel();
+		if(ssc != null && ssc.isOpen()){
+			try {
+				ssc.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		//nonblocking datagram channel
+		CMChannelInfo dcInfo = commInfo.getNonBlockDatagramChannelInfo();
 		dcInfo.removeAllChannels();
 		
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
@@ -132,7 +144,7 @@ public class CMCommManager {
 			ssc.socket().bind(new InetSocketAddress(port));
 			ssc.configureBlocking(false);
 			ssc.register(sel, SelectionKey.OP_ACCEPT);
-			commInfo.setServerSocketChannel(ssc);
+			//commInfo.setNonBlockServerSocketChannel(ssc);
 			ch = ssc;
 			break;
 		case CMInfo.CM_SOCKET_CHANNEL:
@@ -156,7 +168,7 @@ public class CMCommManager {
 			NetworkInterface ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
 			if(ni == null)
 			{
-				System.out.println("CMCommManager.openChannel(), MULTICAST failed!");
+				System.out.println("CMCommManager.openNonBlockChannel(), MULTICAST failed!");
 				return null;
 			}
 			DatagramChannel mc = DatagramChannel.open(StandardProtocolFamily.INET)
@@ -168,18 +180,73 @@ public class CMCommManager {
 			ch = mc;
 			break;
 		default:
-			System.out.println("CMCommManager.openChannel(), unknown channel type: "+channelType);
+			System.out.println("CMCommManager.openNonBlockChannel(), unknown channel type: "+channelType);
 			return null;
 		}
 		
 		if(CMInfo._CM_DEBUG_2)
 		{
-			System.out.println("CMCommManager.openChannel(), Ok, type("+channelType+"), address("
+			System.out.println("CMCommManager.openNonBlockChannel(), Ok, type("+channelType+"), address("
 					+address+"), port("+port+") hashcode("+ch.hashCode()+").");
 			System.out.println("# registered selection keys: "+sel.keys().size());
 		}
 		
 		return ch;
+	}
+	
+	public static SelectableChannel openBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
+	{
+		SelectableChannel ch = null;
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		
+		switch(channelType)
+		{
+		case CMInfo.CM_SERVER_CHANNEL: // address not used
+			ServerSocketChannel ssc = ServerSocketChannel.open();
+			ssc.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+			ssc.socket().bind(new InetSocketAddress(port));
+			ssc.configureBlocking(true);
+			//commInfo.setBlockServerSocketChannel(ssc);
+			ch = ssc;
+			break;
+		case CMInfo.CM_SOCKET_CHANNEL:
+			SocketChannel sc = SocketChannel.open(new InetSocketAddress(address, port));
+			sc.configureBlocking(true);
+			ch = sc;
+			break;
+		case CMInfo.CM_DATAGRAM_CHANNEL:
+			DatagramChannel dc = DatagramChannel.open();
+			dc.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+			dc.socket().bind(new InetSocketAddress(address, port));
+			dc.configureBlocking(true);
+			ch = dc;
+			break;
+		case CMInfo.CM_MULTICAST_CHANNEL:
+			NetworkInterface ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+			if(ni == null)
+			{
+				System.out.println("CMCommManager.openBlockSocketChannel(), MULTICAST failed!");
+				return null;
+			}
+			DatagramChannel mc = DatagramChannel.open(StandardProtocolFamily.INET)
+					.setOption(StandardSocketOptions.SO_REUSEADDR, true)
+					.bind(new InetSocketAddress(port))
+					.setOption(StandardSocketOptions.IP_MULTICAST_IF, ni);
+			mc.configureBlocking(true);
+			ch = mc;
+			break;
+		default:
+			System.out.println("CMCommManager.openBlockSocketChannel(), unknown channel type: "+channelType);
+			return null;
+		}
+		
+		if(CMInfo._CM_DEBUG_2)
+		{
+			System.out.println("CMCommManager.openBlockSocketChannel(), Ok, type("+channelType+"), address("
+					+address+"), port("+port+") hashcode("+ch.hashCode()+").");
+		}
+		
+		return ch;		
 	}
 	
 	public static MembershipKey joinMulticastGroup(DatagramChannel dc, String addr)
