@@ -52,7 +52,7 @@ public class CMInteractionManager {
 			myself.setName("SERVER");
 			ServerSocketChannel ssc = null;
 			try {
-				ssc = (ServerSocketChannel) CMCommManager.openChannel(CMInfo.CM_SERVER_CHANNEL, confInfo.getMyAddress(), confInfo.getMyPort(), cmInfo);
+				ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, confInfo.getMyAddress(), confInfo.getMyPort(), cmInfo);
 				commInfo.setServerSocketChannel(ssc);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -75,7 +75,7 @@ public class CMInteractionManager {
 		// open a datagram channel
 		DatagramChannel dc = null;
 		try {
-			dc = (DatagramChannel) CMCommManager.openChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
+			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
 					confInfo.getMyAddress(), confInfo.getUDPPort(), cmInfo);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -122,7 +122,7 @@ public class CMInteractionManager {
 		
 		// connection establishment to the default server
 		try {
-			sc = (SocketChannel) CMCommManager.openChannel(CMInfo.CM_SOCKET_CHANNEL, 
+			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 					confInfo.getServerAddress(), confInfo.getServerPort(), cmInfo);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -194,7 +194,7 @@ public class CMInteractionManager {
 
 		SelectableChannel sc = null;
 		try {
-			sc = CMCommManager.openChannel(CMInfo.CM_SOCKET_CHANNEL, tserver.getServerAddress(), 
+			sc = CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, tserver.getServerAddress(), 
 										tserver.getServerPort(), cmInfo);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

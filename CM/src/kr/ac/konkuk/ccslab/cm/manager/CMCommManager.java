@@ -116,7 +116,7 @@ public class CMCommManager {
 		return strIP;
 	}
 	
-	public static SelectableChannel openChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
+	public static SelectableChannel openNonBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
 	{
 		SelectableChannel ch = null;
 		CMCommInfo commInfo = cmInfo.getCommInfo();

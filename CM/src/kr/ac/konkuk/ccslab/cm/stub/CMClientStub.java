@@ -648,8 +648,8 @@ public class CMClientStub extends CMStub {
 				return;
 			}
 			
-			sc = (SocketChannel) CMCommManager.openChannel(CMInfo.CM_SOCKET_CHANNEL, serverInfo.getServerAddress()
-									, serverInfo.getServerPort(), m_cmInfo);
+			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
 				System.out.println("CMClientStub.addSocketChannel(), failed.");

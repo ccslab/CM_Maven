@@ -134,8 +134,8 @@ public class CMStub {
 			return;
 		}
 		try {
-			dc = (DatagramChannel) CMCommManager.openChannel(CMInfo.CM_DATAGRAM_CHANNEL, confInfo.getMyAddress()
-					, nChPort, m_cmInfo);
+			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
+					confInfo.getMyAddress(), nChPort, m_cmInfo);
 			if(dc == null)
 			{
 				System.out.println("CMStub.addDatagramChannel(), failed.");
@@ -184,7 +184,7 @@ public class CMStub {
 		}
 		
 		try {
-			mc = (DatagramChannel) CMCommManager.openChannel(CMInfo.CM_MULTICAST_CHANNEL, strChAddress
+			mc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, strChAddress
 															, nChPort, m_cmInfo);
 			if(mc == null)
 			{

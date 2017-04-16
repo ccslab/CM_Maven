@@ -42,7 +42,7 @@ public class CMGroupManager {
 				CMGroup group = iterGroup.next();
 				DatagramChannel dc = null;
 				try {
-					dc = (DatagramChannel) CMCommManager.openChannel(CMInfo.CM_MULTICAST_CHANNEL, 
+					dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, 
 							group.getGroupAddress(), group.getGroupPort(), cmInfo);
 					if(dc == null)
 					{
@@ -94,7 +94,7 @@ public class CMGroupManager {
 		
 		DatagramChannel dc = null;
 		try {
-			dc = (DatagramChannel) CMCommManager.openChannel(CMInfo.CM_MULTICAST_CHANNEL, 
+			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, 
 					group.getGroupAddress(), group.getGroupPort(), cmInfo);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
