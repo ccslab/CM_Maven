@@ -5,7 +5,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 // server information managed by a client
 public class CMServer extends CMServerInfo {
-	private CMChannelInfo m_scInfo;
+	private CMChannelInfo<Integer> m_nonBlockSocketChannelInfo;
+	private CMChannelInfo<Integer> m_blockSocketChannelInfo;
 	
 	private String m_strCurrentSessionName;		// only 4 client
 	private String m_strCurrentGroupName;		// only 4 client
@@ -19,7 +20,8 @@ public class CMServer extends CMServerInfo {
 	public CMServer()
 	{
 		super();
-		m_scInfo = new CMChannelInfo();
+		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
+		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
 		
 		m_strCurrentSessionName = "";
 		m_strCurrentGroupName = "";
@@ -33,7 +35,8 @@ public class CMServer extends CMServerInfo {
 	public CMServer(String sname, String saddr, int nPort, int nUDPPort)
 	{
 		super(sname, saddr, nPort, nUDPPort);
-		m_scInfo = new CMChannelInfo();
+		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
+		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
 		
 		m_strCurrentSessionName = "";
 		m_strCurrentGroupName = "";
@@ -46,9 +49,14 @@ public class CMServer extends CMServerInfo {
 	
 	// set/get methods
 	
-	public CMChannelInfo getSocketChannelInfo()
+	public CMChannelInfo<Integer> getNonBlockSocketChannelInfo()
 	{
-		return m_scInfo;
+		return m_nonBlockSocketChannelInfo;
+	}
+	
+	public CMChannelInfo<Integer> getBlockSocketChannelInfo()
+	{
+		return m_blockSocketChannelInfo;
 	}
 	
 	public void setCurrentSessionName(String name)

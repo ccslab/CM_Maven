@@ -80,21 +80,22 @@ public class CMEventReceiver extends Thread {
 			System.out.println("CMEventReceiver is terminated.");
 	}
 	
+	// What about disconnection from a blocking channel?? (not clear)
 	private void processUnexpectedDisconnection(SelectableChannel ch)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer tserver = null;
 		int nChIndex = -1;
-		CMChannelInfo chInfo = null;
+		CMChannelInfo<Integer> chInfo = null;
 		Iterator<CMServer> iterAddServer = null;
 		boolean bFound = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			// find channel from default server
-			chInfo = interInfo.getDefaultServerInfo().getSocketChannelInfo();
-			nChIndex = chInfo.findChannelIndex(ch);
+			chInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
+			nChIndex = chInfo.findChannelKey(ch);
 			if(nChIndex == 0)	// default channel
 			{
 				chInfo.removeAllChannels();
@@ -115,8 +116,8 @@ public class CMEventReceiver extends Thread {
 				while(iterAddServer.hasNext() && !bFound)
 				{
 					tserver = iterAddServer.next();
-					chInfo = tserver.getSocketChannelInfo();
-					nChIndex = chInfo.findChannelIndex(ch);
+					chInfo = tserver.getNonBlockSocketChannelInfo();
+					nChIndex = chInfo.findChannelKey(ch);
 					if(nChIndex != -1)
 						bFound = true;
 				}
@@ -132,12 +133,12 @@ public class CMEventReceiver extends Thread {
 		else if(confInfo.getSystemType().equals("SERVER"))
 		{
 			// find user with channel
-			String strUser = CMEventManager.findUserWithChannel(ch, interInfo.getLoginUsers());
+			String strUser = CMEventManager.findUserWithSocketChannel(ch, interInfo.getLoginUsers());
 			if(strUser != null)
 			{
 				CMUser user = interInfo.getLoginUsers().findMember(strUser);
 				// find channel index
-				nChIndex = user.getNonBlockSocketChannelInfo().findChannelIndex(ch);
+				nChIndex = user.getNonBlockSocketChannelInfo().findChannelKey(ch);
 				if(nChIndex == 0)
 				{
 					// if the removed channel is default channel (#ch:0), process logout of the user
@@ -166,8 +167,8 @@ public class CMEventReceiver extends Thread {
 				while(iterAddServer.hasNext() && !bFound)
 				{
 					tserver = iterAddServer.next();
-					chInfo = tserver.getSocketChannelInfo();
-					nChIndex = chInfo.findChannelIndex(ch);
+					chInfo = tserver.getNonBlockSocketChannelInfo();
+					nChIndex = chInfo.findChannelKey(ch);
 					if(nChIndex != -1)
 						bFound = true;
 				}
@@ -193,8 +194,8 @@ public class CMEventReceiver extends Thread {
 			{
 				// process disconnection with the default server
 				// find channel from default server
-				chInfo = interInfo.getDefaultServerInfo().getSocketChannelInfo();
-				nChIndex = chInfo.findChannelIndex(ch);
+				chInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
+				nChIndex = chInfo.findChannelKey(ch);
 				if(nChIndex == 0)	// default channel
 				{
 					chInfo.removeAllChannels();

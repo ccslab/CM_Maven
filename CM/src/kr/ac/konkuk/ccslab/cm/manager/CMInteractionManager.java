@@ -84,7 +84,7 @@ public class CMInteractionManager {
 			return false;
 		}
 		// store the datagram channel
-		commInfo.getNonBlockDatagramChannelInfo().addChannel(dc, 0);	// default channel num: 0
+		commInfo.getNonBlockDatagramChannelInfo().addChannel(confInfo.getUDPPort(), dc);
 		
 		// set session info
 		createSession(cmInfo);
@@ -136,7 +136,7 @@ public class CMInteractionManager {
 		dServer.setServerName("SERVER");	// name of the default server
 		dServer.setServerAddress(confInfo.getServerAddress());
 		dServer.setServerPort(confInfo.getServerPort());
-		dServer.getSocketChannelInfo().addChannel(sc, 0);	// default channel number: 0
+		dServer.getNonBlockSocketChannelInfo().addChannel(0, sc);	// default channel number: 0
 		
 		// update the user's state
 		myself.setState(CMInfo.CM_CONNECT);
@@ -160,7 +160,8 @@ public class CMInteractionManager {
 		
 		// remove all channels to the default server
 		CMServer dsInfo = interInfo.getDefaultServerInfo();
-		dsInfo.getSocketChannelInfo().removeAllChannels();
+		dsInfo.getNonBlockSocketChannelInfo().removeAllChannels();
+		dsInfo.getBlockSocketChannelInfo().removeAllChannels();
 		
 		// update user's state
 		myself.setState(CMInfo.CM_INIT);
@@ -210,7 +211,7 @@ public class CMInteractionManager {
 		}
 
 		// add channel info
-		tserver.getSocketChannelInfo().addChannel(sc, 0);
+		tserver.getNonBlockSocketChannelInfo().addChannel(0, sc);
 		
 		// update peer's state
 		tserver.setClientState(CMInfo.CM_CONNECT);
@@ -244,7 +245,8 @@ public class CMInteractionManager {
 		}
 
 		// close and delete all channels of the server
-		tserver.getSocketChannelInfo().removeAllChannels();
+		tserver.getNonBlockSocketChannelInfo().removeAllChannels();
+		tserver.getBlockSocketChannelInfo().removeAllChannels();
 
 		// update peer's state
 		tserver.setClientState(CMInfo.CM_INIT);
@@ -475,7 +477,7 @@ public class CMInteractionManager {
 			tuser.setHost(se.getHostAddress());
 			tuser.setUDPPort(se.getUDPPort());
 			
-			tuser.getNonBlockSocketChannelInfo().addChannel(msg.m_ch, 0);
+			tuser.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);
 			loginUsers = interInfo.getLoginUsers();
 			loginUsers.addMember(tuser);
 			
@@ -732,7 +734,7 @@ public class CMInteractionManager {
 		CMSessionManager.leaveSession(user, cmInfo);
 		
 		// close and remove all additional nonblocking socket channels of the user
-		user.getNonBlockSocketChannelInfo().removeAllAddedChannels();
+		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
 		// close and remove all blocking socket channels of the user
 		user.getBlockSocketChannelInfo().removeAllChannels();
 		// remove the user from login user list
@@ -880,7 +882,7 @@ public class CMInteractionManager {
 			se = null;
 			return;
 		}
-		boolean ret = user.getNonBlockSocketChannelInfo().addChannel(msg.m_ch, nChIndex);
+		boolean ret = user.getNonBlockSocketChannelInfo().addChannel(nChIndex, msg.m_ch);
 		if(ret)
 			seAck.setReturnCode(1);
 		else
@@ -914,7 +916,7 @@ public class CMInteractionManager {
 			{
 				serverInfo = interInfo.findAddServer(strServer);
 			}
-			serverInfo.getSocketChannelInfo().removeChannel(nChIndex);
+			serverInfo.getNonBlockSocketChannelInfo().removeChannel(nChIndex);
 		}
 		else
 		{
@@ -1261,7 +1263,7 @@ public class CMInteractionManager {
 
 		// add a new server info
 		CMServer server = new CMServer(strServerName, strServerAddress, nServerPort, nServerUDPPort);
-		server.getSocketChannelInfo().addChannel(msg.m_ch, 0);	// add default channel to the new server
+		server.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);	// add default channel to the new server
 		bRet = interInfo.addAddServer(server);
 
 		// send response event
@@ -1495,7 +1497,7 @@ public class CMInteractionManager {
 		user.setHost(mse.getHostAddress());
 		user.setUDPPort(mse.getUDPPort());
 
-		user.getNonBlockSocketChannelInfo().addChannel(msg.m_ch, 0);
+		user.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);
 		interInfo.getLoginUsers().addMember(user);
 
 		if(CMInfo._CM_DEBUG)
@@ -1707,7 +1709,7 @@ public class CMInteractionManager {
 			CMSessionManager.leaveSession(user, cmInfo);
 		}
 		
-		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(); // main channel remained
+		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0); // main channel remained
 		user.getBlockSocketChannelInfo().removeAllChannels();
 		interInfo.getLoginUsers().removeMemberObject(mse.getUserName());
 		

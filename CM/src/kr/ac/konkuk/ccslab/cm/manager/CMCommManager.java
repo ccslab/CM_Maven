@@ -48,12 +48,14 @@ public class CMCommManager {
 		}
 		
 		//nonblocking datagram channel
-		CMChannelInfo dcInfo = commInfo.getNonBlockDatagramChannelInfo();
+		CMChannelInfo<Integer> dcInfo = commInfo.getNonBlockDatagramChannelInfo();
 		dcInfo.removeAllChannels();
 		
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		// socket channels to the default server (client, additional server)
-		CMChannelInfo scInfo = interInfo.getDefaultServerInfo().getSocketChannelInfo();
+		CMChannelInfo<Integer> scInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
+		scInfo.removeAllChannels();
+		scInfo = interInfo.getDefaultServerInfo().getBlockSocketChannelInfo();
 		scInfo.removeAllChannels();
 		
 		// socket channels to additional servers (client)
@@ -61,7 +63,9 @@ public class CMCommManager {
 		while(iterServer.hasNext())
 		{
 			CMServer tServer = iterServer.next();
-			CMChannelInfo tscInfo = tServer.getSocketChannelInfo();
+			CMChannelInfo<Integer> tscInfo = tServer.getNonBlockSocketChannelInfo();
+			tscInfo.removeAllChannels();
+			tscInfo = tServer.getBlockSocketChannelInfo();
 			tscInfo.removeAllChannels();
 		}
 		
@@ -70,7 +74,7 @@ public class CMCommManager {
 		while(iterUser.hasNext())
 		{
 			CMUser tUser = iterUser.next();
-			CMChannelInfo chInfo = tUser.getNonBlockSocketChannelInfo();
+			CMChannelInfo<Integer> chInfo = tUser.getNonBlockSocketChannelInfo();
 			chInfo.removeAllChannels();
 			chInfo = tUser.getBlockSocketChannelInfo();
 			chInfo.removeAllChannels();
@@ -85,7 +89,7 @@ public class CMCommManager {
 			while(iterGroup.hasNext())
 			{
 				CMGroup tGroup = iterGroup.next();
-				CMChannelInfo mcInfo = tGroup.getMulticastChannelInfo();
+				CMChannelInfo<InetSocketAddress> mcInfo = tGroup.getMulticastChannelInfo();
 				mcInfo.removeAllChannels();
 			}
 		}
@@ -197,7 +201,6 @@ public class CMCommManager {
 	public static SelectableChannel openBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
 	{
 		SelectableChannel ch = null;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
 		
 		switch(channelType)
 		{
@@ -206,7 +209,6 @@ public class CMCommManager {
 			ssc.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 			ssc.socket().bind(new InetSocketAddress(port));
 			ssc.configureBlocking(true);
-			//commInfo.setBlockServerSocketChannel(ssc);
 			ch = ssc;
 			break;
 		case CMInfo.CM_SOCKET_CHANNEL:

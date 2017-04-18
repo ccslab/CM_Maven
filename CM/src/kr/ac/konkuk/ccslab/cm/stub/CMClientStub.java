@@ -249,7 +249,8 @@ public class CMClientStub extends CMStub {
 		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup(), m_cmInfo);
 
 		// close and remove all additional channels to the default server
-		interInfo.getDefaultServerInfo().getSocketChannelInfo().removeAllAddedChannels();
+		interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
+		interInfo.getDefaultServerInfo().getBlockSocketChannelInfo().removeAllChannels();
 		
 		// make and send an LOGOUT event
 		CMSessionEvent se = new CMSessionEvent();
@@ -611,19 +612,20 @@ public class CMClientStub extends CMStub {
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
 	 * and multicast channels, both the client and the server can add an additional channel.
 	 * 
-	 * @param nChIndex - the channel index which must be greater than 0.
-	 * The index 0 is occupied by the default TCP channel.
+	 * @param nKey - the channel key which must be greater than 0.
+	 * The key 0 is occupied by the default TCP channel.
 	 * @param strServer - the server name to which the client adds a TCP channel. The name of the default 
 	 * server is 'SERVER'.
 	 * 
 	 * @see CMClientStub#removeAdditionalSocketChannel(int, String)
 	 */
-	public void addSocketChannel(int nChIndex, String strServer)
+	public boolean addSocketChannel(int nKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
 		SocketChannel sc = null;
-		CMChannelInfo scInfo = null;
+		CMChannelInfo<Integer> scInfo = null;
+		
 		if(strServer.equals("SERVER"))
 		{
 			serverInfo = interInfo.getDefaultServerInfo();
@@ -633,29 +635,29 @@ public class CMClientStub extends CMStub {
 			serverInfo = interInfo.findAddServer(strServer);
 			if(serverInfo == null)
 			{
-				System.out.println("CMClientStub.addSocketChannel(), server("+strServer+") not found.");
-				return;
+				System.err.println("CMClientStub.addSocketChannel(), server("+strServer+") not found.");
+				return false;
 			}			
 		}
 		
 		try {
-			scInfo = serverInfo.getSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nChIndex);
+			scInfo = serverInfo.getNonBlockSocketChannelInfo();
+			sc = (SocketChannel) scInfo.findChannel(nKey);
 			if(sc != null)
 			{
-				System.out.println("CMClientStub.addSocketChannel(), channel index("+nChIndex
+				System.err.println("CMClientStub.addSocketChannel(), channel key("+nKey
 						+") already exists.");
-				return;
+				return false;
 			}
 			
 			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
-				System.out.println("CMClientStub.addSocketChannel(), failed.");
-				return;
+				System.err.println("CMClientStub.addSocketChannel(), failed.");
+				return false;
 			}
-			scInfo.addChannel(sc, nChIndex);
+			scInfo.addChannel(nKey, sc);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -665,26 +667,35 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_CHANNEL);
 		se.setChannelName(getMyself().getName());
-		se.setChannelNum(nChIndex);
-		send(se, strServer, CMInfo.CM_STREAM, nChIndex);
+		se.setChannelNum(nKey);
+		send(se, strServer, CMInfo.CM_STREAM, nKey);
 		
 		se = null;
-		return;
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMClientStub.addSocketChannel(),successfully requested to add the channel with the key("
+					+nKey+") to the server("+strServer+")");
+		}
+		
+		return true;
 	}
 	
 	/**
 	 * Removes an additional TCP channel from a server.
 	 * 
-	 * @param nChIndex - the index of the channel that is to be removed. The index must be greater than 0. 
+	 * @param nKey - the key of the channel that is to be removed. The key must be greater than 0. 
 	 * If the default channel (0) is removed, the result is undefined. 
 	 * @param strServer - the server name from which the additional channel is removed.
 	 * @see CMClientStub#addSocketChannel(int, String)
 	 */
-	public void removeAdditionalSocketChannel(int nChIndex, String strServer)
+	public boolean removeAdditionalSocketChannel(int nKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
-		CMChannelInfo scInfo = null;
+		CMChannelInfo<Integer> scInfo = null;
+		boolean result = false;
+		
 		if(strServer.equals("SERVER"))
 		{
 			serverInfo = interInfo.getDefaultServerInfo();
@@ -694,14 +705,28 @@ public class CMClientStub extends CMStub {
 			serverInfo = interInfo.findAddServer(strServer);
 			if(serverInfo == null)
 			{
-				System.out.println("CMClientStub.removeAdditionalSocketChannel(), server("+strServer+") not found.");
-				return;
+				System.err.println("CMClientStub.removeAdditionalSocketChannel(), server("+strServer+") not found.");
+				return false;
 			}			
 		}
 		
-		scInfo = serverInfo.getSocketChannelInfo();
-		scInfo.removeChannel(nChIndex);
-		return;
+		scInfo = serverInfo.getNonBlockSocketChannelInfo();
+		result = scInfo.removeChannel(nKey);
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMClientStub.removeAdditionalSocketChannel(), succeeded. key("+nKey+"), server ("
+					+strServer+").");
+			}
+		}
+		else
+		{
+			System.err.println("CMClientStub.removeAdditionalSocketChannel(), failed! key("+nKey+"), server ("
+					+strServer+").");			
+		}
+		
+		return result;
 	}
 
 	/**
@@ -1385,8 +1410,10 @@ public class CMClientStub extends CMStub {
 		}
 
 		// remove and close all additional channels in EM and CM
-		CMChannelInfo chInfo = tserver.getSocketChannelInfo();
-		chInfo.removeAllAddedChannels();
+		CMChannelInfo<Integer> chInfo = tserver.getNonBlockSocketChannelInfo();
+		chInfo.removeAllAddedChannels(0);
+		chInfo = tserver.getBlockSocketChannelInfo();
+		chInfo.removeAllChannels();
 
 		// make and send event
 		CMMultiServerEvent tmse = new CMMultiServerEvent();

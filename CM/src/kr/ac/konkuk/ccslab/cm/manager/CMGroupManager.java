@@ -19,6 +19,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.channels.*;
 
 public class CMGroupManager {
@@ -61,7 +62,8 @@ public class CMGroupManager {
 				MembershipKey key = CMCommManager.joinMulticastGroup(dc, group.getGroupAddress());
 				group.setMembershipKey(key);
 				// store multicast channel
-				group.getMulticastChannelInfo().addChannel(dc, 0);	// default channel number: 0
+				InetSocketAddress sockAddress = new InetSocketAddress(group.getGroupAddress(), group.getGroupPort());
+				group.getMulticastChannelInfo().addChannel(sockAddress, dc);	// default channel
 			}
 		}
 		
@@ -106,7 +108,8 @@ public class CMGroupManager {
 		MembershipKey key = CMCommManager.joinMulticastGroup(dc, group.getGroupAddress());
 		group.setMembershipKey(key);
 		// store multicast channel
-		group.getMulticastChannelInfo().addChannel(dc, 0);	// default channel number: 0
+		InetSocketAddress sockAddress = new InetSocketAddress(group.getGroupAddress(), group.getGroupPort());
+		group.getMulticastChannelInfo().addChannel(sockAddress, dc);	// default channel
 	
 		if(CMInfo._CM_DEBUG)
 		{

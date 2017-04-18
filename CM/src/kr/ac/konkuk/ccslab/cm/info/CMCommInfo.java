@@ -9,7 +9,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 public class CMCommInfo {
 	private ServerSocketChannel m_nonBlockServerSocketChannel; // nonblocking server socket channel
 	private ServerSocketChannel m_blockServerSocketChannel; // blocking server socket channel
-	private CMChannelInfo m_nonBlockDCInfo;	// nonblocking datagram channel list
+	private CMChannelInfo<Integer> m_nonBlockDCInfo;	// nonblocking datagram channel list
 	//private Vector<SocketChannel> m_scList;
 	//private Vector<DatagramChannel> m_dcList;
 	//private Vector<MulticastChannel> m_mcList;
@@ -33,7 +33,7 @@ public class CMCommInfo {
 	{
 		m_nonBlockServerSocketChannel = null;
 		m_blockServerSocketChannel = null;
-		m_nonBlockDCInfo = new CMChannelInfo();
+		m_nonBlockDCInfo = new CMChannelInfo<Integer>();
 		m_byteReceiver = null;
 		//m_scList = new Vector<SocketChannel>();
 		//m_dcList = new Vector<DatagramChannel>();
@@ -159,7 +159,7 @@ public class CMCommInfo {
 		return m_selector;
 	}
 	
-	public CMChannelInfo getNonBlockDatagramChannelInfo()
+	public CMChannelInfo<Integer> getNonBlockDatagramChannelInfo()
 	{
 		return m_nonBlockDCInfo;
 	}

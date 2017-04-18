@@ -23,6 +23,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.channels.*;
 
 /**
@@ -122,103 +123,159 @@ public class CMStub {
 	// add/remove channel (DatagramChannel or MulticastChannel)
 	// SocketChannel is available only in the ClientStub module
 	
-	public void addDatagramChannel(int nChIndex, int nChPort)
+	public boolean addDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		CMChannelInfo nonBlockDCInfo = commInfo.getNonBlockDatagramChannelInfo();
+		CMChannelInfo<Integer> nonBlockDCInfo = commInfo.getNonBlockDatagramChannelInfo();
 		DatagramChannel dc = null;
-		if(nonBlockDCInfo.findChannel(nChIndex) != null)
+		boolean result = false;
+		
+		if(nonBlockDCInfo.findChannel(nChPort) != null)
 		{
-			System.out.println("CMStub.addDatagramChannel(), channel index("+nChIndex+") already exists.");
-			return;
+			System.err.println("CMStub.addDatagramChannel(), channel key("+nChPort+") already exists.");
+			return false;
 		}
 		try {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
 					confInfo.getMyAddress(), nChPort, m_cmInfo);
 			if(dc == null)
 			{
-				System.out.println("CMStub.addDatagramChannel(), failed.");
-				return;
+				System.err.println("CMStub.addDatagramChannel(), failed.");
+				return false;
 			}
-			nonBlockDCInfo.addChannel(dc, nChIndex);
+			
+			result = nonBlockDCInfo.addChannel(nChPort, dc);
+			if(result)
+			{
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMStub.addDatagramChannel(), succeeded. port("+nChPort+")");
+			}
+			else
+			{
+				System.err.println("CMStub.addDatagramChannel(), failed! port("+nChPort+")");
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return;
+		return result;
 	}
 	
-	public void removeAdditionalDatagramChannel(int nChIndex)
+	public boolean removeAdditionalDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
-		CMChannelInfo dcInfo = commInfo.getNonBlockDatagramChannelInfo();
+		CMChannelInfo<Integer> dcInfo = commInfo.getNonBlockDatagramChannelInfo();
+		boolean result = false;
 
-		dcInfo.removeChannel(nChIndex);
-		return;
+		result = dcInfo.removeChannel(nChPort); 
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMStub.removeAdditionalDatagramChannel(), succeeded. port("+nChPort+")");
+		}
+		else
+		{
+			System.err.println("CMStub.removeAdditionalDatagramChannel(), failed! port("+nChPort+")");
+		}
+		return result;
 	}
 
-	public void addMulticastChannel(int nChIndex, String strSession, String strGroup, String strChAddress, int nChPort)
+	public boolean addMulticastChannel(String strSession, String strGroup, String strChAddress, int nChPort)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		DatagramChannel mc = null;
+		InetSocketAddress sockAddress = new InetSocketAddress(strChAddress, nChPort);
+		boolean result = false;
 		
 		CMSession session = interInfo.findSession(strSession);
 		if(session == null)
 		{
-			System.out.println("CMStub.addMulticastChannel(), session("+strSession+") not found.");
-			return;
+			System.err.println("CMStub.addMulticastChannel(), session("+strSession+") not found.");
+			return false;
 		}
 		CMGroup group = session.findGroup(strGroup);
 		if(group == null)
 		{
-			System.out.println("CMStub.addMulticastChannel(), group("+strGroup+") not found.");
-			return;
+			System.err.println("CMStub.addMulticastChannel(), group("+strGroup+") not found.");
+			return false;
 		}
-		CMChannelInfo mcInfo = group.getMulticastChannelInfo();
-		if(mcInfo.findChannel(nChIndex) != null)
+		CMChannelInfo<InetSocketAddress> mcInfo = group.getMulticastChannelInfo();
+		if(mcInfo.findChannel(sockAddress) != null)
 		{
-			System.out.println("CMStub.addMulticastChannel(), channel index("+nChIndex+") already exists.");
-			return;
+			System.err.println("CMStub.addMulticastChannel(), channel index("+sockAddress.toString()+") already exists.");
+			return false;
 		}
 		
 		try {
-			mc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, strChAddress
-															, nChPort, m_cmInfo);
+			mc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, strChAddress, 
+					nChPort, m_cmInfo);
 			if(mc == null)
 			{
-				System.out.println("CMStub.addMulticastChannel() failed.");
-				return;
+				System.err.println("CMStub.addMulticastChannel() failed.");
+				return false;
 			}
-			mcInfo.addChannel(mc, nChIndex);
+			
+			result = mcInfo.addChannel(sockAddress, mc); 
+			if(result)
+			{
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMStub.addMulticastChannel(), succeeded. session("+strSession+"), group("
+							+strGroup+"), address("+strChAddress+"), port("+nChPort+")");					
+				}
+			}
+			else
+			{
+				System.err.println("CMStub.addMulticastChannel(), failed! session("+strSession+"), group("
+						+strGroup+"), address("+strChAddress+"), port("+nChPort+")");				
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return;
+		return result;
 	}
 	
-	public void removeAdditionalMulticastChannel(int nChIndex, String strSession, String strGroup)
+	public boolean removeAdditionalMulticastChannel(String strSession, String strGroup, String strChAddress, int nChPort)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		InetSocketAddress sockAddress = null;
+		boolean result = false;
 		
 		CMSession session = interInfo.findSession(strSession);
 		if(session == null)
 		{
-			System.out.println("CMStub.removeAdditionalMulticastChannel(), session("+strSession+") not found.");
-			return;
+			System.err.println("CMStub.removeAdditionalMulticastChannel(), session("+strSession+") not found.");
+			return false;
 		}
 		CMGroup group = session.findGroup(strGroup);
 		if(group == null)
 		{
-			System.out.println("CMStub.removeAdditionalMulticastChannel(), group("+strGroup+") not found.");
-			return;
+			System.err.println("CMStub.removeAdditionalMulticastChannel(), group("+strGroup+") not found.");
+			return false;
 		}
-		CMChannelInfo mcInfo = group.getMulticastChannelInfo();
-		mcInfo.removeChannel(nChIndex);
-		return;
+		CMChannelInfo<InetSocketAddress> mcInfo = group.getMulticastChannelInfo();
+		sockAddress = new InetSocketAddress(strChAddress, nChPort);
+		
+		result = mcInfo.removeChannel(sockAddress);
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMStub.removeAdditionalMulticastChannel(), succeeded. session("+strSession+"), group("
+						+strGroup+"), address("+strChAddress+"), port("+nChPort+")");				
+			}
+		}
+		else
+		{
+			System.out.println("CMStub.removeAdditionalMulticastChannel(), failed! session("+strSession+"), group("
+					+strGroup+"), address("+strChAddress+"), port("+nChPort+")");			
+		}
+		
+		return result;
 	}
 
 	////////////////////////////////////////////////////////////////////////
@@ -359,13 +416,8 @@ public class CMStub {
 	
 	public boolean multicast(CMEvent cme, String sessionName, String groupName)
 	{
-		return multicast(cme, sessionName, groupName, 0);
-	}
-	
-	public boolean multicast(CMEvent cme, String sessionName, String groupName, int nChNum)
-	{
 		boolean ret = false;
-		ret = CMEventManager.multicastEvent(cme, sessionName, groupName, nChNum, m_cmInfo);
+		ret = CMEventManager.multicastEvent(cme, sessionName, groupName, m_cmInfo);
 		return ret;
 	}
 	

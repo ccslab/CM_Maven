@@ -1143,7 +1143,7 @@ public class CMWinClient extends JFrame {
 		while(iter.hasNext())
 		{
 			CMServer tserver = iter.next();
-			if(tserver.getSocketChannelInfo().findChannel(0) != null)
+			if(tserver.getNonBlockSocketChannelInfo().findChannel(0) != null)
 			{
 				//System.out.println("------ for additional server["+tserver.getServerName()+"]");
 				printMessage("------ for additional server["+tserver.getServerName()+"]\n");
@@ -1191,98 +1191,72 @@ public class CMWinClient extends JFrame {
 	public void testAddChannel()
 	{
 		int nChType = -1;
-		int nChIndex = -1;
+		int nChIndex = -1; // the channel key for the socket channel
 		String strServerName = null;
-		String strChAddress = null;
-		int nChPort = -1;
+		String strChAddress = null; // the channel key for the multicast address is the (address, port) pair
+		int nChPort = -1; // the channel key for the datagram socket channel, or the multicast port number
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		//BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		boolean result = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			CMUser myself = interInfo.getMyself();
 			if(myself.getState() != CMInfo.CM_SESSION_JOIN && myself.getState() != CMInfo.CM_LOGIN)
 			{
-				//System.out.println("You should login to the default server.");
 				printMessage("You should login to the default server.\n");
 				return;
 			}
 		}
 		
-		//System.out.println("====== add additional channel");
 		printMessage("====== add additional channel\n");
 		
 		// ask channel type, (server name), channel index (integer greater than 0), addr, port
-		/*
-		try {
-			System.out.print("Select channel type (SocketChannel:2, DatagramChannel:3, MulticastChannel:4): ");
-			nChType = Integer.parseInt(br.readLine());
-			System.out.print("Channel Index(integer greater than 0): ");
-			nChIndex = Integer.parseInt(br.readLine());
-			if(nChType == CMInfo.CM_SOCKET_CHANNEL)
-			{
-				System.out.print("Server name(\"SERVER\" for the default server): ");
-				strServerName = br.readLine();
-			}
-			else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
-			{
-				System.out.print("Channel udp port: ");
-				nChPort = Integer.parseInt(br.readLine());
-			}
-			else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
-			{
-				System.out.print("Target session name: ");
-				strSessionName = br.readLine();
-				System.out.print("Target group name: ");
-				strGroupName = br.readLine();
-				System.out.print("Channel multicast address: ");
-				strChAddress = br.readLine();
-				System.out.print("Channel multicast port: ");
-				nChPort = Integer.parseInt(br.readLine());
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 		
 		String[] chTypes = {"SocketChannel", "DatagramChannel", "MulticastChannel"};
 		JComboBox<String> chTypeBox = new JComboBox<String>(chTypes);
-		JTextField chIndexField = new JTextField();
 		Object[] message = {
-				"Channel Type: ", chTypeBox,
-				"Channel Index (> 0): ", chIndexField
+				"Channel Type: ", chTypeBox
 		};
-		int option = JOptionPane.showConfirmDialog(null, message, "Channel type & index", JOptionPane.OK_CANCEL_OPTION);
+		int option = JOptionPane.showConfirmDialog(null, message, "Channel type", JOptionPane.OK_CANCEL_OPTION);
 		if(option != JOptionPane.OK_OPTION) return;
 		nChType = chTypeBox.getSelectedIndex() + 2;
-		String strChIndex = chIndexField.getText();
-		try{
-			nChIndex = Integer.parseInt(strChIndex);
-		}catch(NumberFormatException e){
-			printMessage("A channel index must be an integer!");
-			return;
-		}
 
 		if(nChType == CMInfo.CM_SOCKET_CHANNEL)
 		{
-			strServerName = JOptionPane.showInputDialog("Server name(\"SERVER\" for the default server): ");
-			if(strServerName == null) return;
+			JTextField chIndexField = new JTextField();
+			JTextField strServerField = new JTextField();
+			Object[] scMessage = {
+					"Channel index (> 0)", chIndexField,
+					"Server name(empty for the default server)", strServerField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Socket Channel", JOptionPane.OK_CANCEL_OPTION);
+
+			if(scResponse != JOptionPane.OK_OPTION) return;
+			nChIndex = Integer.parseInt(chIndexField.getText());
+		
+			if(nChIndex <= 0)
+			{
+				printMessage("testAddChannel(), invalid socket channel index ("+nChIndex+")!\n");
+				return;
+			}
+			strServerName = strServerField.getText();
+			if(strServerName == null || strServerName.equals(""))
+				strServerName = "SERVER"; // default server name
 		}
 		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
 		{
-			String strUDP = JOptionPane.showInputDialog("Channel UDP Port: ");
+			String strUDP = JOptionPane.showInputDialog("Port number (key of the datagram channel): ");
 			if(strUDP == null) return;
 			try{
 				nChPort = Integer.parseInt(strUDP);
 			}catch(NumberFormatException e){
-				printMessage("A channel UDP port must be an integer!");
+				printMessage("The channel UDP port must be a number!\n");
 				return;
-			}
-			
+			}			
 		}
 		else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
 		{
@@ -1309,21 +1283,40 @@ public class CMWinClient extends JFrame {
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			m_clientStub.addSocketChannel(nChIndex, strServerName);
+			result = m_clientStub.addSocketChannel(nChIndex, strServerName);
+			if(result)
+				printMessage("Successfully requested to add a channel: key("+nChIndex+") to server ("
+						+strServerName+")\n");
+			else
+				printMessage("Failed to requested to add a channel: key("+nChIndex+") to server ("
+						+strServerName+")\n");
+				
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
-			m_clientStub.addDatagramChannel(nChIndex, nChPort);
+			result = m_clientStub.addDatagramChannel(nChPort);
+			if(result)
+				printMessage("Successfully added a datagram socket channel: port("+nChPort+")\n");
+			else
+				printMessage("Failed to add a datagram socket channel: port("+nChPort+")\n");
 			break;
 		case CMInfo.CM_MULTICAST_CHANNEL:
-			m_clientStub.addMulticastChannel(nChIndex, strSessionName, strGroupName, strChAddress, nChPort);
+			result = m_clientStub.addMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
+			if(result)
+			{
+				printMessage("Successfully added a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
+			else
+			{
+				printMessage("Failed to add a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
 			break;
 		default:
-			//System.out.println("Channel type is incorrect!");
 			printMessage("Channel type is incorrect!\n");
 			break;
 		}
 		
-		//System.out.println("======");
 		printMessage("======\n");
 	}
 
@@ -1331,105 +1324,126 @@ public class CMWinClient extends JFrame {
 	{
 		int nChType = -1;
 		int nChIndex = -1;
+		int nChPort = -1;
+		String strChAddress = null;
 		String strServerName = null;
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		//BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		boolean result = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			CMUser myself = interInfo.getMyself();
 			if(myself.getState() != CMInfo.CM_SESSION_JOIN && myself.getState() != CMInfo.CM_LOGIN)
 			{
-				//System.out.println("You should login to the default server.");
 				printMessage("You should login to the default server.\n");
 				return;
 			}
 		}
 		
-		//System.out.println("====== remove additional channel");
 		printMessage("====== remove additional channel\n");
-		
-		/*
-		try {
-			System.out.print("Select channel type (SocketChannel:2, DatagramChannel:3, MulticastChannel:4): ");
-			nChType = Integer.parseInt(br.readLine());
-			System.out.print("Channel Index(integer greater than 0): ");
-			nChIndex = Integer.parseInt(br.readLine());
-			if(nChType == CMInfo.CM_SOCKET_CHANNEL)
-			{
-				System.out.print("Server name(\"SERVER\" for the default server): ");
-				strServerName = br.readLine();
-			}
-			else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
-			{
-				System.out.print("Target session name: ");
-				strSessionName = br.readLine();
-				System.out.print("Target group name: ");
-				strGroupName = br.readLine();
-			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-		
+				
 		String[] chTypes = {"SocketChannel", "DatagramChannel", "MulticastChannel"};
 		JComboBox<String> chTypeBox = new JComboBox<String>(chTypes);
-		JTextField chIndexField = new JTextField();
 		Object[] message = {
-				"Channel Type: ", chTypeBox,
-				"Channel Index(> 0): ", chIndexField
+				"Channel Type: ", chTypeBox
 		};
 		int option = JOptionPane.showConfirmDialog(null, message, "Removal of Additional Channel", JOptionPane.OK_CANCEL_OPTION);
 		if(option != JOptionPane.OK_OPTION) return;
 		nChType = chTypeBox.getSelectedIndex() + 2;
-		try{
-			nChIndex = Integer.parseInt(chIndexField.getText());
-		}catch(NumberFormatException e){
-			printMessage("Channel index must be an integer!");
-			return;
-		}
 
 		if(nChType == CMInfo.CM_SOCKET_CHANNEL)
 		{
-			strServerName = JOptionPane.showInputDialog("Server name(\"SERVER\" for the default server): ");
-			if(strServerName == null) return;
+			JTextField chIndexField = new JTextField();
+			JTextField strServerField = new JTextField();
+			Object[] scMessage = {
+					"Channel index (> 0)", chIndexField,
+					"Server name(empty for the default server)", strServerField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Socket Channel", JOptionPane.OK_CANCEL_OPTION);
+
+			if(scResponse != JOptionPane.OK_OPTION) return;
+			nChIndex = Integer.parseInt(chIndexField.getText());
+		
+			if(nChIndex <= 0)
+			{
+				printMessage("testAddChannel(), invalid socket channel index ("+nChIndex+")!\n");
+				return;
+			}
+			strServerName = strServerField.getText();
+			if(strServerName == null || strServerName.equals(""))
+				strServerName = "SERVER"; // default server name
+		}
+		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
+		{
+			String strUDP = JOptionPane.showInputDialog("Port number (key of the datagram channel): ");
+			if(strUDP == null) return;
+			try{
+				nChPort = Integer.parseInt(strUDP);
+			}catch(NumberFormatException e){
+				printMessage("The channel UDP port must be a number!\n");
+				return;
+			}						
 		}
 		else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
 		{
 			JTextField snameField = new JTextField();
 			JTextField gnameField = new JTextField();
-			Object[] sgMessage = { "Target Session Name: ", snameField,
-					"Target Group Name: ", gnameField
+			JTextField chAddrField = new JTextField();
+			JTextField chPortField = new JTextField();
+			Object[] sgMessage = { 
+					"Target Session Name: ", snameField,
+					"Target Group Name: ", gnameField,
+					"Channel Multicast Address: ", chAddrField,
+					"Channel Multicast Port: ", chPortField
 			};
 			int sgOption = JOptionPane.showConfirmDialog(null, sgMessage, "Target Session and Group", JOptionPane.OK_CANCEL_OPTION);
 			if(sgOption != JOptionPane.OK_OPTION) return;
 			strSessionName = snameField.getText();
 			strGroupName = gnameField.getText();
+			strChAddress = chAddrField.getText();
+			nChPort = Integer.parseInt(chPortField.getText());			
 		}
 
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			m_clientStub.removeAdditionalSocketChannel(nChIndex, strServerName);
+			result = m_clientStub.removeAdditionalSocketChannel(nChIndex, strServerName);
+			if(result)
+				printMessage("Successfully removed a channel: key("+nChIndex+") to server ("+strServerName+")\n");
+			else
+				printMessage("Failed to remove a channel: key("+nChIndex+") to server ("+strServerName+")\n");
+	
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
-			m_clientStub.removeAdditionalDatagramChannel(nChIndex);
+			result = m_clientStub.removeAdditionalDatagramChannel(nChPort);
+			if(result)
+				printMessage("Successfully removed a datagram socket channel: port("+nChPort+")\n");
+			else
+				printMessage("Failed to remove a datagram socket channel: port("+nChPort+")\n");
+
 			break;
 		case CMInfo.CM_MULTICAST_CHANNEL:
-			m_clientStub.removeAdditionalMulticastChannel(nChIndex, strSessionName, strGroupName);
+			result = m_clientStub.removeAdditionalMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
+			if(result)
+			{
+				printMessage("Successfully removed a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
+			else
+			{
+				printMessage("Failed to remove a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
 			break;
 		default:
-			//System.out.println("Channel type is incorrect!");
 			printMessage("Channel type is incorrect!\n");
 			break;
 		}
 		
-		//System.out.println("======");
 		printMessage("======\n");
 	}
 
