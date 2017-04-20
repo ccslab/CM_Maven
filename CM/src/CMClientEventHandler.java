@@ -201,15 +201,15 @@ public class CMClientEventHandler implements CMEventHandler {
 			System.out.println("("+se.getHandlerSession()+")");
 			System.out.println("<"+se.getUserName()+">: "+se.getTalk());
 			break;
-		case CMSessionEvent.ADD_CHANNEL_ACK:
+		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			if(se.getReturnCode() == 0)
 			{
-				System.out.println("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
+				System.out.println("Adding a nonblocking SocketChannel("+se.getChannelName()+","+se.getChannelNum()
 						+") failed in the server!");
 			}
 			else
 			{
-				System.out.println("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
+				System.out.println("Adding a nonblocking SocketChannel("+se.getChannelName()+","+se.getChannelNum()
 						+") succeeded in the server!");
 			}
 			break;

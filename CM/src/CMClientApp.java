@@ -732,7 +732,7 @@ public class CMClientApp {
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			result = m_clientStub.addSocketChannel(nChIndex, strServerName);
+			result = m_clientStub.addNonBlockSocketChannel(nChIndex, strServerName);
 			if(result)
 				System.out.println("Successfully requested to add a channel: key("+nChIndex+") to server ("
 						+strServerName+")");
@@ -827,7 +827,7 @@ public class CMClientApp {
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			result = m_clientStub.removeAdditionalSocketChannel(nChIndex, strServerName);
+			result = m_clientStub.removeNonBlockSocketChannel(nChIndex, strServerName);
 			if(result)
 				System.out.println("Successfully removed a channel: key("+nChIndex+") to server ("
 						+strServerName+")");

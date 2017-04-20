@@ -233,19 +233,19 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		case CMSessionEvent.JOIN_SESSION_ACK:
 			m_client.setButtonsAccordingToClientState();
 			break;
-		case CMSessionEvent.ADD_CHANNEL_ACK:
+		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			if(se.getReturnCode() == 0)
 			{
 				//System.out.println("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
 				//		+") failed in the server!");
-				printMessage("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
+				printMessage("Adding a nonblocking SocketChannel("+se.getChannelName()+","+se.getChannelNum()
 						+") failed in the server!\n");
 			}
 			else
 			{
 				//System.out.println("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
 				//		+") succeeded in the server!");
-				printMessage("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
+				printMessage("Adding a nonblocking SocketChannel("+se.getChannelName()+","+se.getChannelNum()
 						+") succeeded in the server!\n");
 			}
 			break;

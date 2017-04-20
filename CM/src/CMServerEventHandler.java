@@ -99,8 +99,8 @@ public class CMServerEventHandler implements CMEventHandler {
 		case CMSessionEvent.LEAVE_SESSION:
 			System.out.println("["+se.getUserName()+"] leaves a session("+se.getSessionName()+").");
 			break;
-		case CMSessionEvent.ADD_CHANNEL:
-			System.out.println("["+se.getChannelName()+"] request to add SocketChannel with index("
+		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL:
+			System.out.println("["+se.getChannelName()+"] request to add a nonblocking SocketChannel with key("
 					+se.getChannelNum()+").");
 			break;
 		case CMSessionEvent.REGISTER_USER:

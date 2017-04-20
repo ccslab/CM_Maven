@@ -112,10 +112,10 @@ public class CMWinServerEventHandler implements CMEventHandler {
 			//System.out.println("["+se.getUserName()+"] leaves a session("+se.getSessionName()+").");
 			printMessage("["+se.getUserName()+"] leaves a session("+se.getSessionName()+").\n");
 			break;
-		case CMSessionEvent.ADD_CHANNEL:
+		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL:
 			//System.out.println("["+se.getChannelName()+"] request to add SocketChannel with index("
 			//		+se.getChannelNum()+").");
-			printMessage("["+se.getChannelName()+"] request to add SocketChannel with index("
+			printMessage("["+se.getChannelName()+"] request to add a nonblocking SocketChannel with key("
 			+se.getChannelNum()+").\n");
 			break;
 		case CMSessionEvent.REGISTER_USER:

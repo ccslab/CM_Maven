@@ -608,18 +608,23 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * Adds a TCP channel to a server.
+	 * Adds a nonblocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
-	 * and multicast channels, both the client and the server can add an additional channel.
+	 * and multicast channels, both the client and the server can add an additional channel 
+	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
+	 * methods in the CMStub class.
 	 * 
 	 * @param nKey - the channel key which must be greater than 0.
 	 * The key 0 is occupied by the default TCP channel.
 	 * @param strServer - the server name to which the client adds a TCP channel. The name of the default 
 	 * server is 'SERVER'.
+	 * @return true if the socket channel is successfully created at the client and requested to add 
+	 * the (key, socket) pair to the server. 
+	 * <br> False, otherwise.
 	 * 
-	 * @see CMClientStub#removeAdditionalSocketChannel(int, String)
+	 * @see CMClientStub#removeNonBlockSocketChannel(int, String)
 	 */
-	public boolean addSocketChannel(int nKey, String strServer)
+	public boolean addNonBlockSocketChannel(int nKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
@@ -654,7 +659,7 @@ public class CMClientStub extends CMStub {
 					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
-				System.err.println("CMClientStub.addSocketChannel(), failed.");
+				System.err.println("CMClientStub.addSocketChannel(), failed!: key("+nKey+"), server("+strServer+")");
 				return false;
 			}
 			scInfo.addChannel(nKey, sc);
@@ -665,7 +670,7 @@ public class CMClientStub extends CMStub {
 		}
 		
 		CMSessionEvent se = new CMSessionEvent();
-		se.setID(CMSessionEvent.ADD_CHANNEL);
+		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nKey);
 		send(se, strServer, CMInfo.CM_STREAM, nKey);
@@ -687,9 +692,9 @@ public class CMClientStub extends CMStub {
 	 * @param nKey - the key of the channel that is to be removed. The key must be greater than 0. 
 	 * If the default channel (0) is removed, the result is undefined. 
 	 * @param strServer - the server name from which the additional channel is removed.
-	 * @see CMClientStub#addSocketChannel(int, String)
+	 * @see CMClientStub#addNonBlockSocketChannel(int, String)
 	 */
-	public boolean removeAdditionalSocketChannel(int nKey, String strServer)
+	public boolean removeNonBlockSocketChannel(int nKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;

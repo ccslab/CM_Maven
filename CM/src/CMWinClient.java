@@ -1283,7 +1283,7 @@ public class CMWinClient extends JFrame {
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			result = m_clientStub.addSocketChannel(nChIndex, strServerName);
+			result = m_clientStub.addNonBlockSocketChannel(nChIndex, strServerName);
 			if(result)
 				printMessage("Successfully requested to add a channel: key("+nChIndex+") to server ("
 						+strServerName+")\n");
@@ -1411,7 +1411,7 @@ public class CMWinClient extends JFrame {
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			result = m_clientStub.removeAdditionalSocketChannel(nChIndex, strServerName);
+			result = m_clientStub.removeNonBlockSocketChannel(nChIndex, strServerName);
 			if(result)
 				printMessage("Successfully removed a channel: key("+nChIndex+") to server ("+strServerName+")\n");
 			else

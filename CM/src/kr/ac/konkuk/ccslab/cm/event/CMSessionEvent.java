@@ -27,8 +27,8 @@ public class CMSessionEvent extends CMEvent {
 	public static final int SESSION_ADD_USER = 11;			// 로긴 사용자 추가 (s->c)
 	public static final int SESSION_REMOVE_USER = 12;		// 로그아웃 사용자 삭제 (s->c)
 	public static final int CHANGE_SESSION = 13;			// 사용자의 세션 변경 (s->c)
-	public static final int ADD_CHANNEL = 14;				// add channel info (c->s)
-	public static final int ADD_CHANNEL_ACK = 15;			// ack for added channel (s->c)
+	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;				// add channel info (c->s)
+	public static final int ADD_NONBLOCK_SOCKET_CHANNEL_ACK = 15;			// ack for added channel (s->c)
 
 	public static final int REGISTER_USER = 16;				// 사용자 등록 요청 (c->s)
 	public static final int REGISTER_USER_ACK = 17;			// 사용자 등록 요청 응답 (s->c)
@@ -705,10 +705,10 @@ public class CMSessionEvent extends CMEvent {
 		case CHANGE_SESSION:
 			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
 			break;
-		case ADD_CHANNEL:
+		case ADD_NONBLOCK_SOCKET_CHANNEL:
 			nByteNum += 2*Integer.BYTES + m_strChannelName.getBytes().length;
 			break;
-		case ADD_CHANNEL_ACK:
+		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			nByteNum += 3*Integer.BYTES + m_strChannelName.getBytes().length;
 			break;
 		case REGISTER_USER:
@@ -868,13 +868,13 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.put(m_strSessionName.getBytes());
 			m_bytes.clear();
 			break;
-		case ADD_CHANNEL:
+		case ADD_NONBLOCK_SOCKET_CHANNEL:
 			m_bytes.putInt(m_strChannelName.getBytes().length);
 			m_bytes.put(m_strChannelName.getBytes());
 			m_bytes.putInt(m_nChannelNum);
 			m_bytes.clear();
 			break;
-		case ADD_CHANNEL_ACK:
+		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			m_bytes.putInt(m_strChannelName.getBytes().length);
 			m_bytes.put(m_strChannelName.getBytes());
 			m_bytes.putInt(m_nChannelNum);
@@ -1021,12 +1021,12 @@ public class CMSessionEvent extends CMEvent {
 			m_strSessionName = getStringFromByteBuffer(msg);
 			msg.clear();
 			break;
-		case ADD_CHANNEL:
+		case ADD_NONBLOCK_SOCKET_CHANNEL:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
 			msg.clear();
 			break;
-		case ADD_CHANNEL_ACK:
+		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
 			m_nReturnCode = msg.getInt();

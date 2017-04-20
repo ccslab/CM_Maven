@@ -426,11 +426,11 @@ public class CMInteractionManager {
 		case CMSessionEvent.SESSION_TALK:
 			processSESSION_TALK(msg, cmInfo);
 			break;
-		case CMSessionEvent.ADD_CHANNEL:
-			processADD_CHANNEL(msg, cmInfo);
+		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL:
+			processADD_NONBLOCK_SOCKET_CHANNEL(msg, cmInfo);
 			break;
-		case CMSessionEvent.ADD_CHANNEL_ACK:
-			processADD_CHANNEL_ACK(msg, cmInfo);
+		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
+			processADD_NONBLOCK_SOCKET_CHANNEL_ACK(msg, cmInfo);
 			break;
 		case CMSessionEvent.REGISTER_USER:
 			processREGISTER_USER(msg, cmInfo);
@@ -859,7 +859,7 @@ public class CMInteractionManager {
 		return;
 	}
 	
-	private static void processADD_CHANNEL(CMMessage msg, CMInfo cmInfo)
+	private static void processADD_NONBLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
@@ -867,7 +867,7 @@ public class CMInteractionManager {
 		int nChIndex = se.getChannelNum();
 		
 		CMSessionEvent seAck = new CMSessionEvent();
-		seAck.setID(CMSessionEvent.ADD_CHANNEL_ACK);
+		seAck.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK);
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChIndex);
 
@@ -895,7 +895,7 @@ public class CMInteractionManager {
 		return;
 	}
 	
-	private static void processADD_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
+	private static void processADD_NONBLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
