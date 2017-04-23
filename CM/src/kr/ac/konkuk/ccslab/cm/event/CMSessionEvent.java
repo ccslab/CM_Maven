@@ -27,8 +27,12 @@ public class CMSessionEvent extends CMEvent {
 	public static final int SESSION_ADD_USER = 11;			// 로긴 사용자 추가 (s->c)
 	public static final int SESSION_REMOVE_USER = 12;		// 로그아웃 사용자 삭제 (s->c)
 	public static final int CHANGE_SESSION = 13;			// 사용자의 세션 변경 (s->c)
-	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;				// add channel info (c->s)
-	public static final int ADD_NONBLOCK_SOCKET_CHANNEL_ACK = 15;			// ack for added channel (s->c)
+	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;	// add the nonblocking socket channel info (c->s)
+	public static final int ADD_NONBLOCK_SOCKET_CHANNEL_ACK = 15;	// ack for the added nonblocking socket channel (s->c)
+	public static final int ADD_BLOCK_SOCKET_CHANNEL = 22;	// add the blocking socket channel info (c->s)
+	public static final int ADD_BLOCK_SOCKET_CHANNEL_ACK = 23;	// ack for the added blocking socket channel (s->c)
+	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;	// remove the blocking socket channel info (c->s)
+	public static final int REMOVE_BLOCK_SOCKET_CHANNEL_ACK = 25;	// ack for the removed blocking socket channel (s->c)
 
 	public static final int REGISTER_USER = 16;				// 사용자 등록 요청 (c->s)
 	public static final int REGISTER_USER_ACK = 17;			// 사용자 등록 요청 응답 (s->c)
@@ -545,98 +549,6 @@ public class CMSessionEvent extends CMEvent {
 	
 	protected int getByteNum()
 	{
-		/*
-		typedef struct _logIn {
-			char userName[NAME_NUM];
-			char passwd[EVENT_FIELD_LEN];
-			char hostAddr[EVENT_FIELD_LEN];
-			int nUDPPort;
-		} logIn;
-
-		typedef struct _logOut {
-			char userName[NAME_NUM];
-		} logOut;
-
-		typedef struct _loginAck {
-			bool bValidUser;
-			int userID;		// deleted
-			char commArch[EVENT_FIELD_LEN];
-			bool bLoginScheme;
-			bool bSessionScheme;
-			int nServerUDPPort;
-		} loginAck;
-
-		typedef struct _responseSessionInfo {
-			int sessionNum;
-			unsigned char session[1];
-		} responseSessionInfo;
-
-		typedef struct _sInfo {
-			char sessionName[EVENT_FIELD_LEN];
-			char address[EVENT_FIELD_LEN];
-			int port;
-			int userNum;
-			unsigned char session[1];
-		} sInfo;
-
-		typedef struct _joinSessin {
-			char userName[NAME_NUM];
-			char sessionName[EVENT_FIELD_LEN];
-		} joinSession;
-
-		typedef struct _joinSessionAck {
-			int nRegionNum;
-			unsigned char next[1];
-		} joinSessionAck;
-
-		typedef struct _rInfo {
-			char strRegionName[EVENT_FIELD_LEN];
-			char strRegionAddress[EVENT_FIELD_LEN];
-			int nRegionPort;
-			unsigned char next[1];
-		} rInfo;
-
-		typedef struct _leaveSession {
-			char userName[NAME_NUM];
-			char sessionName[EVENT_FIELD_LEN];
-		} leaveSession;
-
-		typedef struct _leaveSessionAck {
-			int returnCode;
-		} leaveSessionAck;
-
-		typedef struct _sessionTalk {
-			char userName[NAME_NUM];
-			char talk[TALK_LEN];
-		} sessionTalk;
-
-		typedef struct _sessionAddUser {
-			char userName[NAME_NUM];
-			char hostAddr[EVENT_FIELD_LEN];
-			char sessionName[EVENT_FIELD_LEN];
-		} sessionAddUser;
-
-		typedef struct _sessionRemoveUser {
-			char userName[NAME_NUM];
-		} sessionRemoveUser;
-
-		typedef struct _changeSession {
-			char userName[NAME_NUM];
-			char sessionName[EVENT_FIELD_LEN];
-		} changeSession;
-
-		typedef struct _addChannel {
-			char strChannelName[NAME_NUM];
-			int nChannelNum;
-		} addChannel;
-
-		typedef struct _addChannelAck {
-			char strChannelName[NAME_NUM];
-			int nChannelNum;
-			int nReturnCode;
-		} addChannelAck;
-		*/
-		
 		Iterator<CMSessionInfo> iterSessionList;
 		Iterator<CMGroupInfo> iterGroupList;
 		int nElementByteNum = 0;
@@ -706,9 +618,13 @@ public class CMSessionEvent extends CMEvent {
 			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
+		case ADD_BLOCK_SOCKET_CHANNEL:
+		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			nByteNum += 2*Integer.BYTES + m_strChannelName.getBytes().length;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
+		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
+		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			nByteNum += 3*Integer.BYTES + m_strChannelName.getBytes().length;
 			break;
 		case REGISTER_USER:
@@ -869,12 +785,16 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
+		case ADD_BLOCK_SOCKET_CHANNEL:
+		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			m_bytes.putInt(m_strChannelName.getBytes().length);
 			m_bytes.put(m_strChannelName.getBytes());
 			m_bytes.putInt(m_nChannelNum);
 			m_bytes.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
+		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
+		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			m_bytes.putInt(m_strChannelName.getBytes().length);
 			m_bytes.put(m_strChannelName.getBytes());
 			m_bytes.putInt(m_nChannelNum);
@@ -1022,11 +942,15 @@ public class CMSessionEvent extends CMEvent {
 			msg.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
+		case ADD_BLOCK_SOCKET_CHANNEL:
+		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
 			msg.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
+		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
+		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
 			m_nReturnCode = msg.getInt();

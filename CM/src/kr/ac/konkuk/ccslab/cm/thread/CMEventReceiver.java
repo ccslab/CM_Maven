@@ -86,7 +86,8 @@ public class CMEventReceiver extends Thread {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer tserver = null;
-		int nChIndex = -1;
+		//int nChIndex = -1;
+		Integer chKey = null;
 		CMChannelInfo<Integer> chInfo = null;
 		Iterator<CMServer> iterAddServer = null;
 		boolean bFound = false;
@@ -95,20 +96,8 @@ public class CMEventReceiver extends Thread {
 		{
 			// find channel from default server
 			chInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
-			nChIndex = chInfo.findChannelKey(ch);
-			if(nChIndex == 0)	// default channel
-			{
-				chInfo.removeAllChannels();
-				// For the clarity, the client must be back to initial state (not yet)
-				interInfo.getSessionList().removeAllElements();
-				interInfo.getMyself().setState(CMInfo.CM_INIT);
-				System.err.println("The default server is disconnected.");
-			}
-			else if(nChIndex > 0) // additional channel
-			{
-				chInfo.removeChannel(nChIndex);
-			}
-			else	// ch index not found
+			chKey = chInfo.findChannelKey(ch);
+			if(chKey == null) // ch key not found
 			{
 				// find channel from additional server list
 				iterAddServer = interInfo.getAddServerList().iterator();
@@ -117,17 +106,29 @@ public class CMEventReceiver extends Thread {
 				{
 					tserver = iterAddServer.next();
 					chInfo = tserver.getNonBlockSocketChannelInfo();
-					nChIndex = chInfo.findChannelKey(ch);
-					if(nChIndex != -1)
+					chKey = chInfo.findChannelKey(ch);
+					if(chKey != null)
 						bFound = true;
 				}
 				if(bFound)
 				{
-					if(nChIndex == 0)
+					if(chKey.intValue() == 0)
 						chInfo.removeAllChannels();
-					else if(nChIndex > 0)
-						chInfo.removeChannel(nChIndex);
-				}
+					else if(chKey.intValue() > 0)
+						chInfo.removeChannel(chKey);
+				}				
+			}
+			else if(chKey.intValue() == 0)	// default channel
+			{
+				chInfo.removeAllChannels();
+				// For the clarity, the client must be back to initial state (not yet)
+				interInfo.getSessionList().removeAllElements();
+				interInfo.getMyself().setState(CMInfo.CM_INIT);
+				System.err.println("The default server is disconnected.");
+			}
+			else if(chKey.intValue() > 0) // additional channel
+			{
+				chInfo.removeChannel(chKey);
 			}
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
@@ -138,8 +139,13 @@ public class CMEventReceiver extends Thread {
 			{
 				CMUser user = interInfo.getLoginUsers().findMember(strUser);
 				// find channel index
-				nChIndex = user.getNonBlockSocketChannelInfo().findChannelKey(ch);
-				if(nChIndex == 0)
+				chKey = user.getNonBlockSocketChannelInfo().findChannelKey(ch);
+				if(chKey == null)
+				{
+					System.err.println("CMEventReceiver.processUnexpectedDisconnection(), key not found "
+							+ "for the channel(hash code: "+ ch.hashCode() +")!");
+				}
+				else if(chKey.intValue() == 0)
 				{
 					// if the removed channel is default channel (#ch:0), process logout of the user
 					CMSessionEvent tse = new CMSessionEvent();
@@ -152,10 +158,10 @@ public class CMEventReceiver extends Thread {
 					tse = null;
 					msg.m_buf = null;
 				}
-				else if(nChIndex > 0)
+				else if(chKey.intValue() > 0)
 				{
 					// remove the channel
-					user.getNonBlockSocketChannelInfo().removeChannel(nChIndex);
+					user.getNonBlockSocketChannelInfo().removeChannel(chKey);
 				}
 				
 			}
@@ -168,13 +174,13 @@ public class CMEventReceiver extends Thread {
 				{
 					tserver = iterAddServer.next();
 					chInfo = tserver.getNonBlockSocketChannelInfo();
-					nChIndex = chInfo.findChannelKey(ch);
-					if(nChIndex != -1)
+					chKey = chInfo.findChannelKey(ch);
+					if(chKey != null)
 						bFound = true;
 				}
 				if(bFound)
 				{
-					if(nChIndex == 0)
+					if(chKey.intValue() == 0)
 					{
 						// notify clients of the deregistration
 						CMMultiServerEvent mse = new CMMultiServerEvent();
@@ -186,8 +192,8 @@ public class CMEventReceiver extends Thread {
 						interInfo.removeAddServer(tserver.getServerName());
 						mse = null;
 					}
-					else if(nChIndex > 0)
-						chInfo.removeChannel(nChIndex);
+					else if(chKey.intValue() > 0)
+						chInfo.removeChannel(chKey);
 				}
 			}
 			else
@@ -195,17 +201,23 @@ public class CMEventReceiver extends Thread {
 				// process disconnection with the default server
 				// find channel from default server
 				chInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
-				nChIndex = chInfo.findChannelKey(ch);
-				if(nChIndex == 0)	// default channel
+				chKey = chInfo.findChannelKey(ch);
+				
+				if(chKey == null)
+				{
+					System.err.println("CMEventReceiver.processUnexpectedDisconnection(); key not found "
+							+"for the channel(hash code: "+ch.hashCode()+")!");
+				}
+				else if(chKey == 0)	// default channel
 				{
 					chInfo.removeAllChannels();
 					// For the clarity, the client must be back to initial state (not yet)
 					interInfo.getMyself().setState(CMInfo.CM_INIT);
 					System.err.println("The default server is disconnected.");
 				}
-				else if(nChIndex > 0) // additional channel
+				else if(chKey > 0) // additional channel
 				{
-					chInfo.removeChannel(nChIndex);
+					chInfo.removeChannel(chKey);
 				}
 			}
 		}

@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -1191,7 +1192,7 @@ public class CMWinClient extends JFrame {
 	public void testAddChannel()
 	{
 		int nChType = -1;
-		int nChIndex = -1; // the channel key for the socket channel
+		int nChKey = -1; // the channel key for the socket channel
 		String strServerName = null;
 		String strChAddress = null; // the channel key for the multicast address is the (address, port) pair
 		int nChPort = -1; // the channel key for the datagram socket channel, or the multicast port number
@@ -1200,6 +1201,8 @@ public class CMWinClient extends JFrame {
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
+		boolean isBlock = false;
+		SocketChannel sc = null;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1226,23 +1229,41 @@ public class CMWinClient extends JFrame {
 
 		if(nChType == CMInfo.CM_SOCKET_CHANNEL)
 		{
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+			
 			JTextField chIndexField = new JTextField();
 			JTextField strServerField = new JTextField();
 			Object[] scMessage = {
-					"Channel index (> 0)", chIndexField,
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"Channel key (> 0 for nonblocking ch, >=0 for blocking ch)", chIndexField,
 					"Server name(empty for the default server)", strServerField
 			};
 			
 			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Socket Channel", JOptionPane.OK_CANCEL_OPTION);
 
 			if(scResponse != JOptionPane.OK_OPTION) return;
-			nChIndex = Integer.parseInt(chIndexField.getText());
-		
-			if(nChIndex <= 0)
+			nChKey = Integer.parseInt(chIndexField.getText());
+
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
+			
+			if(!isBlock && nChKey <= 0)
 			{
-				printMessage("testAddChannel(), invalid socket channel index ("+nChIndex+")!\n");
+				printMessage("testAddChannel(), invalid nonblocking socket channel key ("+nChKey+")!\n");
 				return;
 			}
+			else if(isBlock && nChKey < 0)
+			{
+				printMessage("testAddChannel(), invalid blocking socket channel key ("+nChKey+")!\n");
+				return;
+			}
+			
 			strServerName = strServerField.getText();
 			if(strServerName == null || strServerName.equals(""))
 				strServerName = "SERVER"; // default server name
@@ -1283,13 +1304,26 @@ public class CMWinClient extends JFrame {
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			result = m_clientStub.addNonBlockSocketChannel(nChIndex, strServerName);
-			if(result)
-				printMessage("Successfully requested to add a channel: key("+nChIndex+") to server ("
-						+strServerName+")\n");
+			if(isBlock)
+			{
+				sc = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
+				if(sc != null)
+					printMessage("Successfully requested to add a blocking socket channel: key("+nChKey
+							+") to server ("+strServerName+")\n");
+				else
+					printMessage("Failed to requested to add a blocking socket channel: key("+nChKey
+							+") to server ("+strServerName+")\n");
+			}
 			else
-				printMessage("Failed to requested to add a channel: key("+nChIndex+") to server ("
-						+strServerName+")\n");
+			{
+				result = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
+				if(result)
+					printMessage("Successfully requested to add a nonblocking socket channel: key("
+							+nChKey+") to server ("+strServerName+")\n");
+				else
+					printMessage("Failed to requested to add a nonblocking socket channel: key("
+							+nChKey+") to server ("+strServerName+")\n");				
+			}
 				
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
@@ -1323,7 +1357,7 @@ public class CMWinClient extends JFrame {
 	public void testRemoveChannel()
 	{
 		int nChType = -1;
-		int nChIndex = -1;
+		int nChKey = -1;
 		int nChPort = -1;
 		String strChAddress = null;
 		String strServerName = null;
@@ -1332,6 +1366,7 @@ public class CMWinClient extends JFrame {
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
+		boolean isBlock = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1356,23 +1391,41 @@ public class CMWinClient extends JFrame {
 
 		if(nChType == CMInfo.CM_SOCKET_CHANNEL)
 		{
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+
 			JTextField chIndexField = new JTextField();
 			JTextField strServerField = new JTextField();
 			Object[] scMessage = {
-					"Channel index (> 0)", chIndexField,
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"Channel key (> 0 for nonblocking ch, >=0 for blocking ch)", chIndexField,
 					"Server name(empty for the default server)", strServerField
 			};
 			
 			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Socket Channel", JOptionPane.OK_CANCEL_OPTION);
 
 			if(scResponse != JOptionPane.OK_OPTION) return;
-			nChIndex = Integer.parseInt(chIndexField.getText());
-		
-			if(nChIndex <= 0)
+			nChKey = Integer.parseInt(chIndexField.getText());
+
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
+
+			if(!isBlock && nChKey <= 0)
 			{
-				printMessage("testAddChannel(), invalid socket channel index ("+nChIndex+")!\n");
+				printMessage("testRemoveChannel(), invalid nonblocking socket channel key ("+nChKey+")!\n");
 				return;
 			}
+			else if(isBlock && nChKey < 0)
+			{
+				printMessage("testRemoveChannel(), invalid blocking socket channel key ("+nChKey+")!\n");
+				return;
+			}
+			
 			strServerName = strServerField.getText();
 			if(strServerName == null || strServerName.equals(""))
 				strServerName = "SERVER"; // default server name
@@ -1411,11 +1464,26 @@ public class CMWinClient extends JFrame {
 		switch(nChType)
 		{
 		case CMInfo.CM_SOCKET_CHANNEL:
-			result = m_clientStub.removeNonBlockSocketChannel(nChIndex, strServerName);
-			if(result)
-				printMessage("Successfully removed a channel: key("+nChIndex+") to server ("+strServerName+")\n");
+			if(isBlock)
+			{
+				result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
+				if(result)
+					printMessage("Successfully requested to remove a blocking socket channel: key("+nChKey
+							+") to server ("+strServerName+")");
+				else
+					printMessage("Failed to requested to remove a blocking socket channel: key("+nChKey
+							+") to server ("+strServerName+")");
+			}
 			else
-				printMessage("Failed to remove a channel: key("+nChIndex+") to server ("+strServerName+")\n");
+			{
+				result = m_clientStub.removeNonBlockSocketChannel(nChKey, strServerName);
+				if(result)
+					printMessage("Successfully removed a blocking socket channel: key("+nChKey
+							+") to server ("+strServerName+")\n");
+				else
+					printMessage("Failed to remove a channel: key("+nChKey+") to server ("
+							+strServerName+")\n");				
+			}
 	
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:

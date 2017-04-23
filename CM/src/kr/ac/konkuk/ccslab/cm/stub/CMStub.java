@@ -283,15 +283,20 @@ public class CMStub {
 	
 	public boolean send(CMEvent cme, String strTarget)
 	{
-		return send(cme, strTarget, CMInfo.CM_STREAM, 0);
+		return send(cme, strTarget, CMInfo.CM_STREAM, 0, false);
 	}
 	
 	public boolean send(CMEvent cme, String strTarget, int opt)
 	{
-		return send(cme, strTarget, opt, 0);
+		return send(cme, strTarget, opt, 0, false);
 	}
 	
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum)
+	{
+		return send(cme, strTarget, opt, nChNum, false);
+	}
+	
+	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum, boolean isBlock)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -309,7 +314,7 @@ public class CMStub {
 		}
 		else
 		{
-			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, isBlock, m_cmInfo);
 		}
 
 		return ret;

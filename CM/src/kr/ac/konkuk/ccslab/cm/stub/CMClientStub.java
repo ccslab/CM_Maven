@@ -640,7 +640,7 @@ public class CMClientStub extends CMStub {
 			serverInfo = interInfo.findAddServer(strServer);
 			if(serverInfo == null)
 			{
-				System.err.println("CMClientStub.addSocketChannel(), server("+strServer+") not found.");
+				System.err.println("CMClientStub.addNonBlockSocketChannel(), server("+strServer+") not found.");
 				return false;
 			}			
 		}
@@ -650,7 +650,7 @@ public class CMClientStub extends CMStub {
 			sc = (SocketChannel) scInfo.findChannel(nKey);
 			if(sc != null)
 			{
-				System.err.println("CMClientStub.addSocketChannel(), channel key("+nKey
+				System.err.println("CMClientStub.addNonBlockSocketChannel(), channel key("+nKey
 						+") already exists.");
 				return false;
 			}
@@ -659,7 +659,8 @@ public class CMClientStub extends CMStub {
 					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
-				System.err.println("CMClientStub.addSocketChannel(), failed!: key("+nKey+"), server("+strServer+")");
+				System.err.println("CMClientStub.addNonBlockSocketChannel(), failed!: key("+nKey+"), server("
+						+strServer+")");
 				return false;
 			}
 			scInfo.addChannel(nKey, sc);
@@ -679,8 +680,8 @@ public class CMClientStub extends CMStub {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMClientStub.addSocketChannel(),successfully requested to add the channel with the key("
-					+nKey+") to the server("+strServer+")");
+			System.out.println("CMClientStub.addNonBlockSocketChannel(),successfully requested to add the channel "
+					+ "with the key("+nKey+") to the server("+strServer+")");
 		}
 		
 		return true;
@@ -710,7 +711,7 @@ public class CMClientStub extends CMStub {
 			serverInfo = interInfo.findAddServer(strServer);
 			if(serverInfo == null)
 			{
-				System.err.println("CMClientStub.removeAdditionalSocketChannel(), server("+strServer+") not found.");
+				System.err.println("CMClientStub.removeNonBlockSocketChannel(), server("+strServer+") not found.");
 				return false;
 			}			
 		}
@@ -721,15 +722,127 @@ public class CMClientStub extends CMStub {
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMClientStub.removeAdditionalSocketChannel(), succeeded. key("+nKey+"), server ("
+				System.out.println("CMClientStub.removeNonBlockSocketChannel(), succeeded. key("+nKey+"), server ("
 					+strServer+").");
 			}
 		}
 		else
 		{
-			System.err.println("CMClientStub.removeAdditionalSocketChannel(), failed! key("+nKey+"), server ("
+			System.err.println("CMClientStub.removeNonBlockSocketChannel(), failed! key("+nKey+"), server ("
 					+strServer+").");			
 		}
+		
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @param nKey
+	 * @param strServer
+	 * @return
+	 */
+	public SocketChannel addBlockSocketChannel(int nKey, String strServer)
+	{
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMServer serverInfo = null;
+		SocketChannel sc = null;
+		CMChannelInfo<Integer> scInfo = null;
+		
+		if(strServer.equals("SERVER"))
+		{
+			serverInfo = interInfo.getDefaultServerInfo();
+		}
+		else
+		{
+			serverInfo = interInfo.findAddServer(strServer);
+			if(serverInfo == null)
+			{
+				System.err.println("CMClientStub.addBlockSocketChannel(), server("+strServer+") not found.");
+				return null;
+			}			
+		}
+		
+		try {
+			scInfo = serverInfo.getBlockSocketChannelInfo();
+			sc = (SocketChannel) scInfo.findChannel(nKey);
+			if(sc != null)
+			{
+				System.err.println("CMClientStub.addBlockSocketChannel(), channel key("+nKey+") already exists.");
+				return null;
+			}
+			
+			sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+			if(sc == null)
+			{
+				System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("+nKey+"), server("+strServer+")");
+				return null;
+			}
+			scInfo.addChannel(nKey, sc);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
+		se.setChannelName(getMyself().getName());
+		se.setChannelNum(nKey);
+		//send(se, strServer, CMInfo.CM_STREAM, nKey);
+		send(se, strServer, CMInfo.CM_STREAM, nKey, true);
+		
+		se = null;
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMClientStub.addBlockSocketChannel(),successfully requested to add the channel "
+					+ "with the key("+nKey+") to the server("+strServer+")");
+		}
+		
+		return sc;		
+	}
+	
+	public boolean removeBlockSocketChannel(int nChKey, String strServer)
+	{
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMServer serverInfo = null;
+		CMChannelInfo<Integer> scInfo = null;
+		boolean result = false;
+		SocketChannel sc = null;
+		CMSessionEvent se = null;
+		
+		if(strServer.equals("SERVER"))
+		{
+			serverInfo = interInfo.getDefaultServerInfo();
+		}
+		else
+		{
+			serverInfo = interInfo.findAddServer(strServer);
+			if(serverInfo == null)
+			{
+				System.err.println("CMClientStub.removeBlockSocketChannel(), server("+strServer+") not found.");
+				return false;
+			}			
+		}
+		
+		scInfo = serverInfo.getBlockSocketChannelInfo();
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc == null)
+		{
+			System.err.println("CMClientStub.removeBlockSocketChannel(), socket channel not found! key("
+					+nChKey+"), server ("+strServer+").");
+			return false;
+		}
+		
+		se = new CMSessionEvent();
+		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
+		se.setChannelNum(nChKey);
+		se.setChannelName(interInfo.getMyself().getName());
+		result = send(se, strServer);	// send the event with the default nonblocking socket channel
+		se = null;
+		
+		// The channel will be closed and removed after the client receives the ACK event at the event handler.
 		
 		return result;
 	}

@@ -26,23 +26,27 @@ public class CMByteReceiver extends Thread {
 			System.out.println("CMByteReceiver starts to receive messages.");
 		while(!Thread.currentThread().isInterrupted())
 		{
-			try {
-				//m_selector.select();
-				m_selector.select(1);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			Iterator<SelectionKey> iter = m_selector.selectedKeys().iterator();
-			while(iter.hasNext())
+			synchronized(Selector.class)
 			{
-				SelectionKey key = iter.next();
-				if(key.isAcceptable())
-					processAccept(key);
-				else if(key.isReadable())
-					processRead(key);
-				
-				iter.remove();
+				try {
+					//m_selector.select();
+					m_selector.select(1);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				Iterator<SelectionKey> iter = m_selector.selectedKeys().iterator();
+				while(iter.hasNext())
+				{
+					SelectionKey key = iter.next();
+					if(key.isAcceptable())
+						processAccept(key);
+					else if(key.isReadable())
+						processRead(key);
+					
+					iter.remove();
+				}
+				Selector.class.notify();
 			}
 		}
 		

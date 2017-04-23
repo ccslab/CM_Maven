@@ -107,17 +107,22 @@ public class CMEventManager {
 	
 	public static boolean unicastEvent(CMEvent cme, String strReceiver, CMInfo cmInfo)
 	{
-		return unicastEvent(cme, strReceiver, CMInfo.CM_STREAM, 0, cmInfo);
+		return unicastEvent(cme, strReceiver, CMInfo.CM_STREAM, 0, false, cmInfo);
 	}
 	
 	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, CMInfo cmInfo)
 	{
-		return unicastEvent(cme, strReceiver, opt, 0, cmInfo);
+		return unicastEvent(cme, strReceiver, opt, 0, false, cmInfo);
+	}
+	
+	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, CMInfo cmInfo)
+	{
+		return unicastEvent(cme, strReceiver, opt, nKey, false, cmInfo);
 	}
 	
 	// nKey: the channel key. For the stream channel, nKey is an integer greater than or equal to 0.
 	// For the datagram channel, nKey is an integer that is a port number of this channel.
-	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, CMInfo cmInfo)
+	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock, CMInfo cmInfo)
 	{
 		CMMember loginUsers = null;
 		ByteBuffer bufEvent = null;
@@ -146,7 +151,10 @@ public class CMEventManager {
 			// target is the default server or an additional server
 			if(opt == CMInfo.CM_STREAM)
 			{
-				chInfo = tServer.getNonBlockSocketChannelInfo();
+				if(isBlock)
+					chInfo = tServer.getBlockSocketChannelInfo();
+				else
+					chInfo = tServer.getNonBlockSocketChannelInfo();
 				sc = (SocketChannel) chInfo.findChannel(nKey);
 				if( sc == null )
 				{
@@ -181,7 +189,10 @@ public class CMEventManager {
 			}
 			if(opt == CMInfo.CM_STREAM)
 			{
-				chInfo = user.getNonBlockSocketChannelInfo();
+				if(isBlock)
+					chInfo = user.getBlockSocketChannelInfo();
+				else
+					chInfo = user.getNonBlockSocketChannelInfo();
 				sc = (SocketChannel) chInfo.findChannel(nKey);
 				if( sc == null )
 				{
@@ -222,7 +233,17 @@ public class CMEventManager {
 			nSentBytes = CMCommManager.sendMessage(bufEvent, sc);
 			break;
 		case CMInfo.CM_DATAGRAM:
-			dc = (DatagramChannel) commInfo.getNonBlockDatagramChannelInfo().findChannel(nKey);
+			if(isBlock)
+			{
+				//dc = (DatagramChannel) commInfo.getBlockDatagramChannelInfo().findChannel(nKey); // not yet
+				System.err.println("CMEventManager.unicastEvent(), blocking datagram channel not supported yet!");
+				return false;
+			}
+			else
+			{
+				dc = (DatagramChannel) commInfo.getNonBlockDatagramChannelInfo().findChannel(nKey);
+			}
+			
 			if(dc == null)
 			{
 				System.err.println("CMEventManager.unicastEvent(), datagramChannel("+nKey+") not found.");
@@ -241,7 +262,7 @@ public class CMEventManager {
 		{
 			System.out.println("CMEventManager.unicastEvent(), sent "+nSentBytes+" bytes,"
 							+" event(type: "+cme.getType()+", id: "+cme.getID()+").");
-			System.out.println("receiver("+strReceiver+"), opt("+opt+"), ch key("+nKey+").");
+			System.out.println("receiver("+strReceiver+"), opt("+opt+"), ch key("+nKey+"), isBlock("+isBlock+").");
 		}
 		
 		bufEvent = null;	// clear the ByteBuffer
@@ -588,7 +609,8 @@ public class CMEventManager {
 	public static boolean removeSocketChannel(SelectableChannel ch, boolean isBlock, CMMember loginUsers)
 	{
 		CMUser tuser = null;
-		int nKey = -1;
+		//int nKey = -1;
+		Integer key = null;
 		boolean bFound = false;
 		boolean ret = false;
 		
@@ -603,11 +625,11 @@ public class CMEventManager {
 		{
 			tuser = iter.next();
 			if(isBlock)
-				nKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+				key = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
 			else
-				nKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+				key = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
 			
-			if(nKey != -1)
+			if(key != null)
 			{
 				bFound = true;
 			}
@@ -621,9 +643,9 @@ public class CMEventManager {
 		}
 		
 		if(isBlock)
-			ret = tuser.getBlockSocketChannelInfo().removeChannel(nKey);
+			ret = tuser.getBlockSocketChannelInfo().removeChannel(key);
 		else
-			ret = tuser.getNonBlockSocketChannelInfo().removeChannel(nKey);
+			ret = tuser.getNonBlockSocketChannelInfo().removeChannel(key);
 		
 		return ret;
 	}
@@ -707,7 +729,7 @@ public class CMEventManager {
 		String strUserName = null;
 		boolean isBlock = false;
 		boolean bFound = false;
-		int nKey = -1;
+		Integer returnKey = null;
 		
 		if(ch == null)
 		{
@@ -722,11 +744,11 @@ public class CMEventManager {
 		{
 			CMUser tuser = iter.next();
 			if(isBlock)
-				nKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
 			else
-				nKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
 			
-			if(nKey != -1)
+			if(returnKey != null)
 			{
 				strUserName = tuser.getName();
 				bFound = true;

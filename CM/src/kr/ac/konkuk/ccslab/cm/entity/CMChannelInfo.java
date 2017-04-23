@@ -49,7 +49,8 @@ public class CMChannelInfo<K> {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMChannelInfo.addChannel(), ch("+ch.hashCode()+"), key("+key.toString()+")");
+			System.out.println("CMChannelInfo.addChannel(), succeeded: ch("+ch.hashCode()+"), key("+key.toString()
+				+"), current # channels ("+m_chMap.size()+").");
 		}
 
 		return true;
@@ -81,7 +82,8 @@ public class CMChannelInfo<K> {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMChannelInfo.removeChannel(), ch("+ch.hashCode()+"), key("+key.toString()+")");
+			System.out.println("CMChannelInfo.removeChannel(), succeeded: ch("+ch.hashCode()+"), key("+key.toString()
+				+"), current # channels("+m_chMap.size()+").");
 		}
 
 		return true;

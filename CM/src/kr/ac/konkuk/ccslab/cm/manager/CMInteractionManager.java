@@ -1,9 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
@@ -431,6 +433,18 @@ public class CMInteractionManager {
 			break;
 		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			processADD_NONBLOCK_SOCKET_CHANNEL_ACK(msg, cmInfo);
+			break;
+		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL:
+			processADD_BLOCK_SOCKET_CHANNEL(msg, cmInfo);
+			break;
+		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			processADD_BLOCK_SOCKET_CHANNEL_ACK(msg, cmInfo);
+			break;
+		case CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL:
+			processREMOVE_BLOCK_SOCKET_CHANNEL(msg, cmInfo);
+			break;
+		case CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
+			processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(msg, cmInfo);
 			break;
 		case CMSessionEvent.REGISTER_USER:
 			processREGISTER_USER(msg, cmInfo);
@@ -874,7 +888,7 @@ public class CMInteractionManager {
 		CMUser user = interInfo.getLoginUsers().findMember(strChannelName);
 		if(user == null)
 		{
-			System.out.println("CMInteractionManager.processADD_CHANNEL(), user("+strChannelName
+			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL(), user("+strChannelName
 					+") not found in the login user list.");
 			seAck.setReturnCode(0);
 			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
@@ -905,8 +919,8 @@ public class CMInteractionManager {
 		{
 			String strServer = se.getChannelName();
 			int nChIndex = se.getChannelNum();
-			System.out.println("CMInteractionManager.processADD_CHANNEL_ACK() failed to add channel,"
-					+"server("+strServer+"), channel index("+nChIndex+").");
+			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
+					+"server("+strServer+"), channel key("+nChIndex+").");
 			
 			if(strServer.equals("SERVER"))
 			{
@@ -920,11 +934,263 @@ public class CMInteractionManager {
 		}
 		else
 		{
-			System.out.println("CMInteractionManager.processADD_CHANNEL_ACK(), succeeded for server("
-					+se.getChannelName()+") channel index("+se.getChannelNum()+").");
+			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
+					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
 		}
 		se = null;
 		return;
+	}
+	
+	private static void processADD_BLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+		String strChannelName = se.getChannelName();
+		int nChKey = se.getChannelNum();
+		
+		CMSessionEvent seAck = new CMSessionEvent();
+		seAck.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
+		seAck.setChannelName(interInfo.getMyself().getName());
+		seAck.setChannelNum(nChKey);
+
+		// The receiving channel is included in the Selector with the nonblocking mode.
+		// This channel must be taken out from the Selector and changed to the blocking mode.
+		synchronized(Selector.class){
+			SelectionKey selKey = msg.m_ch.keyFor(commInfo.getSelector());
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL();, # registered ky in "
+						+ "the selector before the cancel request of the key: "
+						+ commInfo.getSelector().keys().size());
+			}
+			selKey.cancel();
+			while(msg.m_ch.isRegistered())
+			{
+				try {
+					Selector.class.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), # registered key in "
+						+ "the selector after the completion of the key cancellation: "
+						+ commInfo.getSelector().keys().size());
+			}
+		}
+		
+		try {
+			msg.m_ch.configureBlocking(true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+			seAck.setReturnCode(0);
+			CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
+			seAck = null;
+			se = null;
+			return;
+		}
+
+		CMUser user = interInfo.getLoginUsers().findMember(strChannelName);
+		if(user == null)
+		{
+			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
+					+") not found in the login user list.");
+			seAck.setReturnCode(0);
+			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
+			seAck = null;
+			se = null;
+			return;
+		}
+		
+		boolean ret = user.getBlockSocketChannelInfo().addChannel(nChKey, msg.m_ch);
+		if(ret)
+			seAck.setReturnCode(1);
+		else
+			seAck.setReturnCode(0);
+		
+		CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+		
+		se = null;
+		seAck = null;
+		return;
+	}
+	
+	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMServer serverInfo = null;
+		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+		
+		if(se.getReturnCode() == 0)
+		{
+			String strServer = se.getChannelName();
+			int nChKey = se.getChannelNum();
+			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
+					+"server("+strServer+"), channel key("+nChKey+").");
+			
+			if(strServer.equals("SERVER"))
+			{
+				serverInfo = interInfo.getDefaultServerInfo();
+			}
+			else
+			{
+				serverInfo = interInfo.findAddServer(strServer);
+			}
+			serverInfo.getBlockSocketChannelInfo().removeChannel(nChKey);
+		}
+		else
+		{
+			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
+					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
+		}
+		se = null;
+		return;
+	}
+	
+	private static void processREMOVE_BLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMUser user = null;
+		CMChannelInfo<Integer> scInfo = null;
+		SocketChannel sc = null;
+		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+		String strChannelName = se.getChannelName();
+		int nChKey = se.getChannelNum();
+		ByteBuffer recvBuf = null;
+		int nRecvBytes = -1;
+		
+		CMSessionEvent seAck = new CMSessionEvent();
+		seAck.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
+		seAck.setChannelName(interInfo.getMyself().getName());
+		seAck.setChannelNum(nChKey);
+		
+		user = interInfo.getLoginUsers().findMember(strChannelName);
+		if( user == null )
+		{
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
+					+") not found!");
+			seAck.setReturnCode(0);
+			CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
+			seAck = null;
+			se = null;
+			return;
+		}
+		scInfo = user.getBlockSocketChannelInfo();
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc == null)
+		{
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), channel not found! "
+					+"user("+strChannelName+"), channel key("+nChKey+")");
+			seAck.setReturnCode(0);
+			CMEventManager.unicastEvent(seAck,  (SocketChannel)msg.m_ch);
+			seAck = null;
+			se = null;
+			return;
+		}
+		
+		// found the blocking channel that will be disconnected
+		seAck.setReturnCode(1);	// ok
+		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
+		seAck = null;
+		se = null;
+		
+		try {
+			recvBuf = ByteBuffer.allocate(Integer.BYTES);
+			System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),waiting for disconnection "
+					+"from the client.");
+			nRecvBytes = sc.read(recvBuf);	// wait for detecting the disconnection of this channel from the client
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), the number "
+						+"of received bytes: "+nRecvBytes+" Bytes.");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), disconnection detected "
+					+"by the IOException!");
+			
+		} 
+
+		// close the channel and remove the channel info
+		try {
+			sc.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		scInfo.removeChannel(nChKey);
+		
+		return;
+	}
+	
+	private static void processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMServer serverInfo = null;
+		CMChannelInfo<Integer> scInfo = null;
+		SocketChannel sc = null;
+		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+		int nChKey = se.getChannelNum();
+		String strServer = se.getChannelName();
+		boolean result = false;
+		
+		if(se.getReturnCode() == 1)
+		{
+			if(strServer.equals("SERVER"))
+				serverInfo = interInfo.getDefaultServerInfo();
+			else
+				serverInfo = interInfo.findAddServer(strServer);
+			
+			if(serverInfo == null)
+			{
+				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+						+"server information not found: server("+strServer+"), channel key("+nChKey+")");
+				return;
+			}
+			
+			scInfo = serverInfo.getBlockSocketChannelInfo();
+			sc = (SocketChannel) scInfo.findChannel(nChKey);
+			
+			if(sc == null)
+			{
+				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+						+"the socket channel not found: channel key("+nChKey+"), server("+strServer+")");
+				return;
+			}
+			
+			try {
+				sc.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return;
+			}
+			
+			result = scInfo.removeChannel(nChKey);
+			if(CMInfo._CM_DEBUG)
+			{
+				if(result)
+					System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+						+"succeeded : channel key("+nChKey+"), server("+strServer+")");
+				else
+					System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+							+"failed to remove the channel : channel key("+nChKey+"), server("+strServer+")");
+					
+			}			
+			
+			return;
+		}
+		else
+		{
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails to accept "
+					+" the removal request of the channel: key("+nChKey+"), server("+strServer+")");
+			return;			
+		}
+
 	}
 	
 	private static void processREGISTER_USER(CMMessage msg, CMInfo cmInfo)
