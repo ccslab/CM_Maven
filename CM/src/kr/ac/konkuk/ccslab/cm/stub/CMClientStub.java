@@ -845,11 +845,44 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Removes the blocking socket (TCP) channel.
 	 * 
-	 * (from here)
-	 * @param nChKey
-	 * @param strServer
-	 * @return
+	 * <p> This method does not immediately remove the requested channel for safe and smooth close procedure 
+	 * between the client and the server. Before the removal of the client socket channel, the client first sends 
+	 * a request CM event to the server that then prepares the channel disconnection and sends the ack event 
+	 * (CMSessionEvent.REMOVE_SOCKET_CHANNEL_ACK) back to the client.
+	 * <br> The client closes and removes the target channel only if it receives the ack event and the return code 
+	 * is 1. 
+	 * The client event handler can catch the event in order to figure out the result of the removal request.
+	 * The detailed event fields are described below:
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event ID </td> <td> CMSNSEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event field </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
+	 *   </tr>
+	 * </table>
+	 * 
+	 * @param nChKey - the key of a socket channel that is to be deleted.
+	 * @param strServer - the name of a server to which the target socket channel is connected.
+	 * @return true if the client successfully requests the removal of the channel from the server, false otherwise.
+	 * <br> The blocking socket channel is closed and removed only when the client receives the ack event from the server.
+	 * 
+	 * @see CMClientStub#addBlockSocketChannel(int, String)
 	 */
 	public boolean removeBlockSocketChannel(int nChKey, String strServer)
 	{
@@ -894,7 +927,14 @@ public class CMClientStub extends CMStub {
 		
 		return result;
 	}
-	
+
+	/**
+	 * 
+	 * (from here)
+	 * @param nChKey
+	 * @param strServerName
+	 * @return
+	 */
 	// returns the blocking socket channel of which key is nChKey and the server name is strServerName.
 	// if strServerName is null, find the blocking socket channel to the default server.
 	public SocketChannel getBlockSocketChannel(int nChKey, String strServerName)
