@@ -2,6 +2,9 @@ import java.io.*;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
@@ -104,6 +107,7 @@ public class CMClientApp {
 				System.out.println("46: distribute a file and merge");
 				System.out.println("---------------------------------------------------");
 				System.out.println("47: multicast chat in current group");
+				System.out.println("48: get additional blocking socket channel");
 				System.out.println("99: terminate CM");
 				break;
 			case 1: // connect to default server
@@ -246,6 +250,9 @@ public class CMClientApp {
 				break;
 			case 47: // test multicast chat in current group
 				testMulticastChat();
+				break;
+			case 48: // get additional blocking socket channel
+				testGetBlockSocketChannel();
 				break;
 			case 50: // test request for an attached file of SNS content
 				testRequestAttachedFileOfSNSContent();
@@ -2084,6 +2091,59 @@ public class CMClientApp {
 
 		ie = null;
 		return;
+	}
+	
+	public void testGetBlockSocketChannel()
+	{
+		int nChKey = -1;
+		String strServerName = null;
+		SocketChannel sc = null;
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		
+		if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			CMUser myself = interInfo.getMyself();
+			if(myself.getState() != CMInfo.CM_SESSION_JOIN && myself.getState() != CMInfo.CM_LOGIN)
+			{
+				System.err.println("You should login to the default server.");
+				return;
+			}
+		}
+		
+		System.out.println("============= get blocking socket channel");
+
+		System.out.print("Channel key (>=0): ");
+		nChKey = scan.nextInt();
+		
+		if(nChKey < 0)
+		{
+			System.err.println("Invalid channel key: "+nChKey);
+			return;
+		}
+		
+		System.out.print("Server name (\"SERVER\" for the default server): ");
+		strServerName = scan.next();
+
+		/*
+		 * scan.next() method never returns before any user given input.
+		 * 
+		if(strServerName == null || strServerName.equals(""))
+			strServerName = "SERVER"; // default server name
+		*/
+
+		sc = m_clientStub.getBlockSocketChannel(nChKey, strServerName);
+		
+		if(sc == null)
+		{
+			System.err.println("Blocking socket channel not found: key("+nChKey+"), server("+strServerName+")");
+		}
+		else
+		{
+			System.out.println("Blocking socket channel found: key("+nChKey+"), server("+strServerName+")");
+		}
+		
+		return;		
 	}
 	
 	public static void main(String[] args) {

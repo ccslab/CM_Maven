@@ -394,6 +394,7 @@ public class CMWinClient extends JFrame {
 			printMessage("46: distribute a file and merge\n");
 			printMessage("---------------------------------------------------\n");
 			printMessage("47: multicast chat in current group\n");
+			printMessage("48: get additional blocking socket channel\n");
 			printMessage("99: terminate CM\n");
 			break;
 		case 1: // connect to default server
@@ -536,6 +537,9 @@ public class CMWinClient extends JFrame {
 			break;
 		case 47: // test multicast chat in current group
 			testMulticastChat();
+			break;
+		case 48: // get additional blocking socket channel
+			testGetBlockSocketChannel();
 			break;
 		case 50: // request an attached file of SNS content
 			testRequestAttachedFileOfSNSContent();
@@ -3036,6 +3040,63 @@ public class CMWinClient extends JFrame {
 		m_clientStub.multicast(ie, myself.getCurrentSession(), myself.getCurrentGroup());
 
 		ie = null;
+		return;
+	}
+	
+	public void testGetBlockSocketChannel()
+	{
+		int nChKey = -1;
+		String strServerName = null;
+		SocketChannel sc = null;
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		
+		if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			CMUser myself = interInfo.getMyself();
+			if(myself.getState() != CMInfo.CM_SESSION_JOIN && myself.getState() != CMInfo.CM_LOGIN)
+			{
+				printMessage("You should login to the default server.\n");
+				return;
+			}
+		}
+		
+		printMessage("============= get blocking socket channel\n");
+
+		JTextField chKeyField = new JTextField();
+		JTextField serverField = new JTextField();
+		Object[] scMessage = {
+				"Channel key (>=0)", chKeyField,
+				"Server name(empty for the default server)", serverField
+		};
+		
+		int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "find blocking socket channel", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(scResponse != JOptionPane.OK_OPTION) return;
+		
+		nChKey = Integer.parseInt(chKeyField.getText());
+		if(nChKey < 0)
+		{
+			System.err.println("Invalid channel key: "+nChKey);
+			return;
+		}
+
+		
+		strServerName = serverField.getText();
+		if(strServerName == null || strServerName.equals(""))
+			strServerName = "SERVER"; // default server name
+
+		sc = m_clientStub.getBlockSocketChannel(nChKey, strServerName);
+		
+		if(sc == null)
+		{
+			printMessage("Blocking socket channel not found: key("+nChKey+"), server("+strServerName+")\n");
+		}
+		else
+		{
+			printMessage("Blocking socket channel found: key("+nChKey+"), server("+strServerName+")\n");
+		}
+		
 		return;
 	}
 	
