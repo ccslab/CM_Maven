@@ -929,14 +929,13 @@ public class CMClientStub extends CMStub {
 	}
 
 	/**
+	 * Returns a blocking socket (TCP) channel.
 	 * 
-	 * (from here)
-	 * @param nChKey
-	 * @param strServerName
-	 * @return
+	 * @param nChKey - the channel key.
+	 * @param strServerName - the name of a server to which the socket channel is connected.
+	 * <br> If strServerName is null, it implies the socket channel to the default server.
+	 * @return the blocking socket channel, or null if the channel is not found.
 	 */
-	// returns the blocking socket channel of which key is nChKey and the server name is strServerName.
-	// if strServerName is null, find the blocking socket channel to the default server.
 	public SocketChannel getBlockSocketChannel(int nChKey, String strServerName)
 	{
 		SocketChannel sc = null;
