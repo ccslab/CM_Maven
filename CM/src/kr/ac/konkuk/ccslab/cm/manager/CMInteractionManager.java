@@ -948,6 +948,15 @@ public class CMInteractionManager {
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
 		int nChKey = se.getChannelNum();
+
+		CMUser user = interInfo.getLoginUsers().findMember(strChannelName);
+		if(user == null)
+		{
+			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
+					+") not found in the login user list.");
+			
+			return;
+		}
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
@@ -989,19 +998,7 @@ public class CMInteractionManager {
 			e.printStackTrace();
 			
 			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
-			seAck = null;
-			se = null;
-			return;
-		}
-
-		CMUser user = interInfo.getLoginUsers().findMember(strChannelName);
-		if(user == null)
-		{
-			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
-					+") not found in the login user list.");
-			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
+			CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
 			seAck = null;
 			se = null;
 			return;

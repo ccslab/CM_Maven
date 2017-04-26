@@ -1473,10 +1473,10 @@ public class CMWinClient extends JFrame {
 				result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
 				if(result)
 					printMessage("Successfully requested to remove a blocking socket channel: key("+nChKey
-							+") to server ("+strServerName+")");
+							+") to server ("+strServerName+")\n");
 				else
 					printMessage("Failed to requested to remove a blocking socket channel: key("+nChKey
-							+") to server ("+strServerName+")");
+							+") to server ("+strServerName+")\n");
 			}
 			else
 			{

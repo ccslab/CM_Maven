@@ -632,6 +632,12 @@ public class CMClientStub extends CMStub {
 		SocketChannel sc = null;
 		CMChannelInfo<Integer> scInfo = null;
 		
+		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), you must log in to the default server!");
+			return false;
+		}
+		
 		if(strServer.equals("SERVER"))
 		{
 			serverInfo = interInfo.getDefaultServerInfo();
@@ -703,6 +709,12 @@ public class CMClientStub extends CMStub {
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> scInfo = null;
 		boolean result = false;
+
+		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), you must log in to the default server!");
+			return false;
+		}
 		
 		if(strServer.equals("SERVER"))
 		{
@@ -788,6 +800,12 @@ public class CMClientStub extends CMStub {
 		CMServer serverInfo = null;
 		SocketChannel sc = null;
 		CMChannelInfo<Integer> scInfo = null;
+
+		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), you must log in to the default server!");
+			return null;
+		}
 		
 		if(strServer.equals("SERVER"))
 		{
@@ -892,6 +910,12 @@ public class CMClientStub extends CMStub {
 		boolean result = false;
 		SocketChannel sc = null;
 		CMSessionEvent se = null;
+
+		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), you must log in to the default server!");
+			return false;
+		}
 		
 		if(strServer.equals("SERVER"))
 		{
@@ -941,6 +965,12 @@ public class CMClientStub extends CMStub {
 		SocketChannel sc = null;
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> chInfo = null;
+
+		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), you must log in to the default server!");
+			return null;
+		}
 		
 		if(strServerName.equals("SERVER"))
 		{
