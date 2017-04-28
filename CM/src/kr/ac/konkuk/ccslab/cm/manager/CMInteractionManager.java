@@ -20,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 
@@ -1022,6 +1023,7 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+		CMEventInfo eInfo = cmInfo.getEventInfo();
 		
 		if(se.getReturnCode() == 0)
 		{
@@ -1045,6 +1047,13 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
 		}
+		
+		synchronized(eInfo.getABSCAObject())
+		{
+			eInfo.setABSCAReturnCode(se.getReturnCode());
+			eInfo.getABSCAObject().notify();
+		}
+		
 		se = null;
 		return;
 	}

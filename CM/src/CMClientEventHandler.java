@@ -214,6 +214,7 @@ public class CMClientEventHandler implements CMEventHandler {
 			}
 			break;
 		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			/*
 			if(se.getReturnCode() == 0)
 			{
 				System.out.println("Adding a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
@@ -224,6 +225,7 @@ public class CMClientEventHandler implements CMEventHandler {
 				System.out.println("Adding a blocking socket channel("+se.getChannelName()+","+se.getChannelNum()
 					+") succeeded in the server!");
 			}
+			*/
 			break;
 		case CMSessionEvent.REGISTER_USER_ACK:
 			if( se.getReturnCode() == 1 )

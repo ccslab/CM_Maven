@@ -250,6 +250,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			}
 			break;
 		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			/*
 			if(se.getReturnCode() == 0)
 			{
 				printMessage("Adding a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
@@ -260,6 +261,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 				printMessage("Adding a blocking socket channel("+se.getChannelName()+","+se.getChannelNum()
 					+") succeeded in the server!\n");
 			}
+			*/
 			break;
 		case CMSessionEvent.REGISTER_USER_ACK:
 			if( se.getReturnCode() == 1 )

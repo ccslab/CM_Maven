@@ -691,10 +691,11 @@ public class CMClientApp {
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		boolean result = false;
+		boolean bResult = false;
 		String strBlock = null;
 		boolean isBlock = false;
 		SocketChannel sc = null;
+		boolean bSyncCall = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -774,18 +775,18 @@ public class CMClientApp {
 		case CMInfo.CM_SOCKET_CHANNEL:
 			if(isBlock)
 			{
-				sc = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
+				sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
 				if(sc != null)
-					System.out.println("Successfully requested to add a blocking socket channel: key("+nChKey
+					System.out.println("Successfully added a blocking socket channel: key("+nChKey
 							+") to server ("+strServerName+")");
 				else
-					System.err.println("Failed to requested to add a blocking socket channel: key("+nChKey
+					System.err.println("Failed to add a blocking socket channel: key("+nChKey
 							+") to server ("+strServerName+")");
 			}
 			else
 			{
-				result = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
-				if(result)
+				bResult = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
+				if(bResult)
 					System.out.println("Successfully requested to add a nonblocking socket channel: key("+nChKey
 							+") to server ("+strServerName+")");
 				else
@@ -796,15 +797,15 @@ public class CMClientApp {
 				
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
-			result = m_clientStub.addDatagramChannel(nChPort);
-			if(result)
+			bResult = m_clientStub.addDatagramChannel(nChPort);
+			if(bResult)
 				System.out.println("Successfully added a datagram socket channel: port("+nChPort+")");
 			else
 				System.err.println("Failed to add a datagram socket channel: port("+nChPort+")");
 			break;
 		case CMInfo.CM_MULTICAST_CHANNEL:
-			result = m_clientStub.addMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
-			if(result)
+			bResult = m_clientStub.addMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
+			if(bResult)
 			{
 				System.out.println("Successfully added a multicast channel: session("+strSessionName+"), group("
 						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")");

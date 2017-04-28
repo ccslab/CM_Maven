@@ -1310,12 +1310,12 @@ public class CMWinClient extends JFrame {
 		case CMInfo.CM_SOCKET_CHANNEL:
 			if(isBlock)
 			{
-				sc = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
+				sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
 				if(sc != null)
-					printMessage("Successfully requested to add a blocking socket channel: key("+nChKey
+					printMessage("Successfully added a blocking socket channel: key("+nChKey
 							+") to server ("+strServerName+")\n");
 				else
-					printMessage("Failed to requested to add a blocking socket channel: key("+nChKey
+					printMessage("Failed to add a blocking socket channel: key("+nChKey
 							+") to server ("+strServerName+")\n");
 			}
 			else
