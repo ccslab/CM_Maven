@@ -1034,7 +1034,7 @@ public class CMClientStub extends CMStub {
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
 		{
-			System.err.println("CMClientStub.addNonBlockSocketChannel(), you must log in to the default server!");
+			System.err.println("CMClientStub.removeBlockSocketChannel(), you must log in to the default server!");
 			return false;
 		}
 		
@@ -1071,6 +1071,99 @@ public class CMClientStub extends CMStub {
 		// The channel will be closed and removed after the client receives the ACK event at the event handler.
 		
 		return result;
+	}
+	
+	/**
+	 * 
+	 * @param nKey
+	 * @param strServer
+	 * @return
+	 */
+	public boolean syncRemoveBlockSocketChannel(int nChKey, String strServer)
+	{
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMServer serverInfo = null;
+		CMChannelInfo<Integer> scInfo = null;
+		boolean result = false;
+		SocketChannel sc = null;
+		CMSessionEvent se = null;
+		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		int nReturnCode = -1;
+
+		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), you must log in to the default server!");
+			return false;
+		}
+		
+		if(strServer.equals("SERVER"))
+		{
+			serverInfo = interInfo.getDefaultServerInfo();
+		}
+		else
+		{
+			serverInfo = interInfo.findAddServer(strServer);
+			if(serverInfo == null)
+			{
+				System.err.println("CMClientStub.removeBlockSocketChannel(), server("+strServer+") not found.");
+				return false;
+			}			
+		}
+		
+		scInfo = serverInfo.getBlockSocketChannelInfo();
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc == null)
+		{
+			System.err.println("CMClientStub.removeBlockSocketChannel(), socket channel not found! key("
+					+nChKey+"), server ("+strServer+").");
+			return false;
+		}
+		
+		se = new CMSessionEvent();
+		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
+		se.setChannelNum(nChKey);
+		se.setChannelName(interInfo.getMyself().getName());
+		result = send(se, strServer);	// send the event with the default nonblocking socket channel
+		se = null;
+		
+		synchronized(eInfo.getRBSCAObject())
+		{
+			while(nReturnCode == -1)
+			{
+				try {
+					eInfo.getRBSCAObject().wait(60000);  // timeout 60s
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				nReturnCode = eInfo.getRBSCAReturnCode();
+			}
+			
+			eInfo.setRBSCAReturnCode(-1);	// reset the value (-1)
+		}
+
+		if(nReturnCode == 1) // successfully remove the new channel info (key, channel) at the server
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMClientStub.syncRemoveBlockSocketChannel(), successfully removed the channel "
+						+ "info at the server: "+"key("+nChKey+"), server("+strServer+")");
+			}
+		}
+		else if(nReturnCode == 0) // failed to remove the new channel info (key, channel) at the server
+		{
+			System.err.println("CMClientStub.syncRemoveBlockSocketChannel(),failed to remove the channel info "
+					+ "at the server: key("+nChKey+"), server("+strServer+")");
+			result = false;
+		}
+		else
+		{
+			System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), failed: return code("+nReturnCode+")");
+			result = false;
+		}
+		
+		return result;
+
 	}
 
 	/**

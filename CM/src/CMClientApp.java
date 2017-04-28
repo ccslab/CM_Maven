@@ -915,12 +915,12 @@ public class CMClientApp {
 		case CMInfo.CM_SOCKET_CHANNEL:
 			if(isBlock)
 			{
-				result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
+				result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
 				if(result)
-					System.out.println("Successfully requested to remove a blocking socket channel: key("+nChKey
+					System.out.println("Successfully removed a blocking socket channel: key("+nChKey
 							+") to server ("+strServerName+")");
 				else
-					System.err.println("Failed to requested to remove a blocking socket channel: key("+nChKey
+					System.err.println("Failed to remove a blocking socket channel: key("+nChKey
 							+") to server ("+strServerName+")");
 			}
 			else

@@ -1143,58 +1143,64 @@ public class CMInteractionManager {
 		int nChKey = se.getChannelNum();
 		String strServer = se.getChannelName();
 		boolean result = false;
+		CMEventInfo eInfo = cmInfo.getEventInfo();
+		Object RBSCAObject = eInfo.getRBSCAObject();
 		
-		if(se.getReturnCode() == 1)
+		synchronized(RBSCAObject)
 		{
-			if(strServer.equals("SERVER"))
-				serverInfo = interInfo.getDefaultServerInfo();
-			else
-				serverInfo = interInfo.findAddServer(strServer);
-			
-			if(serverInfo == null)
+			if(se.getReturnCode() == 1)
 			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"server information not found: server("+strServer+"), channel key("+nChKey+")");
-				return;
-			}
-			
-			scInfo = serverInfo.getBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nChKey);
-			
-			if(sc == null)
-			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"the socket channel not found: channel key("+nChKey+"), server("+strServer+")");
-				return;
-			}
-			
-			try {
-				sc.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return;
-			}
-			
-			result = scInfo.removeChannel(nChKey);
-			if(CMInfo._CM_DEBUG)
-			{
-				if(result)
-					System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"succeeded : channel key("+nChKey+"), server("+strServer+")");
+				if(strServer.equals("SERVER"))
+					serverInfo = interInfo.getDefaultServerInfo();
 				else
+					serverInfo = interInfo.findAddServer(strServer);
+				
+				if(serverInfo == null)
+				{
+					System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+							+"server information not found: server("+strServer+"), channel key("+nChKey+")");
+					
+					RBSCAObject.notify();
+					return;
+				}
+				
+				scInfo = serverInfo.getBlockSocketChannelInfo();
+				sc = (SocketChannel) scInfo.findChannel(nChKey);
+				
+				if(sc == null)
+				{
+					System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+							+"the socket channel not found: channel key("+nChKey+"), server("+strServer+")");
+					
+					RBSCAObject.notify();
+					return;
+				}
+							
+				result = scInfo.removeChannel(nChKey);
+				if(result)
+				{
+					if(CMInfo._CM_DEBUG)
+						System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+								+"succeeded : channel key("+nChKey+"), server("+strServer+")");
+					eInfo.setRBSCAReturnCode(se.getReturnCode());
+				}
+				else
+				{
 					System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
 							+"failed to remove the channel : channel key("+nChKey+"), server("+strServer+")");
-					
-			}			
+				}
+				
+				RBSCAObject.notify();
+				return;
+			}
+			else
+			{
+				System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails to accept "
+						+" the removal request of the channel: key("+nChKey+"), server("+strServer+")");
+				RBSCAObject.notify();
+				return;			
+			}
 			
-			return;
-		}
-		else
-		{
-			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails to accept "
-					+" the removal request of the channel: key("+nChKey+"), server("+strServer+")");
-			return;			
 		}
 
 	}
