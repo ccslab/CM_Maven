@@ -1207,6 +1207,7 @@ public class CMWinClient extends JFrame {
 		boolean result = false;
 		boolean isBlock = false;
 		SocketChannel sc = null;
+		boolean isSyncCall = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1239,12 +1240,16 @@ public class CMWinClient extends JFrame {
 			ButtonGroup bGroup = new ButtonGroup();
 			bGroup.add(blockRadioButton);
 			bGroup.add(nonBlockRadioButton);
+			String[] syncAsync = {"synchronous call", "asynchronous call"};
+			JComboBox syncAsyncComboBox = new JComboBox(syncAsync);
+			syncAsyncComboBox.setSelectedIndex(1); // default value is asynchronous call
 			
 			JTextField chIndexField = new JTextField();
 			JTextField strServerField = new JTextField();
 			Object[] scMessage = {
 					"", blockRadioButton,
 					"", nonBlockRadioButton,
+					"syncronous or asynchronous call", syncAsyncComboBox,
 					"Channel key (> 0 for nonblocking ch, >=0 for blocking ch)", chIndexField,
 					"Server name(empty for the default server)", strServerField
 			};
@@ -1267,6 +1272,11 @@ public class CMWinClient extends JFrame {
 				printMessage("testAddChannel(), invalid blocking socket channel key ("+nChKey+")!\n");
 				return;
 			}
+			
+			if(syncAsyncComboBox.getSelectedIndex() == 0)
+				isSyncCall = true;
+			else
+				isSyncCall = false;
 			
 			strServerName = strServerField.getText();
 			if(strServerName == null || strServerName.equals(""))
@@ -1310,13 +1320,28 @@ public class CMWinClient extends JFrame {
 		case CMInfo.CM_SOCKET_CHANNEL:
 			if(isBlock)
 			{
-				sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
-				if(sc != null)
-					printMessage("Successfully added a blocking socket channel both "
-							+ "at the client and the server: key("+nChKey+"), server("+strServerName+")\n");
+				if(isSyncCall)
+				{
+					sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
+					if(sc != null)
+						printMessage("Successfully added a blocking socket channel both "
+								+ "at the client and the server: key("+nChKey+"), server("+strServerName+")\n");
+					else
+						printMessage("Failed to add a blocking socket channel both at "
+								+ "the client and the server: key("+nChKey+"), server("+strServerName+")\n");					
+				}
 				else
-					printMessage("Failed to add a blocking socket channel both at "
-							+ "the client and the server: key("+nChKey+"), server("+strServerName+")\n");
+				{
+					result = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
+					if(result)
+						printMessage("Successfully added a blocking socket channel at the client and "
+								+"requested to add the channel info to the server: key("+nChKey+"), server("
+								+strServerName+")\n");
+					else
+						printMessage("Failed to add a blocking socket channel at the client or "
+								+"failed to request to add the channel info to the server: key("+nChKey
+								+"), server("+strServerName+")\n");
+				}
 			}
 			else
 			{
@@ -1373,6 +1398,7 @@ public class CMWinClient extends JFrame {
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
 		boolean isBlock = false;
+		boolean isSyncCall = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1403,12 +1429,16 @@ public class CMWinClient extends JFrame {
 			ButtonGroup bGroup = new ButtonGroup();
 			bGroup.add(blockRadioButton);
 			bGroup.add(nonBlockRadioButton);
+			String syncAsync[] = {"synchronous call", "asynchronous call"};
+			JComboBox syncAsyncComboBox = new JComboBox(syncAsync);
+			syncAsyncComboBox.setSelectedIndex(1);	//default value is asynchronous call
 
 			JTextField chIndexField = new JTextField();
 			JTextField strServerField = new JTextField();
 			Object[] scMessage = {
 					"", blockRadioButton,
 					"", nonBlockRadioButton,
+					"Synchronous or asynchronous call", syncAsyncComboBox,
 					"Channel key (> 0 for nonblocking ch, >=0 for blocking ch)", chIndexField,
 					"Server name(empty for the default server)", strServerField
 			};
@@ -1431,6 +1461,11 @@ public class CMWinClient extends JFrame {
 				printMessage("testRemoveChannel(), invalid blocking socket channel key ("+nChKey+")!\n");
 				return;
 			}
+			
+			if(syncAsyncComboBox.getSelectedIndex() == 0)
+				isSyncCall = true;
+			else
+				isSyncCall = false;
 			
 			strServerName = strServerField.getText();
 			if(strServerName == null || strServerName.equals(""))
@@ -1472,13 +1507,27 @@ public class CMWinClient extends JFrame {
 		case CMInfo.CM_SOCKET_CHANNEL:
 			if(isBlock)
 			{
-				result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
-				if(result)
-					printMessage("Successfully removed a blocking socket channel both "
-							+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")\n");
+				if(isSyncCall)
+				{
+					result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
+					if(result)
+						printMessage("Successfully removed a blocking socket channel both "
+								+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")\n");
+					else
+						printMessage("Failed to remove a blocking socket channel both at the client "
+								+ "and the server: key("+nChKey+"), server ("+strServerName+")\n");					
+				}
 				else
-					printMessage("Failed to remove a blocking socket channel both at the client "
-							+ "and the server: key("+nChKey+"), server ("+strServerName+")\n");
+				{
+					result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
+					if(result)
+						printMessage("Successfully removed a blocking socket channel at the client and " 
+								+ "requested to remove it at the server: key("+nChKey+"), server("+strServerName+")\n");
+					else
+						printMessage("Failed to remove a blocking socket channel at the client or "
+								+ "failed to request to remove it at the server: key("+nChKey+"), server("
+								+strServerName+")\n");
+				}
 			}
 			else
 			{

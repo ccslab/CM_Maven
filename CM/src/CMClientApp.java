@@ -695,7 +695,8 @@ public class CMClientApp {
 		String strBlock = null;
 		boolean isBlock = false;
 		SocketChannel sc = null;
-		boolean bSyncCall = false;
+		String strSync = null;
+		boolean isSyncCall = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -745,6 +746,17 @@ public class CMClientApp {
 						return;
 					}
 				}
+				
+				System.out.print("Is the addition synchronous? (\"y\": yes, \"n\": no): ");
+				strSync = scan.next();
+				if(strSync.equals("y")) isSyncCall = true;
+				else if(strSync.equals("n")) isSyncCall =false;
+				else
+				{
+					System.err.println("invalid answer! :" + strSync);
+					return;
+				}
+				
 				System.out.print("Server name(\"SERVER\" for the default server): ");
 				strServerName = scan.next();
 			}
@@ -775,13 +787,29 @@ public class CMClientApp {
 		case CMInfo.CM_SOCKET_CHANNEL:
 			if(isBlock)
 			{
-				sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
-				if(sc != null)
-					System.out.println("Successfully added a blocking socket channel both "
-							+ "at the client and the server: key("+nChKey+"), server("+strServerName+")");
+				if(isSyncCall)
+				{
+					sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
+					if(sc != null)
+						System.out.println("Successfully added a blocking socket channel both "
+								+ "at the client and the server: key("+nChKey+"), server("+strServerName+")");
+					else
+						System.err.println("Failed to add a blocking socket channel both at "
+								+ "the client and the server: key("+nChKey+"), server("+strServerName+")");					
+				}
 				else
-					System.err.println("Failed to add a blocking socket channel both at "
-							+ "the client and the server: key("+nChKey+"), server("+strServerName+")");
+				{
+					bResult = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
+					if(bResult)
+						System.out.println("Successfully added a blocking socket channel at the client and "
+								+"requested to add the channel info to the server: key("+nChKey+"), server("
+								+strServerName+")");
+					else
+						System.err.println("Failed to add a blocking socket channel at the client or "
+								+"failed to request to add the channel info to the server: key("+nChKey
+								+"), server("+strServerName+")");
+					
+				}
 			}
 			else
 			{
@@ -791,7 +819,7 @@ public class CMClientApp {
 							+ "requested to add the channel info to the server: key("+nChKey+"), server("
 							+strServerName+")");
 				else
-					System.err.println("Failed to add a nonblocking socket channe at the client or "
+					System.err.println("Failed to add a nonblocking socket channel at the client or "
 							+ "failed to request to add the channel info to the server: key("+nChKey
 							+"), server("+strServerName+")");
 			}
@@ -839,6 +867,8 @@ public class CMClientApp {
 		boolean result = false;
 		String strBlock = null;
 		boolean isBlock = false;
+		String strSync = null;
+		boolean isSyncCall = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -873,6 +903,15 @@ public class CMClientApp {
 					if(nChKey < 0)
 					{
 						System.err.println("testRemoveChannel(), invalid socket channel key ("+nChKey+")!");
+						return;
+					}
+					System.out.print("Is the removal synchronous? (\"y\": yes, \"n\": no); ");
+					strSync = scan.next();
+					if(strSync.equals("y")) isSyncCall = true;
+					else if(strSync.equals("n")) isSyncCall = false;
+					else
+					{
+						System.err.println("Invalid answer! : "+strSync);
 						return;
 					}
 				}
@@ -916,13 +955,27 @@ public class CMClientApp {
 		case CMInfo.CM_SOCKET_CHANNEL:
 			if(isBlock)
 			{
-				result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
-				if(result)
-					System.out.println("Successfully removed a blocking socket channel both "
-							+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")");
+				if(isSyncCall)
+				{
+					result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
+					if(result)
+						System.out.println("Successfully removed a blocking socket channel both "
+								+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")");
+					else
+						System.err.println("Failed to remove a blocking socket channel both at the client "
+								+ "and the server: key("+nChKey+"), server ("+strServerName+")");					
+				}
 				else
-					System.err.println("Failed to remove a blocking socket channel both at the client "
-							+ "and the server: key("+nChKey+"), server ("+strServerName+")");
+				{
+					result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
+					if(result)
+						System.out.println("Successfully removed a blocking socket channel at the client and " 
+								+ "requested to remove it at the server: key("+nChKey+"), server("+strServerName+")");
+					else
+						System.err.println("Failed to remove a blocking socket channel at the client or "
+								+ "failed to request to remove it at the server: key("+nChKey+"), server("
+								+strServerName+")");
+				}
 			}
 			else
 			{
