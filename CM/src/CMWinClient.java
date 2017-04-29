@@ -1312,21 +1312,23 @@ public class CMWinClient extends JFrame {
 			{
 				sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
 				if(sc != null)
-					printMessage("Successfully added a blocking socket channel: key("+nChKey
-							+") to server ("+strServerName+")\n");
+					printMessage("Successfully added a blocking socket channel both "
+							+ "at the client and the server: key("+nChKey+"), server("+strServerName+")\n");
 				else
-					printMessage("Failed to add a blocking socket channel: key("+nChKey
-							+") to server ("+strServerName+")\n");
+					printMessage("Failed to add a blocking socket channel both at "
+							+ "the client and the server: key("+nChKey+"), server("+strServerName+")\n");
 			}
 			else
 			{
 				result = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
 				if(result)
-					printMessage("Successfully requested to add a nonblocking socket channel: key("
-							+nChKey+") to server ("+strServerName+")\n");
+					printMessage("Successfully added a nonblocking socket channel at the client and "
+							+ "requested to add the channel info to the server: key("+nChKey+"), server("
+							+strServerName+")\n");
 				else
-					printMessage("Failed to requested to add a nonblocking socket channel: key("
-							+nChKey+") to server ("+strServerName+")\n");				
+					printMessage("Failed to add a nonblocking socket channe at the client or "
+							+ "failed to request to add the channel info to the server: key("+nChKey
+							+") to server("+strServerName+")\n");				
 			}
 				
 			break;
@@ -1472,21 +1474,21 @@ public class CMWinClient extends JFrame {
 			{
 				result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
 				if(result)
-					printMessage("Successfully removed a blocking socket channel: key("+nChKey
-							+") to server ("+strServerName+")\n");
+					printMessage("Successfully removed a blocking socket channel both "
+							+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")\n");
 				else
-					printMessage("Failed to remove a blocking socket channel: key("+nChKey
-							+") to server ("+strServerName+")\n");
+					printMessage("Failed to remove a blocking socket channel both at the client "
+							+ "and the server: key("+nChKey+"), server ("+strServerName+")\n");
 			}
 			else
 			{
 				result = m_clientStub.removeNonBlockSocketChannel(nChKey, strServerName);
 				if(result)
-					printMessage("Successfully removed a blocking socket channel: key("+nChKey
-							+") to server ("+strServerName+")\n");
+					printMessage("Successfully removed a nonblocking socket channel: key("+nChKey
+							+"), server("+strServerName+")\n");
 				else
-					printMessage("Failed to remove a channel: key("+nChKey+") to server ("
-							+strServerName+")\n");				
+					printMessage("Failed to remove a nonblocing socket channel: key("+nChKey
+							+"), server("+strServerName+")\n");			
 			}
 	
 			break;

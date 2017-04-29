@@ -236,32 +236,38 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			if(se.getReturnCode() == 0)
 			{
-				//System.out.println("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
-				//		+") failed in the server!");
 				printMessage("Adding a nonblocking SocketChannel("+se.getChannelName()+","+se.getChannelNum()
-						+") failed in the server!\n");
+						+") failed at the server!\n");
 			}
 			else
 			{
-				//System.out.println("Adding SocketChannel("+se.getChannelName()+","+se.getChannelNum()
-				//		+") succeeded in the server!");
 				printMessage("Adding a nonblocking SocketChannel("+se.getChannelName()+","+se.getChannelNum()
-						+") succeeded in the server!\n");
+						+") succeeded at the server!\n");
 			}
 			break;
 		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK:
-			/*
 			if(se.getReturnCode() == 0)
 			{
 				printMessage("Adding a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
-					+") failed in the server!\n");
+					+") failed at the server!\n");
 			}
 			else
 			{
 				printMessage("Adding a blocking socket channel("+se.getChannelName()+","+se.getChannelNum()
-					+") succeeded in the server!\n");
+					+") succeeded at the server!\n");
 			}
-			*/
+			break;
+		case CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
+			if(se.getReturnCode() == 0)
+			{
+				printMessage("Removing a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
+					+") failed at the server!\n");
+			}
+			else
+			{
+				printMessage("Removing a blocking socket channel("+se.getChannelName()+","+se.getChannelNum()
+					+") succeeded at the server!\n");
+			}
 			break;
 		case CMSessionEvent.REGISTER_USER_ACK:
 			if( se.getReturnCode() == 1 )

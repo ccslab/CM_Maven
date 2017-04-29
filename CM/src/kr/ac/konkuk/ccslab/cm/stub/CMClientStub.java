@@ -934,7 +934,16 @@ public class CMClientStub extends CMStub {
 			e.printStackTrace();
 			return null;
 		}
-		
+
+		synchronized(eInfo.getABSCAObject())
+		{
+			/*
+			 * This statement is required because the ack event of adding a nonblocking socket channel
+			 * can set the ABSCAReturnCode value.
+			 */
+			eInfo.setABSCAReturnCode(-1);
+		}
+
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
@@ -1117,6 +1126,15 @@ public class CMClientStub extends CMStub {
 			System.err.println("CMClientStub.removeBlockSocketChannel(), socket channel not found! key("
 					+nChKey+"), server ("+strServer+").");
 			return false;
+		}
+		
+		synchronized(eInfo.getRBSCAObject())
+		{
+			/*
+			 * This statement is required becuase the ack event of removing a nonblocking socket channel
+			 * can set the ABSCAReturnCode value.
+			 */
+			eInfo.setRBSCAReturnCode(-1);			
 		}
 		
 		se = new CMSessionEvent();
