@@ -13,6 +13,10 @@ public class CMEventInfo {
 	private Object m_RBSCAObject;
 	// return code of the REMOVE_BLOCK_SOCKET_CHANNEL_ACK event (-1: initial value, 0: false, 1: true)
 	private int m_nRBSCAReturnCode;
+	// monitor object to wait for receiving the ADD_NONBLOCK_SOCKET_CHANNEL_ACK
+	private Object m_ANBSCAObject;
+	// return code of the ADD_NONBLOCK_SOCKET_CHANNEL_ACK event (-1: initial value, 0: false, 1: true)
+	private int m_nANBSCAReturnCode;
 	
 	public CMEventInfo()
 	{
@@ -22,6 +26,8 @@ public class CMEventInfo {
 		m_nABSCAReturnCode = -1;
 		m_RBSCAObject = new Object();
 		m_nRBSCAReturnCode = -1;
+		m_ANBSCAObject = new Object();
+		m_nANBSCAReturnCode = -1;
 	}
 	
 	// set/get methods
@@ -64,5 +70,20 @@ public class CMEventInfo {
 	public int getRBSCAReturnCode()
 	{
 		return m_nRBSCAReturnCode;
+	}
+	
+	public Object getANBSCAObject()
+	{
+		return m_ANBSCAObject;
+	}
+	
+	public void setANBSCAReturnCode(int nCode)
+	{
+		m_nANBSCAReturnCode = nCode;
+	}
+	
+	public int getANBSCAReturnCode()
+	{
+		return m_nANBSCAReturnCode;
 	}
 }

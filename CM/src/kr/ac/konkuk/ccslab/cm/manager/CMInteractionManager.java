@@ -915,6 +915,7 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+		CMEventInfo eInfo = cmInfo.getEventInfo();
 		
 		if(se.getReturnCode() == 0)
 		{
@@ -938,6 +939,13 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
 		}
+		
+		synchronized(eInfo.getANBSCAObject())
+		{
+			eInfo.setANBSCAReturnCode(se.getReturnCode());
+			eInfo.getANBSCAObject().notify();
+		}
+		
 		se = null;
 		return;
 	}

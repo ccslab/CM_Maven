@@ -813,15 +813,28 @@ public class CMClientApp {
 			}
 			else
 			{
-				bResult = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
-				if(bResult)
-					System.out.println("Successfully added a nonblocking socket channel at the client and "
-							+ "requested to add the channel info to the server: key("+nChKey+"), server("
-							+strServerName+")");
+				if(isSyncCall)
+				{
+					sc = m_clientStub.syncAddNonBlockSocketChannel(nChKey, strServerName);
+					if(sc != null)
+						System.out.println("Successfully added a nonblocking socket channel both at the client "
+								+ "and the server: key("+nChKey+"), server("+strServerName+")");
+					else
+						System.err.println("Failed to add a nonblocking socket channel both at the client "
+								+ "and the server: key("+nChKey+"), server("+strServerName+")");										
+				}
 				else
-					System.err.println("Failed to add a nonblocking socket channel at the client or "
-							+ "failed to request to add the channel info to the server: key("+nChKey
-							+"), server("+strServerName+")");
+				{
+					bResult = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
+					if(bResult)
+						System.out.println("Successfully added a nonblocking socket channel at the client and "
+								+ "requested to add the channel info to the server: key("+nChKey+"), server("
+								+strServerName+")");
+					else
+						System.err.println("Failed to add a nonblocking socket channel at the client or "
+								+ "failed to request to add the channel info to the server: key("+nChKey
+								+"), server("+strServerName+")");					
+				}
 			}
 				
 			break;

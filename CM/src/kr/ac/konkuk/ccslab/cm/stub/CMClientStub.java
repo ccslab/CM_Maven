@@ -609,11 +609,39 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * Adds a nonblocking (TCP) socket channel to a server.
+	 * Adds asynchronously a nonblocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
 	 * and multicast channels, both the client and the server can add an additional channel 
 	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
 	 * methods in the CMStub class.
+	 * 
+	 * <p> Although this method returns the reference to the valid socket channel at the client, it is unsafe 
+	 * for the client use the socket before the server also adds the relevant channel information.
+	 * The establishment of a new nonblocking socket channel at both sides (the client and the server) completes 
+	 * only when the client receives the ack event (CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK) from the server 
+	 * and the return code in the event is 1.
+	 * The client event handler can catch the ack event, and the detailed event fields are described below:
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event ID </td> <td> CMSNSEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Event field </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
+	 *   </tr>
+	 * </table>
 	 * 
 	 * @param nKey - the channel key which must be greater than 0.
 	 * The key 0 is occupied by the default TCP channel.
@@ -623,8 +651,10 @@ public class CMClientStub extends CMStub {
 	 * the (key, socket) pair to the server. 
 	 * <br> False, otherwise.
 	 * 
-	 * @see CMClientStub#removeNonBlockSocketChannel(int, String)
+	 * @see CMClientStub#syncAddNonBlockSocketChannel(int, String)
 	 * @see CMClientStub#addBlockSocketChannel(int, String)
+	 * @see CMClientStub#syncAddBlockSocketChannel(int, String)
+	 * @see CMClientStub#removeNonBlockSocketChannel(int, String)
 	 */
 	public boolean addNonBlockSocketChannel(int nKey, String strServer)
 	{
@@ -676,6 +706,7 @@ public class CMClientStub extends CMStub {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
 		
 		CMSessionEvent se = new CMSessionEvent();
@@ -693,6 +724,137 @@ public class CMClientStub extends CMStub {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * Adds synchronously a nonblocking (TCP) socket channel to a server.
+	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
+	 * and multicast channels, both the client and the server can add an additional channel 
+	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
+	 * methods in the CMStub class.
+	 * 
+	 * @param nKey - the channel key which must be greater than 0.
+	 * The key 0 is occupied by the default TCP channel.
+	 * @param strServer - the server name to which the client adds a TCP channel. The name of the default 
+	 * server is 'SERVER'.
+	 * @return true if the socket channel is successfully created both at the client and the server. 
+	 * <br> False, otherwise.
+	 * 
+	 * @see CMClientStub#addNonBlockSocketChannel(int, String)
+	 * @see CMClientStub#addBlockSocketChannel(int, String)
+	 * @see CMClientStub#syncAddBlockSocketChannel(int, String)
+	 * @see CMClientStub#removeNonBlockSocketChannel(int, String)
+	 */
+	public SocketChannel syncAddNonBlockSocketChannel(int nKey, String strServer)
+	{
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMServer serverInfo = null;
+		SocketChannel sc = null;
+		CMChannelInfo<Integer> scInfo = null;
+		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		int nReturnCode = -1;
+		
+		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), you must log in to the default server!");
+			return null;
+		}
+		
+		if(strServer.equals("SERVER"))
+		{
+			serverInfo = interInfo.getDefaultServerInfo();
+		}
+		else
+		{
+			serverInfo = interInfo.findAddServer(strServer);
+			if(serverInfo == null)
+			{
+				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), server("+strServer+") not found.");
+				return null;
+			}			
+		}
+		
+		try {
+			scInfo = serverInfo.getNonBlockSocketChannelInfo();
+			sc = (SocketChannel) scInfo.findChannel(nKey);
+			if(sc != null)
+			{
+				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), channel key("+nKey
+						+") already exists.");
+				return null;
+			}
+			
+			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+			if(sc == null)
+			{
+				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed!: key("+nKey+"), server("
+						+strServer+")");
+				return null;
+			}
+			scInfo.addChannel(nKey, sc);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+
+		synchronized(eInfo.getANBSCAObject())
+		{
+			/*
+			 * This statement is required because the ack event of adding a blocking socket channel
+			 * can set the ANBSCAReturnCode value.
+			 */
+			eInfo.setANBSCAReturnCode(-1);
+		}
+
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
+		se.setChannelName(getMyself().getName());
+		se.setChannelNum(nKey);
+		send(se, strServer, CMInfo.CM_STREAM, nKey);
+		
+		se = null;
+		
+		synchronized(eInfo.getANBSCAObject())
+		{
+			while(nReturnCode == -1)
+			{
+				try {
+					eInfo.getANBSCAObject().wait(60000);  // timeout 60s
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				nReturnCode = eInfo.getANBSCAReturnCode();
+			}
+			
+			eInfo.setANBSCAReturnCode(-1);	// reset the value (-1)
+		}
+
+		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMClientStub.syncAddNonBlockSocketChannel(), successfully add the channel "
+						+ "info at the server: key("+nKey+"), server("+strServer+")");
+			}
+		}
+		else if(nReturnCode == 0) // failed to add the new channel info (key, channel) at the server
+		{
+			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(),failed to add the channel info "
+					+ "at the server: key("+nKey+"), server("+strServer+")");
+			sc = null;	// the new socket channel is closed and removed at the CMInteractionManager
+		}
+		else
+		{
+			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed: return code("+nReturnCode+")");
+			scInfo.removeChannel(nKey);
+			sc = null;
+		}
+		
+		return sc;		
 	}
 	
 	/**
@@ -751,7 +913,7 @@ public class CMClientStub extends CMStub {
 	}
 
 	/**
-	 * Adds a blocking (TCP) socket channel to a server.
+	 * Adds asynchronously a blocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
 	 * and multicast channels, both the client and the server can add an additional channel 
 	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
@@ -794,6 +956,7 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * @see CMClientStub#syncAddBlockSocketChannel(int, String)
 	 * @see CMClientStub#addNonBlockSocketChannel(int, String)
+	 * @see CMClientStub#syncAddNonBlockSocketChannel(int, String)
 	 * @see CMClientStub#removeBlockSocketChannel(int, String)
 	 * 
 	 */
@@ -865,7 +1028,7 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * Adds a blocking (TCP) socket channel to a server.
+	 * Adds synchronously a blocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
 	 * and multicast channels, both the client and the server can add an additional channel 
 	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
@@ -879,6 +1042,7 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * @see CMClientStub#addBlockSocketChannel(int, String)
 	 * @see CMClientStub#addNonBlockSocketChannel(int, String)
+	 * @see CMClientStub#syncAddNonBlockSocketChannel(int, String)
 	 * @see CMClientStub#removeBlockSocketChannel(int, String)
 	 */
 	public SocketChannel syncAddBlockSocketChannel(int nKey, String strServer)
@@ -993,7 +1157,7 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
-	 * Removes the blocking socket (TCP) channel.
+	 * Removes asynchronously the blocking socket (TCP) channel.
 	 * 
 	 * <p> This method does not immediately remove the requested channel for safe and smooth close procedure 
 	 * between the client and the server. Before the removal of the client socket channel, the client first sends 
@@ -1030,7 +1194,9 @@ public class CMClientStub extends CMStub {
 	 * @return true if the client successfully requests the removal of the channel from the server, false otherwise.
 	 * <br> The blocking socket channel is closed and removed only when the client receives the ack event from the server.
 	 * 
+	 * @see CMClientStub#syncRemoveBlockSocketChannel(int, String)
 	 * @see CMClientStub#addBlockSocketChannel(int, String)
+	 * @see CMClientStub#syncAddBlockSocketChannel(int, String)
 	 */
 	public boolean removeBlockSocketChannel(int nChKey, String strServer)
 	{
@@ -1083,10 +1249,23 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Removes synchronously the blocking socket (TCP) channel.
 	 * 
-	 * @param nKey
-	 * @param strServer
-	 * @return
+	 * <p> This method does not immediately remove the requested channel for safe and smooth close procedure 
+	 * between the client and the server. Before the removal of the client socket channel, the client first sends 
+	 * a request CM event to the server that then prepares the channel disconnection and sends the ack event 
+	 * (CMSessionEvent.REMOVE_SOCKET_CHANNEL_ACK) back to the client.
+	 * <br> The client closes and removes the target channel only if it receives the ack event and the return code 
+	 * is 1. 
+	 * 
+	 * @param nChKey - the key of a socket channel that is to be deleted.
+	 * @param strServer - the name of a server to which the target socket channel is connected.
+	 * @return true if the client successfully closed and removed the channel, false otherwise.
+	 * <br> The blocking socket channel is closed and removed only when the client receives the ack event from the server.
+	 * 
+	 * @see CMClientStub#removeBlockSocketChannel(int, String)
+	 * @see CMClientStub#addBlockSocketChannel(int, String)
+	 * @see CMClientStub#syncAddBlockSocketChannel(int, String)
 	 */
 	public boolean syncRemoveBlockSocketChannel(int nChKey, String strServer)
 	{

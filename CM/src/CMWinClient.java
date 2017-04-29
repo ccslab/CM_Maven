@@ -1345,15 +1345,28 @@ public class CMWinClient extends JFrame {
 			}
 			else
 			{
-				result = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
-				if(result)
-					printMessage("Successfully added a nonblocking socket channel at the client and "
-							+ "requested to add the channel info to the server: key("+nChKey+"), server("
-							+strServerName+")\n");
+				if(isSyncCall)
+				{
+					sc = m_clientStub.syncAddNonBlockSocketChannel(nChKey, strServerName);
+					if(sc != null)
+						printMessage("Successfully added a nonblocking socket channel both at the client "
+								+ "and the server: key("+nChKey+"), server("+strServerName+")\n");
+					else
+						printMessage("Failed to add a nonblocking socket channel both at the client "
+								+ "and the server: key("+nChKey+") to server("+strServerName+")\n");														
+				}
 				else
-					printMessage("Failed to add a nonblocking socket channe at the client or "
-							+ "failed to request to add the channel info to the server: key("+nChKey
-							+") to server("+strServerName+")\n");				
+				{
+					result = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
+					if(result)
+						printMessage("Successfully added a nonblocking socket channel at the client and "
+								+ "requested to add the channel info to the server: key("+nChKey+"), server("
+								+strServerName+")\n");
+					else
+						printMessage("Failed to add a nonblocking socket channe at the client or "
+								+ "failed to request to add the channel info to the server: key("+nChKey
+								+") to server("+strServerName+")\n");									
+				}
 			}
 				
 			break;
