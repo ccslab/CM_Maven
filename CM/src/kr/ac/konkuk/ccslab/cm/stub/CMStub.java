@@ -97,22 +97,38 @@ public class CMStub {
 	}
 	
 	/**
-	 * Registers the event handler of an application.
+	 * Registers the event handler of the application.
 	 * 
-	 * <p> 
-	 * (from here)
-	 * @param handler
+	 * <p> An event handler has a role of receiving a CM event whenever it is received. A developer can define an event 
+	 * handler class which includes application codes so that the application can do any task when a CM event is received.
+	 * The event handler class must implement the {@link CMEventHandler} interface which defines an event processing 
+	 * method, {@link CMEventHandler#processEvent(CMEvent)}. 
+	 *
+	 * @param handler - the event handler of the application.
 	 */
 	public void setEventHandler(CMEventHandler handler)
 	{
 		m_cmInfo.setEventHandler(handler);
 	}
 	
+	/**
+	 * Returns the registered event handler of the application.
+	 * 
+	 * @return the registered event handler of the application.
+	 */
 	public CMEventHandler getEventHandler()
 	{
 		return m_cmInfo.getEventHandler();
 	}
 	
+	/**
+	 * Returns the current client or server information.
+	 * 
+	 * <p> The {@link CMUser} class includes the user information such as the name, the host address, 
+	 * the UDP port number, the current session and group names, and so on.
+	 *  
+	 * @return the current client or the current server information.
+	 */
 	public CMUser getMyself()
 	{
 		CMUser user = m_cmInfo.getInteractionInfo().getMyself();
@@ -281,6 +297,14 @@ public class CMStub {
 	////////////////////////////////////////////////////////////////////////
 	// event transmission methods (if required, the default server is used.)
 	
+	/**
+	 * 
+	 * (from here)
+	 * 
+	 * @param cme
+	 * @param strTarget
+	 * @return
+	 */
 	public boolean send(CMEvent cme, String strTarget)
 	{
 		return send(cme, strTarget, CMInfo.CM_STREAM, 0, false);
