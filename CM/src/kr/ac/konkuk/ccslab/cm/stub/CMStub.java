@@ -298,28 +298,130 @@ public class CMStub {
 	// event transmission methods (if required, the default server is used.)
 	
 	/**
+	 * Sends a CM event to a single node.
 	 * 
-	 * (from here)
+	 * <p> This method is the same as calling send(cme, strTarget, CMInfo.CM_STREAM, 0, false) 
+	 * of the {@link CMStub#send(CMEvent, String, int, int, boolean)} method.
 	 * 
-	 * @param cme
-	 * @param strTarget
-	 * @return
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name. 
+	 * <br> The receiver can be either the server or the client. In the CM network, 
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
+	 * For example, the name of the default server is "SERVER".
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, String)}
+	 * @see {@link CMStub#send(CMEvent, String, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
 	 */
 	public boolean send(CMEvent cme, String strTarget)
 	{
 		return send(cme, strTarget, CMInfo.CM_STREAM, 0, false);
 	}
 	
+	/**
+	 * Sends a CM event to a single node.
+	 * 
+	 * <p> This method is the same as calling send(cme, strTarget, opt, 0, false)
+	 * of the {@link CMStub#send(CMEvent, String, int, int, boolean)} method.
+	 *  
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name. 
+	 * <br> The receiver can be either the server or the client. In the CM network, 
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
+	 * For example, the name of the default server is "SERVER".
+	 * @param opt - the reliability option. 
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send 
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, String)}
+	 * @see {@link CMStub#send(CMEvent, String, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 */
 	public boolean send(CMEvent cme, String strTarget, int opt)
 	{
 		return send(cme, strTarget, opt, 0, false);
 	}
 	
+	/**
+	 * Sends a CM event to a single node.
+	 * 
+	 * <p> This method is the same as calling send(cme, strTarget, opt, nChNum, false)
+	 * of the {@link CMStub#send(CMEvent, String, int, int, boolean)} method.
+	 *  
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name. 
+	 * <br> The receiver can be either the server or the client. In the CM network, 
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
+	 * For example, the name of the default server is "SERVER".
+	 * @param opt - the reliability option. 
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send 
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @param nChNum - the channel key. 
+	 * <br> If the application adds additional TCP or UDP channels, they are identified 
+	 * by the channel key. The key of the TCP channel should be greater than 1 (0 for the default channel), 
+	 * and the key of the UDP channel is the locally bound port number.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String)}
+	 * @see {@link CMStub#send(CMEvent, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, String)}
+	 * @see {@link CMStub#send(CMEvent, String, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, String, int, int)} 
+	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum)
 	{
 		return send(cme, strTarget, opt, nChNum, false);
 	}
 	
+	/**
+	 * Sends a CM event to a single node.
+	 * 
+	 * <p> This method and the other shortened forms ({@link CMStub#send(CMEvent, String)}, 
+	 * {@link CMStub#send(CMEvent, String, int)}, and {@link CMStub#send(CMEvent, String, int, int)}) use 
+	 * the default server if the receiver is a client, because they assume that the receiver belongs to 
+	 * the default server. (If the receiver is a server, these send methods can be called without a problem.) 
+	 * If the client wants to send the event to a client that belongs to another server, the client should call 
+	 * the {@link CMStub#send(CMEvent, String, String, int, int)} method. (CM applications can add multiple servers 
+	 * in addition to the default server.) 
+	 *  
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name. 
+	 * <br> The receiver can be either the server or the client. In the CM network, 
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
+	 * For example, the name of the default server is "SERVER". 
+	 * @param opt - the reliability option. 
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send 
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @param nChNum - the channel key. 
+	 * <br> If the application adds additional TCP or UDP channels, they are identified 
+	 * by the channel key. The key of the TCP channel should be greater than 1 (0 for the default channel), 
+	 * and the key of the UDP channel is the locally bound port number.
+	 * @param isBlock - the blocking option. 
+	 * <br> If isBlock is true, this method uses a blocking channel to send the event. 
+	 * If isBlock is false, this method uses a nonblocking channel to send the event. The CM uses nonblocking channels 
+	 * by default, but the application can also add blocking channels if required.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String)}
+	 * @see {@link CMStub#send(CMEvent, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int)}
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, String)}
+	 * @see {@link CMStub#send(CMEvent, String, String, int)} 
+	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum, boolean isBlock)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
