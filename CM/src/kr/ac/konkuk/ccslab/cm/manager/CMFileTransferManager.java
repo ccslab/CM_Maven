@@ -104,9 +104,8 @@ public class CMFileTransferManager {
 		long lFileSize = file.length();
 		
 		// add send file information
-		// target(requester) name, file path, size
-		// thread handle will be added when it starts to transmit file (not yet)
-		fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID, null);
+		// receiver name, file path, size
+		fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID);
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
@@ -355,9 +354,8 @@ public class CMFileTransferManager {
 		long lFileSize = file.length();
 		
 		// add send file information
-		// requester name, file path, size
-		// thread reference will be added when it starts to transmit file (not yet)
-		fInfo.addSendFileInfo(fe.getUserName(), strFullPath, lFileSize, fe.getContentID(), null);
+		// receiver name, file path, size
+		fInfo.addSendFileInfo(fe.getUserName(), strFullPath, lFileSize, fe.getContentID());
 
 		// start file transfer process
 		CMFileEvent feStart = new CMFileEvent();
@@ -474,7 +472,7 @@ public class CMFileTransferManager {
 	
 	private static void sendFile(CMInfo cmInfo)
 	{
-		String strRequester = null;
+		String strReceiver = null;
 		String strFileName = null;
 		String strFullFileName = null;
 		long lFileSize = -1;
@@ -492,7 +490,7 @@ public class CMFileTransferManager {
 			{
 				bFound = true;
 				sInfo.setStartedToSend(true);
-				strRequester = sInfo.getRequesterName();
+				strReceiver = sInfo.getReceiverName();
 				strFullFileName = sInfo.getFilePath();
 				strFileName = getFileNameFromPath(strFullFileName);
 				lFileSize = sInfo.getFileSize();
@@ -500,7 +498,7 @@ public class CMFileTransferManager {
 			}
 		}
 		
-		System.out.println("Sending file("+strFileName+") to target("+strRequester+").");
+		System.out.println("Sending file("+strFileName+") to target("+strReceiver+").");
 
 		// open the file
 		try {
@@ -538,7 +536,7 @@ public class CMFileTransferManager {
 			fe.setFileBlock(fileBlock);
 			fe.setBlockSize(nReadBytes);
 			fe.setContentID(nContentID);
-			CMEventManager.unicastEvent(fe, strRequester, cmInfo);
+			CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 			
 			lRemainBytes -= nReadBytes;
 			lSentBytes += nReadBytes;
@@ -563,7 +561,7 @@ public class CMFileTransferManager {
 			e.printStackTrace();
 		}
 
-		System.out.println("Ending transfer of file("+strFileName+") to target("+strRequester
+		System.out.println("Ending transfer of file("+strFileName+") to target("+strReceiver
 				+"), size("+lFileSize+") Bytes.");
 
 		// send the end of file transfer
@@ -573,7 +571,7 @@ public class CMFileTransferManager {
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
-		CMEventManager.unicastEvent(fe, strRequester, cmInfo);
+		CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 		
 		fe = null;
 		return;
@@ -791,7 +789,7 @@ public class CMFileTransferManager {
 		else
 		{
 			// delete corresponding request from the list
-			fInfo.removeFileRequestInfo(strUserName, strFileName, nContentID);
+			fInfo.removeSendFileInfo(strUserName, strFileName, nContentID);
 		}
 	
 		if(CMInfo._CM_DEBUG)

@@ -31,23 +31,22 @@ public class CMFileTransferInfo {
 	
 	// add/remove/find request info
 	
-	public boolean addSendFileInfo(String uName, String fPath, long lSize, int nContentID, Thread fThread)
+	public boolean addSendFileInfo(String uName, String fPath, long lSize, int nContentID)
 	{
 		CMSendFileInfo sInfo = findSendFileInfo(uName, fPath, nContentID);
 
 		if( sInfo != null )
 		{
 			System.out.println("CMFileTransferInfo.addSendFileInfo(), already exists.");
-			System.out.println("requester name: "+uName+", file path: "+fPath+", content ID: "+nContentID);
+			System.out.println("receiver name: "+uName+", file path: "+fPath+", content ID: "+nContentID);
 			return false;
 		}
 		
 		sInfo = new CMSendFileInfo();
-		sInfo.setRequesterName(uName);
+		sInfo.setReceiverName(uName);
 		sInfo.setFilePath(fPath);
 		sInfo.setFileSize(lSize);
 		sInfo.setContentID(nContentID);
-		sInfo.setFileSendThread(fThread);
 		
 		m_sendList.addElement(sInfo);
 
@@ -64,7 +63,7 @@ public class CMFileTransferInfo {
 		{
 			sInfo = iterSendList.next();
 			//if(uName.equals(rInfo.m_strUserName) && fName.equals(rInfo.m_strFileName))
-			if(uName.equals(sInfo.getRequesterName()) && sInfo.getFilePath().endsWith(fName) && 
+			if(uName.equals(sInfo.getReceiverName()) && sInfo.getFilePath().endsWith(fName) && 
 					nContentID == sInfo.getContentID())	// not sure
 				bFound = true;
 		}
@@ -74,7 +73,7 @@ public class CMFileTransferInfo {
 		return null;
 	}
 
-	public boolean removeFileRequestInfo(String uName, String fName, int nContentID)
+	public boolean removeSendFileInfo(String uName, String fName, int nContentID)
 	{
 		CMSendFileInfo sInfo = null;
 		boolean bFound = false;
@@ -84,7 +83,7 @@ public class CMFileTransferInfo {
 		{
 			sInfo = iterSendList.next();
 			//if(uName.equals(rInfo.m_strUserName) && fName.equals(rInfo.m_strFileName))
-			if(uName.equals(sInfo.getRequesterName()) && sInfo.getFilePath().endsWith(fName) &&
+			if(uName.equals(sInfo.getReceiverName()) && sInfo.getFilePath().endsWith(fName) &&
 					nContentID == sInfo.getContentID())	// not sure
 			{
 				iterSendList.remove();

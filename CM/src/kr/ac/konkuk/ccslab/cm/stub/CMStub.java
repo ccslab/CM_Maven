@@ -446,6 +446,14 @@ public class CMStub {
 		return ret;
 	}
 	
+	/**
+	 * (from here)
+	 * 
+	 * @param cme
+	 * @param sessionName
+	 * @param groupName
+	 * @return
+	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName)
 	{
 		return cast(cme, sessionName, groupName, CMInfo.CM_STREAM, 0);
