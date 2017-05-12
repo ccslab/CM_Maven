@@ -134,6 +134,33 @@ public class CMFileTransferManager {
 		return;
 	}
 
+	public static void requestFileWithSepChannel(String strFileName, String strFileOwner, CMInfo cmInfo)
+	{
+		requestFileWithSepChannel(strFileName, strFileOwner, -1, cmInfo);
+		return;
+	}
+	
+	public static void requestFileWithSepChannel(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTransferManager.requestFileWithSepChannel(), under development!!");
+	}
+
+	public static void pushFileWithSepChannel(String strFilePath, String strReceiver, CMInfo cmInfo)
+	{
+		pushFileWithSepChannel(strFilePath, strReceiver, -1, cmInfo);
+		return;
+	}
+	
+	// strFilePath: absolute or relative path to a target file
+	public static void pushFileWithSepChannel(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTransferManager.pushFileWithSepChannel(), under development!!");
+	}
+
+
+
 	// srcFile: reference of RandomAccessFile of source file
 	// bos: reference of BufferedOutputStream of split file
 	public static void splitFile(RandomAccessFile srcFile, long lOffset, long lSplitSize, String strSplitFile)
@@ -459,15 +486,7 @@ public class CMFileTransferManager {
 	
 	private static void processSTART_FILE_TRANSFER_ACK(CMFileEvent fe, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		if(confInfo.isFileTransferScheme())
-		{
-			sendFileWithSepThread(cmInfo);
-		}
-		else
-		{
-			sendFile(cmInfo); 
-		}
+		sendFile(cmInfo); 
 	}
 	
 	private static void sendFile(CMInfo cmInfo)
@@ -575,13 +594,6 @@ public class CMFileTransferManager {
 		
 		fe = null;
 		return;
-	}
-	
-	private static void sendFileWithSepThread(CMInfo cmInfo)
-	{
-		// need to be processed by a separate thread (not yet)
-		System.err.println("sendFileWithSepThread(); multi-threaded transfer will be developed !!");
-		
 	}
 	
 	private static void processCONTINUE_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)

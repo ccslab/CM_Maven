@@ -4,6 +4,8 @@ import java.nio.*;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMFileEvent extends CMEvent{
+	
+	// events for the file transfer with the default channel
 	public static final int REQUEST_FILE_TRANSFER = 1;		// c -> s
 	public static final int REPLY_FILE_TRANSFER = 2;		// s -> c
 	public static final int START_FILE_TRANSFER = 3;		// s -> c
@@ -13,6 +15,17 @@ public class CMFileEvent extends CMEvent{
 	public static final int END_FILE_TRANSFER = 7;			// s -> c
 	public static final int END_FILE_TRANSFER_ACK = 8;		// c -> s
 	public static final int REQUEST_DIST_FILE_PROC = 9;		// c -> s (for distributed file processing)
+	
+	// events for the file transfer with the separate channel and thread
+	public static final int REQUEST_FILE_TRANSFER_CHAN = 10;		// c -> s
+	public static final int REPLY_FILE_TRANSFER_CHAN = 11;		// s -> c
+	public static final int START_FILE_TRANSFER_CHAN = 12;		// s -> c
+	public static final int START_FILE_TRANSFER_CHAN_ACK = 13;	// c -> s
+	public static final int CONTINUE_FILE_TRANSFER_CHAN = 14;		// s -> c
+	public static final int CONTINUE_FILE_TRANSFER_CHAN_ACK = 15;	// c -> s
+	public static final int END_FILE_TRANSFER_CHAN = 16;			// s -> c
+	public static final int END_FILE_TRANSFER_CHAN_ACK = 17;		// c -> s
+
 	
 	private String m_strUserName;	// target name
 	private String m_strSenderName;	// sender name
@@ -213,16 +226,20 @@ public class CMFileEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQUEST_FILE_TRANSFER:
+		case REQUEST_FILE_TRANSFER_CHAN:
 			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strFileName.getBytes().length;
 			break;
 		case REPLY_FILE_TRANSFER:
+		case REPLY_FILE_TRANSFER_CHAN:
 			nByteNum += 3*Integer.BYTES + m_strFileName.getBytes().length;
 			break;
 		case START_FILE_TRANSFER:
+		case START_FILE_TRANSFER_CHAN:
 			nByteNum += 3*Integer.BYTES + m_strSenderName.getBytes().length + m_strFileName.getBytes().length
 					+ Long.BYTES;
 			break;
 		case START_FILE_TRANSFER_ACK:
+		case START_FILE_TRANSFER_CHAN_ACK:
 			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strFileName.getBytes().length;
 			break;
 		case CONTINUE_FILE_TRANSFER:
@@ -234,10 +251,12 @@ public class CMFileEvent extends CMEvent{
 					+ Long.BYTES;
 			break;
 		case END_FILE_TRANSFER:
+		case END_FILE_TRANSFER_CHAN:
 			nByteNum += 3*Integer.BYTES + m_strSenderName.getBytes().length + m_strFileName.getBytes().length 
 					+ Long.BYTES;
 			break;
 		case END_FILE_TRANSFER_ACK:
+		case END_FILE_TRANSFER_CHAN_ACK:
 			nByteNum += 4*Integer.BYTES + m_strUserName.getBytes().length + m_strFileName.getBytes().length;
 			break;
 		case REQUEST_DIST_FILE_PROC:
@@ -256,6 +275,7 @@ public class CMFileEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQUEST_FILE_TRANSFER:
+		case REQUEST_FILE_TRANSFER_CHAN:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
@@ -264,6 +284,7 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.clear();
 			break;
 		case REPLY_FILE_TRANSFER:
+		case REPLY_FILE_TRANSFER_CHAN:
 			m_bytes.putInt(m_strFileName.getBytes().length);
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putInt(m_nReturnCode);
@@ -271,6 +292,7 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.clear();
 			break;
 		case START_FILE_TRANSFER:
+		case START_FILE_TRANSFER_CHAN:
 			m_bytes.putInt(m_strSenderName.getBytes().length);
 			m_bytes.put(m_strSenderName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
@@ -280,6 +302,7 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:
+		case START_FILE_TRANSFER_CHAN_ACK:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
@@ -307,6 +330,7 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.clear();
 			break;
 		case END_FILE_TRANSFER:
+		case END_FILE_TRANSFER_CHAN:
 			m_bytes.putInt(m_strSenderName.getBytes().length);
 			m_bytes.put(m_strSenderName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
@@ -316,6 +340,7 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.clear();
 			break;
 		case END_FILE_TRANSFER_ACK:
+		case END_FILE_TRANSFER_CHAN_ACK:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
@@ -342,18 +367,21 @@ public class CMFileEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQUEST_FILE_TRANSFER:
+		case REQUEST_FILE_TRANSFER_CHAN:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			msg.clear();
 			break;
 		case REPLY_FILE_TRANSFER:
+		case REPLY_FILE_TRANSFER_CHAN:
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
 			msg.clear();
 			break;
 		case START_FILE_TRANSFER:
+		case START_FILE_TRANSFER_CHAN:
 			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
@@ -361,6 +389,7 @@ public class CMFileEvent extends CMEvent{
 			msg.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:
+		case START_FILE_TRANSFER_CHAN_ACK:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
@@ -382,6 +411,7 @@ public class CMFileEvent extends CMEvent{
 			msg.clear();
 			break;
 		case END_FILE_TRANSFER:
+		case END_FILE_TRANSFER_CHAN:
 			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
@@ -389,6 +419,7 @@ public class CMFileEvent extends CMEvent{
 			msg.clear();
 			break;
 		case END_FILE_TRANSFER_ACK:
+		case END_FILE_TRANSFER_CHAN_ACK:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
