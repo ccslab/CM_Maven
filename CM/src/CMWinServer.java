@@ -73,6 +73,30 @@ public class CMWinServer extends JFrame {
 		m_eventHandler = new CMWinServerEventHandler(m_serverStub, this);
 		m_uaSim = new CMSNSUserAccessSimulator();
 
+		// start cm
+		boolean bRet = m_serverStub.startCM();
+		if(!bRet)
+		{
+			printStyledMessage("CM initialization error!\n", "bold");
+		}
+		else
+		{
+			printStyledMessage("Server CM starts.\n", "bold");
+			printMessage("Type \"0\" for menu.\n");					
+			// change button to "stop CM"
+			m_startStopButton.setText("Stop Server CM");
+		}
+		// check if default server or not
+		if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
+		{
+			setTitle("CM Default Server (\"SERVER\")");
+		}
+		else
+		{
+			setTitle("CM Additional Server (\"?\")");
+		}					
+		m_inTextField.requestFocus();
+		
 	}
 	
 	private void addStylesToDocument(StyledDocument doc)
@@ -829,9 +853,9 @@ public class CMWinServer extends JFrame {
 				{
 					printStyledMessage("Server CM starts.\n", "bold");
 					printMessage("Type \"0\" for menu.\n");					
+					// change button to "stop CM"
+					button.setText("Stop Server CM");
 				}
-				// change button to "stop CM"
-				button.setText("Stop Server CM");
 				// check if default server or not
 				if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
 				{
