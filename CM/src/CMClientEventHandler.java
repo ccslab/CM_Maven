@@ -424,7 +424,7 @@ public class CMClientEventHandler implements CMEventHandler {
 		// add file name to list and increase index
 		if(m_nCurrentServerNum == 1)
 		{
-			m_filePieces[m_nRecvPieceNum++] = fileInfo.getFilePath()+"/"+strFile; 
+			m_filePieces[m_nRecvPieceNum++] = fileInfo.getFilePath()+File.separator+strFile; 
 		}
 		else
 		{
@@ -434,7 +434,7 @@ public class CMClientEventHandler implements CMEventHandler {
 			int nEndIndex = strFile.lastIndexOf(".");
 			int nPieceIndex = Integer.parseInt(strFile.substring(nStartIndex, nEndIndex))-1;
 			
-			m_filePieces[nPieceIndex] = fileInfo.getFilePath()+"/"+strFile;
+			m_filePieces[nPieceIndex] = fileInfo.getFilePath()+File.separator+strFile;
 			m_nRecvPieceNum++;
 		}
 		
@@ -446,7 +446,7 @@ public class CMClientEventHandler implements CMEventHandler {
 			{
 				// set the merged file name m-'file name'.'ext'
 				int index = strFile.lastIndexOf("-");
-				strMergeName = fileInfo.getFilePath()+"/"+strFile.substring(0, index)+"."+m_strExt;
+				strMergeName = fileInfo.getFilePath()+File.separator+strFile.substring(0, index)+"."+m_strExt;
 
 				// merge split pieces
 				CMFileTransferManager.mergeFiles(m_filePieces, m_nCurrentServerNum, strMergeName);
@@ -625,7 +625,7 @@ public class CMClientEventHandler implements CMEventHandler {
 				CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
 				for(int i = 0; i < fNameList.size(); i++)
 				{
-					String strPath = fInfo.getFilePath()+"/"+fNameList.get(i);
+					String strPath = fInfo.getFilePath()+File.separator+fNameList.get(i);
 					File file = new File(strPath);
 					if(file.exists())
 						System.out.println("attachment: "+fNameList.get(i));

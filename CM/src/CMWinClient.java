@@ -1600,15 +1600,17 @@ public class CMWinClient extends JFrame {
 		}
 		*/
 		
-		strPath = JOptionPane.showInputDialog("file path (must end with \'/\'): ");
+		strPath = JOptionPane.showInputDialog("file path: ");
 		if(strPath == null) return;
 		
+		/*
 		if(!strPath.endsWith("/"))
 		{
 			//System.out.println("Invalid file path!");
 			printMessage("Invalid file path! (must end with \'/\')");
 			return;
 		}
+		*/
 		
 		//CMFileTransferManager.setFilePath(strPath, m_clientStub.getCMInfo());
 		m_clientStub.setFilePath(strPath);
@@ -3331,7 +3333,7 @@ public class CMWinClient extends JFrame {
 				String strPath = pathLabel.getText();
 				File fPath = new File(strPath);
 				try {
-					int index = strPath.lastIndexOf("/");
+					int index = strPath.lastIndexOf(File.separator);
 					String strFileName = strPath.substring(index+1, strPath.length()); 
 					if(fPath.exists())
 					{

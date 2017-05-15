@@ -272,10 +272,10 @@ public class CMServerEventHandler implements CMEventHandler {
 
 		// change the modified file name
 		strModifiedFile = "m-"+strFile;
-		strModifiedFile = fileInfo.getFilePath()+"/"+strSender+"/"+strModifiedFile;
+		strModifiedFile = fileInfo.getFilePath()+File.separator+strSender+File.separator+strModifiedFile;
 
 		// stylize the file
-		strFullSrcFilePath = fileInfo.getFilePath()+"/"+strSender+"/"+strFile;
+		strFullSrcFilePath = fileInfo.getFilePath()+File.separator+strSender+File.separator+strFile;
 		File srcFile = new File(strFullSrcFilePath);
 		long lFileSize = srcFile.length();
 		long lRemainBytes = lFileSize;

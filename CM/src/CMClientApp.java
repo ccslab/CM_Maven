@@ -1036,7 +1036,7 @@ public class CMClientApp {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("====== set file path");
 		String strPath = null;
-		System.out.print("file path (must end with \'/\'): ");
+		System.out.print("file path: ");
 		try {
 			strPath = br.readLine();
 		} catch (IOException e) {
@@ -1044,11 +1044,13 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
+		/*
 		if(!strPath.endsWith("/"))
 		{
 			System.out.println("Invalid file path!");
 			return;
 		}
+		*/
 		
 		//CMFileTransferManager.setFilePath(strPath, m_clientStub.getCMInfo());
 		m_clientStub.setFilePath(strPath);

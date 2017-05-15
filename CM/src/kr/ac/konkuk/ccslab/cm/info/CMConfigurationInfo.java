@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
+import java.io.File;
 import java.util.*;
 
 public class CMConfigurationInfo {
@@ -407,7 +408,21 @@ public class CMConfigurationInfo {
 	
 	public void setFilePath(String path)
 	{
-		m_strFilePath = path;
+		//m_strFilePath = path;
+		StringTokenizer tokenizer = new StringTokenizer(path, "/\\");
+		StringBuffer sbuf = new StringBuffer();
+		while(tokenizer.hasMoreTokens())
+		{
+			sbuf.append(tokenizer.nextToken());
+			if(tokenizer.countTokens() > 0)
+				sbuf.append(File.separator);				
+		}
+		m_strFilePath = sbuf.toString();
+		
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMConfigurationInfo.setFilePath(): "+m_strFilePath);
+		
+		return;
 	}
 	
 	public String getFilePath()

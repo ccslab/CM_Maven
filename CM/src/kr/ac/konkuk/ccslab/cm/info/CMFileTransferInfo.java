@@ -20,7 +20,7 @@ public class CMFileTransferInfo {
 		m_recvList = new Vector<CMRecvFileInfo>();
 	}
 	
-	// set/get methods
+	////////// set/get methods
 	
 	// need to use File.separator in order to adapt to different OSs ('/' or '\\') not yet
 	public void setFilePath(String path)
@@ -33,7 +33,7 @@ public class CMFileTransferInfo {
 		return m_strFilePath;
 	}
 	
-	// add/remove/find request info
+	////////// add/remove/find sending file info
 	
 	public boolean addSendFileInfo(String uName, String fPath, long lSize, int nContentID)
 	{
@@ -48,7 +48,7 @@ public class CMFileTransferInfo {
 		}
 		*/
 		CMSendFileInfo sInfo = null;
-		String strFileName = fPath.substring(fPath.lastIndexOf("/")+1);
+		String strFileName = fPath.substring(fPath.lastIndexOf(File.separator)+1);
 		
 		sInfo = new CMSendFileInfo();
 		sInfo.setReceiverName(uName);
@@ -146,7 +146,7 @@ public class CMFileTransferInfo {
 		return m_sendList;
 	}
 
-	// add/remove/find recv file info
+	////////// add/remove/find receiving file info
 
 	public boolean addRecvFileInfo(String senderName, String fName, long lSize, int nContentID, 
 			long lRecvSize,	FileOutputStream fos)

@@ -278,18 +278,20 @@ public class CMWinServer extends JFrame {
 			e.printStackTrace();
 		}
 		*/
-		strPath = JOptionPane.showInputDialog("file path (must end with \'/\')");
+		strPath = JOptionPane.showInputDialog("file path: ");
 		if(strPath == null)
 		{
 			return;
 		}
 		
+		/*
 		if(!strPath.endsWith("/"))
 		{
 			//System.out.println("Invalid file path!");
 			printMessage("Invalid file path!\n");
 			return;
 		}
+		*/
 		
 		//CMFileTransferManager.setFilePath(strPath, m_serverStub.getCMInfo());
 		m_serverStub.setFilePath(strPath);
