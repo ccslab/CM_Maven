@@ -470,7 +470,7 @@ public class CMFileTransferManager {
 		// init received size
 		long lRecvSize = 0;
 		// add the received file info in the push list
-		fInfo.addRecvFileInfo(fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, fos);
+		fInfo.addRecvFileInfo(fe.getSenderName(), fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, fos);
 		
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
@@ -610,11 +610,12 @@ public class CMFileTransferManager {
 		*/
 
 		// find info in the recv file list
-		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileName(), fe.getContentID());
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		if( recvInfo == null )
 		{
 			System.err.println("CMFileTransferManager.processCONTINUE_FILE_TRANSFER(), "
-					+ "recv file info for file("+fe.getFileName()+") not found.");
+					+ "recv file info for sender("+fe.getSenderName()+"), file("+fe.getFileName()
+					+"), content ID("+fe.getContentID()+") not found.");
 			return;
 		}
 
@@ -643,11 +644,12 @@ public class CMFileTransferManager {
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		
 		// find info from recv file list
-		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileName(), fe.getContentID());
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		if(recvInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), recv file info "
-					+"for file("+fe.getFileName()+") not found.");
+					+"for sender("+fe.getSenderName()+"), file("+fe.getFileName()+"), content ID("
+					+fe.getContentID()+") not found.");
 			return;
 		}
 		// close received file descriptor
@@ -666,7 +668,7 @@ public class CMFileTransferManager {
 		}
 
 		// remove info from push file list
-		fInfo.removeRecvFileInfo(fe.getFileName(), fe.getContentID());
+		fInfo.removeRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		
 		// send ack
 		CMFileEvent feAck = new CMFileEvent();

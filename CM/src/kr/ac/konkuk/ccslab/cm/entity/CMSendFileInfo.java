@@ -18,9 +18,9 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public CMSendFileInfo()
 	{
 		super();
-		m_strReceiverName = null;
+		m_strReceiverName = "?";
 		m_sendChannel = null;
-		m_strFilePath = null;
+		m_strFilePath = "?";
 		m_fis = null;
 		m_sendTaskResult = null;
 		
@@ -32,15 +32,28 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public CMSendFileInfo(String strFile, long lSize)
 	{
 		super(strFile, lSize, -1);
-		m_strReceiverName = null;
+		m_strReceiverName = "?";
 		m_sendChannel = null;
-		m_strFilePath = null;
+		m_strFilePath = "?";
 		m_fis = null;
 		m_sendTaskResult = null;
 		
 		m_bStarted = false;
 		m_bSentAll = false;
 		m_bReceivedAck = false;
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		if(!super.equals(o)) return false;
+		
+		CMSendFileInfo sfInfo = (CMSendFileInfo) o;
+		String strReceiverName = sfInfo.getReceiverName();
+		
+		if(strReceiverName.equals(m_strReceiverName))
+			return true;
+		return false;
 	}
 	
 	// set/get method
