@@ -284,6 +284,7 @@ public class CMFileTransferManager {
 		String strName = null;
 		int index;
 		String sep = File.separator;
+		/*
 		index = strPath.lastIndexOf("/");
 		if(index == -1)
 		{
@@ -297,6 +298,12 @@ public class CMFileTransferManager {
 		{
 			strName = strPath.substring(index+1);
 		}
+		*/
+		index = strPath.lastIndexOf(sep);
+		if(index == -1)
+			strName = strPath;
+		else
+			strName = strPath.substring(index+1);
 		
 		return strName;
 	}
@@ -362,7 +369,7 @@ public class CMFileTransferManager {
 		feAck.setFileName(strFileName);
 
 		// get the full path of the requested file
-		String strFullPath = fInfo.getFilePath() + "/" + strFileName; 
+		String strFullPath = fInfo.getFilePath() + File.separator + strFileName; 
 		// check the file existence
 		File file = new File(strFullPath);
 		if(!file.exists())
@@ -427,12 +434,12 @@ public class CMFileTransferManager {
 		String strFullPath = fInfo.getFilePath();
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
-			strFullPath = strFullPath + "/" + fe.getFileName();
+			strFullPath = strFullPath + File.separator + fe.getFileName();
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
 		{
 			// check the sub-directory and create it if it does not exist
-			strFullPath = strFullPath + "/" + fe.getSenderName();
+			strFullPath = strFullPath + File.separator + fe.getSenderName();
 			File subDir = new File(strFullPath);
 			if(!subDir.exists() || !subDir.isDirectory())
 			{
@@ -449,7 +456,7 @@ public class CMFileTransferManager {
 				}
 			}
 			
-			strFullPath = strFullPath + "/" + fe.getFileName();
+			strFullPath = strFullPath + File.separator + fe.getFileName();
 		}
 		else
 		{
@@ -698,19 +705,19 @@ public class CMFileTransferManager {
 			if(attach == null) return;
 			if(!attach.containsFileName(fe.getFileName())) return;
 			// add attached file info in attached_file_table of DB
-			String strFilePath = fInfo.getFilePath() + "/" + fe.getSenderName();
+			String strFilePath = fInfo.getFilePath() + File.separator + fe.getSenderName();
 			nContentID = attach.getContentID();
 			strFileName = fe.getFileName();
 			
 			// create a thumbnail image
-			String strInputPath = strFilePath + "/" + strFileName;
+			String strInputPath = strFilePath + File.separator + strFileName;
 			if(CMUtil.isImageFile(strInputPath))
 			{
 				int index = strFileName.lastIndexOf(".");
 				String strName = strFileName.substring(0, index)+"-thumbnail";
 				String strExt = strFileName.substring(index+1, strFileName.length());
 				strName = strName + "." + strExt;
-				String strOutPath = strFilePath + "/" + strName;
+				String strOutPath = strFilePath + File.separator + strName;
 				
 				int nWidth = confInfo.getThumbnailHorSize();
 				int nHeight = confInfo.getThumbnailVerSize();
@@ -731,7 +738,7 @@ public class CMFileTransferManager {
 							+") not found!");
 					return;
 				}
-				content.getFilePathList().add(strFilePath+"/"+strFileName);
+				content.getFilePathList().add(strFilePath+File.separator+strFileName);
 			}
 			
 			// increase the number of completed attached files

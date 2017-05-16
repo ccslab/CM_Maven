@@ -11,7 +11,7 @@ public class CMFileTransferInfo {
 	private Vector<CMSendFileInfo> m_sendList;
 	private Vector<CMRecvFileInfo> m_recvList;
 	
-	// from here (linked list? hash map? for sending/receiving file info)
+	// from here (vector and hash table for sending/receiving file info)
 	
 	public CMFileTransferInfo()
 	{

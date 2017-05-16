@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.sns;
 
+import java.io.File;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMObject;
@@ -148,7 +149,7 @@ public class CMSNSContent extends CMObject {
 		for(int i = 0; i < m_filePathList.size(); i++)
 		{
 			String strName = m_filePathList.get(i);
-			int index = strName.lastIndexOf("/")+1;
+			int index = strName.lastIndexOf(File.separator)+1;
 			strName = strName.substring(index);
 			nameList.add(strName);
 		}

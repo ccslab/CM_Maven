@@ -761,7 +761,7 @@ public class CMSNSManager {
 							String strFilePath = rs.getString("filePath");
 							String strFileName = rs.getString("fileName");
 							String strThumbnailName = null;
-							if(CMUtil.isImageFile(strFilePath+"/"+strFileName))
+							if(CMUtil.isImageFile(strFilePath+File.separator+strFileName))
 							{
 								// change the image file name to its thumbnail image name
 								int index = strFileName.lastIndexOf(".");
@@ -787,8 +787,8 @@ public class CMSNSManager {
 									{
 										// add a file path to the prefetching list
 										// avoid duplicate path
-										if(!prefetchPathList.contains(strFilePath+"/"+strFileName))
-											prefetchPathList.add(strFilePath+"/"+strFileName);
+										if(!prefetchPathList.contains(strFilePath+File.separator+strFileName))
+											prefetchPathList.add(strFilePath+File.separator+strFileName);
 									}
 								}
 							}
@@ -796,12 +796,12 @@ public class CMSNSManager {
 							if(bOriginal)
 							{
 								nameList.add(strFileName);
-								pathList.add(strFilePath+"/"+strFileName);								
+								pathList.add(strFilePath+File.separator+strFileName);								
 							}
 							if(bThumbnail)
 							{
 								nameList.add(strThumbnailName);
-								pathList.add(strFilePath+"/"+strThumbnailName);								
+								pathList.add(strFilePath+File.separator+strThumbnailName);								
 							}
 						}
 					} catch (SQLException e) {
@@ -1956,7 +1956,7 @@ public class CMSNSManager {
 		seAck.setFileName(strFileName);
 
 		// check whether the requested file exists or not
-		String strFilePath = fInfo.getFilePath() + "/" + strWriter + "/" + strFileName;
+		String strFilePath = fInfo.getFilePath() + File.separator + strWriter + File.separator + strFileName;
 		int nReturnCode = -1;
 		File file = new File(strFilePath);
 		if(!file.exists())

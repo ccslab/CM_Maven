@@ -1705,7 +1705,7 @@ public class CMClientStub extends CMStub {
 			for(i = 0; i < filePathList.size(); i++)
 			{
 				String strFilePath = filePathList.get(i);
-				int startIndex = strFilePath.lastIndexOf("/");
+				int startIndex = strFilePath.lastIndexOf(File.separator);
 				String strFileName = strFilePath.substring(startIndex+1);
 				fileNameList.add(strFileName);
 				System.out.println("attached file name: "+strFileName);
