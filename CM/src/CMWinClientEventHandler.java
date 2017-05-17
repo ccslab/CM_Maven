@@ -491,7 +491,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			if(m_bReqAttachedFile)
 			{
 				CMFileTransferInfo fileInfo = m_clientStub.getCMInfo().getFileTransferInfo();
-				String strPath = fileInfo.getFilePath() + "/" + fe.getFileName();
+				String strPath = fileInfo.getFilePath() + File.separator + fe.getFileName();
 				File file = new File(strPath);
 				try {
 					Desktop.getDesktop().open(file);
@@ -514,7 +514,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		// add file name to list and increase index
 		if(m_nCurrentServerNum == 1)
 		{
-			m_filePieces[m_nRecvPieceNum++] = fileInfo.getFilePath()+"/"+strFile; 
+			m_filePieces[m_nRecvPieceNum++] = fileInfo.getFilePath()+File.separator+strFile; 
 		}
 		else
 		{
@@ -524,7 +524,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			int nEndIndex = strFile.lastIndexOf(".");
 			int nPieceIndex = Integer.parseInt(strFile.substring(nStartIndex, nEndIndex))-1;
 			
-			m_filePieces[nPieceIndex] = fileInfo.getFilePath()+"/"+strFile;
+			m_filePieces[nPieceIndex] = fileInfo.getFilePath()+File.separator+strFile;
 			m_nRecvPieceNum++;
 		}
 		
@@ -536,7 +536,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			{
 				// set the merged file name m-'file name'.'ext'
 				int index = strFile.lastIndexOf("-");
-				strMergeName = fileInfo.getFilePath()+"/"+strFile.substring(0, index)+"."+m_strExt;
+				strMergeName = fileInfo.getFilePath()+File.separator+strFile.substring(0, index)+"."+m_strExt;
 
 				// merge split pieces
 				CMFileTransferManager.mergeFiles(m_filePieces, m_nCurrentServerNum, strMergeName);
@@ -756,7 +756,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 				CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
 				for(int i = 0; i < fNameList.size(); i++)
 				{
-					String fPath = fInfo.getFilePath() + "/" + fNameList.get(i);
+					String fPath = fInfo.getFilePath() + File.separator + fNameList.get(i);
 					File file = new File(fPath);
 					
 					// display images (possibly thumbnails)
@@ -788,7 +788,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 							int index = fName.lastIndexOf("-thumbnail.");
 							String ext = fName.substring(index+"-thumbnail".length(), fName.length());
 							fName = fName.substring(0, index)+ext;
-							fPath = fInfo.getFilePath()+"/"+fName;
+							fPath = fInfo.getFilePath()+File.separator+fName;
 							file = new File(fPath);
 						}
 					}
@@ -802,7 +802,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 								int index = fName.lastIndexOf("-thumbnail.");
 								String ext = fName.substring(index+"-thumbnail".length(), fName.length());
 								fName = fName.substring(0, index)+ext;
-								fPath = fInfo.getFilePath()+"/"+fName;
+								fPath = fInfo.getFilePath()+File.separator+fName;
 								file = new File(fPath);
 							}
 							else

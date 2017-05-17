@@ -104,9 +104,8 @@ public class CMFileTransferManager {
 		long lFileSize = file.length();
 		
 		// add send file information
-		// target(requester) name, file path, size
-		// thread handle will be added when it starts to transmit file (not yet)
-		fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID, null);
+		// receiver name, file path, size
+		fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID);
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
@@ -134,6 +133,33 @@ public class CMFileTransferManager {
 		pushFile(strFilePath, strReceiver, -1, cmInfo);
 		return;
 	}
+
+	public static void requestFileWithSepChannel(String strFileName, String strFileOwner, CMInfo cmInfo)
+	{
+		requestFileWithSepChannel(strFileName, strFileOwner, -1, cmInfo);
+		return;
+	}
+	
+	public static void requestFileWithSepChannel(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTransferManager.requestFileWithSepChannel(), under development!!");
+	}
+
+	public static void pushFileWithSepChannel(String strFilePath, String strReceiver, CMInfo cmInfo)
+	{
+		pushFileWithSepChannel(strFilePath, strReceiver, -1, cmInfo);
+		return;
+	}
+	
+	// strFilePath: absolute or relative path to a target file
+	public static void pushFileWithSepChannel(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTransferManager.pushFileWithSepChannel(), under development!!");
+	}
+
+
 
 	// srcFile: reference of RandomAccessFile of source file
 	// bos: reference of BufferedOutputStream of split file
@@ -258,6 +284,7 @@ public class CMFileTransferManager {
 		String strName = null;
 		int index;
 		String sep = File.separator;
+		/*
 		index = strPath.lastIndexOf("/");
 		if(index == -1)
 		{
@@ -271,6 +298,12 @@ public class CMFileTransferManager {
 		{
 			strName = strPath.substring(index+1);
 		}
+		*/
+		index = strPath.lastIndexOf(sep);
+		if(index == -1)
+			strName = strPath;
+		else
+			strName = strPath.substring(index+1);
 		
 		return strName;
 	}
@@ -336,7 +369,7 @@ public class CMFileTransferManager {
 		feAck.setFileName(strFileName);
 
 		// get the full path of the requested file
-		String strFullPath = fInfo.getFilePath() + "/" + strFileName; 
+		String strFullPath = fInfo.getFilePath() + File.separator + strFileName; 
 		// check the file existence
 		File file = new File(strFullPath);
 		if(!file.exists())
@@ -355,9 +388,8 @@ public class CMFileTransferManager {
 		long lFileSize = file.length();
 		
 		// add send file information
-		// requester name, file path, size
-		// thread reference will be added when it starts to transmit file (not yet)
-		fInfo.addSendFileInfo(fe.getUserName(), strFullPath, lFileSize, fe.getContentID(), null);
+		// receiver name, file path, size
+		fInfo.addSendFileInfo(fe.getUserName(), strFullPath, lFileSize, fe.getContentID());
 
 		// start file transfer process
 		CMFileEvent feStart = new CMFileEvent();
@@ -402,12 +434,12 @@ public class CMFileTransferManager {
 		String strFullPath = fInfo.getFilePath();
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
-			strFullPath = strFullPath + "/" + fe.getFileName();
+			strFullPath = strFullPath + File.separator + fe.getFileName();
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
 		{
 			// check the sub-directory and create it if it does not exist
-			strFullPath = strFullPath + "/" + fe.getSenderName();
+			strFullPath = strFullPath + File.separator + fe.getSenderName();
 			File subDir = new File(strFullPath);
 			if(!subDir.exists() || !subDir.isDirectory())
 			{
@@ -424,7 +456,7 @@ public class CMFileTransferManager {
 				}
 			}
 			
-			strFullPath = strFullPath + "/" + fe.getFileName();
+			strFullPath = strFullPath + File.separator + fe.getFileName();
 		}
 		else
 		{
@@ -445,7 +477,7 @@ public class CMFileTransferManager {
 		// init received size
 		long lRecvSize = 0;
 		// add the received file info in the push list
-		fInfo.addRecvFileInfo(fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, fos);
+		fInfo.addRecvFileInfo(fe.getSenderName(), fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, fos);
 		
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
@@ -459,48 +491,39 @@ public class CMFileTransferManager {
 		return;
 	}
 	
-	private static void processSTART_FILE_TRANSFER_ACK(CMFileEvent fe, CMInfo cmInfo)
+	private static void processSTART_FILE_TRANSFER_ACK(CMFileEvent recvFileEvent, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		if(confInfo.isFileTransferScheme())
-		{
-			sendFileWithSepThread(cmInfo);
-		}
-		else
-		{
-			sendFile(cmInfo); 
-		}
-	}
-	
-	private static void sendFile(CMInfo cmInfo)
-	{
-		String strRequester = null;
+		//sendFile(cmInfo);
+		
+		String strReceiver = null;
 		String strFileName = null;
 		String strFullFileName = null;
 		long lFileSize = -1;
 		int nContentID = -1;
 		String strSenderName = null;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-
 		CMSendFileInfo sInfo = null;
-		boolean bFound = false;
-		Iterator<CMSendFileInfo> iter = fInfo.getSendFileList().iterator();
-		while(iter.hasNext() && !bFound)
+		
+		// find the CMSendFileInfo object 
+		sInfo = fInfo.findSendFileInfo(recvFileEvent.getUserName(), recvFileEvent.getFileName(), 
+				recvFileEvent.getContentID());
+		if(sInfo == null)
 		{
-			sInfo = iter.next();
-			if(!sInfo.isStartedToSend())
-			{
-				bFound = true;
-				sInfo.setStartedToSend(true);
-				strRequester = sInfo.getRequesterName();
-				strFullFileName = sInfo.getFilePath();
-				strFileName = getFileNameFromPath(strFullFileName);
-				lFileSize = sInfo.getFileSize();
-				nContentID = sInfo.getContentID();
-			}
+			System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER_ACK(), sendFileInfo not found! : "
+					+"receiver("+recvFileEvent.getUserName()+"), file("+recvFileEvent.getFileName()
+					+"), content ID("+recvFileEvent.getContentID()+")");
+			return;
 		}
 		
-		System.out.println("Sending file("+strFileName+") to target("+strRequester+").");
+		strReceiver = sInfo.getReceiverName();
+		strFullFileName = sInfo.getFilePath();
+		strFileName = getFileNameFromPath(strFullFileName);
+		lFileSize = sInfo.getFileSize();
+		nContentID = sInfo.getContentID();
+					
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMFileTransferManager.processSTART_FILE_TRANSFER_ACK(), "
+					+ "Sending file("+strFileName+") to target("+strReceiver+").");
 
 		// open the file
 		try {
@@ -538,21 +561,10 @@ public class CMFileTransferManager {
 			fe.setFileBlock(fileBlock);
 			fe.setBlockSize(nReadBytes);
 			fe.setContentID(nContentID);
-			CMEventManager.unicastEvent(fe, strRequester, cmInfo);
+			CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 			
 			lRemainBytes -= nReadBytes;
 			lSentBytes += nReadBytes;
-		}
-		
-		if(lSentBytes == lFileSize)
-		{
-			sInfo.setSentAll(true);
-		}
-		else
-		{
-			System.err.println("CMFileTransferManager.sendFile(), All file bytes are not sent.");
-			System.err.println("file size("+lFileSize+"), sent bytes("+lSentBytes+").");
-			return;
 		}
 		
 		// close fis
@@ -563,7 +575,106 @@ public class CMFileTransferManager {
 			e.printStackTrace();
 		}
 
-		System.out.println("Ending transfer of file("+strFileName+") to target("+strRequester
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMFileTransferManager.processSTART_FILE_TRANSFER_ACK(), "
+					+ "Ending transfer of file("+strFileName+") to target("+strReceiver
+					+"), size("+lFileSize+") Bytes.");
+
+		// send the end of file transfer
+		fe = new CMFileEvent();
+		fe.setID(CMFileEvent.END_FILE_TRANSFER);
+		fe.setSenderName(strSenderName);
+		fe.setFileName(strFileName);
+		fe.setFileSize(lFileSize);
+		fe.setContentID(nContentID);
+		CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
+		
+		fe = null;
+		return;
+	}
+	
+	/*
+	private static void sendFile(CMInfo cmInfo)
+	{
+		String strReceiver = null;
+		String strFileName = null;
+		String strFullFileName = null;
+		long lFileSize = -1;
+		int nContentID = -1;
+		String strSenderName = null;
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+
+		CMSendFileInfo sInfo = null;
+		boolean bFound = false;
+		Iterator<CMSendFileInfo> iter = fInfo.getSendFileList().iterator();
+		while(iter.hasNext() && !bFound)
+		{
+			sInfo = iter.next();
+			if(!sInfo.isStartedToSend())
+			{
+				bFound = true;
+				sInfo.setStartedToSend(true);
+				strReceiver = sInfo.getReceiverName();
+				strFullFileName = sInfo.getFilePath();
+				strFileName = getFileNameFromPath(strFullFileName);
+				lFileSize = sInfo.getFileSize();
+				nContentID = sInfo.getContentID();
+			}
+		}
+		
+		System.out.println("Sending file("+strFileName+") to target("+strReceiver+").");
+
+		// open the file
+		try {
+			sInfo.setFileInputStream(new FileInputStream(strFullFileName));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		// set sender name
+		strSenderName = cmInfo.getInteractionInfo().getMyself().getName();
+
+		// send blocks
+		long lRemainBytes = lFileSize;
+		long lSentBytes = 0;
+		int nReadBytes = 0;
+		byte[] fileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
+		CMFileEvent fe = new CMFileEvent();
+		
+		while(lRemainBytes > 0)
+		{
+			try {
+				nReadBytes = sInfo.getFileInputStream().read(fileBlock);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			// send file block
+			fe = new CMFileEvent();
+			fe.setID(CMFileEvent.CONTINUE_FILE_TRANSFER);
+			fe.setSenderName(strSenderName);
+			fe.setFileName(strFileName);
+			fe.setFileBlock(fileBlock);
+			fe.setBlockSize(nReadBytes);
+			fe.setContentID(nContentID);
+			CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
+			
+			lRemainBytes -= nReadBytes;
+			lSentBytes += nReadBytes;
+		}
+		
+		// close fis
+		try {
+			sInfo.getFileInputStream().close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println("Ending transfer of file("+strFileName+") to target("+strReceiver
 				+"), size("+lFileSize+") Bytes.");
 
 		// send the end of file transfer
@@ -573,18 +684,12 @@ public class CMFileTransferManager {
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
-		CMEventManager.unicastEvent(fe, strRequester, cmInfo);
+		CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 		
 		fe = null;
 		return;
 	}
-	
-	private static void sendFileWithSepThread(CMInfo cmInfo)
-	{
-		// need to be processed by a separate thread (not yet)
-		System.err.println("sendFileWithSepThread(); multi-threaded transfer will be developed !!");
-		
-	}
+	*/
 	
 	private static void processCONTINUE_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
@@ -600,11 +705,12 @@ public class CMFileTransferManager {
 		*/
 
 		// find info in the recv file list
-		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileName(), fe.getContentID());
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		if( recvInfo == null )
 		{
 			System.err.println("CMFileTransferManager.processCONTINUE_FILE_TRANSFER(), "
-					+ "recv file info for file("+fe.getFileName()+") not found.");
+					+ "recv file info for sender("+fe.getSenderName()+"), file("+fe.getFileName()
+					+"), content ID("+fe.getContentID()+") not found.");
 			return;
 		}
 
@@ -633,11 +739,12 @@ public class CMFileTransferManager {
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		
 		// find info from recv file list
-		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileName(), fe.getContentID());
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		if(recvInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), recv file info "
-					+"for file("+fe.getFileName()+") not found.");
+					+"for sender("+fe.getSenderName()+"), file("+fe.getFileName()+"), content ID("
+					+fe.getContentID()+") not found.");
 			return;
 		}
 		// close received file descriptor
@@ -656,7 +763,7 @@ public class CMFileTransferManager {
 		}
 
 		// remove info from push file list
-		fInfo.removeRecvFileInfo(fe.getFileName(), fe.getContentID());
+		fInfo.removeRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		
 		// send ack
 		CMFileEvent feAck = new CMFileEvent();
@@ -686,19 +793,19 @@ public class CMFileTransferManager {
 			if(attach == null) return;
 			if(!attach.containsFileName(fe.getFileName())) return;
 			// add attached file info in attached_file_table of DB
-			String strFilePath = fInfo.getFilePath() + "/" + fe.getSenderName();
+			String strFilePath = fInfo.getFilePath() + File.separator + fe.getSenderName();
 			nContentID = attach.getContentID();
 			strFileName = fe.getFileName();
 			
 			// create a thumbnail image
-			String strInputPath = strFilePath + "/" + strFileName;
+			String strInputPath = strFilePath + File.separator + strFileName;
 			if(CMUtil.isImageFile(strInputPath))
 			{
 				int index = strFileName.lastIndexOf(".");
 				String strName = strFileName.substring(0, index)+"-thumbnail";
 				String strExt = strFileName.substring(index+1, strFileName.length());
 				strName = strName + "." + strExt;
-				String strOutPath = strFilePath + "/" + strName;
+				String strOutPath = strFilePath + File.separator + strName;
 				
 				int nWidth = confInfo.getThumbnailHorSize();
 				int nHeight = confInfo.getThumbnailVerSize();
@@ -719,7 +826,7 @@ public class CMFileTransferManager {
 							+") not found!");
 					return;
 				}
-				content.getFilePathList().add(strFilePath+"/"+strFileName);
+				content.getFilePathList().add(strFilePath+File.separator+strFileName);
 			}
 			
 			// increase the number of completed attached files
@@ -791,7 +898,7 @@ public class CMFileTransferManager {
 		else
 		{
 			// delete corresponding request from the list
-			fInfo.removeFileRequestInfo(strUserName, strFileName, nContentID);
+			fInfo.removeSendFileInfo(strUserName, strFileName, nContentID);
 		}
 	
 		if(CMInfo._CM_DEBUG)

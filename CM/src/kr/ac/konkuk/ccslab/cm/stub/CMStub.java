@@ -446,6 +446,14 @@ public class CMStub {
 		return ret;
 	}
 	
+	/**
+	 * (from here)
+	 * 
+	 * @param cme
+	 * @param sessionName
+	 * @param groupName
+	 * @return
+	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName)
 	{
 		return cast(cme, sessionName, groupName, CMInfo.CM_STREAM, 0);
@@ -708,13 +716,23 @@ public class CMStub {
 	
 	public void requestFile(String strFileName, String strFileOwner)
 	{
-		CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.isFileTransferScheme())
+			CMFileTransferManager.requestFileWithSepChannel(strFileName, strFileOwner, m_cmInfo);
+		else
+			CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);
+		
 		return;
 	}
 	
 	public void pushFile(String strFilePath, String strReceiver)
 	{
-		CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.isFileTransferScheme())
+			CMFileTransferManager.pushFileWithSepChannel(strFilePath, strReceiver, m_cmInfo);
+		else
+			CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
+		
 		return;
 	}
 
