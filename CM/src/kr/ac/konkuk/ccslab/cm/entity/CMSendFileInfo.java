@@ -12,8 +12,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	private Future m_sendTaskResult;	// the result of the submitted sending task to the thread pool
 	
 	private boolean m_bStarted;
-	private boolean m_bSentAll;
-	private boolean m_bReceivedAck;
 
 	public CMSendFileInfo()
 	{
@@ -25,8 +23,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_sendTaskResult = null;
 		
 		m_bStarted = false;
-		m_bSentAll = false;
-		m_bReceivedAck = false;
 	}
 	
 	public CMSendFileInfo(String strFile, long lSize)
@@ -39,8 +35,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_sendTaskResult = null;
 		
 		m_bStarted = false;
-		m_bSentAll = false;
-		m_bReceivedAck = false;
 	}
 	
 	@Override
@@ -54,6 +48,14 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		if(strReceiverName.equals(m_strReceiverName))
 			return true;
 		return false;
+	}
+	
+	@Override
+	public String toString()
+	{
+		String strInfo = super.toString();
+		strInfo += ", receiver("+m_strReceiverName+")";
+		return strInfo;
 	}
 	
 	// set/get method
@@ -122,28 +124,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public boolean isStartedToSend()
 	{
 		return m_bStarted;
-	}
-	
-	public void setSentAll(boolean bSentAll)
-	{
-		m_bSentAll = bSentAll;
-		return;
-	}
-	
-	public boolean isSentAll()
-	{
-		return m_bSentAll;
-	}
-	
-	public void setReceivedAck(boolean bAck)
-	{
-		m_bReceivedAck = bAck;
-		return;
-	}
-	
-	public boolean isReceivedAck()
-	{
-		return m_bReceivedAck;
 	}
 	
 }

@@ -43,6 +43,14 @@ public class CMTransFileInfo extends Object {
 		return false;	
 	}
 	
+	@Override
+	public String toString()
+	{
+		String strInfo = "CMTransFileInfo object: sender("+m_strSenderName+"), file("+m_strFileName
+				+"), content ID("+m_nContentID+")";
+		return strInfo;
+	}
+	
 	// get/set methods
 
 	public void setSenderName(String strName)
