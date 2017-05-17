@@ -74,6 +74,16 @@ public class CMList<T> {
 		return null;
 	}
 	
+	public int getSize()
+	{
+		return m_list.size();
+	}
+	
+	public boolean isEmpty()
+	{
+		return m_list.isEmpty();
+	}
+	
 	public Vector<T> getList()
 	{
 		return m_list;

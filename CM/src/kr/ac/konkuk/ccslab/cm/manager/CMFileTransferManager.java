@@ -155,7 +155,7 @@ public class CMFileTransferManager {
 	// strFilePath: absolute or relative path to a target file
 	public static void pushFileWithSepChannel(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
 	{
-		// not yet
+		// from here
 		System.err.println("CMFileTransferManager.pushFileWithSepChannel(), under development!!");
 	}
 

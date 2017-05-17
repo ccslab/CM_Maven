@@ -45,6 +45,23 @@ public class CMSNSContent extends CMObject {
 		m_filePathList = new ArrayList<String>();
 	}
 	
+	@Override
+	public boolean equals(Object o)
+	{
+		CMSNSContent cont = (CMSNSContent)o;
+		if(m_nContentID == cont.getContentID())
+			return true;
+		return false;
+	}
+	
+	@Override
+	public String toString()
+	{
+		String str = "CMSNSContent object: ID("+m_nContentID+"), Writer("+m_strWriterName+"), Date("
+				+m_strDate+")";
+		return str;
+	}
+	
 	/////////////////////////////////// set methods
 	public void setContentID(int id)
 	{

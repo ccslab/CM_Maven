@@ -127,7 +127,7 @@ public class CMFileTransferInfo {
 			return false;
 		}
 		
-		if(sInfoList.getList().isEmpty())
+		if(sInfoList.isEmpty())
 		{
 			m_sendFileHashtable.remove(uName);
 		}
@@ -245,7 +245,7 @@ public class CMFileTransferInfo {
 			return false;
 		}
 		
-		if(rInfoList.getList().isEmpty())
+		if(rInfoList.isEmpty())
 		{
 			m_sendFileHashtable.remove(senderName);
 		}
