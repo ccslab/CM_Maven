@@ -1697,8 +1697,8 @@ public class CMClientStub extends CMStub {
 			
 			// store the file path list in the CMSNSInfo class (CMSNSAttach object)
 			CMSNSInfo sInfo = m_cmInfo.getSNSInfo();
-			CMSNSAttach attachToBeSent = sInfo.getSNSAttachToBeSent();
-			attachToBeSent.setFilePathList(filePathList);
+			CMSNSAttach sendAttach = sInfo.getSendSNSAttach();
+			sendAttach.setFilePathList(filePathList);
 			
 			// create a file name list with the given file path list
 			fileNameList = new ArrayList<String>();

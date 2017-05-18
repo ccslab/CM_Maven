@@ -2,11 +2,14 @@ package kr.ac.konkuk.ccslab.cm.sns;
 
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMObject;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMSNSAttachList extends CMObject {
-	private Vector<CMSNSAttach> m_attachVector;
+	//private Vector<CMSNSAttach> m_attachVector;
+	private CMList<CMSNSAttach> m_attachList;
+	
 	////////// event fields of CONTENT_DOWNLOAD_END
 	private String m_strUserName;
 	private String m_strWriterName;
@@ -16,7 +19,8 @@ public class CMSNSAttachList extends CMObject {
 	
 	public CMSNSAttachList()
 	{
-		m_attachVector = new Vector<CMSNSAttach>();
+		//m_attachVector = new Vector<CMSNSAttach>();
+		m_attachList = new CMList<CMSNSAttach>();
 		m_strUserName = null;
 		m_strWriterName = null;
 		m_nContentOffset = -1;
@@ -25,6 +29,7 @@ public class CMSNSAttachList extends CMObject {
 
 	public CMSNSAttach findSNSAttach(int nContentID)
 	{
+		/*
 		CMSNSAttach attach = null;
 		boolean bFound = false;
 		Iterator<CMSNSAttach> iter = m_attachVector.iterator();
@@ -41,46 +46,19 @@ public class CMSNSAttachList extends CMObject {
 			return attach;
 		
 		return null;
-	}
-	
-	/*
-	public CMSNSAttach findSNSAttach(String strUserName, int nContentID)
-	{
+		*/
+		
 		CMSNSAttach attach = null;
-		boolean bFound = false;
-		Iterator<CMSNSAttach> iter = m_attachVector.iterator();
-		while(iter.hasNext() && !bFound)
-		{
-			attach = iter.next();
-			if(strUserName.equals(attach.getUserName()) && nContentID == attach.getContentID())
-			{
-				bFound = true;
-			}
-		}
+		CMSNSAttach inAttach = new CMSNSAttach();
+		inAttach.setContentID(nContentID);
+		attach = m_attachList.findElement(inAttach);
 		
 		return attach;
 	}
-	
-	public CMSNSAttach findSNSAttach(String strUserName, String strFileName)
-	{
-		CMSNSAttach attach = null;
-		boolean bFound = false;
-		Iterator<CMSNSAttach> iter = m_attachVector.iterator();
-		while(iter.hasNext() && !bFound)
-		{
-			attach = iter.next();
-			if(strUserName.equals(attach.getUserName()) && attach.containsFileName(strFileName))
-			{
-				bFound = true;
-			}
-		}
-		
-		return attach;
-	}
-	*/
 	
 	public boolean addSNSAttach(CMSNSAttach attach)
 	{
+		/*
 		if(findSNSAttach(attach.getContentID()) != null)
 		{
 			System.err.println("CMSNSAttachList.addSNSAttach(), already exists! user("+attach.getUserName()
@@ -97,10 +75,15 @@ public class CMSNSAttachList extends CMObject {
 		}
 		
 		return true;
+		*/
+		
+		boolean bResult = m_attachList.addElement(attach);
+		return bResult;
 	}
 	
 	public boolean removeSNSAttach(int nContentID)
 	{
+		/*
 		boolean bFound = false;
 		Iterator<CMSNSAttach> iter = m_attachVector.iterator();
 		CMSNSAttach attach = null;
@@ -130,11 +113,22 @@ public class CMSNSAttachList extends CMObject {
 		}
 		
 		return bFound;
+		*/
+		
+		boolean bResult = false;
+		CMSNSAttach inAttach = new CMSNSAttach();
+		inAttach.setContentID(nContentID);
+		bResult = m_attachList.removeElement(inAttach);
+		
+		return bResult;
 	}
 	
 	public Vector<CMSNSAttach> getSNSAttachList()
 	{
+		/*
 		return m_attachVector;
+		*/
+		return m_attachList.getList();
 	}
 	
 	//////////////////////////////////////////////////

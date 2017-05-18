@@ -1,6 +1,5 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
-import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
@@ -14,7 +13,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashMap;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashtable;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
@@ -786,8 +785,8 @@ public class CMFileTransferManager {
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			// find attachment info to be received
-			CMSNSAttachHashMap attachMap = snsInfo.getSNSAttachMapToBeRecv();
-			attachList = attachMap.findSNSAttachList(fe.getSenderName());
+			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
+			attachList = attachHashtable.findSNSAttachList(fe.getSenderName());
 			if(attachList == null) return;
 			attach = attachList.findSNSAttach(fe.getContentID());
 			if(attach == null) return;
@@ -840,7 +839,7 @@ public class CMFileTransferManager {
 			se.setReturnCode(attach.getReturnCode());
 			se.setContentID(attach.getContentID());
 			se.setDate(attach.getCreationTime());
-			se.setUserName(attach.getUserName());
+			se.setUserName(attach.getRequesterName());
 			CMEventManager.unicastEvent(se, fe.getSenderName(), cmInfo);
 			se = null;
 			
@@ -849,7 +848,7 @@ public class CMFileTransferManager {
 			attach = null;
 			if(attachList.getSNSAttachList().isEmpty())
 			{
-				attachMap.removeSNSAttachList(fe.getSenderName());
+				attachHashtable.removeSNSAttachList(fe.getSenderName());
 				attachList = null;
 			}
 
@@ -857,7 +856,7 @@ public class CMFileTransferManager {
 		else if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			// find attachment info to be received
-			attachList = snsInfo.getSNSAttachListToBeRecv();
+			attachList = snsInfo.getRecvSNSAttachList();
 			nContentID = fe.getContentID();
 			attach = attachList.findSNSAttach(nContentID);
 			if(attach == null) return;

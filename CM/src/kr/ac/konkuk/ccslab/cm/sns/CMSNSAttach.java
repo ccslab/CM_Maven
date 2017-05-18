@@ -10,7 +10,7 @@ public class CMSNSAttach extends CMObject {
 	private ArrayList<String> m_filePathList;
 	// Event fields of CMSNSEvent.CONTENT_UPLOAD_RESPONSE
 	private int m_nReturnCode;
-	private String m_strUserName;
+	private String m_strRequesterName;
 	private int m_nContentID;
 	private String m_strDate;
 	//////////////////////////
@@ -20,9 +20,25 @@ public class CMSNSAttach extends CMObject {
 		m_nNumCompleted = 0;
 		m_filePathList = new ArrayList<String>();
 		m_nReturnCode = -1;
-		m_strUserName = null;
+		m_strRequesterName = null;
 		m_nContentID = -1;
 		m_strDate = null;
+	}
+	
+	@Override
+	public String toString()
+	{
+		String str = "CMSNSAttach object: content ID("+m_nContentID+")";
+		return str;
+	}
+	
+	@Override
+	public boolean equals(Object o)
+	{
+		CMSNSAttach attach = (CMSNSAttach)o;
+		if(m_nContentID == attach.getContentID())
+			return true;
+		return false;
 	}
 	
 	/////////////////////////////////////////////
@@ -57,17 +73,17 @@ public class CMSNSAttach extends CMObject {
 	{
 		return m_nReturnCode;
 	}
-	
-	public void setUserName(String name)
+
+	public void setRequesterName(String name)
 	{
-		m_strUserName = name;
+		m_strRequesterName = name;
 	}
 	
-	public String getUserName()
+	public String getRequesterName()
 	{
-		return m_strUserName;
+		return m_strRequesterName;
 	}
-	
+
 	public void setContentID(int id)
 	{
 		m_nContentID = id;
@@ -88,10 +104,10 @@ public class CMSNSAttach extends CMObject {
 		return m_strDate;
 	}
 	
-	public void setContentUploadResponseEvent(int nReturnCode, int nContentID, String strDate, String strUserName)
+	public void setContentUploadResponseEvent(int nReturnCode, int nContentID, String strDate, String strRequesterName)
 	{
 		m_nReturnCode = nReturnCode;
-		m_strUserName = strUserName;
+		m_strRequesterName = strRequesterName;
 		m_nContentID = nContentID;
 		m_strDate = strDate;
 	}
@@ -117,7 +133,7 @@ public class CMSNSAttach extends CMObject {
 		m_nNumCompleted = 0;
 		m_filePathList = new ArrayList<String>();
 		m_nReturnCode = -1;
-		m_strUserName = null;
+		m_strRequesterName = null;
 		m_nContentID = -1;
 		m_strDate = null;
 		

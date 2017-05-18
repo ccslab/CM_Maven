@@ -1,7 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashMap;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashtable;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchHashMap;
@@ -9,10 +9,10 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchHashMap;
 public class CMSNSInfo {
 	private CMSNSContentList m_contentList;	// downloaded content for client, global content list for server
 											// if DB is not used
-	private CMSNSAttach m_attachToBeSent;	// by client for content upload
-	private CMSNSAttachHashMap m_attachMapToBeRecv;	// by server for content upload
-	private CMSNSAttachHashMap m_attachMapToBeSent;	// by server for content download
-	private CMSNSAttachList m_attachListToBeRecv;	// by client for content download	
+	private CMSNSAttach m_sendAttach;	// by client for content upload
+	private CMSNSAttachHashtable m_recvAttachHashtable;	// by server for content upload
+	private CMSNSAttachHashtable m_sendAttachHashtable;	// by server for content download
+	private CMSNSAttachList m_recvAttachList;	// by client for content download	
 	private CMSNSPrefetchHashMap m_prefetchMap;		// by server for prefetching attached files
 	
 	private String m_strLastlyReqWriter;	// by client for saving the information on the last content download request
@@ -22,10 +22,10 @@ public class CMSNSInfo {
 	public CMSNSInfo()
 	{
 		m_contentList = new CMSNSContentList();
-		m_attachToBeSent = new CMSNSAttach();
-		m_attachMapToBeRecv = new CMSNSAttachHashMap();
-		m_attachMapToBeSent = new CMSNSAttachHashMap();
-		m_attachListToBeRecv = new CMSNSAttachList();
+		m_sendAttach = new CMSNSAttach();
+		m_recvAttachHashtable = new CMSNSAttachHashtable();
+		m_sendAttachHashtable = new CMSNSAttachHashtable();
+		m_recvAttachList = new CMSNSAttachList();
 		m_prefetchMap = new CMSNSPrefetchHashMap();
 		m_strLastlyReqWriter = ""; // initial (or default) writer is an empty string
 		m_nLastlyReqOffset = 0;		// initial (or default) offset is 0 (the most recent content)
@@ -45,44 +45,44 @@ public class CMSNSInfo {
 		return m_contentList;
 	}
 	
-	public void setSNSAttachToBeSent(CMSNSAttach attach)
+	public void setSendSNSAttach(CMSNSAttach attach)
 	{
-		m_attachToBeSent = attach;
+		m_sendAttach = attach;
 	}
 	
-	public CMSNSAttach getSNSAttachToBeSent()
+	public CMSNSAttach getSendSNSAttach()
 	{
-		return m_attachToBeSent;
+		return m_sendAttach;
 	}
 	
-	public void setSNSAttachMapToBeRecv(CMSNSAttachHashMap attachMap)
+	public void setRecvSNSAttachHashtable(CMSNSAttachHashtable attachTable)
 	{
-		m_attachMapToBeRecv = attachMap;
+		m_recvAttachHashtable = attachTable;
 	}
 	
-	public CMSNSAttachHashMap getSNSAttachMapToBeRecv()
+	public CMSNSAttachHashtable getRecvSNSAttachHashtable()
 	{
-		return m_attachMapToBeRecv;
+		return m_recvAttachHashtable;
 	}
 	
-	public void setSNSAttachMapToBeSent(CMSNSAttachHashMap attachMap)
+	public void setSendSNSAttachHashtable(CMSNSAttachHashtable attachTable)
 	{
-		m_attachMapToBeSent = attachMap;
+		m_sendAttachHashtable = attachTable;
 	}
 	
-	public CMSNSAttachHashMap getSNSAttachMapToBeSent()
+	public CMSNSAttachHashtable getSendSNSAttachHashtable()
 	{
-		return m_attachMapToBeSent;
+		return m_sendAttachHashtable;
 	}
 	
-	public void setSNSAttachListToBeRecv(CMSNSAttachList attachList)
+	public void setRecvSNSAttachList(CMSNSAttachList attachList)
 	{
-		m_attachListToBeRecv = attachList;
+		m_recvAttachList = attachList;
 	}
 	
-	public CMSNSAttachList getSNSAttachListToBeRecv()
+	public CMSNSAttachList getRecvSNSAttachList()
 	{
-		return m_attachListToBeRecv;
+		return m_recvAttachList;
 	}
 	
 	public void setPrefetchMap(CMSNSPrefetchHashMap prefetchMap)

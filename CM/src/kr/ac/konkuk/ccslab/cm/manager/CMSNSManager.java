@@ -17,7 +17,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistory;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashMap;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashtable;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
@@ -221,7 +221,7 @@ public class CMSNSManager {
 		CMSNSAttach attach = null;
 		int nCompleted = 0;
 
-		attach = snsInfo.getSNSAttachToBeSent();
+		attach = snsInfo.getSendSNSAttach();
 		if(attach.getContentID() != nContentID) return;
 		if(!attach.containsFileName(strFileName)) return;
 		nCompleted = attach.getNumCompleted() + 1;
@@ -242,8 +242,8 @@ public class CMSNSManager {
 		int nCompleted = 0;
 
 		// find and update the completed attachment info
-		CMSNSAttachHashMap attachMap = snsInfo.getSNSAttachMapToBeSent();
-		CMSNSAttachList attachList = attachMap.findSNSAttachList(strUserName);
+		CMSNSAttachHashtable attachHashtable = snsInfo.getSendSNSAttachHashtable();
+		CMSNSAttachList attachList = attachHashtable.findSNSAttachList(strUserName);
 		if(attachList == null) return;
 		attach = attachList.findSNSAttach(nContentID);
 		if(attach == null) return;
@@ -270,7 +270,7 @@ public class CMSNSManager {
 			sevent = null;
 			
 			// remove the completed attachment list info
-			attachMap.removeSNSAttachList(strUserName);
+			attachHashtable.removeSNSAttachList(strUserName);
 			attachList = null;
 		}
 		
@@ -816,11 +816,11 @@ public class CMSNSManager {
 					if(nAttachDownloadScheme != CMInfo.SNS_ATTACH_NONE)
 					{
 						// add the attached file path to the attachMapToBeSent
-						CMSNSAttachHashMap attachMapToBeSent = snsInfo.getSNSAttachMapToBeSent();
+						CMSNSAttachHashtable sendAttachHashtable = snsInfo.getSendSNSAttachHashtable();
 						CMSNSAttach attach = new CMSNSAttach();
 						attach.setContentID(nContID);
 						attach.setFilePathList(pathList);
-						CMSNSAttachList attachList = attachMapToBeSent.findSNSAttachList(se.getUserName());
+						CMSNSAttachList attachList = sendAttachHashtable.findSNSAttachList(se.getUserName());
 						if(attachList != null)
 						{
 							attachList.addSNSAttach(attach);
@@ -831,7 +831,7 @@ public class CMSNSManager {
 							attachList.addSNSAttach(attach);
 							attachList.setContentDownloadEndEvent(se.getUserName(), se.getWriterName(), 
 									se.getContentOffset(), contentList.getSNSContentNum());
-							attachMapToBeSent.addSNSAttachList(se.getUserName(), attachList);
+							sendAttachHashtable.addSNSAttachList(se.getUserName(), attachList);
 						}
 						
 						// save the prefetch list if current mode is the prefetch mode
@@ -1022,7 +1022,7 @@ public class CMSNSManager {
 		
 		if(se.getNumAttachedFiles() > 0 && confInfo.getAttachDownloadScheme() != CMInfo.SNS_ATTACH_NONE)
 		{
-			CMSNSAttachList attachList = snsInfo.getSNSAttachListToBeRecv();
+			CMSNSAttachList attachList = snsInfo.getRecvSNSAttachList();
 			CMSNSAttach attach = new CMSNSAttach();
 			attach.setContentID(se.getContentID());
 			ArrayList<String> fileNameList = new ArrayList<String>();
@@ -1065,7 +1065,7 @@ public class CMSNSManager {
 
 		
 		// check if all attached files have been received or not
-		CMSNSAttachList attachList = snsInfo.getSNSAttachListToBeRecv();
+		CMSNSAttachList attachList = snsInfo.getRecvSNSAttachList();
 		if(attachList.getSNSAttachList().isEmpty())
 			nReturnCode = 1;
 		else
@@ -1221,8 +1221,8 @@ public class CMSNSManager {
 			attach.setFilePathList(se.getFileNameList());	// only file names
 			CMSNSAttachList attachList = new CMSNSAttachList();
 			attachList.addSNSAttach(attach);
-			CMSNSAttachHashMap attachMap = snsInfo.getSNSAttachMapToBeRecv();
-			attachMap.addSNSAttachList(se.getUserName(), attachList);
+			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
+			attachHashtable.addSNSAttachList(se.getUserName(), attachList);
 			/////////////// request for the attached files			
 			tse = new CMSNSEvent();
 			tse.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
@@ -1779,10 +1779,10 @@ public class CMSNSManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMSNSAttach attachToBeSent = null;
+		CMSNSAttach sendAttach = null;
 		CMSNSAttachList attachList = null;
 		CMSNSAttach attach = null;
-		CMSNSAttachHashMap attachMapToBeSent = null;
+		CMSNSAttachHashtable sendAttachHashtable = null;
 		ArrayList<String> filePathList = null;
 		ArrayList<String> naFileNameList = null;
 		int i = 0;
@@ -1796,9 +1796,9 @@ public class CMSNSManager {
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			// set content ID to the attachment object
-			attachToBeSent = snsInfo.getSNSAttachToBeSent();
-			attachToBeSent.setContentID(se.getContentID());
-			filePathList = attachToBeSent.getFilePathList();
+			sendAttach = snsInfo.getSendSNSAttach();
+			sendAttach.setContentID(se.getContentID());
+			filePathList = sendAttach.getFilePathList();
 			for(i = 0; i < filePathList.size(); i++)
 			{				
 				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), 
@@ -1807,9 +1807,9 @@ public class CMSNSManager {
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
 		{
-			// find attachMapToBeSent
-			attachMapToBeSent = snsInfo.getSNSAttachMapToBeSent();
-			attachList = attachMapToBeSent.findSNSAttachList(se.getUserName());
+			// find sendAttachHashtable
+			sendAttachHashtable = snsInfo.getSendSNSAttachHashtable();
+			attachList = sendAttachHashtable.findSNSAttachList(se.getUserName());
 			if(attachList == null)
 			{
 				System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILES(), attach list for user("
@@ -1901,7 +1901,7 @@ public class CMSNSManager {
 		}
 		
 		// update attachment info to be received
-		attachList = snsInfo.getSNSAttachListToBeRecv();
+		attachList = snsInfo.getRecvSNSAttachList();
 		nContentID = se.getContentID();
 		attach = attachList.findSNSAttach(nContentID);
 		if(attach == null) return;
