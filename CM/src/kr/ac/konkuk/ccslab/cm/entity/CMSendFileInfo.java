@@ -54,7 +54,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public String toString()
 	{
 		String strInfo = super.toString();
-		strInfo += ", receiver("+m_strReceiverName+")";
+		strInfo += "; CMSendFileInfo: receiver("+m_strReceiverName+")";
 		return strInfo;
 	}
 	

@@ -28,6 +28,27 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		m_recvTaskResult = null;
 	}
 	
+	@Override
+	public boolean equals(Object o)
+	{
+		if(!super.equals(o)) return false;
+		
+		CMRecvFileInfo rfInfo = (CMRecvFileInfo) o;
+		String strSenderName = rfInfo.getSenderName();
+		
+		if(strSenderName.equals(m_strSenderName))
+			return true;
+		return false;
+	}
+
+	@Override
+	public String toString()
+	{
+		String str = super.toString();
+		str += "; CMRecvFileInfo: sender("+m_strSenderName+")";
+		return str;
+	}
+	
 	// set/get methods
 	
 	public void setRecvSize(long lSize)

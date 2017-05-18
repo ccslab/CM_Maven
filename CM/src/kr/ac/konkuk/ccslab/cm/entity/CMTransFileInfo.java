@@ -31,13 +31,10 @@ public class CMTransFileInfo extends Object {
 	public boolean equals(Object o)
 	{
 		CMTransFileInfo tfInfo = (CMTransFileInfo) o;
-		String strSenderName = tfInfo.getSenderName();
 		String strFileName = tfInfo.getFileName();
-		//long lFileSize = tfInfo.getFileSize();
 		int nContentID = tfInfo.getContentID();
 		
-		if(strSenderName.equals(m_strSenderName) && strFileName.equals(m_strFileName) 
-				&& nContentID == m_nContentID)
+		if(strFileName.equals(m_strFileName) && nContentID == m_nContentID)
 			return true;
 		
 		return false;	
@@ -46,8 +43,7 @@ public class CMTransFileInfo extends Object {
 	@Override
 	public String toString()
 	{
-		String strInfo = "CMTransFileInfo object: sender("+m_strSenderName+"), file("+m_strFileName
-				+"), content ID("+m_nContentID+")";
+		String strInfo = "CMTransFileInfo: file("+m_strFileName+"), content ID("+m_nContentID+")";
 		return strInfo;
 	}
 	
