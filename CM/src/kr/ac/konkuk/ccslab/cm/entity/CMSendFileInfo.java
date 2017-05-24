@@ -1,6 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
-import java.io.FileInputStream;
+import java.io.RandomAccessFile;
 import java.nio.channels.SelectableChannel;
 import java.util.concurrent.Future;
 
@@ -8,7 +8,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	private String m_strReceiverName;	// the receiver name
 	private SelectableChannel m_sendChannel; // the dedicated channel for sending the file
 	private String m_strFilePath;	// the path of the sent file
-	private FileInputStream m_fis;	// the file input stream that is used to read data of the sent file
+	private RandomAccessFile m_readFile;// for reading file blocks of the sent file
 	private Future m_sendTaskResult;	// the result of the submitted sending task to the thread pool
 	
 	private boolean m_bStarted;
@@ -19,7 +19,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_strReceiverName = "?";
 		m_sendChannel = null;
 		m_strFilePath = "?";
-		m_fis = null;
+		m_readFile = null;
 		m_sendTaskResult = null;
 		
 		m_bStarted = false;
@@ -31,7 +31,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_strReceiverName = "?";
 		m_sendChannel = null;
 		m_strFilePath = "?";
-		m_fis = null;
+		m_readFile = null;
 		m_sendTaskResult = null;
 		
 		m_bStarted = false;
@@ -93,15 +93,15 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		return m_strFilePath;
 	}
 		
-	public void setFileInputStream(FileInputStream fis)
+	public void setReadFile(RandomAccessFile raf)
 	{
-		m_fis = fis;
+		m_readFile = raf;
 		return;
 	}
 	
-	public FileInputStream getFileInputStream()
+	public RandomAccessFile getReadFile()
 	{
-		return m_fis;
+		return m_readFile;
 	}
 	
 	public void setSendTaskResult(Future result)

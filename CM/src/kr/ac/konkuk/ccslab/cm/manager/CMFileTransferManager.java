@@ -465,18 +465,20 @@ public class CMFileTransferManager {
 		
 		
 		// open a file output stream
-		FileOutputStream fos;
+		RandomAccessFile writeFile;
 		try {
-			fos = new FileOutputStream(strFullPath);
+			writeFile = new RandomAccessFile(strFullPath, "rw");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
+		
+		
 		// init received size
 		long lRecvSize = 0;
 		// add the received file info in the push list
-		fInfo.addRecvFileInfo(fe.getSenderName(), fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, fos);
+		fInfo.addRecvFileInfo(fe.getSenderName(), fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, writeFile);
 		
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
@@ -492,8 +494,6 @@ public class CMFileTransferManager {
 	
 	private static void processSTART_FILE_TRANSFER_ACK(CMFileEvent recvFileEvent, CMInfo cmInfo)
 	{
-		//sendFile(cmInfo);
-		
 		String strReceiver = null;
 		String strFileName = null;
 		String strFullFileName = null;
@@ -526,7 +526,7 @@ public class CMFileTransferManager {
 
 		// open the file
 		try {
-			sInfo.setFileInputStream(new FileInputStream(strFullFileName));
+			sInfo.setReadFile(new RandomAccessFile(strFullFileName, "rw"));
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -546,7 +546,7 @@ public class CMFileTransferManager {
 		while(lRemainBytes > 0)
 		{
 			try {
-				nReadBytes = sInfo.getFileInputStream().read(fileBlock);
+				nReadBytes = sInfo.getReadFile().read(fileBlock);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -568,7 +568,7 @@ public class CMFileTransferManager {
 		
 		// close fis
 		try {
-			sInfo.getFileInputStream().close();
+			sInfo.getReadFile().close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -591,104 +591,6 @@ public class CMFileTransferManager {
 		fe = null;
 		return;
 	}
-	
-	/*
-	private static void sendFile(CMInfo cmInfo)
-	{
-		String strReceiver = null;
-		String strFileName = null;
-		String strFullFileName = null;
-		long lFileSize = -1;
-		int nContentID = -1;
-		String strSenderName = null;
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-
-		CMSendFileInfo sInfo = null;
-		boolean bFound = false;
-		Iterator<CMSendFileInfo> iter = fInfo.getSendFileList().iterator();
-		while(iter.hasNext() && !bFound)
-		{
-			sInfo = iter.next();
-			if(!sInfo.isStartedToSend())
-			{
-				bFound = true;
-				sInfo.setStartedToSend(true);
-				strReceiver = sInfo.getReceiverName();
-				strFullFileName = sInfo.getFilePath();
-				strFileName = getFileNameFromPath(strFullFileName);
-				lFileSize = sInfo.getFileSize();
-				nContentID = sInfo.getContentID();
-			}
-		}
-		
-		System.out.println("Sending file("+strFileName+") to target("+strReceiver+").");
-
-		// open the file
-		try {
-			sInfo.setFileInputStream(new FileInputStream(strFullFileName));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-		
-		// set sender name
-		strSenderName = cmInfo.getInteractionInfo().getMyself().getName();
-
-		// send blocks
-		long lRemainBytes = lFileSize;
-		long lSentBytes = 0;
-		int nReadBytes = 0;
-		byte[] fileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
-		CMFileEvent fe = new CMFileEvent();
-		
-		while(lRemainBytes > 0)
-		{
-			try {
-				nReadBytes = sInfo.getFileInputStream().read(fileBlock);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			// send file block
-			fe = new CMFileEvent();
-			fe.setID(CMFileEvent.CONTINUE_FILE_TRANSFER);
-			fe.setSenderName(strSenderName);
-			fe.setFileName(strFileName);
-			fe.setFileBlock(fileBlock);
-			fe.setBlockSize(nReadBytes);
-			fe.setContentID(nContentID);
-			CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
-			
-			lRemainBytes -= nReadBytes;
-			lSentBytes += nReadBytes;
-		}
-		
-		// close fis
-		try {
-			sInfo.getFileInputStream().close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		System.out.println("Ending transfer of file("+strFileName+") to target("+strReceiver
-				+"), size("+lFileSize+") Bytes.");
-
-		// send the end of file transfer
-		fe = new CMFileEvent();
-		fe.setID(CMFileEvent.END_FILE_TRANSFER);
-		fe.setSenderName(strSenderName);
-		fe.setFileName(strFileName);
-		fe.setFileSize(lFileSize);
-		fe.setContentID(nContentID);
-		CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
-		
-		fe = null;
-		return;
-	}
-	*/
 	
 	private static void processCONTINUE_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
@@ -714,7 +616,7 @@ public class CMFileTransferManager {
 		}
 
 		try {
-			recvInfo.getFileOutputStream().write(fe.getFileBlock(), 0, fe.getBlockSize());
+			recvInfo.getWriteFile().write(fe.getFileBlock(), 0, fe.getBlockSize());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -748,7 +650,7 @@ public class CMFileTransferManager {
 		}
 		// close received file descriptor
 		try {
-			recvInfo.getFileOutputStream().close();
+			recvInfo.getWriteFile().close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
