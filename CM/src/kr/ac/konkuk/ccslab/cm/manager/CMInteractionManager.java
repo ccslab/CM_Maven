@@ -107,6 +107,7 @@ public class CMInteractionManager {
 	public static void terminate(CMInfo cmInfo)
 	{
 		CMDBManager.terminate(cmInfo);
+		CMFileTransferManager.terminate(cmInfo);
 	}
 	
 	public static boolean connectDefaultServer(CMInfo cmInfo)
@@ -615,6 +616,9 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		SocketChannel sc = null;
+		CMServer serverInfo = null;
+		CMChannelInfo<Integer> scInfo = null;
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
 			return;
@@ -643,6 +647,42 @@ public class CMInteractionManager {
 			interInfo.getMyself().setState(CMInfo.CM_LOGIN);
 			// set client's attachment download scheme
 			interInfo.getMyself().setAttachDownloadScheme(se.getAttachDownloadScheme());
+			// if the file trasnfer scheme is set, create a blocking TCP socket channel
+			if(confInfo.isFileTransferScheme())
+			{
+				serverInfo = interInfo.getDefaultServerInfo();
+				scInfo = serverInfo.getBlockSocketChannelInfo();
+				try {
+					sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+							serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return;
+				}
+				
+				if(sc == null)
+				{
+					System.err.println("CMInteractionMaanger.processLOGIN_ACK(), failed to create a blocking "
+							+ "TCP socket channel to the default server!");
+					return;
+				}
+				scInfo.addChannel(0, sc); // key for the default blocking TCP socket channel is 1
+
+				CMSessionEvent tse = new CMSessionEvent();
+				tse.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
+				tse.setChannelName(interInfo.getMyself().getName());
+				tse.setChannelNum(0);
+				CMEventManager.unicastEvent(tse, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
+				se = null;
+
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
+							+ "the channel with the key(0) to the default server.");
+				}
+				
+			}
 			// request session information if session scheme is not used.
 			if(!confInfo.isSessionScheme())
 			{
@@ -978,7 +1018,7 @@ public class CMInteractionManager {
 			SelectionKey selKey = msg.m_ch.keyFor(commInfo.getSelector());
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL();, # registered ky in "
+				System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(); # registered ky in "
 						+ "the selector before the cancel request of the key: "
 						+ commInfo.getSelector().keys().size());
 			}
@@ -994,7 +1034,7 @@ public class CMInteractionManager {
 			}
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), # registered key in "
+				System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(); # registered key in "
 						+ "the selector after the completion of the key cancellation: "
 						+ commInfo.getSelector().keys().size());
 			}

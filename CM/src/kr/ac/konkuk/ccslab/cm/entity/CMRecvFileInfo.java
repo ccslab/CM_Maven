@@ -1,14 +1,14 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.io.RandomAccessFile;
-import java.nio.channels.SelectableChannel;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.Future;
 
 public class CMRecvFileInfo extends CMTransFileInfo {
 	private long m_lRecvSize;
 	private RandomAccessFile m_writeFile;		// for writing the received file block to the new file
-	private SelectableChannel m_recvChannel;	// the dedicated channel for receiving the file
-	private Future m_recvTaskResult;	// the result of the submitted receiving task to the thread pool 
+	private SocketChannel m_recvChannel;	// the dedicated channel for receiving the file
+	private Future<CMRecvFileInfo> m_recvTaskResult;	// the result of the submitted receiving task to the thread pool 
 
 	public CMRecvFileInfo()
 	{
@@ -72,24 +72,24 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		return m_writeFile;
 	}
 	
-	public void setRecvChannel(SelectableChannel channel)
+	public void setRecvChannel(SocketChannel channel)
 	{
 		m_recvChannel = channel;
 		return;
 	}
 	
-	public SelectableChannel getRecvChannel()
+	public SocketChannel getRecvChannel()
 	{
 		return m_recvChannel;
 	}
 	
-	public void setRecvTaskResult(Future result)
+	public void setRecvTaskResult(Future<CMRecvFileInfo> result)
 	{
 		m_recvTaskResult = result;
 		return;
 	}
 	
-	public Future getRecvTaskResult()
+	public Future<CMRecvFileInfo> getRecvTaskResult()
 	{
 		return m_recvTaskResult;
 	}

@@ -171,55 +171,7 @@ public class CMFileEvent extends CMEvent{
 	//////////////////////////////////////////////////////////
 	
 	protected int getByteNum()
-	{
-		/*
-		typedef struct _requestFileTransfer {
-			char strUserName[NAME_NUM];
-			char strFileName[NAME_NUM];
-		} requestFileTransfer;
-
-		typedef struct _replyFileTransfer {
-			char strFileName[NAME_NUM];
-			int nReturnCode;	// 0: valid, -1: invalid
-		} replyFileTransfer;
-
-		typedef struct _startFileTransfer{
-			char strSenderName[NAME_NUM];
-			char strFileName[NAME_NUM];
-			unsigned long lFileSize;
-		} startFileTransfer;
-
-		typedef struct _startFileTransferAck {
-			char strUserName[NAME_NUM];
-			char strFileName[NAME_NUM];
-		} startFileTransferAck;
-
-		typedef struct _continueFileTransfer {
-			char strSenderName[NAME_NUM];
-			char strFileName[NAME_NUM];
-			char cFileBlock[FILE_BLOCK_LEN];
-			int nBlockSize;
-		} continueFileTransfer;
-
-		typedef struct _continueFileTransferAck {
-			char strUserName[NAME_NUM];
-			char strFileName[NAME_NUM];
-			unsigned long lReceivedFileSize;
-		} continueFileTransferAck;
-
-		typedef struct _endFileTransfer {
-			char strSenderName[NAME_NUM];
-			char strFileName[NAME_NUM];
-			unsigned long lFileSize;
-		} endFileTransfer;
-
-		typedef struct _endFileTransferAck {
-			char strUserName[NAME_NUM];
-			char strFileName[NAME_NUM];
-			int nReturnCode;	// 0: success, -1: error
-		} endFileTransferAck;
-		*/
-		
+	{		
 		int nByteNum = 0;
 		nByteNum = super.getByteNum();
 		
@@ -239,8 +191,11 @@ public class CMFileEvent extends CMEvent{
 					+ Long.BYTES;
 			break;
 		case START_FILE_TRANSFER_ACK:
-		case START_FILE_TRANSFER_CHAN_ACK:
 			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strFileName.getBytes().length;
+			break;
+		case START_FILE_TRANSFER_CHAN_ACK:
+			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strFileName.getBytes().length 
+					+ Long.BYTES;
 			break;
 		case CONTINUE_FILE_TRANSFER:
 			nByteNum += 4*Integer.BYTES + m_strSenderName.getBytes().length + m_strFileName.getBytes().length 
@@ -302,13 +257,21 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:
-		case START_FILE_TRANSFER_CHAN_ACK:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putInt(m_nContentID);
 			m_bytes.clear();
+			break;
+		case START_FILE_TRANSFER_CHAN_ACK:
+			m_bytes.putInt(m_strUserName.getBytes().length);
+			m_bytes.put(m_strUserName.getBytes());
+			m_bytes.putInt(m_strFileName.getBytes().length);
+			m_bytes.put(m_strFileName.getBytes());
+			m_bytes.putInt(m_nContentID);
+			m_bytes.putLong(m_lReceivedFileSize);
+			m_bytes.clear();			
 			break;
 		case CONTINUE_FILE_TRANSFER:
 			m_bytes.putInt(m_strSenderName.getBytes().length);
@@ -389,10 +352,16 @@ public class CMFileEvent extends CMEvent{
 			msg.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:
+			m_strUserName = getStringFromByteBuffer(msg);
+			m_strFileName = getStringFromByteBuffer(msg);
+			m_nContentID = msg.getInt();
+			msg.clear();
+			break;
 		case START_FILE_TRANSFER_CHAN_ACK:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
+			m_lReceivedFileSize = msg.getLong();
 			msg.clear();
 			break;
 		case CONTINUE_FILE_TRANSFER:

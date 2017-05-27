@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.info;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
@@ -11,12 +12,14 @@ public class CMFileTransferInfo {
 	private String m_strFilePath;
 	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable; // key is the receiver name
 	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable; // key is the sender name
+	private ExecutorService m_executorService;
 	
 	public CMFileTransferInfo()
 	{
 		m_strFilePath = null;
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
+		m_executorService = null;
 	}
 	
 	////////// set/get methods
@@ -29,6 +32,16 @@ public class CMFileTransferInfo {
 	public String getFilePath()
 	{
 		return m_strFilePath;
+	}
+	
+	public void setExecutorService(ExecutorService es)
+	{
+		m_executorService = es;
+	}
+	
+	public ExecutorService getExecutorService()
+	{
+		return m_executorService;
 	}
 	
 	////////// add/remove/find sending file info
@@ -69,6 +82,38 @@ public class CMFileTransferInfo {
 		}
 
 		return true;
+	}
+
+	public boolean addSendFileInfo(CMSendFileInfo sInfo)
+	{
+		String strFileName = null;
+		CMList<CMSendFileInfo> sInfoList = null;
+		boolean bResult = false;
+		
+		strFileName = sInfo.getFilePath().substring(sInfo.getFilePath().lastIndexOf(File.separator)+1);
+		sInfo.setFileName(strFileName);
+		
+		sInfoList = m_sendFileHashtable.get(sInfo.getReceiverName());
+		if(sInfoList == null)
+		{
+			sInfoList = new CMList<CMSendFileInfo>();
+			m_sendFileHashtable.put(sInfo.getReceiverName(), sInfoList);
+		}
+		
+		bResult = sInfoList.addElement(sInfo);
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.addSendFileInfo() failed: "+sInfo.toString());
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.addSendFileInfo() done: "+sInfo.toString());
+			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
+		}
+
+		return true;		
 	}
 
 	public CMSendFileInfo findSendFileInfo(String uName, String fName, int nContentID)
@@ -187,6 +232,34 @@ public class CMFileTransferInfo {
 		
 		return true;
 	}
+	
+	public boolean addRecvFileInfo(CMRecvFileInfo rInfo)
+	{
+		CMList<CMRecvFileInfo> rInfoList = null;
+		boolean bResult = false;
+		
+		rInfoList = m_recvFileHashtable.get(rInfo.getSenderName());
+		if(rInfoList == null)
+		{
+			rInfoList = new CMList<CMRecvFileInfo>();
+			m_recvFileHashtable.put(rInfo.getSenderName(), rInfoList);
+		}
+		
+		bResult = rInfoList.addElement(rInfo);
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.addRecvFileInfo() failed: "+rInfo.toString());
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.addRecvFileInfo() done: "+rInfo.toString());
+			System.out.println("# current hashtable elements: "+m_recvFileHashtable.size());
+		}
+		
+		return true;		
+	}
 
 	public CMRecvFileInfo findRecvFileInfo(String senderName, String fName, int nContentID)
 	{	
@@ -264,4 +337,60 @@ public class CMFileTransferInfo {
 	{
 		return m_recvFileHashtable;
 	}
+	
+	////// find the receiving file info that is being used or is not yet started by the thread pool
+	
+	public CMRecvFileInfo findRecvFileInfoNotStarted(String strSender)
+	{
+		CMRecvFileInfo rfInfo = null;
+		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(strSender);
+		boolean bFound = false;
+		
+		if(rfInfoList == null) return null;
+		
+		Iterator<CMRecvFileInfo> iter = rfInfoList.getList().iterator();
+		while(iter.hasNext() && !bFound)
+		{
+			rfInfo = iter.next();
+			if(rfInfo.getRecvTaskResult() == null)
+			{
+				bFound = true;
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMFileTransferInfo.findRecvFileInfoNotStarted(); found: "+rfInfo.toString());
+			}
+		}
+		
+		if(bFound)
+			return rfInfo;
+		else
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMFileTransferInfo.findRecvFileInfoNotStarted(); not found!");
+			return null;
+		}
+	}
+	
+	public boolean isRecvOngoing(String strSender)
+	{
+		CMRecvFileInfo rfInfo = null;
+		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(strSender);
+		boolean bFound = false;
+		
+		if(rfInfoList == null) return false;
+		
+		Iterator<CMRecvFileInfo> iter = rfInfoList.getList().iterator();
+		while(iter.hasNext() && !bFound)
+		{
+			rfInfo = iter.next();
+			if(rfInfo.getRecvTaskResult() != null)
+			{
+				bFound = true;
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMFileTransferInfo.isRecvOngoing(); ongoing recv info found: "+rfInfo.toString());
+			}
+		}
+		
+		return bFound;
+	}
+	
 }

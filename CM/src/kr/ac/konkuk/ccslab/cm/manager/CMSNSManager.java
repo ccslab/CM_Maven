@@ -213,9 +213,143 @@ public class CMSNSManager {
 		return biFriendList;
 	}
 	
+	// check the completion of receiving attached file of SNS content
+	protected static void checkCompleteRecvAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
+	{
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMSNSAttachList attachList = null;
+		CMSNSAttach attach = null;
+		int nContentID = -1;
+		String strFileName = null;
+		int nCompleted = 0;
+		CMSNSEvent se = null;
+		
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			// find attachment info to be received
+			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
+			attachList = attachHashtable.findSNSAttachList(fe.getSenderName());
+			if(attachList == null) return;
+			attach = attachList.findSNSAttach(fe.getContentID());
+			if(attach == null) return;
+			if(!attach.containsFileName(fe.getFileName())) return;
+			// add attached file info in attached_file_table of DB
+			String strFilePath = fInfo.getFilePath() + File.separator + fe.getSenderName();
+			nContentID = attach.getContentID();
+			strFileName = fe.getFileName();
+			
+			// create a thumbnail image
+			String strInputPath = strFilePath + File.separator + strFileName;
+			if(CMUtil.isImageFile(strInputPath))
+			{
+				int index = strFileName.lastIndexOf(".");
+				String strName = strFileName.substring(0, index)+"-thumbnail";
+				String strExt = strFileName.substring(index+1, strFileName.length());
+				strName = strName + "." + strExt;
+				String strOutPath = strFilePath + File.separator + strName;
+				
+				int nWidth = confInfo.getThumbnailHorSize();
+				int nHeight = confInfo.getThumbnailVerSize();
+				CMUtil.createScaledImage(strInputPath, nWidth, nHeight, strOutPath);
+			}
+			
+			if(confInfo.isDBUse())
+			{
+				CMDBManager.queryInsertSNSAttachedFile(nContentID, strFilePath, strFileName, cmInfo);
+			}
+			else
+			{
+				CMSNSContentList contentList = snsInfo.getSNSContentList();
+				CMSNSContent content = contentList.findSNSContent(nContentID);
+				if(content == null)
+				{
+					System.err.println("CMSNSManager.checkCompleteRecvAttachedFiles(), content("+nContentID
+							+") not found!");
+					return;
+				}
+				content.getFilePathList().add(strFilePath+File.separator+strFileName);
+			}
+			
+			// increase the number of completed attached files
+			nCompleted = attach.getNumCompleted() + 1;
+			attach.setNumCompleted(nCompleted);
+			// check if all attached files of the content have been transfered or not
+			if(nCompleted < attach.getFilePathList().size()) return;
+			// send the response event to the content upload request
+			se = new CMSNSEvent();
+			se.setID(CMSNSEvent.CONTENT_UPLOAD_RESPONSE);
+			se.setReturnCode(attach.getReturnCode());
+			se.setContentID(attach.getContentID());
+			se.setDate(attach.getCreationTime());
+			se.setUserName(attach.getRequesterName());
+			CMEventManager.unicastEvent(se, fe.getSenderName(), cmInfo);
+			se = null;
+			
+			// remove the completed attachment info
+			attachList.removeSNSAttach(nContentID);
+			attach = null;
+			if(attachList.getSNSAttachList().isEmpty())
+			{
+				attachHashtable.removeSNSAttachList(fe.getSenderName());
+				attachList = null;
+			}
+
+		}
+		else // CLIENT
+		{
+			// find attachment info to be received
+			attachList = snsInfo.getRecvSNSAttachList();
+			nContentID = fe.getContentID();
+			attach = attachList.findSNSAttach(nContentID);
+			if(attach == null) return;
+			if(!attach.containsFileName(fe.getFileName())) return;
+			// increase the number of completed attached files
+			nCompleted = attach.getNumCompleted() + 1;
+			attach.setNumCompleted(nCompleted);
+			// check if all attached files of the content have been transfered or not
+			if(nCompleted < attach.getFilePathList().size()) return;
+
+			// remove the completed attachment info
+			attachList.removeSNSAttach(nContentID);
+			attach = null;
+		}
+		
+		return;
+	}
+	
+	//////////////////// check the completion of sending attached file of SNS content
+	//////////////////// and check the completion of prefetching an attached file of SNS content
+	protected static void checkCompleteSendAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
+	{
+		int nContentID = fe.getContentID();
+		String strFileName = fe.getFileName();
+		String strReceiverName = fe.getUserName();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		
+		if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			checkClientCompleteSendAttachedFiles(nContentID, strFileName, cmInfo);
+		}
+		else	// SERVER
+		{
+			checkServerCompleteSendAttachedFiles(strReceiverName, nContentID, strFileName, cmInfo);
+			
+			// check the completion of prefetching process
+			CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName);
+			if(user != null && user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
+			{
+				checkServerCompletePrefetch(strReceiverName, strFileName, cmInfo);
+			}			
+		}
+		return;
+	}
+	
 	// check whether an attached file from a client is completed to be transferred or not
 	// called when a client completes its file transfer
-	public static void checkClientAttachmentCompletion(int nContentID, String strFileName, CMInfo cmInfo)
+	private static void checkClientCompleteSendAttachedFiles(int nContentID, String strFileName, CMInfo cmInfo)
 	{
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMSNSAttach attach = null;
@@ -234,7 +368,7 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be transferred or not
 	// called when a server completes its file transfer
-	public static void checkServerAttachmentCompletion(String strUserName, int nContentID, String strFileName, 
+	private static void checkServerCompleteSendAttachedFiles(String strUserName, int nContentID, String strFileName, 
 			CMInfo cmInfo)
 	{
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
@@ -279,7 +413,7 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be prefetched or not
 	// called when a server completes its file transfer
-	public static void checkServerPrefetchCompletion(String strUserName, String strFileName, CMInfo cmInfo)
+	private static void checkServerCompletePrefetch(String strUserName, String strFileName, CMInfo cmInfo)
 	{
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();

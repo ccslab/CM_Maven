@@ -716,23 +716,13 @@ public class CMStub {
 	
 	public void requestFile(String strFileName, String strFileOwner)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		if(confInfo.isFileTransferScheme())
-			CMFileTransferManager.requestFileWithSepChannel(strFileName, strFileOwner, m_cmInfo);
-		else
-			CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);
-		
+		CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);		
 		return;
 	}
 	
 	public void pushFile(String strFilePath, String strReceiver)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		if(confInfo.isFileTransferScheme())
-			CMFileTransferManager.pushFileWithSepChannel(strFilePath, strReceiver, m_cmInfo);
-		else
-			CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
-		
+		CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);		
 		return;
 	}
 
