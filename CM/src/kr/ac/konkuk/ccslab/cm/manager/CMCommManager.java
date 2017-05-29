@@ -101,6 +101,21 @@ public class CMCommManager {
 	public static String getLocalIP()
 	{
 		String strIP = null;
+		String strIPByGetLocalHost = null;
+		InetAddress localAddress = null;
+		try {
+			localAddress = InetAddress.getLocalHost();
+		} catch (UnknownHostException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		strIPByGetLocalHost = localAddress.getHostAddress();
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("local address by InetAddress.getLocalHost(); "+strIPByGetLocalHost);
+		}
+		
 		try{
 
 			/// enumerate IP addresses bound to the local host
@@ -129,6 +144,7 @@ public class CMCommManager {
 		if(strIP == null)
 		{
 			System.err.println("CMCommManager.getLocalIP(), cannot find local IP");
+			strIP = strIPByGetLocalHost;
 		}
 
 		return strIP;
