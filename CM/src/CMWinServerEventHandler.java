@@ -280,14 +280,17 @@ public class CMWinServerEventHandler implements CMEventHandler {
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_FILE_TRANSFER:
+		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
 			printMessage("["+fe.getUserName()+"] requests file("+fe.getFileName()+").\n");
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
+		case CMFileEvent.START_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
 			printMessage("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").\n");
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
+		case CMFileEvent.END_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
 			//		+fe.getFileSize()+" Bytes).");
 			printMessage("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "

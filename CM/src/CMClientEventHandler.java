@@ -397,16 +397,20 @@ public class CMClientEventHandler implements CMEventHandler {
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_FILE_TRANSFER:
+		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
 			System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
 			break;
 		case CMFileEvent.REPLY_FILE_TRANSFER:
+		case CMFileEvent.REPLY_FILE_TRANSFER_CHAN:
 			if(fe.getReturnCode() == 0)
 				System.out.println("["+fe.getFileName()+"] does not exist in the owner!");
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
+		case CMFileEvent.START_FILE_TRANSFER_CHAN:
 			System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
+		case CMFileEvent.END_FILE_TRANSFER_CHAN:
 			System.out.println("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
 					+fe.getFileSize()+" Bytes).");
 			if(m_bDistFileProc)
