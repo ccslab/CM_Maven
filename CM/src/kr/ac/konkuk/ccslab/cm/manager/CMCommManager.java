@@ -113,7 +113,8 @@ public class CMCommManager {
 		strIPByGetLocalHost = localAddress.getHostAddress();
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("local address by InetAddress.getLocalHost(); "+strIPByGetLocalHost);
+			System.out.println("------ detecting IPv4 addresses");
+			System.out.println("local address by InetAddress.getLocalHost(): "+strIPByGetLocalHost);
 		}
 		
 		try{
@@ -131,7 +132,7 @@ public class CMCommManager {
 				if(CMInfo._CM_DEBUG)
 				{
 					System.out.println("network interface name: "+ni.getName());
-					System.out.println("  isLoopback("+ni.isLoopback()+"), isPointToPoint("+ni.isPointToPoint()+
+					System.out.println("  :isLoopback("+ni.isLoopback()+"), isPointToPoint("+ni.isPointToPoint()+
 							"), isUp("+ni.isUp()+"), isVirtual("+ni.isVirtual()+")");
 				}
 				
@@ -146,13 +147,13 @@ public class CMCommManager {
 					if(CMInfo._CM_DEBUG)
 					{
 						System.out.println("  detected inetAddress: " + inetAddress.getHostAddress());
-						System.out.println("    isLoopback("+inetAddress.isLoopbackAddress()+"), isLinkLocal("
+						System.out.println("    :isLoopback("+inetAddress.isLoopbackAddress()+"), isLinkLocal("
 								+inetAddress.isLinkLocalAddress()+"), isSiteLocal("+inetAddress.isSiteLocalAddress()
 								+")");
 						if(inetAddress instanceof Inet4Address)
-							System.out.println("    IP4 address");
+							System.out.println("    :detected as the IP4 address");
 						else if(inetAddress instanceof Inet6Address)
-							System.out.println("    IP6 address");
+							System.out.println("    :detected as the IP6 address");
 					}
 					
 					//if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress() && 
@@ -160,6 +161,8 @@ public class CMCommManager {
 					if(!inetAddress.isLoopbackAddress())
 					{
 						 strIP = inetAddress.getHostAddress().toString();
+						 if(CMInfo._CM_DEBUG)
+							 System.out.println("    :detected as the local IP");
 					}
 				}
 			}
@@ -170,9 +173,18 @@ public class CMCommManager {
 		
 		if(strIP == null)
 		{
-			System.err.println("CMCommManager.getLocalIP(), cannot find local IP");
+			System.err.println("CMCommManager.getLocalIP(), cannot find local IP! use the result of "
+					+ "InetAddress.getLocalHost().");
 			strIP = strIPByGetLocalHost;
 		}
+		else
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("------ detected local IP: "+strIP);
+		}
+		
+		if(CMInfo._CM_DEBUG)
+			System.out.println("------ end of detecting IPv4 address");
 
 		return strIP;
 	}
