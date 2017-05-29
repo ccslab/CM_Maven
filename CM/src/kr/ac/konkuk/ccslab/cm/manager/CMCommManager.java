@@ -101,21 +101,63 @@ public class CMCommManager {
 	public static String getLocalIP()
 	{
 		String strIP = null;
+		String strIPByGetLocalHost = null;
+		InetAddress localAddress = null;
+		try {
+			localAddress = InetAddress.getLocalHost();
+		} catch (UnknownHostException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		strIPByGetLocalHost = localAddress.getHostAddress();
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("local address by InetAddress.getLocalHost(); "+strIPByGetLocalHost);
+		}
+		
 		try{
 
 			/// enumerate IP addresses bound to the local host
 			Enumeration<NetworkInterface> nienum = NetworkInterface.getNetworkInterfaces();
-			while (nienum.hasMoreElements())
+			//while (nienum.hasMoreElements())
+			for(NetworkInterface ni : Collections.list(nienum))
 			{
-				NetworkInterface ni = nienum.nextElement();
-				Enumeration<InetAddress> enumIA = ni.getInetAddresses();
-				while (enumIA.hasMoreElements())
+				//NetworkInterface ni = nienum.nextElement();
+				
+				if(ni.isPointToPoint())
+					continue;
+				
+				if(CMInfo._CM_DEBUG)
 				{
-					InetAddress inetAddress = enumIA.nextElement();
+					System.out.println("network interface name: "+ni.getName());
+					System.out.println("  isLoopback("+ni.isLoopback()+"), isPointToPoint("+ni.isPointToPoint()+
+							"), isUp("+ni.isUp()+"), isVirtual("+ni.isVirtual()+")");
+				}
+				
+				Enumeration<InetAddress> enumIA = ni.getInetAddresses();
+				//while (enumIA.hasMoreElements())
+				for(InetAddress inetAddress : Collections.list(enumIA))
+				{
+					if( !(inetAddress instanceof Inet4Address) )
+						continue;
+						
+					//InetAddress inetAddress = enumIA.nextElement();
 					if(CMInfo._CM_DEBUG)
-						System.out.println("detected inetAddress: " + inetAddress.getHostAddress());
-					if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress() && 
-					inetAddress.isSiteLocalAddress())
+					{
+						System.out.println("  detected inetAddress: " + inetAddress.getHostAddress());
+						System.out.println("    isLoopback("+inetAddress.isLoopbackAddress()+"), isLinkLocal("
+								+inetAddress.isLinkLocalAddress()+"), isSiteLocal("+inetAddress.isSiteLocalAddress()
+								+")");
+						if(inetAddress instanceof Inet4Address)
+							System.out.println("    IP4 address");
+						else if(inetAddress instanceof Inet6Address)
+							System.out.println("    IP6 address");
+					}
+					
+					//if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress() && 
+					//inetAddress.isSiteLocalAddress())
+					if(!inetAddress.isLoopbackAddress())
 					{
 						 strIP = inetAddress.getHostAddress().toString();
 					}
@@ -129,6 +171,7 @@ public class CMCommManager {
 		if(strIP == null)
 		{
 			System.err.println("CMCommManager.getLocalIP(), cannot find local IP");
+			strIP = strIPByGetLocalHost;
 		}
 
 		return strIP;
