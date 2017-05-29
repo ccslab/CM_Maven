@@ -503,7 +503,7 @@ public class CMClientEventHandler implements CMEventHandler {
 			}
 			contentList.addSNSContent(se.getContentID(), se.getDate(), se.getWriterName(), se.getMessage(),
 					se.getNumAttachedFiles(), se.getReplyOf(), se.getLevelOfDisclosure(), fNameList);
-			System.out.println("transmitted delay: "+se.getEstDelay());
+			//System.out.println("transmitted delay: "+se.getEstDelay());
 			m_nEstDelaySum += se.getEstDelay();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END:
@@ -635,7 +635,7 @@ public class CMClientEventHandler implements CMEventHandler {
 			}
 
 		}
-		System.out.println("sum of estimated download delay: "+m_nEstDelaySum +" ms");
+		//System.out.println("sum of estimated download delay: "+m_nEstDelaySum +" ms");
 
 		// continue simulation until m_nSimNum = 0
 		if( --m_nSimNum > 0 )

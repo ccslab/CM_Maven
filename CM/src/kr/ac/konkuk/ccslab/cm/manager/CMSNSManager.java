@@ -761,6 +761,7 @@ public class CMSNSManager {
 		}
 
 		// for simulation, generate delay with exponential distribution
+		/*
 		lDelay = (long)(getExpRandVar(0.5)*100);
 
 		if(CMInfo._CM_DEBUG)
@@ -768,6 +769,7 @@ public class CMSNSManager {
 			System.out.println("CMSNSManager::processCONTENT_DOWNLOAD_READY(): sim delay: "+lDelay
 					+" ms.");
 		}
+		*/
 
 		// get number of contents to be downloaded
 		if(confInfo.isDownloadScheme())
@@ -805,7 +807,7 @@ public class CMSNSManager {
 		nOffset = se.getContentOffset();
 
 		// for simulation delay
-		Random rnd = new Random();
+		//Random rnd = new Random();
 		
 		if(confInfo.isDBUse())
 		{
@@ -984,6 +986,7 @@ public class CMSNSManager {
 				}
 
 				// add estimated download delay of this content for simulation
+				/*
 				int maxDelta = ((int)lDelay/2)/3; // 30% of estimated one-way delay
 				int delta = 0;
 				if( maxDelta != 0 )
@@ -999,6 +1002,7 @@ public class CMSNSManager {
 				{
 					sevent.setEstDelay( (int)lDelay/2 - delta );
 				}
+				*/
 		
 				CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
 				sevent = null;
@@ -1041,6 +1045,7 @@ public class CMSNSManager {
 				sevent.setMessage( strMsg );
 					
 				// add estimated download delay of this content for simulation
+				/*
 				int maxDelta = ((int)lDelay/2)/3; // 30% of estimated one-way delay
 				int delta = 0;
 				if( maxDelta != 0 )
@@ -1056,6 +1061,7 @@ public class CMSNSManager {
 				{
 					sevent.setEstDelay( (int)lDelay/2 - delta );
 				}
+				*/
 		
 				CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
 				sevent = null;
