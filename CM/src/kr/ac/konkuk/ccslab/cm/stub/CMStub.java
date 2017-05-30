@@ -726,4 +726,27 @@ public class CMStub {
 		return;
 	}
 
+	/////////////////////////////////////////////////////////////////////
+	// network service
+	
+	public void measureReadThroughput(String strTarget)
+	{
+		// from here
+	}
+	
+	public void measureWriteThroughput(String strTarget)
+	{
+		// not yet
+	}
+	
+	public float syncMeasureReadThroughput(String strTarget)
+	{
+		// not yet
+	}
+	
+	public float syncMeasureWriteThroughput(String strTarget)
+	{
+		// not yet
+	}
+	
 }
