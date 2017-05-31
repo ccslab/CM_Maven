@@ -17,6 +17,10 @@ public class CMEventInfo {
 	private Object m_ANBSCAObject;
 	// return code of the ADD_NONBLOCK_SOCKET_CHANNEL_ACK event (-1: initial value, 0: false, 1: true)
 	private int m_nANBSCAReturnCode;
+	// monitor object to wait for receiving the END_FILE_TRANSFER
+	private Object m_EFTObject;
+	// received file size that is needed to measure the end-to-end network throughput
+	private long m_lEFTFileSize;
 	
 	public CMEventInfo()
 	{
@@ -28,6 +32,8 @@ public class CMEventInfo {
 		m_nRBSCAReturnCode = -1;
 		m_ANBSCAObject = new Object();
 		m_nANBSCAReturnCode = -1;
+		m_EFTObject = new Object();
+		m_lEFTFileSize = -1;
 	}
 	
 	// set/get methods
@@ -85,5 +91,20 @@ public class CMEventInfo {
 	public int getANBSCAReturnCode()
 	{
 		return m_nANBSCAReturnCode;
+	}
+	
+	public Object getEFTObject()
+	{
+		return m_EFTObject;
+	}
+	
+	public void setEFTFileSize(long fSize)
+	{
+		m_lEFTFileSize = fSize;
+	}
+	
+	public long getEFTFileSize()
+	{
+		return m_lEFTFileSize;
 	}
 }

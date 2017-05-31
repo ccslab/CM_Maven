@@ -14,12 +14,15 @@ public class CMFileTransferInfo {
 	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable; // key is the sender name
 	private ExecutorService m_executorService;
 	
+	private long m_lStartTime;	// used for measuring the delay of the file transfer
+	
 	public CMFileTransferInfo()
 	{
 		m_strFilePath = null;
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
 		m_executorService = null;
+		m_lStartTime = -1;
 	}
 	
 	////////// set/get methods
@@ -42,6 +45,17 @@ public class CMFileTransferInfo {
 	public ExecutorService getExecutorService()
 	{
 		return m_executorService;
+	}
+	
+	public void setStartTime(long time)
+	{
+		m_lStartTime = time;
+		return;
+	}
+	
+	public long getStartTime()
+	{
+		return m_lStartTime;
 	}
 	
 	////////// add/remove/find sending file info

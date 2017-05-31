@@ -349,36 +349,6 @@ public class CMWinClient extends JFrame {
 		switch(nCommand)
 		{
 		case 0:
-			/*
-			System.out.println("---------------------------------------------------");
-			System.out.println("0: help, 1: connect to default server, 2: disconnect from default server");
-			System.out.println("3: login to default server, 4: logout from default server");
-			System.out.println("5: request session info from default server, 6: join session of defalut server, 7: leave session of default server");
-			System.out.println("8: user position, 9: chat, 10: test CMDummyEvent, 11: test datagram message");
-			System.out.println("12: test CMUserEvent, 13: print group info, 14: print current user status");
-			System.out.println("15: change group, 16: add additional channel, 17: remove additional channel");
-			System.out.println("18: set file path, 19: request file, 20: push file");
-			System.out.println("21: test forwarding schemes, 22: test delay of forwarding schemes");
-			System.out.println("---------------------------------------------------");
-			System.out.println("23: SNS content download, 24: test repeated downloading of SNS content");
-			System.out.println("25: SNS content upload, 26: register user, 27: deregister user");
-			System.out.println("28: find registered user, 29: add a new friend, 30: remove a friend");
-			System.out.println("31: request current friend list, 32: request friend requester list");
-			System.out.println("33: request bi-directional friends");
-			System.out.println("---------------------------------------------------");
-			System.out.println("34: request additional server info");
-			System.out.println("35: connect to a designated server, 36: disconnect from a designated server");
-			System.out.println("37: log in to a designated server, 38: log out from a designated server");
-			System.out.println("39: request session info from a designated server");
-			System.out.println("40: join a session of a designated server, 41: leave a session of a designated server");
-			System.out.println("42: print group info of a designated server");
-			System.out.println("---------------------------------------------------");
-			System.out.println("43: pull/push multiple files, 44: split a file, 45: merge files");
-			System.out.println("46: distribute a file and merge");
-			System.out.println("---------------------------------------------------");
-			System.out.println("47: multicast chat in current group");
-			System.out.println("99: terminate CM");
-			*/
 			printMessage("---------------------------------------------------\n");
 			printMessage("0: help, 1: connect to default server, 2: disconnect from default server\n");
 			printMessage("3: login to default server, 4: logout from default server\n");
@@ -408,6 +378,7 @@ public class CMWinClient extends JFrame {
 			printMessage("---------------------------------------------------\n");
 			printMessage("47: multicast chat in current group\n");
 			printMessage("48: get additional blocking socket channel\n");
+			printMessage("60: test input network throughput, 61: test output network throughput\n");
 			printMessage("99: terminate CM\n");
 			break;
 		case 1: // connect to default server
@@ -556,6 +527,12 @@ public class CMWinClient extends JFrame {
 			break;
 		case 50: // request an attached file of SNS content
 			testRequestAttachedFileOfSNSContent();
+			break;
+		case 60: // test input network throughput
+			testMeasureInputThroughput();
+			break;
+		case 61: // test output network throughput
+			testMeasureOutputThroughput();
 			break;
 		case 99: // terminate CM
 			testTermination();
@@ -3177,6 +3154,30 @@ public class CMWinClient extends JFrame {
 		}
 		
 		return;
+	}
+
+	public void testMeasureInputThroughput()
+	{
+		String strTarget = null;
+		float fSpeed = -1; // MBps
+		printMessage("========== test input network throughput\n");
+		
+		String strMessage = JOptionPane.showInputDialog("Target node (empty for the default server)");
+		if(strMessage == null) 
+			return;
+		else if(strMessage.equals(""))
+			strTarget = "SERVER";
+
+		fSpeed = m_clientStub.measureInputThroughput(strTarget);
+		if(fSpeed == -1)
+			printMessage("Test failed!\n");
+		else
+			printMessage(String.format("Input network throughput from [%s] : %.2f MBps%n", strTarget, fSpeed));
+	}
+	
+	public void testMeasureOutputThroughput()
+	{
+		// not yet
 	}
 	
 	private void requestAttachedFile(String strFileName)

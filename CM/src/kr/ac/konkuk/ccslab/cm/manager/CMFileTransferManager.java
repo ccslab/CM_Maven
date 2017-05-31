@@ -14,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -77,13 +78,14 @@ public class CMFileTransferManager {
 		return;
 	}
 	
-	public static void requestFile(String strFileName, String strFileOwner, CMInfo cmInfo)
+	public static boolean requestFile(String strFileName, String strFileOwner, CMInfo cmInfo)
 	{
-		requestFile(strFileName, strFileOwner, -1, cmInfo);
-		return;
+		boolean bReturn = false;
+		bReturn = requestFile(strFileName, strFileOwner, -1, cmInfo);
+		return bReturn;
 	}
 	
-	public static void requestFile(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
+	public static boolean requestFile(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
@@ -92,14 +94,14 @@ public class CMFileTransferManager {
 				&& myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
 			System.err.println("CMFileTransferManager.requestFile(), Client must log in to the default server.");
-			return;
+			return false;
 		}
 		
 		if(confInfo.isFileTransferScheme())
 			requestFileWithSepChannel(strFileName, strFileOwner, nContentID, cmInfo);
 		else
 			requestFileWithDefChannel(strFileName, strFileOwner, nContentID, cmInfo);
-		return;
+		return true;
 	}
 	
 	public static void requestFileWithDefChannel(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
@@ -133,13 +135,14 @@ public class CMFileTransferManager {
 	}
 	
 	
-	public static void pushFile(String strFilePath, String strReceiver, CMInfo cmInfo)
+	public static boolean pushFile(String strFilePath, String strReceiver, CMInfo cmInfo)
 	{
-		pushFile(strFilePath, strReceiver, -1, cmInfo);
-		return;
+		boolean bReturn = false;
+		bReturn = pushFile(strFilePath, strReceiver, -1, cmInfo);
+		return bReturn;
 	}
 	
-	public static void pushFile(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
+	public static boolean pushFile(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
@@ -147,14 +150,14 @@ public class CMFileTransferManager {
 				&& myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
 			System.err.println("CMFileTransferManager.pushFile(), Client must log in to the default server.");
-			return;
+			return false;
 		}
 		
 		if(confInfo.isFileTransferScheme())
 			pushFileWithSepChannel(strFilePath, strReceiver, nContentID, cmInfo);
 		else
 			pushFileWithDefChannel(strFilePath, strReceiver, nContentID, cmInfo);
-		return;
+		return false;
 	}
 
 	// strFilePath: absolute or relative path to a target file
@@ -567,10 +570,20 @@ public class CMFileTransferManager {
 	
 	private static void processREPLY_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
+		CMEventInfo eInfo = cmInfo.getEventInfo();
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileManager.processREPLY_FILE_TRANSFER(), file("+fe.getFileName()
+			System.out.println("CMFileTransferManager.processREPLY_FILE_TRANSFER(), file("+fe.getFileName()
 					+"), return code("+fe.getReturnCode()+"), contentID("+fe.getContentID()+").");
+		}
+		
+		if(fe.getReturnCode() == 0 && fe.getFileName().equals("throughput.test"))
+		{
+			System.err.println("The requested file does not exists!");
+			synchronized(eInfo.getEFTObject())
+			{
+				eInfo.getEFTObject().notify();
+			}
 		}
 		return;
 	}
@@ -794,7 +807,14 @@ public class CMFileTransferManager {
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		
+		CMEventInfo eInfo = cmInfo.getEventInfo();
+
+		synchronized(eInfo.getEFTObject())
+		{
+			eInfo.setEFTFileSize(fe.getFileSize());
+			eInfo.getEFTObject().notify();
+		}
+
 		// find info from recv file list
 		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		if(recvInfo == null)
@@ -802,6 +822,7 @@ public class CMFileTransferManager {
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), recv file info "
 					+"for sender("+fe.getSenderName()+"), file("+fe.getFileName()+"), content ID("
 					+fe.getContentID()+") not found.");
+			
 			return;
 		}
 		// close received file descriptor

@@ -729,24 +729,56 @@ public class CMStub {
 	/////////////////////////////////////////////////////////////////////
 	// network service
 	
-	public void measureReadThroughput(String strTarget)
+	// measure synchronously the end-to-end input throughput from the target node to this node
+	public float measureInputThroughput(String strTarget)
 	{
+		boolean bReturn = false;
+		float fSpeed = -1;
+		long lFileSize = -1;	// the size of a file to measure the transmission delay
+		long lStartTime = System.currentTimeMillis();
+		long lEndTime = -1;
+		long lTransDelay = -1;
+		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
+		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		
+		fInfo.setStartTime(lStartTime);
+		bReturn = CMFileTransferManager.requestFile("throughput-test.jpg", strTarget, m_cmInfo);
+		
+		if(!bReturn)
+			return -1;
+		
+		synchronized(eInfo.getEFTObject())
+		{
+			try {
+				eInfo.getEFTObject().wait();
+				lFileSize = eInfo.getEFTFileSize();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return -1;
+			}
+		}
+				
+		lEndTime = System.currentTimeMillis();
+		lTransDelay = lEndTime - lStartTime;	// millisecond
+		fSpeed = ((float)lFileSize / 1000000) / ((float)lTransDelay / 1000);	// MBps
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMStub.measureReadThroughput(); received file size("+lFileSize+"), delay("
+					+lTransDelay+" ms), speed("+fSpeed+" MBps)");
+		}
+
+		return fSpeed;
+	}
+	
+	// measure synchronously the end-to-end output throughput from this node to the target node
+	public float measureOutputThroughput(String strTarget)
+	{
+		float fSpeed = -1f;
 		// from here
-	}
-	
-	public void measureWriteThroughput(String strTarget)
-	{
-		// not yet
-	}
-	
-	public float syncMeasureReadThroughput(String strTarget)
-	{
-		// not yet
-	}
-	
-	public float syncMeasureWriteThroughput(String strTarget)
-	{
-		// not yet
+		
+		return fSpeed;
 	}
 	
 }
