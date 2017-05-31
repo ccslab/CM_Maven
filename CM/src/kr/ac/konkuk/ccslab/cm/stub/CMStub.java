@@ -22,6 +22,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
@@ -765,7 +766,7 @@ public class CMStub {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMStub.measureReadThroughput(); received file size("+lFileSize+"), delay("
+			System.out.println("CMStub.measureInputThroughput(); received file size("+lFileSize+"), delay("
 					+lTransDelay+" ms), speed("+fSpeed+" MBps)");
 		}
 
@@ -775,9 +776,44 @@ public class CMStub {
 	// measure synchronously the end-to-end output throughput from this node to the target node
 	public float measureOutputThroughput(String strTarget)
 	{
-		float fSpeed = -1f;
-		// from here
+		boolean bReturn = false;
+		float fSpeed = -1;
+		long lFileSize = -1;	// the size of a file to measure the transmission delay
+		long lStartTime = System.currentTimeMillis();
+		long lEndTime = -1;
+		long lTransDelay = -1;
+		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
+		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		String strFilePath = fInfo.getFilePath() + File.separator + "throughput-test.jpg";
 		
+		fInfo.setStartTime(lStartTime);
+		bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, m_cmInfo);
+		
+		if(!bReturn)
+			return -1;
+		
+		synchronized(eInfo.getEFTAObject())
+		{
+			try {
+				eInfo.getEFTAObject().wait();
+				lFileSize = eInfo.getEFTAFileSize();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return -1;
+			}
+		}
+				
+		lEndTime = System.currentTimeMillis();
+		lTransDelay = lEndTime - lStartTime;	// millisecond
+		fSpeed = ((float)lFileSize / 1000000) / ((float)lTransDelay / 1000);	// MBps
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMStub.measureOutputThroughput(); received file size("+lFileSize+"), delay("
+					+lTransDelay+" ms), speed("+fSpeed+" MBps)");
+		}
+
 		return fSpeed;
 	}
 	

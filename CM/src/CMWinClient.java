@@ -3162,10 +3162,10 @@ public class CMWinClient extends JFrame {
 		float fSpeed = -1; // MBps
 		printMessage("========== test input network throughput\n");
 		
-		String strMessage = JOptionPane.showInputDialog("Target node (empty for the default server)");
-		if(strMessage == null) 
+		strTarget = JOptionPane.showInputDialog("Target node (empty for the default server)");
+		if(strTarget == null) 
 			return;
-		else if(strMessage.equals(""))
+		else if(strTarget.equals(""))
 			strTarget = "SERVER";
 
 		fSpeed = m_clientStub.measureInputThroughput(strTarget);
@@ -3177,7 +3177,21 @@ public class CMWinClient extends JFrame {
 	
 	public void testMeasureOutputThroughput()
 	{
-		// not yet
+		String strTarget = null;
+		float fSpeed = -1; // MBps
+		printMessage("========== test output network throughput\n");
+		
+		strTarget = JOptionPane.showInputDialog("Target node (empty for the default server)");
+		if(strTarget == null) 
+			return;
+		else if(strTarget.equals(""))
+			strTarget = "SERVER";
+
+		fSpeed = m_clientStub.measureOutputThroughput(strTarget);
+		if(fSpeed == -1)
+			printMessage("Test failed!\n");
+		else
+			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, fSpeed));
 	}
 	
 	private void requestAttachedFile(String strFileName)

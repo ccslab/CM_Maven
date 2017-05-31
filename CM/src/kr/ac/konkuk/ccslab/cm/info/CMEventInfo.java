@@ -19,8 +19,12 @@ public class CMEventInfo {
 	private int m_nANBSCAReturnCode;
 	// monitor object to wait for receiving the END_FILE_TRANSFER
 	private Object m_EFTObject;
-	// received file size that is needed to measure the end-to-end network throughput
+	// received file size that is needed to measure the end-to-end input network throughput
 	private long m_lEFTFileSize;
+	// monitor object to wait for receiving the END_FILE_TRANSFER_ACK
+	private Object m_EFTAObject;
+	// received file size that is needed to measure the end-to-end output network throughput
+	private long m_lEFTAFileSize;
 	
 	public CMEventInfo()
 	{
@@ -34,6 +38,8 @@ public class CMEventInfo {
 		m_nANBSCAReturnCode = -1;
 		m_EFTObject = new Object();
 		m_lEFTFileSize = -1;
+		m_EFTAObject = new Object();
+		m_lEFTAFileSize = -1;
 	}
 	
 	// set/get methods
@@ -106,5 +112,20 @@ public class CMEventInfo {
 	public long getEFTFileSize()
 	{
 		return m_lEFTFileSize;
+	}
+	
+	public Object getEFTAObject()
+	{
+		return m_EFTAObject;
+	}
+	
+	public void setEFTAFileSize(long fSize)
+	{
+		m_lEFTAFileSize = fSize;
+	}
+	
+	public long getEFTAFileSize()
+	{
+		return m_lEFTAFileSize;
 	}
 }

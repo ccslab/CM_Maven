@@ -628,7 +628,16 @@ public class CMServerApp {
 	
 	public void measureOutputThroughput()
 	{
-		// not yet
+		String strTarget = null;
+		float fSpeed = -1; // MBps
+		System.out.println("========== test output network throughput");
+		System.out.print("target user: ");
+		strTarget = m_scan.next();
+		fSpeed = m_serverStub.measureOutputThroughput(strTarget);
+		if(fSpeed == -1)
+			System.err.println("Test failed!");
+		else
+			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, fSpeed);		
 	}
 
 	public static void main(String[] args) {

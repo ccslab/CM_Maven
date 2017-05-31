@@ -175,7 +175,7 @@ public class CMFileTransferManager {
 		File file = new File(strFilePath);
 		if(!file.exists())
 		{
-			System.err.println("CMFileTransferManager.pushFile(), file("+strFilePath+") does not exists.");
+			System.err.println("CMFileTransferManager.pushFileWithDefChannel(), file("+strFilePath+") does not exists.");
 			return false;
 		}
 		long lFileSize = file.length();
@@ -199,6 +199,12 @@ public class CMFileTransferManager {
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
 		bReturn = CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
+		
+		if(!bReturn)
+		{
+			// remove send file information
+			fInfo.removeSendFileInfo(strReceiver, strFileName, nContentID);
+		}
 
 		file = null;
 		fe = null;
@@ -305,6 +311,11 @@ public class CMFileTransferManager {
 		fe.setContentID(nContentID);
 		bReturn = CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 
+		if(!bReturn)
+		{
+			fInfo.removeSendFileInfo(strReceiver, strFileName, nContentID);
+		}
+		
 		file = null;
 		fe = null;
 		return bReturn;
@@ -815,12 +826,6 @@ public class CMFileTransferManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMEventInfo eInfo = cmInfo.getEventInfo();
 
-		synchronized(eInfo.getEFTObject())
-		{
-			eInfo.setEFTFileSize(fe.getFileSize());
-			eInfo.getEFTObject().notify();
-		}
-
 		// find info from recv file list
 		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getSenderName(), fe.getFileName(), fe.getContentID());
 		if(recvInfo == null)
@@ -828,7 +833,14 @@ public class CMFileTransferManager {
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), recv file info "
 					+"for sender("+fe.getSenderName()+"), file("+fe.getFileName()+"), content ID("
 					+fe.getContentID()+") not found.");
-			
+
+			// notify the waiting thread
+			synchronized(eInfo.getEFTObject())
+			{
+				eInfo.setEFTFileSize(fe.getFileSize());
+				eInfo.getEFTObject().notify();
+			}
+
 			return;
 		}
 		// close received file descriptor
@@ -861,15 +873,24 @@ public class CMFileTransferManager {
 		
 		CMSNSManager.checkCompleteRecvAttachedFiles(fe, cmInfo);
 
+		// notify the waiting thread
+		synchronized(eInfo.getEFTObject())
+		{
+			eInfo.setEFTFileSize(fe.getFileSize());
+			eInfo.getEFTObject().notify();
+		}
+
 		return;
 	}
 	
 	private static void processEND_FILE_TRANSFER_ACK(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMEventInfo eInfo = cmInfo.getEventInfo();
 		String strReceiverName = fe.getUserName();
 		String strFileName = fe.getFileName();
 		int nContentID = fe.getContentID();
+		long lFileSize = -1;
 		
 		// find completed send info
 		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strReceiverName, strFileName, nContentID);
@@ -880,6 +901,7 @@ public class CMFileTransferManager {
 		}
 		else
 		{
+			lFileSize = sInfo.getFileSize();
 			// delete corresponding request from the list
 			fInfo.removeSendFileInfo(strReceiverName, strFileName, nContentID);
 		}
@@ -894,7 +916,14 @@ public class CMFileTransferManager {
 		//////////////////// check the completion of sending attached file of SNS content
 		//////////////////// and check the completion of prefetching an attached file of SNS content
 		CMSNSManager.checkCompleteSendAttachedFiles(fe, cmInfo);
-		
+
+		// notify the waiting thread
+		synchronized(eInfo.getEFTAObject())
+		{
+			eInfo.setEFTAFileSize(lFileSize);
+			eInfo.getEFTAObject().notify();
+		}
+
 		return;
 	}
 	

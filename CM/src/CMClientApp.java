@@ -2236,7 +2236,16 @@ public class CMClientApp {
 	
 	public void testMeasureOutputThroughput()
 	{
-		// not yet
+		String strTarget = null;
+		float fSpeed = -1; // MBps
+		System.out.println("========== test output network throughput");
+		System.out.print("target node (\"SERVER\" for the default server): ");
+		strTarget = m_scan.next();
+		fSpeed = m_clientStub.measureOutputThroughput(strTarget);
+		if(fSpeed == -1)
+			System.err.println("Test failed!");
+		else
+			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, fSpeed);
 	}
 	
 	public static void main(String[] args) {
