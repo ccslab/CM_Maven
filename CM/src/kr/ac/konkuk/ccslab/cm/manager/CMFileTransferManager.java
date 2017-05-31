@@ -87,6 +87,7 @@ public class CMFileTransferManager {
 	
 	public static boolean requestFile(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
 	{
+		boolean bReturn = false;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
@@ -98,14 +99,15 @@ public class CMFileTransferManager {
 		}
 		
 		if(confInfo.isFileTransferScheme())
-			requestFileWithSepChannel(strFileName, strFileOwner, nContentID, cmInfo);
+			bReturn = requestFileWithSepChannel(strFileName, strFileOwner, nContentID, cmInfo);
 		else
-			requestFileWithDefChannel(strFileName, strFileOwner, nContentID, cmInfo);
-		return true;
+			bReturn = requestFileWithDefChannel(strFileName, strFileOwner, nContentID, cmInfo);
+		return bReturn;
 	}
 	
-	public static void requestFileWithDefChannel(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
+	public static boolean requestFileWithDefChannel(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
 	{
+		boolean bReturn = false;
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
 		CMFileEvent fe = new CMFileEvent();
@@ -113,14 +115,15 @@ public class CMFileTransferManager {
 		fe.setUserName(myself.getName());	// requester name
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
-		CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
+		bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
 		
 		fe = null;
-		return;
+		return bReturn;
 	}
 	
-	public static void requestFileWithSepChannel(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
+	public static boolean requestFileWithSepChannel(String strFileName, String strFileOwner, int nContentID, CMInfo cmInfo)
 	{
+		boolean bReturn = false;
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
 		CMFileEvent fe = new CMFileEvent();
@@ -128,10 +131,10 @@ public class CMFileTransferManager {
 		fe.setUserName(myself.getName());	// requester name
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
-		CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
+		bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
 		
 		fe = null;
-		return;
+		return bReturn;
 	}
 	
 	
@@ -144,6 +147,7 @@ public class CMFileTransferManager {
 	
 	public static boolean pushFile(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
 	{
+		boolean bReturn = false;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() != CMInfo.CM_LOGIN 
@@ -154,15 +158,16 @@ public class CMFileTransferManager {
 		}
 		
 		if(confInfo.isFileTransferScheme())
-			pushFileWithSepChannel(strFilePath, strReceiver, nContentID, cmInfo);
+			bReturn = pushFileWithSepChannel(strFilePath, strReceiver, nContentID, cmInfo);
 		else
-			pushFileWithDefChannel(strFilePath, strReceiver, nContentID, cmInfo);
-		return false;
+			bReturn = pushFileWithDefChannel(strFilePath, strReceiver, nContentID, cmInfo);
+		return bReturn;
 	}
 
 	// strFilePath: absolute or relative path to a target file
-	public static void pushFileWithDefChannel(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
+	public static boolean pushFileWithDefChannel(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
 	{
+		boolean bReturn = false;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
@@ -171,7 +176,7 @@ public class CMFileTransferManager {
 		if(!file.exists())
 		{
 			System.err.println("CMFileTransferManager.pushFile(), file("+strFilePath+") does not exists.");
-			return;
+			return false;
 		}
 		long lFileSize = file.length();
 		
@@ -193,16 +198,17 @@ public class CMFileTransferManager {
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
-		CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
+		bReturn = CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 
 		file = null;
 		fe = null;
-		return;
+		return bReturn;
 	}
 	
 	// strFilePath: absolute or relative path to a target file
-	public static void pushFileWithSepChannel(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
+	public static boolean pushFileWithSepChannel(String strFilePath, String strReceiver, int nContentID, CMInfo cmInfo)
 	{
+		boolean bReturn = false;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -232,26 +238,26 @@ public class CMFileTransferManager {
 		{
 			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
 					+ "default blocking TCP socket channel not found!");
-			return;
+			return false;
 		}
 		else if(!sc.isOpen())
 		{
 			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
 					+ "default blocking TCP socket channel closed!");
-			return;
+			return false;
 		}
 		
 		if(dsc == null)
 		{
 			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
 					+ "default TCP socket channel not found!");
-			return;
+			return false;
 		}
 		else if(!dsc.isOpen())
 		{
 			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
 					+ "default TCP socket channel closed!");
-			return;
+			return false;
 		}
 
 
@@ -260,7 +266,7 @@ public class CMFileTransferManager {
 		if(!file.exists())
 		{
 			System.err.println("CMFileTransferManager.pushFileWithSepChannel(), file("+strFilePath+") does not exists.");
-			return;
+			return false;
 		}
 		long lFileSize = file.length();
 		
@@ -275,13 +281,13 @@ public class CMFileTransferManager {
 		sfInfo.setSendChannel(sc);
 		sfInfo.setDefaultChannel(dsc);
 		//boolean bResult = fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID);
-		boolean bResult = fInfo.addSendFileInfo(sfInfo);
-		if(!bResult)
+		bReturn = fInfo.addSendFileInfo(sfInfo);
+		if(!bReturn)
 		{
 			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); error for adding the sending file info: "
 					+"receiver("+strReceiver+"), file("+strFilePath+"), size("+lFileSize+"), content ID("
 					+nContentID+")!");
-			return;
+			return false;
 		}
 
 		// get my name
@@ -297,11 +303,11 @@ public class CMFileTransferManager {
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
-		CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
+		bReturn = CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 
 		file = null;
 		fe = null;
-		return;
+		return bReturn;
 	}
 
 

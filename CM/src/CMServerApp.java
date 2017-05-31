@@ -13,6 +13,7 @@ public class CMServerApp {
 	private CMServerEventHandler m_eventHandler;
 	private boolean m_bRun;
 	private CMSNSUserAccessSimulator m_uaSim;
+	private Scanner m_scan = null;
 	
 	public CMServerApp()
 	{
@@ -38,6 +39,7 @@ public class CMServerApp {
 	{
 		System.out.println("Server application starts.");
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		m_scan = new Scanner(System.in);
 		String strInput = null;
 		int nCommand = -1;
 		while(m_bRun)
@@ -71,6 +73,7 @@ public class CMServerApp {
 				System.out.println("11: config user access simulation, 12: start user access simulation");
 				System.out.println("13: start user access simulation and calculate prefetch precision and recall");
 				System.out.println("14: configure, simulate, and write recent history to CMDB");
+				System.out.println("15: test input network throughput, 16: test output network throughput");
 				System.out.println("99: terminate CM");
 				break;
 			case 1: // print session information
@@ -115,6 +118,12 @@ public class CMServerApp {
 			case 14: 	// configure, simulate and write recent history to CMDB
 				writeRecentAccHistoryToDB();
 				break;
+			case 15:	// test input network throughput
+				measureInputThroughput();
+				break;
+			case 16:	// test output network throughput
+				measureOutputThroughput();
+				break;
 			case 99:
 				testTermination();
 				return;
@@ -130,6 +139,8 @@ public class CMServerApp {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		m_scan.close();
 		
 	}
 	
@@ -599,6 +610,25 @@ public class CMServerApp {
 			System.err.println("Error for update of user access table of CMDB!");
 		
 		return;
+	}
+	
+	public void measureInputThroughput()
+	{
+		String strTarget = null;
+		float fSpeed = -1; // MBps
+		System.out.println("========== test input network throughput");
+		System.out.print("target user: ");
+		strTarget = m_scan.next();
+		fSpeed = m_serverStub.measureInputThroughput(strTarget);
+		if(fSpeed == -1)
+			System.err.println("Test failed!");
+		else
+			System.out.format("Input network throughput from [%s] : %.2f%n", strTarget, fSpeed);		
+	}
+	
+	public void measureOutputThroughput()
+	{
+		// not yet
 	}
 
 	public static void main(String[] args) {

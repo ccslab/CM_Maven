@@ -149,6 +149,7 @@ public class CMWinServer extends JFrame {
 			printMessage("11: config user access simulation, 12: start user access simulation\n");
 			printMessage("13: start user access simulation and calculate prefetch precision and recall\n");
 			printMessage("14: configure, simulate, and write recent history to CMDB\n");
+			printMessage("15: test input network throughput, 16: test output network throughput\n");
 			printMessage("99: terminate CM\n");
 			break;
 		case 1: // print session information
@@ -192,6 +193,12 @@ public class CMWinServer extends JFrame {
 			break;
 		case 14: 	// configure, simulate and write recent history to CMDB
 			writeRecentAccHistoryToDB();
+			break;
+		case 15:	// test input network throughput
+			measureInputThroughput();
+			break;
+		case 16:	// test output network throughput
+			measureOutputThroughput();
 			break;
 		case 99:
 			testTermination();
@@ -750,6 +757,28 @@ public class CMWinServer extends JFrame {
 		return;
 	}
 
+	public void measureInputThroughput()
+	{
+		String strTarget = null;
+		float fSpeed = -1; // MBps
+		printMessage("========== test input network throughput\n");
+		
+		String strMessage = JOptionPane.showInputDialog("Target node");
+		if(strMessage == null) 
+			return;
+
+		fSpeed = m_serverStub.measureInputThroughput(strTarget);
+		if(fSpeed == -1)
+			printMessage("Test failed!\n");
+		else
+			printMessage(String.format("Input network throughput from [%s] : %.2f MBps%n", strTarget, fSpeed));
+	}
+	
+	public void measureOutputThroughput()
+	{
+		// not yet
+	}
+	
 
 	public void printMessage(String strText)
 	{
