@@ -1369,6 +1369,8 @@ public class CMClientApp {
 	public void testDownloadNextSNSContent()
 	{
 		System.out.println("===== Request the next SNS content list");
+		// start time of downloading contents
+		m_eventHandler.setStartTime(System.currentTimeMillis());
 		m_clientStub.requestNextSNSContent();
 		
 		return;
@@ -1379,6 +1381,8 @@ public class CMClientApp {
 	public void testDownloadPreviousSNSContent()
 	{
 		System.out.println("===== Request the previous SNS content list");
+		// start time of downloading contents
+		m_eventHandler.setStartTime(System.currentTimeMillis());
 		m_clientStub.requestPreviousSNSContent();
 		
 		return;

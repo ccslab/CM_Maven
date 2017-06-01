@@ -1983,6 +1983,8 @@ public class CMWinClient extends JFrame {
 	public void testDownloadNextSNSContent()
 	{
 		printMessage("===== Request the next SNS content list\n");
+		// start time of downloading contents
+		m_eventHandler.setStartTime(System.currentTimeMillis());
 		m_clientStub.requestNextSNSContent();
 		
 		return;		
@@ -1993,6 +1995,8 @@ public class CMWinClient extends JFrame {
 	public void testDownloadPreviousSNSContent()
 	{
 		printMessage("===== Request the previous SNS content list\n");
+		// start time of downloading contents
+		m_eventHandler.setStartTime(System.currentTimeMillis());
 		m_clientStub.requestPreviousSNSContent();
 		
 		return;		
