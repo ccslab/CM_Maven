@@ -36,6 +36,7 @@ public class CMFileEvent extends CMEvent{
 	private byte[] m_cFileBlock;
 	private int m_nBlockSize;
 	private int m_nContentID;	// associated content ID (a file as an attachment of SNS content)
+	private byte m_byteThroughputTestFlag;	// flag whether this file transfer is to measure throughput or not (0 or 1)
 	
 	public CMFileEvent()
 	{
@@ -50,6 +51,7 @@ public class CMFileEvent extends CMEvent{
 		m_nBlockSize = -1;
 		m_cFileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
 		m_nContentID = -1;
+		m_byteThroughputTestFlag = 0;
 	}
 	
 	public CMFileEvent(ByteBuffer msg)
@@ -65,6 +67,7 @@ public class CMFileEvent extends CMEvent{
 		m_nBlockSize = -1;
 		m_cFileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
 		m_nContentID = -1;
+		m_byteThroughputTestFlag = 0;
 		
 		unmarshallHeader(msg);
 		unmarshallBody(msg);
@@ -168,6 +171,16 @@ public class CMFileEvent extends CMEvent{
 		return m_nContentID;
 	}
 	
+	public void setThroughputTestFlag(byte flag)
+	{
+		m_byteThroughputTestFlag = flag;
+	}
+	
+	public byte getThroughputTestFlag()
+	{
+		return m_byteThroughputTestFlag;
+	}
+	
 	//////////////////////////////////////////////////////////
 	
 	protected int getByteNum()
@@ -179,7 +192,8 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_FILE_TRANSFER:
 		case REQUEST_FILE_TRANSFER_CHAN:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strFileName.getBytes().length;
+			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strFileName.getBytes().length
+					+ Byte.BYTES;
 			break;
 		case REPLY_FILE_TRANSFER:
 		case REPLY_FILE_TRANSFER_CHAN:
@@ -188,7 +202,7 @@ public class CMFileEvent extends CMEvent{
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
 			nByteNum += 3*Integer.BYTES + m_strSenderName.getBytes().length + m_strFileName.getBytes().length
-					+ Long.BYTES;
+					+ Long.BYTES + Byte.BYTES;
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
@@ -234,6 +248,7 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.putInt(m_strFileName.getBytes().length);
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putInt(m_nContentID);
+			m_bytes.put(m_byteThroughputTestFlag);
 			m_bytes.clear();
 			break;
 		case REPLY_FILE_TRANSFER:
@@ -252,6 +267,7 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
+			m_bytes.put(m_byteThroughputTestFlag);
 			m_bytes.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:
@@ -325,6 +341,7 @@ public class CMFileEvent extends CMEvent{
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
+			m_byteThroughputTestFlag = msg.get();
 			msg.clear();
 			break;
 		case REPLY_FILE_TRANSFER:
@@ -340,6 +357,7 @@ public class CMFileEvent extends CMEvent{
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
+			m_byteThroughputTestFlag = msg.get();
 			msg.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:

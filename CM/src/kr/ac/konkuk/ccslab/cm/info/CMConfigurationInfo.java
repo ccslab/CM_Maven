@@ -38,6 +38,8 @@ public class CMConfigurationInfo {
 	private String m_strFilePath;
 	// File transfer scheme
 	private int m_bFileTransferScheme;
+	// File append scheme
+	private byte m_bFileAppendScheme;	
 	
 	// Simulation parameter for added transmission delay
 	private int m_nSimTransDelay;
@@ -75,6 +77,8 @@ public class CMConfigurationInfo {
 		
 		m_strFilePath = ".";
 		m_bFileTransferScheme = 0;
+		m_bFileAppendScheme = 0;
+		
 		m_nSimTransDelay = 0;
 	}
 
@@ -445,6 +449,33 @@ public class CMConfigurationInfo {
 			bScheme = true;
 		
 		return bScheme;		
+	}
+	
+	public void setFileAppendScheme(byte bScheme)
+	{
+		m_bFileAppendScheme = bScheme;
+	}
+	
+	public void setFileAppendScheme(boolean bScheme)
+	{
+		if(bScheme)
+			m_bFileAppendScheme = 1;
+		else
+			m_bFileAppendScheme = 0;
+		
+		return;
+	}
+	
+	public boolean isFileAppendScheme()
+	{
+		boolean bScheme = false;
+		
+		if(m_bFileAppendScheme == 0)
+			bScheme = false;
+		else
+			bScheme = true;
+		
+		return bScheme;
 	}
 	
 	/////////////////////////////////////////////////////////////////////

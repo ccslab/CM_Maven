@@ -209,7 +209,7 @@ public class CMFileTransferInfo {
 	////////// add/remove/find receiving file info
 
 	public boolean addRecvFileInfo(String senderName, String fName, long lSize, int nContentID,
-			long lRecvSize, RandomAccessFile writeFile)
+			long lRecvSize, RandomAccessFile writeFile, boolean bAppend)
 	{
 		CMRecvFileInfo rInfo = null;
 		CMList<CMRecvFileInfo> rInfoList = null;
@@ -223,6 +223,7 @@ public class CMFileTransferInfo {
 		rInfo.setContentID(nContentID);
 		rInfo.setRecvSize(lRecvSize);
 		rInfo.setWriteFile(writeFile);
+		rInfo.setAppend(bAppend);
 		
 		rInfoList = m_recvFileHashtable.get(senderName);
 		if(rInfoList == null)

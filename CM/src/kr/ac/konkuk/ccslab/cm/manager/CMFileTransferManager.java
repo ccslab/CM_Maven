@@ -661,32 +661,34 @@ public class CMFileTransferManager {
 		long lRecvSize = 0;
 		RandomAccessFile writeFile;
 		try {
+			writeFile = new RandomAccessFile(strFullPath, "rw");
+
 			if(file.exists())
 			{
-				// init received file size
-				lRecvSize = file.length();
+				if(confInfo.isFileAppendScheme())
+				{
+					// init received file size
+					lRecvSize = file.length();
 				
-				if(CMInfo._CM_DEBUG)
-					System.out.println("The file ("+strFullPath+") exists with the size("+lRecvSize+" bytes).");
+					if(CMInfo._CM_DEBUG)
+						System.out.println("The file ("+strFullPath+") exists with the size("+lRecvSize+" bytes).");
 				
-				writeFile = new RandomAccessFile(strFullPath, "rw");
-				// move the file pointer
-				try {
-					writeFile.seek(lRecvSize);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					// move the file pointer
 					try {
-						writeFile.close();
-					} catch (IOException e1) {
+						writeFile.seek(lRecvSize);
+					} catch (IOException e) {
 						// TODO Auto-generated catch block
-						e1.printStackTrace();
+						e.printStackTrace();
+						try {
+							writeFile.close();
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						return;
 					}
-					return;
 				}
 			}
-			else
-				writeFile = new RandomAccessFile(strFullPath, "rw");
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -696,7 +698,8 @@ public class CMFileTransferManager {
 		
 		
 		// add the received file info in the push list
-		fInfo.addRecvFileInfo(fe.getSenderName(), fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, writeFile);
+		fInfo.addRecvFileInfo(fe.getSenderName(), fe.getFileName(), lFileSize, fe.getContentID(), 
+				lRecvSize, writeFile, confInfo.isFileAppendScheme());
 		
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
@@ -751,7 +754,7 @@ public class CMFileTransferManager {
 		RandomAccessFile readFile = null;
 		try {
 			readFile = new RandomAccessFile(strFullFileName, "rw");
-			if(lRecvSize > 0)
+			if(lRecvSize > 0)	// If the receiver uses the append scheme,
 			{
 				try {
 					readFile.seek(lRecvSize);
@@ -1130,8 +1133,11 @@ public class CMFileTransferManager {
 		long lRecvSize = 0;
 		if(file.exists())
 		{
-			// init received file size
-			lRecvSize = file.length();
+			if(confInfo.isFileAppendScheme())
+			{
+				// init received file size
+				lRecvSize = file.length();
+			}
 		}
 
 		// add the received file info
@@ -1147,6 +1153,7 @@ public class CMFileTransferManager {
 		//rfInfo.setWriteFile(raf);
 		rfInfo.setRecvChannel(sc);
 		rfInfo.setDefaultChannel(dsc);
+		rfInfo.setAppend(confInfo.isFileAppendScheme());
 		
 		bResult = fInfo.addRecvFileInfo(rfInfo);
 		if(!bResult)
@@ -1211,7 +1218,10 @@ public class CMFileTransferManager {
 		
 		lRecvSize = fe.getReceivedFileSize();
 		if(lRecvSize > 0)
-			sInfo.setSentSize(lRecvSize);	// update the sent size 
+		{
+			sInfo.setSentSize(lRecvSize);	// update the sent size
+			//sInfo.setAppend(true);			// set the file append scheme
+		}
 					
 		if(CMInfo._CM_DEBUG)
 		{

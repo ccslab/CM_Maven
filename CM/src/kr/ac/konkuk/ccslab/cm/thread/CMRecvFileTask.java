@@ -27,6 +27,7 @@ public class CMRecvFileTask implements Runnable {
 		long lRecvSize = m_recvFileInfo.getRecvSize();
 		long lFileSize = m_recvFileInfo.getFileSize();
 		SocketChannel recvSC = m_recvFileInfo.getRecvChannel();
+		boolean bAppend = m_recvFileInfo.isAppend();
 		int nRecvBytes = -1;
 		int nWrittenBytes = -1;
 		int nWrittenBytesSum = -1;
@@ -45,15 +46,20 @@ public class CMRecvFileTask implements Runnable {
 		// skip file offset by the previously received size
 		if(lRecvSize > 0)
 		{
-			try {
-				//raf.seek(lRecvSize);
-				fc.position(lRecvSize);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				closeRandomAccessFile(raf);				
-				return;
+			if(bAppend)
+			{
+				try {
+					//raf.seek(lRecvSize);
+					fc.position(lRecvSize);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					closeRandomAccessFile(raf);				
+					return;
+				}
 			}
+			else
+				lRecvSize = 0;
 		}
 		
 		// main loop for receiving and writing file blocks
