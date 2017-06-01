@@ -653,11 +653,41 @@ public class CMFileTransferManager {
 			return;
 		}
 		
+
 		
+		// check the existing file
 		// open a file output stream
+		File file = new File(strFullPath);
+		long lRecvSize = 0;
 		RandomAccessFile writeFile;
 		try {
-			writeFile = new RandomAccessFile(strFullPath, "rw");
+			if(file.exists())
+			{
+				// init received file size
+				lRecvSize = file.length();
+				
+				if(CMInfo._CM_DEBUG)
+					System.out.println("The file ("+strFullPath+") exists with the size("+lRecvSize+" bytes).");
+				
+				writeFile = new RandomAccessFile(strFullPath, "rw");
+				// move the file pointer
+				try {
+					writeFile.seek(lRecvSize);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					try {
+						writeFile.close();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					return;
+				}
+			}
+			else
+				writeFile = new RandomAccessFile(strFullPath, "rw");
+
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -665,8 +695,6 @@ public class CMFileTransferManager {
 		}
 		
 		
-		// init received size
-		long lRecvSize = 0;
 		// add the received file info in the push list
 		fInfo.addRecvFileInfo(fe.getSenderName(), fe.getFileName(), lFileSize, fe.getContentID(), lRecvSize, writeFile);
 		
@@ -676,6 +704,7 @@ public class CMFileTransferManager {
 		feAck.setUserName(cmInfo.getInteractionInfo().getMyself().getName());
 		feAck.setFileName(fe.getFileName());
 		feAck.setContentID(fe.getContentID());
+		feAck.setReceivedFileSize(lRecvSize);
 		CMEventManager.unicastEvent(feAck, fe.getSenderName(), cmInfo);
 
 		feAck = null;
@@ -692,6 +721,7 @@ public class CMFileTransferManager {
 		String strSenderName = null;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMSendFileInfo sInfo = null;
+		long lRecvSize = 0;
 		
 		// find the CMSendFileInfo object 
 		sInfo = fInfo.findSendFileInfo(recvFileEvent.getUserName(), recvFileEvent.getFileName(), 
@@ -710,13 +740,34 @@ public class CMFileTransferManager {
 		lFileSize = sInfo.getFileSize();
 		nContentID = sInfo.getContentID();
 					
+		lRecvSize = recvFileEvent.getReceivedFileSize();
+		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMFileTransferManager.processSTART_FILE_TRANSFER_ACK(), "
-					+ "Sending file("+strFileName+") to target("+strReceiver+").");
+					+ "Sending file("+strFileName+") to target("+strReceiver+") from the file position("
+					+ lRecvSize +").");
 
 		// open the file
+		RandomAccessFile readFile = null;
 		try {
-			sInfo.setReadFile(new RandomAccessFile(strFullFileName, "rw"));
+			readFile = new RandomAccessFile(strFullFileName, "rw");
+			if(lRecvSize > 0)
+			{
+				try {
+					readFile.seek(lRecvSize);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					try {
+						readFile.close();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					return;
+				}
+			}
+			sInfo.setReadFile(readFile);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -727,7 +778,8 @@ public class CMFileTransferManager {
 		strSenderName = cmInfo.getInteractionInfo().getMyself().getName();
 
 		// send blocks
-		long lRemainBytes = lFileSize;
+		//long lRemainBytes = lFileSize;
+		long lRemainBytes = lFileSize - lRecvSize;
 		int nReadBytes = 0;
 		byte[] fileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
 		CMFileEvent fe = new CMFileEvent();
