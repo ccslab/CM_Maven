@@ -1064,22 +1064,39 @@ public class CMClientApp {
 	
 	public void testRequestFile()
 	{
+		boolean bReturn = false;
 		String strFileName = null;
 		String strFileOwner = null;
+		String strFileAppend = null;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("====== request a file");
 		try {
 			System.out.print("File name: ");
 			strFileName = br.readLine();
-			System.out.print("File owner(server name): ");
+			System.out.print("File owner(enter for \"SERVER\"): ");
 			strFileOwner = br.readLine();
+			if(strFileOwner.isEmpty())
+				strFileOwner = "SERVER";
+			System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
+			strFileAppend = br.readLine();
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		//CMFileTransferManager.requestFile(strFileName, strFileOwner, m_clientStub.getCMInfo());
-		m_clientStub.requestFile(strFileName, strFileOwner);
+		if(strFileAppend.isEmpty())
+			bReturn = m_clientStub.requestFile(strFileName, strFileOwner);
+		else if(strFileAppend.equals("y"))
+			bReturn = m_clientStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_APPEND);
+		else if(strFileAppend.equals("n"))
+			bReturn = m_clientStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
+		else
+			System.err.println("wrong input for the file append mode!");
+		
+		if(!bReturn)
+			System.err.println("Request file error! file("+strFileName+"), owner("+strFileOwner+").");
+		
 		System.out.println("======");
 	}
 	
@@ -1087,21 +1104,27 @@ public class CMClientApp {
 	{
 		String strFilePath = null;
 		String strReceiver = null;
+		boolean bReturn = false;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("====== push a file");
 		
 		try {
 			System.out.print("File path name: ");
 			strFilePath = br.readLine();
-			System.out.print("File receiver (server name): ");
+			System.out.print("File receiver (enter for \"SERVER\"): ");
 			strReceiver = br.readLine();
+			if(strReceiver.isEmpty())
+				strReceiver = "SERVER";
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		//CMFileTransferManager.pushFile(strFilePath, strReceiver, m_clientStub.getCMInfo());
-		m_clientStub.pushFile(strFilePath, strReceiver);
+		bReturn = m_clientStub.pushFile(strFilePath, strReceiver);
+		
+		if(!bReturn)
+			System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
+		
 		System.out.println("======");
 	}
 	

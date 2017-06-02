@@ -715,16 +715,25 @@ public class CMStub {
 		return fInfo.getFilePath();
 	}
 	
-	public void requestFile(String strFileName, String strFileOwner)
+	public boolean requestFile(String strFileName, String strFileOwner)
 	{
-		CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);		
-		return;
+		boolean bReturn = false;
+		bReturn = CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);		
+		return bReturn;
 	}
 	
-	public void pushFile(String strFilePath, String strReceiver)
+	public boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend)
 	{
-		CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);		
-		return;
+		boolean bReturn = false;
+		bReturn = CMFileTransferManager.requestFile(strFileName, strFileOwner, byteFileAppend, m_cmInfo);
+		return bReturn;
+	}
+	
+	public boolean pushFile(String strFilePath, String strReceiver)
+	{
+		boolean bReturn = false;
+		bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);		
+		return bReturn;
 	}
 
 	/////////////////////////////////////////////////////////////////////

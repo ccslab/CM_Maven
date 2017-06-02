@@ -333,38 +333,40 @@ public class CMWinServer extends JFrame {
 	
 	public void requestFile()
 	{
+		boolean bReturn = false;
 		String strFileName = null;
 		String strFileOwner = null;
-		/*
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.println("====== request a file");
-		try {
-			System.out.print("File name: ");
-			strFileName = br.readLine();
-			System.out.print("File owner(user name): ");
-			strFileOwner = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
+		String strFileAppendMode = null;
+
 		printMessage("====== request a file\n");
 		JTextField fileNameField = new JTextField();
 		JTextField fileOwnerField = new JTextField();
+		String[] fAppendMode = {"Default", "Overwrite", "Append"};		
+		JComboBox<String> fAppendBox = new JComboBox<String>(fAppendMode);
+
 		Object[] message = {
 		    "File Name:", fileNameField,
-		    "File Owner:", fileOwnerField
+		    "File Owner:", fileOwnerField,
+			"File Append Mode: ", fAppendBox
 		};
 		int option = JOptionPane.showConfirmDialog(null, message, "File Request Input", JOptionPane.OK_CANCEL_OPTION);
 		if (option == JOptionPane.OK_OPTION) 
 		{
 			strFileName = fileNameField.getText();
 			strFileOwner = fileOwnerField.getText();
-			//CMFileTransferManager.requestFile(strFileName, strFileOwner, m_serverStub.getCMInfo());
-			m_serverStub.requestFile(strFileName, strFileOwner);
+			strFileAppendMode = (String) fAppendBox.getSelectedItem();
+			
+			if(strFileAppendMode.equals("Default"))
+				bReturn = m_serverStub.requestFile(strFileName, strFileOwner);
+			else if(strFileAppendMode.equals("Overwrite"))
+				bReturn = m_serverStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
+			else
+				bReturn = m_serverStub.requestFile(strFileName, strFileOwner, CMInfo.FILE_APPEND);
+			
+			if(!bReturn)
+				printMessage("Request file error! file("+strFileName+"), owner("+strFileOwner+").\n");
 		}
 		
-		//System.out.println("======");
 		printMessage("======\n");
 	}
 

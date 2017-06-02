@@ -234,8 +234,10 @@ public class CMServerApp {
 	
 	public void requestFile()
 	{
+		boolean bReturn = false;
 		String strFileName = null;
 		String strFileOwner = null;
+		String strFileAppend = null;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("====== request a file");
 		try {
@@ -243,18 +245,31 @@ public class CMServerApp {
 			strFileName = br.readLine();
 			System.out.print("File owner(user name): ");
 			strFileOwner = br.readLine();
+			System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
+			strFileAppend = br.readLine();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		//CMFileTransferManager.requestFile(strFileName, strFileOwner, m_serverStub.getCMInfo());
-		m_serverStub.requestFile(strFileName, strFileOwner);
+		if(strFileAppend.isEmpty())
+			bReturn = m_serverStub.requestFile(strFileName, strFileOwner);
+		else if(strFileAppend.equals("y"))
+			bReturn = m_serverStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_APPEND);
+		else if(strFileAppend.equals("n"))
+			bReturn = m_serverStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
+		else
+			System.err.println("wrong input for the file append mode!");
+		
+		if(!bReturn)
+			System.err.println("Request file error! file("+strFileName+"), owner("+strFileOwner+").");
+
 		System.out.println("======");
 	}
 	
 	public void pushFile()
 	{
+		boolean bReturn = false;
 		String strFilePath = null;
 		String strReceiver = null;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -270,8 +285,11 @@ public class CMServerApp {
 			e.printStackTrace();
 		}
 		
-		//CMFileTransferManager.pushFile(strFileName, strReceiver, m_serverStub.getCMInfo());
-		m_serverStub.pushFile(strFilePath, strReceiver);
+		bReturn = m_serverStub.pushFile(strFilePath, strReceiver);
+		
+		if(!bReturn)
+			System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
+
 		System.out.println("======");
 	}
 	

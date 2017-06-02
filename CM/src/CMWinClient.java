@@ -1611,36 +1611,40 @@ public class CMWinClient extends JFrame {
 
 	public void testRequestFile()
 	{
+		boolean bReturn = false;
 		String strFileName = null;
 		String strFileOwner = null;
-		//BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		//System.out.println("====== request a file");
-		printMessage("====== request a file\n");
-		/*
-		try {
-			System.out.print("File name: ");
-			strFileName = br.readLine();
-			System.out.print("File owner(server name): ");
-			strFileOwner = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
+		String strFileAppendMode = null;
 		
+		printMessage("====== request a file\n");
+
 		JTextField fnameField = new JTextField();
 		JTextField fownerField = new JTextField();
-		Object[] message = { "File Name: ", fnameField, "File Owner: ", fownerField };
+		String[] fAppendMode = {"Default", "Overwrite", "Append"};		
+		JComboBox<String> fAppendBox = new JComboBox<String>(fAppendMode);
+
+		Object[] message = { 
+				"File Name: ", fnameField, "File Owner: ", fownerField,
+				"File Append Mode: ", fAppendBox 
+				};
 		int option = JOptionPane.showConfirmDialog(null, message, "File Request", JOptionPane.OK_CANCEL_OPTION);
 		if(option == JOptionPane.OK_OPTION)
 		{
 			strFileName = fnameField.getText();
 			strFileOwner = fownerField.getText();
-			//CMFileTransferManager.requestFile(strFileName, strFileOwner, m_clientStub.getCMInfo());
-			m_clientStub.requestFile(strFileName, strFileOwner);
+			strFileAppendMode = (String) fAppendBox.getSelectedItem();
+			
+			if(strFileAppendMode.equals("Default"))
+				bReturn = m_clientStub.requestFile(strFileName, strFileOwner);
+			else if(strFileAppendMode.equals("Overwrite"))
+				bReturn = m_clientStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
+			else
+				bReturn = m_clientStub.requestFile(strFileName, strFileOwner, CMInfo.FILE_APPEND);
+			
+			if(!bReturn)
+				printMessage("Request file error! file("+strFileName+"), owner("+strFileOwner+").\n");
 		}
 		
-		//System.out.println("======");
 		printMessage("======\n");
 	}
 
