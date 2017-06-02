@@ -743,7 +743,7 @@ public class CMStub {
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
 		
 		fInfo.setStartTime(lStartTime);
-		bReturn = CMFileTransferManager.requestFile("throughput-test.jpg", strTarget, m_cmInfo);
+		bReturn = CMFileTransferManager.requestFile("throughput-test.jpg", strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		
 		if(!bReturn)
 			return -1;
@@ -787,7 +787,7 @@ public class CMStub {
 		String strFilePath = fInfo.getFilePath() + File.separator + "throughput-test.jpg";
 		
 		fInfo.setStartTime(lStartTime);
-		bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, m_cmInfo);
+		bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		
 		if(!bReturn)
 			return -1;

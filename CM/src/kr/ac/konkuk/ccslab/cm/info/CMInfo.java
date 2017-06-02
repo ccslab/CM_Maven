@@ -97,6 +97,11 @@ public class CMInfo {
 	public static final int SNS_ATTACH_PREFETCH = 2;
 	public static final int SNS_ATTACH_NONE = 3;
 	
+	// append mode of the file transfer
+	public static final byte FILE_DEFAULT = -1;	// determined by the configuration file
+	public static final byte FILE_OVERWRITE = 0;
+	public static final byte FILE_APPEND = 1;
+	
 	// repository
 	private CMConfigurationInfo m_confInfo;
 	private CMSNSInfo m_snsInfo;

@@ -1941,7 +1941,7 @@ public class CMSNSManager {
 			filePathList = sendAttach.getFilePathList();
 			for(i = 0; i < filePathList.size(); i++)
 			{				
-				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), 
+				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), CMInfo.FILE_APPEND, 
 						se.getContentID(), cmInfo);
 			}
 		}
@@ -1983,8 +1983,8 @@ public class CMSNSManager {
 				}
 				else
 				{
-					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), se.getContentID(), 
-						cmInfo);
+					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), CMInfo.FILE_APPEND, 
+							se.getContentID(), cmInfo);
 				}
 				file = null;
 			}

@@ -9,7 +9,6 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 	private RandomAccessFile m_writeFile;		// for writing the received file block to the new file
 	private SocketChannel m_recvChannel;	// the dedicated channel for receiving the file
 	private Future<CMRecvFileInfo> m_recvTaskResult;	// the result of the submitted receiving task to the thread pool 
-	protected boolean m_bAppend;	// the file append scheme
 
 	public CMRecvFileInfo()
 	{
@@ -18,7 +17,6 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		m_writeFile = null;
 		m_recvChannel = null;
 		m_recvTaskResult = null;
-		m_bAppend = false;
 	}
 	
 	public CMRecvFileInfo(String strFile, long lSize)
@@ -28,7 +26,6 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		m_writeFile = null;
 		m_recvChannel = null;
 		m_recvTaskResult = null;
-		m_bAppend = false;
 	}
 	
 	@Override
@@ -97,14 +94,4 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		return m_recvTaskResult;
 	}
 	
-	public void setAppend(boolean bAppend)
-	{
-		m_bAppend = bAppend;
-		return;
-	}
-	
-	public boolean isAppend()
-	{
-		return m_bAppend;
-	}
 }
