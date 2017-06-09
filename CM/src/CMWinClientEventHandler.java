@@ -469,7 +469,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		case CMFileEvent.REQUEST_FILE_TRANSFER:
 		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
-			printMessage("["+fe.getUserName()+"] requests file("+fe.getFileName()+").\n");
+			printMessage("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").\n");
 			break;
 		case CMFileEvent.REPLY_FILE_TRANSFER:
 		case CMFileEvent.REPLY_FILE_TRANSFER_CHAN:
@@ -505,6 +505,13 @@ public class CMWinClientEventHandler implements CMEventHandler{
 				}
 				m_bReqAttachedFile = false;
 			}
+			break;
+		case CMFileEvent.CANCEL_FILE_SEND:
+		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
+			printMessage("["+fe.getSenderName()+"] cancelled the file transfer.\n");
+			break;
+		case CMFileEvent.CANCEL_FILE_RECV_CHAN:
+			printMessage("["+fe.getReceiverName()+"] cancelled the file request.\n");
 			break;
 		}
 		return;

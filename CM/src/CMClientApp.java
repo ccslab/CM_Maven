@@ -83,6 +83,7 @@ public class CMClientApp {
 				System.out.println("12: test CMUserEvent, 13: print group info, 14: print current user status");
 				System.out.println("15: change group, 16: add additional channel, 17: remove additional channel");
 				System.out.println("18: set file path, 19: request file, 20: push file");
+				System.out.println("62: cancel receiving file, 63: cancel sending file");
 				System.out.println("21: test forwarding schemes, 22: test delay of forwarding schemes");
 				System.out.println("---------------------------------------------------");
 				System.out.println("23: download new SNS content, 50: request attached file of SNS content");
@@ -266,6 +267,12 @@ public class CMClientApp {
 				break;
 			case 61: // test output network throughput
 				testMeasureOutputThroughput();
+				break;
+			case 62:	// test cancel receiving a file
+				cancelRecvFile();
+				break;
+			case 63:	// test cancel sending a file
+				cancelSendFile();
 				break;
 			case 99: // terminate CM
 				testTermination();
@@ -1126,6 +1133,46 @@ public class CMClientApp {
 			System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
 		
 		System.out.println("======");
+	}
+	
+	public void cancelRecvFile()
+	{
+		String strSender = null;
+		boolean bReturn = false;
+		System.out.println("====== cancel receiving a file: to be developed!");
+		
+		// from here
+	}
+	
+	public void cancelSendFile()
+	{
+		String strReceiver = null;
+		boolean bReturn = false;
+		System.out.println("====== cancel sending a file");
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.print("Input receiver name (enter for all receivers): ");
+		
+		try {
+			strReceiver = br.readLine();
+			if(strReceiver.isEmpty())
+				strReceiver = null;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		bReturn = m_clientStub.cancelPushFile(strReceiver);
+		
+		if(bReturn)
+		{
+			if(strReceiver == null)
+				strReceiver = "all receivers";
+			System.out.println("Successfully requested to cancel sending a file to ["+strReceiver+"].");
+		}
+		else
+			System.err.println("Request failed to cancel sending a file to ["+strReceiver+"]!");
+		
+		return;
 	}
 	
 	public void testForwarding()
@@ -2089,7 +2136,7 @@ public class CMClientApp {
 		// make a file event (REQUEST_DIST_FILE_PROC)
 		fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_DIST_FILE_PROC);
-		fe.setUserName(interInfo.getMyself().getName());
+		fe.setReceiverName(interInfo.getMyself().getName());
 
 		// for pieces except the last piece
 		for( i = 0; i < m_eventHandler.getCurrentServerNum()-1; i++)

@@ -12,6 +12,7 @@ public class CMFileTransferInfo {
 	private String m_strFilePath;
 	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable; // key is the receiver name
 	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable; // key is the sender name
+	private boolean m_bCancelSend;	// flag for canceling file push with the default channel
 	private ExecutorService m_executorService;
 	
 	private long m_lStartTime;	// used for measuring the delay of the file transfer
@@ -21,6 +22,7 @@ public class CMFileTransferInfo {
 		m_strFilePath = null;
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
+		m_bCancelSend = false;
 		m_executorService = null;
 		m_lStartTime = -1;
 	}
@@ -56,6 +58,17 @@ public class CMFileTransferInfo {
 	public long getStartTime()
 	{
 		return m_lStartTime;
+	}
+	
+	public void setCancelSend(boolean bCancel)
+	{
+		m_bCancelSend = bCancel;
+		return;
+	}
+	
+	public boolean isCancelSend()
+	{
+		return m_bCancelSend;
 	}
 	
 	////////// add/remove/find sending file info
@@ -199,6 +212,44 @@ public class CMFileTransferInfo {
 		
 		return true;
 		
+	}
+	
+	public boolean removeSendFileList(String strReceiver)
+	{
+		CMList<CMSendFileInfo> sInfoList = null;
+		sInfoList = m_sendFileHashtable.remove(strReceiver);
+		if(sInfoList == null)
+		{
+			System.err.println("CMFileTransferInfo.removeSendFileList(); list not found for receiver("
+					+strReceiver+")!");
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.removeSendFileList() done : receiver("+strReceiver+").");
+			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
+		}
+		
+		return true;
+	}
+	
+	public boolean clearSendFileHashtable()
+	{
+		m_sendFileHashtable.clear();
+		
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMFileTransferInfo.clearSendFileHashtable(); current size("
+					+m_sendFileHashtable.size()+").");
+		return true;
+	}
+	
+	public CMList<CMSendFileInfo> getSendFileList(String strReceiver)
+	{
+		CMList<CMSendFileInfo> sendFileList = null;
+		sendFileList = m_sendFileHashtable.get(strReceiver);
+		
+		return sendFileList;
 	}
 	
 	public Hashtable<String, CMList<CMSendFileInfo>> getSendFileHashtable()
@@ -345,6 +396,45 @@ public class CMFileTransferInfo {
 		
 		return true;
 		
+	}
+
+	public boolean removeRecvFileList(String strSender)
+	{
+		CMList<CMRecvFileInfo> rInfoList = null;
+		rInfoList = m_recvFileHashtable.remove(strSender);
+		if(rInfoList == null)
+		{
+			System.err.println("CMFileTransferInfo.removeRecvFileList(); list not found for sender("
+					+strSender+")!");
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.removeRecvFileList() done : sender("+strSender+").");
+			System.out.println("# current hashtable elements: "+m_recvFileHashtable.size());
+		}
+		
+		return true;
+	}
+
+	public boolean clearRecvFileHashtable()
+	{
+		m_recvFileHashtable.clear();
+		
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMFileTransferInfo.clearRecvFileHashtable(); current size("
+					+m_sendFileHashtable.size()+").");
+		return true;
+	}
+	
+
+	public CMList<CMRecvFileInfo> getRecvFileList(String strSender)
+	{
+		CMList<CMRecvFileInfo> recvFileList = null;
+		recvFileList = m_recvFileHashtable.get(strSender);
+		
+		return recvFileList;
 	}
 	
 	public Hashtable<String, CMList<CMRecvFileInfo>> getRecvFileHashtable()

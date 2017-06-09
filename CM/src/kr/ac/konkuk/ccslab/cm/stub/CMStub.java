@@ -735,6 +735,13 @@ public class CMStub {
 		bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);		
 		return bReturn;
 	}
+	
+	public boolean cancelPushFile(String strReceiver)
+	{
+		boolean bReturn = false;
+		bReturn = CMFileTransferManager.cancelPushFile(strReceiver, m_cmInfo);
+		return bReturn;
+	}
 
 	/////////////////////////////////////////////////////////////////////
 	// network service

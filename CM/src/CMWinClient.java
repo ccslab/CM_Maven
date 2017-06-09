@@ -357,6 +357,7 @@ public class CMWinClient extends JFrame {
 			printMessage("12: test CMUserEvent, 13: print group info, 14: print current user status\n");
 			printMessage("15: change group, 16: add additional channel, 17: remove additional channel\n");
 			printMessage("18: set file path, 19: request file, 20: push file\n");
+			printMessage("62: cancel receiving file, 63: cancel sending file\n");
 			printMessage("21: test forwarding schemes, 22: test delay of forwarding schemes\n");
 			printMessage("---------------------------------------------------\n");
 			printMessage("23: SNS content download, 50: request attached file of SNS content\n");
@@ -533,6 +534,12 @@ public class CMWinClient extends JFrame {
 			break;
 		case 61: // test output network throughput
 			testMeasureOutputThroughput();
+			break;
+		case 62:	// test cancel receiving a file
+			cancelRecvFile();
+			break;
+		case 63:	// test cancel sending a file
+			cancelSendFile();
 			break;
 		case 99: // terminate CM
 			testTermination();
@@ -1689,6 +1696,39 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
+	public void cancelRecvFile()
+	{
+		String strSender = null;
+		boolean bReturn = false;
+		printMessage("====== cancel receiving a file: to be developed!\n");
+		
+		// from here
+	}
+	
+	public void cancelSendFile()
+	{
+		String strReceiver = null;
+		boolean bReturn = false;
+		printMessage("====== cancel sending a file\n");
+
+		strReceiver = JOptionPane.showInputDialog("Input receiver name (enter for all receivers)");
+		if(strReceiver.isEmpty())
+			strReceiver = null;
+		
+		bReturn = m_clientStub.cancelPushFile(strReceiver);
+		
+		if(bReturn)
+		{
+			if(strReceiver == null)
+				strReceiver = "all receivers";
+			printMessage("Successfully requested to cancel sending a file to ["+strReceiver+"].\n");
+		}
+		else
+			printMessage("Request failed to cancel sending a file to ["+strReceiver+"]!\n");
+		
+		return;
+	}
+	
 	public void testForwarding()
 	{
 		int nForwardType = 0;
@@ -2992,7 +3032,7 @@ public class CMWinClient extends JFrame {
 		// make a file event (REQUEST_DIST_FILE_PROC)
 		fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_DIST_FILE_PROC);
-		fe.setUserName(interInfo.getMyself().getName());
+		fe.setReceiverName(interInfo.getMyself().getName());
 
 		// for pieces except the last piece
 		for( i = 0; i < m_eventHandler.getCurrentServerNum()-1; i++)

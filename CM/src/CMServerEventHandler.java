@@ -237,7 +237,7 @@ public class CMServerEventHandler implements CMEventHandler {
 		{
 		case CMFileEvent.REQUEST_FILE_TRANSFER:
 		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
-			System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
+			System.out.println("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").");
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
@@ -255,8 +255,15 @@ public class CMServerEventHandler implements CMEventHandler {
 			}
 			break;
 		case CMFileEvent.REQUEST_DIST_FILE_PROC:
-			System.out.println("["+fe.getUserName()+"] requests the distributed file processing.");
+			System.out.println("["+fe.getReceiverName()+"] requests the distributed file processing.");
 			m_bDistFileProc = true;
+			break;
+		case CMFileEvent.CANCEL_FILE_SEND:
+		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
+			System.out.println("["+fe.getSenderName()+"] cancelled the file transfer.");
+			break;
+		case CMFileEvent.CANCEL_FILE_RECV_CHAN:
+			System.out.println("["+fe.getReceiverName()+"] cancelled the file request.");
 			break;
 		}
 		return;

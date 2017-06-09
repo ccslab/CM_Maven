@@ -66,6 +66,7 @@ public class CMServerApp {
 			case 0:
 				System.out.println("0: help, 1: session info, 2: group info");
 				System.out.println("3: set file path, 4: request file, 5: push file");
+				System.out.println("17: cancel receiving file, 18: cancel sending file");
 				System.out.println("6: request registration to the default server");
 				System.out.println("7: request deregistration from the default server");
 				System.out.println("8: connect to the default server, 9: disconnect from the default server");
@@ -123,6 +124,12 @@ public class CMServerApp {
 				break;
 			case 16:	// test output network throughput
 				measureOutputThroughput();
+				break;
+			case 17:	// test cancel receiving a file
+				cancelRecvFile();
+				break;
+			case 18:	// test cancel sending a file
+				cancelSendFile();
 				break;
 			case 99:
 				testTermination();
@@ -291,6 +298,47 @@ public class CMServerApp {
 			System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
 
 		System.out.println("======");
+	}
+	
+	public void cancelRecvFile()
+	{
+		String strSender = null;
+		boolean bReturn = false;
+		System.out.println("====== cancel receiving a file: to be developed!");
+		/*
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.print("Input sender name(enter for all senders): ");
+		
+		strSender = br.readLine();
+		*/
+		
+	}
+	
+	public void cancelSendFile()
+	{
+		String strReceiver = null;
+		boolean bReturn = false;
+		System.out.println("====== cancel sending a file");
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.print("Input receiver name (enter for all receivers): ");
+		
+		try {
+			strReceiver = br.readLine();
+			if(strReceiver.isEmpty())
+				strReceiver = null;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		bReturn = m_serverStub.cancelPushFile(strReceiver);
+		
+		if(bReturn)
+			System.out.println("Successfully requested to cancel sending a file to ["+strReceiver+"]");
+		else
+			System.err.println("Request failed to cancel sending a file to ["+strReceiver+"]!");
+		
+		return;
 	}
 	
 	public void requestServerReg()

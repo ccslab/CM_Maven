@@ -142,6 +142,7 @@ public class CMWinServer extends JFrame {
 			//System.out.println("99: terminate CM");
 			printMessage("0: help, 1: session info, 2: group info\n");
 			printMessage("3: set file path, 4: request file, 5: push file\n");
+			printMessage("17: cancel receiving file, 18: cancel sending file\n");
 			printMessage("6: request registration to the default server\n");
 			printMessage("7: request deregistration from the default server\n");
 			printMessage("8: connect to the default server, 9: disconnect from the default server\n");
@@ -199,6 +200,12 @@ public class CMWinServer extends JFrame {
 			break;
 		case 16:	// test output network throughput
 			measureOutputThroughput();
+			break;
+		case 17:	// test cancel receiving a file
+			cancelRecvFile();
+			break;
+		case 18:	// test cancel sending a file
+			cancelSendFile();
 			break;
 		case 99:
 			testTermination();
@@ -411,6 +418,35 @@ public class CMWinServer extends JFrame {
 		}
 	
 		printMessage("======\n");
+	}
+
+	public void cancelRecvFile()
+	{
+		String strSender = null;
+		boolean bReturn = false;
+		printMessage("====== cancel receiving a file: to be developed!\n");
+		
+		// not yet
+	}
+	
+	public void cancelSendFile()
+	{
+		String strReceiver = null;
+		boolean bReturn = false;
+		printMessage("====== cancel sending a file\n");
+
+		strReceiver = JOptionPane.showInputDialog("Input receiver name (enter for all receivers)");
+		if(strReceiver.isEmpty())
+			strReceiver = null;
+		
+		bReturn = m_serverStub.cancelPushFile(strReceiver);
+		
+		if(bReturn)
+			printMessage("Successfully requested to cancel sending a file to ["+strReceiver+"]");
+		else
+			printMessage("Request failed to cancel sending a file to ["+strReceiver+"]!");
+		
+		return;
 	}
 
 	public void requestServerReg()

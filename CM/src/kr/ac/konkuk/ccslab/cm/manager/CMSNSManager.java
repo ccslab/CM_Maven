@@ -325,7 +325,7 @@ public class CMSNSManager {
 	{
 		int nContentID = fe.getContentID();
 		String strFileName = fe.getFileName();
-		String strReceiverName = fe.getUserName();
+		String strReceiverName = fe.getReceiverName();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
@@ -2032,7 +2032,7 @@ public class CMSNSManager {
 		{
 			CMFileEvent fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_ACK);
-			fe.setUserName(se.getUserName());
+			fe.setReceiverName(se.getUserName());
 			fe.setFileName(strFileNameList.get(i));
 			fe.setReturnCode(0);	// the file is not received
 			fe.setContentID(se.getContentID());

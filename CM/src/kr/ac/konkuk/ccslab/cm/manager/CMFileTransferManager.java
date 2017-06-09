@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -10,6 +12,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
@@ -113,7 +116,7 @@ public class CMFileTransferManager {
 		return bReturn;
 	}
 	
-	public static boolean requestFileWithDefChannel(String strFileName, String strFileOwner, byte byteFileAppend, 
+	private static boolean requestFileWithDefChannel(String strFileName, String strFileOwner, byte byteFileAppend, 
 			int nContentID, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
@@ -121,7 +124,7 @@ public class CMFileTransferManager {
 		
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_FILE_TRANSFER);
-		fe.setUserName(myself.getName());	// requester name
+		fe.setReceiverName(myself.getName());	// requester name
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
 		fe.setFileAppendFlag(byteFileAppend);
@@ -131,7 +134,7 @@ public class CMFileTransferManager {
 		return bReturn;
 	}
 	
-	public static boolean requestFileWithSepChannel(String strFileName, String strFileOwner, byte byteFileAppend, 
+	private static boolean requestFileWithSepChannel(String strFileName, String strFileOwner, byte byteFileAppend, 
 			int nContentID, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
@@ -139,7 +142,7 @@ public class CMFileTransferManager {
 		
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_FILE_TRANSFER_CHAN);
-		fe.setUserName(myself.getName());	// requester name
+		fe.setReceiverName(myself.getName());	// requester name
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
 		fe.setFileAppendFlag(byteFileAppend);
@@ -185,7 +188,7 @@ public class CMFileTransferManager {
 	}
 
 	// strFilePath: absolute or relative path to a target file
-	public static boolean pushFileWithDefChannel(String strFilePath, String strReceiver, byte byteFileAppend, 
+	private static boolean pushFileWithDefChannel(String strFilePath, String strReceiver, byte byteFileAppend, 
 			int nContentID, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
@@ -204,6 +207,9 @@ public class CMFileTransferManager {
 		// add send file information
 		// receiver name, file path, size
 		fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID);
+		
+		// set the cancellation flag
+		fInfo.setCancelSend(false);
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
@@ -234,7 +240,7 @@ public class CMFileTransferManager {
 	}
 	
 	// strFilePath: absolute or relative path to a target file
-	public static boolean pushFileWithSepChannel(String strFilePath, String strReceiver, byte byteFileAppend, 
+	private static boolean pushFileWithSepChannel(String strFilePath, String strReceiver, byte byteFileAppend, 
 			int nContentID, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
@@ -342,6 +348,130 @@ public class CMFileTransferManager {
 		
 		file = null;
 		fe = null;
+		return bReturn;
+	}
+	
+	public static boolean cancelPushFile(String strReceiver, CMInfo cmInfo)
+	{
+		boolean bReturn = false;
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		if(confInfo.isFileTransferScheme())
+			bReturn = cancelPushFileWithSepChannel(strReceiver, cmInfo);
+		else
+			bReturn = cancelPushFileWithDefChannel(strReceiver, cmInfo);
+		
+		return bReturn;
+	}
+	
+	private static boolean cancelPushFileWithDefChannel(String strReceiver, CMInfo cmInfo)
+	{
+		boolean bReturn = false;
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMList<CMSendFileInfo> sendList = null;
+		Iterator<CMSendFileInfo> iterSendList = null;
+		CMSendFileInfo sInfo = null;
+		CMFileEvent fe = null;
+
+		if(strReceiver != null)
+		{
+			// find the CMSendFile list of the strReceiver
+			sendList = fInfo.getSendFileList(strReceiver);
+			if(sendList == null)
+			{
+				System.err.println("CMFileTransferManager.cancelPushFileWithDefChannel(); Sending file list "
+						+ "not found for the receiver("+strReceiver+")!");
+				return false;
+			}			
+		}
+		
+		// set the flag
+		fInfo.setCancelSend(true);
+		
+		// send the cancellation event to the receiver
+		// close the RandomAccessFile and remove the sending file info of the receiver
+		if(strReceiver != null) // for the target receiver
+		{
+			fe = new CMFileEvent();
+			fe.setID(CMFileEvent.CANCEL_FILE_SEND);
+			fe.setSenderName(interInfo.getMyself().getName());
+			fe.setReceiverName(strReceiver);
+			CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
+			
+			// close the RandomAccessFile
+			iterSendList = sendList.getList().iterator();
+			while(iterSendList.hasNext())
+			{
+				sInfo = iterSendList.next();
+				if(sInfo.getReadFile() != null)
+				{
+					try {
+						sInfo.getReadFile().close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			
+			bReturn = fInfo.removeSendFileList(strReceiver);
+		}
+		else	// for all receivers
+		{
+			Set<String> keySet = fInfo.getSendFileHashtable().keySet();
+			Iterator<String> iterKeys = keySet.iterator();
+			while(iterKeys.hasNext())
+			{
+				String iterReceiver = iterKeys.next();
+				fe = new CMFileEvent();
+				fe.setID(CMFileEvent.CANCEL_FILE_SEND);
+				fe.setSenderName(interInfo.getMyself().getName());
+				fe.setReceiverName(iterReceiver);
+				CMEventManager.unicastEvent(fe, iterReceiver, cmInfo);
+				
+				// close the RandomAccessFile
+				sendList = fInfo.getSendFileList(iterReceiver);
+				iterSendList = sendList.getList().iterator();
+				while(iterSendList.hasNext())
+				{
+					sInfo = iterSendList.next();
+					if(sInfo.getReadFile() != null)
+					{
+						try {
+							sInfo.getReadFile().close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+			
+			bReturn = fInfo.clearSendFileHashtable();
+		}
+		
+		if(bReturn)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMFileTransferManager.cancelPushFileWithDefChannel(); succeeded for "
+						+ "receiver("+strReceiver+").");
+		}
+		else
+		{
+			System.err.println("CMFileTransferManager.cancelPushFileWithDefChannel(); failed for "
+					+ "receiver("+strReceiver+")!");
+		}
+		
+		return bReturn;
+	}
+	
+	private static boolean cancelPushFileWithSepChannel(String strReceiver, CMInfo cmInfo)
+	{
+		boolean bReturn = false;
+		
+		System.err.println("CMFileTransferManager.cancelPushFileWithSepChannel(); to be developed!");
+		// not yet
+		
 		return bReturn;
 	}
 
@@ -544,6 +674,24 @@ public class CMFileTransferManager {
 		case CMFileEvent.END_FILE_TRANSFER_CHAN_ACK:
 			processEND_FILE_TRANSFER_CHAN_ACK(fe, cmInfo);
 			break;
+		case CMFileEvent.CANCEL_FILE_SEND:
+			processCANCEL_FILE_SEND(fe, cmInfo);
+			break;
+		case CMFileEvent.CANCEL_FILE_SEND_ACK:
+			processCANCEL_FILE_SEND_ACK(fe, cmInfo);
+			break;
+		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
+			processCANCEL_FILE_SEND_CHAN(fe, cmInfo);
+			break;
+		case CMFileEvent.CANCEL_FILE_SEND_CHAN_ACK:
+			processCANCEL_FILE_SEND_CHAN_ACK(fe, cmInfo);
+			break;
+		case CMFileEvent.CANCEL_FILE_RECV_CHAN:
+			processCANCEL_FILE_RECV_CHAN(fe, cmInfo);
+			break;
+		case CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK:
+			processCANCEL_FILE_RECV_CHAN_ACK(fe, cmInfo);
+			break;
 		default:
 			System.err.println("CMFileTransferManager.processEvent(), unknown event id("+fe.getID()+").");
 			fe = null;
@@ -562,7 +710,7 @@ public class CMFileTransferManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processREQUEST_FILE_TRANSFER(), requester("
-					+fe.getUserName()+"), file("+fe.getFileName()+"), contentID("+fe.getContentID()
+					+fe.getReceiverName()+"), file("+fe.getFileName()+"), contentID("+fe.getContentID()
 					+").");
 		}
 
@@ -578,21 +726,21 @@ public class CMFileTransferManager {
 		if(!file.exists())
 		{
 			feAck.setReturnCode(0);	// file not found
-			CMEventManager.unicastEvent(feAck, fe.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
 			feAck = null;
 			return;
 		}
 		
 		feAck.setReturnCode(1);	// file found
 		feAck.setContentID(fe.getContentID());
-		CMEventManager.unicastEvent(feAck, fe.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
 		
 		// get the file size
 		long lFileSize = file.length();
 		
 		// add send file information
 		// receiver name, file path, size
-		fInfo.addSendFileInfo(fe.getUserName(), strFullPath, lFileSize, fe.getContentID());
+		fInfo.addSendFileInfo(fe.getReceiverName(), strFullPath, lFileSize, fe.getContentID());
 
 		// start file transfer process
 		CMFileEvent feStart = new CMFileEvent();
@@ -602,7 +750,7 @@ public class CMFileTransferManager {
 		feStart.setFileSize(lFileSize);
 		feStart.setContentID(fe.getContentID());
 		feStart.setFileAppendFlag(fe.getFileAppendFlag());
-		CMEventManager.unicastEvent(feStart, fe.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(feStart, fe.getReceiverName(), cmInfo);
 
 		feAck = null;
 		feStart = null;
@@ -731,7 +879,7 @@ public class CMFileTransferManager {
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.START_FILE_TRANSFER_ACK);
-		feAck.setUserName(cmInfo.getInteractionInfo().getMyself().getName());
+		feAck.setReceiverName(cmInfo.getInteractionInfo().getMyself().getName());
 		feAck.setFileName(fe.getFileName());
 		feAck.setContentID(fe.getContentID());
 		feAck.setReceivedFileSize(lRecvSize);
@@ -754,12 +902,12 @@ public class CMFileTransferManager {
 		long lRecvSize = 0;
 		
 		// find the CMSendFileInfo object 
-		sInfo = fInfo.findSendFileInfo(recvFileEvent.getUserName(), recvFileEvent.getFileName(), 
+		sInfo = fInfo.findSendFileInfo(recvFileEvent.getReceiverName(), recvFileEvent.getFileName(), 
 				recvFileEvent.getContentID());
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER_ACK(), sendFileInfo not found! : "
-					+"receiver("+recvFileEvent.getUserName()+"), file("+recvFileEvent.getFileName()
+					+"receiver("+recvFileEvent.getReceiverName()+"), file("+recvFileEvent.getFileName()
 					+"), content ID("+recvFileEvent.getContentID()+")");
 			return;
 		}
@@ -814,13 +962,14 @@ public class CMFileTransferManager {
 		byte[] fileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
 		CMFileEvent fe = new CMFileEvent();
 		
-		while(lRemainBytes > 0)
+		while(lRemainBytes > 0 && !fInfo.isCancelSend())
 		{
 			try {
 				nReadBytes = sInfo.getReadFile().read(fileBlock);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				continue;
 			}
 			
 			// send file block
@@ -842,6 +991,13 @@ public class CMFileTransferManager {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		// reset the flag
+		if(fInfo.isCancelSend())
+		{
+			fInfo.setCancelSend(false);
+			return;
 		}
 
 		if(CMInfo._CM_DEBUG)
@@ -946,7 +1102,7 @@ public class CMFileTransferManager {
 		// send ack
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.END_FILE_TRANSFER_ACK);
-		feAck.setUserName(interInfo.getMyself().getName());
+		feAck.setReceiverName(interInfo.getMyself().getName());
 		feAck.setFileName(fe.getFileName());
 		feAck.setReturnCode(1);	// success
 		feAck.setContentID(fe.getContentID());
@@ -969,7 +1125,7 @@ public class CMFileTransferManager {
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMEventInfo eInfo = cmInfo.getEventInfo();
-		String strReceiverName = fe.getUserName();
+		String strReceiverName = fe.getReceiverName();
 		String strFileName = fe.getFileName();
 		int nContentID = fe.getContentID();
 		long lFileSize = -1;
@@ -1014,7 +1170,7 @@ public class CMFileTransferManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processREQUEST_DIST_FILE_PROC(), user("
-						+fe.getUserName()+") requests the distributed file processing.");
+						+fe.getReceiverName()+") requests the distributed file processing.");
 		}
 		return;
 	}
@@ -1026,7 +1182,7 @@ public class CMFileTransferManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processREQUEST_FILE_TRANSFER_CHAN(), requester("
-					+fe.getUserName()+"), file("+fe.getFileName()+"), contentID("+fe.getContentID()
+					+fe.getReceiverName()+"), file("+fe.getFileName()+"), contentID("+fe.getContentID()
 					+").");
 		}
 
@@ -1042,16 +1198,16 @@ public class CMFileTransferManager {
 		if(!file.exists())
 		{
 			feAck.setReturnCode(0);	// file not found
-			CMEventManager.unicastEvent(feAck, fe.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
 			feAck = null;
 			return;
 		}
 		
 		feAck.setReturnCode(1);	// file found
 		feAck.setContentID(fe.getContentID());
-		CMEventManager.unicastEvent(feAck, fe.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
 		
-		pushFileWithSepChannel(strFullPath, fe.getUserName(), fe.getFileAppendFlag(), fe.getContentID(), cmInfo);
+		pushFileWithSepChannel(strFullPath, fe.getReceiverName(), fe.getFileAppendFlag(), fe.getContentID(), cmInfo);
 		return;
 	}
 	
@@ -1229,11 +1385,11 @@ public class CMFileTransferManager {
 		CMSendFileInfo sInfo = null;
 		
 		// find the CMSendFileInfo object 
-		sInfo = fInfo.findSendFileInfo(fe.getUserName(), fe.getFileName(), fe.getContentID());
+		sInfo = fInfo.findSendFileInfo(fe.getReceiverName(), fe.getFileName(), fe.getContentID());
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER_CHAN_ACK(), sendFileInfo "
-					+ "not found! : receiver("+fe.getUserName()+"), file("+fe.getFileName()
+					+ "not found! : receiver("+fe.getReceiverName()+"), file("+fe.getFileName()
 					+"), content ID("+fe.getContentID()+")");
 			return;
 		}
@@ -1317,7 +1473,7 @@ public class CMFileTransferManager {
 		// make ack event
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.END_FILE_TRANSFER_CHAN_ACK);
-		feAck.setUserName(interInfo.getMyself().getName());
+		feAck.setReceiverName(interInfo.getMyself().getName());
 		feAck.setFileName(fe.getFileName());
 		feAck.setContentID(fe.getContentID());
 
@@ -1365,7 +1521,7 @@ public class CMFileTransferManager {
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMEventInfo eInfo = cmInfo.getEventInfo();
-		String strReceiverName = fe.getUserName();
+		String strReceiverName = fe.getReceiverName();
 		String strFileName = fe.getFileName();
 		int nContentID = fe.getContentID();
 		long lFileSize = -1;
@@ -1418,13 +1574,118 @@ public class CMFileTransferManager {
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.START_FILE_TRANSFER_CHAN_ACK);
-		feAck.setUserName(cmInfo.getInteractionInfo().getMyself().getName());
+		feAck.setReceiverName(cmInfo.getInteractionInfo().getMyself().getName());
 		feAck.setFileName(rfInfo.getFileName());
 		feAck.setContentID(rfInfo.getContentID());
 		feAck.setReceivedFileSize(rfInfo.getRecvSize());
 		CMEventManager.unicastEvent(feAck, rfInfo.getSenderName(), cmInfo);
 
 		feAck = null;
+	}
+	
+	private static void processCANCEL_FILE_SEND(CMFileEvent fe, CMInfo cmInfo)
+	{
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		String strSender = fe.getSenderName();
+		CMList<CMRecvFileInfo> recvList = fInfo.getRecvFileList(strSender);
+		Iterator<CMRecvFileInfo> iter = null;
+		CMRecvFileInfo rInfo = null;
+		CMFileEvent feAck = new CMFileEvent();
+		boolean bReturn = false;
+		
+		// make the ack event
+		feAck.setID(CMFileEvent.CANCEL_FILE_SEND_ACK);
+		feAck.setSenderName(strSender);
+		feAck.setReceiverName(interInfo.getMyself().getName());
+		
+		// recv file info list not found
+		if(recvList == null)
+		{
+			System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND(); recv info list not found "
+					+ "for sender("+strSender+")!");
+			feAck.setReturnCode(0);
+			CMEventManager.unicastEvent(feAck, strSender, cmInfo);
+			return;
+		}
+		
+		// close RandomAccessFile and remove the recv file info list
+		iter = recvList.getList().iterator();
+		while(iter.hasNext())
+		{
+			rInfo = iter.next();
+			if(rInfo.getWriteFile() != null)
+			{
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND(); cancelled file("
+							+rInfo.getFileName()+"), file size("+rInfo.getFileSize()+"), recv size("
+							+rInfo.getRecvSize()+").");
+				}
+				
+				try {
+					rInfo.getWriteFile().close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		bReturn = fInfo.removeRecvFileList(strSender);
+		
+		if(bReturn)
+			feAck.setReturnCode(1);
+		else
+			feAck.setReturnCode(0);
+		
+		bReturn = CMEventManager.unicastEvent(feAck, strSender, cmInfo);
+		
+		if(bReturn)
+		{
+			System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND(); succeeded. sender("
+					+fe.getSenderName()+"), receiver("+fe.getReceiverName()+").");
+		}
+		else
+		{
+			System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND(); failed! sender("
+					+fe.getSenderName()+"), receiver("+fe.getReceiverName()+").");
+		}
+		
+		return;
+	}
+	
+	private static void processCANCEL_FILE_SEND_ACK(CMFileEvent fe, CMInfo cmInfo)
+	{
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND_ACK(); sender("+fe.getSenderName()
+				+"), receiver("+fe.getReceiverName()+"), return code("+fe.getReturnCode()+").");
+		}
+		return;
+	}
+	
+	private static void processCANCEL_FILE_SEND_CHAN(CMFileEvent fe, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(); to be developed!");
+	}
+	
+	private static void processCANCEL_FILE_SEND_CHAN_ACK(CMFileEvent fe, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTranferManager.processCANCEL_FILE_SEND_CHAN_ACK(); to be developed!");
+	}
+	
+	private static void processCANCEL_FILE_RECV_CHAN(CMFileEvent fe, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); to be developed!");
+	}
+	
+	private static void processCANCEL_FILE_RECV_CHAN_ACK(CMFileEvent fe, CMInfo cmInfo)
+	{
+		// not yet
+		System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN_ACK(); to be developed!");
 	}
 	
 }
