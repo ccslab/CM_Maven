@@ -104,8 +104,8 @@ public class CMByteReceiver extends Thread {
 		CMMessage msg = null;
 		
 		// create ByteBuffer
-		bufByteNum = ByteBuffer.allocateDirect(Integer.BYTES);
-		//bufByteNum = ByteBuffer.allocate(Integer.BYTES);
+		//bufByteNum = ByteBuffer.allocateDirect(Integer.BYTES);
+		bufByteNum = ByteBuffer.allocate(Integer.BYTES);
 		bufByteNum.clear();
 		ret = readStreamBytes(sc, bufByteNum);
 		/*
@@ -158,8 +158,8 @@ public class CMByteReceiver extends Thread {
 			nByteNum = bufByteNum.getInt();
 			if(CMInfo._CM_DEBUG_2)
 				System.out.println("#### event byte num: "+nByteNum+" bytes, read byte num: "+ret+" bytes.");
-			bufEvent = ByteBuffer.allocateDirect(nByteNum);
-			//bufEvent = ByteBuffer.allocate(nByteNum);
+			//bufEvent = ByteBuffer.allocateDirect(nByteNum);
+			bufEvent = ByteBuffer.allocate(nByteNum);
 			bufEvent.clear();
 			bufEvent.putInt(nByteNum);	// put the first 4 bytes
 			//nReceivedByteNum = Integer.BYTES;
@@ -251,8 +251,8 @@ public class CMByteReceiver extends Thread {
 		CMMessage msg = null;
 		SocketAddress senderAddr = null;	// sender address
 		int nByteNum = 0;
-		ByteBuffer bufEvent = ByteBuffer.allocateDirect(CMInfo.SO_RCVBUF_LEN);
-		//ByteBuffer bufEvent = ByteBuffer.allocate(CMInfo.SO_RCVBUF_LEN);
+		//ByteBuffer bufEvent = ByteBuffer.allocateDirect(CMInfo.SO_RCVBUF_LEN);
+		ByteBuffer bufEvent = ByteBuffer.allocate(CMInfo.SO_RCVBUF_LEN);
 		bufEvent.clear();	// initialize the ByteBuffer
 		
 		try {

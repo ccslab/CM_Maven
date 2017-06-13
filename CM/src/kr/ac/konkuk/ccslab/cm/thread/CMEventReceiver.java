@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
@@ -72,6 +73,10 @@ public class CMEventReceiver extends Thread {
 			if(cme.getType() == CMInfo.CM_USER_EVENT)
 			{
 				((CMUserEvent)cme).removeAllEventFields();	// clear all event fields
+			}
+			else if(cme.getType() == CMInfo.CM_FILE_EVENT)
+			{
+				((CMFileEvent)cme).setFileBlock(null);	// clear the file block
 			}
 			cme = null;			// clear the event
 		}

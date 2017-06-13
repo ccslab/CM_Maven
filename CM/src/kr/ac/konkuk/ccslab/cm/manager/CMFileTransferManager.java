@@ -698,6 +698,7 @@ public class CMFileTransferManager {
 			return;
 		}
 		
+		fe.setFileBlock(null);
 		fe = null;
 		return;
 	}
@@ -997,6 +998,8 @@ public class CMFileTransferManager {
 		if(fInfo.isCancelSend())
 		{
 			fInfo.setCancelSend(false);
+			fileBlock = null;
+			fe = null;
 			return;
 		}
 
@@ -1014,6 +1017,7 @@ public class CMFileTransferManager {
 		fe.setContentID(nContentID);
 		CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 		
+		fileBlock = null;
 		fe = null;
 		return;
 	}

@@ -147,7 +147,10 @@ public class CMFileEvent extends CMEvent{
 	
 	public void setFileBlock(byte[] fBlock)
 	{
-		System.arraycopy(fBlock, 0, m_cFileBlock, 0, CMInfo.FILE_BLOCK_LEN);
+		if(fBlock == null)
+			m_cFileBlock = null;
+		else
+			System.arraycopy(fBlock, 0, m_cFileBlock, 0, CMInfo.FILE_BLOCK_LEN);
 	}
 	
 	public byte[] getFileBlock()
