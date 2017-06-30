@@ -172,5 +172,10 @@ public class CMChannelInfo<K> {
 		
 		return ret;
 	}
+	
+	public int getSize()
+	{
+		return m_chMap.size();
+	}
 
 }

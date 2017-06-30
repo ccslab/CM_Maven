@@ -256,6 +256,37 @@ public class CMFileTransferInfo {
 	{
 		return m_sendFileHashtable;
 	}
+	
+	//////////////////// methods for the investigation of current state of the sending file info
+	//////////////////// (used by the file transfer with separate channels and threads)
+
+	// find the CMSendFileInfo of which file is currently being sent to the receiver
+	public CMSendFileInfo findSendFileInfoOngoing(String strReceiver)
+	{
+		CMSendFileInfo sInfo = null;
+		CMList<CMSendFileInfo> sInfoList = m_sendFileHashtable.get(strReceiver);
+		boolean bFound = false;
+		
+		if(sInfoList == null) return null;
+		
+		Iterator<CMSendFileInfo> iter = sInfoList.getList().iterator();
+		while(iter.hasNext() && !bFound)
+		{
+			sInfo = iter.next();
+			if(sInfo.getSendTaskResult() != null)
+			{
+				bFound = true;
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMFileTransferInfo.findSendFileInfoOngoing(); ongoing send info found: "
+							+sInfo.toString());
+			}
+		}
+		
+		if(!bFound)
+			sInfo = null;
+		
+		return sInfo;
+	}
 
 	////////// add/remove/find receiving file info
 
@@ -442,8 +473,10 @@ public class CMFileTransferInfo {
 		return m_recvFileHashtable;
 	}
 	
-	////// find the receiving file info that is being used or is not yet started by the thread pool
+	//////////////////// methods for the investigation of current state of the receiving file info
+	//////////////////// (used by the file transfer with separate channels and threads)
 	
+	// find the receiving file info that is not yet started by the thread pool 
 	public CMRecvFileInfo findRecvFileInfoNotStarted(String strSender)
 	{
 		CMRecvFileInfo rfInfo = null;
@@ -473,7 +506,8 @@ public class CMFileTransferInfo {
 			return null;
 		}
 	}
-	
+
+	// check whether there is the receiving file info that is being used 
 	public boolean isRecvOngoing(String strSender)
 	{
 		CMRecvFileInfo rfInfo = null;
@@ -497,4 +531,31 @@ public class CMFileTransferInfo {
 		return bFound;
 	}
 	
+	// find the CMRecvFileInfo of which file is currently being received from the sender
+	public CMRecvFileInfo findRecvFileInfoOngoing(String strSender)
+	{
+		CMRecvFileInfo rInfo = null;
+		CMList<CMRecvFileInfo> rInfoList = m_recvFileHashtable.get(strSender);
+		boolean bFound = false;
+		
+		if(rInfoList == null) return null;
+		
+		Iterator<CMRecvFileInfo> iter = rInfoList.getList().iterator();
+		while(iter.hasNext() && !bFound)
+		{
+			rInfo = iter.next();
+			if(rInfo.getRecvTaskResult() != null)
+			{
+				bFound = true;
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMFileTransferInfo.findRecvFileInfoOngoing(); ongoing recv info found: "
+							+rInfo.toString());
+			}
+		}
+		
+		if(!bFound)
+			rInfo = null;
+		
+		return rInfo;
+	}	
 }

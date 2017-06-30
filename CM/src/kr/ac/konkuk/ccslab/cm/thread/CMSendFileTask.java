@@ -34,6 +34,7 @@ public class CMSendFileTask implements Runnable {
 		int nSendBytesSum = -1;
 		ByteBuffer buf = ByteBuffer.allocateDirect(CMInfo.FILE_BLOCK_LEN);
 		CMFileEvent fe = null;
+		boolean bInterrupted = false;
 
 		// open the file
 		try {
@@ -61,8 +62,21 @@ public class CMSendFileTask implements Runnable {
 
 		// main loop for receiving and writing file blocks
 		nSendBytes = 0;
-		while(lSentSize < lFileSize)
+		while( lSentSize < lFileSize && !bInterrupted)
 		{
+			// check for interrupt by other thread
+			if(Thread.currentThread().isInterrupted())
+			{
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMSendFileTask.run(); interrupted! file name("+m_sendFileInfo.getFileName()
+						+"), file size("+lFileSize+"), sent size("+lSentSize+").");
+				}
+
+				bInterrupted = true;
+				continue;
+			}
+			
 			// initialize the ByteBuffer
 			buf.clear();
 			
@@ -98,17 +112,21 @@ public class CMSendFileTask implements Runnable {
 			
 		} // outer while loop
 
-		// send END_FILE_TRANSFER_CHAN with the default TCP socket channel
-		fe = new CMFileEvent();
-		fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);
-		fe.setSenderName(m_sendFileInfo.getSenderName());
-		fe.setFileName(m_sendFileInfo.getFileName());
-		fe.setFileSize(m_sendFileInfo.getFileSize());
-		fe.setContentID(m_sendFileInfo.getContentID());
-		CMCommManager.sendMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
+		//if(!bInterrupted)
+		if(lSentSize == lFileSize)
+		{
+			// send END_FILE_TRANSFER_CHAN with the default TCP socket channel
+			fe = new CMFileEvent();
+			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);
+			fe.setSenderName(m_sendFileInfo.getSenderName());
+			fe.setFileName(m_sendFileInfo.getFileName());
+			fe.setFileSize(m_sendFileInfo.getFileSize());
+			fe.setContentID(m_sendFileInfo.getContentID());
+			CMCommManager.sendMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
+			fe = null;
+		}
 
 		closeRandomAccessFile(raf);
-		fe = null;
 		
 		return;
 	}

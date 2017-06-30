@@ -742,6 +742,13 @@ public class CMStub {
 		bReturn = CMFileTransferManager.cancelPushFile(strReceiver, m_cmInfo);
 		return bReturn;
 	}
+	
+	public boolean cancelRequestFile(String strSender)
+	{
+		boolean bReturn = false;
+		bReturn = CMFileTransferManager.cancelRequestFile(strSender, m_cmInfo);
+		return bReturn;
+	}
 
 	/////////////////////////////////////////////////////////////////////
 	// network service

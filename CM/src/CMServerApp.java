@@ -304,13 +304,31 @@ public class CMServerApp {
 	{
 		String strSender = null;
 		boolean bReturn = false;
-		System.out.println("====== cancel receiving a file: to be developed!");
-		/*
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.print("Input sender name(enter for all senders): ");
+		System.out.println("====== cancel receiving a file");
 		
-		strSender = br.readLine();
-		*/
+		System.out.print("Input sender name (enter for all senders): ");
+		try {
+			strSender = br.readLine();
+			if(strSender.isEmpty())
+				strSender = null;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		bReturn = m_serverStub.cancelRequestFile(strSender);
+		
+		if(bReturn)
+		{
+			if(strSender == null)
+				strSender = "all senders";
+			System.out.println("Successfully requested to cancel receiving a file to ["+strSender+"].");
+		}
+		else
+			System.err.println("Request failed to cancel receiving a file to ["+strSender+"]!");
+		
+		return;
 		
 	}
 	

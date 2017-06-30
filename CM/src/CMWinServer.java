@@ -424,9 +424,24 @@ public class CMWinServer extends JFrame {
 	{
 		String strSender = null;
 		boolean bReturn = false;
-		printMessage("====== cancel receiving a file: to be developed!\n");
+		printMessage("====== cancel receiving a file\n");
 		
-		// not yet
+		strSender = JOptionPane.showInputDialog("Input sender name (enter for all senders)");
+		if(strSender.isEmpty())
+			strSender = null;
+		
+		bReturn = m_serverStub.cancelRequestFile(strSender);
+		
+		if(bReturn)
+		{
+			if(strSender == null)
+				strSender = "all senders";
+			printMessage("Successfully requested to cancel receiving a file to ["+strSender+"].\n");
+		}
+		else
+			printMessage("Request failed to cancel receiving a file to ["+strSender+"]!\n");
+		
+		return;
 	}
 	
 	public void cancelSendFile()
