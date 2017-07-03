@@ -169,17 +169,206 @@ public class CMFileTransferManager {
 		
 		return bReturn;		
 	}
-	
+
+	// cancel the receiving file task with separate channels and threads
 	private static boolean cancelRequestFileWithSepChannel(String strSender, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		
-		System.err.println("CMFileTransferManager.cancelRequestFileWithSepChannel(); to be developed!");
-		// from here
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+
+		if(strSender != null)
+		{
+			bReturn = cancelRequestFileWithSepChannelForOneSender(strSender, cmInfo);
+		}
+		else // cancel file transfer to all senders
+		{
+			Set<String> keySet = fInfo.getRecvFileHashtable().keySet();
+			Iterator<String> iterKeys = keySet.iterator();
+			while(iterKeys.hasNext())
+			{
+				String iterSender = iterKeys.next();
+				bReturn = cancelRequestFileWithSepChannelForOneSender(iterSender, cmInfo);
+			}
+			// clear the sending file hash table
+			bReturn = fInfo.clearRecvFileHashtable();
+		}
 		
 		return bReturn;
 	}
-	
+
+	// cancel the receiving file task from one sender with a separate channel and thread
+	private static boolean cancelRequestFileWithSepChannelForOneSender(String strSender, CMInfo cmInfo)
+	{
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMList<CMRecvFileInfo> recvList = null;
+		CMRecvFileInfo rInfo = null;
+		boolean bReturn = false;
+		Future<CMRecvFileInfo> recvTask = null;
+		CMFileEvent fe = null;
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMChannelInfo<Integer> blockSCInfo = null;
+		SocketChannel defaultBlockSC = null;
+		
+		// find the CMRecvFile list of the strSender
+		recvList = fInfo.getRecvFileList(strSender);
+		if(recvList == null)
+		{
+			System.err.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+					+ "receiving file list not found for the sender("+strSender+")!");
+			return false;
+		}
+		
+		// find the current receiving file task
+		rInfo = fInfo.findRecvFileInfoOngoing(strSender);
+		if(rInfo == null)
+		{
+			System.err.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+					+ "ongoing receiving task not found for the sender("+strSender+")!");
+			bReturn = fInfo.removeRecvFileList(strSender);
+			return bReturn;
+		}
+		
+		// request for canceling the receiving task
+		recvTask = rInfo.getRecvTaskResult();
+		recvTask.cancel(true);
+		// wait for the thread cancellation
+		try {
+			recvTask.get(10L, TimeUnit.SECONDS);
+		} catch(CancellationException e) {
+			System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+					+ "the receiving task cancelled.: "
+					+ "sender("+strSender+"), file("+rInfo.getFileName()+"), file size("+rInfo.getFileSize()
+					+ "), recv size("+rInfo.getRecvSize()+")");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		/////////////////////// management of the closed default blocking socket channel
+		
+		// get the default blocking socket channel
+		if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			blockSCInfo = interInfo.getDefaultServerInfo().getBlockSocketChannelInfo();
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+						+ "# blocking socket channel: "	+ blockSCInfo.getSize());
+			}
+			// get the default blocking socket channel
+			defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0);	// default blocking channel
+				
+		}
+		else	// server
+		{
+			CMUser receiver = interInfo.getLoginUsers().findMember(strSender);
+			blockSCInfo = receiver.getBlockSocketChannelInfo();
+			// get the default blocking socket channel
+			defaultBlockSC = (SocketChannel) receiver.getBlockSocketChannelInfo().findChannel(0);
+
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+						+ "# blocking socket channel: "	+ blockSCInfo.getSize());
+			}
+
+		}
+
+		// close the default blocking socket channel if it is open
+		// the channel is actually closed due to the interrupt exception of the receiving thread
+		if(defaultBlockSC.isOpen())
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+						+ "the default channel is still open and should be closed for reconnection!");
+			}
+			
+			try {
+				defaultBlockSC.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			System.err.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+					+ "the default channel is already closed!");
+		}
+		
+		// remove the default blocking socket channel
+		blockSCInfo.removeChannel(0);
+
+		// send the cancel event to the sender
+		fe = new CMFileEvent();
+		fe.setID(CMFileEvent.CANCEL_FILE_RECV_CHAN);
+		fe.setSenderName(strSender);
+		fe.setReceiverName(interInfo.getMyself().getName());
+		bReturn = CMEventManager.unicastEvent(fe, strSender, cmInfo);
+		if(!bReturn)
+		{
+			return false;
+		}
+		
+		// remove the receiving file list of the sender
+		bReturn = fInfo.removeRecvFileList(strSender);
+
+		// if the system type is client, it recreates the default blocking socket channel to the default server
+		if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			CMServer serverInfo = interInfo.getDefaultServerInfo();
+			try {
+				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+			
+			if(defaultBlockSC == null)
+			{
+				System.err.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); recreation of "
+						+ "the blocking socket channel failed!: server("+serverInfo.getServerAddress()+"), port("
+						+ serverInfo.getServerPort() +")");
+				return false;
+			}
+			bReturn = blockSCInfo.addChannel(0, defaultBlockSC);
+
+			if(bReturn)
+			{
+				CMSessionEvent se = new CMSessionEvent();
+				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
+				se.setChannelName(interInfo.getMyself().getName());
+				se.setChannelNum(0);
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
+				se = null;
+
+				if(bReturn)
+				{
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+								+ "successfully requested to add the blocking socket channel with the key(0) "
+								+ "to the server("+serverInfo.getServerName()+")");
+					}
+					
+				}
+			}
+		}
+		
+		//////////////////////////////////
+
+		return bReturn;		
+	}
 	
 	public static boolean pushFile(String strFilePath, String strReceiver, CMInfo cmInfo)
 	{
@@ -537,7 +726,7 @@ public class CMFileTransferManager {
 		sendList = fInfo.getSendFileList(strReceiver);
 		if(sendList == null)
 		{
-			System.err.println("CMFileTransferManager.cancelPushFileWithSepChannel(); Sending file list "
+			System.err.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); Sending file list "
 					+ "not found for the receiver("+strReceiver+")!");
 			return false;
 		}
@@ -546,7 +735,7 @@ public class CMFileTransferManager {
 		sInfo = fInfo.findSendFileInfoOngoing(strReceiver);
 		if(sInfo == null)
 		{
-			System.err.println("CMFileTransferManager.cancelPushFileWithSepChannel(); ongoing sending task "
+			System.err.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); ongoing sending task "
 					+ "not found for the receiver("+strReceiver+")!");
 			bReturn = fInfo.removeSendFileList(strReceiver);
 			return bReturn;
@@ -559,7 +748,8 @@ public class CMFileTransferManager {
 		try {
 			sendTask.get(10L, TimeUnit.SECONDS);
 		} catch(CancellationException e) {
-			System.out.println("CMFileTransferManager.cancelPushFileWithSepChannel(); the sending task cancelled.: "
+			System.out.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); "
+					+ "the sending task cancelled.: "
 					+ "receiver("+strReceiver+"), file("+sInfo.getFileName()+"), file size("+sInfo.getFileSize()
 					+ "), sent size("+sInfo.getSentSize()+")");
 		} catch (InterruptedException e) {
@@ -581,8 +771,8 @@ public class CMFileTransferManager {
 			blockSCInfo = interInfo.getDefaultServerInfo().getBlockSocketChannelInfo();
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMFileTransferManager.cancelPushFileWithSepCahnnel(); # blocking socket channel: "
-						+ blockSCInfo.getSize());
+				System.out.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); "
+						+ "# blocking socket channel: "	+ blockSCInfo.getSize());
 			}
 			// get the default blocking socket channel
 			defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0);	// default blocking channel
@@ -597,8 +787,8 @@ public class CMFileTransferManager {
 
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMFileTransferManager.cancelPushFileWithSepCahnnel(); # blocking socket channel: "
-						+ blockSCInfo.getSize());
+				System.out.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); "
+						+ "# blocking socket channel: "	+ blockSCInfo.getSize());
 			}
 
 		}
@@ -609,8 +799,8 @@ public class CMFileTransferManager {
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMFileTransferManager.cancelPushFileWithSepChannel(); the default channel is "
-						+ "still open and should be closed for reconnection!");
+				System.out.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); "
+						+ "the default channel is still open and should be closed for reconnection!");
 			}
 			
 			try {
@@ -622,8 +812,8 @@ public class CMFileTransferManager {
 		}
 		else
 		{
-			System.err.println("CMFileTransferManager.cancelPushFileWithSepChannel(); the default channel is "
-					+ "already closed!");
+			System.err.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); "
+					+ "the default channel is already closed!");
 		}
 		
 		// remove the default blocking socket channel
@@ -658,7 +848,7 @@ public class CMFileTransferManager {
 			
 			if(defaultBlockSC == null)
 			{
-				System.err.println("CMFileTransferManager.cancelPushFileWithSepChannel(), recreation of "
+				System.err.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); recreation of "
 						+ "the blocking socket channel failed!: server("+serverInfo.getServerAddress()+"), port("
 						+ serverInfo.getServerPort() +")");
 				return false;
@@ -678,9 +868,9 @@ public class CMFileTransferManager {
 				{
 					if(CMInfo._CM_DEBUG)
 					{
-						System.out.println("CMFileTransferManager.cancelPushFileWithSepChannel(),successfully requested "
-								+ "to add the blocking socket channel with the key(0) to the server("
-								+serverInfo.getServerName()+")");
+						System.out.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); "
+								+ "successfully requested to add the blocking socket channel with the key(0) "
+								+ "to the server("+serverInfo.getServerName()+")");
 					}
 					
 				}
@@ -1901,7 +2091,7 @@ public class CMFileTransferManager {
 		boolean bException = false;
 		int nReturnCode = -1;
 		
-		// find the CMRecvFile list of the strReceiver
+		// find the CMRecvFile list of the strSender
 		recvList = fInfo.getRecvFileList(strSender);
 		if(recvList == null)
 		{
@@ -1910,7 +2100,7 @@ public class CMFileTransferManager {
 			return;
 		}
 		
-		// find the current sending file task
+		// find the current receiving file task
 		rInfo = fInfo.findRecvFileInfoOngoing(strSender);
 		if(rInfo == null)
 		{
@@ -2076,14 +2266,192 @@ public class CMFileTransferManager {
 	
 	private static void processCANCEL_FILE_RECV_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
-		// not yet
-		System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); to be developed!");
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMList<CMSendFileInfo> sendList = null;
+		CMSendFileInfo sInfo = null;
+		Future<CMSendFileInfo> sendTask = null;
+		CMFileEvent feAck = null;
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMChannelInfo<Integer> blockSCInfo = null;
+		SocketChannel defaultBlockSC = null;
+		boolean bReturn = false;
+		
+		String strReceiver = fe.getReceiverName();
+		boolean bException = false;
+		int nReturnCode = -1;
+		
+		// find the CMSendFile list of the strReceiver
+		sendList = fInfo.getSendFileList(strReceiver);
+		if(sendList == null)
+		{
+			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); sending file list "
+					+ "not found for the receiver("+strReceiver+")!");
+			return;
+		}
+		
+		// find the current sending file task
+		sInfo = fInfo.findSendFileInfoOngoing(strReceiver);
+		if(sInfo == null)
+		{
+			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); ongoing sending task "
+					+ "not found for the receiver("+strReceiver+")!");
+			fInfo.removeSendFileList(strReceiver);
+			return;
+		}
+		
+		// request for canceling the sending task
+		sendTask = sInfo.getSendTaskResult();
+		sendTask.cancel(true);
+		// wait for the thread cancellation
+		try {
+			sendTask.get(10L, TimeUnit.SECONDS);
+		} catch(CancellationException e) {
+			System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); the sending task cancelled.: "
+					+ "receiver("+strReceiver+"), file("+sInfo.getFileName()+"), file size("+sInfo.getFileSize()
+					+ "), sent size("+sInfo.getSentSize()+")");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			bException = true;
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			bException = true;
+		} catch (TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			bException = true;
+		} finally {
+			if(bException)
+				nReturnCode = 0;
+			else
+				nReturnCode = 1;
+		}
+
+		// remove the sending file list of the receiver
+		fInfo.removeSendFileList(strReceiver);
+
+		// send the cancel ack event to the receiver
+		feAck = new CMFileEvent();
+		feAck.setID(CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK);
+		feAck.setSenderName(interInfo.getMyself().getName());
+		feAck.setReceiverName(strReceiver);
+		feAck.setReturnCode(nReturnCode);
+		CMEventManager.unicastEvent(feAck, strReceiver, cmInfo);
+
+		//////////////////// the management of the closed default blocking socket channel
+		// get the default blocking socket channel
+		if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			blockSCInfo = interInfo.getDefaultServerInfo().getBlockSocketChannelInfo();
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); # blocking socket channel: "
+						+ blockSCInfo.getSize());
+			}
+			// get the default blocking socket channel
+			defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0);	// default blocking channel
+				
+		}
+		else	// server
+		{
+			CMUser sender = interInfo.getLoginUsers().findMember(strReceiver);
+			blockSCInfo = sender.getBlockSocketChannelInfo();
+			// get the default blocking socket channel
+			defaultBlockSC = (SocketChannel) sender.getBlockSocketChannelInfo().findChannel(0);
+
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); # blocking socket channel: "
+						+ blockSCInfo.getSize());
+			}
+
+		}
+
+		// close the default blocking socket channel if it is open
+		// the channel is actually closed due to the interrupt exception of the receiving thread
+		if(defaultBlockSC.isOpen())
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); the default channel is "
+						+ "still open and should be closed for reconnection!");
+			}
+			
+			try {
+				defaultBlockSC.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); the default channel is "
+					+ "already closed!");
+		}
+		
+		// remove the default blocking socket channel
+		blockSCInfo.removeChannel(0);
+
+		// if the system type is client, it recreates the default blocking socket channel to the default server
+		if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			CMServer serverInfo = interInfo.getDefaultServerInfo();
+			try {
+				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return;
+			}
+			
+			if(defaultBlockSC == null)
+			{
+				System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(), recreation of "
+						+ "the blocking socket channel failed!: server("+serverInfo.getServerAddress()+"), port("
+						+ serverInfo.getServerPort() +")");
+				return;
+			}
+			bReturn = blockSCInfo.addChannel(0, defaultBlockSC);
+
+			if(bReturn)
+			{
+				CMSessionEvent se = new CMSessionEvent();
+				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
+				se.setChannelName(interInfo.getMyself().getName());
+				se.setChannelNum(0);
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
+				se = null;
+
+				if(bReturn)
+				{
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(),successfully requested "
+								+ "to add the blocking socket channel with the key(0) to the server("
+								+serverInfo.getServerName()+")");
+					}
+					
+				}
+			}
+		}
+		
+		/////////////////////
+		
+		return;	
 	}
 	
 	private static void processCANCEL_FILE_RECV_CHAN_ACK(CMFileEvent fe, CMInfo cmInfo)
 	{
-		// not yet
-		System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN_ACK(); to be developed!");
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN_ACK(); sender("+fe.getSenderName()
+				+"), receiver("+fe.getReceiverName()+"), return code("+fe.getReturnCode()+").");
+		}
+		return;
 	}
 	
 }
