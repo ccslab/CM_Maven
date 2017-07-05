@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
@@ -441,15 +442,27 @@ public class CMSNSManager {
 	// check whether the original files are currently being prefetched to the client or not
 	private static boolean isServerPrefetchOngoing(String strUserName, CMInfo cmInfo)
 	{
-		// not clear
+		boolean bFound = false;
+		// find the prefetch list of the client
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMSNSPrefetchHashMap  prefetchMap = snsInfo.getPrefetchMap();
 		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
 		if(prefetchList == null) return false;
-		if(prefetchList.getFilePathList().isEmpty())
-			return false;
-		else
-			return true;
+		
+		// find the ongoing file sending info
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName);
+		if(sendFileInfo != null)
+		{
+			// check if the ongoing file is one of the prefetch list member
+			String strPrefetchFilePath = prefetchList.findFilePath(sendFileInfo.getFileName());
+			if(strPrefetchFilePath != null)
+				bFound = true;
+			else
+				bFound = false;
+		}
+		
+		return bFound;
 	}
 	
 	// load access history of this user from DB from a specified date to his/her last login date
@@ -687,14 +700,21 @@ public class CMSNSManager {
 		// If the sns attachment download scheme is the prefetch mode, the incomplete prefetch should be canceled
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
+			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			
 			// check for the ongoing prefetch to the user, and cancel the prefetched file transfer
 			if(isServerPrefetchOngoing(strUser, cmInfo))
 			{
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
 							+ "to the user("+strUser+")");
-				// from here
-			}					
+				CMFileTransferManager.cancelPushFile(strUser, cmInfo);	// not clear
+			}
+			
+			// clear the prefetch list of the user
+			CMSNSPrefetchList prefetchList = snsInfo.getPrefetchMap().findPrefetchList(strUser);
+			if(prefetchList != null)
+				snsInfo.getPrefetchMap().removePrefetchList(strUser);
 		}
 	
 		nReturnCode = 1;
