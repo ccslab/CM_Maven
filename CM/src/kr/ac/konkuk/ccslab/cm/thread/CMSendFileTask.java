@@ -69,8 +69,8 @@ public class CMSendFileTask implements Runnable {
 			{
 				if(CMInfo._CM_DEBUG)
 				{
-					System.out.println("CMSendFileTask.run(); interrupted! file name("+m_sendFileInfo.getFileName()
-						+"), file size("+lFileSize+"), sent size("+lSentSize+").");
+					System.out.println("CMSendFileTask.run(); interrupted at the outer loop! file name("
+							+m_sendFileInfo.getFileName()+"), file size("+lFileSize+"), sent size("+lSentSize+").");
 				}
 
 				bInterrupted = true;
@@ -93,8 +93,19 @@ public class CMSendFileTask implements Runnable {
 			// send a file block
 			buf.flip();
 			nSendBytesSum = 0;
-			while(nSendBytesSum < nReadBytes)
+			while(nSendBytesSum < nReadBytes && !bInterrupted)
 			{
+				if(Thread.currentThread().isInterrupted())
+				{
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMSendFileTask.run(); interrupted at the inner loop! file name("
+								+m_sendFileInfo.getFileName()+"), file size("+lFileSize+"), sent size("+lSentSize+").");
+					}
+					bInterrupted = true;
+					continue;
+				}
+				
 				try {
 					nSendBytes = sendSC.write(buf);
 					
@@ -113,8 +124,15 @@ public class CMSendFileTask implements Runnable {
 		} // outer while loop
 
 		//if(!bInterrupted)
-		if(lSentSize == lFileSize)
+		if(lSentSize >= lFileSize)
 		{
+			if(lSentSize > lFileSize)
+			{
+				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getReceiverName()+") already has "
+						+ "a bigger size file("+m_sendFileInfo.getFileName()+"); sender size("+lFileSize
+						+ "), receiver size("+lSentSize+")");
+			}
+			
 			// send END_FILE_TRANSFER_CHAN with the default TCP socket channel
 			fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);

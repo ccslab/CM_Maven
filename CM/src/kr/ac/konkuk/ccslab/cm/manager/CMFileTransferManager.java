@@ -1336,7 +1336,7 @@ public class CMFileTransferManager {
 		RandomAccessFile readFile = null;
 		try {
 			readFile = new RandomAccessFile(strFullFileName, "rw");
-			if(lRecvSize > 0)	// If the receiver uses the append scheme,
+			if(lRecvSize > 0 && lRecvSize < lFileSize)	// If the receiver uses the append scheme,
 			{
 				try {
 					readFile.seek(lRecvSize);
@@ -1390,6 +1390,14 @@ public class CMFileTransferManager {
 			CMEventManager.unicastEvent(fe, strReceiver, cmInfo);
 			
 			lRemainBytes -= nReadBytes;
+		}
+		
+		if(lRemainBytes < 0)
+		{
+			System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER(); "
+					+ "the receiver("+strReceiver+") already has "
+					+ "a bigger size file("+strFileName+"); sender size("+lFileSize
+					+ "), receiver size("+lRecvSize+").");
 		}
 		
 		// close fis
@@ -1888,7 +1896,7 @@ public class CMFileTransferManager {
 		feAck.setContentID(fe.getContentID());
 
 		// check out whether the file is completely received
-		if(recvInfo.getFileSize() == recvInfo.getRecvSize())
+		if(recvInfo.getFileSize() <= recvInfo.getRecvSize())
 		{
 			feAck.setReturnCode(1);	// success
 			bResult = true;

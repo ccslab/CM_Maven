@@ -438,6 +438,20 @@ public class CMSNSManager {
 		return;
 	}
 	
+	// check whether the original files are currently being prefetched to the client or not
+	private static boolean isServerPrefetchOngoing(String strUserName, CMInfo cmInfo)
+	{
+		// not clear
+		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSPrefetchHashMap  prefetchMap = snsInfo.getPrefetchMap();
+		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
+		if(prefetchList == null) return false;
+		if(prefetchList.getFilePathList().isEmpty())
+			return false;
+		else
+			return true;
+	}
+	
 	// load access history of this user from DB from a specified date to his/her last login date
 	public static void loadAccessHistory(CMUser user, CMInfo cmInfo)
 	{
@@ -661,11 +675,26 @@ public class CMSNSManager {
 	{
 		CMSNSEvent seAck = null;
 		int nReturnCode = -1;
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		String strUser = se.getUserName();
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(), user("+se.getUserName()
+			System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(), user("+strUser
 					+"), writer("+se.getWriterName()+"), offset("+se.getContentOffset()+").");
+		}
+		
+		// If the sns attachment download scheme is the prefetch mode, the incomplete prefetch should be canceled
+		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
+		{
+			// check for the ongoing prefetch to the user, and cancel the prefetched file transfer
+			if(isServerPrefetchOngoing(strUser, cmInfo))
+			{
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
+							+ "to the user("+strUser+")");
+				// from here
+			}					
 		}
 	
 		nReturnCode = 1;
@@ -674,7 +703,7 @@ public class CMSNSManager {
 		// create a response event (requester name, content offset, return code, server time value)
 		seAck = new CMSNSEvent();
 		seAck.setID(CMSNSEvent.CONTENT_DOWNLOAD_RESPONSE);
-		seAck.setUserName( se.getUserName() );
+		seAck.setUserName( strUser );
 		seAck.setWriterName(se.getWriterName());
 		seAck.setContentOffset( se.getContentOffset() );
 		seAck.setReturnCode( nReturnCode );	// 1: ok, 0: error
@@ -686,7 +715,7 @@ public class CMSNSManager {
 		}
 	
 		// send the response event
-		CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(seAck, strUser, cmInfo);
 		
 		seAck = null;
 		return;
@@ -1941,7 +1970,7 @@ public class CMSNSManager {
 			filePathList = sendAttach.getFilePathList();
 			for(i = 0; i < filePathList.size(); i++)
 			{				
-				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), CMInfo.FILE_APPEND, 
+				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), CMInfo.FILE_DEFAULT, 
 						se.getContentID(), cmInfo);
 			}
 		}
@@ -1983,7 +2012,7 @@ public class CMSNSManager {
 				}
 				else
 				{
-					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), CMInfo.FILE_APPEND, 
+					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), CMInfo.FILE_DEFAULT, 
 							se.getContentID(), cmInfo);
 				}
 				file = null;

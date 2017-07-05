@@ -21,8 +21,10 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 
 import java.sql.*;
 
@@ -766,6 +768,9 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		
 		if(!confInfo.getSystemType().equals("SERVER"))
 			return;
 		
@@ -778,6 +783,18 @@ public class CMInteractionManager {
 					+") not found.");
 			return;
 		}
+		
+		// stop all the file-transfer threads
+		//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();	// wrong
+		//if(CMInfo._CM_DEBUG)
+		//	System.out.println("CMInteractionManager.processLOGOUT(); # shutdown threads: "+ftList.size());
+		// remove all the ongoing file-transfer info with the user
+		fInfo.removeRecvFileList(user.getName());
+		fInfo.removeSendFileList(user.getName());
+		// remove all the ongoing sns related file-transfer info about the user
+		snsInfo.getPrefetchMap().removePrefetchList(user.getName());
+		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName());
+		snsInfo.getSendSNSAttachHashtable().removeSNSAttachList(user.getName());
 		
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{

@@ -123,6 +123,12 @@ public class CMSNSAttachList extends CMObject {
 		return bResult;
 	}
 	
+	public void removeAllSNSAttach()
+	{
+		m_attachList.getList().clear();
+		return;
+	}
+	
 	public Vector<CMSNSAttach> getSNSAttachList()
 	{
 		/*

@@ -66,8 +66,8 @@ public class CMRecvFileTask implements Runnable {
 			{
 				if(CMInfo._CM_DEBUG)
 				{
-					System.out.println("CMRecvFileTask.run(); interrupted! file name("+m_recvFileInfo.getFileName()
-						+"), file size("+lFileSize+"), recv size("+lRecvSize+").");
+					System.out.println("CMRecvFileTask.run(); interrupted at the outer loop! file name("
+							+m_recvFileInfo.getFileName()+"), file size("+lFileSize+"), recv size("+lRecvSize+").");
 				}
 				bInterrupted = true;
 				continue;
@@ -89,8 +89,19 @@ public class CMRecvFileTask implements Runnable {
 			// write the received block to the file
 			buf.flip();
 			nWrittenBytesSum = 0;
-			while(nWrittenBytesSum < nRecvBytes)
+			while(nWrittenBytesSum < nRecvBytes && !bInterrupted)
 			{
+				if(Thread.currentThread().isInterrupted())
+				{
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMRecvFileTask.run(); interrupted at the inner loop! file name("
+								+m_recvFileInfo.getFileName()+"), file size("+lFileSize+"), recv size("+lRecvSize+").");						
+					}
+					bInterrupted = true;
+					continue;
+				}
+				
 				try {
 					nWrittenBytes = fc.write(buf);
 					

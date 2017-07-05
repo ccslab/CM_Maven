@@ -13,8 +13,10 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -96,6 +98,8 @@ public class CMEventReceiver extends Thread {
 		CMChannelInfo<Integer> chInfo = null;
 		Iterator<CMServer> iterAddServer = null;
 		boolean bFound = false;
+		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
+		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -125,11 +129,26 @@ public class CMEventReceiver extends Thread {
 			}
 			else if(chKey.intValue() == 0)	// default channel
 			{
+				// remove all non-blocking channels
 				chInfo.removeAllChannels();
+				// remove all blocking channels
+				interInfo.getDefaultServerInfo().getBlockSocketChannelInfo().removeAllChannels();
+				
 				// For the clarity, the client must be back to initial state (not yet)
+				// stop all the file-transfer threads
+				//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
+				// remove all the ongoing file-transfer info about the default server
+				fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
+				fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+				// remove all the ongoing sns related file-transfer info at the client
+				snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
+				// remove all session info
 				interInfo.getSessionList().removeAllElements();
+				// initialize the client state
 				interInfo.getMyself().setState(CMInfo.CM_INIT);
-				System.err.println("The default server is disconnected.");
+				
+				System.err.println("CMEventReceiver.processUndexpectedDisconnection(); The default server is disconnected.");
+				
 			}
 			else if(chKey.intValue() > 0) // additional channel
 			{
