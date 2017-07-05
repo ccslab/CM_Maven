@@ -313,6 +313,11 @@ public class CMWinClientEventHandler implements CMEventHandler{
 				printMessage("User profile search failed: user["+se.getUserName()+"]!\n");
 			}
 			break;
+		case CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION:
+			m_client.printStyledMessage("Unexpected disconnection from the default server!\n", "bold");
+			m_client.setButtonsAccordingToClientState();
+			m_client.setTitle("CM Client");
+			break;
 		default:
 			return;
 		}

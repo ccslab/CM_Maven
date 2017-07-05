@@ -273,6 +273,9 @@ public class CMClientEventHandler implements CMEventHandler {
 				System.out.println("User profile search failed: user["+se.getUserName()+"]!");
 			}
 			break;
+		case CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION:
+			System.err.println("Unexpected disconnection from the default server!");
+			break;
 		default:
 			return;
 		}

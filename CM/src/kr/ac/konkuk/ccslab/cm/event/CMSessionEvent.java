@@ -40,36 +40,39 @@ public class CMSessionEvent extends CMEvent {
 	public static final int DEREGISTER_USER_ACK = 19;		// 사용자 탈퇴 요청 응답 (s->c)
 	public static final int FIND_REGISTERED_USER = 20;		// 사용자 검색 (c->s)
 	public static final int FIND_REGISTERED_USER_ACK = 21;	// 사용자 검색 응답 (s->c)
-
-	String m_strUserName;						// login or out user name
-	String m_strPasswd;							// password of user
-	String m_strHostAddr;						// host address of the login user
-	int m_nUDPPort;
-
-	int m_bValidUser;							// for LOGINACK
-	String m_strSessionName;					// 세션 이름
-
-	String m_strCurrentGroupName;				// for LOGINACK (group name)
-	String m_strCurrentAddress;					// for LOGINACK (group multicast address)
-	int m_nCurrentPort;							// for LOGINACK (group port)
 	
-	int m_nSessionNum;
-	Vector< CMSessionInfo > m_sessionList;
-	int m_nGroupNum;
-	Vector< CMGroupInfo > m_groupList;
+	// local CM event for notification to the application
+	public static final int UNEXPECTED_SERVER_DISCONNECTION = 99;	// notify app of the unexpected disconnection (c->app)
 
-	String m_strCommArch;						// communication architecture (CM_PS/CM_CS)
-	int m_bFileTransferScheme;
-	int m_bLoginScheme;
-	int m_bSessionScheme;
-	int m_nAttachDownloadScheme;
-	int m_nReturnCode;
-	String m_strTalk;
+	private String m_strUserName;						// login or out user name
+	private String m_strPasswd;							// password of user
+	private String m_strHostAddr;						// host address of the login user
+	private int m_nUDPPort;
+
+	private int m_bValidUser;							// for LOGINACK
+	private String m_strSessionName;					// 세션 이름
+
+	private String m_strCurrentGroupName;				// for LOGINACK (group name)
+	private String m_strCurrentAddress;					// for LOGINACK (group multicast address)
+	private int m_nCurrentPort;							// for LOGINACK (group port)
 	
-	String m_strChannelName;
-	int m_nChannelNum;
+	private int m_nSessionNum;
+	private Vector< CMSessionInfo > m_sessionList;
+	private int m_nGroupNum;
+	private Vector< CMGroupInfo > m_groupList;
 
-	String m_strCreationTime;			// for user registration time
+	private String m_strCommArch;						// communication architecture (CM_PS/CM_CS)
+	private int m_bFileTransferScheme;
+	private int m_bLoginScheme;
+	private int m_bSessionScheme;
+	private int m_nAttachDownloadScheme;
+	private int m_nReturnCode;
+	private String m_strTalk;
+	
+	private String m_strChannelName;
+	private int m_nChannelNum;
+
+	private String m_strCreationTime;			// for user registration time
 
 	public CMSessionEvent()
 	{

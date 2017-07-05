@@ -87,7 +87,7 @@ public class CMEventReceiver extends Thread {
 			System.out.println("CMEventReceiver is terminated.");
 	}
 	
-	// What about disconnection from a blocking channel?? (not clear)
+	// handle unexpected disconnection with the server or the client
 	private void processUnexpectedDisconnection(SelectableChannel ch)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -149,6 +149,11 @@ public class CMEventReceiver extends Thread {
 				
 				System.err.println("CMEventReceiver.processUndexpectedDisconnection(); The default server is disconnected.");
 				
+				// notify to the application
+				CMSessionEvent se = new CMSessionEvent();
+				se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
+				m_cmInfo.getEventHandler().processEvent(se);
+				se = null;
 			}
 			else if(chKey.intValue() > 0) // additional channel
 			{
