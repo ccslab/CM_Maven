@@ -157,13 +157,62 @@ public class CMClientStub extends CMStub {
 	 * and the requesting client is in the CM_LOGIN state. Otherwise, the login process fails.
 	 * The LOGIN_ACK event also includes other CM information that can be returned by 
 	 * {@link CMSessionEvent#getCommArch()}, {@link CMSessionEvent#isLoginScheme()}, and 
-	 * {@link CMSessionEvent#isSessionScheme()}.
+	 * {@link CMSessionEvent#isSessionScheme()}. The detailed information of the LOGIN_ACK event is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.LOGIN_ACK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User validity</td><td>int</td><td>1:valid user, 0:invalid user</td><td>isValidUser()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Communication architecture</td><td>String</td>
+	 * <td>
+	 * Specified communication architecture
+	 * <br>CM_CS: client-server model
+	 * <br>CM_PS: client-server with multicast model
+	 * </td>
+	 * <td>getCommArch()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Login scheme</td><td>int</td><td>1: user authentication used, 0: no user authentication</td><td>isLoginScheme()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Session scheme</td><td>int</td><td>1: multiple sessions used, 0: single session used</td><td>isSessionScheme()</td>
+	 * </tr>
+	 * </table>
+	 * 
 	 * <p> When the server CM accepts the login request from a client, the server CM also notifies other 
 	 * participating clients of the information of the login user with the SESSION_ADD_USER event. 
 	 * A client application can catch this event in the event handler routine if it wants to use such 
 	 * information. The login user information is the user name and the host address that can be retrieved 
-	 * by {@link CMSessionEvent#getUserName()} and {@link CMSessionEvent#getHostAddress()} methods, 
-	 * respectively.
+	 * by {@link CMSessionEvent#getUserName()} and {@link CMSessionEvent#getHostAddress()} methods, respectively.
+	 * The detailed information of the SESSION_ADD_USER event is shown below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.SESSION_ADD_USER</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Name of the login user</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Host address</td><td>String</td><td>Host address of the login user</td><td>getHostAddress()</td>
+	 * </tr>
+	 * </table>
 	 * 
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
@@ -228,7 +277,23 @@ public class CMClientStub extends CMStub {
 	 * of the {@link CMSessionEvent}. 
 	 * A client application can catch this event in the event handler routine if it wants to use 
 	 * such information. The logout user information is just the user name, which can be returned by 
-	 * {@link CMSessionEvent#getUserName()} method.
+	 * {@link CMSessionEvent#getUserName()} method. The detailed information of the SESSION_REMOVE_USER event 
+	 * is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.SESSION_REMOVE_USER</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>user name</td><td>String</td><td>Name of the logout user</td><td>getUserName()</td>
+	 * </tr>
+	 * </table>
 	 * 
 	 * @see {@link CMClientStub#loginCM()}, {@link CMClientStub#dereisterUser()}
 	 */
@@ -283,6 +348,26 @@ public class CMClientStub extends CMStub {
 	 * <br> Each element of the CMSessionInfo object includes information of an available session such as 
 	 * the session name, the session address and port number to which a client can join, and the current 
 	 * number of session members who already joined the session.
+	 * <br> The detailed information of the RESPONSE_SESSION_INFO event is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.RESPONSE_SESSION_INFO</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Number of sessions</td><td>int</td><td>Number of sessions</td><td>getSessionNum()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Vector of sessions</td><td>Vector<CMSessionInfo></td><td>List of session information</td>
+	 * <td>getSessionInfoList()</td>
+	 * </tr>
+	 * </table>
 	 * 
 	 * @see {@link CMClientStub#joinSession(String)}, {@link CMClientStub#joinSession(String, String)}
 	 */
@@ -329,7 +414,25 @@ public class CMClientStub extends CMStub {
 	 * in the event handler routine if it wants to use such information. The CHANGE_SESSION event includes 
 	 * fields such as the user name and the session name, which can be returned by calling 
 	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
-	 * respectively.
+	 * respectively. The detailed informatino of the CHANGE_SESSION event is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.CHANGE_SESSION</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Name of a user who joins a session</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Session name</td><td>String</td><td>Name of a session which the user joins</td><td>getSessionName()</td>
+	 * </tr>
+	 * </table>
 	 * 
 	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
 	 * other participating clients of the information of the new group user with the NEW_USER event that 
@@ -341,7 +444,35 @@ public class CMClientStub extends CMStub {
 	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
 	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
 	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
-	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively. The detailed information of the NEW_USER event 
+	 * is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_DATA_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMDataEvent.NEW_USER</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>current session</td><td>String</td><td>current session name of the user</td><td>getHandlerSession()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>current group</td><td>String</td><td>current group name of the user</td><td>getHandlerGroup()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>user name</td><td>String</td><td>name of the new group user</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>host address</td><td>String</td><td>host address of the new group user</td><td>getHostAddress()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>UDP port number</td><td>int</td><td>UDP port number of the new group user</td><td>getUDPPort()</td>
+	 * </tr>
+	 * </table>
 	 * 
 	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
 	 * the new user of the information of other existing group users with the series of INHABITANT events that 
@@ -353,7 +484,36 @@ public class CMClientStub extends CMStub {
 	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
 	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
 	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
-	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively. The detailed information of the INHABITANT event is 
+	 * described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_DATA_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMDataEvent.INHABITANT</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>current session</td><td>String</td><td>current session name of the user</td><td>getHandlerSession()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>current group</td><td>String</td><td>current group name of the user</td><td>getHandlerGroup()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>user name</td><td>String</td><td>name of the new group user</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>host address</td><td>String</td><td>host address of the new group user</td><td>getHostAddress()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>UDP port number</td><td>int</td><td>UDP port number of the new group user</td><td>getUDPPort()</td>
+	 * </tr>
+	 * </table>
+	 * 
 	 * 
 	 * @param sname - the session name that a client requests to join
 	 * @see {@link CMClientStub#joinSession(String, String)}
@@ -403,7 +563,29 @@ public class CMClientStub extends CMStub {
 	 * <p> Before leaving the current session, the server first remove the client from its current group. 
 	 * The server notifies group members of the user leave by sending the REMOVE_USER event of 
 	 * the {@link CMDataEvent}. The REMOVE_USER event includes the user name field, which can be returned 
-	 * by the {@link CMDataEvent#getUserName()} method.
+	 * by the {@link CMDataEvent#getUserName()} method. The detailed information of the REMOvE_USER event 
+	 * is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event field</td><td>CMInfo.CM_DATA_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMDataEvent.REMOVE_USER</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>current session</td><td>String</td><td>current session name of the user</td><td>getHandlerSession()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>current group</td><td>String</td><td>current group name of the user</td><td>getHandlerGroup()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>user name</td><td>String</td><td>name of the leaving group user</td><td>getUserName()</td>
+	 * </tr>
+	 * </table>
 	 * 
 	 * <p> When the server CM completes the session leaving request from a client, the server CM also 
 	 * notifies other participating clients of the information of the leaving user with the CHANGE_SESSION 
@@ -498,12 +680,59 @@ public class CMClientStub extends CMStub {
 	 * server. The SESSION_TALK event includes fields such as the sender name, the text message, and 
 	 * the session name of the sender, which can be returned by calling {@link CMSessionEvent#getUserName()}, 
 	 * {@link CMSessionEvent#getTalk()}, and {@link CMSessionEvent#getHandlerSession()} methods, respectively. 
+	 * The detailed information of the SESSION_TALK event is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_Event</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.SESSION_TALK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>user name</td><td>String</td><td>name of the sending user</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>text message</td><td>String</td><td>a chat message</td><td>getTalk()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>session name</td><td>String</td><td>current session of the sending user</td><td>getHandlerSession()</td>
+	 * </tr>
+	 * </table>
+	 * 
 	 * <br>The other event is the USER_TALK event of the {@link CMInterestEvent} class. A client can 
 	 * receive this event only if it enters a group. The USER_TALK event includes fields such as the sender 
 	 * name, the text message, the session name of the sender, and the group name of the sender, which can 
 	 * be returned by calling {@link CMInterestEvent#getUserName()}, {@link CMInterestEvent#getTalk()}, 
 	 * {@link CMInterestEvent#getHandlerSession()}, and {@link CMInterestEvent#getHandlerGroup()} methods, 
-	 * respectively.
+	 * respectively. The detailed information of the USER_TAlK event is descrbied below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_INTEREST_Event</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMInterestEvent.USER_TALK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>user name</td><td>String</td><td>name of the sending user</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>text message</td><td>String</td><td>a chat message</td><td>getTalk()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>session name</td><td>String</td><td>current session of the sending user</td><td>getHandlerSession()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>group name</td><td>String</td><td>current group of the sending user</td><td>getHandlerGroup()</td>
+	 * </tr>
+	 * </table> 
 	 * 
 	 * @param strTarget - the receiver name.
 	 * <br>This parameter must start with ¡®/¡¯ character and it specifies the range of recipients of the chat 
@@ -624,22 +853,22 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 *   <tr>
-	 *     <td> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event ID </td> <td> CMSNSEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK </td>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event field </td> <td> Get method </td>
+	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
+	 *     <td bgcolor="lightgrey"> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
+	 *     <td bgcolor="lightgrey"> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
+	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
 	 *   </tr>
 	 * </table>
 	 * 
@@ -930,22 +1159,22 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 *   <tr>
-	 *     <td> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event ID </td> <td> CMSNSEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK </td>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event field </td> <td> Get method </td>
+	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
+	 *     <td bgcolor="lightgrey"> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
+	 *     <td bgcolor="lightgrey"> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
+	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
 	 *   </tr>
 	 * </table>
 	 * 
@@ -1170,22 +1399,22 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 *   <tr>
-	 *     <td> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event ID </td> <td> CMSNSEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK </td>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event field </td> <td> Get method </td>
+	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
+	 *     <td bgcolor="lightgrey"> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
+	 *     <td bgcolor="lightgrey"> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
+	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
 	 *   </tr>
 	 * </table>
 	 * 
@@ -1428,48 +1657,48 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 *   <tr>
-	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
 	 *   <tr> 
-	 *     <td> Event ID </td> <td> CMSNEEvent.CONTENT_DOWNLOAD </td> 
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNEEvent.CONTENT_DOWNLOAD </td> 
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event field </td> <td> Get method </td>
+	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Requester name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *     <td bgcolor="lightgrey"> Requester name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Requested content offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
+	 *     <td bgcolor="lightgrey"> Requested content offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *     <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   </tr>
 	 *   <tr> 
-	 *     <td> Written date and time of the content </td> <td> {@link CMSNSEvent#getDate()} </td> 
+	 *     <td bgcolor="lightgrey"> Written date and time of the content </td> <td> {@link CMSNSEvent#getDate()} </td> 
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Writer name of the content </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *     <td bgcolor="lightgrey"> Writer name of the content </td> <td> {@link CMSNSEvent#getWriterName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Text message of the content </td> <td> {@link CMSNSEvent#getMessage()} </td>
+	 *     <td bgcolor="lightgrey"> Text message of the content </td> <td> {@link CMSNSEvent#getMessage()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Number of attachments </td> <td> {@link CMSNSEvent#getNumAttachedFiles()} </td>
+	 *     <td bgcolor="lightgrey"> Number of attachments </td> <td> {@link CMSNSEvent#getNumAttachedFiles()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Content ID to which this message replies (0 for no reply) </td>
+	 *     <td bgcolor="lightgrey"> Content ID to which this message replies (0 for no reply) </td>
 	 *     <td> {@link CMSNSEvent#getReplyOf()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Level of disclosure of the content
+	 *     <td bgcolor="lightgrey"> Level of disclosure of the content
 	 *          <br> 0: open to public <br> 1: open only to friends <br> 2: open only to bi-friends 
 	 *          <br> 3: private 
 	 *     </td> 
 	 *     <td> {@link CMSNSEvent#getLevelOfDisclosure()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> List of attached file names </td> <td> {@link CMSNSEvent#getFileNameList()} </td>
+	 *     <td bgcolor="lightgrey"> List of attached file names </td> <td> {@link CMSNSEvent#getFileNameList()} </td>
 	 *   </tr>
 	 * </table>
 	 * 
@@ -1482,25 +1711,25 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 *   <tr>
-	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event ID </td> <td> CMSNSEvent.CONTENT_DOWNLOAD_END </td>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.CONTENT_DOWNLOAD_END </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event field </td> <td> Get method </td>
+	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *     <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
+	 *     <td bgcolor="lightgrey"> Offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *     <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Number of downloaded items </td> <td> {@link CMSNSEvent#getNumContents()} </td>
+	 *     <td bgcolor="lightgrey"> Number of downloaded items </td> <td> {@link CMSNSEvent#getNumContents()} </td>
 	 *   <tr>
 	 * </table>
 	 * 
@@ -1616,25 +1845,25 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 *   <tr>
-	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
 	 *   <tr> 
-	 *     <td> Event ID </td> <td> CMSNEEvent.CONTENT_UPLOAD_RESPONSE </td> 
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNEEvent.CONTENT_UPLOAD_RESPONSE </td> 
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Event field </td> <td> Get method </td>
+	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
+	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *     <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> Date and time </td> <td> {@link CMSNSEvent#getDate()} </td>
+	 *     <td bgcolor="lightgrey"> Date and time </td> <td> {@link CMSNSEvent#getDate()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *     <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   </tr>
 	 * </table>  
 	 * 
@@ -1737,32 +1966,32 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 * <tr>
-	 *   <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
+	 *   <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
 	 * </tr>
 	 * <tr>
-	 *   <td> Event ID </td> <td> CMSNSEvent.RESPONSE_ATTACHED_FILE </td>
+	 *   <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.RESPONSE_ATTACHED_FILE </td>
 	 * </tr>
-	 * <tr>
+	 * <tr bgcolor="lightgrey">
 	 *   <td> Event field </td> <td> Get method </td> <td> Description </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
+	 *   <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
 	 *   <td> The requesting user name </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   <td> The ID of the SNS content that attached the requested file </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   <td bgcolor="lightgrey"> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
 	 *   <td> The writer name of the SNS content </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> File name </td> <td> {@link CMSNSEvent#getFileName()} </td>
+	 *   <td bgcolor="lightgrey"> File name </td> <td> {@link CMSNSEvent#getFileName()} </td>
 	 *   <td> The name of the attached file </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
+	 *   <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
 	 *   <td> The request result. If the value is 1, the requested file will be delivered to the client. If the value 
 	 *   is 0, the server does nothing further for the request. </td>
 	 * </tr>
@@ -1855,28 +2084,28 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <table border=1>
 	 * <tr>
-	 *   <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
+	 *   <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
 	 * </tr>
 	 * <tr>
-	 *   <td> Event ID </td> <td> CMSNSEvent.ACCESS_ATTACHED_FILE </td>
+	 *   <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.ACCESS_ATTACHED_FILE </td>
 	 * </tr>
-	 * <tr>
+	 * <tr bgcolor="lightgrey">
 	 *   <td> Event field </td> <td> Get method </td> <td> Description </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
+	 *   <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
 	 *   <td> The name of the file-accessing user </td> 
 	 * </tr>
 	 * <tr>
-	 *   <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   <td> ID of the SNS content of which attached file is accessed </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   <td bgcolor="lightgrey"> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
 	 *   <td> The writer name of the SNS content of which attached file is accessed </td>
 	 * </tr>
 	 * <tr>
-	 *   <td> Attached file name </td> <td> {@link CMSNSEvent#getFileName()} </td>
+	 *   <td bgcolor="lightgrey"> Attached file name </td> <td> {@link CMSNSEvent#getFileName()} </td>
 	 *   <td> The name of an attached file that the user accessed </td>
 	 * </tr>
 	 * </table>
