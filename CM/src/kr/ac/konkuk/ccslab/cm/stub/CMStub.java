@@ -765,23 +765,86 @@ public class CMStub {
 	// event transmission methods with a designated server
 
 	/**
-	 * (from here)
+	 * Sends a CM event to a single node via a designated server.
 	 * 
-	 * @param cme
-	 * @param serverName
-	 * @param userName
-	 * @return
+	 * <p> This method is the same as calling send(cme, serverName, userName, CMInfo.CM_STREAM, 0)
+	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
+	 * 
+	 * @param cme - the CM event
+	 * @param serverName - the server name
+	 * @param userName - the target user name
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, String, int)} 
+	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String)}
+	 * @see {@link CMStub#send(CMEvent, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}  
 	 */
 	public boolean send(CMEvent cme, String serverName, String userName)
 	{
 		return send(cme, serverName, userName, CMInfo.CM_STREAM, 0);
 	}
-	
+
+	/**
+	 * Sends a CM event to a single node via a designated server.
+	 * 
+	 * <p> This method is the same as calling send(cme, serverName, userName, opt, 0)
+	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
+	 * 
+	 * @param cme - the CM event
+	 * @param serverName - the server name
+	 * @param userName - the target user name
+	 * @param opt - the reliability option. 
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send 
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, String)} 
+	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String)}
+	 * @see {@link CMStub#send(CMEvent, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}  
+
+	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt)
 	{
 		return send(cme, serverName, userName, opt, 0);
 	}
 	
+	/**
+	 * Sends a CM event to a single node via a designated server.
+	 * 
+	 * <p> This method is usually used to send an event to a participating user node through the designated server.
+	 * This method is the same as calling send(cme, userName, opt, 0, false)
+	 * of the {@link CMStub#send(CMEvent, String, int, int, boolean)} method except that this method uses the designated server.
+	 * <br> This method is used especially if the application uses multiple servers and the client wants to send an event to 
+	 * another client. The target client (user) is connected to a server which is not the default server.
+	 * 
+	 * @param cme - the CM event
+	 * @param serverName - the server name
+	 * @param userName - the target user name
+	 * @param opt - the reliability option. 
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send 
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @param nChNum - the channel key. 
+	 * <br> If the application adds additional TCP or UDP channels, they are identified 
+	 * by the channel key. The key of the TCP channel should be greater than 1 (0 for the default channel), 
+	 * and the key of the UDP channel is the locally bound port number.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String, String)} 
+	 * @see {@link CMStub#send(CMEvent, String, String, int)}
+	 * 
+	 * @see {@link CMStub#send(CMEvent, String)}
+	 * @see {@link CMStub#send(CMEvent, String, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int)}
+	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}  
+	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -815,16 +878,95 @@ public class CMStub {
 		return ret;
 	}
 
+	/**
+	 * Sends a CM event to a node group via a designated server
+	 * 
+	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, CMInfo.CM_STREAM, 0)
+	 * of the {@link CMStub#send(CMEvent, String, String, String, int, int)} method.
+	 *  
+	 * @param cme - the CM event
+	 * @param serverName - the server name
+	 * @param sessionName - the target session name
+	 * <br> If sessionName is null (not specified), the event is sent to all sessions. In this case, 
+	 * the groupName parameter must be also null.
+	 * @param groupName - the target group name
+	 * <br> If groupName is null (not specified), the event is sent to all groups in a session.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#cast(CMEvent, String, String, String, int)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, String, int, int)}
+	 * 
+	 * @see {@link CMStub#cast(CMEvent, String, String)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)} 
+	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName)
 	{
 		return cast(cme, serverName, sessionName, groupName, CMInfo.CM_STREAM, 0);
 	}
 	
+	/**
+	 * Sends a CM event to a node group via a designated server
+	 * 
+	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, opt, 0)
+	 * of the {@link CMStub#send(CMEvent, String, String, String, int, int)} method.
+	 *   
+	 * @param cme - the CM event
+	 * @param serverName - the server name
+	 * @param sessionName - the target session name
+	 * <br> If sessionName is null (not specified), the event is sent to all sessions. In this case, 
+	 * the groupName parameter must be also null.
+	 * @param groupName - the target group name
+	 * <br> If groupName is null (not specified), the event is sent to all groups in a session.
+	 * @param opt - the reliability option. 
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send 
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#cast(CMEvent, String, String, String)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, String, int, int)}
+	 * 
+	 * @see {@link CMStub#cast(CMEvent, String, String)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}  
+	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt)
 	{
 		return cast(cme, serverName, sessionName, groupName, opt, 0);
 	}
 	
+	/**
+	 * Sends a CM event to a node group via a designated server
+	 * 
+	 * <p> This method is usually used to send an event to a participating user node group through the designated server.
+	 * This method is the same as calling cast(cme, sessionName, groupName, opt, nChNum)
+	 * of the {@link CMStub#cast(CMEvent, String, String, int, int)} method except that this method uses the designated server.
+	 * <br> This method is used especially if the application uses multiple servers and the client wants to send an event to 
+	 * a client group. The target client (user) group is connected to a server which is not the default server. 
+	 * 
+	 * @param cme - the CM event
+	 * @param serverName - the server name
+	 * @param sessionName - the target session name
+	 * <br> If sessionName is null (not specified), the event is sent to all sessions. In this case, 
+	 * the groupName parameter must be also null.
+	 * @param groupName - the target group name
+	 * <br> If groupName is null (not specified), the event is sent to all groups in a session.
+	 * @param opt - the reliability option. 
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send 
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @param nChNum - the channel key. 
+	 * <br> If the application adds additional TCP or UDP channels, they are identified 
+	 * by the channel key. The key of the TCP channel should be greater than 1 (0 for the default channel), 
+	 * and the key of the UDP channel is the locally bound port number.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see {@link CMStub#cast(CMEvent, String, String, String)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, String, int)}
+	 * 
+	 * @see {@link CMStub#cast(CMEvent, String, String)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
+	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}   
+	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt, int nChNum)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
