@@ -845,7 +845,7 @@ public class CMClientStub extends CMStub {
 	 * methods in the CMStub class.
 	 * 
 	 * <p> Although this method returns the reference to the valid socket channel at the client, it is unsafe 
-	 * for the client use the socket before the server also adds the relevant channel information.
+	 * for the client to use the socket before the server also adds the relevant channel information.
 	 * The establishment of a new nonblocking socket channel at both sides (the client and the server) completes 
 	 * only when the client receives the ack event (CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK) from the server 
 	 * and the return code in the event is 1.
@@ -856,23 +856,23 @@ public class CMClientStub extends CMStub {
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK </td>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK </td>
+	 *   </tr>
+	 *   <tr bgcolor="lightgrey">
+	 *     <td> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
+	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
+	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
+	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
 	 *   </tr>
 	 * </table>
 	 * 
-	 * @param nKey - the channel key which must be greater than 0.
+	 * @param nChKey - the channel key that must be greater than 0.
 	 * The key 0 is occupied by the default TCP channel.
 	 * @param strServer - the server name to which the client adds a TCP channel. The name of the default 
 	 * server is 'SERVER'.
@@ -885,7 +885,7 @@ public class CMClientStub extends CMStub {
 	 * @see CMClientStub#syncAddBlockSocketChannel(int, String)
 	 * @see CMClientStub#removeNonBlockSocketChannel(int, String)
 	 */
-	public boolean addNonBlockSocketChannel(int nKey, String strServer)
+	public boolean addNonBlockSocketChannel(int nChKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
@@ -914,10 +914,10 @@ public class CMClientStub extends CMStub {
 		
 		try {
 			scInfo = serverInfo.getNonBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nKey);
+			sc = (SocketChannel) scInfo.findChannel(nChKey);
 			if(sc != null)
 			{
-				System.err.println("CMClientStub.addNonBlockSocketChannel(), channel key("+nKey
+				System.err.println("CMClientStub.addNonBlockSocketChannel(), channel key("+nChKey
 						+") already exists.");
 				return false;
 			}
@@ -926,11 +926,11 @@ public class CMClientStub extends CMStub {
 					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
-				System.err.println("CMClientStub.addNonBlockSocketChannel(), failed!: key("+nKey+"), server("
+				System.err.println("CMClientStub.addNonBlockSocketChannel(), failed!: key("+nChKey+"), server("
 						+strServer+")");
 				return false;
 			}
-			scInfo.addChannel(nKey, sc);
+			scInfo.addChannel(nChKey, sc);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -941,15 +941,15 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
-		se.setChannelNum(nKey);
-		send(se, strServer, CMInfo.CM_STREAM, nKey);
+		se.setChannelNum(nChKey);
+		send(se, strServer, CMInfo.CM_STREAM, nChKey);
 		
 		se = null;
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMClientStub.addNonBlockSocketChannel(),successfully requested to add the channel "
-					+ "with the key("+nKey+") to the server("+strServer+")");
+					+ "with the key("+nChKey+") to the server("+strServer+")");
 		}
 		
 		return true;
@@ -962,7 +962,7 @@ public class CMClientStub extends CMStub {
 	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
 	 * methods in the CMStub class.
 	 * 
-	 * @param nKey - the channel key which must be greater than 0.
+	 * @param nChKey - the channel key which must be greater than 0.
 	 * The key 0 is occupied by the default TCP channel.
 	 * @param strServer - the server name to which the client adds a TCP channel. The name of the default 
 	 * server is 'SERVER'.
@@ -974,7 +974,7 @@ public class CMClientStub extends CMStub {
 	 * @see CMClientStub#syncAddBlockSocketChannel(int, String)
 	 * @see CMClientStub#removeNonBlockSocketChannel(int, String)
 	 */
-	public SocketChannel syncAddNonBlockSocketChannel(int nKey, String strServer)
+	public SocketChannel syncAddNonBlockSocketChannel(int nChKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
@@ -1005,10 +1005,10 @@ public class CMClientStub extends CMStub {
 		
 		try {
 			scInfo = serverInfo.getNonBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nKey);
+			sc = (SocketChannel) scInfo.findChannel(nChKey);
 			if(sc != null)
 			{
-				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), channel key("+nKey
+				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), channel key("+nChKey
 						+") already exists.");
 				return null;
 			}
@@ -1017,11 +1017,11 @@ public class CMClientStub extends CMStub {
 					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
-				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed!: key("+nKey+"), server("
+				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed!: key("+nChKey+"), server("
 						+strServer+")");
 				return null;
 			}
-			scInfo.addChannel(nKey, sc);
+			scInfo.addChannel(nChKey, sc);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -1041,8 +1041,8 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
-		se.setChannelNum(nKey);
-		send(se, strServer, CMInfo.CM_STREAM, nKey);
+		se.setChannelNum(nChKey);
+		send(se, strServer, CMInfo.CM_STREAM, nChKey);
 		
 		se = null;
 		
@@ -1067,19 +1067,19 @@ public class CMClientStub extends CMStub {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMClientStub.syncAddNonBlockSocketChannel(), successfully add the channel "
-						+ "info at the server: key("+nKey+"), server("+strServer+")");
+						+ "info at the server: key("+nChKey+"), server("+strServer+")");
 			}
 		}
 		else if(nReturnCode == 0) // failed to add the new channel info (key, channel) at the server
 		{
 			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(),failed to add the channel info "
-					+ "at the server: key("+nKey+"), server("+strServer+")");
+					+ "at the server: key("+nChKey+"), server("+strServer+")");
 			sc = null;	// the new socket channel is closed and removed at the CMInteractionManager
 		}
 		else
 		{
 			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed: return code("+nReturnCode+")");
-			scInfo.removeChannel(nKey);
+			scInfo.removeChannel(nChKey);
 			sc = null;
 		}
 		
@@ -1089,13 +1089,16 @@ public class CMClientStub extends CMStub {
 	/**
 	 * Removes a nonblocking (TCP) socket channel from a server.
 	 * 
-	 * @param nKey - the key of the channel that is to be removed. The key must be greater than 0. 
+	 * @param nChKey - the key of the channel that is to be removed. The key must be greater than 0. 
 	 * If the default channel (0) is removed, the result is undefined. 
 	 * @param strServer - the server name from which the additional channel is removed.
+	 * @return true if the client successfully closes and removes the channel, or false otherwise.
+	 * <br> If the client removes the nonblocking socket channel, the server CM detects the disconnection and 
+	 * removes the channel at the server side as well. 
 	 * @see CMClientStub#addNonBlockSocketChannel(int, String)
 	 * @see CMClientStub#removeBlockSocketChannel(int, String)
 	 */
-	public boolean removeNonBlockSocketChannel(int nKey, String strServer)
+	public boolean removeNonBlockSocketChannel(int nChKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
@@ -1123,18 +1126,18 @@ public class CMClientStub extends CMStub {
 		}
 		
 		scInfo = serverInfo.getNonBlockSocketChannelInfo();
-		result = scInfo.removeChannel(nKey);
+		result = scInfo.removeChannel(nChKey);
 		if(result)
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMClientStub.removeNonBlockSocketChannel(), succeeded. key("+nKey+"), server ("
+				System.out.println("CMClientStub.removeNonBlockSocketChannel(), succeeded. key("+nChKey+"), server ("
 					+strServer+").");
 			}
 		}
 		else
 		{
-			System.err.println("CMClientStub.removeNonBlockSocketChannel(), failed! key("+nKey+"), server ("
+			System.err.println("CMClientStub.removeNonBlockSocketChannel(), failed! key("+nChKey+"), server ("
 					+strServer+").");			
 		}
 		
@@ -1151,7 +1154,8 @@ public class CMClientStub extends CMStub {
 	 * <p> Although this method returns the reference to the valid socket channel, the server side socket channel is 
 	 * always created as a nonblocking mode first due to the intrinsic CM architecture of event-driven asynchronous 
 	 * communication. The server sends the acknowledgement message after the nonblocking channel is changed 
-	 * to the blocking channel. It is unsafe for the client use its socket before the blocking mode change at the server.
+	 * to the blocking channel. It is unsafe for the client use its socket channel before the channel is changed to 
+	 * the blocking mode at the server.
 	 * The establishment of a new blocking socket channel at both sides (the client and the server) completes 
 	 * only when the client receives the ack event (CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK) from the server 
 	 * and the return code in the event is 1. 
@@ -1162,23 +1166,23 @@ public class CMClientStub extends CMStub {
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK </td>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK </td>
+	 *   </tr>
+	 *   <tr bgcolor="lightgrey">
+	 *     <td> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
+	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
+	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
+	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
 	 *   </tr>
 	 * </table>
 	 * 
-	 * @param nKey - the channel key. It should be a positive integer (greater than or equal to 0).
+	 * @param nChKey - the channel key. It should be a positive integer (greater than or equal to 0).
 	 * @param strServer - the name of a server to which the client creates a connection. The default server name is 
 	 * "SERVER".
 	 * @return a reference to the socket channel if it is successfully created at the client, or null otherwise. 
@@ -1189,7 +1193,7 @@ public class CMClientStub extends CMStub {
 	 * @see CMClientStub#removeBlockSocketChannel(int, String)
 	 * 
 	 */
-	public boolean addBlockSocketChannel(int nKey, String strServer)
+	public boolean addBlockSocketChannel(int nChKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
@@ -1218,10 +1222,10 @@ public class CMClientStub extends CMStub {
 		
 		try {
 			scInfo = serverInfo.getBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nKey);
+			sc = (SocketChannel) scInfo.findChannel(nChKey);
 			if(sc != null)
 			{
-				System.err.println("CMClientStub.addBlockSocketChannel(), channel key("+nKey+") already exists.");
+				System.err.println("CMClientStub.addBlockSocketChannel(), channel key("+nChKey+") already exists.");
 				return false;
 			}
 			
@@ -1229,10 +1233,10 @@ public class CMClientStub extends CMStub {
 					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
-				System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("+nKey+"), server("+strServer+")");
+				System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("+nChKey+"), server("+strServer+")");
 				return false;
 			}
-			scInfo.addChannel(nKey, sc);
+			scInfo.addChannel(nChKey, sc);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -1243,14 +1247,14 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
-		se.setChannelNum(nKey);
-		send(se, strServer, CMInfo.CM_STREAM, nKey, true);
+		se.setChannelNum(nChKey);
+		send(se, strServer, CMInfo.CM_STREAM, nChKey, true);
 		se = null;
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMClientStub.addBlockSocketChannel(),successfully requested to add the channel "
-					+ "with the key("+nKey+") to the server("+strServer+")");
+					+ "with the key("+nChKey+") to the server("+strServer+")");
 		}
 				
 		return true;				
@@ -1263,7 +1267,7 @@ public class CMClientStub extends CMStub {
 	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
 	 * methods in the CMStub class.
 	 * 
-	 * @param nKey - the channel key. It should be a positive integer (greater than or equal to 0).
+	 * @param nChKey - the channel key. It should be a positive integer (greater than or equal to 0).
 	 * @param strServer - the name of a server to which the client creates a connection. The default server name is 
 	 * "SERVER".
 	 * @return a reference to the socket channel if it is successfully created both at the client and the server, 
@@ -1274,7 +1278,7 @@ public class CMClientStub extends CMStub {
 	 * @see CMClientStub#syncAddNonBlockSocketChannel(int, String)
 	 * @see CMClientStub#removeBlockSocketChannel(int, String)
 	 */
-	public SocketChannel syncAddBlockSocketChannel(int nKey, String strServer)
+	public SocketChannel syncAddBlockSocketChannel(int nChKey, String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
@@ -1305,10 +1309,10 @@ public class CMClientStub extends CMStub {
 		
 		try {
 			scInfo = serverInfo.getBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nKey);
+			sc = (SocketChannel) scInfo.findChannel(nChKey);
 			if(sc != null)
 			{
-				System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("+nKey+") already exists.");
+				System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("+nChKey+") already exists.");
 				return null;
 			}
 			
@@ -1316,11 +1320,11 @@ public class CMClientStub extends CMStub {
 					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
 			if(sc == null)
 			{
-				System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed!: key("+nKey+"), server("
+				System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed!: key("+nChKey+"), server("
 						+strServer+")");
 				return null;
 			}
-			scInfo.addChannel(nKey, sc);
+			scInfo.addChannel(nChKey, sc);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -1340,9 +1344,9 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
-		se.setChannelNum(nKey);
+		se.setChannelNum(nChKey);
 		//send(se, strServer, CMInfo.CM_STREAM, nKey);
-		send(se, strServer, CMInfo.CM_STREAM, nKey, true);
+		send(se, strServer, CMInfo.CM_STREAM, nChKey, true);
 		se = null;
 
 		synchronized(eInfo.getABSCAObject())
@@ -1366,19 +1370,19 @@ public class CMClientStub extends CMStub {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMClientStub.syncAddBlockSocketChannel(), successfully add the channel "
-						+ "info at the server: "+"key("+nKey+"), server("+strServer+")");
+						+ "info at the server: "+"key("+nChKey+"), server("+strServer+")");
 			}
 		}
 		else if(nReturnCode == 0) // failed to add the new channel info (key, channel) at the server
 		{
 			System.err.println("CMClientStub.syncAddBlockSocketChannel(),failed to add the channel info at the server: "
-					+"key("+nKey+"), server("+strServer+")");
+					+"key("+nChKey+"), server("+strServer+")");
 			sc = null;	// the new socket channel is closed and removed at the CMInteractionManager
 		}
 		else
 		{
 			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed: return code("+nReturnCode+")");
-			scInfo.removeChannel(nKey);
+			scInfo.removeChannel(nChKey);
 			sc = null;
 		}
 
@@ -1420,7 +1424,7 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * @param nChKey - the key of a socket channel that is to be deleted.
 	 * @param strServer - the name of a server to which the target socket channel is connected.
-	 * @return true if the client successfully requests the removal of the channel from the server, false otherwise.
+	 * @return true if the client successfully requests the removal of the channel from the server, or false otherwise.
 	 * <br> The blocking socket channel is closed and removed only when the client receives the ack event from the server.
 	 * 
 	 * @see CMClientStub#syncRemoveBlockSocketChannel(int, String)
