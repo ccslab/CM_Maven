@@ -31,7 +31,12 @@ public class CMFileTransferInfo {
 	
 	public void setFilePath(String path)
 	{
-		m_strFilePath = path;
+		String strModPath = path.trim();
+		if(strModPath.endsWith(File.separator))
+		{
+			strModPath = strModPath.substring(0, strModPath.length()-1);
+		}
+		m_strFilePath = strModPath;
 	}
 	
 	public String getFilePath()
