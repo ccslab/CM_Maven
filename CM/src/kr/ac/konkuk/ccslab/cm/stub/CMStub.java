@@ -1050,7 +1050,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Requests to transfer a file.
+	 * Requests to transfer a file from a owner (push mode).
 	 * 
 	 * <p> This method is the same as calling requestFile(strFileName, strFileOwner, CMInfo.FILE_DEFAULT) 
 	 * of the {@link CMStub#requestFile(String, String, byte)}.
@@ -1069,7 +1069,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Requests to transfer a file.
+	 * Requests to transfer a file from a owner (push mode).
 	 * 
 	 * <p> If a client requests a file, the file owner can be a server. If a server requests a file, 
 	 * the file owner can be a client.
@@ -1133,7 +1133,7 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> return code </td> <td> int </td> 
-	 *     <td> 1: ok <br> 0: the requested file does not exist
+	 *     <td> 1: transfer succeeded <br> 0: transfer failed
 	 *     </td>
 	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
 	 *   </tr>
@@ -1170,10 +1170,50 @@ public class CMStub {
 	}
 	
 	/**
-	 * (from here)
-	 * @param strFilePath
-	 * @param strReceiver
-	 * @return
+	 * Sends a file to a receiver (push mode).
+	 * 
+	 * <p> Unlike the pull mode, in the push mode, a CM application can send a file to another remote CM application.
+	 * 
+	 * <p> When the file is entirely transferred to the receiver, the receiver CM sends the END_FILE_TRANSFER_ACK event 
+	 * to the sender. The sender can catch this event in the event handler if it needs to be notified when the entire file 
+	 * is transferred. The detailed information of the END_FILE_TRANSFER_ACK event is the same as that of 
+	 * the END_FILE_TRANSFER event as follows.
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMFileEvent.END_FILE_TRANSFER_ACK </td>
+	 *   </tr>
+	 *   <tr bgcolor="lightgrey">
+	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
+	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> return code </td> <td> int </td> 
+	 *     <td> 1: the entire file successfully received <br> 0: reception error at the receiver
+	 *     </td>
+	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> attaching SNS content ID </td> <td> int </td> 
+	 *     <td> If this file is an attachment of an SNS content, the content ID (>= 0) is set. The default value is 
+	 *     -1 (if this file is not an attachment). 
+	 *     <td> {@link CMFileEvent#getContentID()} </td>
+	 *   </tr>
+	 * </table>
+	 *  
+	 * @param strFilePath - the path name of a file to be sent
+	 * @param strReceiver - the receiver name
+	 * @return true if the file push is successfully notified to the receiver, or false otherwise.
+	 * @see {@link CMStub#requestFile(String, String)}
 	 */
 	public boolean pushFile(String strFilePath, String strReceiver)
 	{
@@ -1182,6 +1222,11 @@ public class CMStub {
 		return bReturn;
 	}
 	
+	/**
+	 * (from here)
+	 * @param strReceiver
+	 * @return
+	 */
 	public boolean cancelPushFile(String strReceiver)
 	{
 		boolean bReturn = false;
