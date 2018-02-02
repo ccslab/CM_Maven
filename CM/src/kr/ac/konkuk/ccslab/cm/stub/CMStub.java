@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -1012,19 +1013,54 @@ public class CMStub {
 	
 	/////////////////////////////////////////////////////////////////////
 	// file transfer 
-	
+
+	/**
+	 * Sets the default file path for file transfer.
+	 * 
+	 * <p> CM applications that directly connect to each other can exchange a file with the CMStub class 
+	 * that is the parent class of the CMClientStub and the CMServerStub classes. In the client-server architecture, 
+	 * a client can push or pull a file to/from a server and vice versa. When CM is initialized by an application, 
+	 * the default directory is configured by the path information that is set in the configuration file 
+	 * (the FILE_PATH field). If the default directory does not exist, CM creates it. If the FILE_PATH field is not set, 
+	 * the default path is set to the current working directory (".").
+	 * <p> If the file transfer is requested, a sender (the server or the client) searches for the file 
+	 * in the default file path. If a client receives a file, CM stores the file in this file path. 
+	 * If a server receives a file, CM stores the file in a sub-directory of the default path. 
+	 * The sub-directory name is a sender (client) name.
+	 * 
+	 * @param filePath - the file path
+	 * @see {@link CMStub#getFilePath()}
+	 */
 	public void setFilePath(String filePath)
 	{
 		CMFileTransferManager.setFilePath(filePath, m_cmInfo);
 		return;
 	}
 	
+	/**
+	 * Gets the default file path for file transfer.
+	 * 
+	 * @return the default file path for file transfer
+	 * @see {@link CMStub#setFilePath(String)}
+	 */
 	public String getFilePath()
 	{
 		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
 		return fInfo.getFilePath();
 	}
 	
+	/**
+	 * Requests to transfer a file.
+	 * 
+	 * <p> This method is the same as calling requestFile(strFileName, strFileOwner, CMInfo.FILE_DEFAULT) 
+	 * of the {@link CMStub#requestFile(String, String, byte)}.
+	 * 
+	 * @param strFileName - the requested file name
+	 * @param strFileOwner - the file owner name
+	 * @return true if the file transfer is successfully requested, or false otherwise.
+	 * @see {@link CMStub#requestFile(String, String, byte)}
+	 * @see {@link CMStub#pushFile(String, String)}
+	 */
 	public boolean requestFile(String strFileName, String strFileOwner)
 	{
 		boolean bReturn = false;
@@ -1032,6 +1068,100 @@ public class CMStub {
 		return bReturn;
 	}
 	
+	/**
+	 * Requests to transfer a file.
+	 * 
+	 * <p> If a client requests a file, the file owner can be a server. If a server requests a file, 
+	 * the file owner can be a client.
+	 * <p> If a client requests a file to the default server and the server has the requested file 
+	 * in its file path, the client successfully receives the file and locates it in its file path. 
+	 * If the requested file does not exist in the requested server, the server sends a pre-defined 
+	 * file event as the reply to the request and finishes the file transfer protocol. 
+	 * <br> By catching the reply file event, REPLY_FILE_TRANSFER, the client can figure out 
+	 * whether the requested file exists or not in the server. The following codes are the part of 
+	 * the client event handler which handles the REPLY_FILE_TRANSFER event. If the return code of the event is 1, 
+	 * the requested file exists. If the return code is 0, the requested file does not exist in the requested server.
+	 * The detailed event fields of the REPLY_FILE_TRANSFER event are described below.
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMFileEvent.REPLY_FILE_TRANSFER </td>
+	 *   </tr>
+	 *   <tr bgcolor="lightgrey">
+	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> return code </td> <td> int </td> 
+	 *     <td> 1: ok <br> 0: the requested file does not exist
+	 *     </td>
+	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> attaching SNS content ID </td> <td> int </td> 
+	 *     <td> If this file is an attachment of an SNS content, the content ID (>= 0) is set. The default value is 
+	 *     -1 (if this file is not an attachment). 
+	 *     <td> {@link CMFileEvent#getContentID()} </td>
+	 *   </tr>
+	 * </table>
+	 * 
+	 * <p> When the requested file is completely transferred, the sender CM sends the END_FILE_TRANSFER event 
+	 * to the requester. The requester can catch this event in the event handler if it needs to be notified 
+	 * when the entire file is transferred. The detailed information of the END_FILE_TRANSFER event is described below.
+	 *
+	 * <table border=1>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMFileEvent.END_FILE_TRANSFER </td>
+	 *   </tr>
+	 *   <tr bgcolor="lightgrey">
+	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
+	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> return code </td> <td> int </td> 
+	 *     <td> 1: ok <br> 0: the requested file does not exist
+	 *     </td>
+	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> attaching SNS content ID </td> <td> int </td> 
+	 *     <td> If this file is an attachment of an SNS content, the content ID (>= 0) is set. The default value is 
+	 *     -1 (if this file is not an attachment). 
+	 *     <td> {@link CMFileEvent#getContentID()} </td>
+	 *   </tr>
+	 * </table>
+	 * 
+	 * @param strFileName - the requested file name
+	 * @param strFileOwner - the file owner name
+	 * @param byteFileAppend - the file reception mode
+	 * <br> The file reception mode specifies the behavior of the receiver if it already has the entire 
+	 * or part of the requested file. CM provides three file reception modes which are default, overwrite, 
+	 * and append mode. The byteFileAppend parameter can be one of these three modes which are CMInfo.FILE_DEFAULT(-1), 
+	 * CMInfo.FILE_OVERWRITE(0), and CMInfo.FILE_APPEND(1). If the byteFileAppend parameter is CMInfo.FILE_DEFAULT, 
+	 * the file reception mode is determined by the FILE_APPEND_SCHEME field of the CM configuration file. 
+	 * If the byteFileAppend parameter is set to one of the other two values, the reception mode of this requested file 
+	 * does not follow the CM configuration file, but this parameter value. The CMInfo.FILE_OVERWRITE is the overwrite mode 
+	 * where the receiver always receives the entire file even if it already has the same file. 
+	 * The CMInfo.FILE_APPEND is the append mode where the receiver skips existing file blocks 
+	 * and receives only remaining blocks.
+	 * @return true if the file transfer is successfully requested, or false otherwise.
+	 * @see {@link CMStub#requestFile(String, String)}
+	 * @see {@link CMStub#pushFile(String, String)}
+	 */
 	public boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend)
 	{
 		boolean bReturn = false;
@@ -1039,6 +1169,12 @@ public class CMStub {
 		return bReturn;
 	}
 	
+	/**
+	 * (from here)
+	 * @param strFilePath
+	 * @param strReceiver
+	 * @return
+	 */
 	public boolean pushFile(String strFilePath, String strReceiver)
 	{
 		boolean bReturn = false;

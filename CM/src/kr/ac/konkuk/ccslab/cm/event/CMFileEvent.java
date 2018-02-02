@@ -3,6 +3,12 @@ import java.nio.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
+/**
+ * This class represents CM events that are used for file-transfer tasks.
+ * 
+ * @author mlim
+ * @see CMEvent
+ */
 public class CMFileEvent extends CMEvent{
 	
 	// events for the file transfer with the default channel
