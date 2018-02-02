@@ -1223,9 +1223,48 @@ public class CMStub {
 	}
 	
 	/**
-	 * (from here)
-	 * @param strReceiver
-	 * @return
+	 * Cancels sending (or pushing) a file.
+	 * 
+	 * <p> A sender can cancel all of its sending tasks to the receiver by calling this method. 
+	 * The file pushing task can be cancelled regardless of the file transfer scheme that is determined 
+	 * by the FILE_TRANSFER_SCHEME field of the server CM configuration file. The cancellation is also 
+	 * notified to the receiver. The result of the receiver's cancellation is sent to the sender 
+	 * as the CANCEL_FILE_SEND_ACK or the CANCEL_FILE_SEND_CHAN_ACK event. The former event is sent 
+	 * if the file transfer service uses the default channel (,that is, if the FILE_TRANSFER_SCHEME field 
+	 * is 0 in the server CM configuration file), and the latter event is sent if the file transfer service 
+	 * uses the separate channel (, that is, if the FILE_TRANSFER_SCHEME field is 1 in the server CM 
+	 * configuration file). The detailed information of these events is described below.
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event ID </td> 
+	 *     <td> CMFileEvent.CANCEL_FILE_SEND_ACK <br> CMFileEvent.CANCEL_FILE_SEND_CHAN_ACK </td>
+	 *   </tr>
+	 *   <tr bgcolor="lightgrey">
+	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> sender name </td> <td> String </td> <td> file sender name </td>
+	 *     <td> {@link CMFileEvent#getSenderName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
+	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> return code </td> <td> int </td> 
+	 *     <td> 1: successfully cancelled at the receiver <br> 0: cancellation error at the receiver
+	 *     </td>
+	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
+	 *   </tr>
+	 * </table> 
+	 * 
+	 * @param strReceiver - the receiver name
+	 * @return true if the cancellation is succeeded, or false otherwise.
+	 * @see {@link CMStub#cancelRequestFile(String)}
 	 */
 	public boolean cancelPushFile(String strReceiver)
 	{
@@ -1234,6 +1273,48 @@ public class CMStub {
 		return bReturn;
 	}
 	
+	/**
+	 * Cancels receiving (or pulling) a file.
+	 * 
+	 * <p> A receiver can cancel all of its receiving tasks from the sender by calling this method. 
+	 * Unlike the cancellation of the file pushing task, the file pulling task can be cancelled 
+	 * only if the file transfer scheme is on using the separate channel (, that is, 
+	 * if the FILE_TRANSFER_SCHEME field is 1 in the server CM configuration file). 
+	 * The cancellation is also notified to the sender. The result of the sender's cancellation 
+	 * is sent to the receiver as the CANCEL_FILE_RECV_CHAN_ACK event. The detailed information of 
+	 * this events is described below.
+	 * 
+	 * <table border=1>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td bgcolor="lightgrey"> Event ID </td> 
+	 *     <td> CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK </td>
+	 *   </tr>
+	 *   <tr bgcolor="lightgrey">
+	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> sender name </td> <td> String </td> <td> file sender name </td>
+	 *     <td> {@link CMFileEvent#getSenderName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
+	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *   </tr>
+	 *   <tr>
+	 *     <td> return code </td> <td> int </td> 
+	 *     <td> 1: successfully cancelled at the sender <br> 0: cancellation error at the sender
+	 *     </td>
+	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
+	 *   </tr>
+	 * </table>  
+	 * 
+	 * @param strSender - the sender name
+	 * @return true if the cancellation is succeeded, or false otherwise.
+	 * @see {@link CMStub#cancelPushFile(String)} 
+	 */
 	public boolean cancelRequestFile(String strSender)
 	{
 		boolean bReturn = false;
@@ -1245,6 +1326,11 @@ public class CMStub {
 	// network service
 	
 	// measure synchronously the end-to-end input throughput from the target node to this node
+	/**
+	 * (from here)
+	 * @param strTarget
+	 * @return
+	 */
 	public float measureInputThroughput(String strTarget)
 	{
 		boolean bReturn = false;
