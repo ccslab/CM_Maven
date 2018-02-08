@@ -1327,9 +1327,19 @@ public class CMStub {
 	
 	// measure synchronously the end-to-end input throughput from the target node to this node
 	/**
-	 * (from here)
-	 * @param strTarget
-	 * @return
+	 * measures the incoming network throughput from a CM node.
+	 * 
+	 * <p> A CM application can measure the incoming/outgoing network throughput from/to another CM application 
+	 * that is directly connected to the application. For example, a client can measure the network throughput 
+	 * from/to the server. 
+	 * The incoming network throughput of a CM node A from B measures how many bytes A can receive from B in a second. 
+	 * The outgoing network through of a CM node A to B measures how many bytes A can send to B.
+	 * 
+	 * @param strTarget - the target CM node
+	 * <br> The target CM node should be directly connected to the calling node.
+	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
+	 * if successfully measured, or -1 otherwise.
+	 * @see {@link CMStub#measureOutputThroughput(String)}
 	 */
 	public float measureInputThroughput(String strTarget)
 	{
@@ -1373,6 +1383,14 @@ public class CMStub {
 		return fSpeed;
 	}
 	
+	/**
+	 * measures the incoming network throughput from a CM node.
+	 * 
+	 * @param strTarget - the target CM node
+	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
+	 * if successfully measured, or -1 otherwise.
+	 * @see {@link CMStub#measureInputThroughput(String)}
+	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
 	public float measureOutputThroughput(String strTarget)
 	{
