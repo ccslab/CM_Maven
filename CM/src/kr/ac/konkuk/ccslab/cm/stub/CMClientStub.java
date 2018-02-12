@@ -9,6 +9,7 @@ import java.util.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
+import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
@@ -2188,6 +2189,56 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 
+	/**
+	 * Requests new additional server information from the default server.
+	 * 
+	 * <p> When the default server registers an additional server, it then notifies clients of 
+	 * the new server information. If a client is a late comer to the CM network, it can also 
+	 * explicitly request the information of additional servers from the default server.
+	 * <br> In any of the above two cases, the default server sends the NOTIFY_SERVER_INFO event 
+	 * of the {@link CMMultiServerEvent} class. This event contains the list of additional server information 
+	 * such as a server name, address, port number, and UDP port number. The detailed event fields of 
+	 * the NOTIFY_SERVER_INFO event is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMMultiServerEvent.NOTIFY_SERVER_INFO</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Number of servers</td><td>int</td><td>Number of additional servers</td><td>getServerNum()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Server list</td><td>Vector&lt{@link CMServerInfo}&gt</td><td>List of additional server information</td>
+	 * <td>getServerInfoList()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * <p> When the default server deletes an additional server by the deregistration request, it then sends 
+	 * the NOTIFY_SERVER_LEAVE event to clients. The event fields of the event are described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMMultiServerEvent.NOTIFY_SERVER_LEAVE</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Server name</td><td>String</td><td>Name of an additional server that leaves the CM network</td>
+	 * <td>getServerName()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 */
 	public void requestServerInfo()
 	{
 		CMUser myself = getMyself();

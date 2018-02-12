@@ -7,6 +7,11 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
+/**
+ * This class represents CM events that are related to additional servers.
+ * @author mlim
+ * @see CMEvent
+ */
 public class CMMultiServerEvent extends CMEvent{
 	public static final int REQ_SERVER_REG = 1;				// S->DS
 	public static final int RES_SERVER_REG = 2;				// DS->C

@@ -1,8 +1,14 @@
 package kr.ac.konkuk.ccslab.cm.entity;
-
+import kr.ac.konkuk.ccslab.cm.stub.*;
 ////////////////////////////////////////////////////////
 //CMServerInfo (server info to be transfered in an event)
 
+/**
+ * This class represents CM server information that needs to be transferred to a remote CM node.
+ * 
+ * @author mlim
+ * @see {@link CMStub#requestServerInfo()}
+ */
 public class CMServerInfo {
 	protected String m_strServerName;
 	protected String m_strServerAddress;
