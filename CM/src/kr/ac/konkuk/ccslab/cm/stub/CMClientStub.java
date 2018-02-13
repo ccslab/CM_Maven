@@ -121,10 +121,16 @@ public class CMClientStub extends CMStub {
 	
 	/**
 	 * Connects to the default server.
-	 * <br> When a client application calls this method, the client CM opens a default stream(TCP)
+	 * 
+	 * <p> When a client application calls this method, the client CM opens a default stream(TCP)
 	 * channel and connects to the server CM used by the default server application.
+	 * <br> When the CM client starts by calling the {@link CMClientStub#startCM()} method, it connects 
+	 * to the default server ("SERVER") as one of the initialization tasks.
+	 * Before the client logs in to the default CM server, it must be connected to the server by calling this method.
+	 * The connection to the default server is made with the default TCP channel.
 	 * 
 	 * @return true if the connection is established successfully, or false otherwise.
+	 * @see CMClientStub#connectToServer(String)
 	 * @see CMClientStub#disconnectFromServer()
 	 */
 	public boolean connectToServer()
@@ -138,6 +144,7 @@ public class CMClientStub extends CMStub {
 	 * stream(TCP) channels from the server CM used by the default server application.
 	 * 
 	 * @return true if the connection is successfully disconnected, or false otherwise.
+	 * @see CMClientStub#disconnectFromServer(String)
 	 * @see CMClientStub#connectToServer()
 	 */
 	public boolean disconnectFromServer()
@@ -217,6 +224,7 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
+	 * @see CMClientStub#loginCM(String, String, String)
 	 * @see {@link CMClientStub#logoutCM()}, {@link CMClientStub#registerUser(String, String)}
 	 * 
 	 */
@@ -2262,6 +2270,18 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Connects to a CM server.
+	 * 
+	 * <p>If the CM network has multiple servers (the default server and additional servers), 
+	 * a CM client can connect to these servers by specifying a server name as the parameter. 
+	 * Connection to an additional server is made with an additional TCP channel created.
+	 * 
+	 * @param strServerName - the server name
+	 * @return true if the connection is successfully established; or false otherwise.
+	 * @see CMClientStub#connectToServer()
+	 * @see CMServerStub#connectToServer()
+	 */
 	public boolean connectToServer(String strServerName)
 	{
 		
@@ -2276,6 +2296,17 @@ public class CMClientStub extends CMStub {
 		return ret;
 	}
 	
+	/**
+	 * Disconnects from a CM server.
+	 * 
+	 * <p> If the CM network has multiple servers (the default server and additional servers), 
+	 * a CM client can disconnect from these servers by specifying a server name as the parameter. 
+	 * 
+	 * @param strServerName - the server name
+	 * @return true if the connection is successfully disconnected; or false otherwise.
+	 * @see CMClientStub#disconnectFromServer()
+	 * @see CMServerStub#disconnectFromServer()
+	 */
 	public boolean disconnectFromServer(String strServerName)
 	{
 		boolean ret = false;
@@ -2289,6 +2320,24 @@ public class CMClientStub extends CMStub {
 		return ret;
 	}
 	
+	/**
+	 * Logs in to a CM server.
+	 * 
+	 * <p> If the CM network has multiple servers (the default server and additional servers), 
+	 * a CM client can log in to these servers by specifying a server name.  
+	 * <br> The login process to an additional CM server is the almost same as that to the default server 
+	 * with the {@link CMClientStub#loginCM(String, String)} method.
+	 * Different part is that the login to an additional server requires the target server name, and that 
+	 * the multiple-server-related CM event is the {@link CMMultiServerEvent} class instead of the {@link CMSessionEvent}. 
+	 * Each event ID of the CMMultiServerEvent is preceded by the "ADD_" and the remaining ID word and its 
+	 * role is the same as that of the CMSessionEvent class. Event fields of the CMMultiServerEvent event is also 
+	 * the same as those of the CMSessionEvent except an additional field, the server name.
+	 * 
+	 * @param strServer - the server name
+	 * @param strUser - the user name
+	 * @param strPasswd - the password
+	 * @see CMClientStub#loginCM(String, String)
+	 */
 	public void loginCM(String strServer, String strUser, String strPasswd)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -2351,6 +2400,22 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Logs out from a CM server.
+	 * 
+	 * <p> If the CM network has multiple servers (the default server and additional servers), 
+	 * a CM client can log from one of these servers by specifying a server name.  
+	 * <br> The logout process from an additional CM server is the almost same as that from the default server 
+	 * with the {@link CMClientStub#logoutCM()} method.
+	 * Different part is that the logout from an additional server requires the target server name, and that 
+	 * the multiple-server-related CM event is the {@link CMMultiServerEvent} class instead of the {@link CMSessionEvent}. 
+	 * Each event ID of the CMMultiServerEvent is preceded by the "ADD_" and the remaining ID word and its 
+	 * role is the same as that of the CMSessionEvent class. Event fields of the CMMultiServerEvent event is also 
+	 * the same as those of the CMSessionEvent except an additional field, the server name.
+	 * 
+	 * @param strServer - the server name
+	 * @see CMClientStub#logoutCM()
+	 */
 	public void logoutCM(String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -2402,6 +2467,22 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Requests available session information from a CM server.
+	 * 
+	 * <p> If the CM network has multiple servers (the default server and additional servers), 
+	 * a CM client can request session information from one of these servers by specifying a server name.  
+	 * <br> The session-information-request process with an additional CM server is the almost same as that 
+	 * with the default server using the {@link CMClientStub#requestSessionInfo()} method.
+	 * Different part is that the request from an additional server requires the target server name, and that 
+	 * the multiple-server-related CM event is the {@link CMMultiServerEvent} class instead of the {@link CMSessionEvent}. 
+	 * Each event ID of the CMMultiServerEvent is preceded by the "ADD_" and the remaining ID word and its 
+	 * role is the same as that of the CMSessionEvent class. Event fields of the CMMultiServerEvent event is also 
+	 * the same as those of the CMSessionEvent except an additional field, the server name.
+	 * 
+	 * @param strServerName - the server name
+	 * @see CMClientStub#requestSessionInfo()
+	 */
 	// requests available session information of a designated server
 	public void requestSessionInfo(String strServerName)
 	{
@@ -2447,6 +2528,23 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Joins a session in a CM server.
+	 * 
+	 * <p> If the CM network has multiple servers (the default server and additional servers), 
+	 * a CM client can join a session in one of these servers by specifying a server name.  
+	 * <br> The session-join process with an additional CM server is the almost same as that 
+	 * with the default server using the {@link CMClientStub#joinSession(String)} method.
+	 * Different part is that the request from an additional server requires the target server name, and that 
+	 * the multiple-server-related CM event is the {@link CMMultiServerEvent} class instead of the {@link CMSessionEvent}. 
+	 * Each event ID of the CMMultiServerEvent is preceded by the "ADD_" and the remaining ID word and its 
+	 * role is the same as that of the CMSessionEvent class. Event fields of the CMMultiServerEvent event is also 
+	 * the same as those of the CMSessionEvent except an additional field, the server name.
+	 * 
+	 * @param strServer - the server name
+	 * @param strSession - the session name
+	 * @see CMClientStub#joinSession(String)
+	 */
 	public void joinSession(String strServer, String strSession)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -2508,6 +2606,22 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Leaves the current session in a CM server.
+	 * 
+	 * <p> If the CM network has multiple servers (the default server and additional servers), 
+	 * a CM client can leave the current session in one of these servers by specifying a server name.  
+	 * <br> The session-leave process in an additional CM server is the almost same as that 
+	 * in the default server using the {@link CMClientStub#leaveSession()} method.
+	 * Different part is that the request from an additional server requires the target server name, and that 
+	 * the multiple-server-related CM event is the {@link CMMultiServerEvent} class instead of the {@link CMSessionEvent}. 
+	 * Each event ID of the CMMultiServerEvent is preceded by the "ADD_" and the remaining ID word and its 
+	 * role is the same as that of the CMSessionEvent class. Event fields of the CMMultiServerEvent event is also 
+	 * the same as those of the CMSessionEvent except an additional field, the server name.
+	 * 
+	 * @param strServer - the server name
+	 * @see CMClientStub#leaveSession()
+	 */
 	public void leaveSession(String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -2562,6 +2676,44 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Registers a user to the default server.
+	 * 
+	 * <p> A user can be registered to CM by the registerUser method of the CM client stub. 
+	 * If a CM client is connected to the default server, it can call this method. 
+	 * CM uses the registered user information for the user authentication when a user logs in to the default server.
+	 * 
+	 * <p> Whether the registration request is successful or not is set to a return code of a reply session event, 
+	 * REGISTER_USER_ACK. If the request is successful, the reply event also contains the registration time at the server. 
+	 * The details of the REGISTER_USER_ACK event are described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.REGISTER_USER_ACK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Return code</td><td>int</td>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * </td>
+	 * <td>getReturnCode()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Creation time</td><td>String</td><td>Time to register the user at the DB</td><td>getCreationTime()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param strName - the user name
+	 * @param strPasswd - the password
+	 */
 	public void registerUser(String strName, String strPasswd)
 	{
 		int nState = -1;
@@ -2591,6 +2743,39 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Deregisters a user from the default server.
+	 * 
+	 * <p> A user can cancel his/her registration from CM by the deregisterUser method of 
+	 * the CM client stub. If a client is connected to the default server, it can call this method. 
+	 * When requested, CM removes the registered user information from the CM DB.
+	 * <br> Whether the deregistration request is successful or not is set to a return code of 
+	 * a reply session event, DEREGISTER_USER_ACK as described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.DEREGISTER_USER_ACK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Return code</td><td>int</td>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * </td>
+	 * <td>getReturnCode()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param strName - the user name
+	 * @param strPasswd - the password
+	 */
 	public void deregisterUser(String strName, String strPasswd)
 	{
 		int nState = -1;
@@ -2622,6 +2807,41 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Finds a registered user.
+	 * 
+	 * <p> A user can search for another user by the findRegisteredUser method of the CM client stub. 
+	 * If a client is connected to the default server, it can call this method. When requested, 
+	 * CM provides the basic profile of the target user such as a name and registration time.
+	 * <br> Whether the requested user is found or not is set to a return code of a reply session event, 
+	 * FIND_REGISTERED_USER_ACK as described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.FIND_REGISTERED_USER_ACK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Return code</td><td>int</td>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * </td>
+	 * <td>getReturnCode()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Creation time</td><td>String</td><td>Time to create the user at DB</td><td>getCreationTime()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param strName - the user name
+	 */
 	public void findRegisteredUser(String strName)
 	{
 		int nState = -1;
@@ -2652,6 +2872,44 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Adds a new friend user.
+	 * 
+	 * <p> A client can add a user as its friend only if the user name has been registered to CM. 
+	 * When the default server receives the request for adding a new friend, it first checks 
+	 * if the friend is a registered user or not. If the friend is a registered user, the server 
+	 * adds it to the friend table of the CM DB as a friend of the requesting user. Otherwise, 
+	 * the request fails. In any case, the server sends the ADD_NEW_FRIEND_ACK event with a result 
+	 * code to the requesting client so that it can figure out the request result.
+	 * The detailed information of the ADD_NEW_FRIEND_ACK event is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSNSEvent.ADD_NEW_FRIEND_ACK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Return code</td><td>int</td>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * </td>
+	 * <td>getReturnCode()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Friend name</td><td>String</td><td>Friend name</td><td>getFriendName()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param strFriendName - the friend name
+	 * @see CMClientStub#removeFriend(String)
+	 */
 	public void addNewFriend(String strFriendName)
 	{
 		int nState = -1;
@@ -2675,6 +2933,43 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Removes a friend.
+	 * 
+	 * <p> When the default server receives the request for deleting a friend, it searches for 
+	 * the friend of the requesting user. If the friend is found, the server deletes 
+	 * the corresponding entry from the friend table. Otherwise, the request fails. 
+	 * The result of the request is sent to the requesting client as the REMOVE_FRIEND_ACK event 
+	 * with a result code.
+	 * The detailed information of the REMOVE_FRIEND_ACK event is described below.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td><td>CMSNSEvent.REMOVE_FRIEND_ACK</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Return code</td><td>int</td>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * </td>
+	 * <td>getReturnCode()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Friend name</td><td>String</td><td>Friend name</td><td>getFriendName()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @param strFriendName - the friend name
+	 * @see CMClientStub#addNewFriend(String)
+	 */
 	public void removeFriend(String strFriendName)
 	{
 		int nState = -1;
@@ -2698,6 +2993,62 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Requests to retrieve current friends list of this client.
+	 * 
+	 * <p> Different SNS applications use the concept of a friend in different ways. 
+	 * In some applications, a user can add another user in his/her friend list without 
+	 * the agreement of the target user. In other applications, a user can add a friend 
+	 * only if the other user accepts the friend request. CM supports such different policies 
+	 * of the friend management by methods that request different user lists. 
+	 * <br>The requestFriendsList method requests the list of users whom the requesting user adds 
+	 * as his/her friends regardless of the acceptance of the others. 
+	 * <br>The {@link CMClientStub#requestFriendRequestersList()} method requests the list of users 
+	 * who add the requesting user as a friend, but whom the requesting user has not added 
+	 * as friends yet. 
+	 * <br>The {@link CMClientStub#requestBiFriendsList()} method requests the list 
+	 * of users who add the requesting user as a friend and whom the requesting user adds as friends. 
+	 * 
+	 * <p> When the default server receives the request for friends, requesters, or bi-friends 
+	 * from a client, it sends corresponding user list as the RESPONSE_FRIEND_LIST, 
+	 * RESPONSE_FRIEND_REQUESTER_LIST, or RESPONSE_BI_FRIEND_LIST event to the requesting client. 
+	 * The three events have the same event fields as described below. 
+	 * One of the event fields is the friend list, but the meaning of the list is different 
+	 * according to an event ID. The friend list contains a maximum of 50 user names. 
+	 * If the total number exceeds 50, the server then sends the event more than once.
+	 * 
+	 * <table border=1>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
+	 * </tr>
+	 * <tr>
+	 * <td bgcolor="lightgrey">Event ID</td>
+	 * <td>CMSNSEvent.RESPONSE_FRIEND_LIST<br>CMSNSEvent.RESPONSE_FRIEND_REQUESTER_LIST
+	 * <br>CMSNSEvent.RESPONSE_BI_FRIEND_LIST</td>
+	 * </tr>
+	 * <tr bgcolor="lightgrey">
+	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
+	 * </tr>
+	 * <tr>
+	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Total number of friends</td><td>int</td><td>Total number of requested friends</td>
+	 * <td>getTotalNumFriends()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Number of friends</td><td>int</td><td>Number of requested friends in this event</td>
+	 * <td>getNumFriends()</td>
+	 * </tr>
+	 * <tr>
+	 * <td>Friend list</td><td>ArrayList&ltString&gt</td><td>List of requested friend names</td>
+	 * <td>getFriendList()</td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @see CMClientStub#requestFriendRequestersList()
+	 * @see CMClientStub#requestBiFriendsList()
+	 */
 	public void requestFriendsList()
 	{
 		int nState = -1;
@@ -2720,6 +3071,14 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Requests to retrieve current friend-requesters list of this client.
+	 * 
+	 * <p> The detailed information is described in the {@link CMClientStub#requestFriendsList()} method.
+	 * 
+	 * @see CMClientStub#requestFriendsList()
+	 * @see CMClientStub#requestByFriendsList()
+	 */
 	public void requestFriendRequestersList()
 	{
 		int nState = -1;
@@ -2742,6 +3101,14 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Requests to retrieve current bi-friends list of this client.
+	 * 
+	 * <p> The detailed information is described in the {@link CMClientStub#requestFriendsList()} method.
+	 * 
+	 * @see CMClientStub#requestFriendsList()
+	 * @see CMClientStub#requestFriendRequestersList()
+	 */
 	public void requestBiFriendsList()
 	{
 		int nState = -1;
