@@ -141,6 +141,17 @@ public class CMStub {
 	// add/remove channel (DatagramChannel or MulticastChannel)
 	// SocketChannel is available only in the ClientStub module
 	
+	/**
+	 * Adds an additional datagram (UDP) channel to this CM node.
+	 * 
+	 * <p> A developer must note that the given port number is unique and different from 
+	 * that of the default channel in the configuration file. A UDP channel is identified 
+	 * by the port number as an index.
+	 * 
+	 * @param nChPort - the port number for the new datagram (UDP) channel
+	 * @return true if the channel is successfully open, or false otherwise.
+	 * @see CMStub#removeAdditionalDatagramChannel(int)
+	 */
 	public boolean addDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
@@ -181,6 +192,16 @@ public class CMStub {
 		return result;
 	}
 	
+	/**
+	 * Removes an additional datagram (UDP) channel from this CM node.
+	 * 
+	 * <p> Like the stream (TCP) channel case, a developer should be careful 
+	 * not to remove the default channel.
+	 * 
+	 * @param nChPort - the port number of the channel to be removed
+	 * @return true if the channel is successfully removed, or false otherwise.
+	 * @see CMStub#addDatagramChannel(int)
+	 */
 	public boolean removeAdditionalDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
@@ -200,6 +221,23 @@ public class CMStub {
 		return result;
 	}
 
+	/**
+	 * Adds an additional multicast channel to this CM node.
+	 * 
+	 * <p> The first and second parameters specify a session and group to which a new channel is assigned, 
+	 * because a multicast channel is always mapped to a specific group in a session. The third and fourth 
+	 * parameters are the multicast address and the port number of the new channel. A developer must note 
+	 * that the given address and the port number are unique and different from that of the default channel 
+	 * in a corresponding session configuration file. A multicast channel is identified by the four-tuple: 
+	 * a session name, a group name, a multicast address, and a port number.
+	 * 
+	 * @param strSession - the session name which the new channel belongs to
+	 * @param strGroup - the group name which the new channel belongs to
+	 * @param strChAddress - the multicast address
+	 * @param nChPort - the port number
+	 * @return true if the channel is successfully open, or false otherwise.
+	 * @see CMStub#removeAdditionalMulticastChannel(String, String, String, int)
+	 */
 	public boolean addMulticastChannel(String strSession, String strGroup, String strChAddress, int nChPort)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
@@ -257,6 +295,18 @@ public class CMStub {
 		return result;
 	}
 	
+	/**
+	 * Removes an additional multicast channel from this CM node.
+	 * 
+	 * <p> Like the other additional channel cases, a developer should be careful not to remove the default channel.
+	 * 
+	 * @param strSession - the session name which the target channel belongs to
+	 * @param strGroup - the group name which the target channel belongs to
+	 * @param strChAddress - the multicast address
+	 * @param nChPort - the port number
+	 * @return true if the channel is successfully removed, or false otherwise.
+	 * @see CMStub#addMulticastChannel(String, String, String, int)
+	 */
 	public boolean removeAdditionalMulticastChannel(String strSession, String strGroup, String strChAddress, int nChPort)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();

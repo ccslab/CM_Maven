@@ -5,6 +5,12 @@ import java.util.Calendar;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
 
+/**
+ * This class represents the information of a CM user (client).
+ * 
+ * @author mlim
+ *
+ */
 public class CMUser extends CMObject {
 	
 	private int m_nID;
