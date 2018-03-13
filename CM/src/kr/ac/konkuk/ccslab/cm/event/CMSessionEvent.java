@@ -14,54 +14,60 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  */
 public class CMSessionEvent extends CMEvent {
 
-	public static final int LOGIN = 1;						// 로긴 요청 (c->s)
-	public static final int LOGOUT = 2;						// 로그아웃 (c->s)
-	public static final int LOGIN_ACK = 3;					// 로긴 응답 (s->c)
-	public static final int REQUEST_SESSION_INFO = 4;		// 세션 정보 요청 (c->s)
-	public static final int RESPONSE_SESSION_INFO = 5;		// 세션 정보 응답 (s->c)
-	public static final int JOIN_SESSION = 6;				// 세션 가입 요청 (c->s) sm에서 처리
-	public static final int JOIN_SESSION_ACK = 7;			// 세션 가입 응답 (s->c) sm에서 처리
-	public static final int LEAVE_SESSION = 8;				// 세션 탈퇴 요청 (c->s) sm에서 처리
-	public static final int LEAVE_SESSION_ACK = 9;			// 세션 탈퇴 응답 (s->c) sm에서 처리
-	public static final int SESSION_TALK = 10;				// 로긴상태에서의 채팅 (c<->s)
-	public static final int SESSION_ADD_USER = 11;			// 로긴 사용자 추가 (s->c)
-	public static final int SESSION_REMOVE_USER = 12;		// 로그아웃 사용자 삭제 (s->c)
-	public static final int CHANGE_SESSION = 13;			// 사용자의 세션 변경 (s->c)
-	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;	// add the nonblocking socket channel info (c->s)
-	public static final int ADD_NONBLOCK_SOCKET_CHANNEL_ACK = 15;	// ack for the added nonblocking socket channel (s->c)
-	public static final int ADD_BLOCK_SOCKET_CHANNEL = 22;	// add the blocking socket channel info (c->s)
-	public static final int ADD_BLOCK_SOCKET_CHANNEL_ACK = 23;	// ack for the added blocking socket channel (s->c)
-	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;	// remove the blocking socket channel info (c->s)
-	public static final int REMOVE_BLOCK_SOCKET_CHANNEL_ACK = 25;	// ack for the removed blocking socket channel (s->c)
+	public static final int LOGIN = 1;	// login request (from client to server)
+	public static final int LOGOUT = 2;	// logout request (from client to server)
+	public static final int LOGIN_ACK = 3;	// response to the login request (from server to client)
+	public static final int REQUEST_SESSION_INFO = 4;		// request session information (from client to server)
+	public static final int RESPONSE_SESSION_INFO = 5;	// response to the session-information request (from server to client)
+	public static final int JOIN_SESSION = 6;	// request to join a session (from client to server)
+	public static final int JOIN_SESSION_ACK = 7;	// response to the join-session request (from server to client)
+	public static final int LEAVE_SESSION = 8;		// request to leave the current session (from client to server)
+	public static final int LEAVE_SESSION_ACK = 9;	// response to the leave-session request (from server to client)
+	public static final int SESSION_TALK = 10;		// chat in a session
+	public static final int SESSION_ADD_USER = 11;	// notify to add a login user (from server to client)
+	public static final int SESSION_REMOVE_USER = 12;	// notify to remove a logout user (from server to client)
+	public static final int CHANGE_SESSION = 13;		// notify to change a session of a user (from server to client)
+	// request to add a non-blocking socket channel information (from client to server)
+	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;	
+	// response to the add-non-blocking-socket-channel request (from server to client)
+	public static final int ADD_NONBLOCK_SOCKET_CHANNEL_ACK = 15;
+	// request to add a blocking socket channel information (from client to server)
+	public static final int ADD_BLOCK_SOCKET_CHANNEL = 22;
+	// response to the add-blocking-socket-channel request (from server to client)
+	public static final int ADD_BLOCK_SOCKET_CHANNEL_ACK = 23;
+	// request to remove a blocking socket channel information (from client to server)
+	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;	
+	// response to the remove-blocking-socket-channel request (from server to client)
+	public static final int REMOVE_BLOCK_SOCKET_CHANNEL_ACK = 25;	
 
-	public static final int REGISTER_USER = 16;				// 사용자 등록 요청 (c->s)
-	public static final int REGISTER_USER_ACK = 17;			// 사용자 등록 요청 응답 (s->c)
-	public static final int DEREGISTER_USER = 18;			// 사용자 탈퇴 요청 (c->s)
-	public static final int DEREGISTER_USER_ACK = 19;		// 사용자 탈퇴 요청 응답 (s->c)
-	public static final int FIND_REGISTERED_USER = 20;		// 사용자 검색 (c->s)
-	public static final int FIND_REGISTERED_USER_ACK = 21;	// 사용자 검색 응답 (s->c)
+	public static final int REGISTER_USER = 16;			// request to register a user (from client to server)
+	public static final int REGISTER_USER_ACK = 17;		// response to the register-user request (from server to client)
+	public static final int DEREGISTER_USER = 18;		// request to deregister a user (from client to server)
+	public static final int DEREGISTER_USER_ACK = 19;		// response to the deregister-user request (from server to client)
+	public static final int FIND_REGISTERED_USER = 20;	// request to find a user (from client to server)
+	public static final int FIND_REGISTERED_USER_ACK = 21;	// response to the find-user request (from server to client)
 	
-	// local CM event for notification to the application
-	public static final int UNEXPECTED_SERVER_DISCONNECTION = 99;	// notify app of the unexpected disconnection (c->app)
+	// local CM event from CM to notify the application of the unexpected disconnection (from client CM to application)
+	public static final int UNEXPECTED_SERVER_DISCONNECTION = 99;	
 
-	private String m_strUserName;						// login or out user name
-	private String m_strPasswd;							// password of user
-	private String m_strHostAddr;						// host address of the login user
+	private String m_strUserName;
+	private String m_strPasswd;
+	private String m_strHostAddr;
 	private int m_nUDPPort;
 
-	private int m_bValidUser;							// for LOGINACK
-	private String m_strSessionName;					// 세션 이름
+	private int m_bValidUser;
+	private String m_strSessionName;
 
-	private String m_strCurrentGroupName;				// for LOGINACK (group name)
-	private String m_strCurrentAddress;					// for LOGINACK (group multicast address)
-	private int m_nCurrentPort;							// for LOGINACK (group port)
+	private String m_strCurrentGroupName;
+	private String m_strCurrentAddress;
+	private int m_nCurrentPort;
 	
 	private int m_nSessionNum;
 	private Vector< CMSessionInfo > m_sessionList;
 	private int m_nGroupNum;
 	private Vector< CMGroupInfo > m_groupList;
 
-	private String m_strCommArch;						// communication architecture (CM_PS/CM_CS)
+	private String m_strCommArch;
 	private int m_bFileTransferScheme;
 	private int m_bLoginScheme;
 	private int m_bSessionScheme;
@@ -72,7 +78,7 @@ public class CMSessionEvent extends CMEvent {
 	private String m_strChannelName;
 	private int m_nChannelNum;
 
-	private String m_strCreationTime;			// for user registration time
+	private String m_strCreationTime;
 
 	public CMSessionEvent()
 	{

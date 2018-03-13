@@ -12,10 +12,12 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -36,7 +38,8 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
  * A client application can use this class in order to request client-specific communication services.
  * 
  * @author mlim
- * @see {@link CMStub}, {@link CMServerStub}
+ * @see CMStub 
+ * @see CMServerStub
  */
 public class CMClientStub extends CMStub {
 
@@ -168,6 +171,7 @@ public class CMClientStub extends CMStub {
 	 * {@link CMSessionEvent#isSessionScheme()}. The detailed information of the LOGIN_ACK event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.LOGIN_ACK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -205,6 +209,7 @@ public class CMClientStub extends CMStub {
 	 * The detailed information of the SESSION_ADD_USER event is shown below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMsessionEvent.SESSION_ADD_USER event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -225,7 +230,8 @@ public class CMClientStub extends CMStub {
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
 	 * @see CMClientStub#loginCM(String, String, String)
-	 * @see {@link CMClientStub#logoutCM()}, {@link CMClientStub#registerUser(String, String)}
+	 * @see CMClientStub#logoutCM()
+	 * @see CMClientStub#registerUser(String, String)
 	 * 
 	 */
 	public void loginCM(String strUserName, String strPassword)
@@ -290,6 +296,7 @@ public class CMClientStub extends CMStub {
 	 * is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.SESSION_REMOVE_USER event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -304,7 +311,8 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * </table>
 	 * 
-	 * @see {@link CMClientStub#loginCM()}, {@link CMClientStub#dereisterUser()}
+	 * @see CMClientStub#loginCM(String, String)
+	 * @see CMClientStub#deregisterUser(String, String)
 	 */
 	public void logoutCM()
 	{
@@ -360,6 +368,7 @@ public class CMClientStub extends CMStub {
 	 * <br> The detailed information of the RESPONSE_SESSION_INFO event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.RESPONSE_SESSION_INFO event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -373,12 +382,13 @@ public class CMClientStub extends CMStub {
 	 * <td>Number of sessions</td><td>int</td><td>Number of sessions</td><td>getSessionNum()</td>
 	 * </tr>
 	 * <tr>
-	 * <td>Vector of sessions</td><td>Vector<CMSessionInfo></td><td>List of session information</td>
+	 * <td>Vector of sessions</td><td>Vector&lt;CMSessionInfo&gt;</td><td>List of session information</td>
 	 * <td>getSessionInfoList()</td>
 	 * </tr>
 	 * </table>
 	 * 
-	 * @see {@link CMClientStub#joinSession(String)}, {@link CMClientStub#joinSession(String, String)}
+	 * @see CMClientStub#joinSession(String)
+	 * @see CMClientStub#joinSession(String, String)
 	 */
 	// request available session information from the default server
 	public void requestSessionInfo()
@@ -414,8 +424,8 @@ public class CMClientStub extends CMStub {
 	 * the server CM adopts single session or multiple sessions in the CM server configuration file 
 	 * (cm-server.conf).
 	 * <br> After the client CM completes to join a session, it automatically proceeds to enter the first 
-	 * group of the session. For example, if the client joins ¡°session1¡±, it also enters the group, ¡°g1¡±
-	 * that is the first group of the session, ¡°session1¡±.
+	 * group of the session. For example, if the client joins &quot;session1&quot;, it also enters the group, &quot;g1&quot;
+	 * that is the first group of the session, &quot;session1&quot;.
 	 * 
 	 * <p> When the server CM completes the session joining request from a client, the server CM also 
 	 * notifies other participating clients of the information of the new session user with 
@@ -423,9 +433,10 @@ public class CMClientStub extends CMStub {
 	 * in the event handler routine if it wants to use such information. The CHANGE_SESSION event includes 
 	 * fields such as the user name and the session name, which can be returned by calling 
 	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
-	 * respectively. The detailed informatino of the CHANGE_SESSION event is described below.
+	 * respectively. The detailed information of the CHANGE_SESSION event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.CHANGE_SESSION event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -457,6 +468,7 @@ public class CMClientStub extends CMStub {
 	 * is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMDataEvent.NEW_USER event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_DATA_EVENT</td>
 	 * </tr>
@@ -497,6 +509,7 @@ public class CMClientStub extends CMStub {
 	 * described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMDataEvent.INHABITANT event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_DATA_EVENT</td>
 	 * </tr>
@@ -525,8 +538,9 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * 
 	 * @param sname - the session name that a client requests to join
-	 * @see {@link CMClientStub#joinSession(String, String)}
-	 * @see {@link CMClientStub#leaveSession()}, {@link CMClientStub#leaveSession(String)}
+	 * @see CMClientStub#joinSession(String, String)
+	 * @see CMClientStub#leaveSession()
+	 * @see CMClientStub#leaveSession(String)
 	 */
 	public void joinSession(String sname)
 	{
@@ -576,6 +590,7 @@ public class CMClientStub extends CMStub {
 	 * is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMDataEvent.REMOVE_USER event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event field</td><td>CMInfo.CM_DATA_EVENT</td>
 	 * </tr>
@@ -606,8 +621,9 @@ public class CMClientStub extends CMStub {
 	 * If the session name field of this event is an empty space, a client can know that the user leaves 
 	 * his/her current session. 
 	 * 
-	 * @see {@link CMClientStub#leaveSession(String)}
-	 * @see {@link CMClientStub#joinSession(String)}, {@link CMClientStub#joinSession(String, String)}
+	 * @see CMClientStub#leaveSession(String)
+	 * @see CMClientStub#joinSession(String)
+	 * @see CMClientStub#joinSession(String, String)
 	 */
 	public void leaveSession()
 	{
@@ -692,6 +708,7 @@ public class CMClientStub extends CMStub {
 	 * The detailed information of the SESSION_TALK event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.SESSION_TALK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_Event</td>
 	 * </tr>
@@ -720,6 +737,7 @@ public class CMClientStub extends CMStub {
 	 * respectively. The detailed information of the USER_TAlK event is descrbied below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMInterestEvent.USER_TALK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_INTEREST_Event</td>
 	 * </tr>
@@ -744,13 +762,13 @@ public class CMClientStub extends CMStub {
 	 * </table> 
 	 * 
 	 * @param strTarget - the receiver name.
-	 * <br>This parameter must start with ¡®/¡¯ character and it specifies the range of recipients of the chat 
+	 * <br>This parameter must start with &quot;/&quot; character and it specifies the range of recipients of the chat 
 	 * message as described below:
 	 * <br> /b - The chat message is sent to the all login users.
 	 * <br> /s - The chat message is sent to the all session members of the sending user.
 	 * <br> /g - The chat message is sent to the all group members of the sending user.
-	 * <br> /name - The chat message is sent to a specific CM node of which name is ¡®name¡¯. The name can be 
-	 * another user name or a server name. If ¡®name¡¯ is SERVER, the message is sent to the default server.
+	 * <br> /name - The chat message is sent to a specific CM node of which name is &quot;name&quot;. The name can be 
+	 * another user name or a server name. If &quot;name&quot; is SERVER, the message is sent to the default server.
 	 * @param strMessage - the chat message.
 	 */
 	public void chat(String strTarget, String strMessage)
@@ -861,6 +879,7 @@ public class CMClientStub extends CMStub {
 	 * The client event handler can catch the ack event, and the detailed event fields are described below:
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
@@ -1171,6 +1190,7 @@ public class CMClientStub extends CMStub {
 	 * The client event handler can catch the ack event, and the detailed event fields are described below:
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
@@ -1411,11 +1431,12 @@ public class CMClientStub extends CMStub {
 	 * The detailed event fields are described below:
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK </td>
+	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK </td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
@@ -1669,6 +1690,7 @@ public class CMClientStub extends CMStub {
 	 * the client event handler. The CONTENT_DOWNLOAD event includes fields as below:
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.CONTENT_DOWNLOAD event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
@@ -1723,6 +1745,7 @@ public class CMClientStub extends CMStub {
 	 * The detailed event fields of the CONTENT_DOWNLOAD_END event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.CONTENT_DOWNLOAD_END event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
@@ -1749,10 +1772,10 @@ public class CMClientStub extends CMStub {
 	 * @param strWriter - the name of the writer whose content list will be downloaded.
 	 * <br> The client can designate a specific writer name or a friend group. If the parameter value is 
 	 * a specific user name, the client downloads only content that was uploaded by the specified name 
-	 * and that is accessible by the requester. If the parameter value is ¡®CM_MY_FRIEND¡¯, the client 
-	 * downloads content that was uploaded by the requester¡¯s friends. If the parameter is ¡®CM_BI_FRIEND¡¯, 
-	 * the client downloads content that was uploaded by the requester¡¯s bi-friends. If the ¡®strWriter¡¯ 
-	 * parameter is an empty string (¡°¡±), the client does not specify a writer name and it downloads all 
+	 * and that is accessible by the requester. If the parameter value is &quot;CM_MY_FRIEND&quot;, the client 
+	 * downloads content that was uploaded by the requester&#39;s friends. If the parameter is &quot;CM_BI_FRIEND&quot;, 
+	 * the client downloads content that was uploaded by the requester&#39;s bi-friends. If the &quot;strWriter&quot; 
+	 * parameter is an empty string (&quot;&quot;), the client does not specify a writer name and it downloads all 
 	 * content that the requester is eligible to access.
 	 * @param nOffset - the offset from the beginning of the requested content list.
 	 * <br> The client can request to download some number of SNS messages starting from the nOffset-th 
@@ -1797,7 +1820,8 @@ public class CMClientStub extends CMStub {
 	 * <br> If there is no more next list of SNS content, the server sends the CONTENT_DOWNLOAD_END event of 
 	 * {@link CMSNSEvent} without sending the CONTENT_DOWNLOAD event.
 	 * 
-	 * @see {@link CMClientStub#requestPreviousSNSContent()}, {@link CMClientStub#requestSNSContent(String, int)}
+	 * @see CMClientStub#requestPreviousSNSContent()
+	 * @see CMClientStub#requestSNSContent(String, int)
 	 */
 	public void requestNextSNSContent()
 	{
@@ -1825,7 +1849,8 @@ public class CMClientStub extends CMStub {
 	 * <br> If there is no more previous list of SNS content, the server sends the CONTENT_DOWNLOAD_END event of 
 	 * {@link CMSNSEvent} without sending the CONTENT_DOWNLOAD event.
 	 * 
-	 * @see {@link CMClientStub#requestNextSNSContent()}, {@link CMClientStub#requestSNSContent(String, int)}
+	 * @see CMClientStub#requestNextSNSContent()
+	 * @see CMClientStub#requestSNSContent(String, int)
 	 */
 	public void requestPreviousSNSContent()
 	{
@@ -1857,6 +1882,7 @@ public class CMClientStub extends CMStub {
 	 * The detailed event fields of the CONTENT_UPLOAD_RESPONSE event is described below:
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.CONTENT_UPLOAD_RESPONSE event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
@@ -1895,7 +1921,7 @@ public class CMClientStub extends CMStub {
 	 * LoD 3 does not open the uploaded content and makes it private.
 	 * @param filePathList - the list of attached files
 	 * 
-	 * @see {@link CMClientStub#requestSNSContent(String, int)} 
+	 * @see CMClientStub#requestSNSContent(String, int) 
 	 */
 	public void requestSNSContentUpload(String user, String message, int nNumAttachedFiles, 
 			int nReplyOf, int nLevelOfDisclosure, ArrayList<String> filePathList)
@@ -1978,6 +2004,7 @@ public class CMClientStub extends CMStub {
 	 * <br> The detailed event fields of the RESPONSE_ATTACHED_FILE event are described below:
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.RESPONSE_ATTACHED_FILE event</caption>
 	 * <tr>
 	 *   <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
 	 * </tr>
@@ -2016,7 +2043,7 @@ public class CMClientStub extends CMStub {
 	 * a file name that needs to separately download from the server.
 	 * 
 	 * @return true if the request is successfully sent, or false otherwise
-	 * @see {@link CMClientStub#requestAttachedFileOfSNSContent(int, String, String)}
+	 * @see CMClientStub#requestAttachedFileOfSNSContent(int, String, String)
 	 */
 	public boolean requestAttachedFileOfSNSContent(String strFileName)
 	{
@@ -2068,7 +2095,7 @@ public class CMClientStub extends CMStub {
 	 * @param strWriterName - the name of a requesting user
 	 * @param strFileName - the requested file name
 	 * 
-	 * @see {@link CMClientStub#requestAttachedFileOfSNSContent(String)}
+	 * @see CMClientStub#requestAttachedFileOfSNSContent(String)
 	 */
 	public void requestAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
@@ -2096,6 +2123,7 @@ public class CMClientStub extends CMStub {
 	 * <p> The detailed event fields of the ACCESS_ATTACHED_FILE event are described below:
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.ACCESS_ATTACHED_FILE event</caption>
 	 * <tr>
 	 *   <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
 	 * </tr>
@@ -2127,7 +2155,7 @@ public class CMClientStub extends CMStub {
 	 * @return true if the file access information is successfully sent to the server and if the corresponding 
 	 * SNS content is found at the client. Otherwise, the return value is false.
 	 * 
-	 * @see {@link CMClientStub#accessAttachedFileOfSNSContent(int, String, String)}
+	 * @see CMClientStub#accessAttachedFileOfSNSContent(int, String, String)
 	 */
 	// find the downloaded content and inform the server that the attached file is accessed by the client
 	public boolean accessAttachedFileOfSNSContent(String strFileName)
@@ -2180,7 +2208,7 @@ public class CMClientStub extends CMStub {
 	 * @param strWriterName - the writer name of the SNS content of which attached file is accessed
 	 * @param strFileName - the name of an attached file that the user accessed
 	 * 
-	 * @see {@link CMClientStub#accessAttachedFileOfSNSContent(String)}
+	 * @see CMClientStub#accessAttachedFileOfSNSContent(String)
 	 */
 	public void accessAttachedFileOfSNSContent(int nContentID, String strWriterName, String strFileName)
 	{
@@ -2209,6 +2237,7 @@ public class CMClientStub extends CMStub {
 	 * the NOTIFY_SERVER_INFO event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMMultiServerEvent.NOTIFY_SERVER_INFO event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
@@ -2222,7 +2251,7 @@ public class CMClientStub extends CMStub {
 	 * <td>Number of servers</td><td>int</td><td>Number of additional servers</td><td>getServerNum()</td>
 	 * </tr>
 	 * <tr>
-	 * <td>Server list</td><td>Vector&lt{@link CMServerInfo}&gt</td><td>List of additional server information</td>
+	 * <td>Server list</td><td>Vector&lt;{@link CMServerInfo}&gt;</td><td>List of additional server information</td>
 	 * <td>getServerInfoList()</td>
 	 * </tr>
 	 * </table>
@@ -2231,6 +2260,7 @@ public class CMClientStub extends CMStub {
 	 * the NOTIFY_SERVER_LEAVE event to clients. The event fields of the event are described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMMultiServerEvent.NOTIFY_SERVER_LEAVE event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
@@ -2688,6 +2718,7 @@ public class CMClientStub extends CMStub {
 	 * The details of the REGISTER_USER_ACK event are described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.REGISTER_USER_ACK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -2699,7 +2730,7 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * <tr>
 	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed
 	 * </td>
 	 * <td>getReturnCode()</td>
 	 * </tr>
@@ -2753,6 +2784,7 @@ public class CMClientStub extends CMStub {
 	 * a reply session event, DEREGISTER_USER_ACK as described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.DEREGISTER_USER_ACK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -2764,7 +2796,7 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * <tr>
 	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed
 	 * </td>
 	 * <td>getReturnCode()</td>
 	 * </tr>
@@ -2817,6 +2849,7 @@ public class CMClientStub extends CMStub {
 	 * FIND_REGISTERED_USER_ACK as described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSessionEvent.FIND_REGISTERED_USER_ACK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
 	 * </tr>
@@ -2828,7 +2861,7 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * <tr>
 	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed
 	 * </td>
 	 * <td>getReturnCode()</td>
 	 * </tr>
@@ -2884,6 +2917,7 @@ public class CMClientStub extends CMStub {
 	 * The detailed information of the ADD_NEW_FRIEND_ACK event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.ADD_NEW_FRIEND_ACK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
 	 * </tr>
@@ -2895,7 +2929,7 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * <tr>
 	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed
 	 * </td>
 	 * <td>getReturnCode()</td>
 	 * </tr>
@@ -2944,6 +2978,7 @@ public class CMClientStub extends CMStub {
 	 * The detailed information of the REMOVE_FRIEND_ACK event is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.REMOVE_FRIEND_ACK event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
 	 * </tr>
@@ -2955,7 +2990,7 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * <tr>
 	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed</br>
+	 * <td>Result of the request <br>1: succeeded<br>0: failed
 	 * </td>
 	 * <td>getReturnCode()</td>
 	 * </tr>
@@ -3018,6 +3053,8 @@ public class CMClientStub extends CMStub {
 	 * If the total number exceeds 50, the server then sends the event more than once.
 	 * 
 	 * <table border=1>
+	 * <caption>CMSNSEvent.RESPONSE_FRIEND_LIST, RESPONSE_FRIEND_REQUESTER_LIST, 
+	 * RESPONSE_BI_FRIEND_LIST events</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
 	 * </tr>
@@ -3041,7 +3078,7 @@ public class CMClientStub extends CMStub {
 	 * <td>getNumFriends()</td>
 	 * </tr>
 	 * <tr>
-	 * <td>Friend list</td><td>ArrayList&ltString&gt</td><td>List of requested friend names</td>
+	 * <td>Friend list</td><td>ArrayList&lt;String&gt;</td><td>List of requested friend names</td>
 	 * <td>getFriendList()</td>
 	 * </tr>
 	 * </table>
@@ -3077,7 +3114,7 @@ public class CMClientStub extends CMStub {
 	 * <p> The detailed information is described in the {@link CMClientStub#requestFriendsList()} method.
 	 * 
 	 * @see CMClientStub#requestFriendsList()
-	 * @see CMClientStub#requestByFriendsList()
+	 * @see CMClientStub#requestBiFriendsList()
 	 */
 	public void requestFriendRequestersList()
 	{

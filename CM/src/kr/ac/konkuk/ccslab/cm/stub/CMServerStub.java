@@ -22,7 +22,8 @@ import kr.ac.konkuk.ccslab.cm.manager.CMSNSManager;
  * A server application can use this class in order to request service-specific communication services.
  * 
  * @author mlim
- * @see {@link CMClientStub}, {@link CMStub}
+ * @see CMClientStub
+ * @see CMStub
  */
 public class CMServerStub extends CMStub {
 
@@ -115,6 +116,7 @@ public class CMServerStub extends CMStub {
 	 * The event fields of this event are described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMMultiServerEvent.RES_SERVER_REG event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
@@ -188,6 +190,7 @@ public class CMServerStub extends CMStub {
 	 * The event fields of this event are described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMMultiServerEvent.RES_SERVER_DEREG event</caption>
 	 * <tr>
 	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
@@ -297,34 +300,35 @@ public class CMServerStub extends CMStub {
 	 * <br> The possible value is CMInfo.SNS_ATTACH_FULL(or 0), CMInfo.SNS_ATTACH_PARTIAL(or 1), 
 	 * CMInfo.SNS_ATTACH_PREFETCH(or 2) and CMInfo.SNS_ATTACH_NONE(or 3).
 	 * <table border=1>
-	 * <tr bgcolor=lightgrey>
-	 * <td>download scheme</td><td>description</td>
-	 * </tr>
-	 * <tr>
-	 * <td>CMInfo.SNS_ATTACH_FULL</td>
-	 * <td>
-	 * The CM server sends images with the original quality to the client.
-	 * </td>
-	 * </tr>
-	 * <tr>
-	 * <td>CMInfo.SNS_ATTACH_PARTIAL</td>
-	 * <td>
-	 * The server sends thumbnail images instead of the original images.
-	 * </td>
-	 * </tr>
-	 * <tr>
-	 * <td>CMInfo.SNS_ATTACH_PREFETCH</td>
-	 * <td>
-	 * The server sends thumbnail images to the client, and sends also original 
-	 * images that the client is interested in.
-	 * </td>
-	 * </tr>
-	 * <tr>
-	 * <td>CMInfo.SNS_ATTACH_NONE</td>
-	 * <td>
-	 * The server sends only text links to images.
-	 * </td>
-	 * </tr>
+	 * <caption>Download scheme of attached images of SNS content</caption>
+	 * 	<tr bgcolor=lightgrey>
+	 * 		<td>download scheme</td><td>description</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td>CMInfo.SNS_ATTACH_FULL</td>
+	 * 		<td>
+	 * 			The CM server sends images with the original quality to the client.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td>CMInfo.SNS_ATTACH_PARTIAL</td>
+	 * 		<td>
+	 * 			The server sends thumbnail images instead of the original images.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td>CMInfo.SNS_ATTACH_PREFETCH</td>
+	 * 		<td>
+	 * 			The server sends thumbnail images to the client, and sends also original 
+	 * 			images that the client is interested in.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td>CMInfo.SNS_ATTACH_NONE</td>
+	 * 		<td>
+	 * 			The server sends only text links to images.
+	 * 		</td>
+	 * 	</tr>
 	 * </table>
 	 * @see CMClientStub#requestSNSContent(String, int)
 	 */

@@ -13,7 +13,7 @@ public class CMSessionInfo {
 	protected String m_strSessionName;
 	protected String m_strAddress;
 	protected int m_nPort;
-	protected int m_nUserNum;		// 세션 내 사용자 수
+	protected int m_nUserNum;
 	
 	/**
 	 * Creates an empty CMSessionInfo object.

@@ -35,7 +35,8 @@ import java.nio.channels.*;
  * Application developers should generate an instance of the two sub-classes instead of the CMStub class.
  * 
  * @author mlim
- * @see {@link CMClientStub}, {@link CMServerStub}
+ * @see CMClientStub
+ * @see CMServerStub
  */
 public class CMStub {
 	protected CMInfo m_cmInfo;
@@ -362,13 +363,13 @@ public class CMStub {
 	 * For example, the name of the default server is "SERVER".
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, String)}
-	 * @see {@link CMStub#send(CMEvent, String, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int)
+	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 */
 	public boolean send(CMEvent cme, String strTarget)
 	{
@@ -391,13 +392,13 @@ public class CMStub {
 	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, String)}
-	 * @see {@link CMStub#send(CMEvent, String, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int)
+	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt)
 	{
@@ -424,13 +425,13 @@ public class CMStub {
 	 * and the key of the UDP channel is the locally bound port number.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String)}
-	 * @see {@link CMStub#send(CMEvent, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, String)}
-	 * @see {@link CMStub#send(CMEvent, String, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, String, int, int)} 
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int)
+	 * @see CMStub#send(CMEvent, String, String, int, int) 
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum)
 	{
@@ -466,13 +467,13 @@ public class CMStub {
 	 * by default, but the application can also add blocking channels if required.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String)}
-	 * @see {@link CMStub#send(CMEvent, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int)}
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, String)}
-	 * @see {@link CMStub#send(CMEvent, String, String, int)} 
-	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int) 
+	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum, boolean isBlock)
 	{
@@ -512,12 +513,12 @@ public class CMStub {
 	 * <br> If groupName is null (not specified), the event is sent to all groups in a session.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, int, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, String, int, int)
 	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName)
 	{
@@ -541,12 +542,12 @@ public class CMStub {
 	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, int, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, String, int, int)
 	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName, int opt)
 	{
@@ -563,6 +564,7 @@ public class CMStub {
 	 * different as described below.
 	 * 
 	 * <table border=1>
+	 * <caption>Receiver ranges of the chat() method</caption>
 	 * <tr bgcolor="lightgrey">
 	 * <td>sessionName</td><td>groupName</td><td>receiver range</td>
 	 * </tr>
@@ -592,15 +594,15 @@ public class CMStub {
 	 * and the key of the UDP channel is the locally bound port number.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
+	 * @see CMStub#cast(CMEvent, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, String, int, int)
 	 * 
-	 * @see {@link CMStub#multicast(CMEvent, String, String)}
-	 * @see {@link CMStub#broadcast(CMEvent, int, int)}
+	 * @see CMStub#multicast(CMEvent, String, String)
+	 * @see CMStub#broadcast(CMEvent, int, int)
 	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName, int opt, int nChNum)
 	{
@@ -705,8 +707,8 @@ public class CMStub {
 	 * @param groupName - the target group name
 	 * @return true if the event is successfully multicasted; false otherwise.
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}
-	 * @see {@link CMStub#broadcast(CMEvent, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String, int, int)
+	 * @see CMStub#broadcast(CMEvent, int, int)
 	 */
 	public boolean multicast(CMEvent cme, String sessionName, String groupName)
 	{
@@ -724,11 +726,11 @@ public class CMStub {
 	 * @param cme - the CM event
 	 * @return true if the event is successfully broadcasted; false otherwise.
 	 * 
-	 * @see {@link CMStub#broadcast(CMEvent, int)}
-	 * @see {@link CMStub#broadcast(CMEvent, int, int)}
+	 * @see CMStub#broadcast(CMEvent, int)
+	 * @see CMStub#broadcast(CMEvent, int, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}
-	 * @see {@link CMStub#multicast(CMEvent, String, String)}
+	 * @see CMStub#cast(CMEvent, String, String, int, int)
+	 * @see CMStub#multicast(CMEvent, String, String)
 	 */
 	public boolean broadcast(CMEvent cme)
 	{
@@ -747,11 +749,11 @@ public class CMStub {
 	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
 	 * @return true if the event is successfully broadcasted; false otherwise.
 	 * 
-	 * @see {@link CMStub#broadcast(CMEvent)}
-	 * @see {@link CMStub#broadcast(CMEvent, int, int)}
+	 * @see CMStub#broadcast(CMEvent)
+	 * @see CMStub#broadcast(CMEvent, int, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}
-	 * @see {@link CMStub#multicast(CMEvent, String, String)} 
+	 * @see CMStub#cast(CMEvent, String, String, int, int)
+	 * @see CMStub#multicast(CMEvent, String, String) 
 	 */
 	public boolean broadcast(CMEvent cme, int opt)
 	{
@@ -776,11 +778,11 @@ public class CMStub {
 	 * and the key of the UDP channel is the locally bound port number.
 	 * @return true if the event is successfully broadcasted; false otherwise.
 	 * 
-	 * @see {@link CMStub#broadcast(CMEvent)}
-	 * @see {@link CMStub#broadcast(CMEvent, int)}
+	 * @see CMStub#broadcast(CMEvent)
+	 * @see CMStub#broadcast(CMEvent, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}
-	 * @see {@link CMStub#multicast(CMEvent, String, String)} 
+	 * @see CMStub#cast(CMEvent, String, String, int, int)
+	 * @see CMStub#multicast(CMEvent, String, String) 
 	 */
 	public boolean broadcast(CMEvent cme, int opt, int nChNum)
 	{
@@ -826,13 +828,13 @@ public class CMStub {
 	 * @param userName - the target user name
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, String, int)} 
-	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 * @see CMStub#send(CMEvent, String, String, int) 
+	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String)}
-	 * @see {@link CMStub#send(CMEvent, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}  
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
 	 */
 	public boolean send(CMEvent cme, String serverName, String userName)
 	{
@@ -853,14 +855,13 @@ public class CMStub {
 	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, String)} 
-	 * @see {@link CMStub#send(CMEvent, String, String, int, int)}
+	 * @see CMStub#send(CMEvent, String, String) 
+	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String)}
-	 * @see {@link CMStub#send(CMEvent, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}  
-
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt)
 	{
@@ -888,13 +889,13 @@ public class CMStub {
 	 * and the key of the UDP channel is the locally bound port number.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String, String)} 
-	 * @see {@link CMStub#send(CMEvent, String, String, int)}
+	 * @see CMStub#send(CMEvent, String, String) 
+	 * @see CMStub#send(CMEvent, String, String, int)
 	 * 
-	 * @see {@link CMStub#send(CMEvent, String)}
-	 * @see {@link CMStub#send(CMEvent, String, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int)}
-	 * @see {@link CMStub#send(CMEvent, String, int, int, boolean)}  
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{
@@ -933,7 +934,7 @@ public class CMStub {
 	 * Sends a CM event to a node group via a designated server
 	 * 
 	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, CMInfo.CM_STREAM, 0)
-	 * of the {@link CMStub#send(CMEvent, String, String, String, int, int)} method.
+	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
 	 *  
 	 * @param cme - the CM event
 	 * @param serverName - the server name
@@ -944,12 +945,12 @@ public class CMStub {
 	 * <br> If groupName is null (not specified), the event is sent to all groups in a session.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, String, int, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)} 
+	 * @see CMStub#cast(CMEvent, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, int, int) 
 	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName)
 	{
@@ -960,7 +961,7 @@ public class CMStub {
 	 * Sends a CM event to a node group via a designated server
 	 * 
 	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, opt, 0)
-	 * of the {@link CMStub#send(CMEvent, String, String, String, int, int)} method.
+	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
 	 *   
 	 * @param cme - the CM event
 	 * @param serverName - the server name
@@ -974,12 +975,12 @@ public class CMStub {
 	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int, int)}
+	 * @see CMStub#cast(CMEvent, String, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, String, int, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}  
+	 * @see CMStub#cast(CMEvent, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, int, int)  
 	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt)
 	{
@@ -1011,12 +1012,12 @@ public class CMStub {
 	 * and the key of the UDP channel is the locally bound port number.
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, String, int)}
+	 * @see CMStub#cast(CMEvent, String, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, String, int)
 	 * 
-	 * @see {@link CMStub#cast(CMEvent, String, String)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int)}
-	 * @see {@link CMStub#cast(CMEvent, String, String, int, int)}   
+	 * @see CMStub#cast(CMEvent, String, String)
+	 * @see CMStub#cast(CMEvent, String, String, int)
+	 * @see CMStub#cast(CMEvent, String, String, int, int)   
 	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt, int nChNum)
 	{
@@ -1079,7 +1080,7 @@ public class CMStub {
 	 * The sub-directory name is a sender (client) name.
 	 * 
 	 * @param filePath - the file path
-	 * @see {@link CMStub#getFilePath()}
+	 * @see CMStub#getFilePath()
 	 */
 	public void setFilePath(String filePath)
 	{
@@ -1091,7 +1092,7 @@ public class CMStub {
 	 * Gets the default file path for file transfer.
 	 * 
 	 * @return the default file path for file transfer
-	 * @see {@link CMStub#setFilePath(String)}
+	 * @see CMStub#setFilePath(String)
 	 */
 	public String getFilePath()
 	{
@@ -1108,8 +1109,8 @@ public class CMStub {
 	 * @param strFileName - the requested file name
 	 * @param strFileOwner - the file owner name
 	 * @return true if the file transfer is successfully requested, or false otherwise.
-	 * @see {@link CMStub#requestFile(String, String, byte)}
-	 * @see {@link CMStub#pushFile(String, String)}
+	 * @see CMStub#requestFile(String, String, byte)
+	 * @see CMStub#pushFile(String, String)
 	 */
 	public boolean requestFile(String strFileName, String strFileOwner)
 	{
@@ -1134,6 +1135,7 @@ public class CMStub {
 	 * The detailed event fields of the REPLY_FILE_TRANSFER event are described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMFileEvent.REPLY_FILE_TRANSFER event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
 	 *   </tr>
@@ -1154,7 +1156,7 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> attaching SNS content ID </td> <td> int </td> 
-	 *     <td> If this file is an attachment of an SNS content, the content ID (>= 0) is set. The default value is 
+	 *     <td> If this file is an attachment of an SNS content, the content ID (&gt;= 0) is set. The default value is 
 	 *     -1 (if this file is not an attachment). 
 	 *     <td> {@link CMFileEvent#getContentID()} </td>
 	 *   </tr>
@@ -1165,6 +1167,7 @@ public class CMStub {
 	 * when the entire file is transferred. The detailed information of the END_FILE_TRANSFER event is described below.
 	 *
 	 * <table border=1>
+	 * <caption>CMFileEvent.END_FILE_TRANSFER event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
 	 *   </tr>
@@ -1189,7 +1192,7 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> attaching SNS content ID </td> <td> int </td> 
-	 *     <td> If this file is an attachment of an SNS content, the content ID (>= 0) is set. The default value is 
+	 *     <td> If this file is an attachment of an SNS content, the content ID (&gt;= 0) is set. The default value is 
 	 *     -1 (if this file is not an attachment). 
 	 *     <td> {@link CMFileEvent#getContentID()} </td>
 	 *   </tr>
@@ -1209,8 +1212,8 @@ public class CMStub {
 	 * The CMInfo.FILE_APPEND is the append mode where the receiver skips existing file blocks 
 	 * and receives only remaining blocks.
 	 * @return true if the file transfer is successfully requested, or false otherwise.
-	 * @see {@link CMStub#requestFile(String, String)}
-	 * @see {@link CMStub#pushFile(String, String)}
+	 * @see CMStub#requestFile(String, String)
+	 * @see CMStub#pushFile(String, String)
 	 */
 	public boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend)
 	{
@@ -1230,6 +1233,7 @@ public class CMStub {
 	 * the END_FILE_TRANSFER event as follows.
 	 * 
 	 * <table border=1>
+	 * <caption>CMFileEvent.END_FILE_TRANSFER_ACK event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
 	 *   </tr>
@@ -1254,7 +1258,7 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> attaching SNS content ID </td> <td> int </td> 
-	 *     <td> If this file is an attachment of an SNS content, the content ID (>= 0) is set. The default value is 
+	 *     <td> If this file is an attachment of an SNS content, the content ID (&gt;= 0) is set. The default value is 
 	 *     -1 (if this file is not an attachment). 
 	 *     <td> {@link CMFileEvent#getContentID()} </td>
 	 *   </tr>
@@ -1263,7 +1267,7 @@ public class CMStub {
 	 * @param strFilePath - the path name of a file to be sent
 	 * @param strReceiver - the receiver name
 	 * @return true if the file push is successfully notified to the receiver, or false otherwise.
-	 * @see {@link CMStub#requestFile(String, String)}
+	 * @see CMStub#requestFile(String, String)
 	 */
 	public boolean pushFile(String strFilePath, String strReceiver)
 	{
@@ -1286,6 +1290,7 @@ public class CMStub {
 	 * configuration file). The detailed information of these events is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMFileEvent.CANCEL_FILE_SEND_CHAN_ACK event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
 	 *   </tr>
@@ -1314,7 +1319,7 @@ public class CMStub {
 	 * 
 	 * @param strReceiver - the receiver name
 	 * @return true if the cancellation is succeeded, or false otherwise.
-	 * @see {@link CMStub#cancelRequestFile(String)}
+	 * @see CMStub#cancelRequestFile(String)
 	 */
 	public boolean cancelPushFile(String strReceiver)
 	{
@@ -1335,6 +1340,7 @@ public class CMStub {
 	 * this events is described below.
 	 * 
 	 * <table border=1>
+	 * <caption>CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK event</caption>
 	 *   <tr>
 	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
 	 *   </tr>
@@ -1363,7 +1369,7 @@ public class CMStub {
 	 * 
 	 * @param strSender - the sender name
 	 * @return true if the cancellation is succeeded, or false otherwise.
-	 * @see {@link CMStub#cancelPushFile(String)} 
+	 * @see CMStub#cancelPushFile(String) 
 	 */
 	public boolean cancelRequestFile(String strSender)
 	{
@@ -1389,7 +1395,7 @@ public class CMStub {
 	 * <br> The target CM node should be directly connected to the calling node.
 	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
 	 * if successfully measured, or -1 otherwise.
-	 * @see {@link CMStub#measureOutputThroughput(String)}
+	 * @see CMStub#measureOutputThroughput(String)
 	 */
 	public float measureInputThroughput(String strTarget)
 	{
@@ -1439,7 +1445,7 @@ public class CMStub {
 	 * @param strTarget - the target CM node
 	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
 	 * if successfully measured, or -1 otherwise.
-	 * @see {@link CMStub#measureInputThroughput(String)}
+	 * @see CMStub#measureInputThroughput(String)
 	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
 	public float measureOutputThroughput(String strTarget)
