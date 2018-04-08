@@ -2595,7 +2595,7 @@ public class CMInteractionManager {
 							+strDistGroup+") not found.");
 					return;
 				}
-				CMEventManager.unicastEvent(cme, strDistGroup, opt, 0, cmInfo);
+				CMEventManager.unicastEvent(cme, strDistGroup, opt, cmInfo);
 			}
 			else if(strDistSession.equals("CM_ALL_SESSION")) // distribute to all session members
 			{

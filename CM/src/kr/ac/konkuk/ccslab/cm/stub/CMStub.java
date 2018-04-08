@@ -406,7 +406,19 @@ public class CMStub {
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt)
 	{
-		return send(cme, strTarget, opt, 0, false);
+		boolean bReturn = false;
+		
+		if(opt == CMInfo.CM_STREAM)
+			bReturn = send(cme, strTarget, opt, 0, false);
+		else if(opt == CMInfo.CM_DATAGRAM)
+			bReturn = send(cme, strTarget, opt, m_cmInfo.getConfigurationInfo().getUDPPort(), false);
+		else
+		{
+			System.err.println("CMStub.send(), invalid option !");
+			return false;
+		}
+		
+		return bReturn;
 	}
 	
 	/**
@@ -555,7 +567,19 @@ public class CMStub {
 	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName, int opt)
 	{
-		return cast(cme, sessionName, groupName, opt, 0);
+		boolean bReturn = false;
+		
+		if(opt == CMInfo.CM_STREAM)
+			cast(cme, sessionName, groupName, opt, 0);
+		else if(opt == CMInfo.CM_DATAGRAM)
+			cast(cme, sessionName, groupName, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+		else
+		{
+			System.err.println("CMStub.cast(), invalid option!");
+			return false;
+		}
+		
+		return bReturn;
 	}
 
 	/**
@@ -761,7 +785,19 @@ public class CMStub {
 	 */
 	public boolean broadcast(CMEvent cme, int opt)
 	{
-		return broadcast(cme, opt, 0);
+		boolean bReturn = false;
+		
+		if(opt == CMInfo.CM_STREAM)
+			broadcast(cme, opt, 0);
+		else if(opt == CMInfo.CM_DATAGRAM)
+			broadcast(cme, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+		else
+		{
+			System.err.println("CMStub.broadcast(), invalid option!");
+			return false;
+		}
+		
+		return bReturn;
 	}
 
 	/**
@@ -869,7 +905,19 @@ public class CMStub {
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt)
 	{
-		return send(cme, serverName, userName, opt, 0);
+		boolean bReturn = false;
+		
+		if(opt == CMInfo.CM_STREAM)
+			send(cme, serverName, userName, opt, 0);
+		else if(opt == CMInfo.CM_DATAGRAM)
+			send(cme, serverName, userName, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+		else
+		{
+			System.err.println("CMStub.send(), invalid option!");
+			return false;
+		}
+		
+		return bReturn;
 	}
 	
 	/**
@@ -988,7 +1036,19 @@ public class CMStub {
 	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt)
 	{
-		return cast(cme, serverName, sessionName, groupName, opt, 0);
+		boolean bReturn = false;
+		
+		if(opt == CMInfo.CM_STREAM)
+			cast(cme, serverName, sessionName, groupName, opt, 0);
+		else if(opt == CMInfo.CM_DATAGRAM)
+			cast(cme, serverName, sessionName, groupName, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+		else
+		{
+			System.err.println("CMStub.cast(), invalid option!");
+			return false;
+		}
+		
+		return bReturn;
 	}
 	
 	/**

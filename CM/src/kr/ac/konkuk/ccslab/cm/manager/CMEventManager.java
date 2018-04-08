@@ -114,7 +114,23 @@ public class CMEventManager {
 	
 	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, CMInfo cmInfo)
 	{
-		return unicastEvent(cme, strReceiver, opt, 0, false, cmInfo);
+		boolean bReturn = false;
+		
+		if(opt == CMInfo.CM_STREAM)
+			bReturn = unicastEvent(cme, strReceiver, opt, 0, false, cmInfo);
+		else if(opt == CMInfo.CM_DATAGRAM)
+		{
+			//search for the udp port number of the local default datagram channel
+			CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+			bReturn = unicastEvent(cme, strReceiver, opt, confInfo.getUDPPort(), false, cmInfo);
+		}
+		else
+		{
+			System.err.println("CMEventManager.unicastEvent(), invalid option!");
+			return false;
+		}
+		
+		return bReturn;
 	}
 	
 	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, CMInfo cmInfo)
