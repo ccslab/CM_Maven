@@ -276,6 +276,7 @@ public class CMEventManager {
 			
 			InetSocketAddress sockAddr = new InetSocketAddress(strTargetAddress, nTargetPort);
 			msg = new CMMessage(bufEvent, dc, sockAddr);
+			sendQueue.push(msg);
 			//nSentBytes = CMCommManager.sendMessage(bufEvent, dc, strTargetAddress, nTargetPort);			
 			break;
 		default:
