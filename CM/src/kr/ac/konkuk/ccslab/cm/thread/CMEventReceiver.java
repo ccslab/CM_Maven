@@ -28,7 +28,7 @@ public class CMEventReceiver extends Thread {
 	public CMEventReceiver(CMInfo cmInfo)
 	{
 		m_cmInfo = cmInfo;
-		m_queue = cmInfo.getCommInfo().getBlockingEventQueue();
+		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
 	}
 	
 	public void run()

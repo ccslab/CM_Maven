@@ -15,6 +15,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
+import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 
 public class CMCommManager {
 	
@@ -340,12 +341,22 @@ public class CMCommManager {
 	public static CMByteReceiver startReceivingMessage(CMInfo cmInfo)
 	{
 		Selector sel = cmInfo.getCommInfo().getSelector();
-		CMBlockingEventQueue queue = cmInfo.getCommInfo().getBlockingEventQueue();
-		CMByteReceiver byteReceiver = new CMByteReceiver(sel, queue);
+		CMBlockingEventQueue recvQueue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		CMByteReceiver byteReceiver = new CMByteReceiver(sel, recvQueue);
 		byteReceiver.start();
 		cmInfo.getCommInfo().setByteReceiver(byteReceiver);
 		
 		return byteReceiver;
+	}
+	
+	public static CMByteSender startSendingMessage(CMInfo cmInfo)
+	{
+		CMBlockingEventQueue sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
+		CMByteSender byteSender = new CMByteSender(sendQueue);
+		byteSender.start();
+		cmInfo.getCommInfo().setByteSender(byteSender);
+		
+		return byteSender;
 	}
 
 	

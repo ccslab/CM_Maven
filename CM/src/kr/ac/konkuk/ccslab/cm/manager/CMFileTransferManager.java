@@ -20,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
@@ -1801,6 +1802,7 @@ public class CMFileTransferManager {
 		long lRecvSize = -1;	// received size by the receiver
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMSendFileInfo sInfo = null;
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		
 		// find the CMSendFileInfo object 
 		sInfo = fInfo.findSendFileInfo(fe.getReceiverName(), fe.getFileName(), fe.getContentID());
@@ -1835,7 +1837,7 @@ public class CMFileTransferManager {
 
 		// start a dedicated sending thread
 		Future<CMSendFileInfo> future = null;
-		CMSendFileTask sendFileTask = new CMSendFileTask(sInfo);
+		CMSendFileTask sendFileTask = new CMSendFileTask(sInfo, commInfo.getSendBlockingEventQueue());
 		future = fInfo.getExecutorService().submit(sendFileTask, sInfo);
 		sInfo.setSendTaskResult(future);		
 

@@ -80,6 +80,7 @@ public class CMServerStub extends CMStub {
 		}
 		CMEventManager.startReceivingEvent(m_cmInfo);
 		CMCommManager.startReceivingMessage(m_cmInfo);
+		CMCommManager.startSendingMessage(m_cmInfo);
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMServerStub.startCM(), succeeded.");

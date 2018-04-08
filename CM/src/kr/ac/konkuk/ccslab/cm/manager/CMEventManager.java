@@ -8,9 +8,11 @@ import java.util.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMConcurrencyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMConsistencyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
@@ -126,15 +128,18 @@ public class CMEventManager {
 	{
 		CMMember loginUsers = null;
 		ByteBuffer bufEvent = null;
+		CMMessage msg = null;
 		SocketChannel sc = null;
 		DatagramChannel dc = null;
 		CMUser user = null;
-		int nSentBytes = -1;
+		//int nSentBytes = -1;
 		CMServer tServer = null;
 		CMChannelInfo<Integer> chInfo = null;
 		String strTargetAddress = null;
 		int nTargetPort = -1;
 		CMCommInfo commInfo = cmInfo.getCommInfo();
+		// get the sending queue
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 				
 		//// find a destination channel
@@ -225,12 +230,14 @@ public class CMEventManager {
 					+cme.getType()+", id: "+cme.getID()+").");
 			return false;
 		}
-
+		
 		// send the event
 		switch(opt)
 		{
 		case CMInfo.CM_STREAM:
-			nSentBytes = CMCommManager.sendMessage(bufEvent, sc);
+			msg = new CMMessage(bufEvent, sc);
+			sendQueue.push(msg);
+			//nSentBytes = CMCommManager.sendMessage(bufEvent, sc);
 			break;
 		case CMInfo.CM_DATAGRAM:
 			if(isBlock)
@@ -250,7 +257,10 @@ public class CMEventManager {
 				bufEvent = null;
 				return false;
 			}
-			nSentBytes = CMCommManager.sendMessage(bufEvent, dc, strTargetAddress, nTargetPort);			
+			
+			InetSocketAddress sockAddr = new InetSocketAddress(strTargetAddress, nTargetPort);
+			msg = new CMMessage(bufEvent, dc, sockAddr);
+			//nSentBytes = CMCommManager.sendMessage(bufEvent, dc, strTargetAddress, nTargetPort);			
 			break;
 		default:
 			System.err.println("CMEventManager.unicastEvent(), incorrect option: "+opt);
@@ -260,18 +270,23 @@ public class CMEventManager {
 		
 		if(CMInfo._CM_DEBUG_2)
 		{
-			System.out.println("CMEventManager.unicastEvent(), sent "+nSentBytes+" bytes,"
+			//System.out.println("CMEventManager.unicastEvent(), sent "+nSentBytes+" bytes,"
+			//							+" event(type: "+cme.getType()+", id: "+cme.getID()+").");
+			System.out.println("CMEventManager.unicastEvent(), puts event to the sending queue,"
 							+" event(type: "+cme.getType()+", id: "+cme.getID()+").");
 			System.out.println("receiver("+strReceiver+"), opt("+opt+"), ch key("+nKey+"), isBlock("+isBlock+").");
 		}
 		
-		bufEvent = null;	// clear the ByteBuffer
+		//bufEvent = null;	// clear the ByteBuffer
 		return true;
 	}
 	
-	public static boolean unicastEvent(CMEvent cme, SocketChannel sc)
+	public static boolean unicastEvent(CMEvent cme, SocketChannel sc, CMInfo cmInfo)
 	{
-		int nSentBytes = -1;
+		//int nSentBytes = -1;
+		CMMessage msg = null;
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
 		if(bufEvent == null)
@@ -281,13 +296,16 @@ public class CMEventManager {
 			return false;
 		}
 		
-		nSentBytes = CMCommManager.sendMessage(bufEvent, sc);
-		bufEvent = null;
+		msg = new CMMessage(bufEvent, sc);
+		sendQueue.push(msg);
+		//nSentBytes = CMCommManager.sendMessage(bufEvent, sc);
+		//bufEvent = null;
 		
 		if(CMInfo._CM_DEBUG_2)
 		{
-			System.out.println("CMEventManager.unicastEvent(), sent "+nSentBytes+" bytes, with"
-					+sc.toString());
+			//System.out.println("CMEventManager.unicastEvent(), sent "+nSentBytes+" bytes, with"
+			//		+sc.toString());
+			System.out.println("CMEventManager.unicastEvent(), puts event to the sending queue.");
 			System.out.println("event(type: "+cme.getType()+", id: "+cme.getID()+").");
 		}
 		
@@ -297,12 +315,15 @@ public class CMEventManager {
 	public static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMSession session = interInfo.findSession(strSessionName);
 		CMGroup group = null;
 		InetSocketAddress sockAddress = null;
 		DatagramChannel dc = null;
 		ByteBuffer bufEvent = null;
-		int nSentBytes = -1;
+		CMMessage msg = null;
+		//int nSentBytes = -1;
 		
 		if(session == null)
 		{
@@ -338,12 +359,17 @@ public class CMEventManager {
 			return false;
 		}
 		
-		nSentBytes = CMCommManager.sendMessage(bufEvent, dc, group.getGroupAddress(), group.getGroupPort());
-		bufEvent = null;
+		msg = new CMMessage(bufEvent, dc, sockAddress);
+		sendQueue.push(msg);
+		//nSentBytes = CMCommManager.sendMessage(bufEvent, dc, group.getGroupAddress(), group.getGroupPort());
+		//bufEvent = null;
 		
 		if(CMInfo._CM_DEBUG_2)
 		{
-			System.out.println("CMEventManager.multicastEvent(), sent "+nSentBytes+" bytes, with"
+			//System.out.println("CMEventManager.multicastEvent(), sent "+nSentBytes+" bytes, with"
+			//		+dc.toString()+" session("+strSessionName+"), group("+strGroupName+"), channel("
+			//		+sockAddress.toString()+").");
+			System.out.println("CMEventManager.multicastEvent(), puts the event to the sending queue, with"
 					+dc.toString()+" session("+strSessionName+"), group("+strGroupName+"), channel("
 					+sockAddress.toString()+").");
 			System.out.println("event(type: "+cme.getType()+", id: "+cme.getID()+").");
@@ -352,9 +378,12 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public static boolean multicastEvent(CMEvent cme, DatagramChannel dc, String strMA, int nPort)
+	public static boolean multicastEvent(CMEvent cme, DatagramChannel dc, String strMA, int nPort, CMInfo cmInfo)
 	{
-		int nSentBytes = -1;
+		//int nSentBytes = -1;
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+		CMMessage msg = null;
 		
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
 		if(bufEvent == null)
@@ -364,12 +393,17 @@ public class CMEventManager {
 			return false;
 		}
 		
-		nSentBytes = CMCommManager.sendMessage(bufEvent, dc, strMA, nPort);
-		bufEvent = null;
+		InetSocketAddress sockAddr = new InetSocketAddress(strMA, nPort);
+		msg = new CMMessage(bufEvent, dc, sockAddr);
+		sendQueue.push(msg);
+		//nSentBytes = CMCommManager.sendMessage(bufEvent, dc, strMA, nPort);
+		//bufEvent = null;
 		
 		if(CMInfo._CM_DEBUG_2)
 		{
-			System.out.println("CMEventManager.multicastEvent(), sent "+nSentBytes+" bytes, with"
+			//System.out.println("CMEventManager.multicastEvent(), sent "+nSentBytes+" bytes, with"
+			//		+dc.toString()+", addr("+strMA+"), port("+nPort+").");
+			System.out.println("CMEventManager.multicastEvent(), puts the event to the sending queue, with"
 					+dc.toString()+", addr("+strMA+"), port("+nPort+").");
 			System.out.println("event(type: "+cme.getType()+", id: "+cme.getID()+").");
 		}
@@ -390,6 +424,10 @@ public class CMEventManager {
 	// send an event to all login users (server)
 	public static boolean broadcastEvent(CMEvent cme, int opt, int nChNum, CMInfo cmInfo)
 	{
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+		CMMessage msg = null;
+		
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
 		if(bufEvent == null)
 		{
@@ -423,7 +461,9 @@ public class CMEventManager {
 
 				sleepForSimTransDelay(cmInfo);
 
-				CMCommManager.sendMessage(bufEvent, sc);
+				msg = new CMMessage(bufEvent, sc);
+				sendQueue.push(msg);
+				//CMCommManager.sendMessage(bufEvent, sc);
 			}
 			break;
 		case CMInfo.CM_DATAGRAM:
@@ -442,7 +482,10 @@ public class CMEventManager {
 
 				sleepForSimTransDelay(cmInfo);
 
-				CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
+				InetSocketAddress sockAddr = new InetSocketAddress(tuser.getHost(), tuser.getUDPPort());
+				msg = new CMMessage(bufEvent, dc, sockAddr);
+				sendQueue.push(msg);
+				//CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
 			}
 			break;
 		default:
@@ -459,7 +502,7 @@ public class CMEventManager {
 			System.out.println("event(type: "+cme.getType()+", id: "+cme.getID()+").");
 		}
 		
-		bufEvent = null;
+		//bufEvent = null;
 		return true;
 	}
 	
@@ -476,6 +519,10 @@ public class CMEventManager {
 	// send an event to a specific user group with multiple unicast transmissions
 	public static boolean castEvent(CMEvent cme, CMMember users, int opt, int nChNum, CMInfo cmInfo)
 	{
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+		CMMessage msg = null;
+		
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
 		if(bufEvent == null)
 		{
@@ -509,7 +556,9 @@ public class CMEventManager {
 
 				sleepForSimTransDelay(cmInfo);
 
-				CMCommManager.sendMessage(bufEvent, sc);
+				msg = new CMMessage(bufEvent, sc);
+				sendQueue.push(msg);
+				//CMCommManager.sendMessage(bufEvent, sc);
 			}
 			break;
 		case CMInfo.CM_DATAGRAM:
@@ -528,7 +577,10 @@ public class CMEventManager {
 				
 				sleepForSimTransDelay(cmInfo);
 
-				CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
+				InetSocketAddress sockAddr = new InetSocketAddress(tuser.getHost(), tuser.getUDPPort());
+				msg = new CMMessage(bufEvent, dc, sockAddr);
+				sendQueue.push(msg);
+				//CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
 			}
 			break;
 		default:
@@ -545,7 +597,7 @@ public class CMEventManager {
 			System.out.println("event(type: "+cme.getType()+", id: "+cme.getID()+").");
 		}
 		
-		bufEvent = null;
+		//bufEvent = null;
 		return true;
 	}
 	

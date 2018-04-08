@@ -21,6 +21,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
+import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 import java.io.File;
@@ -67,9 +68,12 @@ public class CMStub {
 		if(er != null)
 			er.interrupt();
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
-		CMByteReceiver br = commInfo.getByteReceiver();
-		if(br != null)
-			br.interrupt();
+		CMByteReceiver byteReceiver = commInfo.getByteReceiver();
+		if(byteReceiver != null)
+			byteReceiver.interrupt();
+		CMByteSender byteSender = commInfo.getByteSender();
+		if(byteSender != null)
+			byteSender.interrupt();
 		
 		// close all channels
 		CMCommManager.terminate(m_cmInfo);

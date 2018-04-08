@@ -949,7 +949,7 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL(), user("+strChannelName
 					+") not found in the login user list.");
 			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
+			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
 			seAck = null;
 			se = null;
 			return;
@@ -1146,7 +1146,7 @@ public class CMInteractionManager {
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
 					+") not found!");
 			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
+			CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);
 			seAck = null;
 			se = null;
 			return;
@@ -1158,7 +1158,7 @@ public class CMInteractionManager {
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), channel not found! "
 					+"user("+strChannelName+"), channel key("+nChKey+")");
 			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck,  (SocketChannel)msg.m_ch);
+			CMEventManager.unicastEvent(seAck,  (SocketChannel)msg.m_ch, cmInfo);
 			seAck = null;
 			se = null;
 			return;
@@ -1166,7 +1166,7 @@ public class CMInteractionManager {
 		
 		// found the blocking channel that will be disconnected
 		seAck.setReturnCode(1);	// ok
-		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
+		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);
 		seAck = null;
 		se = null;
 		
@@ -1326,7 +1326,7 @@ public class CMInteractionManager {
 		seAck.setReturnCode(nReturnCode);
 		seAck.setUserName(se.getUserName());
 		seAck.setCreationTime(strCreationTime);
-		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
+		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
 
 		se = null;
 		seAck = null;
@@ -1404,7 +1404,7 @@ public class CMInteractionManager {
 		seAck.setID(CMSessionEvent.DEREGISTER_USER_ACK);
 		seAck.setReturnCode(nReturnCode);
 		seAck.setUserName(se.getUserName());
-		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
+		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
 		
 		se = null;
 		seAck = null;
@@ -1482,7 +1482,7 @@ public class CMInteractionManager {
 		seAck.setReturnCode(nReturnCode);
 		seAck.setUserName(se.getUserName());
 		seAck.setCreationTime(strCreationTime);
-		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
+		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
 
 		se = null;
 		seAck = null;
@@ -1617,7 +1617,7 @@ public class CMInteractionManager {
 			mseAck.setReturnCode(1);
 		else
 			mseAck.setReturnCode(0);
-		CMEventManager.unicastEvent(mseAck, (SocketChannel) msg.m_ch);
+		CMEventManager.unicastEvent(mseAck, (SocketChannel) msg.m_ch, cmInfo);
 		
 		if(CMInfo._CM_DEBUG)
 		{

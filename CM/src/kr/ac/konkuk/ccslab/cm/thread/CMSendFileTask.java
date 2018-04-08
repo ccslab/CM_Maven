@@ -7,19 +7,23 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
+import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
+//import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 
 public class CMSendFileTask implements Runnable {
 
 	CMSendFileInfo m_sendFileInfo;
+	CMBlockingEventQueue m_sendQueue;
 	
-	public CMSendFileTask(CMSendFileInfo sendFileInfo)
+	public CMSendFileTask(CMSendFileInfo sendFileInfo, CMBlockingEventQueue sendQueue)
 	{
 		m_sendFileInfo = sendFileInfo;
+		m_sendQueue = sendQueue;
 	}
 	
 	@Override
@@ -140,8 +144,11 @@ public class CMSendFileTask implements Runnable {
 			fe.setFileName(m_sendFileInfo.getFileName());
 			fe.setFileSize(m_sendFileInfo.getFileSize());
 			fe.setContentID(m_sendFileInfo.getContentID());
-			CMCommManager.sendMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
-			fe = null;
+			
+			CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
+			m_sendQueue.push(msg);
+			//CMCommManager.sendMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
+			//fe = null;
 		}
 
 		closeRandomAccessFile(raf);
