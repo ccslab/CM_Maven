@@ -610,7 +610,7 @@ public class CMInteractionManager {
 		}
 		else
 		{
-			user.getNonBlockSocketChannelInfo().removeAllChannels();
+			user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
 			user.getBlockSocketChannelInfo().removeAllChannels();
 			interInfo.getLoginUsers().removeMember(user.getName());
 		}
