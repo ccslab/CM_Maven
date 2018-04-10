@@ -206,7 +206,11 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			if(se.isValidUser() == 0)
 			{
 				//System.out.println("This client fails authentication by the default server.");
-				printMessage("This client fails authentication by the default server.\n");				
+				printMessage("This client fails authentication by the default server!\n");				
+			}
+			else if(se.isValidUser() == -1)
+			{
+				printMessage("This client is already in the login-user list!\n");
 			}
 			else
 			{

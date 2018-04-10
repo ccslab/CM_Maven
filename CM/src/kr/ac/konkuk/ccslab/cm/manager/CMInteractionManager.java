@@ -268,8 +268,9 @@ public class CMInteractionManager {
 	
 	/////////////////////////////////////////////////////////////////////////////////
 	
-	public static void processEvent(CMMessage msg, CMInfo cmInfo)
+	public static boolean processEvent(CMMessage msg, CMInfo cmInfo)
 	{
+		boolean bReturn = true;	// the flag of whether the event will be forwarded to the application or not
 		CMEvent cmEvent = null;
 
 		// unmarshall an event
@@ -277,7 +278,7 @@ public class CMInteractionManager {
 		if(cmEvent == null)
 		{
 			System.err.println("CMInteractionManager.processEvent(), unmarshalled event is null.");
-			return ;
+			return false;
 		}
 
 		if(CMInfo._CM_DEBUG_2)
@@ -310,7 +311,7 @@ public class CMInteractionManager {
 				CMSNSManager.processEvent(msg, cmInfo);
 				break;
 			case CMInfo.CM_SESSION_EVENT:
-				processSessionEvent(msg, cmInfo);
+				bReturn = processSessionEvent(msg, cmInfo);
 				break;
 			case CMInfo.CM_MULTI_SERVER_EVENT:
 				processMultiServerEvent(msg, cmInfo);
@@ -323,7 +324,7 @@ public class CMInteractionManager {
 				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
 						+nEventType);
 				cmEvent = null;
-				return;
+				return true;
 			}
 		}
 		
@@ -349,7 +350,7 @@ public class CMInteractionManager {
 		// clear event object (message object is cleared at the EventReceiver)
 		cmEvent = null;
 		
-		return;
+		return bReturn;
 	}
 	
 	/////////////////////////////////////////////////////////////////////
@@ -399,14 +400,15 @@ public class CMInteractionManager {
 		}
 	}
 
-	private static void processSessionEvent(CMMessage msg, CMInfo cmInfo)
+	private static boolean processSessionEvent(CMMessage msg, CMInfo cmInfo)
 	{
+		boolean bForward = true;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		int nEventID = se.getID();
 		switch(nEventID)
 		{
 		case CMSessionEvent.LOGIN:
-			processLOGIN(msg, cmInfo);
+			bForward = processLOGIN(msg, cmInfo);
 			break;
 		case CMSessionEvent.LOGIN_ACK:
 			processLOGIN_ACK(msg, cmInfo);
@@ -472,45 +474,71 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processSessionEvent(), unknown event ID: "
 					+nEventID);
 			se = null;
-			return;
+			return false;
 		}
 		
 		se = null;
-		return;
+		return bForward;
 	}
 
-	private static void processLOGIN(CMMessage msg, CMInfo cmInfo)
+	private static boolean processLOGIN(CMMessage msg, CMInfo cmInfo)
 	{
+		boolean bForward = true;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMMember loginUsers = null;
 		
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
+			// check if the user already has logged in or not
 			CMSessionEvent se = new CMSessionEvent(msg.m_buf);
-			CMUser tuser = new CMUser();
-
-			tuser.setName(se.getUserName());
-			tuser.setPasswd(se.getPassword());
-			tuser.setHost(se.getHostAddress());
-			tuser.setUDPPort(se.getUDPPort());
-			
-			tuser.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);
 			loginUsers = interInfo.getLoginUsers();
-			loginUsers.addMember(tuser);
-			
-			if(CMInfo._CM_DEBUG)
+			if(loginUsers.isMember(se.getUserName()))
 			{
-				System.out.println("CMInteractionManager.processLOGIN(), add new user("+
-						se.getUserName()+"), # longin users("+loginUsers.getMemberNum()+").");
+				// send LOGIN_ACK event saying that the user already has logged into the server
+				bForward = false;
+				if(CMInfo._CM_DEBUG)
+				{
+					System.err.println("CMInteractionManager.processLOGIN(), user("+
+							se.getUserName()+") already has logged into the server!");
+				}
+				
+				CMSessionEvent seAck = new CMSessionEvent();
+				seAck.setID(CMSessionEvent.LOGIN_ACK);
+				seAck.setValidUser(-1);	// already-logged user
+				CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);
+			}
+			else
+			{
+				CMUser tuser = new CMUser();
+
+				tuser.setName(se.getUserName());
+				tuser.setPasswd(se.getPassword());
+				tuser.setHost(se.getHostAddress());
+				tuser.setUDPPort(se.getUDPPort());
+				
+				tuser.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);
+				loginUsers.addMember(tuser);
+				
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMInteractionManager.processLOGIN(), add new user("+
+							se.getUserName()+"), # longin users("+loginUsers.getMemberNum()+").");
+				}
+
+				if(!confInfo.isLoginScheme())
+					replyToLOGIN(se, true, cmInfo);				
 			}
 
-			if(!confInfo.isLoginScheme())
-				replyToLOGIN(se, true, cmInfo);
-
 			se = null;
-			return;
+			return bForward;
 		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.err.println("CMInteractionManager.processLOGIN(); system type is not SERVER!");
+		}
+		return false;
 	}
 
 	public static void replyToLOGIN(CMSessionEvent se, boolean bValidUser, CMInfo cmInfo)

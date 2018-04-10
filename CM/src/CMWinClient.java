@@ -169,7 +169,9 @@ public class CMWinClient extends JFrame {
 			printStyledMessage("Type \"0\" for menu.\n", "regular");
 			// change the appearance of buttons in the client window frame
 			setButtonsAccordingToClientState();
-		}		
+		}
+		
+		m_inTextField.requestFocus();
 	}
 	
 	private void addStylesToDocument(StyledDocument doc)

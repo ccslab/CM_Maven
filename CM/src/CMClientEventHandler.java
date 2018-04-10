@@ -187,7 +187,11 @@ public class CMClientEventHandler implements CMEventHandler {
 		case CMSessionEvent.LOGIN_ACK:
 			if(se.isValidUser() == 0)
 			{
-				System.out.println("This client fails authentication by the default server.");
+				System.err.println("This client fails authentication by the default server!");
+			}
+			else if(se.isValidUser() == -1)
+			{
+				System.err.println("This client is already in the login-user list!");
 			}
 			else
 			{

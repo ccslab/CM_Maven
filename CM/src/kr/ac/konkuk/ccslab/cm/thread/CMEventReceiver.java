@@ -34,6 +34,7 @@ public class CMEventReceiver extends Thread {
 	public void run()
 	{
 		CMMessage msg = null;
+		boolean bForwardToApp = true;
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMEventReceiver starts to receive events.");
@@ -65,22 +66,26 @@ public class CMEventReceiver extends Thread {
 			}
 			
 			// deliver msg to interaction manager
-			CMInteractionManager.processEvent(msg, m_cmInfo);
-			// deliver msg to stub module
-			CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
-			//System.out.println("==Received eType("+cme.getType()+"), eID("+cme.getID()+"), eSize("+msg.m_buf.capacity()+")");
-			m_cmInfo.getEventHandler().processEvent(cme);
-			
+			bForwardToApp = CMInteractionManager.processEvent(msg, m_cmInfo);
+			if(bForwardToApp)
+			{
+				// deliver msg to stub module
+				CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
+				//System.out.println("==Received eType("+cme.getType()+"), eID("+cme.getID()+"), eSize("+msg.m_buf.capacity()+")");
+				m_cmInfo.getEventHandler().processEvent(cme);
+				
+				if(cme.getType() == CMInfo.CM_USER_EVENT)
+				{
+					((CMUserEvent)cme).removeAllEventFields();	// clear all event fields
+				}
+				else if(cme.getType() == CMInfo.CM_FILE_EVENT)
+				{
+					((CMFileEvent)cme).setFileBlock(null);	// clear the file block
+				}
+				cme = null;			// clear the event				
+			}
 			msg.m_buf = null;	// clear the received ByteBuffer
-			if(cme.getType() == CMInfo.CM_USER_EVENT)
-			{
-				((CMUserEvent)cme).removeAllEventFields();	// clear all event fields
-			}
-			else if(cme.getType() == CMInfo.CM_FILE_EVENT)
-			{
-				((CMFileEvent)cme).setFileBlock(null);	// clear the file block
-			}
-			cme = null;			// clear the event
+
 		}
 		
 		if(CMInfo._CM_DEBUG)
