@@ -26,6 +26,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
@@ -353,7 +354,8 @@ public class CMWinClient extends JFrame {
 		case 0:
 			printMessage("---------------------------------------------------\n");
 			printMessage("0: help, 1: connect to default server, 2: disconnect from default server\n");
-			printMessage("3: login to default server, 4: logout from default server\n");
+			printMessage("3: asynchronous login to default server, 73: synchronous login to default server\n");
+			printMessage("4: logout from default server\n");
 			printMessage("5: request session info from default server, 6: join session of defalut server, 7: leave session of default server\n");
 			printMessage("8: user position, 9: chat, 10: test CMDummyEvent, 11: test datagram message\n");
 			printMessage("12: test CMUserEvent, 13: print group info, 14: print current user status\n");
@@ -390,8 +392,11 @@ public class CMWinClient extends JFrame {
 		case 2: // disconnect from default server
 			testDisconnectionDS();
 			break;
-		case 3: // login to default server
+		case 3: // asynchronous login to default server
 			testLoginDS();
+			break;
+		case 73: // synchronous login to default server
+			testSyncLoginDS();
 			break;
 		case 4: // logout from default server
 			testLogoutDS();
@@ -594,31 +599,8 @@ public class CMWinClient extends JFrame {
 		String strUserName = null;
 		String strPassword = null;
 		String strEncPassword = null;
-		Console console = System.console();
-		if(console == null)
-		{
-			//System.err.println("Unable to obtain console.");
-		}
-		
-		//System.out.println("====== login to default server");
+
 		printMessage("====== login to default server\n");
-		/*
-		System.out.print("user name: ");
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		try {
-			strUserName = br.readLine();
-			if(console == null)
-			{
-				System.out.print("password: ");
-				strPassword = br.readLine();
-			}
-			else
-				strPassword = new String(console.readPassword("password: "));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 		JTextField userNameField = new JTextField();
 		JPasswordField passwordField = new JPasswordField();
 		Object[] message = {
@@ -633,12 +615,60 @@ public class CMWinClient extends JFrame {
 			// encrypt password
 			strEncPassword = CMUtil.getSHA1Hash(strPassword);
 			
-			//m_clientStub.loginCM(strUserName, strPassword);
 			m_clientStub.loginCM(strUserName, strEncPassword);
 		}
 		
-		//System.out.println("======");
 		printMessage("======\n");
+	}
+	
+	public void testSyncLoginDS()
+	{
+		String strUserName = null;
+		String strPassword = null;
+		String strEncPassword = null;
+		CMSessionEvent loginAckEvent = null;
+
+		printMessage("====== synchronous login to default server\n");
+		JTextField userNameField = new JTextField();
+		JPasswordField passwordField = new JPasswordField();
+		Object[] message = {
+				"User Name:", userNameField,
+				"Password:", passwordField
+		};
+		int option = JOptionPane.showConfirmDialog(null, message, "Login Input", JOptionPane.OK_CANCEL_OPTION);
+		if (option == JOptionPane.OK_OPTION)
+		{
+			strUserName = userNameField.getText();
+			strPassword = new String(passwordField.getPassword()); // security problem?
+			// encrypt password
+			strEncPassword = CMUtil.getSHA1Hash(strPassword);
+			
+			loginAckEvent = m_clientStub.syncLoginCM(strUserName, strEncPassword);
+			
+			// print login result
+			if(loginAckEvent.isValidUser() == 0)
+			{
+				printMessage("This client fails authentication by the default server!\n");				
+			}
+			else if(loginAckEvent.isValidUser() == -1)
+			{
+				printMessage("This client is already in the login-user list!\n");
+			}
+			else
+			{
+				printMessage("This client successfully logs in to the default server.\n");
+				CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+				
+				// Change the title of the client window
+				setTitle("CM Client ("+interInfo.getMyself().getName()+")");
+
+				// Set the appearance of buttons in the client frame window
+				setButtonsAccordingToClientState();
+			}
+
+		}
+		
+		printMessage("======\n");		
 	}
 
 	public void testLogoutDS()

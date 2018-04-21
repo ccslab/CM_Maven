@@ -1,9 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
+import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 public class CMEventInfo {
 	private CMEventReceiver m_eventReceiver;
+	private CMEventSynchronizer m_eventSynchronizer;
 	
 	// monitor object to wait for receiving the ADD_BLOCK_SOCKET_CHANNEL_ACK
 	private Object m_ABSCAObject;
@@ -29,6 +31,7 @@ public class CMEventInfo {
 	public CMEventInfo()
 	{
 		m_eventReceiver = null;
+		m_eventSynchronizer = new CMEventSynchronizer();
 		
 		m_ABSCAObject = new Object();
 		m_nABSCAReturnCode = -1;
@@ -52,6 +55,16 @@ public class CMEventInfo {
 	public CMEventReceiver getEventReceiver()
 	{
 		return m_eventReceiver;
+	}
+	
+	public void setEventSynchronizer(CMEventSynchronizer sync)
+	{
+		m_eventSynchronizer = sync;
+	}
+	
+	public CMEventSynchronizer getEventSynchronizer()
+	{
+		return m_eventSynchronizer;
 	}
 	
 	public Object getABSCAObject()

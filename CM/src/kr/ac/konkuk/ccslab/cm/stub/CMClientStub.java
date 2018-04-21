@@ -18,6 +18,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -282,6 +283,32 @@ public class CMClientStub extends CMStub {
 		se = null;
 		
 		return;
+	}
+	
+	public CMSessionEvent syncLoginCM(String strUserName, String strPassword)
+	{
+		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMSessionEvent loginAckEvent = null;
+		
+		loginCM(strUserName, strPassword);
+		
+		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.LOGIN_ACK);
+		synchronized(eventSync)
+		{
+			while(loginAckEvent == null)
+			{
+				try {
+					eventSync.wait(30000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				loginAckEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			}
+		}
+		eventSync.init();
+		
+		return loginAckEvent;
 	}
 	
 	/**

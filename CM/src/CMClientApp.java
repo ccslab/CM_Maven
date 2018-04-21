@@ -11,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -77,7 +78,8 @@ public class CMClientApp {
 			case 0:
 				System.out.println("---------------------------------------------------");
 				System.out.println("0: help, 1: connect to default server, 2: disconnect from default server");
-				System.out.println("3: login to default server, 4: logout from default server");
+				System.out.println("3: asynchronous login to default server, 73: synchronous login to default server");
+				System.out.println("4: logout from default server");
 				System.out.println("5: request session info from default server, 6: join session of defalut server, 7: leave session of default server");
 				System.out.println("8: user position, 9: chat, 10: test CMDummyEvent, 11: test datagram message");
 				System.out.println("12: test CMUserEvent, 13: print group info, 14: print current user status");
@@ -115,8 +117,11 @@ public class CMClientApp {
 			case 2: // disconnect from default server
 				testDisconnectionDS();
 				break;
-			case 3: // login to default server
+			case 3: // asynchronous login to default server
 				testLoginDS();
+				break;
+			case 73: // synchronous login to default server
+				testSyncLoginDS();
 				break;
 			case 4: // logout from default server
 				testLogoutDS();
@@ -340,6 +345,57 @@ public class CMClientApp {
 		//m_clientStub.loginCM(strUserName, strPassword);
 		m_clientStub.loginCM(strUserName, strEncPassword);
 		System.out.println("======");
+	}
+	
+	public void testSyncLoginDS()
+	{
+		String strUserName = null;
+		String strPassword = null;
+		String strEncPassword = null;
+		CMSessionEvent loginAckEvent = null;
+		Console console = System.console();
+		if(console == null)
+		{
+			System.err.println("Unable to obtain console.");
+		}
+		
+		System.out.println("====== login to default server");
+		System.out.print("user name: ");
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		try {
+			strUserName = br.readLine();
+			if(console == null)
+			{
+				System.out.print("password: ");
+				strPassword = br.readLine();
+			}
+			else
+				strPassword = new String(console.readPassword("password: "));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// encrypt password
+		strEncPassword = CMUtil.getSHA1Hash(strPassword);
+		
+		loginAckEvent = m_clientStub.syncLoginCM(strUserName, strEncPassword);
+		
+		// print login result
+		if(loginAckEvent.isValidUser() == 0)
+		{
+			System.err.println("This client fails authentication by the default server!");
+		}
+		else if(loginAckEvent.isValidUser() == -1)
+		{
+			System.err.println("This client is already in the login-user list!");
+		}
+		else
+		{
+			System.out.println("This client successfully logs in to the default server.");
+		}
+
+		System.out.println("======");		
 	}
 	
 	public void testLogoutDS()

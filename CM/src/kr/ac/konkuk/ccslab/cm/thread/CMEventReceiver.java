@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
@@ -35,6 +36,7 @@ public class CMEventReceiver extends Thread {
 	{
 		CMMessage msg = null;
 		boolean bForwardToApp = true;
+		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMEventReceiver starts to receive events.");
@@ -67,22 +69,35 @@ public class CMEventReceiver extends Thread {
 			
 			// deliver msg to interaction manager
 			bForwardToApp = CMInteractionManager.processEvent(msg, m_cmInfo);
-			if(bForwardToApp)
+
+			// check whether the main thread is waiting for an event
+			CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
+			if(eventSync.isWaiting() && cme.getType() == eventSync.getWaitingEventType() && 
+					cme.getID() == eventSync.getWaitingEventID())
 			{
-				// deliver msg to stub module
-				CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
-				//System.out.println("==Received eType("+cme.getType()+"), eID("+cme.getID()+"), eSize("+msg.m_buf.capacity()+")");
-				m_cmInfo.getEventHandler().processEvent(cme);
-				
-				if(cme.getType() == CMInfo.CM_USER_EVENT)
+				eventSync.setReplyEvent(cme);
+				synchronized(eventSync)
 				{
-					((CMUserEvent)cme).removeAllEventFields();	// clear all event fields
+					eventSync.notify();
 				}
-				else if(cme.getType() == CMInfo.CM_FILE_EVENT)
+			}
+			else
+			{
+				if(bForwardToApp)
 				{
-					((CMFileEvent)cme).setFileBlock(null);	// clear the file block
-				}
-				cme = null;			// clear the event				
+					// deliver msg to stub module
+					m_cmInfo.getEventHandler().processEvent(cme);
+					
+					if(cme.getType() == CMInfo.CM_USER_EVENT)
+					{
+						((CMUserEvent)cme).removeAllEventFields();	// clear all event fields
+					}
+					else if(cme.getType() == CMInfo.CM_FILE_EVENT)
+					{
+						((CMFileEvent)cme).setFileBlock(null);	// clear the file block
+					}
+					cme = null;			// clear the event				
+				}				
 			}
 			msg.m_buf = null;	// clear the received ByteBuffer
 
