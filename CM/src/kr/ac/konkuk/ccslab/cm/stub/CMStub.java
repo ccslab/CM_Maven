@@ -10,6 +10,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
@@ -1471,23 +1472,40 @@ public class CMStub {
 		long lTransDelay = -1;
 		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
+		CMFileEvent replyEvent = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		
 		fInfo.setStartTime(lStartTime);
 		bReturn = CMFileTransferManager.requestFile("throughput-test.jpg", strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		
 		if(!bReturn)
 			return -1;
+
+		if(confInfo.isFileTransferScheme())
+			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN);
+		else
+			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER);
 		
-		synchronized(eInfo.getEFTObject())
+		synchronized(eventSync)
 		{
-			try {
-				eInfo.getEFTObject().wait();
-				lFileSize = eInfo.getEFTFileSize();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return -1;
+			while(replyEvent == null)
+			{
+				try {
+					eventSync.wait(30000);					
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				replyEvent = (CMFileEvent) eventSync.getReplyEvent();
 			}
+			lFileSize = replyEvent.getFileSize();
+		}
+		eventSync.init();
+		
+		if(replyEvent.getID() == CMFileEvent.REPLY_FILE_TRANSFER || replyEvent.getID() == CMFileEvent.REPLY_FILE_TRANSFER_CHAN)
+		{
+			return -1;
 		}
 				
 		lEndTime = System.currentTimeMillis();
@@ -1522,6 +1540,9 @@ public class CMStub {
 		long lTransDelay = -1;
 		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
+		CMFileEvent replyEvent = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		String strFilePath = fInfo.getFilePath() + File.separator + "throughput-test.jpg";
 		
 		fInfo.setStartTime(lStartTime);
@@ -1530,17 +1551,26 @@ public class CMStub {
 		if(!bReturn)
 			return -1;
 		
-		synchronized(eInfo.getEFTAObject())
+		if(confInfo.isFileTransferScheme())
+			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK);
+		else
+			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK);
+		
+		synchronized(eventSync)
 		{
-			try {
-				eInfo.getEFTAObject().wait();
-				lFileSize = eInfo.getEFTAFileSize();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return -1;
+			while(replyEvent == null)
+			{
+				try {
+					eventSync.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				replyEvent = (CMFileEvent) eventSync.getReplyEvent();
 			}
+			lFileSize = replyEvent.getFileSize();
 		}
+		eventSync.init();
 				
 		lEndTime = System.currentTimeMillis();
 		lTransDelay = lEndTime - lStartTime;	// millisecond
