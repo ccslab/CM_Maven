@@ -608,6 +608,7 @@ public class CMWinClient extends JFrame {
 		String strUserName = null;
 		String strPassword = null;
 		String strEncPassword = null;
+		boolean bRequestResult = false;
 
 		printMessage("====== login to default server\n");
 		JTextField userNameField = new JTextField();
@@ -624,7 +625,11 @@ public class CMWinClient extends JFrame {
 			// encrypt password
 			strEncPassword = CMUtil.getSHA1Hash(strPassword);
 			
-			m_clientStub.loginCM(strUserName, strEncPassword);
+			bRequestResult = m_clientStub.loginCM(strUserName, strEncPassword);
+			if(bRequestResult)
+				printMessage("successfully sent the login request.\n");
+			else
+				printStyledMessage("failed the login request!\n", "bold");
 		}
 		
 		printMessage("======\n");
@@ -653,28 +658,34 @@ public class CMWinClient extends JFrame {
 			strEncPassword = CMUtil.getSHA1Hash(strPassword);
 			
 			loginAckEvent = m_clientStub.syncLoginCM(strUserName, strEncPassword);
-			
-			// print login result
-			if(loginAckEvent.isValidUser() == 0)
+			if(loginAckEvent != null)
 			{
-				printMessage("This client fails authentication by the default server!\n");				
-			}
-			else if(loginAckEvent.isValidUser() == -1)
-			{
-				printMessage("This client is already in the login-user list!\n");
+				// print login result
+				if(loginAckEvent.isValidUser() == 0)
+				{
+					printMessage("This client fails authentication by the default server!\n");				
+				}
+				else if(loginAckEvent.isValidUser() == -1)
+				{
+					printMessage("This client is already in the login-user list!\n");
+				}
+				else
+				{
+					printMessage("This client successfully logs in to the default server.\n");
+					CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+					
+					// Change the title of the client window
+					setTitle("CM Client ("+interInfo.getMyself().getName()+")");
+
+					// Set the appearance of buttons in the client frame window
+					setButtonsAccordingToClientState();
+				}				
 			}
 			else
 			{
-				printMessage("This client successfully logs in to the default server.\n");
-				CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-				
-				// Change the title of the client window
-				setTitle("CM Client ("+interInfo.getMyself().getName()+")");
-
-				// Set the appearance of buttons in the client frame window
-				setButtonsAccordingToClientState();
+				printStyledMessage("failed the login request!\n", "bold");
 			}
-
+			
 		}
 		
 		printMessage("======\n");		
@@ -705,8 +716,13 @@ public class CMWinClient extends JFrame {
 
 	public void testSessionInfoDS()
 	{
+		boolean bRequestResult = false;
 		printMessage("====== request session info from default server\n");
-		m_clientStub.requestSessionInfo();
+		bRequestResult = m_clientStub.requestSessionInfo();
+		if(bRequestResult)
+			printMessage("successfully sent the session-info request.\n");
+		else
+			printStyledMessage("failed the session-info request!\n", "bold");
 		printMessage("======\n");
 	}
 	
@@ -715,6 +731,11 @@ public class CMWinClient extends JFrame {
 		CMSessionEvent se = null;
 		printMessage("====== synchronous request session info from default server\n");
 		se = m_clientStub.syncRequestSessionInfo();
+		if(se == null)
+		{
+			printStyledMessage("failed the session-info request!\n", "bold");
+			return;
+		}
 		
 		// print the request result
 		Iterator<CMSessionInfo> iter = se.getSessionInfoList().iterator();

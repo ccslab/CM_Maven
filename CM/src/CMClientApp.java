@@ -326,6 +326,7 @@ public class CMClientApp {
 		String strUserName = null;
 		String strPassword = null;
 		String strEncPassword = null;
+		boolean bRequestResult = false;
 		Console console = System.console();
 		if(console == null)
 		{
@@ -352,8 +353,11 @@ public class CMClientApp {
 		// encrypt password
 		strEncPassword = CMUtil.getSHA1Hash(strPassword);
 		
-		//m_clientStub.loginCM(strUserName, strPassword);
-		m_clientStub.loginCM(strUserName, strEncPassword);
+		bRequestResult = m_clientStub.loginCM(strUserName, strEncPassword);
+		if(bRequestResult)
+			System.out.println("successfully sent the login request.");
+		else
+			System.err.println("failed the login request!");
 		System.out.println("======");
 	}
 	
@@ -390,19 +394,25 @@ public class CMClientApp {
 		strEncPassword = CMUtil.getSHA1Hash(strPassword);
 		
 		loginAckEvent = m_clientStub.syncLoginCM(strUserName, strEncPassword);
-		
-		// print login result
-		if(loginAckEvent.isValidUser() == 0)
+		if(loginAckEvent != null)
 		{
-			System.err.println("This client fails authentication by the default server!");
-		}
-		else if(loginAckEvent.isValidUser() == -1)
-		{
-			System.err.println("This client is already in the login-user list!");
+			// print login result
+			if(loginAckEvent.isValidUser() == 0)
+			{
+				System.err.println("This client fails authentication by the default server!");
+			}
+			else if(loginAckEvent.isValidUser() == -1)
+			{
+				System.err.println("This client is already in the login-user list!");
+			}
+			else
+			{
+				System.out.println("This client successfully logs in to the default server.");
+			}			
 		}
 		else
 		{
-			System.out.println("This client successfully logs in to the default server.");
+			System.err.println("failed the login request!");
 		}
 
 		System.out.println("======");		
@@ -423,8 +433,13 @@ public class CMClientApp {
 
 	public void testSessionInfoDS()
 	{
+		boolean bRequestResult = false;
 		System.out.println("====== request session info from default server");
-		m_clientStub.requestSessionInfo();
+		bRequestResult = m_clientStub.requestSessionInfo();
+		if(bRequestResult)
+			System.out.println("successfully sent the session-info request.");
+		else
+			System.err.println("failed the session-info request!");
 		System.out.println("======");
 	}
 	
@@ -433,6 +448,11 @@ public class CMClientApp {
 		CMSessionEvent se = null;
 		System.out.println("====== synchronous request session info from default server");
 		se = m_clientStub.syncRequestSessionInfo();
+		if(se == null)
+		{
+			System.err.println("failed the session-info request!");
+			return;
+		}
 
 		// print the request result
 		Iterator<CMSessionInfo> iter = se.getSessionInfoList().iterator();

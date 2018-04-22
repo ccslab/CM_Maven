@@ -231,15 +231,17 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
+	 * @return true if the request is successfully sent to the server; false otherwise.
 	 * @see CMClientStub#syncLoginCM(String, String)
 	 * @see CMClientStub#loginCM(String, String, String)
 	 * @see CMClientStub#logoutCM()
 	 * @see CMClientStub#registerUser(String, String)
 	 * 
 	 */
-	public void loginCM(String strUserName, String strPassword)
+	public boolean loginCM(String strUserName, String strPassword)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		boolean bRequestResult = false;
 		
 		// check local state
 		int nUserState = getMyself().getState();
@@ -252,13 +254,10 @@ public class CMClientStub extends CMStub {
 		
 		switch( nUserState )
 		{
-		//case CMInfo.CM_INIT:
-			//System.out.println("You should connect to the default server before login.\n"); 
-			//return;
 		case CMInfo.CM_LOGIN:
 		case CMInfo.CM_SESSION_JOIN:
-			System.out.println("You already logged on the default server.\n"); 
-			return;
+			System.out.println("You already logged in to the default server."); 
+			return false;
 		}
 		
 		String strMyAddr = confInfo.getMyAddress();		// client IP address
@@ -280,10 +279,10 @@ public class CMClientStub extends CMStub {
 		myself.setUDPPort(nMyUDPPort);
 		
 		// send the event
-		send(se, "SERVER");
+		bRequestResult = send(se, "SERVER");
 		se = null;
 		
-		return;
+		return bRequestResult;
 	}
 	
 	/**
@@ -304,8 +303,10 @@ public class CMClientStub extends CMStub {
 	{
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
 		CMSessionEvent loginAckEvent = null;
+		boolean bRequestResult = false;
 		
-		loginCM(strUserName, strPassword);
+		bRequestResult = loginCM(strUserName, strPassword);
+		if(!bRequestResult) return null;
 		
 		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.LOGIN_ACK);
 		synchronized(eventSync)
@@ -430,31 +431,33 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * </table>
 	 * 
+	 * @return true if the request is successfully sent to the server; false otherwise.
 	 * @see CMClientStub#syncRequestSessionInfo()
 	 * @see CMClientStub#joinSession(String)
 	 * @see CMClientStub#joinSession(String, String)
 	 */
 	// request available session information from the default server
-	public void requestSessionInfo()
+	public boolean requestSessionInfo()
 	{
+		boolean bRequestResult = false;
 		
 		// check local state
 		int nUserState = getMyself().getState();
 		if(nUserState == CMInfo.CM_INIT || nUserState == CMInfo.CM_CONNECT)
 		{
 			System.out.println("CMClientStub.requestSessionInfo(), you should log in to the default server.");
-			return;
+			return false;
 		}
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REQUEST_SESSION_INFO);
 		se.setUserName(getMyself().getName());
-		send(se, "SERVER");
+		bRequestResult = send(se, "SERVER");
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMClientStub.requestSessionInfo(), end.");
 		se = null;
-		return;
+		return bRequestResult;
 	}
 	
 	/**
@@ -473,8 +476,10 @@ public class CMClientStub extends CMStub {
 	{
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
+		boolean bRequestResult = false;
 		
-		requestSessionInfo();
+		bRequestResult = requestSessionInfo();
+		if(!bRequestResult) return null;
 		
 		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.RESPONSE_SESSION_INFO);
 		synchronized(eventSync)
