@@ -22,6 +22,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
@@ -354,8 +355,7 @@ public class CMWinClient extends JFrame {
 		case 0:
 			printMessage("---------------------------------------------------\n");
 			printMessage("0: help, 1: connect to default server, 2: disconnect from default server\n");
-			printMessage("3: asynchronous login to default server, 73: synchronous login to default server\n");
-			printMessage("4: logout from default server\n");
+			printMessage("3: login to default server, 4: logout from default server\\n");
 			printMessage("5: request session info from default server, 6: join session of defalut server, 7: leave session of default server\n");
 			printMessage("8: user position, 9: chat, 10: test CMDummyEvent, 11: test datagram message\n");
 			printMessage("12: test CMUserEvent, 13: print group info, 14: print current user status\n");
@@ -363,6 +363,8 @@ public class CMWinClient extends JFrame {
 			printMessage("18: set file path, 19: request file, 20: push file\n");
 			printMessage("62: cancel receiving file, 63: cancel sending file\n");
 			printMessage("21: test forwarding schemes, 22: test delay of forwarding schemes\n");
+			printMessage("---------------------------------------------------\n");
+			printMessage("73: synchronous login to default server, 74: synchronous request session info\n");
 			printMessage("---------------------------------------------------\n");
 			printMessage("23: SNS content download, 50: request attached file of SNS content\n");
 			printMessage("24: test repeated downloading of SNS content, 25: SNS content upload\n");
@@ -403,6 +405,9 @@ public class CMWinClient extends JFrame {
 			break;
 		case 5: // request session info from default server
 			testSessionInfoDS();
+			break;
+		case 74: // synchronous request session info from default server
+			testSyncSessionInfoDS();
 			break;
 		case 6: // join a session
 			testJoinSession();
@@ -696,11 +701,32 @@ public class CMWinClient extends JFrame {
 
 	public void testSessionInfoDS()
 	{
-		//System.out.println("====== request session info from default server");
 		printMessage("====== request session info from default server\n");
 		m_clientStub.requestSessionInfo();
-		//System.out.println("======");
 		printMessage("======\n");
+	}
+	
+	public void testSyncSessionInfoDS()
+	{
+		CMSessionEvent se = null;
+		printMessage("====== synchronous request session info from default server\n");
+		se = m_clientStub.syncRequestSessionInfo();
+		
+		// print the request result
+		Iterator<CMSessionInfo> iter = se.getSessionInfoList().iterator();
+
+		printMessage(String.format("%-60s%n", "------------------------------------------------------------"));
+		printMessage(String.format("%-20s%-20s%-10s%-10s%n", "name", "address", "port", "user num"));
+		printMessage(String.format("%-60s%n", "------------------------------------------------------------"));
+
+		while(iter.hasNext())
+		{
+			CMSessionInfo tInfo = iter.next();
+			printMessage(String.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), 
+					tInfo.getPort(), tInfo.getUserNum()));
+		}
+	
+		printMessage("======\n");		
 	}
 
 	public void testJoinSession()

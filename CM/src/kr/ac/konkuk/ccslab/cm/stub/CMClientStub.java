@@ -231,6 +231,7 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
+	 * @see CMClientStub#syncLoginCM(String, String)
 	 * @see CMClientStub#loginCM(String, String, String)
 	 * @see CMClientStub#logoutCM()
 	 * @see CMClientStub#registerUser(String, String)
@@ -285,6 +286,19 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Logs in to the default server synchronously.
+	 * 
+	 * <p> Unlike the asynchronous login method ({@link CMClientStub#loginCM(String, String)}), 
+	 * this method makes the main thread of the client block its execution until it receives and 
+	 * returns the reply event (CMSessionEvent.LOGIN_ACK) from the default server.
+	 * <br> For the other detailed login information, please refer to the asynchronous login method.
+	 * 
+	 * @param strUserName - the user name
+	 * @param strPassword - the password
+	 * @return the reply event (CMSessionEvent.LOGIN_ACK) from the default server.
+	 * @see CMClientStub#loginCM(String, String)
+	 */
 	public CMSessionEvent syncLoginCM(String strUserName, String strPassword)
 	{
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
@@ -415,6 +429,7 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * </table>
 	 * 
+	 * @see CMClientStub#syncRequestSessionInfo()
 	 * @see CMClientStub#joinSession(String)
 	 * @see CMClientStub#joinSession(String, String)
 	 */
@@ -439,6 +454,43 @@ public class CMClientStub extends CMStub {
 			System.out.println("CMClientStub.requestSessionInfo(), end.");
 		se = null;
 		return;
+	}
+	
+	/**
+	 * Requests available session information from the default server synchronously.
+	 * 
+	 * <p> Unlike the asynchronous method ({@link CMClientStub#requestSessionInfo()}), this method makes 
+	 * the main thread of the client block its execution until it receives and returns the reply event 
+	 * (CMSessionEvent.RESPONSE_SESSION_INFO) from the default server.
+	 * <br> For the other detailed information, please refer to the asynchronous version of the request. 
+	 * 
+	 * @return the reply event (CMSessionEvent.RESPONSE_SESSION_INFO) from the default server.
+	 * @see CMClientStub#requestSessionInfo()
+	 */
+	public CMSessionEvent syncRequestSessionInfo()
+	{
+		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMSessionEvent replyEvent = null;
+		
+		requestSessionInfo();
+		
+		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.RESPONSE_SESSION_INFO);
+		synchronized(eventSync)
+		{
+			while(replyEvent == null)
+			{
+				try {
+					eventSync.wait(30000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			}
+		}
+		eventSync.init();
+		
+		return replyEvent;
 	}
 
 	/**

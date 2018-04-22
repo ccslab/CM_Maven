@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
@@ -78,15 +79,17 @@ public class CMClientApp {
 			case 0:
 				System.out.println("---------------------------------------------------");
 				System.out.println("0: help, 1: connect to default server, 2: disconnect from default server");
-				System.out.println("3: asynchronous login to default server, 73: synchronous login to default server");
-				System.out.println("4: logout from default server");
-				System.out.println("5: request session info from default server, 6: join session of defalut server, 7: leave session of default server");
-				System.out.println("8: user position, 9: chat, 10: test CMDummyEvent, 11: test datagram message");
-				System.out.println("12: test CMUserEvent, 13: print group info, 14: print current user status");
+				System.out.println("3: login to default server, 4: logout from default server");
+				System.out.println("5: request session info from default server, 6: join session of defalut server");
+				System.out.println("7: leave session of default server, 8: user position, 9: chat, 10: test CMDummyEvent");
+				System.out.println("11: test datagram message, 12: test CMUserEvent");
+				System.out.println("13: print group info, 14: print current user status");
 				System.out.println("15: change group, 16: add additional channel, 17: remove additional channel");
 				System.out.println("18: set file path, 19: request file, 20: push file");
 				System.out.println("62: cancel receiving file, 63: cancel sending file");
 				System.out.println("21: test forwarding schemes, 22: test delay of forwarding schemes");
+				System.out.println("---------------------------------------------------");
+				System.out.println("73: synchronous login to default server, 74: synchronous request session info");
 				System.out.println("---------------------------------------------------");
 				System.out.println("23: download new SNS content, 50: request attached file of SNS content");
 				System.out.println("51: download next SNS content, 52: download previous SNS content");
@@ -128,6 +131,9 @@ public class CMClientApp {
 				break;
 			case 5: // request session info from default server
 				testSessionInfoDS();
+				break;
+			case 74: // synchronous request sesssion info
+				testSyncSessionInfoDS();
 				break;
 			case 6: // join a session
 				testJoinSession();
@@ -416,6 +422,29 @@ public class CMClientApp {
 		System.out.println("====== request session info from default server");
 		m_clientStub.requestSessionInfo();
 		System.out.println("======");
+	}
+	
+	public void testSyncSessionInfoDS()
+	{
+		CMSessionEvent se = null;
+		System.out.println("====== synchronous request session info from default server");
+		se = m_clientStub.syncRequestSessionInfo();
+
+		// print the request result
+		Iterator<CMSessionInfo> iter = se.getSessionInfoList().iterator();
+
+		System.out.format("%-60s%n", "------------------------------------------------------------");
+		System.out.format("%-20s%-20s%-10s%-10s%n", "name", "address", "port", "user num");
+		System.out.format("%-60s%n", "------------------------------------------------------------");
+
+		while(iter.hasNext())
+		{
+			CMSessionInfo tInfo = iter.next();
+			System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), 
+					tInfo.getPort(), tInfo.getUserNum());
+		}
+
+		System.out.println("======");		
 	}
 	
 	public void testJoinSession()

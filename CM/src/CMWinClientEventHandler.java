@@ -331,9 +331,6 @@ public class CMWinClientEventHandler implements CMEventHandler{
 	{
 		Iterator<CMSessionInfo> iter = se.getSessionInfoList().iterator();
 
-		//System.out.format("%-60s%n", "------------------------------------------------------------");
-		//System.out.format("%-20s%-20s%-10s%-10s%n", "name", "address", "port", "user num");
-		//System.out.format("%-60s%n", "------------------------------------------------------------");
 		printMessage(String.format("%-60s%n", "------------------------------------------------------------"));
 		printMessage(String.format("%-20s%-20s%-10s%-10s%n", "name", "address", "port", "user num"));
 		printMessage(String.format("%-60s%n", "------------------------------------------------------------"));
@@ -341,8 +338,6 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		while(iter.hasNext())
 		{
 			CMSessionInfo tInfo = iter.next();
-			//System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), 
-			//		tInfo.getPort(), tInfo.getUserNum());
 			printMessage(String.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), 
 					tInfo.getPort(), tInfo.getUserNum()));
 		}
