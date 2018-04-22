@@ -89,7 +89,8 @@ public class CMClientApp {
 				System.out.println("62: cancel receiving file, 63: cancel sending file");
 				System.out.println("21: test forwarding schemes, 22: test delay of forwarding schemes");
 				System.out.println("---------------------------------------------------");
-				System.out.println("73: synchronous login to default server, 74: synchronous request session info");
+				System.out.println("73: synchronously login to default server, 74: synchronously request session info");
+				System.out.println("75: synchronoulsy join session of default server");
 				System.out.println("---------------------------------------------------");
 				System.out.println("23: download new SNS content, 50: request attached file of SNS content");
 				System.out.println("51: download next SNS content, 52: download previous SNS content");
@@ -120,10 +121,10 @@ public class CMClientApp {
 			case 2: // disconnect from default server
 				testDisconnectionDS();
 				break;
-			case 3: // asynchronous login to default server
+			case 3: // login to default server
 				testLoginDS();
 				break;
-			case 73: // synchronous login to default server
+			case 73: // synchronously login to default server
 				testSyncLoginDS();
 				break;
 			case 4: // logout from default server
@@ -132,11 +133,14 @@ public class CMClientApp {
 			case 5: // request session info from default server
 				testSessionInfoDS();
 				break;
-			case 74: // synchronous request sesssion info
+			case 74: // synchronously request session info
 				testSyncSessionInfoDS();
 				break;
 			case 6: // join a session
 				testJoinSession();
+				break;
+			case 75: // synchronously join a session
+				testSyncJoinSession();
 				break;
 			case 7: // leave the current session
 				testLeaveSession();
@@ -450,6 +454,7 @@ public class CMClientApp {
 	public void testJoinSession()
 	{
 		String strSessionName = null;
+		boolean bRequestResult = false;
 		System.out.println("====== join a session");
 		System.out.print("session name: ");
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -459,8 +464,39 @@ public class CMClientApp {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		m_clientStub.joinSession(strSessionName);
+		bRequestResult = m_clientStub.joinSession(strSessionName);
+		if(bRequestResult)
+			System.out.println("successfully sent the session-join request.");
+		else
+			System.err.println("failed the session-join request!");
 		System.out.println("======");
+	}
+	
+	public void testSyncJoinSession()
+	{
+		CMSessionEvent se = null;
+		String strSessionName = null;
+		System.out.println("====== join a session");
+		System.out.print("session name: ");
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		try {
+			strSessionName = br.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		se = m_clientStub.syncJoinSession(strSessionName);
+		if(se != null)
+		{
+			System.out.println("successfully joined a session that has ("+se.getGroupNum()+") groups.");
+		}
+		else
+		{
+			System.err.println("failed the session-join request!");
+		}
+		
+		System.out.println("======");		
 	}
 	
 	public void testLeaveSession()

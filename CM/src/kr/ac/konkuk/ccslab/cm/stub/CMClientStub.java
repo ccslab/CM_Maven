@@ -292,7 +292,8 @@ public class CMClientStub extends CMStub {
 	 * <p> Unlike the asynchronous login method ({@link CMClientStub#loginCM(String, String)}), 
 	 * this method makes the main thread of the client block its execution until it receives and 
 	 * returns the reply event (CMSessionEvent.LOGIN_ACK) from the default server.
-	 * <br> For the other detailed login information, please refer to the asynchronous login method.
+	 * <br> For the other detailed information of the login process, please refer to 
+	 * the asynchronous login method.
 	 * 
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
@@ -462,7 +463,8 @@ public class CMClientStub extends CMStub {
 	 * <p> Unlike the asynchronous method ({@link CMClientStub#requestSessionInfo()}), this method makes 
 	 * the main thread of the client block its execution until it receives and returns the reply event 
 	 * (CMSessionEvent.RESPONSE_SESSION_INFO) from the default server.
-	 * <br> For the other detailed information, please refer to the asynchronous version of the request. 
+	 * <br> For the other detailed information of the session-information-request process, 
+	 * please refer to the asynchronous version of the request. 
 	 * 
 	 * @return the reply event (CMSessionEvent.RESPONSE_SESSION_INFO) from the default server.
 	 * @see CMClientStub#requestSessionInfo()
@@ -618,23 +620,26 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * 
 	 * @param sname - the session name that a client requests to join
+	 * @return true if the request is successful; false otherwise.
+	 * @see CMClientStub#syncJoinSession(String)
 	 * @see CMClientStub#joinSession(String, String)
 	 * @see CMClientStub#leaveSession()
 	 * @see CMClientStub#leaveSession(String)
 	 */
-	public void joinSession(String sname)
+	public boolean joinSession(String sname)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		boolean bResult = false;
 		
 		// check local state
 		switch( getMyself().getState() )
 		{
 		case CMInfo.CM_INIT:
-			System.out.println("You should connect and login server before session join.\n"); return;
+			System.out.println("You should connect and login server before session join.\n"); return false;
 		case CMInfo.CM_CONNECT:
-			System.out.println("You should login server before session join..\n"); return;
+			System.out.println("You should login server before session join..\n"); return false;
 		case CMInfo.CM_SESSION_JOIN:
-			System.out.println("You have already joined a session.\n"); return;
+			System.out.println("You have already joined a session.\n"); return false;
 		}
 		
 		// check selected session
@@ -642,7 +647,7 @@ public class CMClientStub extends CMStub {
 		{
 			System.out.println("session("+sname+") not found. You can request session information"
 					+" from the default server.");
-			return;
+			return false;
 		}
 
 		// make and send an event
@@ -651,11 +656,52 @@ public class CMClientStub extends CMStub {
 		se.setHandlerSession(sname);
 		se.setUserName(getMyself().getName());
 		se.setSessionName(sname);
-		send(se, "SERVER");
+		bResult = send(se, "SERVER");
 		getMyself().setCurrentSession(sname);
 		
 		se = null;
-		return;
+		return bResult;
+	}
+	
+	/**
+	 * Joins a session in the default server synchronously.
+	 * 
+	 * <p> Unlike the asynchronous method ({@link CMClientStub#joinSession(String)}), this method makes 
+	 * the main thread of the client block its execution until it receives and returns the reply event 
+	 * (CMSessionEvent.JOIN_SESSION_ACK) from the default server.
+	 * <br> For the other detailed information of the session-join process, please refer to the asynchronous 
+	 * version of the request.  
+	 * 
+	 * @param sname - the session name that a client requests to join
+	 * @return the reply event (CMSessionEvent.JOIN_SESSION_ACK) from the default server, null if the request fails.
+	 * @see CMClientStub#joinSession(String)
+	 */
+	public CMSessionEvent syncJoinSession(String sname)
+	{
+		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMSessionEvent replyEvent = null;
+		boolean bRequestResult = false;
+		
+		bRequestResult = joinSession(sname);
+		if(!bRequestResult) return null;
+		
+		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.JOIN_SESSION_ACK);
+		synchronized(eventSync)
+		{
+			while(replyEvent == null)
+			{
+				try {
+					eventSync.wait(30000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			}
+		}
+		eventSync.init();
+		
+		return replyEvent;		
 	}
 	
 	/**

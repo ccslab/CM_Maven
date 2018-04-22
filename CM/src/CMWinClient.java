@@ -364,7 +364,8 @@ public class CMWinClient extends JFrame {
 			printMessage("62: cancel receiving file, 63: cancel sending file\n");
 			printMessage("21: test forwarding schemes, 22: test delay of forwarding schemes\n");
 			printMessage("---------------------------------------------------\n");
-			printMessage("73: synchronous login to default server, 74: synchronous request session info\n");
+			printMessage("73: synchronously login to default server, 74: synchronously request session info\n");
+			printMessage("75: synchronously join session of default server\n");
 			printMessage("---------------------------------------------------\n");
 			printMessage("23: SNS content download, 50: request attached file of SNS content\n");
 			printMessage("24: test repeated downloading of SNS content, 25: SNS content upload\n");
@@ -397,7 +398,7 @@ public class CMWinClient extends JFrame {
 		case 3: // asynchronous login to default server
 			testLoginDS();
 			break;
-		case 73: // synchronous login to default server
+		case 73: // synchronously login to default server
 			testSyncLoginDS();
 			break;
 		case 4: // logout from default server
@@ -406,11 +407,14 @@ public class CMWinClient extends JFrame {
 		case 5: // request session info from default server
 			testSessionInfoDS();
 			break;
-		case 74: // synchronous request session info from default server
+		case 74: // synchronously request session info from default server
 			testSyncSessionInfoDS();
 			break;
 		case 6: // join a session
 			testJoinSession();
+			break;
+		case 75: // synchronously join a session
+			testSyncJoinSession();
 			break;
 		case 7: // leave the current session
 			testLeaveSession();
@@ -732,23 +736,42 @@ public class CMWinClient extends JFrame {
 	public void testJoinSession()
 	{
 		String strSessionName = null;
-		//System.out.println("====== join a session");
+		boolean bRequestResult = false;
 		printMessage("====== join a session\n");
-		/*
-		System.out.print("session name: ");
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		try {
-			strSessionName = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 		strSessionName = JOptionPane.showInputDialog("Session Name:");
 		if(strSessionName != null)
-			m_clientStub.joinSession(strSessionName);
-		//System.out.println("======");
+		{
+			bRequestResult = m_clientStub.joinSession(strSessionName);
+			if(bRequestResult)
+				printMessage("successfully sent the session-join request.");
+			else
+				printStyledMessage("failed the session-join request!", "bold");
+		}
 		printMessage("======\n");
+	}
+	
+	public void testSyncJoinSession()
+	{
+		CMSessionEvent se = null;
+		String strSessionName = null;
+		printMessage("====== join a session\n");
+		strSessionName = JOptionPane.showInputDialog("Session Name:");
+		if(strSessionName != null)
+		{
+			se = m_clientStub.syncJoinSession(strSessionName);
+			if(se != null)
+			{
+				setButtonsAccordingToClientState();
+				// print result of the request
+				printMessage("successfully joined a session that has ("+se.getGroupNum()+") groups.\n");				
+			}
+			else
+			{
+				printStyledMessage("failed the session-join request!\n", "bold");
+			}
+		}
+				
+		printMessage("======\n");		
 	}
 
 	public void testLeaveSession()
