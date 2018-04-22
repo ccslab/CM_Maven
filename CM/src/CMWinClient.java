@@ -693,10 +693,13 @@ public class CMWinClient extends JFrame {
 
 	public void testLogoutDS()
 	{
-		//System.out.println("====== logout from default server");
+		boolean bRequestResult = false;
 		printMessage("====== logout from default server\n");
-		m_clientStub.logoutCM();
-		//System.out.println("======");
+		bRequestResult = m_clientStub.logoutCM();
+		if(bRequestResult)
+			printMessage("successfully sent the logout request.\n");
+		else
+			printStyledMessage("failed the logout request!\n", "bold");
 		printMessage("======\n");
 
 		// Change the title of the login button
@@ -797,10 +800,13 @@ public class CMWinClient extends JFrame {
 
 	public void testLeaveSession()
 	{
-		//System.out.println("====== leave the current session");
+		boolean bRequestResult = false;
 		printMessage("====== leave the current session\n");
-		m_clientStub.leaveSession();
-		//System.out.println("======");
+		bRequestResult = m_clientStub.leaveSession();
+		if(bRequestResult)
+			printMessage("successfully sent the leave-session request.\n");
+		else
+			printStyledMessage("failed the leave-session request!\n", "bold");
 		printMessage("======\n");
 		setButtonsAccordingToClientState();
 	}

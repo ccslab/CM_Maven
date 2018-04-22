@@ -420,8 +420,13 @@ public class CMClientApp {
 	
 	public void testLogoutDS()
 	{
+		boolean bRequestResult = false;
 		System.out.println("====== logout from default server");
-		m_clientStub.logoutCM();
+		bRequestResult = m_clientStub.logoutCM();
+		if(bRequestResult)
+			System.out.println("successfully sent the logout request.");
+		else
+			System.err.println("failed the logout request!");
 		System.out.println("======");
 	}
 	
@@ -521,8 +526,13 @@ public class CMClientApp {
 	
 	public void testLeaveSession()
 	{
+		boolean bRequestResult = false;
 		System.out.println("====== leave the current session");
-		m_clientStub.leaveSession();
+		bRequestResult = m_clientStub.leaveSession();
+		if(bRequestResult)
+			System.out.println("successfully sent the leave-session request.");
+		else
+			System.err.println("failed the leave-session request!");
 		System.out.println("======");
 	}
 	

@@ -355,21 +355,23 @@ public class CMClientStub extends CMStub {
 	 * </tr>
 	 * </table>
 	 * 
+	 * @return true if successfully sent the logout request, false otherwise.
 	 * @see CMClientStub#loginCM(String, String)
 	 * @see CMClientStub#deregisterUser(String, String)
 	 */
-	public void logoutCM()
+	public boolean logoutCM()
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		boolean bRequestResult = false;
 		
 		// check state of the local user
 		CMUser myself = getMyself();
 		switch(myself.getState())
 		{
 		case CMInfo.CM_INIT:
-			System.out.println("You should connect and log in to the default server."); return;
+			System.out.println("You should connect and log in to the default server."); return false;
 		case CMInfo.CM_CONNECT:
-			System.out.println("You should log in to the default server."); return;
+			System.out.println("You should log in to the default server."); return false;
 		}
 		
 		// terminate current group info (multicast channel, group member, Membership key)
@@ -383,15 +385,17 @@ public class CMClientStub extends CMStub {
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.LOGOUT);
 		se.setUserName(myself.getName());
-		send(se, "SERVER");
+		bRequestResult = send(se, "SERVER");
 		
 		// update local state
 		myself.setState(CMInfo.CM_CONNECT);
-		
-		System.out.println("["+myself.getName()+"] logs out the default server.");
+		if(bRequestResult)
+			System.out.println("["+myself.getName()+"] successfully sent the logout request to the default server.");
+		else
+			System.err.println("["+myself.getName()+"] failed the logout request!");
 		
 		se = null;
-		return;
+		return bRequestResult;
 	}
 	
 	/**
@@ -752,24 +756,26 @@ public class CMClientStub extends CMStub {
 	 * If the session name field of this event is an empty space, a client can know that the user leaves 
 	 * his/her current session. 
 	 * 
+	 * @return true if successfully sent the leave-session request, false otherwise.
 	 * @see CMClientStub#leaveSession(String)
 	 * @see CMClientStub#joinSession(String)
 	 * @see CMClientStub#joinSession(String, String)
 	 */
-	public void leaveSession()
+	public boolean leaveSession()
 	{
+		boolean bRequestResult = false;
 		CMUser myself = getMyself();
 		// check local state
 		switch(myself.getState())
 		{
 		case CMInfo.CM_INIT:
 			System.out.println("You should connect, log in to the default server, and join a session."); 
-			return;
+			return false;
 		case CMInfo.CM_CONNECT:
 			System.out.println("You should log in to the default server and join a session.");
-			return;
+			return false;
 		case CMInfo.CM_LOGIN:
-			System.out.println("You should join a session."); return;
+			System.out.println("You should join a session."); return false;
 		}
 		
 		// terminate current group info (multicast channel, group member, Membership key)
@@ -781,15 +787,18 @@ public class CMClientStub extends CMStub {
 		se.setHandlerSession(myself.getCurrentSession());
 		se.setUserName(myself.getName());
 		se.setSessionName(myself.getCurrentSession());
-		send(se, "SERVER");
+		bRequestResult = send(se, "SERVER");
 		
 		// update the local state
 		myself.setState(CMInfo.CM_LOGIN);
 		
-		System.out.println("["+myself.getName()+"] leaves session("+myself.getCurrentSession()+").");
+		if(bRequestResult)
+			System.out.println("["+myself.getName()+"] successfully requested to leave session("+myself.getCurrentSession()+").");
+		else
+			System.err.println("["+myself.getName()+"] failed the leave-session request!");
 		
 		se = null;
-		return;
+		return bRequestResult;
 	}
 	
 	/**
