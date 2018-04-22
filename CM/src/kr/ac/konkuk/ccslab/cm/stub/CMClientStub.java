@@ -1149,6 +1149,8 @@ public class CMClientStub extends CMStub {
 		SocketChannel sc = null;
 		CMChannelInfo<Integer> scInfo = null;
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
+		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
 		
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
@@ -1197,39 +1199,34 @@ public class CMClientStub extends CMStub {
 			return null;
 		}
 
-		synchronized(eInfo.getANBSCAObject())
-		{
-			/*
-			 * This statement is required because the ack event of adding a blocking socket channel
-			 * can set the ANBSCAReturnCode value.
-			 */
-			eInfo.setANBSCAReturnCode(-1);
-		}
+		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nChKey);
-		send(se, strServer, CMInfo.CM_STREAM, nChKey);
+		boolean bRequestResult = send(se, strServer, CMInfo.CM_STREAM, nChKey);
+		if(!bRequestResult)
+			return null;
 		
 		se = null;
 		
-		synchronized(eInfo.getANBSCAObject())
+		synchronized(eventSync)
 		{
-			while(nReturnCode == -1)
+			while(replyEvent == null)
 			{
 				try {
-					eInfo.getANBSCAObject().wait(60000);  // timeout 60s
+					eventSync.wait(30000);  // timeout 30s
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				nReturnCode = eInfo.getANBSCAReturnCode();
-			}
-			
-			eInfo.setANBSCAReturnCode(-1);	// reset the value (-1)
+				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			}	
 		}
+		eventSync.init();
 
+		nReturnCode = replyEvent.getReturnCode();
 		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
 		{
 			if(CMInfo._CM_DEBUG)
@@ -1454,6 +1451,8 @@ public class CMClientStub extends CMStub {
 		SocketChannel sc = null;
 		CMChannelInfo<Integer> scInfo = null;
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
+		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
@@ -1501,39 +1500,34 @@ public class CMClientStub extends CMStub {
 			return null;
 		}
 
-		synchronized(eInfo.getABSCAObject())
-		{
-			/*
-			 * This statement is required because the ack event of adding a nonblocking socket channel
-			 * can set the ABSCAReturnCode value.
-			 */
-			eInfo.setABSCAReturnCode(-1);
-		}
+		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nChKey);
-		//send(se, strServer, CMInfo.CM_STREAM, nKey);
-		send(se, strServer, CMInfo.CM_STREAM, nChKey, true);
+		boolean bRequestResult = send(se, strServer, CMInfo.CM_STREAM, nChKey, true);
+		if(!bRequestResult)
+			return null;
+		
 		se = null;
 
-		synchronized(eInfo.getABSCAObject())
+		synchronized(eventSync)
 		{
-			while(nReturnCode == -1)
+			while(replyEvent == null)
 			{
 				try {
-					eInfo.getABSCAObject().wait(60000);  // timeout 60s
+					eventSync.wait(30000);  // timeout 30s
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				nReturnCode = eInfo.getABSCAReturnCode();
-			}
-			
-			eInfo.setABSCAReturnCode(-1);	// reset the value (-1)
+				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			}			
 		}
+		eventSync.init();
 
+		nReturnCode = replyEvent.getReturnCode();
 		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
 		{
 			if(CMInfo._CM_DEBUG)
@@ -1679,6 +1673,8 @@ public class CMClientStub extends CMStub {
 		SocketChannel sc = null;
 		CMSessionEvent se = null;
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
+		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
@@ -1710,38 +1706,34 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		synchronized(eInfo.getRBSCAObject())
-		{
-			/*
-			 * This statement is required becuase the ack event of removing a nonblocking socket channel
-			 * can set the ABSCAReturnCode value.
-			 */
-			eInfo.setRBSCAReturnCode(-1);			
-		}
+		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
 		
 		se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
 		se.setChannelNum(nChKey);
 		se.setChannelName(interInfo.getMyself().getName());
 		result = send(se, strServer);	// send the event with the default nonblocking socket channel
+		if(!result)
+			return false;
+		
 		se = null;
 		
-		synchronized(eInfo.getRBSCAObject())
+		synchronized(eventSync)
 		{
-			while(nReturnCode == -1)
+			while(replyEvent == null)
 			{
 				try {
-					eInfo.getRBSCAObject().wait(60000);  // timeout 60s
+					eventSync.wait(30000);  // timeout 30s
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				nReturnCode = eInfo.getRBSCAReturnCode();
+				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 			}
-			
-			eInfo.setRBSCAReturnCode(-1);	// reset the value (-1)
 		}
+		eventSync.init();
 
+		nReturnCode = replyEvent.getReturnCode();
 		if(nReturnCode == 1) // successfully remove the new channel info (key, channel) at the server
 		{
 			if(CMInfo._CM_DEBUG)
@@ -1763,7 +1755,6 @@ public class CMClientStub extends CMStub {
 		}
 		
 		return result;
-
 	}
 
 	/**
