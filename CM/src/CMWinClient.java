@@ -355,7 +355,7 @@ public class CMWinClient extends JFrame {
 		case 0:
 			printMessage("---------------------------------------------------\n");
 			printMessage("0: help, 1: connect to default server, 2: disconnect from default server\n");
-			printMessage("3: login to default server, 4: logout from default server\\n");
+			printMessage("3: login to default server, 4: logout from default server\n");
 			printMessage("5: request session info from default server, 6: join session of defalut server, 7: leave session of default server\n");
 			printMessage("8: user position, 9: chat, 10: test CMDummyEvent, 11: test datagram message\n");
 			printMessage("12: test CMUserEvent, 13: print group info, 14: print current user status\n");
@@ -625,11 +625,19 @@ public class CMWinClient extends JFrame {
 			// encrypt password
 			strEncPassword = CMUtil.getSHA1Hash(strPassword);
 			
+			m_eventHandler.setStartTime(System.currentTimeMillis());
 			bRequestResult = m_clientStub.loginCM(strUserName, strEncPassword);
+			long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 			if(bRequestResult)
+			{
 				printMessage("successfully sent the login request.\n");
+				printMessage("return delay: "+lDelay+" ms.\n");
+			}
 			else
+			{
 				printStyledMessage("failed the login request!\n", "bold");
+				m_eventHandler.setStartTime(0);
+			}
 		}
 		
 		printMessage("======\n");
@@ -657,13 +665,15 @@ public class CMWinClient extends JFrame {
 			// encrypt password
 			strEncPassword = CMUtil.getSHA1Hash(strPassword);
 			
+			m_eventHandler.setStartTime(System.currentTimeMillis());
 			loginAckEvent = m_clientStub.syncLoginCM(strUserName, strEncPassword);
+			long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 			if(loginAckEvent != null)
 			{
 				// print login result
 				if(loginAckEvent.isValidUser() == 0)
 				{
-					printMessage("This client fails authentication by the default server!\n");				
+					printMessage("This client fails authentication by the default server!\n");		
 				}
 				else if(loginAckEvent.isValidUser() == -1)
 				{
@@ -671,6 +681,7 @@ public class CMWinClient extends JFrame {
 				}
 				else
 				{
+					printMessage("return delay: "+lDelay+" ms.\n");
 					printMessage("This client successfully logs in to the default server.\n");
 					CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 					
@@ -721,9 +732,14 @@ public class CMWinClient extends JFrame {
 	{
 		boolean bRequestResult = false;
 		printMessage("====== request session info from default server\n");
+		m_eventHandler.setStartTime(System.currentTimeMillis());
 		bRequestResult = m_clientStub.requestSessionInfo();
+		long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 		if(bRequestResult)
+		{
 			printMessage("successfully sent the session-info request.\n");
+			printMessage("return delay: "+ lDelay +" ms.\n");
+		}
 		else
 			printStyledMessage("failed the session-info request!\n", "bold");
 		printMessage("======\n");
@@ -733,12 +749,16 @@ public class CMWinClient extends JFrame {
 	{
 		CMSessionEvent se = null;
 		printMessage("====== synchronous request session info from default server\n");
+		m_eventHandler.setStartTime(System.currentTimeMillis());
 		se = m_clientStub.syncRequestSessionInfo();
+		long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 		if(se == null)
 		{
 			printStyledMessage("failed the session-info request!\n", "bold");
 			return;
 		}
+		
+		printMessage("return delay: "+ lDelay +" ms.\n");
 		
 		// print the request result
 		Iterator<CMSessionInfo> iter = se.getSessionInfoList().iterator();
@@ -765,11 +785,16 @@ public class CMWinClient extends JFrame {
 		strSessionName = JOptionPane.showInputDialog("Session Name:");
 		if(strSessionName != null)
 		{
+			m_eventHandler.setStartTime(System.currentTimeMillis());
 			bRequestResult = m_clientStub.joinSession(strSessionName);
+			long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 			if(bRequestResult)
-				printMessage("successfully sent the session-join request.");
+			{
+				printMessage("successfully sent the session-join request.\n");
+				printMessage("return delay: "+lDelay+" ms.\n");
+			}
 			else
-				printStyledMessage("failed the session-join request!", "bold");
+				printStyledMessage("failed the session-join request!\n", "bold");
 		}
 		printMessage("======\n");
 	}
@@ -782,12 +807,15 @@ public class CMWinClient extends JFrame {
 		strSessionName = JOptionPane.showInputDialog("Session Name:");
 		if(strSessionName != null)
 		{
+			m_eventHandler.setStartTime(System.currentTimeMillis());
 			se = m_clientStub.syncJoinSession(strSessionName);
+			long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 			if(se != null)
 			{
 				setButtonsAccordingToClientState();
 				// print result of the request
-				printMessage("successfully joined a session that has ("+se.getGroupNum()+") groups.\n");				
+				printMessage("successfully joined a session that has ("+se.getGroupNum()+") groups.\n");
+				printMessage("return delay: "+lDelay+" ms.\n");
 			}
 			else
 			{
@@ -1313,6 +1341,7 @@ public class CMWinClient extends JFrame {
 		boolean isBlock = false;
 		SocketChannel sc = null;
 		boolean isSyncCall = false;
+		long lDelay = -1;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1427,21 +1456,31 @@ public class CMWinClient extends JFrame {
 			{
 				if(isSyncCall)
 				{
+					m_eventHandler.setStartTime(System.currentTimeMillis());
 					sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(sc != null)
+					{
 						printMessage("Successfully added a blocking socket channel both "
 								+ "at the client and the server: key("+nChKey+"), server("+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
 					else
 						printMessage("Failed to add a blocking socket channel both at "
 								+ "the client and the server: key("+nChKey+"), server("+strServerName+")\n");					
 				}
 				else
 				{
+					m_eventHandler.setStartTime(System.currentTimeMillis());
 					result = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(result)
+					{
 						printMessage("Successfully added a blocking socket channel at the client and "
 								+"requested to add the channel info to the server: key("+nChKey+"), server("
 								+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
 					else
 						printMessage("Failed to add a blocking socket channel at the client or "
 								+"failed to request to add the channel info to the server: key("+nChKey
@@ -1517,6 +1556,7 @@ public class CMWinClient extends JFrame {
 		boolean result = false;
 		boolean isBlock = false;
 		boolean isSyncCall = false;
+		long lDelay = 0;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1627,20 +1667,30 @@ public class CMWinClient extends JFrame {
 			{
 				if(isSyncCall)
 				{
+					m_eventHandler.setStartTime(System.currentTimeMillis());
 					result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(result)
+					{
 						printMessage("Successfully removed a blocking socket channel both "
 								+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
 					else
 						printMessage("Failed to remove a blocking socket channel both at the client "
 								+ "and the server: key("+nChKey+"), server ("+strServerName+")\n");					
 				}
 				else
 				{
+					m_eventHandler.setStartTime(System.currentTimeMillis());
 					result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(result)
+					{
 						printMessage("Successfully removed a blocking socket channel at the client and " 
 								+ "requested to remove it at the server: key("+nChKey+"), server("+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
 					else
 						printMessage("Failed to remove a blocking socket channel at the client or "
 								+ "failed to request to remove it at the server: key("+nChKey+"), server("

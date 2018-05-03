@@ -33,7 +33,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 	private CMWinClient m_client;
 	private CMClientStub m_clientStub;
 	private long m_lDelaySum;	// for forwarding simulation
-	private long m_lStartTime;	// for delay of SNS content downloading, distributed file processing
+	private long m_lStartTime;	// for delay of SNS content downloading, distributed file processing, server response
 	private int m_nEstDelaySum;	// for SNS downloading simulation
 	private int m_nSimNum;		// for simulation of multiple sns content downloading
 	private FileOutputStream m_fos;	// for storing downloading delay of multiple SNS content
@@ -70,6 +70,11 @@ public class CMWinClientEventHandler implements CMEventHandler{
 	public void setStartTime(long time)
 	{
 		m_lStartTime = time;
+	}
+	
+	public long getStartTime()
+	{
+		return m_lStartTime;
 	}
 	
 	public void setFileOutputStream(FileOutputStream fos)
@@ -199,14 +204,16 @@ public class CMWinClientEventHandler implements CMEventHandler{
 	
 	private void processSessionEvent(CMEvent cme)
 	{
+		long lDelay = 0;
 		CMSessionEvent se = (CMSessionEvent)cme;
 		switch(se.getID())
 		{
 		case CMSessionEvent.LOGIN_ACK:
+			lDelay = System.currentTimeMillis() - m_lStartTime;
+			printMessage("LOGIN_ACK delay: "+lDelay+" ms.\n");
 			if(se.isValidUser() == 0)
 			{
-				//System.out.println("This client fails authentication by the default server.");
-				printMessage("This client fails authentication by the default server!\n");				
+				printMessage("This client fails authentication by the default server!\n");
 			}
 			else if(se.isValidUser() == -1)
 			{
@@ -214,7 +221,6 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			}
 			else
 			{
-				//System.out.println("This client successfully logs in to the default server.");
 				printMessage("This client successfully logs in to the default server.\n");
 				CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 				
@@ -226,6 +232,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			}
 			break;
 		case CMSessionEvent.RESPONSE_SESSION_INFO:
+			lDelay = System.currentTimeMillis() - m_lStartTime;
+			printMessage("RESPONSE_SESSION_INFO delay: "+lDelay+" ms.\n");
 			processRESPONSE_SESSION_INFO(se);
 			break;
 		case CMSessionEvent.SESSION_TALK:
@@ -235,6 +243,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			printMessage("<"+se.getUserName()+">: "+se.getTalk()+"\n");
 			break;
 		case CMSessionEvent.JOIN_SESSION_ACK:
+			lDelay = System.currentTimeMillis() - m_lStartTime;
+			printMessage("JOIN_SESSION_ACK delay: "+lDelay+" ms.\n");
 			m_client.setButtonsAccordingToClientState();
 			break;
 		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
@@ -250,6 +260,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			}
 			break;
 		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			lDelay = System.currentTimeMillis() - m_lStartTime;
+			printMessage("ADD_BLOCK_SOCKET_CHANNEL_ACK delay: "+lDelay+" ms.\n");
 			if(se.getReturnCode() == 0)
 			{
 				printMessage("Adding a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
@@ -262,6 +274,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			}
 			break;
 		case CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
+			lDelay = System.currentTimeMillis() - m_lStartTime;
+			printMessage("REMOVE_BLOCK_SOCKET_CHANNEL_ACK delay: "+lDelay+" ms.\n");
 			if(se.getReturnCode() == 0)
 			{
 				printMessage("Removing a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
