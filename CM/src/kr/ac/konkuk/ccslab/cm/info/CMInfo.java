@@ -19,6 +19,7 @@ public class CMInfo {
 	public static final int FILE_BLOCK_LEN = 4092;
 	public static final int SO_SNDBUF_LEN = 8192;
 	public static final int SO_RCVBUF_LEN = 8192;
+	public static final int MAX_EVENT_SIZE = 8192;
 	
 	// big/little endian
 	public static final int CM_BIG_ENDIAN = 0;

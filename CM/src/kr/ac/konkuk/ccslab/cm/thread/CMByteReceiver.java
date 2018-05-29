@@ -100,35 +100,12 @@ public class CMByteReceiver extends Thread {
 		ByteBuffer bufEvent = null;
 		int ret = -1;
 		int nByteNum = -1;
-		//int nReceivedByteNum = 0;
 		CMMessage msg = null;
 		
 		// create ByteBuffer
-		//bufByteNum = ByteBuffer.allocateDirect(Integer.BYTES);
 		bufByteNum = ByteBuffer.allocate(Integer.BYTES);
 		bufByteNum.clear();
 		ret = readStreamBytes(sc, bufByteNum);
-		/*
-		try {
-			ret = sc.read(bufByteNum);	// read the number of bytes of the event
-			if(CMInfo._CM_DEBUG_2)
-			{
-				System.out.println("---- CMByteReceiver.readStreamBytes(), read "+ret+" bytes.");
-				System.out.println("hash code: "+sc.hashCode());
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			
-			try {
-				sc.close();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			
-		}
-		*/
 		
 		// if a channel is disconnected
 		if( ret == 0 || ret == -1 )
@@ -158,36 +135,19 @@ public class CMByteReceiver extends Thread {
 			nByteNum = bufByteNum.getInt();
 			if(CMInfo._CM_DEBUG_2)
 				System.out.println("#### event byte num: "+nByteNum+" bytes, read byte num: "+ret+" bytes.");
+			if(nByteNum > CMInfo.MAX_EVENT_SIZE)
+			{
+				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
+						+") is greater than the maximum event size("+CMInfo.MAX_EVENT_SIZE+")!");
+				return;
+			}
 			//bufEvent = ByteBuffer.allocateDirect(nByteNum);
 			bufEvent = ByteBuffer.allocate(nByteNum);
 			bufEvent.clear();
 			bufEvent.putInt(nByteNum);	// put the first 4 bytes
-			//nReceivedByteNum = Integer.BYTES;
 			// read remaining event bytes
 			ret = readStreamBytes(sc, bufEvent);
-			//nReceivedByteNum += ret;
-			//while(bufEvent.hasRemaining() && ret != 0 && ret != -1)
-			/*
-			while(bufEvent.hasRemaining() && ret != -1)
-			{
-				try {
-					ret = sc.read(bufEvent);
-					if(CMInfo._CM_DEBUG_2)
-						System.out.println("CMByteReceiver.readStreamBytes(), read "+ret+" bytes.");
-					nReceivedByteNum += ret;
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}
-			*/
-			
-			/*
-			if(CMInfo._CM_DEBUG_2)
-				System.out.println("---- CMByteReceiver.readEventBytes(), total read bytes: "
-								+nReceivedByteNum+" bytes.");
-			*/
+
 			if(CMInfo._CM_DEBUG_2)
 				System.out.println("---- CMByteReceiver.readEventBytes(), total read bytes: "
 								+Integer.BYTES+ret+" bytes.");

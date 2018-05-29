@@ -78,9 +78,17 @@ public class CMEvent extends CMObject {
 	 */
 	public ByteBuffer marshall()
 	{
-		allocate();
-		marshallHeader();
-		marshallBody();
+		boolean bResult = false;
+		
+		bResult = allocate();
+		if(bResult)
+		{
+			marshallHeader();
+			marshallBody();
+		}
+		else
+			m_bytes = null;
+		
 		return m_bytes;
 	}
 	
@@ -253,11 +261,17 @@ public class CMEvent extends CMObject {
 	
 	/////////////////////////////////////////////////
 	
-	protected void allocate()
+	protected boolean allocate()
 	{
 		m_nByteNum = getByteNum();
+		if(m_nByteNum > CMInfo.MAX_EVENT_SIZE)
+		{
+			System.err.println("CMEvent.allocate(): the byte number("+m_nByteNum
+					+") is greater than the maximum event size ("+CMInfo.MAX_EVENT_SIZE+")!");
+			return false;
+		}
 		m_bytes = ByteBuffer.allocate(m_nByteNum);
-		
+		return true;
 		// this allocated object should be deallocated after the event is sent by a sending method.
 	}
 	
