@@ -141,6 +141,12 @@ public class CMByteReceiver extends Thread {
 						+") is greater than the maximum event size("+CMInfo.MAX_EVENT_SIZE+")!");
 				return;
 			}
+			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
+			{
+				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
+						+") is less than the minimum event size("+CMInfo.MIN_EVENT_SIZE+")!");
+				return;
+			}
 			//bufEvent = ByteBuffer.allocateDirect(nByteNum);
 			bufEvent = ByteBuffer.allocate(nByteNum);
 			bufEvent.clear();
