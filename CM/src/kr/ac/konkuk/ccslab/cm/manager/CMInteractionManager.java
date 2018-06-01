@@ -824,7 +824,7 @@ public class CMInteractionManager {
 		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName());
 		snsInfo.getSendSNSAttachHashtable().removeSNSAttachList(user.getName());
 		
-		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
+		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 		{
 			// save newly added or updated access history for the attachment of SNS content
 			CMSNSManager.saveAccessHistory(user, cmInfo);
