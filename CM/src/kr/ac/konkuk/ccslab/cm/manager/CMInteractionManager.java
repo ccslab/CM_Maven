@@ -591,7 +591,7 @@ public class CMInteractionManager {
 			user.setAttachDownloadScheme(confInfo.getAttachDownloadScheme());
 			// set login date
 			user.setLastLoginDate(Calendar.getInstance());
-			if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
+			if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 			{
 				// load history info for attachment access of this user
 				CMSNSManager.loadAccessHistory(user, cmInfo);
