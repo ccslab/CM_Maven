@@ -1,22 +1,27 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
+import java.io.File;
 import java.sql.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMDBInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistory;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 
 public class CMDBManager {
-
-	// open DB connection
+	
+	// initialize DB url
 	public static void init(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		Connection connect = null;
-		Statement st = null;
 		
 		// this will load the MySQL driver, each DB has its own driver
 		try {
@@ -27,131 +32,100 @@ public class CMDBManager {
 		}
 		
 		// setup the connection with the DB
-		//connect = DriverManager.getConnection("jdbc:mysql://"+confInfo.getDBHost()
-		//		+"/"+confInfo.getDBName()+"?user="+confInfo.getDBUser()+"&password="
-		//		+confInfo.getDBPass());
 		String url = "jdbc:mysql://"+confInfo.getDBHost()+":3306/"+confInfo.getDBName();
 		url += "?useUnicode=true&characterEncoding=euckr";	// for using Korean character
-		try {
-			connect = DriverManager.getConnection(url, confInfo.getDBUser(), confInfo.getDBPass());
-			// statements allow to issue SQL queries to the database
-			st = connect.createStatement();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-		
-		dbInfo.setConnection(connect);
-		dbInfo.setStatement(st);
-		
-		if(CMInfo._CM_DEBUG)
-			System.out.println("CMDBManager.init(), MySQL connection succeeded. url("+url
-					+"), user("+confInfo.getDBUser()+").");
-
+		dbInfo.setDBURL(url);
+				
 		return;
 	}
 	
-	// close DB connection
-	public static void terminate(CMInfo cmInfo)
+	// connect DB
+	public static boolean connectDB(CMInfo cmInfo)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
 		Connection connect = null;
 		Statement st = null;
-		ResultSet rs = null;
-		
-		if(dbInfo == null)
-			return;
-		
-		boolean bClosed = false;
-		
-		// close Connection
-		connect = dbInfo.getConnection();
-		
-		if(connect == null)
-			return;
+		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		String url = dbInfo.getDBURL();
+		String user = confInfo.getDBUser();
+		String pass = confInfo.getDBPass();
 		
 		try {
-			bClosed = connect.isClosed();
+			connect = DriverManager.getConnection(url, user, pass);
+			// statements allow to issue SQL queries to the database
+			st = connect.createStatement();
+			dbInfo.setStatement(st);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return false;
 		}
 		
-		if(!bClosed)
-		{
-			try {
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMDBManager.connectDB(), MySQL connection succeeded. url("+url
+					+"), user("+confInfo.getDBUser()+").");	
+
+		return true;
+	}
+	
+	// close DB
+	public static void closeDB(CMInfo cmInfo)
+	{
+		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		Connection connect = dbInfo.getConnection();
+		Statement st = dbInfo.getStatement();
+		
+		try {
+			if(connect != null)
+			{
 				connect.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
-		}
-
-		// close Statement
-		st = dbInfo.getStatement();
-		
-		if(st == null)
-			return;
-		
-		try {
-			bClosed = st.isClosed();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		if(!bClosed)
-		{
-			try {
+			if(st != null)
+			{
 				st.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
-		}
-
-		// close ResultSet
-		rs = dbInfo.getResultSet();
-		
-		if(rs == null)
-			return;
-		
-		try {
-			bClosed = rs.isClosed();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		if(!bClosed)
+		return;
+	}
+	
+	// close the ResultSet object
+	public static void closeRS(ResultSet rs)
+	{
+		if(rs != null)
 		{
 			try {
 				rs.close();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-
 		return;
 	}
-
+	
 	// send SELECT query
+	// The caller of this method should close the ResultSet object after it completes to use!
 	public static ResultSet sendSelectQuery(String strQuery, CMInfo cmInfo)
 	{
 		CMDBInfo dbInfo = cmInfo.getDBInfo();
 		ResultSet rs = null;
 		
+		if(!connectDB(cmInfo))
+			return null;
+		
 		try {
 			// resultSet gets the result of the SQL query
 			rs = dbInfo.getStatement().executeQuery(strQuery);
-			dbInfo.setResultSet(rs);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
+		
+		// ResultSet should be closed at the caller!!
 		
 		return rs;
 	}
@@ -162,12 +136,17 @@ public class CMDBManager {
 		CMDBInfo dbInfo = cmInfo.getDBInfo();
 		int ret = -1;
 		
+		if(!connectDB(cmInfo))
+			return -1;
+		
 		try {
 			ret = dbInfo.getStatement().executeUpdate(strQuery);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		closeDB(cmInfo);
 		
 		return ret;
 	}
@@ -201,16 +180,20 @@ public class CMDBManager {
 				+"' and password=PASSWORD('"+strPassword+"');";
 		ResultSet rs = sendSelectQuery(strQuery, cmInfo);
 		try {
-			if(rs.next())
+			if(rs != null && rs.next())
 				bValidUser = true;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
 		}
 		
 		return bValidUser;
 	}
 	
+	// not yet called
 	// Send a query to retrieve 'num' user rows from 'index' and store the result
 	// If 'index'== 0 and 'num' == -1, all the rows are retrieved
 	public static ResultSet queryGetUsers(int index, int num, CMInfo cmInfo)
@@ -230,6 +213,7 @@ public class CMDBManager {
 		return rs;
 	}
 
+	// not yet called
 	// Currently only field which can be updated is password.
 	// Password must be an input with PASSWORD() macro.
 	// All the updated fields are String type because they are given as a query string
@@ -266,7 +250,7 @@ public class CMDBManager {
 		rs = sendSelectQuery(strQuery, cmInfo);
 		int nSeqNum = -1;
 		try {
-			if(rs.next())
+			if(rs != null && rs.next())
 			{
 				nSeqNum = rs.getInt("seqNum");
 				if(CMInfo._CM_DEBUG)
@@ -275,12 +259,13 @@ public class CMDBManager {
 			else
 			{
 				System.out.println("CMDBManager.queryDeleteUser(), user("+name+") not found.");
-				return -1;
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return -1;
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
 		}
 		
 		strQuery = "delete from user_table where seqNum="+nSeqNum+";";
@@ -298,34 +283,7 @@ public class CMDBManager {
 		return ret;
 	}
 
-	// It must be called only after SELECT query.
-	public static void showResultUsers(CMInfo cmInfo)
-	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		ResultSet rs = dbInfo.getResultSet();
-		
-		System.out.println("------ user_table");
-		try {
-			while( rs.next() )
-			{
-				int id = rs.getInt("seqNum");
-				String uname = rs.getString("userName");
-				String passwd = rs.getString("password");
-				String ctime = rs.getString("creationTime");
-				System.out.format("%-3d %-10s %s %-20s%n", id, uname, passwd, ctime);
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println("---------------");
-
-		if(CMInfo._CM_DEBUG)
-			System.out.println("CMDBManager.showResultUsers(), end.");
-
-		return;
-	}
-
+	// not yet called
 	public static void queryTruncateUserTable(CMInfo cmInfo)
 	{
 		sendUpdateQuery("truncate table user_table;", cmInfo);
@@ -361,6 +319,7 @@ public class CMDBManager {
 		return ret;
 	}
 
+	// not yet called
 	// send a query to retrieve 'num' contents from 'index' in decsending order of seqNum, 
 	// and store the result.
 	// Regardless of a writer and the level of disclosure of content
@@ -393,10 +352,18 @@ public class CMDBManager {
 	// strWriter: a name of a content writer
 	// index: offset (starting with 0) in the list of found content set (it must be equal to or greater than 0)
 	// num: the number of content to be retrieved
-	public static ResultSet queryGetSNSContent(String strRequester, String strWriter, int index, int num, CMInfo cmInfo)
+	public static CMSNSContentList queryGetSNSContent(String strRequester, String strWriter, int index, int num, CMInfo cmInfo)
 	{
 		String strQuery = null;
 		ResultSet rs = null;
+		CMSNSContentList contentList = null;
+		int nContID = -1;
+		String strDate = null;
+		String strMsg = null;
+		int nNumAttachedFiles = 0;
+		int nReplyOf = -1;
+		int nLevelOfDisclosure = -1;
+		
 		
 		if(index < 0)
 		{
@@ -458,6 +425,31 @@ public class CMDBManager {
 		}
 
 		rs = sendSelectQuery(strQuery, cmInfo);
+		if(rs != null)
+			contentList = new CMSNSContentList();
+		
+		try {
+			while( rs != null && rs.next() )
+			{
+				nContID = rs.getInt("seqNum");
+				strDate = rs.getString("creationTime");
+				strWriter = rs.getString("userName");
+				strMsg = rs.getString("textMessage");
+				nNumAttachedFiles = rs.getInt("numAttachedFiles");
+				nReplyOf = rs.getInt("replyOf");
+				nLevelOfDisclosure = rs.getInt("levelOfDisclosure");
+				contentList.addSNSContent(nContID, strDate, strWriter, strMsg, nNumAttachedFiles, 
+						nReplyOf, nLevelOfDisclosure, null);
+
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
+		}
+		
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -465,9 +457,10 @@ public class CMDBManager {
 					+strWriter+"), (index: "+index+", num: "+num+").");
 		}
 
-		return rs;
+		return contentList;
 	}
 
+	// not yet called
 	// Fields that are updatable are textMessage and attachedFilePath.
 	// All the updated fields are char* type because they are given as a query string
 	public static int queryUpdateSNSContent(int seqNum, String fieldName, String value, CMInfo cmInfo)
@@ -489,6 +482,7 @@ public class CMDBManager {
 		return ret;
 	}
 
+	//not yet called
 	public static int queryDeleteSNSContent(int seqNum, CMInfo cmInfo)
 	{
 		int ret = -1;
@@ -508,12 +502,10 @@ public class CMDBManager {
 		return ret;
 	}
 
+	// not yet called
 	// It must be called only after SELECT query
-	public static void showResultSNSContent(CMInfo cmInfo)
+	public static void showResultSNSContent(ResultSet rs)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		ResultSet rs = dbInfo.getResultSet();
-
 		System.out.println("------ sns_content_table");
 		try {
 			while( rs.next() )
@@ -544,6 +536,7 @@ public class CMDBManager {
 		return;
 	}
 
+	// not yet called
 	public static void queryTruncateSNSContentTable(CMInfo cmInfo)
 	{
 		sendUpdateQuery("truncate table sns_content_table;", cmInfo);
@@ -580,21 +573,36 @@ public class CMDBManager {
 	}
 
 	// get the list of attached files of a specific content
-	public static ResultSet queryGetSNSAttachedFile(int nContentID, CMInfo cmInfo)
+	public static ArrayList<String> queryGetSNSAttachedFile(int nContentID, CMInfo cmInfo)
 	{
+		ArrayList<String> attachList = null;
 		String strQuery = null;
 		ResultSet rs = null;
 		strQuery = "select * from attached_file_table where contentID="+nContentID+";";
 
 		rs = sendSelectQuery(strQuery, cmInfo);
+		if(rs != null)
+			attachList = new ArrayList<String>();
+		
+		try {
+			while(rs != null && rs.next()) {
+				String strPathFile = rs.getString("filePath") + File.separator + rs.getString("fileName");
+				attachList.add(strPathFile);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
+		}
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMDBManager.queryGetSNSAttachedFile(), end.");
 
-		return rs;
+		return attachList;
 	}
 	
-	
+	// not yet called
 	// Columns that can be updated are contentID, filePath and fileName.
 	// All the updated fields are String type because they are given as a query string
 	public static int queryUpdateSNSAttachedFile(int seqNum, String fieldName, String value, CMInfo cmInfo)
@@ -616,6 +624,7 @@ public class CMDBManager {
 		return ret;
 	}
 
+	// not yet called
 	public static int queryDeleteSNSAttachedFile(int seqNum, CMInfo cmInfo)
 	{
 		int ret = -1;
@@ -635,12 +644,10 @@ public class CMDBManager {
 		return ret;
 	}
 
+	// not yet called
 	// It must be called only after SELECT query
-	public static void showResultSNSAttachedFile(CMInfo cmInfo)
+	public static void showResultSNSAttachedFile(ResultSet rs)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		ResultSet rs = dbInfo.getResultSet();
-
 		System.out.println("------ attached_file_table");
 		try {
 			while( rs.next() )
@@ -665,6 +672,7 @@ public class CMDBManager {
 		return;
 	}
 
+	// not yet called
 	public static void queryTruncateSNSAttachedFileTable(CMInfo cmInfo)
 	{
 		sendUpdateQuery("truncate table attached_file_table;", cmInfo);
@@ -678,6 +686,7 @@ public class CMDBManager {
 
 	////////////////////////////////////////////////////////////////////////////
 	
+	// not yet called
 	public static long sendRowNumQuery(String table, CMInfo cmInfo)
 	{
 		long num = -1;
@@ -697,6 +706,9 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
 		}
 
 		if(CMInfo._CM_DEBUG)
@@ -748,28 +760,60 @@ public class CMDBManager {
 	}
 	
 	// get the list of users whom 'strUserName' added as friends
-	public static void queryGetFriendsList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> queryGetFriendsList(String strUserName, CMInfo cmInfo)
 	{
+		ResultSet rs = null;
+		ArrayList<String> myFriendList = null;
 		String strQuery = "select * from friend_table where userName='"+strUserName+"';";
 
-		sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery, cmInfo);
+		if(rs != null)
+			myFriendList = new ArrayList<String>();
 		
+		try {
+			while(rs != null && rs.next())
+			{
+				myFriendList.add(rs.getString("friendName"));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
+		}
+
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMDBManager.queryGetFriendsList(), end for user("+strUserName+").");
 	
-		return;
+		return myFriendList;
 	}
 	// get the list of users who added 'strUserName' as a friend
-	public static void queryGetRequestersList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> queryGetRequestersList(String strUserName, CMInfo cmInfo)
 	{
+		ResultSet rs = null;
+		ArrayList<String> candidateList = null;
 		String strQuery = "select * from friend_table where friendName='"+strUserName+"';";
 		
-		sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery, cmInfo);
+		if(rs != null)
+			candidateList = new ArrayList<String>();
+		
+		try {
+			while(rs != null && rs.next()){
+				candidateList.add(rs.getString("userName"));
+			}
+		} catch(SQLException e) {
+			e.printStackTrace();
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
+		}
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMDBManager.queryGetRequestersList(), end for user("+strUserName+").");
-		return;
-				
+		
+		return candidateList;		
 	}
 	
 	//////////////////////////////////////////////////////// sns_attach_access_history_table management
@@ -798,6 +842,7 @@ public class CMDBManager {
 
 	}
 	
+	// not yet called
 	public static int queryDeleteAccessHistory(String strUserName, Calendar date, String strWriterName, 
 			CMInfo cmInfo)
 	{
@@ -848,7 +893,7 @@ public class CMDBManager {
 	}
 
 	// get the list of access history of a user in the range of two dates
-	public static ResultSet queryGetAccessHistory(String strUserName, Calendar startDate, Calendar endDate, 
+	public static CMSNSAttachAccessHistoryList queryGetAccessHistory(String strUserName, Calendar startDate, Calendar endDate, 
 			String strWriterName, CMInfo cmInfo)
 	{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -871,43 +916,51 @@ public class CMDBManager {
 					+strWriterName+"';";
 		}
 
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMDBManager.queryGetAccessHistory(), start.");
+
 		rs = sendSelectQuery(strQuery, cmInfo);
 		
-		if(CMInfo._CM_DEBUG)
-			System.out.println("CMDBManager.queryGetAccessHistory(), end.");
-
-		return rs;
-	}
-
-	// It must be called only after SELECT query
-	public static void showResultAccessHistory(CMInfo cmInfo)
-	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		ResultSet rs = dbInfo.getResultSet();
-
-		System.out.println("------ sns_attach_access_history_table");
+		CMSNSAttachAccessHistoryList historyList = null;
+		if(rs != null)
+			historyList = new CMSNSAttachAccessHistoryList();
+		
 		try {
-			while( rs.next() )
+			while(rs != null && rs.next())
 			{
-				String strUserName = rs.getString("userName");
+				CMSNSAttachAccessHistory tempHistory = null;
 				String strDate = rs.getString("date");
-				String strWriterName = rs.getString("writerName");
+				Calendar date = Calendar.getInstance();
+				try {
+					date.setTime(dateFormat.parse(strDate));
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				String strHistoryWriterName = rs.getString("writerName");
 				int nAccessCount = rs.getInt("accessCount");
-
-				System.out.println("userName: "+strUserName+", date: "+strDate+", writerName:"
-						+strWriterName+", accessCount:"+nAccessCount);
+				
+				tempHistory = new CMSNSAttachAccessHistory(strUserName, date, strHistoryWriterName, nAccessCount); 
+				historyList.addAccessHistory(tempHistory);
+				
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("userName: "+strUserName+", date: "+date+", writerName:"
+							+strHistoryWriterName+", accessCount:"+nAccessCount);					
+				}
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeRS(rs);
 		}
-		System.out.println("---------------");
-		
+
 		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMDBManager.showResultAccessHistory(), end.");
-		}
-		return;
+			System.out.println("CMDBManager.queryGetAccessHistory(), end.");
+
+		return historyList;
 	}
 
 	public static void queryTruncateAccessHistoryTable(CMInfo cmInfo)

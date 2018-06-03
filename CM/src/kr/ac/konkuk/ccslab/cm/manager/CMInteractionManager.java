@@ -108,7 +108,6 @@ public class CMInteractionManager {
 	
 	public static void terminate(CMInfo cmInfo)
 	{
-		CMDBManager.terminate(cmInfo);
 		CMFileTransferManager.terminate(cmInfo);
 	}
 	
@@ -1291,7 +1290,7 @@ public class CMInteractionManager {
 			strQuery = "select * from  user_table where userName='"+se.getUserName()+"';";
 			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
 			try {
-				if( rs.next() )
+				if( rs != null && rs.next() )
 				{
 					// the requested user already exists
 					System.out.println("CMInteractionManager.processREGISTER_USER(), user("
@@ -1315,6 +1314,9 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeRS(rs);
 			}
 
 		}
@@ -1376,7 +1378,7 @@ public class CMInteractionManager {
 					+"password=PASSWORD('"+se.getPassword()+"');";
 			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
 			try {
-				if( !rs.next() )
+				if( rs != null && !rs.next() )
 				{
 					// authentication failed
 					System.out.println("CMInteractionManager.processDEREGISTER_USER(), user name or "
@@ -1394,6 +1396,9 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeRS(rs);
 			}
 
 		}
@@ -1454,7 +1459,7 @@ public class CMInteractionManager {
 			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
 
 			try {
-				if( !rs.next() )
+				if( rs != null && !rs.next() )
 				{
 					// search failed
 					System.out.println("CMInteractionManager.processFIND_REGISTERED_USER(), user("
@@ -1471,6 +1476,9 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeRS(rs);
 			}
 		}
 		else

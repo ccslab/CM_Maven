@@ -4,13 +4,13 @@ import java.sql.*;
 public class CMDBInfo {
 	private Connection m_connection;
 	private Statement m_statement;
-	private ResultSet m_resultSet;
+	private String m_strDBURL;
 	
 	public CMDBInfo()
 	{
 		m_connection = null;
 		m_statement = null;
-		m_resultSet = null;
+		m_strDBURL = null;
 	}
 	
 	public void setConnection(Connection conn)
@@ -32,14 +32,14 @@ public class CMDBInfo {
 	{
 		return m_statement;
 	}
-	
-	public void setResultSet(ResultSet result)
+
+	public void setDBURL(String strDBURL)
 	{
-		m_resultSet = result;
+		m_strDBURL = strDBURL;
 	}
 	
-	public ResultSet getResultSet()
+	public String getDBURL()
 	{
-		return m_resultSet;
+		return m_strDBURL;
 	}
 }

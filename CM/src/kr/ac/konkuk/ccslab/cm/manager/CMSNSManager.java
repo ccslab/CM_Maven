@@ -52,22 +52,9 @@ public class CMSNSManager {
 			return null;
 		}
 		
-		ArrayList<String> friendList = new ArrayList<String>();
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		ResultSet rs = null;
+		ArrayList<String> friendList = null;
 		// get users whom I added as friends
-		CMDBManager.queryGetFriendsList(strUserName, cmInfo);
-		rs = dbInfo.getResultSet();
-		try {
-			while(rs.next())
-			{
-				friendList.add(rs.getString("friendName"));
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
+		friendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
 
 		return friendList;
 	}
@@ -90,51 +77,29 @@ public class CMSNSManager {
 			return null;
 		}
 
-		ArrayList<String> candidateList = new ArrayList<String>();
-		ArrayList<String> myFriendList = new ArrayList<String>();
-		ArrayList<String> requesterList = new ArrayList<String>();
-		
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		ResultSet rs = null;
-		int i = 0;
+		ArrayList<String> candidateList = null;
+		ArrayList<String> myFriendList = null;
+		ArrayList<String> requesterList = null;
 		
 		// get users who added me as a friend
-		CMDBManager.queryGetRequestersList(strUserName, cmInfo);
-		rs = dbInfo.getResultSet();
-		try {
-			while(rs.next())
-			{
-				candidateList.add(rs.getString("userName"));
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
+		candidateList = CMDBManager.queryGetRequestersList(strUserName, cmInfo);
 		
 		// get users whom I added as friends
-		CMDBManager.queryGetFriendsList(strUserName, cmInfo);
-		rs = dbInfo.getResultSet();
-		try {
-			while(rs.next())
-			{
-				myFriendList.add(rs.getString("friendName"));
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
+		myFriendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
 		
 		// If users in the list are not my friends, add them to a new list
-		// because current 'candidateList' includes users whom I added as friends as well. 
-		for(i = 0; i < candidateList.size(); i++)
+		// because current 'candidateList' includes users whom I added as friends as well.
+		if(candidateList != null)
 		{
-			String strUser = candidateList.get(i);
-			if(!myFriendList.contains(strUser))
+			requesterList = new ArrayList<String>();
+			for(int i = 0; i < candidateList.size(); i++)
 			{
-				requesterList.add(strUser);
-			}
+				String strUser = candidateList.get(i);
+				if(myFriendList == null || !myFriendList.contains(strUser))
+				{
+					requesterList.add(strUser);
+				}
+			}			
 		}
 		
 		candidateList = null;
@@ -161,51 +126,28 @@ public class CMSNSManager {
 			return null;
 		}
 		
-		ArrayList<String> candidateList = new ArrayList<String>();
-		ArrayList<String> myFriendList = new ArrayList<String>();
-		ArrayList<String> biFriendList = new ArrayList<String>();
+		ArrayList<String> candidateList = null;
+		ArrayList<String> myFriendList = null;
+		ArrayList<String> biFriendList = null;
 
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		ResultSet rs = null;
-		int i = 0;
-		
 		// get users who added me as a friend
-		CMDBManager.queryGetRequestersList(strUserName, cmInfo);
-		rs = dbInfo.getResultSet();
-		try {
-			while(rs.next())
-			{
-				candidateList.add(rs.getString("userName"));
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
-		
+		candidateList = CMDBManager.queryGetRequestersList(strUserName, cmInfo);		
 		// get users whom I added as friends
-		CMDBManager.queryGetFriendsList(strUserName, cmInfo);
-		rs = dbInfo.getResultSet();
-		try {
-			while(rs.next())
-			{
-				myFriendList.add(rs.getString("friendName"));
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
+		myFriendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
 		
 		// If users in the list are not my friends, add them to a new list
-		// because current 'candidateList' includes users whom I added as friends as well. 
-		for(i = 0; i < candidateList.size(); i++)
+		// because current 'candidateList' includes users whom I added as friends as well.
+		if(candidateList != null && myFriendList != null)
 		{
-			String strUser = candidateList.get(i);
-			if(myFriendList.contains(strUser))
+			biFriendList = new ArrayList<String>();
+			for(int i = 0; i < candidateList.size(); i++)
 			{
-				biFriendList.add(strUser);
-			}
+				String strUser = candidateList.get(i);
+				if(myFriendList.contains(strUser))
+				{
+					biFriendList.add(strUser);
+				}
+			}			
 		}
 
 		candidateList = null;
@@ -483,36 +425,11 @@ public class CMSNSManager {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		
 		// load access history of the user from DB
-		ResultSet rs = null;
-		rs = CMDBManager.queryGetAccessHistory(strUserName, startDate, endDate, null, cmInfo);
+		CMSNSAttachAccessHistoryList historyList = null;
+		historyList = CMDBManager.queryGetAccessHistory(strUserName, startDate, endDate, null, cmInfo);
 		
 		// store history to the history list of the user
-		CMSNSAttachAccessHistoryList historyList = user.getAttachAccessHistoryList();
-		historyList.removeAllAccessHistory();
-		try {
-			while(rs.next())
-			{
-				CMSNSAttachAccessHistory tempHistory = null;
-				String strDate = rs.getString("date");
-				Calendar date = Calendar.getInstance();
-				try {
-					date.setTime(dateFormat.parse(strDate));
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return;
-				}
-				String strWriterName = rs.getString("writerName");
-				int nAccessCount = rs.getInt("accessCount");
-				
-				tempHistory = new CMSNSAttachAccessHistory(strUserName, date, strWriterName, nAccessCount); 
-				historyList.addAccessHistory(tempHistory);
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
+		user.setAttachAccessHistoryList(historyList);
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -772,7 +689,6 @@ public class CMSNSManager {
 		long lDelay = 0;
 		int nContNum = 0;
 		int nOffset = -1;
-		ResultSet rs = null;
 		int nContID = -1;
 		String strDate = null;
 		String strWriter = null;
@@ -875,29 +791,9 @@ public class CMSNSManager {
 			CMDBManager.queryGetSNSContent(nOffset, nContNum, cmInfo);
 			*/
 			
-			rs = CMDBManager.queryGetSNSContent(se.getUserName(), se.getWriterName(), nOffset, nContNum, cmInfo);
-
-			// add each row to the content list
-			contentList.removeAllSNSContents();
-			try {
-				while( rs != null && rs.next() )
-				{
-					nContID = rs.getInt("seqNum");
-					strDate = rs.getString("creationTime");
-					strWriter = rs.getString("userName");
-					strMsg = rs.getString("textMessage");
-					nNumAttachedFiles = rs.getInt("numAttachedFiles");
-					nReplyOf = rs.getInt("replyOf");
-					nLevelOfDisclosure = rs.getInt("levelOfDisclosure");
-					contentList.addSNSContent(nContID, strDate, strWriter, strMsg, nNumAttachedFiles, 
-							nReplyOf, nLevelOfDisclosure, null);
-
-				}
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return;
-			}
+			contentList = CMDBManager.queryGetSNSContent(se.getUserName(), se.getWriterName(), nOffset, nContNum, cmInfo);
+			contentVector = contentList.getContentList();
+			snsInfo.setSNSContentList(contentList);
 
 			nForStart = 0;
 			nForEnd = contentList.getSNSContentNum();
@@ -934,67 +830,65 @@ public class CMSNSManager {
 					bExistAttachment = true;
 					
 					// get the names of attached files
-					rs = CMDBManager.queryGetSNSAttachedFile(nContID, cmInfo);
+					ArrayList<String> attachFileList = null;
+					attachFileList = CMDBManager.queryGetSNSAttachedFile(nContID, cmInfo);
 					nameList = new ArrayList<String>();
 					pathList = new ArrayList<String>();
 					prefetchPathList = new ArrayList<String>();
-					try {
-						while(rs.next())
+					
+					for(int j = 0; attachFileList != null && j < attachFileList.size(); j++)
+					{
+						String strAttachPathFile = attachFileList.get(j);
+						boolean bOriginal = true;
+						boolean bThumbnail = false;
+						String strFilePath = strAttachPathFile.substring(0, strAttachPathFile.lastIndexOf(File.separator));
+						String strFileName = strAttachPathFile.substring(strAttachPathFile.lastIndexOf(File.separator)+1);
+						String strThumbnailName = null;
+						if(CMUtil.isImageFile(strFilePath+File.separator+strFileName))
 						{
-							boolean bOriginal = true;
-							boolean bThumbnail = false;
-							String strFilePath = rs.getString("filePath");
-							String strFileName = rs.getString("fileName");
-							String strThumbnailName = null;
-							if(CMUtil.isImageFile(strFilePath+File.separator+strFileName))
-							{
-								// change the image file name to its thumbnail image name
-								int index = strFileName.lastIndexOf(".");
-								strThumbnailName = strFileName.substring(0, index)+"-thumbnail"
-									+strFileName.substring(index, strFileName.length());
+							// change the image file name to its thumbnail image name
+							int index = strFileName.lastIndexOf(".");
+							strThumbnailName = strFileName.substring(0, index)+"-thumbnail"
+								+strFileName.substring(index, strFileName.length());
 
-								if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PARTIAL)
-								{
-									bOriginal = false;
-									bThumbnail = true;
-								}
-								else if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH)
-								{
-									bOriginal = false;
-									bThumbnail = true;
-									if(CMInfo._CM_DEBUG)
-									{
-										System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_READY(), "
-												+ "call isPrefetchEnabled() for content("+nContID+").");
-									}
-									// check prefetch threshold (interest of a user in a writer)
-									if(isPrefetchEnabled(se.getUserName(), strWriter, cmInfo))
-									{
-										// add a file path to the prefetching list
-										// avoid duplicate path
-										if(!prefetchPathList.contains(strFilePath+File.separator+strFileName))
-											prefetchPathList.add(strFilePath+File.separator+strFileName);
-									}
-								}
-							}
-							
-							if(bOriginal)
+							if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PARTIAL)
 							{
-								nameList.add(strFileName);
-								pathList.add(strFilePath+File.separator+strFileName);								
+								bOriginal = false;
+								bThumbnail = true;
 							}
-							if(bThumbnail)
+							else if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH)
 							{
-								nameList.add(strThumbnailName);
-								pathList.add(strFilePath+File.separator+strThumbnailName);								
+								bOriginal = false;
+								bThumbnail = true;
+								if(CMInfo._CM_DEBUG)
+								{
+									System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_READY(), "
+											+ "call isPrefetchEnabled() for content("+nContID+").");
+								}
+								// check prefetch threshold (interest of a user in a writer)
+								if(isPrefetchEnabled(se.getUserName(), strWriter, cmInfo))
+								{
+									// add a file path to the prefetching list
+									// avoid duplicate path
+									if(!prefetchPathList.contains(strFilePath+File.separator+strFileName))
+										prefetchPathList.add(strFilePath+File.separator+strFileName);
+								}
 							}
 						}
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						return;
+						
+						if(bOriginal)
+						{
+							nameList.add(strFileName);
+							pathList.add(strFilePath+File.separator+strFileName);								
+						}
+						if(bThumbnail)
+						{
+							nameList.add(strThumbnailName);
+							pathList.add(strFilePath+File.separator+strThumbnailName);								
+						}
+						
 					}
-					
+										
 					// add the file name list to the CONTENT_DOWNLOAD event
 					sevent.setFileNameList(nameList);
 										
@@ -1338,7 +1232,7 @@ public class CMSNSManager {
 				String strQuery = "select last_insert_id() from sns_content_table;";
 				ResultSet rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
 				try {
-					if(rs.next())
+					if(rs != null && rs.next())
 					{
 						nSeqNum = rs.getInt(1); 
 					}
@@ -1346,7 +1240,7 @@ public class CMSNSManager {
 					strQuery = "select creationTime from sns_content_table where seqNum="+nSeqNum+";";
 					rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
 
-					if(rs.next())
+					if(rs != null && rs.next())
 					{
 						strCreationTime = rs.getString("creationTime");
 						if(CMInfo._CM_DEBUG)
@@ -1361,6 +1255,9 @@ public class CMSNSManager {
 				} catch (SQLException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+				} finally {
+					CMDBManager.closeDB(cmInfo);
+					CMDBManager.closeRS(rs);
 				}
 			}
 			else
@@ -1451,7 +1348,7 @@ public class CMSNSManager {
 			strQuery = "select * from user_table where userName='"+se.getFriendName()+"';";
 			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
 			try {
-				if(rs.next())
+				if(rs != null && rs.next())
 				{
 					// insert (user, friend)
 					ret = CMDBManager.queryInsertFriend(se.getUserName(), se.getFriendName(), cmInfo);
@@ -1468,6 +1365,9 @@ public class CMSNSManager {
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeRS(rs);
 			}
 		}
 		else
@@ -2161,19 +2061,18 @@ public class CMSNSManager {
 		}
 		
 		// check whether the requested file is the attachment of the given content ID or not
-		ResultSet rs = CMDBManager.queryGetSNSAttachedFile(nContentID, cmInfo);
+		ArrayList<String> attachFileList = null;
+		attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID, cmInfo);
 		boolean bFound = false;
-		try {
-			while(rs.next())
-			{
-				if(strFileName.equals(rs.getString("fileName")))
-					bFound = true;
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
+		
+		for(int i = 0; attachFileList != null && i < attachFileList.size(); i++)
+		{
+			String strAttachPath = attachFileList.get(i);
+			String strAttachFileName = strAttachPath.substring(strAttachPath.lastIndexOf(File.separator)+1);
+			if(strFileName.equals(strAttachFileName))
+				bFound = true;
 		}
+		
 		if(!bFound)
 		{
 			System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILE(), file("+strFileName
