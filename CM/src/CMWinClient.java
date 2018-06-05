@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Random;
@@ -1340,6 +1341,7 @@ public class CMWinClient extends JFrame {
 		boolean result = false;
 		boolean isBlock = false;
 		SocketChannel sc = null;
+		DatagramChannel dc = null;
 		boolean isSyncCall = false;
 		long lDelay = -1;
 		
@@ -1418,14 +1420,33 @@ public class CMWinClient extends JFrame {
 		}
 		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
 		{
-			String strUDP = JOptionPane.showInputDialog("Port number (key of the datagram channel): ");
-			if(strUDP == null) return;
-			try{
-				nChPort = Integer.parseInt(strUDP);
-			}catch(NumberFormatException e){
-				printMessage("The channel UDP port must be a number!\n");
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+			
+			JTextField chIndexField = new JTextField();
+
+			Object[] scMessage = {
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"Port number (key of the datagram channel)", chIndexField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Add Datagram Channel", JOptionPane.OK_CANCEL_OPTION);
+			if(scResponse != JOptionPane.OK_OPTION) return;
+
+			try {
+				nChPort = Integer.parseInt(chIndexField.getText());
+			}catch(NumberFormatException e) {
+				printMessage("The channel UDP port must be a number !\n");
 				return;
-			}			
+			}
+
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
 		}
 		else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
 		{
@@ -1515,11 +1536,23 @@ public class CMWinClient extends JFrame {
 				
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
-			result = m_clientStub.addDatagramChannel(nChPort);
-			if(result)
-				printMessage("Successfully added a datagram socket channel: port("+nChPort+")\n");
+			if(isBlock)
+			{
+				dc = m_clientStub.addBlockDatagramChannel(nChPort);
+				if(dc != null)
+					printMessage("Successfully added a blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to add a blocking datagram socket channel: port("+nChPort+")\n");								
+			}
 			else
-				printMessage("Failed to add a datagram socket channel: port("+nChPort+")\n");
+			{
+				dc = m_clientStub.addNonBlockDatagramChannel(nChPort);
+				if(dc != null)
+					printMessage("Successfully added a non-blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to add a non-blocking datagram socket channel: port("+nChPort+")\n");				
+			}
+						
 			break;
 		case CMInfo.CM_MULTICAST_CHANNEL:
 			result = m_clientStub.addMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
@@ -1631,14 +1664,34 @@ public class CMWinClient extends JFrame {
 		}
 		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
 		{
-			String strUDP = JOptionPane.showInputDialog("Port number (key of the datagram channel): ");
-			if(strUDP == null) return;
-			try{
-				nChPort = Integer.parseInt(strUDP);
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+
+			JTextField chIndexField = new JTextField();
+			Object[] scMessage = {
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"Port number (key of the datagram channel):", chIndexField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Remove Datagram Channel", 
+					JOptionPane.OK_CANCEL_OPTION);
+
+			if(scResponse != JOptionPane.OK_OPTION) return;
+			try {
+				nChPort = Integer.parseInt(chIndexField.getText());				
 			}catch(NumberFormatException e){
 				printMessage("The channel UDP port must be a number!\n");
 				return;
-			}						
+			}
+	
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
+
 		}
 		else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
 		{
@@ -1710,12 +1763,23 @@ public class CMWinClient extends JFrame {
 	
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
-			result = m_clientStub.removeAdditionalDatagramChannel(nChPort);
-			if(result)
-				printMessage("Successfully removed a datagram socket channel: port("+nChPort+")\n");
+			if(isBlock)
+			{
+				result = m_clientStub.removeBlockDatagramChannel(nChPort);
+				if(result)
+					printMessage("Successfully removed a blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to remove a blocking datagram socket channel: port("+nChPort+")\n");								
+			}
 			else
-				printMessage("Failed to remove a datagram socket channel: port("+nChPort+")\n");
-
+			{
+				result = m_clientStub.removeNonBlockDatagramChannel(nChPort);
+				if(result)
+					printMessage("Successfully removed a non-blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to remove a non-blocking datagram socket channel: port("+nChPort+")\n");				
+			}
+			
 			break;
 		case CMInfo.CM_MULTICAST_CHANNEL:
 			result = m_clientStub.removeAdditionalMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);

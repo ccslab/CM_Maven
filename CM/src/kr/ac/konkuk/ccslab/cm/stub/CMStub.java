@@ -148,17 +148,18 @@ public class CMStub {
 	// SocketChannel is available only in the ClientStub module
 	
 	/**
-	 * Adds an additional datagram (UDP) channel to this CM node.
+	 * Adds a non-blocking datagram (UDP) channel to this CM node.
 	 * 
 	 * <p> A developer must note that the given port number is unique and different from 
 	 * that of the default channel in the configuration file. A UDP channel is identified 
 	 * by the port number as an index.
 	 * 
 	 * @param nChPort - the port number for the new datagram (UDP) channel
-	 * @return true if the channel is successfully open, or false otherwise.
-	 * @see CMStub#removeAdditionalDatagramChannel(int)
+	 * @return a reference to the datagram channel if it is successfully created, or null otherwise.
+	 * @see CMStub#removeNonBlockDatagramChannel(int)
+	 * @see CMStub#addBlockDatagramChannel(int)
 	 */
-	public boolean addDatagramChannel(int nChPort)
+	public DatagramChannel addNonBlockDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -168,47 +169,49 @@ public class CMStub {
 		
 		if(nonBlockDCInfo.findChannel(nChPort) != null)
 		{
-			System.err.println("CMStub.addDatagramChannel(), channel key("+nChPort+") already exists.");
-			return false;
+			System.err.println("CMStub.addNonBlockDatagramChannel(), channel key("+nChPort+") already exists.");
+			return null;
 		}
 		try {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
 					confInfo.getMyAddress(), nChPort, m_cmInfo);
 			if(dc == null)
 			{
-				System.err.println("CMStub.addDatagramChannel(), failed.");
-				return false;
+				System.err.println("CMStub.addNonBlockDatagramChannel(), failed.");
+				return null;
 			}
 			
 			result = nonBlockDCInfo.addChannel(nChPort, dc);
 			if(result)
 			{
 				if(CMInfo._CM_DEBUG)
-					System.out.println("CMStub.addDatagramChannel(), succeeded. port("+nChPort+")");
+					System.out.println("CMStub.addNonBlockDatagramChannel(), succeeded. port("+nChPort+")");
 			}
 			else
 			{
-				System.err.println("CMStub.addDatagramChannel(), failed! port("+nChPort+")");
+				System.err.println("CMStub.addNonBlockDatagramChannel(), failed! port("+nChPort+")");
+				return null;
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return result;
+		return dc;
 	}
 	
 	/**
-	 * Removes an additional datagram (UDP) channel from this CM node.
+	 * Removes a non-blocking datagram (UDP) channel from this CM node.
 	 * 
 	 * <p> Like the stream (TCP) channel case, a developer should be careful 
 	 * not to remove the default channel.
 	 * 
 	 * @param nChPort - the port number of the channel to be removed
 	 * @return true if the channel is successfully removed, or false otherwise.
-	 * @see CMStub#addDatagramChannel(int)
+	 * @see CMStub#addNonBlockDatagramChannel(int)
+	 * @see CMStub#removeBlockDatagramChannel(int)
 	 */
-	public boolean removeAdditionalDatagramChannel(int nChPort)
+	public boolean removeNonBlockDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMChannelInfo<Integer> dcInfo = commInfo.getNonBlockDatagramChannelInfo();
@@ -218,11 +221,93 @@ public class CMStub {
 		if(result)
 		{
 			if(CMInfo._CM_DEBUG)
-				System.out.println("CMStub.removeAdditionalDatagramChannel(), succeeded. port("+nChPort+")");
+				System.out.println("CMStub.removeNonBlockDatagramChannel(), succeeded. port("+nChPort+")");
 		}
 		else
 		{
-			System.err.println("CMStub.removeAdditionalDatagramChannel(), failed! port("+nChPort+")");
+			System.err.println("CMStub.removeNonBlockDatagramChannel(), failed! port("+nChPort+")");
+		}
+		return result;
+	}
+	
+	/**
+	 * Adds a blocking datagram (UDP) channel to this CM node.
+	 * 
+	 * <p> A UDP channel is identified by the port number as an index.
+	 * 
+	 * @param nChPort - the port number for the new datagram (UDP) channel
+	 * @return a reference to the datagram channel if it is successfully created, or null otherwise.
+	 * @see CMStub#removeBlockDatagramChannel(int)
+	 * @see CMStub#addNonBlockDatagramChannel(int)
+	 */
+	public DatagramChannel addBlockDatagramChannel(int nChPort)
+	{
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMChannelInfo<Integer> blockDCInfo = commInfo.getBlockDatagramChannelInfo();
+		DatagramChannel dc = null;
+		boolean result = false;
+		
+		if(blockDCInfo.findChannel(nChPort) != null)
+		{
+			System.err.println("CMStub.addBlockDatagramChannel(), channel key("+nChPort+") already exists.");
+			return null;
+		}
+		try {
+			dc = (DatagramChannel) CMCommManager.openBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
+					confInfo.getMyAddress(), nChPort, m_cmInfo);
+			if(dc == null)
+			{
+				System.err.println("CMStub.addBlockDatagramChannel(), failed.");
+				return null;
+			}
+	
+			result = blockDCInfo.addChannel(nChPort, dc);
+			if(result)
+			{
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMStub.addBlockDatagramChannel(), succeeded. port("+nChPort+")");
+			}
+			else
+			{
+				System.err.println("CMStub.addBlockDatagramChannel(), failed! port("+nChPort+")");
+				return null;
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return dc;		
+	}
+	
+	/**
+	 * Removes a blocking datagram (UDP) channel from this CM node.
+	 * 
+	 * <p> Like the stream (TCP) channel case, a developer should be careful 
+	 * not to remove the default channel.
+	 * 
+	 * @param nChPort - the port number of the channel to be removed
+	 * @return true if the channel is successfully removed, or false otherwise.
+	 * @see CMStub#addBlockDatagramChannel(int)
+	 * @see CMStub#removeNonBlockDatagramChannel(int)
+	 */
+	public boolean removeBlockDatagramChannel(int nChPort)
+	{
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMChannelInfo<Integer> dcInfo = commInfo.getBlockDatagramChannelInfo();
+		boolean result = false;
+
+		result = dcInfo.removeChannel(nChPort); 
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMStub.removeBlockDatagramChannel(), succeeded. port("+nChPort+")");
+		}
+		else
+		{
+			System.err.println("CMStub.removeBlockDatagramChannel(), failed! port("+nChPort+")");
 		}
 		return result;
 	}

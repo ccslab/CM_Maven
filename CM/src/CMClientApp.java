@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.util.*;
 
@@ -857,6 +858,7 @@ public class CMClientApp {
 		String strBlock = null;
 		boolean isBlock = false;
 		SocketChannel sc = null;
+		DatagramChannel dc = null;
 		String strSync = null;
 		boolean isSyncCall = false;
 		
@@ -924,8 +926,37 @@ public class CMClientApp {
 			}
 			else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
 			{
-				System.out.print("Channel udp port: ");
-				nChPort = m_scan.nextInt();
+				System.out.print("is it a blocking channel? (\"y\": yes, \"n\": no): ");
+				strBlock = m_scan.next();
+				if(strBlock.equals("y")) isBlock = true;
+				else if(strBlock.equals("n")) isBlock = false;
+				else
+				{
+					System.err.println("invalid answer! : "+strBlock);
+					return;
+				}
+			
+				if(isBlock)
+				{
+					System.out.print("Channel udp port: ");
+					nChPort = m_scan.nextInt();
+					if(nChPort < 0)
+					{
+						System.err.println("testAddChannel(), invalid blocking datagram channel key ("+nChPort+")!");
+						return;
+					}
+				}
+				else
+				{
+					System.out.print("Channel udp port: ");
+					nChPort = m_scan.nextInt();
+					if(nChPort <= 0)
+					{
+						System.err.println("testAddChannel(), invalid nonblocking datagram channel key ("+nChPort+")!");
+						return;
+					}
+				}
+
 			}
 			else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
 			{
@@ -1001,11 +1032,23 @@ public class CMClientApp {
 				
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
-			bResult = m_clientStub.addDatagramChannel(nChPort);
-			if(bResult)
-				System.out.println("Successfully added a datagram socket channel: port("+nChPort+")");
+			if(isBlock)
+			{
+				dc = m_clientStub.addBlockDatagramChannel(nChPort);
+				if(dc != null)
+					System.out.println("Successfully added a blocking datagram socket channel: port("+nChPort+")");
+				else
+					System.err.println("Failed to add a blocking datagram socket channel: port("+nChPort+")");								
+			}
 			else
-				System.err.println("Failed to add a datagram socket channel: port("+nChPort+")");
+			{
+				dc = m_clientStub.addNonBlockDatagramChannel(nChPort);
+				if(dc != null)
+					System.out.println("Successfully added a non-blocking datagram socket channel: port("+nChPort+")");
+				else
+					System.err.println("Failed to add a non-blocking datagram socket channel: port("+nChPort+")");				
+			}
+			
 			break;
 		case CMInfo.CM_MULTICAST_CHANNEL:
 			bResult = m_clientStub.addMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
@@ -1105,8 +1148,18 @@ public class CMClientApp {
 			}
 			else if(nChType ==CMInfo.CM_DATAGRAM_CHANNEL)
 			{
-			System.out.print("Channel udp port: ");
-			nChPort = m_scan.nextInt();			
+				System.out.print("is it a blocking channel? (\"y\": yes, \"n\": no): ");
+				strBlock = m_scan.next();
+				if(strBlock.equals("y")) isBlock = true;
+				else if(strBlock.equals("n")) isBlock = false;
+				else
+				{
+					System.err.println("invalid answer! : "+strBlock);
+					return;
+				}
+
+				System.out.print("Channel udp port: ");
+				nChPort = m_scan.nextInt();			
 			}
 			else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
 			{
@@ -1165,11 +1218,22 @@ public class CMClientApp {
 			
 			break;
 		case CMInfo.CM_DATAGRAM_CHANNEL:
-			result = m_clientStub.removeAdditionalDatagramChannel(nChPort);
-			if(result)
-				System.out.println("Successfully removed a datagram socket channel: port("+nChPort+")");
+			if(isBlock)
+			{
+				result = m_clientStub.removeBlockDatagramChannel(nChPort);
+				if(result)
+					System.out.println("Successfully removed a blocking datagram socket channel: port("+nChPort+")");
+				else
+					System.err.println("Failed to remove a blocking datagram socket channel: port("+nChPort+")");				
+			}
 			else
-				System.err.println("Failed to remove a datagram socket channel: port("+nChPort+")");
+			{
+				result = m_clientStub.removeNonBlockDatagramChannel(nChPort);
+				if(result)
+					System.out.println("Successfully removed a non-blocking datagram socket channel: port("+nChPort+")");
+				else
+					System.err.println("Failed to remove a non-blocking datagram socket channel: port("+nChPort+")");				
+			}
 
 			break;
 		case CMInfo.CM_MULTICAST_CHANNEL:
