@@ -641,6 +641,7 @@ public class CMClientApp {
 	public void testDatagram()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMUser myself = interInfo.getMyself();
 
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -651,22 +652,54 @@ public class CMClientApp {
 		
 		String strReceiver = null;
 		String strMessage = null;
+		String strSendPort = null;
+		String strRecvPort = null;
+		String strBlock = null;
+		boolean isBlock = false;
+		int nSendPort = 0;
+		int nRecvPort = 0;
 		System.out.println("====== test unicast chatting with datagram");
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.print("receiver: ");
 		try {
+			System.out.print("is it a blocking channel? (\"y\": yes, enter or any other input: no): ");
+			strBlock = br.readLine();
+			System.out.print("receiver: ");
 			strReceiver = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.print("message: ");
-		try {
+			System.out.print("message: ");
 			strMessage = br.readLine();
-		} catch (IOException e) {
+			System.out.print("sender port(enter for default port): ");
+			strSendPort = br.readLine();
+			System.out.print("receiver port(enter for default port): ");
+			strRecvPort = br.readLine();
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
+
+		if(strBlock.equals("y"))
+			isBlock = true;
+		
+		try {
+			if(strSendPort.isEmpty())
+				nSendPort = confInfo.getUDPPort();
+			else
+				nSendPort = Integer.parseInt(strSendPort);
+		}catch(NumberFormatException ne) {
+			ne.printStackTrace();
+			nSendPort = confInfo.getUDPPort();
+		}
+			
+		try {
+			if(strRecvPort.isEmpty())
+				nRecvPort = 0;
+			else
+				nRecvPort = Integer.parseInt(strRecvPort);			
+		}catch(NumberFormatException ne)
+		{
+			ne.printStackTrace();
+			nRecvPort = 0;
+		}
+		
 		
 		CMInterestEvent ie = new CMInterestEvent();
 		ie.setID(CMInterestEvent.USER_TALK);
@@ -674,7 +707,11 @@ public class CMClientApp {
 		ie.setHandlerGroup(myself.getCurrentGroup());
 		ie.setUserName(myself.getName());
 		ie.setTalk(strMessage);
-		m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM);
+		
+		if(nRecvPort == 0)
+			m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, isBlock);
+		else
+			m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, nRecvPort, isBlock);
 		ie = null;
 		
 		System.out.println("======");

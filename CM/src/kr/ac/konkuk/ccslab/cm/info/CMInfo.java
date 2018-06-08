@@ -7,7 +7,7 @@ public class CMInfo {
 	// flag for debugging output
 	//public static final boolean _CM_DEBUG = false;
 	public static final boolean _CM_DEBUG = true;
-	public static final boolean _CM_DEBUG_2 = false;	// communication level log
+	public static final boolean _CM_DEBUG_2 = true;	// communication level log
 	
 	// general number and lengths setting
 	public static final int MAXSESSION_NUM = 64;

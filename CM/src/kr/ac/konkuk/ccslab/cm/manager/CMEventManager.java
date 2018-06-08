@@ -138,9 +138,16 @@ public class CMEventManager {
 		return unicastEvent(cme, strReceiver, opt, nKey, false, cmInfo);
 	}
 	
+	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock, CMInfo cmInfo)
+	{
+		return unicastEvent(cme, strReceiver, opt, nKey, 0, isBlock, cmInfo);
+	}
+	
 	// nKey: the channel key. For the stream channel, nKey is an integer greater than or equal to 0.
 	// For the datagram channel, nKey is an integer that is a port number of this channel.
-	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock, CMInfo cmInfo)
+	// nRecvPort: if this value is 0, the default receiver port number is used.
+	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, int nRecvPort, 
+			boolean isBlock, CMInfo cmInfo)
 	{
 		CMMember loginUsers = null;
 		ByteBuffer bufEvent = null;
@@ -189,7 +196,10 @@ public class CMEventManager {
 			else if(opt == CMInfo.CM_DATAGRAM)
 			{
 				strTargetAddress = tServer.getServerAddress();
-				nTargetPort = tServer.getServerUDPPort();
+				if(nRecvPort == 0)
+					nTargetPort = tServer.getServerUDPPort();
+				else
+					nTargetPort = nRecvPort;
 				if(strTargetAddress.equals("") || nTargetPort == -1)
 				{
 					System.err.println("CMEventManager.unicastEvent(), datagram target information unavailable, "
@@ -226,7 +236,10 @@ public class CMEventManager {
 			else if(opt == CMInfo.CM_DATAGRAM)
 			{
 				strTargetAddress = user.getHost();
-				nTargetPort = user.getUDPPort();
+				if(nRecvPort == 0)
+					nTargetPort = user.getUDPPort();
+				else
+					nTargetPort = nRecvPort;
 				if(strTargetAddress.equals("") || nTargetPort == -1)
 				{
 					System.err.println("CMEventManager.unicastEvent(), datagram target information unavailable, "
@@ -258,9 +271,7 @@ public class CMEventManager {
 		case CMInfo.CM_DATAGRAM:
 			if(isBlock)
 			{
-				//dc = (DatagramChannel) commInfo.getBlockDatagramChannelInfo().findChannel(nKey); // not yet
-				System.err.println("CMEventManager.unicastEvent(), blocking datagram channel not supported yet!");
-				return false;
+				dc = (DatagramChannel) commInfo.getBlockDatagramChannelInfo().findChannel(nKey);
 			}
 			else
 			{
@@ -277,7 +288,6 @@ public class CMEventManager {
 			InetSocketAddress sockAddr = new InetSocketAddress(strTargetAddress, nTargetPort);
 			msg = new CMMessage(bufEvent, dc, sockAddr);
 			sendQueue.push(msg);
-			//nSentBytes = CMCommManager.sendMessage(bufEvent, dc, strTargetAddress, nTargetPort);			
 			break;
 		default:
 			System.err.println("CMEventManager.unicastEvent(), incorrect option: "+opt);
@@ -287,8 +297,6 @@ public class CMEventManager {
 		
 		if(CMInfo._CM_DEBUG_2)
 		{
-			//System.out.println("CMEventManager.unicastEvent(), sent "+nSentBytes+" bytes,"
-			//							+" event(type: "+cme.getType()+", id: "+cme.getID()+").");
 			System.out.println("CMEventManager.unicastEvent(), puts event to the sending queue,"
 							+" event(type: "+cme.getType()+", id: "+cme.getID()+").");
 			System.out.println("receiver("+strReceiver+"), opt("+opt+"), ch key("+nKey+"), isBlock("+isBlock+").");

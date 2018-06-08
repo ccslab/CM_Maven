@@ -997,46 +997,77 @@ public class CMWinClient extends JFrame {
 	public void testDatagram()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMUser myself = interInfo.getMyself();
 
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
-			//System.out.println("You should join a session and a group!");
 			printMessage("You should join a session and a group!\n");
 			return;
 		}
 		
 		String strReceiver = null;
 		String strMessage = null;
-		//System.out.println("====== test unicast chatting with datagram");
+		String strSendPort = null;
+		String strRecvPort = null;
+		int nSendPort = 0;
+		int nRecvPort = 0;
+		boolean isBlock = false;
 		printMessage("====== test unicast chatting with datagram\n");
-		/*
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.print("receiver: ");
-		try {
-			strReceiver = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.print("message: ");
-		try {
-			strMessage = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
+
+		JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+		JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+		nonBlockRadioButton.setSelected(true);
+		ButtonGroup bGroup = new ButtonGroup();
+		bGroup.add(blockRadioButton);
+		bGroup.add(nonBlockRadioButton);
+
 		JTextField receiverField = new JTextField();
 		JTextField messageField = new JTextField();
+		JTextField sendPortField = new JTextField();
+		JTextField recvPortField = new JTextField();
 		Object[] message = {
-				"Receiver: ", receiverField, "Message: ", messageField
+				"", blockRadioButton,
+				"", nonBlockRadioButton,
+				"Receiver: ", receiverField, 
+				"Message: ", messageField,
+				"Sender port(empty for default port): ", sendPortField,
+				"Receiver port(empty for default port): ", recvPortField
 		};
 		int option = JOptionPane.showConfirmDialog(null, message, "Message Input", JOptionPane.OK_OPTION);
 		if(option == JOptionPane.OK_OPTION)
 		{
+			if(blockRadioButton.isSelected())
+				isBlock = true;
+			else
+				isBlock = false;
+			
 			strReceiver = receiverField.getText();
 			strMessage = messageField.getText();
+			strSendPort = sendPortField.getText();
+			strRecvPort = recvPortField.getText();
+			if(strSendPort != null && !strSendPort.isEmpty())
+			{
+				try {
+					nSendPort = Integer.parseInt(strSendPort);					
+				}catch(NumberFormatException e) {
+					e.printStackTrace();
+					nSendPort = confInfo.getUDPPort();
+				}
+			}
+			else
+			{
+				nSendPort = confInfo.getUDPPort();
+			}
+			
+			if(strRecvPort != null && !strRecvPort.isEmpty())
+			{
+				try {
+					nRecvPort = Integer.parseInt(strRecvPort);					
+				}catch(NumberFormatException e) {
+					e.printStackTrace();
+				}
+			}
 			
 			CMInterestEvent ie = new CMInterestEvent();
 			ie.setID(CMInterestEvent.USER_TALK);
@@ -1044,11 +1075,14 @@ public class CMWinClient extends JFrame {
 			ie.setHandlerGroup(myself.getCurrentGroup());
 			ie.setUserName(myself.getName());
 			ie.setTalk(strMessage);
-			m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM);
+			//m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM);
+			if(nRecvPort == 0)
+				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, isBlock);
+			else
+				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, nRecvPort, isBlock);
 			ie = null;
 		}
 		
-		//System.out.println("======");
 		printMessage("======\n");
 		return;
 	}

@@ -311,6 +311,23 @@ public class CMStub {
 		}
 		return result;
 	}
+	
+	/**
+	 * Returns a blocking datagram (UDP) channel.
+	 *  
+	 * @param nChPort - the channel port number.
+	 * @return the blocking datagram channel, or null if the channel is not found.
+	 */
+	public DatagramChannel getBlockDatagramChannel(int nChPort)
+	{
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMChannelInfo<Integer> dcInfo = commInfo.getBlockDatagramChannelInfo();
+		DatagramChannel dc = null;
+		
+		dc = (DatagramChannel) dcInfo.findChannel(nChPort);
+		
+		return dc;
+	}
 
 	/**
 	 * Adds an additional multicast channel to this CM node.
@@ -456,6 +473,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -485,6 +503,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -530,6 +549,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -572,6 +592,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int) 
@@ -598,6 +619,50 @@ public class CMStub {
 			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, isBlock, m_cmInfo);
 		}
 
+		return ret;
+	}
+	
+	/**
+	 * Sends a CM event to a single node.
+	 * 
+	 * <p> This method can be called only in the following conditions. First, this method uses only the datagram 
+	 * (udp) channel. Therefore, the opt parameter must be always set to CMInfo.CM_DATAGRAM (or 1).
+	 * Second, this method can send an event to a CM node of which the sender knows its address. Unlike the other 
+	 * send() method, this method cannot use the internal forwarding scheme of CM. 
+	 *  
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name. 
+	 * <br> The receiver can be either the server or the client. In the CM network, 
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
+	 * For example, the name of the default server is "SERVER". 
+	 * @param opt - the reliability option. 
+	 * <br> The opt value of this method must be CMInfo.CM_DATAGRAM (or 1), because this method must be called 
+	 * only with the UDP datagram socket channel.
+	 * @param nSendPort - the datagram channel key. 
+	 * <br> If the application adds additional UDP channels, they are identified 
+	 * by the channel key. The key of the UDP channel is the locally bound port number.
+	 * @param nRecvPort - the receiver port number.
+	 * <br> If nRecvPort is 0, then CM uses the default UDP port of the receiver.
+	 * @param isBlock - the blocking option. 
+	 * <br> If isBlock is true, this method uses a blocking channel to send the event. 
+	 * If isBlock is false, this method uses a nonblocking channel to send the event. The CM uses nonblocking channels 
+	 * by default, but the application can also add blocking channels if required.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * 
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int) 
+	 * @see CMStub#send(CMEvent, String, String, int, int)
+
+	 */
+	public boolean send(CMEvent cme, String strTarget, int opt, int nSendPort, int nRecvPort, boolean isBlock)
+	{
+		boolean ret = false;
+		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock, m_cmInfo);
 		return ret;
 	}
 	
@@ -960,7 +1025,8 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
+	 * @see CMStub#send(CMEvent, String, int, int, boolean) 
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public boolean send(CMEvent cme, String serverName, String userName)
 	{
@@ -987,7 +1053,8 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt)
 	{
@@ -1033,7 +1100,8 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{
