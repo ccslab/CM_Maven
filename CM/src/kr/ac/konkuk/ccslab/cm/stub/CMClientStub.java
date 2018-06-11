@@ -1007,9 +1007,9 @@ public class CMClientStub extends CMStub {
 	/**
 	 * Adds asynchronously a nonblocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
-	 * and multicast channels, both the client and the server can add an additional channel 
-	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
-	 * methods in the CMStub class.
+	 * and multicast channels, both the client and the server can add an additional non-blocking channel 
+	 * with the {@link CMStub#addNonBlockDatagramChannel(int)} and 
+	 * {@link CMStub#addMulticastChannel(String, String, String, int)} methods in the CMStub class.
 	 * 
 	 * <p> Although this method returns the reference to the valid socket channel at the client, it is unsafe 
 	 * for the client to use the socket before the server also adds the relevant channel information.
@@ -1126,8 +1126,8 @@ public class CMClientStub extends CMStub {
 	/**
 	 * Adds synchronously a nonblocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
-	 * and multicast channels, both the client and the server can add an additional channel 
-	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
+	 * and multicast channels, both the client and the server can add an additional non-blocking channel 
+	 * with the {@link CMStub#addNonBlockDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
 	 * methods in the CMStub class.
 	 * 
 	 * @param nChKey - the channel key which must be greater than 0.
@@ -1312,9 +1312,8 @@ public class CMClientStub extends CMStub {
 	/**
 	 * Adds asynchronously a blocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
-	 * and multicast channels, both the client and the server can add an additional channel 
-	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
-	 * methods in the CMStub class.
+	 * channel, both the client and the server can add an additional blocking channel 
+	 * with the {@link CMStub#addBlockDatagramChannel(int)} method in the CMStub class.
 	 * 
 	 * <p> Although this method returns the reference to the valid socket channel, the server side socket channel is 
 	 * always created as a nonblocking mode first due to the intrinsic CM architecture of event-driven asynchronous 
@@ -1429,9 +1428,8 @@ public class CMClientStub extends CMStub {
 	/**
 	 * Adds synchronously a blocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
-	 * and multicast channels, both the client and the server can add an additional channel 
-	 * with the {@link CMStub#addDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
-	 * methods in the CMStub class.
+	 * channel, both the client and the server can add an additional blocking channel 
+	 * with the {@link CMStub#addBlockDatagramChannel(int)} method in the CMStub class.
 	 * 
 	 * @param nChKey - the channel key. It should be a positive integer (greater than or equal to 0).
 	 * @param strServer - the name of a server to which the client creates a connection. The default server name is 
@@ -1760,10 +1758,15 @@ public class CMClientStub extends CMStub {
 	/**
 	 * Returns a blocking socket (TCP) channel.
 	 * 
+	 * <p> A client can add a blocking socket channel with {@link CMClientStub#addBlockSocketChannel(int, String)} method, 
+	 * and retrieve it later with this method.
+	 * 
 	 * @param nChKey - the channel key.
 	 * @param strServerName - the name of a server to which the socket channel is connected.
 	 * <br> If strServerName is null, it implies the socket channel to the default server.
 	 * @return the blocking socket channel, or null if the channel is not found.
+	 * 
+	 * @see CMStub#getBlockDatagramChannel(int)
 	 */
 	public SocketChannel getBlockSocketChannel(int nChKey, String strServerName)
 	{

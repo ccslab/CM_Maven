@@ -660,7 +660,6 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int) 
 	 * @see CMStub#send(CMEvent, String, String, int, int)
-
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nSendPort, int nRecvPort, boolean isBlock)
 	{
@@ -669,6 +668,19 @@ public class CMStub {
 		return ret;
 	}
 	
+	/**
+	 * Receives a CM event using a blocking socket channel.
+	 * 
+	 * <p> An application can call this method when it needs to synchronously receive a CM event 
+	 * explicitly with a blocking socket channel. 
+	 * Only a client can add a blocking socket channel with {@link CMClientStub#addBlockSocketChannel(int, String)} method.
+	 * <br> Furthermore, an application can retrieve its blocking socket channels with 
+	 * {@link CMClientStub#getBlockSocketChannel(int, String)} method.  
+	 * 
+	 * @param sc - the blocking socket channel through which the caller receives an event.
+	 * @return a CM event if this method successfully receives, or null otherwise.
+	 * @see CMStub#receive(DatagramChannel)
+	 */
 	public CMEvent receive(SocketChannel sc)
 	{
 		CMEvent event = null;
@@ -782,6 +794,19 @@ public class CMStub {
 		return event;
 	}
 	
+	/**
+	 * Receives a CM event using a blocking datagram channel.
+	 * 
+	 * <p> An application can call this method when it needs to synchronously receive a CM event 
+	 * explicitly with a blocking datagram channel. The application (server or client) can add 
+	 * a blocking datagram channel with {@link CMStub#addBlockDatagramChannel(int)} method. 
+	 * <br> Furthermore, an application can retrieve its blocking datagram channels with 
+	 * {@link CMStub#getBlockDatagramChannel(int)} method. 
+	 * 
+	 * @param dc - the datagram channel through which the caller receives an event.
+	 * @return a CM event if this method successfully receives, or null otherwise.
+	 * @see CMStub#receive(SocketChannel)
+	 */
 	public CMEvent receive(DatagramChannel dc)
 	{
 		CMEvent event = null;

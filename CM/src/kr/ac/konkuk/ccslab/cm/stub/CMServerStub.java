@@ -403,6 +403,19 @@ public class CMServerStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * Returns a blocking socket (TCP) channel to a client.
+	 * 
+	 * <p> When a client adds a blocking socket channel, the server also creates and adds a corresponding blocking 
+	 * socket channel to communicate with the client. The server can retrieve such a blocking socket channel 
+	 * with this method.
+	 * 
+	 * @param nChKey - the channel key.
+	 * @param strUserName - the user name to which the socket channel is connected.
+	 * @return the blocking socket channel, or null if the channel is not found.
+	 * 
+	 * @see CMStub#getBlockDatagramChannel(int)
+	 */
 	public SocketChannel getBlockSocketChannel(int nChKey, String strUserName)
 	{
 		SocketChannel sc = null;
