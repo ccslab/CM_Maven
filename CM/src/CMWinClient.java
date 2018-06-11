@@ -386,7 +386,7 @@ public class CMWinClient extends JFrame {
 			printMessage("46: distribute a file and merge\n");
 			printMessage("---------------------------------------------------\n");
 			printMessage("47: multicast chat in current group\n");
-			printMessage("48: get additional blocking socket channel\n");
+			printMessage("48: test blocking channel\n");
 			printMessage("60: test input network throughput, 61: test output network throughput\n");
 			printMessage("99: terminate CM\n");
 			break;
@@ -540,8 +540,8 @@ public class CMWinClient extends JFrame {
 		case 47: // test multicast chat in current group
 			testMulticastChat();
 			break;
-		case 48: // get additional blocking socket channel
-			testGetBlockSocketChannel();
+		case 48: // test blocking channel
+			testBlockingChannel();
 			break;
 		case 50: // request an attached file of SNS content
 			testRequestAttachedFileOfSNSContent();
@@ -3418,11 +3418,13 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testGetBlockSocketChannel()
+	public void testBlockingChannel()
 	{
 		int nChKey = -1;
+		int nRecvPort = -1;
 		String strServerName = null;
 		SocketChannel sc = null;
+		DatagramChannel dc = null;
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		
@@ -3436,41 +3438,85 @@ public class CMWinClient extends JFrame {
 			}
 		}
 		
-		printMessage("============= get blocking socket channel\n");
+		printMessage("============= test blocking channel\n");
 
+		JRadioButton socketRadioButton = new JRadioButton("socket channel");
+		JRadioButton datagramRadioButton = new JRadioButton("datagram channel");
+		socketRadioButton.setSelected(true);
+		ButtonGroup chButtonGroup = new ButtonGroup();
+		chButtonGroup.add(socketRadioButton);
+		chButtonGroup.add(datagramRadioButton);
+		
 		JTextField chKeyField = new JTextField();
 		JTextField serverField = new JTextField();
+		JTextField recvPortField = new JTextField();
 		Object[] scMessage = {
-				"Channel key (>=0)", chKeyField,
-				"Server name(empty for the default server)", serverField
+				"", socketRadioButton,
+				"", datagramRadioButton,
+				"Channel key (>=0 or sender port for datagram channel)", chKeyField,
+				"Server name(empty for the default server)", serverField,
+				"receiver port (only for datagram channel)", recvPortField
 		};
 		
-		int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "find blocking socket channel", 
+		int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "test blocking channel", 
 				JOptionPane.OK_CANCEL_OPTION);
 		if(scResponse != JOptionPane.OK_OPTION) return;
 		
-		nChKey = Integer.parseInt(chKeyField.getText());
-		if(nChKey < 0)
+		try {
+			nChKey = Integer.parseInt(chKeyField.getText());
+			if(nChKey < 0)
+			{
+				System.err.println("Invalid channel key: "+nChKey);
+				return;
+			}
+		}catch(NumberFormatException ne)
 		{
-			System.err.println("Invalid channel key: "+nChKey);
-			return;
+			nChKey = -1;
+		}
+		
+		try {
+			nRecvPort = Integer.parseInt(recvPortField.getText());						
+		}catch(NumberFormatException ne)
+		{
+			nRecvPort = -1;
 		}
 
-		
 		strServerName = serverField.getText();
 		if(strServerName == null || strServerName.equals(""))
 			strServerName = "SERVER"; // default server name
 
-		sc = m_clientStub.getBlockSocketChannel(nChKey, strServerName);
-		
-		if(sc == null)
+		if(socketRadioButton.isSelected())
 		{
-			printMessage("Blocking socket channel not found: key("+nChKey+"), server("+strServerName+")\n");
+			sc = m_clientStub.getBlockSocketChannel(nChKey, strServerName);
+			if(sc == null)
+			{
+				printStyledMessage("Blocking socket channel not found: key("+nChKey+"), server("+strServerName+")\n", "bold");
+				return;
+			}
+			printMessage("Blocking socket channel found: key("+nChKey+"), server("+strServerName+")\n");
 		}
 		else
 		{
-			printMessage("Blocking socket channel found: key("+nChKey+"), server("+strServerName+")\n");
+			dc = m_clientStub.getBlockDatagramChannel(nChKey);
+			if(dc == null)
+			{
+				printStyledMessage("Blocking datagram channel not found: key("+nChKey+")\n", "bold");
+				return;
+			}
+			printMessage("Blocking datagram channel found: key("+nChKey+")\n");
 		}
+		
+		CMUserEvent ue = new CMUserEvent();
+		ue.setStringID("reqRecv");
+		ue.setEventField(CMInfo.CM_STR, "user", m_clientStub.getMyself().getName());
+		if(socketRadioButton.isSelected())
+			ue.setEventField(CMInfo.CM_INT, "chType", Integer.toString(CMInfo.CM_SOCKET_CHANNEL));
+		else
+			ue.setEventField(CMInfo.CM_INT, "chType", Integer.toString(CMInfo.CM_DATAGRAM_CHANNEL));
+		
+		ue.setEventField(CMInfo.CM_INT, "chKey", Integer.toString(nChKey));
+		ue.setEventField(CMInfo.CM_INT, "recvPort", Integer.toString(nRecvPort));
+		m_clientStub.send(ue, strServerName);
 		
 		return;
 	}
@@ -3512,7 +3558,7 @@ public class CMWinClient extends JFrame {
 		else
 			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, fSpeed));
 	}
-	
+		
 	private void requestAttachedFile(String strFileName)
 	{
 		/*

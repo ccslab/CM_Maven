@@ -4,6 +4,7 @@ import java.util.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -28,6 +29,8 @@ import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 
 /**
@@ -664,6 +667,155 @@ public class CMStub {
 		boolean ret = false;
 		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock, m_cmInfo);
 		return ret;
+	}
+	
+	public CMEvent receive(SocketChannel sc)
+	{
+		CMEvent event = null;
+		ByteBuffer bufByteNum = null;
+		ByteBuffer bufEvent = null;
+		int ret = 0;
+		int nByteNum = -1;
+		int nTotalReadBytes = 0;
+		
+		// create ByteBuffer
+		bufByteNum = ByteBuffer.allocate(Integer.BYTES);
+		bufByteNum.clear();
+		//ret = readStreamBytes(sc, bufByteNum);
+		while(bufByteNum.hasRemaining() && ret != -1)
+		{
+			try {
+				ret = sc.read(bufByteNum);
+				nTotalReadBytes += ret;
+				if(CMInfo._CM_DEBUG_2)
+					System.out.println("CMStub.receive(), read "+ret+" bytes.");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}			
+		}
+		
+		// if a channel is disconnected
+		if( ret == 0 || ret == -1 )
+		{
+			if(CMInfo._CM_DEBUG_2)
+			{
+				System.out.println("---- CMStub.receive(), "+sc.toString()
+							+" is disconnected.");
+				System.out.println("is open: "+sc.isOpen());
+				System.out.println("hash code: "+sc.hashCode());
+			}
+			if(sc.isOpen())
+			{
+				try {
+					sc.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+			return null;
+		}
+		else
+		{
+			// create a main ByteBuffer
+			bufByteNum.flip();
+			nByteNum = bufByteNum.getInt();
+			if(CMInfo._CM_DEBUG_2)
+				System.out.println("#### event byte num: "+nByteNum+" bytes, read byte num: "+ret+" bytes.");
+			if(nByteNum > CMInfo.MAX_EVENT_SIZE)
+			{
+				System.err.println("CMStub.receive(): nByteNum("+nByteNum
+						+") is greater than the maximum event size("+CMInfo.MAX_EVENT_SIZE+")!");
+				return null;
+			}
+			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
+			{
+				System.err.println("CMStub.receive(): nByteNum("+nByteNum
+						+") is less than the minimum event size("+CMInfo.MIN_EVENT_SIZE+")!");
+				return null;
+			}
+			//bufEvent = ByteBuffer.allocateDirect(nByteNum);
+			bufEvent = ByteBuffer.allocate(nByteNum);
+			bufEvent.clear();
+			bufEvent.putInt(nByteNum);	// put the first 4 bytes
+			// read remaining event bytes
+			//ret = readStreamBytes(sc, bufEvent);
+			ret = 0;
+			while(bufEvent.hasRemaining() && ret != -1)
+			{
+				try {
+					ret = sc.read(bufEvent);
+					nTotalReadBytes += ret;
+					if(CMInfo._CM_DEBUG_2)
+						System.out.println("CMStub.receive(), read "+ret+" bytes.");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				}			
+			}
+
+			if(CMInfo._CM_DEBUG_2)
+				System.out.println("---- CMStub.receive(), total read bytes: "
+								+nTotalReadBytes+" bytes.");
+		}
+		
+		// If the channel is disconnected, null message is delivered.
+		//if( ret == 0 || ret == -1 )
+		if( ret == -1 )
+		{
+			if(bufEvent != null)
+				bufEvent = null;
+			
+			return null;
+		}
+		else
+		{
+			bufEvent.flip();
+		}
+		
+		event = CMEventManager.unmarshallEvent(bufEvent);
+		
+		return event;
+	}
+	
+	public CMEvent receive(DatagramChannel dc)
+	{
+		CMEvent event = null;
+		SocketAddress senderAddr = null;	// sender address
+		int nByteNum = 0;
+		ByteBuffer bufEvent = ByteBuffer.allocate(CMInfo.SO_RCVBUF_LEN);
+		bufEvent.clear();	// initialize the ByteBuffer
+		
+		try {
+			senderAddr = dc.receive(bufEvent);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		bufEvent.flip();				// limit: cur position, position: 0
+		nByteNum = bufEvent.getInt();	// get the # bytes of the message
+		bufEvent.rewind();				// position: 0
+		
+		// check the completeness of the received message
+		if(nByteNum != bufEvent.remaining())
+		{
+			System.err.println("CMStub.receive(), receive incomplete message. "
+					+ "nByteNum("+nByteNum+" bytes), received byte num ("+bufEvent.remaining()+" bytes).");
+			bufEvent = null;
+			return null;
+		}
+		
+		if(CMInfo._CM_DEBUG_2)
+			System.out.println("---- CMStub.receive(), read "+bufEvent.remaining()+" bytes.");
+		
+		event = CMEventManager.unmarshallEvent(bufEvent);
+		
+		return event;
 	}
 	
 	/**

@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.stub;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
@@ -400,5 +401,21 @@ public class CMServerStub extends CMStub {
 
 		se = null;
 		return;
+	}
+	
+	public SocketChannel getBlockSocketChannel(int nChKey, String strUserName)
+	{
+		SocketChannel sc = null;
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMMember loginUsers = interInfo.getLoginUsers();
+		CMUser user = loginUsers.findMember(strUserName);
+		if(user == null)
+		{
+			System.err.println("user("+strUserName+") not found!");
+			return null;
+		}
+		
+		sc = (SocketChannel) user.getBlockSocketChannelInfo().findChannel(nChKey);
+		return sc;
 	}
 }
