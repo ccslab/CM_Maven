@@ -1,4 +1,6 @@
 import java.io.*;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SocketChannel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Iterator;
@@ -12,6 +14,8 @@ import javax.swing.text.StyledDocument;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -151,6 +155,7 @@ public class CMWinServer extends JFrame {
 			printMessage("13: start user access simulation and calculate prefetch precision and recall\n");
 			printMessage("14: configure, simulate, and write recent history to CMDB\n");
 			printMessage("15: test input network throughput, 16: test output network throughput\n");
+			printMessage("19: add channel, 20: remove channel\n");
 			printMessage("99: terminate CM\n");
 			break;
 		case 1: // print session information
@@ -206,6 +211,12 @@ public class CMWinServer extends JFrame {
 			break;
 		case 18:	// test cancel sending a file
 			cancelSendFile();
+			break;
+		case 19: 	// test add channel
+			addChannel();
+			break;
+		case 20: 	// test remove channel
+			removeChannel();
 			break;
 		case 99:
 			testTermination();
@@ -842,6 +853,474 @@ public class CMWinServer extends JFrame {
 			printMessage("Test failed!\n");
 		else
 			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, fSpeed));
+	}
+	
+	public void addChannel()
+	{
+		int nChType = -1;
+		int nChKey = -1; // the channel key for the socket channel
+		String strServerName = null;
+		String strChAddress = null; // the channel key for the multicast address is the (address, port) pair
+		int nChPort = -1; // the channel key for the datagram socket channel, or the multicast port number
+		String strSessionName = null;
+		String strGroupName = null;
+		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		boolean result = false;
+		boolean isBlock = false;
+		SocketChannel sc = null;
+		DatagramChannel dc = null;
+		boolean isSyncCall = false;
+		long lDelay = -1;
+				
+		printMessage("====== add additional channel\n");
+		
+		// ask channel type, (server name), channel index (integer greater than 0), addr, port
+		
+		String[] chTypes = {"SocketChannel(not yet supported)", "DatagramChannel", "MulticastChannel"};
+		JComboBox<String> chTypeBox = new JComboBox<String>(chTypes);
+		chTypeBox.setSelectedIndex(1);
+		Object[] message = {
+				"Channel Type: ", chTypeBox
+		};
+		int option = JOptionPane.showConfirmDialog(null, message, "Channel type", JOptionPane.OK_CANCEL_OPTION);
+		if(option != JOptionPane.OK_OPTION) return;
+		nChType = chTypeBox.getSelectedIndex() + 2;
+
+		if(nChType == CMInfo.CM_SOCKET_CHANNEL) // not yet supported
+		{
+			printStyledMessage("add socket channel at the server not supported yet!\n", "bold");
+			return;
+			/*
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+			String[] syncAsync = {"synchronous call", "asynchronous call"};
+			JComboBox syncAsyncComboBox = new JComboBox(syncAsync);
+			syncAsyncComboBox.setSelectedIndex(1); // default value is asynchronous call
+			
+			JTextField chIndexField = new JTextField();
+			JTextField strServerField = new JTextField();
+			Object[] scMessage = {
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"syncronous or asynchronous call", syncAsyncComboBox,
+					"Channel key (> 0 for nonblocking ch, >=0 for blocking ch)", chIndexField,
+					"Server name(empty for the default server)", strServerField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Socket Channel", JOptionPane.OK_CANCEL_OPTION);
+
+			if(scResponse != JOptionPane.OK_OPTION) return;
+			nChKey = Integer.parseInt(chIndexField.getText());
+
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
+			
+			if(!isBlock && nChKey <= 0)
+			{
+				printMessage("testAddChannel(), invalid nonblocking socket channel key ("+nChKey+")!\n");
+				return;
+			}
+			else if(isBlock && nChKey < 0)
+			{
+				printMessage("testAddChannel(), invalid blocking socket channel key ("+nChKey+")!\n");
+				return;
+			}
+			
+			if(syncAsyncComboBox.getSelectedIndex() == 0)
+				isSyncCall = true;
+			else
+				isSyncCall = false;
+			
+			strServerName = strServerField.getText();
+			if(strServerName == null || strServerName.equals(""))
+				strServerName = "SERVER"; // default server name
+			*/
+		}
+		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
+		{
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+			
+			JTextField chIndexField = new JTextField();
+
+			Object[] scMessage = {
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"Port number (key of the datagram channel)", chIndexField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Add Datagram Channel", JOptionPane.OK_CANCEL_OPTION);
+			if(scResponse != JOptionPane.OK_OPTION) return;
+
+			try {
+				nChPort = Integer.parseInt(chIndexField.getText());
+			}catch(NumberFormatException e) {
+				printMessage("The channel UDP port must be a number !\n");
+				return;
+			}
+
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
+		}
+		else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
+		{
+			JTextField snameField = new JTextField();
+			JTextField gnameField = new JTextField();
+			JTextField chAddrField = new JTextField();
+			JTextField chPortField = new JTextField();
+			Object[] multicastMessage = {
+					"Target Session Name: ", snameField,
+					"Target Group Name: ", gnameField,
+					"Channel Multicast Address: ", chAddrField,
+					"Channel Multicast Port: ", chPortField
+			};
+			int multicastResponse = JOptionPane.showConfirmDialog(null, multicastMessage, "Additional Multicast Input",
+					JOptionPane.OK_CANCEL_OPTION);
+			if(multicastResponse != JOptionPane.OK_OPTION) return;
+			
+			strSessionName = snameField.getText();
+			strGroupName = gnameField.getText();
+			strChAddress = chAddrField.getText();
+			nChPort = Integer.parseInt(chPortField.getText());			
+		}
+	    
+		switch(nChType)
+		{
+		/*
+		case CMInfo.CM_SOCKET_CHANNEL:
+			if(isBlock)
+			{
+				if(isSyncCall)
+				{
+					sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					if(sc != null)
+					{
+						printMessage("Successfully added a blocking socket channel both "
+								+ "at the client and the server: key("+nChKey+"), server("+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
+					else
+						printMessage("Failed to add a blocking socket channel both at "
+								+ "the client and the server: key("+nChKey+"), server("+strServerName+")\n");					
+				}
+				else
+				{
+					m_eventHandler.setStartTime(System.currentTimeMillis());
+					result = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					if(result)
+					{
+						printMessage("Successfully added a blocking socket channel at the client and "
+								+"requested to add the channel info to the server: key("+nChKey+"), server("
+								+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
+					else
+						printMessage("Failed to add a blocking socket channel at the client or "
+								+"failed to request to add the channel info to the server: key("+nChKey
+								+"), server("+strServerName+")\n");
+				}
+			}
+			else
+			{
+				if(isSyncCall)
+				{
+					sc = m_clientStub.syncAddNonBlockSocketChannel(nChKey, strServerName);
+					if(sc != null)
+						printMessage("Successfully added a nonblocking socket channel both at the client "
+								+ "and the server: key("+nChKey+"), server("+strServerName+")\n");
+					else
+						printMessage("Failed to add a nonblocking socket channel both at the client "
+								+ "and the server: key("+nChKey+") to server("+strServerName+")\n");														
+				}
+				else
+				{
+					result = m_clientStub.addNonBlockSocketChannel(nChKey, strServerName);
+					if(result)
+						printMessage("Successfully added a nonblocking socket channel at the client and "
+								+ "requested to add the channel info to the server: key("+nChKey+"), server("
+								+strServerName+")\n");
+					else
+						printMessage("Failed to add a nonblocking socket channe at the client or "
+								+ "failed to request to add the channel info to the server: key("+nChKey
+								+") to server("+strServerName+")\n");									
+				}
+			}
+				
+			break;
+		*/
+		case CMInfo.CM_DATAGRAM_CHANNEL:
+			if(isBlock)
+			{
+				dc = m_serverStub.addBlockDatagramChannel(nChPort);
+				if(dc != null)
+					printMessage("Successfully added a blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to add a blocking datagram socket channel: port("+nChPort+")\n");								
+			}
+			else
+			{
+				dc = m_serverStub.addNonBlockDatagramChannel(nChPort);
+				if(dc != null)
+					printMessage("Successfully added a non-blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to add a non-blocking datagram socket channel: port("+nChPort+")\n");				
+			}
+						
+			break;
+		case CMInfo.CM_MULTICAST_CHANNEL:
+			result = m_serverStub.addMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
+			if(result)
+			{
+				printMessage("Successfully added a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
+			else
+			{
+				printMessage("Failed to add a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
+			break;
+		default:
+			printMessage("Channel type is incorrect!\n");
+			break;
+		}
+		
+		printMessage("======\n");
+	}
+	
+	public void removeChannel()
+	{
+		int nChType = -1;
+		int nChKey = -1;
+		int nChPort = -1;
+		String strChAddress = null;
+		String strServerName = null;
+		String strSessionName = null;
+		String strGroupName = null;
+		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		boolean result = false;
+		boolean isBlock = false;
+		boolean isSyncCall = false;
+		long lDelay = 0;
+		
+		printMessage("====== remove additional channel\n");
+				
+		String[] chTypes = {"SocketChannel(not yet supported)", "DatagramChannel", "MulticastChannel"};
+		JComboBox<String> chTypeBox = new JComboBox<String>(chTypes);
+		chTypeBox.setSelectedIndex(1);
+		Object[] message = {
+				"Channel Type: ", chTypeBox
+		};
+		int option = JOptionPane.showConfirmDialog(null, message, "Removal of Additional Channel", JOptionPane.OK_CANCEL_OPTION);
+		if(option != JOptionPane.OK_OPTION) return;
+		nChType = chTypeBox.getSelectedIndex() + 2;
+
+		if(nChType == CMInfo.CM_SOCKET_CHANNEL)
+		{
+			printStyledMessage("remove socket channel not yet supported!", "bold");
+			return;
+			/*
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+			String syncAsync[] = {"synchronous call", "asynchronous call"};
+			JComboBox syncAsyncComboBox = new JComboBox(syncAsync);
+			syncAsyncComboBox.setSelectedIndex(1);	//default value is asynchronous call
+
+			JTextField chIndexField = new JTextField();
+			JTextField strServerField = new JTextField();
+			Object[] scMessage = {
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"Synchronous or asynchronous call", syncAsyncComboBox,
+					"Channel key (> 0 for nonblocking ch, >=0 for blocking ch)", chIndexField,
+					"Server name(empty for the default server)", strServerField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Socket Channel", JOptionPane.OK_CANCEL_OPTION);
+
+			if(scResponse != JOptionPane.OK_OPTION) return;
+			nChKey = Integer.parseInt(chIndexField.getText());
+
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
+
+			if(!isBlock && nChKey <= 0)
+			{
+				printMessage("testRemoveChannel(), invalid nonblocking socket channel key ("+nChKey+")!\n");
+				return;
+			}
+			else if(isBlock && nChKey < 0)
+			{
+				printMessage("testRemoveChannel(), invalid blocking socket channel key ("+nChKey+")!\n");
+				return;
+			}
+			
+			if(syncAsyncComboBox.getSelectedIndex() == 0)
+				isSyncCall = true;
+			else
+				isSyncCall = false;
+			
+			strServerName = strServerField.getText();
+			if(strServerName == null || strServerName.equals(""))
+				strServerName = "SERVER"; // default server name
+			*/
+		}
+		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
+		{
+			JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
+			JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
+			nonBlockRadioButton.setSelected(true);
+			ButtonGroup bGroup = new ButtonGroup();
+			bGroup.add(blockRadioButton);
+			bGroup.add(nonBlockRadioButton);
+
+			JTextField chIndexField = new JTextField();
+			Object[] scMessage = {
+					"", blockRadioButton,
+					"", nonBlockRadioButton,
+					"Port number (key of the datagram channel):", chIndexField
+			};
+			
+			int scResponse = JOptionPane.showConfirmDialog(null, scMessage, "Remove Datagram Channel", 
+					JOptionPane.OK_CANCEL_OPTION);
+
+			if(scResponse != JOptionPane.OK_OPTION) return;
+			try {
+				nChPort = Integer.parseInt(chIndexField.getText());				
+			}catch(NumberFormatException e){
+				printMessage("The channel UDP port must be a number!\n");
+				return;
+			}
+	
+			if(blockRadioButton.isSelected()) isBlock = true;
+			else isBlock = false;
+
+		}
+		else if(nChType == CMInfo.CM_MULTICAST_CHANNEL)
+		{
+			JTextField snameField = new JTextField();
+			JTextField gnameField = new JTextField();
+			JTextField chAddrField = new JTextField();
+			JTextField chPortField = new JTextField();
+			Object[] sgMessage = { 
+					"Target Session Name: ", snameField,
+					"Target Group Name: ", gnameField,
+					"Channel Multicast Address: ", chAddrField,
+					"Channel Multicast Port: ", chPortField
+			};
+			int sgOption = JOptionPane.showConfirmDialog(null, sgMessage, "Target Session and Group", JOptionPane.OK_CANCEL_OPTION);
+			if(sgOption != JOptionPane.OK_OPTION) return;
+			strSessionName = snameField.getText();
+			strGroupName = gnameField.getText();
+			strChAddress = chAddrField.getText();
+			nChPort = Integer.parseInt(chPortField.getText());			
+		}
+
+		switch(nChType)
+		{
+		/*
+		case CMInfo.CM_SOCKET_CHANNEL:
+			if(isBlock)
+			{
+				if(isSyncCall)
+				{
+					m_eventHandler.setStartTime(System.currentTimeMillis());
+					result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					if(result)
+					{
+						printMessage("Successfully removed a blocking socket channel both "
+								+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
+					else
+						printMessage("Failed to remove a blocking socket channel both at the client "
+								+ "and the server: key("+nChKey+"), server ("+strServerName+")\n");					
+				}
+				else
+				{
+					m_eventHandler.setStartTime(System.currentTimeMillis());
+					result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
+					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					if(result)
+					{
+						printMessage("Successfully removed a blocking socket channel at the client and " 
+								+ "requested to remove it at the server: key("+nChKey+"), server("+strServerName+")\n");
+						printMessage("return delay: "+lDelay+" ms.\n");
+					}
+					else
+						printMessage("Failed to remove a blocking socket channel at the client or "
+								+ "failed to request to remove it at the server: key("+nChKey+"), server("
+								+strServerName+")\n");
+				}
+			}
+			else
+			{
+				result = m_clientStub.removeNonBlockSocketChannel(nChKey, strServerName);
+				if(result)
+					printMessage("Successfully removed a nonblocking socket channel: key("+nChKey
+							+"), server("+strServerName+")\n");
+				else
+					printMessage("Failed to remove a nonblocing socket channel: key("+nChKey
+							+"), server("+strServerName+")\n");			
+			}
+	
+			break;
+		*/
+		case CMInfo.CM_DATAGRAM_CHANNEL:
+			if(isBlock)
+			{
+				result = m_serverStub.removeBlockDatagramChannel(nChPort);
+				if(result)
+					printMessage("Successfully removed a blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to remove a blocking datagram socket channel: port("+nChPort+")\n");								
+			}
+			else
+			{
+				result = m_serverStub.removeNonBlockDatagramChannel(nChPort);
+				if(result)
+					printMessage("Successfully removed a non-blocking datagram socket channel: port("+nChPort+")\n");
+				else
+					printMessage("Failed to remove a non-blocking datagram socket channel: port("+nChPort+")\n");				
+			}
+			
+			break;
+		case CMInfo.CM_MULTICAST_CHANNEL:
+			result = m_serverStub.removeAdditionalMulticastChannel(strSessionName, strGroupName, strChAddress, nChPort);
+			if(result)
+			{
+				printMessage("Successfully removed a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
+			else
+			{
+				printMessage("Failed to remove a multicast channel: session("+strSessionName+"), group("
+						+strGroupName+"), address("+strChAddress+"), port("+nChPort+")\n");
+			}
+			break;
+		default:
+			printMessage("Channel type is incorrect!\n");
+			break;
+		}
+		
+		printMessage("======\n");		
 	}
 	
 

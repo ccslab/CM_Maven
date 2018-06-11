@@ -4,6 +4,7 @@ import java.util.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -28,6 +29,8 @@ import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.*;
 
 /**
@@ -148,17 +151,18 @@ public class CMStub {
 	// SocketChannel is available only in the ClientStub module
 	
 	/**
-	 * Adds an additional datagram (UDP) channel to this CM node.
+	 * Adds a non-blocking datagram (UDP) channel to this CM node.
 	 * 
 	 * <p> A developer must note that the given port number is unique and different from 
 	 * that of the default channel in the configuration file. A UDP channel is identified 
 	 * by the port number as an index.
 	 * 
 	 * @param nChPort - the port number for the new datagram (UDP) channel
-	 * @return true if the channel is successfully open, or false otherwise.
-	 * @see CMStub#removeAdditionalDatagramChannel(int)
+	 * @return a reference to the datagram channel if it is successfully created, or null otherwise.
+	 * @see CMStub#removeNonBlockDatagramChannel(int)
+	 * @see CMStub#addBlockDatagramChannel(int)
 	 */
-	public boolean addDatagramChannel(int nChPort)
+	public DatagramChannel addNonBlockDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -168,47 +172,49 @@ public class CMStub {
 		
 		if(nonBlockDCInfo.findChannel(nChPort) != null)
 		{
-			System.err.println("CMStub.addDatagramChannel(), channel key("+nChPort+") already exists.");
-			return false;
+			System.err.println("CMStub.addNonBlockDatagramChannel(), channel key("+nChPort+") already exists.");
+			return null;
 		}
 		try {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
 					confInfo.getMyAddress(), nChPort, m_cmInfo);
 			if(dc == null)
 			{
-				System.err.println("CMStub.addDatagramChannel(), failed.");
-				return false;
+				System.err.println("CMStub.addNonBlockDatagramChannel(), failed.");
+				return null;
 			}
 			
 			result = nonBlockDCInfo.addChannel(nChPort, dc);
 			if(result)
 			{
 				if(CMInfo._CM_DEBUG)
-					System.out.println("CMStub.addDatagramChannel(), succeeded. port("+nChPort+")");
+					System.out.println("CMStub.addNonBlockDatagramChannel(), succeeded. port("+nChPort+")");
 			}
 			else
 			{
-				System.err.println("CMStub.addDatagramChannel(), failed! port("+nChPort+")");
+				System.err.println("CMStub.addNonBlockDatagramChannel(), failed! port("+nChPort+")");
+				return null;
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return result;
+		return dc;
 	}
 	
 	/**
-	 * Removes an additional datagram (UDP) channel from this CM node.
+	 * Removes a non-blocking datagram (UDP) channel from this CM node.
 	 * 
 	 * <p> Like the stream (TCP) channel case, a developer should be careful 
 	 * not to remove the default channel.
 	 * 
 	 * @param nChPort - the port number of the channel to be removed
 	 * @return true if the channel is successfully removed, or false otherwise.
-	 * @see CMStub#addDatagramChannel(int)
+	 * @see CMStub#addNonBlockDatagramChannel(int)
+	 * @see CMStub#removeBlockDatagramChannel(int)
 	 */
-	public boolean removeAdditionalDatagramChannel(int nChPort)
+	public boolean removeNonBlockDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMChannelInfo<Integer> dcInfo = commInfo.getNonBlockDatagramChannelInfo();
@@ -218,13 +224,112 @@ public class CMStub {
 		if(result)
 		{
 			if(CMInfo._CM_DEBUG)
-				System.out.println("CMStub.removeAdditionalDatagramChannel(), succeeded. port("+nChPort+")");
+				System.out.println("CMStub.removeNonBlockDatagramChannel(), succeeded. port("+nChPort+")");
 		}
 		else
 		{
-			System.err.println("CMStub.removeAdditionalDatagramChannel(), failed! port("+nChPort+")");
+			System.err.println("CMStub.removeNonBlockDatagramChannel(), failed! port("+nChPort+")");
 		}
 		return result;
+	}
+	
+	/**
+	 * Adds a blocking datagram (UDP) channel to this CM node.
+	 * 
+	 * <p> A UDP channel is identified by the port number as an index.
+	 * 
+	 * @param nChPort - the port number for the new datagram (UDP) channel
+	 * @return a reference to the datagram channel if it is successfully created, or null otherwise.
+	 * @see CMStub#removeBlockDatagramChannel(int)
+	 * @see CMStub#addNonBlockDatagramChannel(int)
+	 */
+	public DatagramChannel addBlockDatagramChannel(int nChPort)
+	{
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMChannelInfo<Integer> blockDCInfo = commInfo.getBlockDatagramChannelInfo();
+		DatagramChannel dc = null;
+		boolean result = false;
+		
+		if(blockDCInfo.findChannel(nChPort) != null)
+		{
+			System.err.println("CMStub.addBlockDatagramChannel(), channel key("+nChPort+") already exists.");
+			return null;
+		}
+		try {
+			dc = (DatagramChannel) CMCommManager.openBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
+					confInfo.getMyAddress(), nChPort, m_cmInfo);
+			if(dc == null)
+			{
+				System.err.println("CMStub.addBlockDatagramChannel(), failed.");
+				return null;
+			}
+	
+			result = blockDCInfo.addChannel(nChPort, dc);
+			if(result)
+			{
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMStub.addBlockDatagramChannel(), succeeded. port("+nChPort+")");
+			}
+			else
+			{
+				System.err.println("CMStub.addBlockDatagramChannel(), failed! port("+nChPort+")");
+				return null;
+			}
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return dc;		
+	}
+	
+	/**
+	 * Removes a blocking datagram (UDP) channel from this CM node.
+	 * 
+	 * <p> Like the stream (TCP) channel case, a developer should be careful 
+	 * not to remove the default channel.
+	 * 
+	 * @param nChPort - the port number of the channel to be removed
+	 * @return true if the channel is successfully removed, or false otherwise.
+	 * @see CMStub#addBlockDatagramChannel(int)
+	 * @see CMStub#removeNonBlockDatagramChannel(int)
+	 */
+	public boolean removeBlockDatagramChannel(int nChPort)
+	{
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMChannelInfo<Integer> dcInfo = commInfo.getBlockDatagramChannelInfo();
+		boolean result = false;
+
+		result = dcInfo.removeChannel(nChPort); 
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMStub.removeBlockDatagramChannel(), succeeded. port("+nChPort+")");
+		}
+		else
+		{
+			System.err.println("CMStub.removeBlockDatagramChannel(), failed! port("+nChPort+")");
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns a blocking datagram (UDP) channel.
+	 *  
+	 * @param nChPort - the channel port number.
+	 * @return the blocking datagram channel, or null if the channel is not found.
+	 */
+	public DatagramChannel getBlockDatagramChannel(int nChPort)
+	{
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMChannelInfo<Integer> dcInfo = commInfo.getBlockDatagramChannelInfo();
+		DatagramChannel dc = null;
+		
+		dc = (DatagramChannel) dcInfo.findChannel(nChPort);
+		
+		return dc;
 	}
 
 	/**
@@ -371,6 +476,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -400,6 +506,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -445,6 +552,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -487,6 +595,7 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int) 
@@ -514,6 +623,199 @@ public class CMStub {
 		}
 
 		return ret;
+	}
+	
+	/**
+	 * Sends a CM event to a single node.
+	 * 
+	 * <p> This method can be called only in the following conditions. First, this method uses only the datagram 
+	 * (udp) channel. Therefore, the opt parameter must be always set to CMInfo.CM_DATAGRAM (or 1).
+	 * Second, this method can send an event to a CM node of which the sender knows its address. Unlike the other 
+	 * send() method, this method cannot use the internal forwarding scheme of CM. 
+	 *  
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name. 
+	 * <br> The receiver can be either the server or the client. In the CM network, 
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
+	 * For example, the name of the default server is "SERVER". 
+	 * @param opt - the reliability option. 
+	 * <br> The opt value of this method must be CMInfo.CM_DATAGRAM (or 1), because this method must be called 
+	 * only with the UDP datagram socket channel.
+	 * @param nSendPort - the datagram channel key. 
+	 * <br> If the application adds additional UDP channels, they are identified 
+	 * by the channel key. The key of the UDP channel is the locally bound port number.
+	 * @param nRecvPort - the receiver port number.
+	 * <br> If nRecvPort is 0, then CM uses the default UDP port of the receiver.
+	 * @param isBlock - the blocking option. 
+	 * <br> If isBlock is true, this method uses a blocking channel to send the event. 
+	 * If isBlock is false, this method uses a nonblocking channel to send the event. The CM uses nonblocking channels 
+	 * by default, but the application can also add blocking channels if required.
+	 * @return true if the event is successfully sent; false otherwise.
+	 * 
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * 
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int) 
+	 * @see CMStub#send(CMEvent, String, String, int, int)
+
+	 */
+	public boolean send(CMEvent cme, String strTarget, int opt, int nSendPort, int nRecvPort, boolean isBlock)
+	{
+		boolean ret = false;
+		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock, m_cmInfo);
+		return ret;
+	}
+	
+	public CMEvent receive(SocketChannel sc)
+	{
+		CMEvent event = null;
+		ByteBuffer bufByteNum = null;
+		ByteBuffer bufEvent = null;
+		int ret = 0;
+		int nByteNum = -1;
+		int nTotalReadBytes = 0;
+		
+		// create ByteBuffer
+		bufByteNum = ByteBuffer.allocate(Integer.BYTES);
+		bufByteNum.clear();
+		//ret = readStreamBytes(sc, bufByteNum);
+		while(bufByteNum.hasRemaining() && ret != -1)
+		{
+			try {
+				ret = sc.read(bufByteNum);
+				nTotalReadBytes += ret;
+				if(CMInfo._CM_DEBUG_2)
+					System.out.println("CMStub.receive(), read "+ret+" bytes.");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}			
+		}
+		
+		// if a channel is disconnected
+		if( ret == 0 || ret == -1 )
+		{
+			if(CMInfo._CM_DEBUG_2)
+			{
+				System.out.println("---- CMStub.receive(), "+sc.toString()
+							+" is disconnected.");
+				System.out.println("is open: "+sc.isOpen());
+				System.out.println("hash code: "+sc.hashCode());
+			}
+			if(sc.isOpen())
+			{
+				try {
+					sc.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+			return null;
+		}
+		else
+		{
+			// create a main ByteBuffer
+			bufByteNum.flip();
+			nByteNum = bufByteNum.getInt();
+			if(CMInfo._CM_DEBUG_2)
+				System.out.println("#### event byte num: "+nByteNum+" bytes, read byte num: "+ret+" bytes.");
+			if(nByteNum > CMInfo.MAX_EVENT_SIZE)
+			{
+				System.err.println("CMStub.receive(): nByteNum("+nByteNum
+						+") is greater than the maximum event size("+CMInfo.MAX_EVENT_SIZE+")!");
+				return null;
+			}
+			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
+			{
+				System.err.println("CMStub.receive(): nByteNum("+nByteNum
+						+") is less than the minimum event size("+CMInfo.MIN_EVENT_SIZE+")!");
+				return null;
+			}
+			//bufEvent = ByteBuffer.allocateDirect(nByteNum);
+			bufEvent = ByteBuffer.allocate(nByteNum);
+			bufEvent.clear();
+			bufEvent.putInt(nByteNum);	// put the first 4 bytes
+			// read remaining event bytes
+			//ret = readStreamBytes(sc, bufEvent);
+			ret = 0;
+			while(bufEvent.hasRemaining() && ret != -1)
+			{
+				try {
+					ret = sc.read(bufEvent);
+					nTotalReadBytes += ret;
+					if(CMInfo._CM_DEBUG_2)
+						System.out.println("CMStub.receive(), read "+ret+" bytes.");
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return null;
+				}			
+			}
+
+			if(CMInfo._CM_DEBUG_2)
+				System.out.println("---- CMStub.receive(), total read bytes: "
+								+nTotalReadBytes+" bytes.");
+		}
+		
+		// If the channel is disconnected, null message is delivered.
+		//if( ret == 0 || ret == -1 )
+		if( ret == -1 )
+		{
+			if(bufEvent != null)
+				bufEvent = null;
+			
+			return null;
+		}
+		else
+		{
+			bufEvent.flip();
+		}
+		
+		event = CMEventManager.unmarshallEvent(bufEvent);
+		
+		return event;
+	}
+	
+	public CMEvent receive(DatagramChannel dc)
+	{
+		CMEvent event = null;
+		SocketAddress senderAddr = null;	// sender address
+		int nByteNum = 0;
+		ByteBuffer bufEvent = ByteBuffer.allocate(CMInfo.SO_RCVBUF_LEN);
+		bufEvent.clear();	// initialize the ByteBuffer
+		
+		try {
+			senderAddr = dc.receive(bufEvent);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		bufEvent.flip();				// limit: cur position, position: 0
+		nByteNum = bufEvent.getInt();	// get the # bytes of the message
+		bufEvent.rewind();				// position: 0
+		
+		// check the completeness of the received message
+		if(nByteNum != bufEvent.remaining())
+		{
+			System.err.println("CMStub.receive(), receive incomplete message. "
+					+ "nByteNum("+nByteNum+" bytes), received byte num ("+bufEvent.remaining()+" bytes).");
+			bufEvent = null;
+			return null;
+		}
+		
+		if(CMInfo._CM_DEBUG_2)
+			System.out.println("---- CMStub.receive(), read "+bufEvent.remaining()+" bytes.");
+		
+		event = CMEventManager.unmarshallEvent(bufEvent);
+		
+		return event;
 	}
 	
 	/**
@@ -875,7 +1177,8 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
+	 * @see CMStub#send(CMEvent, String, int, int, boolean) 
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public boolean send(CMEvent cme, String serverName, String userName)
 	{
@@ -902,7 +1205,8 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt)
 	{
@@ -948,7 +1252,8 @@ public class CMStub {
 	 * @see CMStub#send(CMEvent, String)
 	 * @see CMStub#send(CMEvent, String, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)  
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{

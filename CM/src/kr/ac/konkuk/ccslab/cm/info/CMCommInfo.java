@@ -11,6 +11,7 @@ public class CMCommInfo {
 	private ServerSocketChannel m_nonBlockServerSocketChannel; // nonblocking server socket channel
 	private ServerSocketChannel m_blockServerSocketChannel; // blocking server socket channel
 	private CMChannelInfo<Integer> m_nonBlockDCInfo;	// nonblocking datagram channel list
+	private CMChannelInfo<Integer> m_blockDCInfo;		// blocking datagram channel list
 	//private Vector<SocketChannel> m_scList;
 	//private Vector<DatagramChannel> m_dcList;
 	//private Vector<MulticastChannel> m_mcList;
@@ -37,6 +38,7 @@ public class CMCommInfo {
 		m_nonBlockServerSocketChannel = null;
 		m_blockServerSocketChannel = null;
 		m_nonBlockDCInfo = new CMChannelInfo<Integer>();
+		m_blockDCInfo = new CMChannelInfo<Integer>();
 		m_byteReceiver = null;
 		m_byteSender = null;
 		//m_scList = new Vector<SocketChannel>();
@@ -182,6 +184,11 @@ public class CMCommInfo {
 	public CMChannelInfo<Integer> getNonBlockDatagramChannelInfo()
 	{
 		return m_nonBlockDCInfo;
+	}
+	
+	public CMChannelInfo<Integer> getBlockDatagramChannelInfo()
+	{
+		return m_blockDCInfo;
 	}
 		
 	/*
