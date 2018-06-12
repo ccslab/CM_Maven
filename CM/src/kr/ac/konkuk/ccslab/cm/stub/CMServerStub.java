@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.Vector;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -430,5 +433,51 @@ public class CMServerStub extends CMStub {
 		
 		sc = (SocketChannel) user.getBlockSocketChannelInfo().findChannel(nChKey);
 		return sc;
+	}
+	
+	@Override
+	public String getCurrentChannelInfo()
+	{
+		StringBuffer sb = new StringBuffer();
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		String strChInfo = null;
+		
+		// add datagram channel info of the CMStub class
+		String strSuperChInfo = super.getCurrentChannelInfo();
+		if(strSuperChInfo != null)
+			sb.append(strSuperChInfo);
+		
+		// add server socket channel info
+		sb.append("==== server socket channel\n");
+		sb.append(commInfo.getNonBlockServerSocketChannel().toString()+"\n");
+		
+		// add socket channel info of the login users
+		CMMember loginUsers = interInfo.getLoginUsers();
+		if(!loginUsers.isEmpty())
+		{
+			Vector<CMUser> loginUserList = loginUsers.getAllMembers();
+			Iterator<CMUser> iter = loginUserList.iterator();
+
+			while(iter.hasNext())
+			{
+				CMUser user = iter.next();
+				sb.append("==== user: "+user.getName()+"\n");
+				strChInfo = user.getNonBlockSocketChannelInfo().toString();
+				if(strChInfo != null)
+				{
+					sb.append("-- non-blocking socket channel\n");
+					sb.append(strChInfo);
+				}
+				strChInfo = user.getBlockSocketChannelInfo().toString();
+				if(strChInfo != null)
+				{
+					sb.append("-- blocking socket channel\n");
+					sb.append(strChInfo);
+				}
+			}
+		}
+		
+		return sb.toString();
 	}
 }

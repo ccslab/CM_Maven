@@ -114,6 +114,7 @@ public class CMClientApp {
 				System.out.println("47: multicast chat in current group");
 				System.out.println("48: get additional blocking socket channel");
 				System.out.println("60: test input network throughput, 61: test output network throughput");
+				System.out.println("64: print current channels information");
 				System.out.println("99: terminate CM");
 				break;
 			case 1: // connect to default server
@@ -289,6 +290,9 @@ public class CMClientApp {
 				break;
 			case 63:	// test cancel sending a file
 				cancelSendFile();
+				break;
+			case 64:	// print current channels information
+				testPrintCurrentChannelInfo();
 				break;
 			case 99: // terminate CM
 				testTermination();
@@ -2595,7 +2599,14 @@ public class CMClientApp {
 		else
 			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, fSpeed);
 	}
-	
+
+	public void testPrintCurrentChannelInfo()
+	{
+		System.out.println("========== print current channel info");
+		String strChannels = m_clientStub.getCurrentChannelInfo();
+		System.out.println(strChannels);
+	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		CMClientApp client = new CMClientApp();

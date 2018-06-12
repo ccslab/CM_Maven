@@ -1915,4 +1915,37 @@ public class CMStub {
 		return fSpeed;
 	}
 	
+	public String getCurrentChannelInfo()
+	{
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		StringBuffer sb = null;
+		String strNonBlockDCMap = null;
+		String strBlockDCMap = null;
+		CMChannelInfo<Integer> nonBlockDCMap = commInfo.getNonBlockDatagramChannelInfo();
+		CMChannelInfo<Integer> blockDCMap = commInfo.getBlockDatagramChannelInfo();
+
+		// non-blocking datagram channel info
+		strNonBlockDCMap = nonBlockDCMap.toString();
+		strBlockDCMap = blockDCMap.toString();
+
+		if( strNonBlockDCMap == null && strBlockDCMap == null)
+			return null;
+		
+		sb = new StringBuffer();
+		
+		if(strNonBlockDCMap != null)
+		{
+			sb.append("-- non-blocking datagram channel\n");
+			sb.append(strNonBlockDCMap);
+		}
+		
+		// blocking datagram channel info
+		if(strBlockDCMap != null)
+		{
+			sb.append("-- blocking datagram channel\n");
+			sb.append(strBlockDCMap);
+		}
+		
+		return sb.toString();
+	}
 }

@@ -3301,4 +3301,61 @@ public class CMClientStub extends CMStub {
 		se = null;
 		return;
 	}
+	
+	@Override
+	public String getCurrentChannelInfo()
+	{
+		StringBuffer sb = new StringBuffer();
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMServer defaultServer = interInfo.getDefaultServerInfo();
+		String strChInfo = null;
+		
+		// add datagram channel info of the CMStub class
+		String strSuperChInfo = super.getCurrentChannelInfo();
+		if(strSuperChInfo != null)
+			sb.append(strSuperChInfo);
+		
+		// add socket channel info of the default server
+		sb.append("==== default server: "+defaultServer.getServerName()+"\n");
+		
+		strChInfo = defaultServer.getNonBlockSocketChannelInfo().toString();
+		if(strChInfo != null)
+		{
+			sb.append("-- non-blocking socket channel\n");
+			sb.append(strChInfo);
+		}
+		
+		strChInfo = defaultServer.getBlockSocketChannelInfo().toString();
+		if(strChInfo != null)
+		{
+			sb.append("-- blocking socket channel\n");
+			sb.append(strChInfo);
+		}
+		
+		// add socket channel info of additional servers
+		Vector<CMServer> addServerList = interInfo.getAddServerList();
+		if(!addServerList.isEmpty())
+		{
+			Iterator<CMServer> iter = addServerList.iterator();
+			while(iter.hasNext())
+			{
+				CMServer addServer = iter.next();
+				sb.append("==== additional server: "+addServer.getServerName()+"\n");
+				strChInfo = addServer.getNonBlockSocketChannelInfo().toString();
+				if(strChInfo != null)
+				{
+					sb.append("-- non-blocking socket channel\n");
+					sb.append(strChInfo);
+				}
+				strChInfo = addServer.getBlockSocketChannelInfo().toString();
+				if(strChInfo != null)
+				{
+					sb.append("-- blocking socket channel\n");
+					sb.append(strChInfo);
+				}
+			}
+		}
+		
+		return sb.toString();
+	}
 }

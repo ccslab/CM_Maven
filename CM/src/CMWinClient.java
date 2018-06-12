@@ -388,6 +388,7 @@ public class CMWinClient extends JFrame {
 			printMessage("47: multicast chat in current group\n");
 			printMessage("48: test blocking channel\n");
 			printMessage("60: test input network throughput, 61: test output network throughput\n");
+			printMessage("64: print current channels information\n");
 			printMessage("99: terminate CM\n");
 			break;
 		case 1: // connect to default server
@@ -557,6 +558,9 @@ public class CMWinClient extends JFrame {
 			break;
 		case 63:	// test cancel sending a file
 			cancelSendFile();
+			break;
+		case 64: 	// print current channels information
+			testPrintCurrentChannelInfo();
 			break;
 		case 99: // terminate CM
 			testTermination();
@@ -3557,6 +3561,13 @@ public class CMWinClient extends JFrame {
 			printMessage("Test failed!\n");
 		else
 			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, fSpeed));
+	}
+	
+	public void testPrintCurrentChannelInfo()
+	{
+		printMessage("========== print current channel info\n");
+		String strChannels = m_clientStub.getCurrentChannelInfo();
+		printMessage(strChannels);
 	}
 		
 	private void requestAttachedFile(String strFileName)

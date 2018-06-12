@@ -156,6 +156,7 @@ public class CMWinServer extends JFrame {
 			printMessage("14: configure, simulate, and write recent history to CMDB\n");
 			printMessage("15: test input network throughput, 16: test output network throughput\n");
 			printMessage("19: add channel, 20: remove channel\n");
+			printMessage("21: print current channels information\n");
 			printMessage("99: terminate CM\n");
 			break;
 		case 1: // print session information
@@ -217,6 +218,9 @@ public class CMWinServer extends JFrame {
 			break;
 		case 20: 	// test remove channel
 			removeChannel();
+			break;
+		case 21:	// print current channels information
+			printCurrentChannelInfo();
 			break;
 		case 99:
 			testTermination();
@@ -1323,6 +1327,12 @@ public class CMWinServer extends JFrame {
 		printMessage("======\n");		
 	}
 	
+	public void printCurrentChannelInfo()
+	{
+		printMessage("========== print current channel info\n");
+		String strChannels = m_serverStub.getCurrentChannelInfo();
+		printMessage(strChannels);
+	}
 
 	public void printMessage(String strText)
 	{

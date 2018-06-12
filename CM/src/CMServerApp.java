@@ -80,6 +80,7 @@ public class CMServerApp {
 				System.out.println("14: configure, simulate, and write recent history to CMDB");
 				System.out.println("15: test input network throughput, 16: test output network throughput");
 				System.out.println("19: add channel, 20: remove channel");
+				System.out.println("21: print current channels information");
 				System.out.println("99: terminate CM");
 				break;
 			case 1: // print session information
@@ -141,6 +142,9 @@ public class CMServerApp {
 				break;
 			case 20:	// remove channel
 				removeChannel();
+				break;
+			case 21:	// print current channels information
+				printCurrentChannelInfo();
 				break;
 			case 99:
 				testTermination();
@@ -1141,6 +1145,13 @@ public class CMServerApp {
 		}
 		
 		System.out.println("======");		
+	}
+
+	public void printCurrentChannelInfo()
+	{
+		System.out.println("========== print current channel info");
+		String strChannels = m_serverStub.getCurrentChannelInfo();
+		System.out.println(strChannels);
 	}
 
 	public static void main(String[] args) {
