@@ -3302,6 +3302,18 @@ public class CMClientStub extends CMStub {
 		return;
 	}
 	
+	/**
+	 * gets the string representation of current channels information.
+	 * 
+	 * <p> This method overrides the {@link CMStub#getCurrentChannelInfo()} method.
+	 * It firstly calls the parent method to get the current datagram channel information, 
+	 * and then also gets the current blocking/non-blocking socket channel mostly to servers.
+	 * 
+	 * @return string of current channels information if successful, or null otherwise.
+	 * 
+	 * @see CMStub#getCurrentChannelInfo()
+	 * @see CMServerStub#getCurrentChannelInfo()
+	 */
 	@Override
 	public String getCurrentChannelInfo()
 	{

@@ -1915,6 +1915,18 @@ public class CMStub {
 		return fSpeed;
 	}
 	
+	/**
+	 * gets the string representation of current channels information.
+	 * 
+	 * <p> This method in the CMStub class gets only the blocking/non-blocking datagram channel information.
+	 * The {@link CMClientStub#getCurrentChannelInfo()} and {@link CMServerStub#getCurrentChannelInfo()} 
+	 * methods get the current blocking/non-blocking socket channel information as well as the datagram channels.
+	 * 
+	 * @return string of current channels information if successful, or null otherwise.
+	 * 
+	 * @see CMClientStub#getCurrentChannelInfo()
+	 * @see CMServerStub#getCurrentChannelInfo()
+	 */
 	public String getCurrentChannelInfo()
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
