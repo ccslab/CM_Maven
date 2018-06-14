@@ -1016,23 +1016,13 @@ public class CMWinClient extends JFrame {
 		String strRecvPort = null;
 		int nSendPort = 0;
 		int nRecvPort = 0;
-		boolean isBlock = false;
-		printMessage("====== test unicast chatting with datagram\n");
-
-		JRadioButton blockRadioButton = new JRadioButton("Blocking Channel");
-		JRadioButton nonBlockRadioButton = new JRadioButton("NonBlocking Channel");
-		nonBlockRadioButton.setSelected(true);
-		ButtonGroup bGroup = new ButtonGroup();
-		bGroup.add(blockRadioButton);
-		bGroup.add(nonBlockRadioButton);
+		printMessage("====== test unicast chatting with non-blocking datagram channels\n");
 
 		JTextField receiverField = new JTextField();
 		JTextField messageField = new JTextField();
 		JTextField sendPortField = new JTextField();
 		JTextField recvPortField = new JTextField();
 		Object[] message = {
-				"", blockRadioButton,
-				"", nonBlockRadioButton,
 				"Receiver: ", receiverField, 
 				"Message: ", messageField,
 				"Sender port(empty for default port): ", sendPortField,
@@ -1041,11 +1031,6 @@ public class CMWinClient extends JFrame {
 		int option = JOptionPane.showConfirmDialog(null, message, "Message Input", JOptionPane.OK_OPTION);
 		if(option == JOptionPane.OK_OPTION)
 		{
-			if(blockRadioButton.isSelected())
-				isBlock = true;
-			else
-				isBlock = false;
-			
 			strReceiver = receiverField.getText();
 			strMessage = messageField.getText();
 			strSendPort = sendPortField.getText();
@@ -1081,9 +1066,9 @@ public class CMWinClient extends JFrame {
 			ie.setTalk(strMessage);
 			//m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM);
 			if(nRecvPort == 0)
-				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, isBlock);
+				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort);
 			else
-				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, nRecvPort, isBlock);
+				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, nRecvPort, false);
 			ie = null;
 		}
 		

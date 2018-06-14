@@ -373,6 +373,29 @@ public class CMClientEventHandler implements CMEventHandler {
 			System.out.println("Received user envet 'EndForwardDelay', avg delay("+m_lDelaySum/nSendNum+" ms)");
 			m_lDelaySum = 0;
 		}
+		else if(ue.getStringID().equals("repRecv"))
+		{
+			String strReceiver = ue.getEventField(CMInfo.CM_STR, "receiver");
+			int nBlockingChannelType = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "chType"));
+			int nBlockingChannelKey = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "chKey"));
+			int nRecvPort = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "recvPort"));
+			int opt = -1;
+			if(nBlockingChannelType == CMInfo.CM_SOCKET_CHANNEL)
+				opt = CMInfo.CM_STREAM;
+			else if(nBlockingChannelType == CMInfo.CM_DATAGRAM_CHANNEL)
+				opt = CMInfo.CM_DATAGRAM;
+
+			CMDummyEvent due = new CMDummyEvent();
+			due.setDummyInfo("This is a test message to test a blocking channel");
+			System.out.println("Sending a dummy event to ("+strReceiver+")..");
+			
+			if(opt == CMInfo.CM_STREAM)
+				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, true);
+			else if(opt == CMInfo.CM_DATAGRAM)
+				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, nRecvPort, true);
+			else
+				System.err.println("invalid sending option!: "+opt);
+		}
 		else
 		{
 			System.out.println("CMUserEvent received, strID("+ue.getStringID()+")");

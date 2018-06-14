@@ -1,5 +1,7 @@
 import java.util.Iterator;
 import java.io.*;
+import java.nio.channels.DatagramChannel;
+import java.nio.channels.SocketChannel;
 
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -202,6 +204,66 @@ public class CMServerEventHandler implements CMEventHandler {
 				System.out.println("Received user event 'EndForwardDelay'");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
 				m_serverStub.send(cme, strUser);
+			}
+			
+		}
+		else if(ue.getStringID().equals("reqRecv"))
+		{
+			strUser = ue.getEventField(CMInfo.CM_STR, "user");
+			int nChType = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "chType"));
+			int nChKey = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "chKey"));
+			int nRecvPort = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "recvPort"));
+			CMUserEvent userEvent = new CMUserEvent();
+			userEvent.setStringID("repRecv");
+			userEvent.setEventField(CMInfo.CM_STR, "receiver", m_serverStub.getMyself().getName());
+			userEvent.setEventField(CMInfo.CM_INT, "chType", Integer.toString(nChType));
+			userEvent.setEventField(CMInfo.CM_INT, "chKey", Integer.toString(nChKey));
+			userEvent.setEventField(CMInfo.CM_INT, "recvPort", Integer.toString(nRecvPort));
+			m_serverStub.send(userEvent, strUser);
+			
+			System.out.print("["+strUser+"] requested to receive a dummy event ");
+			
+			SocketChannel sc = null;
+			DatagramChannel dc = null;
+			CMDummyEvent due = null;
+			if(nChType == CMInfo.CM_SOCKET_CHANNEL)
+			{
+				System.out.println("with the blocking socket channel ("+nChKey+").");
+				sc = m_serverStub.getBlockSocketChannel(nChKey, strUser);
+				if(sc == null)
+				{
+					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, socket channel not found, key("
+							+nChKey+"), user("+strUser+")!");
+					return;
+				}
+				
+				due = (CMDummyEvent) m_serverStub.receive(sc);
+				if(due == null)
+				{
+					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, failed to receive a dummy event!");
+					return;
+				}
+				System.out.println("received dummy info: "+due.getDummyInfo());
+
+			}
+			else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
+			{
+				System.out.println("with the blocking datagram channel port("+nRecvPort+")");
+				dc = m_serverStub.getBlockDatagramChannel(nRecvPort);
+				if(dc == null)
+				{
+					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, datagram channel not found, recvPort("
+							+nRecvPort+")!");
+					return;
+				}
+				
+				due = (CMDummyEvent) m_serverStub.receive(dc);
+				if(due == null)
+				{
+					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, failed to receive a dummy event!");
+					return;
+				}
+				System.out.println("received dummy info: "+due.getDummyInfo());				
 			}
 			
 		}
