@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
@@ -3368,6 +3369,32 @@ public class CMClientStub extends CMStub {
 			}
 		}
 		
+		// add multicast channel info of the current group
+		CMUser myself = interInfo.getMyself();
+		if(myself == null)
+		{
+			System.err.println("CMClientStub.getCurrentChannelInfo(): the client info not found!");
+			return null;
+		}
+		String strCurrentSession = myself.getCurrentSession();
+		String strCurrentGroup = myself.getCurrentGroup();
+		if(strCurrentSession != null && strCurrentGroup != null)
+		{
+			CMSession curSession = interInfo.findSession(strCurrentSession);
+			if(curSession != null)
+			{
+				CMGroup curGroup = curSession.findGroup(strCurrentGroup);
+				strChInfo = curGroup.getMulticastChannelInfo().toString();
+				if(strChInfo != null)
+				{
+					sb.append("==== multicast channels: session("+strCurrentSession+"), group("
+							+strCurrentGroup+")\n");
+					sb.append(strChInfo);
+				}
+			}
+		}
+		
 		return sb.toString();
 	}
+	
 }

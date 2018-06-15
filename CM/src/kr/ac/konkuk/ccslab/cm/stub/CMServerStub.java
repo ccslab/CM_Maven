@@ -7,7 +7,9 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Vector;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
@@ -487,6 +489,45 @@ public class CMServerStub extends CMStub {
 					sb.append("-- blocking socket channel\n");
 					sb.append(strChInfo);
 				}
+			}
+		}
+		
+		// add multicast channel info of every session and group
+		Vector<CMSession> sessionList = interInfo.getSessionList();
+		Iterator<CMSession> sessionIter = null;
+		if(sessionList == null)
+		{
+			System.err.println("CMServerStub.getCurrentChannelInfo(): There is no session!");
+			return null;
+		}
+		sb.append("==== multicast channels\n");
+		sessionIter = sessionList.iterator();
+		while(sessionIter.hasNext())
+		{
+			CMSession session = sessionIter.next();
+			if(session != null)
+			{
+				
+				Vector<CMGroup> groupList = session.getGroupList();
+				if(groupList != null)
+				{
+					Iterator<CMGroup> groupIter = groupList.iterator();
+					while(groupIter.hasNext())
+					{
+						CMGroup group = groupIter.next();
+						if(group != null)
+						{
+							strChInfo = group.getMulticastChannelInfo().toString();
+							if(strChInfo != null)
+							{
+								sb.append("-- session("+session.getSessionName()+"), group("
+										+group.getGroupName()+")\n");
+								sb.append(strChInfo);
+							}
+						}
+					}
+				}
+				
 			}
 		}
 		
