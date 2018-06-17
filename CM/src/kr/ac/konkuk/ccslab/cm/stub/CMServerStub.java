@@ -447,7 +447,7 @@ public class CMServerStub extends CMStub {
 	 * @return string of current channels information if successful, or null otherwise.
 	 * 
 	 * @see CMStub#getCurrentChannelInfo()
-	 * @see CMSClientStub#getCurrentChannelInfo()
+	 * @see CMClientStub#getCurrentChannelInfo()
 	 */
 	@Override
 	public String getCurrentChannelInfo()
