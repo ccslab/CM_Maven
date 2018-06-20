@@ -630,8 +630,9 @@ public class CMStub {
 	 * 
 	 * <p> This method can be called only in the following conditions. First, this method uses only the datagram 
 	 * (udp) channel. Therefore, the opt parameter must be always set to CMInfo.CM_DATAGRAM (or 1).
-	 * Second, this method can send an event to a CM node of which the sender knows its address. Unlike the other 
-	 * send() method, this method cannot use the internal forwarding scheme of CM. 
+	 * Second, this method can send an event to a CM node of which a target port number (that is not the default 
+	 * port number) is known by the sender. Unlike the other send() methods, this method cannot use 
+	 * the internal forwarding scheme of CM. 
 	 *  
 	 * @param cme - the CM event
 	 * @param strTarget - the receiver name. 
