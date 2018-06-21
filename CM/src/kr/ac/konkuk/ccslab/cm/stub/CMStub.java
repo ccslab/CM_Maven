@@ -673,9 +673,12 @@ public class CMStub {
 	 * Receives a CM event using a blocking socket channel.
 	 * 
 	 * <p> An application can call this method when it needs to synchronously receive a CM event 
-	 * explicitly with a blocking socket channel. 
-	 * Only a client can add a blocking socket channel with {@link CMClientStub#addBlockSocketChannel(int, String)} method.
-	 * <br> Furthermore, an application can retrieve its blocking socket channels with 
+	 * explicitly with a blocking socket channel.
+	 * When an application calls the receive method, the application blocks its execution until it receives a CM event 
+	 * through the channel parameter. When an event is received, the method returns the event and the application resumes 
+	 * its execution. 
+	 * <br> Only a client can add a blocking socket channel with {@link CMClientStub#addBlockSocketChannel(int, String)} method.
+	 * Furthermore, an application can retrieve its blocking socket channels with 
 	 * {@link CMClientStub#getBlockSocketChannel(int, String)} method.  
 	 * 
 	 * @param sc - the blocking socket channel through which the caller receives an event.
@@ -799,9 +802,13 @@ public class CMStub {
 	 * Receives a CM event using a blocking datagram channel.
 	 * 
 	 * <p> An application can call this method when it needs to synchronously receive a CM event 
-	 * explicitly with a blocking datagram channel. The application (server or client) can add 
-	 * a blocking datagram channel with {@link CMStub#addBlockDatagramChannel(int)} method. 
-	 * <br> Furthermore, an application can retrieve its blocking datagram channels with 
+	 * explicitly with a blocking datagram channel.
+	 * When an application calls the receive method, the application blocks its execution until it receives a CM event 
+	 * through the channel parameter. When an event is received, the method returns the event and the application resumes 
+	 * its execution.  
+	 * <br> The application (server or client) can add a blocking datagram channel with 
+	 * {@link CMStub#addBlockDatagramChannel(int)} method. 
+	 * Furthermore, an application can retrieve its blocking datagram channels with 
 	 * {@link CMStub#getBlockDatagramChannel(int)} method. 
 	 * 
 	 * @param dc - the datagram channel through which the caller receives an event.
