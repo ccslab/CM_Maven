@@ -4,11 +4,11 @@ various communication-related functionalities.
 
 This project includes CM source codes and example (server and client) applications.
 
-CM user guide document is available at the link. (https://sites.google.com/site/kuccslab/research/cm)
-CM API is also locally available at (CM/CM/doc/index.html).
+CM user guide document is available at the link: https://sites.google.com/site/kuccslab/research/cm
+CM API document is also locally available at (CM/CM/doc/index.html).
 
 # Authors
-Collaborative Computing Systems Lab. (CCSLab.), Konkuk University, Korea
+(c) 2009-present Collaborative Computing Systems Lab. (CCSLab.), Konkuk University, Korea
 
 # License
 This project is licensed under the LGPLv2.1 License.
