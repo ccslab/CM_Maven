@@ -630,8 +630,9 @@ public class CMStub {
 	 * 
 	 * <p> This method can be called only in the following conditions. First, this method uses only the datagram 
 	 * (udp) channel. Therefore, the opt parameter must be always set to CMInfo.CM_DATAGRAM (or 1).
-	 * Second, this method can send an event to a CM node of which the sender knows its address. Unlike the other 
-	 * send() method, this method cannot use the internal forwarding scheme of CM. 
+	 * Second, this method can send an event to a CM node of which a target port number (that is not the default 
+	 * port number) is known by the sender. Unlike the other send() methods, this method cannot use 
+	 * the internal forwarding scheme of CM. 
 	 *  
 	 * @param cme - the CM event
 	 * @param strTarget - the receiver name. 
@@ -672,9 +673,12 @@ public class CMStub {
 	 * Receives a CM event using a blocking socket channel.
 	 * 
 	 * <p> An application can call this method when it needs to synchronously receive a CM event 
-	 * explicitly with a blocking socket channel. 
-	 * Only a client can add a blocking socket channel with {@link CMClientStub#addBlockSocketChannel(int, String)} method.
-	 * <br> Furthermore, an application can retrieve its blocking socket channels with 
+	 * explicitly with a blocking socket channel.
+	 * When an application calls the receive method, the application blocks its execution until it receives a CM event 
+	 * through the channel parameter. When an event is received, the method returns the event and the application resumes 
+	 * its execution. 
+	 * <br> Only a client can add a blocking socket channel with {@link CMClientStub#addBlockSocketChannel(int, String)} method.
+	 * Furthermore, an application can retrieve its blocking socket channels with 
 	 * {@link CMClientStub#getBlockSocketChannel(int, String)} method.  
 	 * 
 	 * @param sc - the blocking socket channel through which the caller receives an event.
@@ -798,9 +802,13 @@ public class CMStub {
 	 * Receives a CM event using a blocking datagram channel.
 	 * 
 	 * <p> An application can call this method when it needs to synchronously receive a CM event 
-	 * explicitly with a blocking datagram channel. The application (server or client) can add 
-	 * a blocking datagram channel with {@link CMStub#addBlockDatagramChannel(int)} method. 
-	 * <br> Furthermore, an application can retrieve its blocking datagram channels with 
+	 * explicitly with a blocking datagram channel.
+	 * When an application calls the receive method, the application blocks its execution until it receives a CM event 
+	 * through the channel parameter. When an event is received, the method returns the event and the application resumes 
+	 * its execution.  
+	 * <br> The application (server or client) can add a blocking datagram channel with 
+	 * {@link CMStub#addBlockDatagramChannel(int)} method. 
+	 * Furthermore, an application can retrieve its blocking datagram channels with 
 	 * {@link CMStub#getBlockDatagramChannel(int)} method. 
 	 * 
 	 * @param dc - the datagram channel through which the caller receives an event.
