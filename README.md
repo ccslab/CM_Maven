@@ -7,7 +7,5 @@ CM user guide document is available at the link: (https://sites.google.com/site/
 CM API document is also locally available at (CM/CM/doc/index.html).
 
 # Authors
-(c) 2009-present Collaborative Computing Systems Lab. (CCSLab.), Konkuk University, Korea
+Copyright (c) 2009-present Collaborative Computing Systems Lab. (CCSLab.), Konkuk University, Korea
 
-# License
-This project is licensed under the LGPLv2.1 License.
