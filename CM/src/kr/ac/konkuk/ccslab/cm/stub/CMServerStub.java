@@ -533,4 +533,14 @@ public class CMServerStub extends CMStub {
 		
 		return sb.toString();
 	}
+	
+	// javadoc comments will be added later..
+	public CMMember getLoginUsers()
+	{
+		CMMember loginUsers = null;
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		loginUsers = interInfo.getLoginUsers();
+		
+		return loginUsers;
+	}
 }

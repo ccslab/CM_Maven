@@ -225,7 +225,7 @@ public class CMWinClientEventHandler implements CMEventHandler{
 				CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 				
 				// Change the title of the client window
-				m_client.setTitle("CM Client ("+interInfo.getMyself().getName()+")");
+				m_client.setTitle("CM Client ["+interInfo.getMyself().getName()+"]");
 
 				// Set the appearance of buttons in the client frame window
 				m_client.setButtonsAccordingToClientState();

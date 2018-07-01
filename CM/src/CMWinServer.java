@@ -4,6 +4,7 @@ import java.nio.channels.SocketChannel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Iterator;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -13,6 +14,7 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -44,6 +46,7 @@ public class CMWinServer extends JFrame {
 		setSize(500, 500);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		setMenus();
 		setLayout(new BorderLayout());
 		
 		m_outTextPane = new JTextPane();
@@ -78,29 +81,7 @@ public class CMWinServer extends JFrame {
 		m_uaSim = new CMSNSUserAccessSimulator();
 
 		// start cm
-		boolean bRet = m_serverStub.startCM();
-		if(!bRet)
-		{
-			printStyledMessage("CM initialization error!\n", "bold");
-		}
-		else
-		{
-			printStyledMessage("Server CM starts.\n", "bold");
-			printMessage("Type \"0\" for menu.\n");					
-			// change button to "stop CM"
-			m_startStopButton.setText("Stop Server CM");
-		}
-		// check if default server or not
-		if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
-		{
-			setTitle("CM Default Server (\"SERVER\")");
-		}
-		else
-		{
-			setTitle("CM Additional Server (\"?\")");
-		}					
-		m_inTextField.requestFocus();
-		
+		startCM();		
 	}
 	
 	private void addStylesToDocument(StyledDocument doc)
@@ -124,6 +105,129 @@ public class CMWinServer extends JFrame {
 		return m_eventHandler;
 	}
 	
+	public void setMenus()
+	{
+		MyMenuListener menuListener = new MyMenuListener();
+		JMenuBar menuBar = new JMenuBar();
+		
+		JMenu helpMenu = new JMenu("Help");
+		//helpMenu.setMnemonic(KeyEvent.VK_H);
+		JMenuItem showAllMenuItem = new JMenuItem("show all menus");
+		showAllMenuItem.addActionListener(menuListener);
+		showAllMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.ALT_MASK));
+		
+		helpMenu.add(showAllMenuItem);
+		menuBar.add(helpMenu);
+
+		JMenu cmNetworkMenu = new JMenu("Network Participation");
+		
+		JMenu startStopSubMenu = new JMenu("Start/Stop");
+		JMenuItem startMenuItem = new JMenuItem("start CM");
+		startMenuItem.addActionListener(menuListener);
+		startStopSubMenu.add(startMenuItem);
+		JMenuItem terminateMenuItem = new JMenuItem("terminate CM");
+		terminateMenuItem.addActionListener(menuListener);
+		startStopSubMenu.add(terminateMenuItem);
+
+		cmNetworkMenu.add(startStopSubMenu);
+
+		JMenu multiServerSubMenu = new JMenu("Multi-server");
+		JMenuItem connectDefaultMenuItem = new JMenuItem("connect to default server");
+		connectDefaultMenuItem.addActionListener(menuListener);
+		multiServerSubMenu.add(connectDefaultMenuItem);
+		JMenuItem disconnectDefaultMenuItem = new JMenuItem("disconnect from default server");
+		disconnectDefaultMenuItem.addActionListener(menuListener);
+		multiServerSubMenu.add(disconnectDefaultMenuItem);
+		JMenuItem regDefaultMenuItem = new JMenuItem("register to default server");
+		regDefaultMenuItem.addActionListener(menuListener);
+		multiServerSubMenu.add(regDefaultMenuItem);
+		JMenuItem deregDefaultMenuItem = new JMenuItem("deregister from default server");
+		deregDefaultMenuItem.addActionListener(menuListener);
+		multiServerSubMenu.add(deregDefaultMenuItem);
+		
+		cmNetworkMenu.add(multiServerSubMenu);
+		menuBar.add(cmNetworkMenu);
+		
+		JMenu serviceMenu = new JMenu("Services");
+		
+		JMenu infoSubMenu = new JMenu("Information");
+		JMenuItem showSessionMenuItem = new JMenuItem("show session information");
+		showSessionMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(showSessionMenuItem);
+		JMenuItem showGroupMenuItem = new JMenuItem("show group information");
+		showGroupMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(showGroupMenuItem);
+		JMenuItem showChannelMenuItem = new JMenuItem("show current channels");
+		showChannelMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(showChannelMenuItem);
+		JMenuItem showUsersMenuItem = new JMenuItem("show login users");
+		showUsersMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(showUsersMenuItem);
+		JMenuItem inputThroughputMenuItem = new JMenuItem("test input network throughput");
+		inputThroughputMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(inputThroughputMenuItem);
+		JMenuItem outputThroughputMenuItem = new JMenuItem("test output network throughput");
+		outputThroughputMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(outputThroughputMenuItem);
+		
+		serviceMenu.add(infoSubMenu);
+		
+		JMenu fileTransferSubMenu = new JMenu("File Transfer");
+		JMenuItem setPathMenuItem = new JMenuItem("set file path");
+		setPathMenuItem.addActionListener(menuListener);
+		fileTransferSubMenu.add(setPathMenuItem);
+		JMenuItem reqFileMenuItem = new JMenuItem("request file");
+		reqFileMenuItem.addActionListener(menuListener);
+		fileTransferSubMenu.add(reqFileMenuItem);
+		JMenuItem pushFileMenuItem = new JMenuItem("push file");
+		pushFileMenuItem.addActionListener(menuListener);
+		fileTransferSubMenu.add(pushFileMenuItem);
+		JMenuItem cancelRecvMenuItem = new JMenuItem("cancel receiving file");
+		cancelRecvMenuItem.addActionListener(menuListener);
+		fileTransferSubMenu.add(cancelRecvMenuItem);
+		JMenuItem cancelSendMenuItem = new JMenuItem("cancel sending file");
+		cancelSendMenuItem.addActionListener(menuListener);
+		fileTransferSubMenu.add(cancelSendMenuItem);
+	
+		serviceMenu.add(fileTransferSubMenu);
+		
+		JMenu snsSubMenu = new JMenu("Social Network Service");
+		JMenuItem attachSchemeMenuItem = new JMenuItem("set attachment download scheme");
+		attachSchemeMenuItem.addActionListener(menuListener);
+		snsSubMenu.add(attachSchemeMenuItem);		
+
+		serviceMenu.add(snsSubMenu);
+		
+		JMenu channelSubMenu = new JMenu("Channel");
+		JMenuItem addChannelMenuItem = new JMenuItem("add channel");
+		addChannelMenuItem.addActionListener(menuListener);
+		channelSubMenu.add(addChannelMenuItem);
+		JMenuItem removeChannelMenuItem = new JMenuItem("remove channel");
+		removeChannelMenuItem.addActionListener(menuListener);
+		channelSubMenu.add(removeChannelMenuItem);
+		
+		serviceMenu.add(channelSubMenu);
+		
+		JMenu otherSubMenu = new JMenu("Other CM Tests");
+		JMenuItem configUserAccessSimMenuItem = new JMenuItem("configure SNS user access simulation");
+		configUserAccessSimMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(configUserAccessSimMenuItem);
+		JMenuItem startUserAccessSimMenuItem = new JMenuItem("start SNS user access simulation");
+		startUserAccessSimMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(startUserAccessSimMenuItem);
+		JMenuItem prefetchAccSimMenuItem = new JMenuItem("start SNS user access simulation and measure prefetch accuracy");
+		prefetchAccSimMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(prefetchAccSimMenuItem);
+		JMenuItem recentAccHistorySimMenuItem = new JMenuItem("start and write recent SNS access history simulation to CM DB");
+		recentAccHistorySimMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(recentAccHistorySimMenuItem);
+		
+		serviceMenu.add(otherSubMenu);		
+		menuBar.add(serviceMenu);
+		
+		setJMenuBar(menuBar);
+	}
+	
 	public void processInput(String strInput)
 	{
 		int nCommand = -1;
@@ -138,26 +242,7 @@ public class CMWinServer extends JFrame {
 		switch(nCommand)
 		{
 		case 0:
-			//System.out.println("0: help, 1: session info, 2: group info");
-			//System.out.println("3: set file path, 4: request file, 5: push file");
-			//System.out.println("6: request registration to the default server");
-			//System.out.println("7: request deregistration from the default server");
-			//System.out.println("8: connect to the default server, 9: disconnect from the default server");
-			//System.out.println("99: terminate CM");
-			printMessage("0: help, 1: session info, 2: group info\n");
-			printMessage("3: set file path, 4: request file, 5: push file\n");
-			printMessage("17: cancel receiving file, 18: cancel sending file\n");
-			printMessage("6: request registration to the default server\n");
-			printMessage("7: request deregistration from the default server\n");
-			printMessage("8: connect to the default server, 9: disconnect from the default server\n");
-			printMessage("10: set a scheme for attachment download of SNS content\n");
-			printMessage("11: config user access simulation, 12: start user access simulation\n");
-			printMessage("13: start user access simulation and calculate prefetch precision and recall\n");
-			printMessage("14: configure, simulate, and write recent history to CMDB\n");
-			printMessage("15: test input network throughput, 16: test output network throughput\n");
-			printMessage("19: add channel, 20: remove channel\n");
-			printMessage("21: print current channels information\n");
-			printMessage("99: terminate CM\n");
+			printAllMenus();
 			break;
 		case 1: // print session information
 			printSessionInfo();
@@ -223,7 +308,7 @@ public class CMWinServer extends JFrame {
 			printCurrentChannelInfo();
 			break;
 		case 99:
-			testTermination();
+			terminateCM();
 			return;
 		default:
 			//System.out.println("Unknown command.");
@@ -232,7 +317,53 @@ public class CMWinServer extends JFrame {
 		}
 	}
 	
-	public void testTermination()
+	public void printAllMenus()
+	{
+		printMessage("0: help, 1: session info, 2: group info\n");
+		printMessage("3: set file path, 4: request file, 5: push file\n");
+		printMessage("17: cancel receiving file, 18: cancel sending file\n");
+		printMessage("6: request registration to the default server\n");
+		printMessage("7: request deregistration from the default server\n");
+		printMessage("8: connect to the default server, 9: disconnect from the default server\n");
+		printMessage("10: set a scheme for attachment download of SNS content\n");
+		printMessage("11: config user access simulation, 12: start user access simulation\n");
+		printMessage("13: start user access simulation and calculate prefetch precision and recall\n");
+		printMessage("14: configure, simulate, and write recent history to CMDB\n");
+		printMessage("15: test input network throughput, 16: test output network throughput\n");
+		printMessage("19: add channel, 20: remove channel\n");
+		printMessage("21: print current channels information\n");
+		printMessage("99: terminate CM\n");
+	}
+	
+	public void startCM()
+	{
+		// start cm
+		boolean bRet = m_serverStub.startCM();
+		if(!bRet)
+		{
+			printStyledMessage("CM initialization error!\n", "bold");
+		}
+		else
+		{
+			printStyledMessage("Server CM starts.\n", "bold");
+			printMessage("Type \"0\" for menu.\n");					
+			// change button to "stop CM"
+			m_startStopButton.setText("Stop Server CM");
+		}
+		// check if default server or not
+		if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
+		{
+			setTitle("CM Default Server [\"SERVER\"]");
+		}
+		else
+		{
+			setTitle("CM Additional Server [\"?\"]");
+		}					
+		m_inTextField.requestFocus();
+
+	}
+	
+	public void terminateCM()
 	{
 		m_serverStub.terminateCM();
 		printMessage("Server CM terminates.\n");
@@ -1333,6 +1464,33 @@ public class CMWinServer extends JFrame {
 		String strChannels = m_serverStub.getCurrentChannelInfo();
 		printMessage(strChannels);
 	}
+	
+	public void printLoginUsers()
+	{
+		printMessage("========== print login users\n");
+		CMMember loginUsers = m_serverStub.getLoginUsers();
+		if(loginUsers == null)
+		{
+			printStyledMessage("The login users list is null!\n", "bold");
+			return;
+		}
+		
+		printMessage("Currently ["+loginUsers.getMemberNum()+"] users are online.\n");
+		Vector<CMUser> loginUserVector = loginUsers.getAllMembers();
+		Iterator<CMUser> iter = loginUserVector.iterator();
+		int nPrintCount = 0;
+		while(iter.hasNext())
+		{
+			CMUser user = iter.next();
+			printMessage(user.getName()+" ");
+			nPrintCount++;
+			if((nPrintCount % 10) == 0)
+			{
+				printMessage("\n");
+				nPrintCount = 0;
+			}
+		}
+	}
 
 	public void printMessage(String strText)
 	{
@@ -1459,6 +1617,91 @@ public class CMWinServer extends JFrame {
 				printMessage("Server CM terminates.\n");
 				// change button to "start CM"
 				button.setText("Start Server CM");
+			}
+		}
+	}
+	
+	public class MyMenuListener implements ActionListener {
+		public void actionPerformed(ActionEvent e)
+		{
+			String strMenu = e.getActionCommand();
+			switch(strMenu)
+			{
+			case "show all menus":
+				printAllMenus();
+				break;
+			case "start CM":
+				startCM();
+				break;
+			case "terminate CM":
+				terminateCM();
+				break;
+			case "connect to default server":
+				connectToDefaultServer();
+				break;
+			case "disconnect from default server":
+				disconnectFromDefaultServer();
+				break;
+			case "register to default server":
+				requestServerReg();
+				break;
+			case "deregister from default server":
+				requestServerDereg();
+				break;
+			case "show session information":
+				printSessionInfo();
+				break;
+			case "show group information":
+				printGroupInfo();
+				break;
+			case "show current channels":
+				printCurrentChannelInfo();
+				break;
+			case "show login users":
+				printLoginUsers();
+				break;
+			case "test input network throughput":
+				measureInputThroughput();
+				break;
+			case "test output network throughput":
+				measureOutputThroughput();
+				break;
+			case "set file path":
+				setFilePath();
+				break;
+			case "request file":
+				requestFile();
+				break;
+			case "push file":
+				pushFile();
+				break;
+			case "cancel receiving file":
+				cancelRecvFile();
+				break;
+			case "cancel sending file":
+				cancelSendFile();
+				break;
+			case "set attachment download scheme":
+				setAttachDownloadScheme();
+				break;
+			case "add channel":
+				addChannel();
+				break;
+			case "remove channel":
+				removeChannel();
+				break;
+			case "configure SNS user access simulation":
+				configureUserAccessSimulation();
+				break;
+			case "start SNS user access simulation":
+				startUserAccessSimulation();
+				break;
+			case "start SNS user access simulation and measure prefetch accuracy":
+				startUserAccessSimulationAndCalPrecRecall();
+				break;
+			case "start and write recent SNS access history simulation to CM DB":
+				writeRecentAccHistoryToDB();
+				break;
 			}
 		}
 	}

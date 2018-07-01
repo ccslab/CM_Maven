@@ -165,18 +165,7 @@ public class CMWinClient extends JFrame {
 		m_clientStub = new CMClientStub();
 		m_eventHandler = new CMWinClientEventHandler(m_clientStub, this);
 
-		boolean bRet = m_clientStub.startCM();
-		if(!bRet)
-		{
-			printStyledMessage("CM initialization error!\n", "bold");
-		}
-		else
-		{
-			printStyledMessage("Client CM starts.\n", "bold");
-			printStyledMessage("Type \"0\" for menu.\n", "regular");
-			// change the appearance of buttons in the client window frame
-			setButtonsAccordingToClientState();
-		}
+		testStartCM();
 		
 		m_inTextField.requestFocus();
 	}
