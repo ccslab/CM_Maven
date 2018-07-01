@@ -78,227 +78,190 @@ public class CMClientApp {
 			switch(nCommand)
 			{
 			case 0:
-				System.out.println("---------------------------------------------------");
-				System.out.println("0: help, 1: connect to default server, 2: disconnect from default server");
-				System.out.println("3: login to default server, 4: logout from default server");
-				System.out.println("5: request session info from default server, 6: join session of defalut server");
-				System.out.println("7: leave session of default server, 8: user position, 9: chat, 10: test CMDummyEvent");
-				System.out.println("11: test datagram message, 12: test CMUserEvent");
-				System.out.println("13: print group info, 14: print current user status");
-				System.out.println("15: change group, 16: add additional channel, 17: remove additional channel");
-				System.out.println("18: set file path, 19: request file, 20: push file");
-				System.out.println("62: cancel receiving file, 63: cancel sending file");
-				System.out.println("21: test forwarding schemes, 22: test delay of forwarding schemes");
-				System.out.println("---------------------------------------------------");
-				System.out.println("73: synchronously login to default server, 74: synchronously request session info");
-				System.out.println("75: synchronoulsy join session of default server");
-				System.out.println("---------------------------------------------------");
-				System.out.println("23: download new SNS content, 50: request attached file of SNS content");
-				System.out.println("51: download next SNS content, 52: download previous SNS content");
-				System.out.println("24: test repeated downloading of SNS content, 25: SNS content upload");
-				System.out.println("26: register user, 27: deregister user");
-				System.out.println("28: find registered user, 29: add a new friend, 30: remove a friend");
-				System.out.println("31: request current friend list, 32: request friend requester list");
-				System.out.println("33: request bi-directional friends");
-				System.out.println("---------------------------------------------------");
-				System.out.println("34: request additional server info");
-				System.out.println("35: connect to a designated server, 36: disconnect from a designated server");
-				System.out.println("37: log in to a designated server, 38: log out from a designated server");
-				System.out.println("39: request session info from a designated server");
-				System.out.println("40: join a session of a designated server, 41: leave a session of a designated server");
-				System.out.println("42: print group info of a designated server");
-				System.out.println("---------------------------------------------------");
-				System.out.println("43: pull/push multiple files, 44: split a file, 45: merge files");
-				System.out.println("46: distribute a file and merge");
-				System.out.println("---------------------------------------------------");
-				System.out.println("47: multicast chat in current group");
-				System.out.println("48: test blocking channel");
-				System.out.println("60: test input network throughput, 61: test output network throughput");
-				System.out.println("64: print current channels information");
-				System.out.println("99: terminate CM");
+				printAllMenus();
 				break;
+			case 999:
+				testTerminateCM();
+				break;			
 			case 1: // connect to default server
 				testConnectionDS();
 				break;
 			case 2: // disconnect from default server
 				testDisconnectionDS();
 				break;
-			case 3: // login to default server
-				testLoginDS();
-				break;
-			case 73: // synchronously login to default server
-				testSyncLoginDS();
-				break;
-			case 4: // logout from default server
-				testLogoutDS();
-				break;
-			case 5: // request session info from default server
-				testSessionInfoDS();
-				break;
-			case 74: // synchronously request session info
-				testSyncSessionInfoDS();
-				break;
-			case 6: // join a session
-				testJoinSession();
-				break;
-			case 75: // synchronously join a session
-				testSyncJoinSession();
-				break;
-			case 7: // leave the current session
-				testLeaveSession();
-				break;
-			case 8: // user position
-				testUserPosition();
-				break;
-			case 9: // chat
-				testChat();
-				break;
-			case 10: // test CMDummyEvent
-				testDummyEvent();
-				break;
-			case 11: // test datagram message
-				testDatagram();
-				break;
-			case 12: // test CMUserEvent
-				testUserEvent();
-				break;
-			case 13: // print group info
-				testPrintGroupInfo();
-				break;
-			case 14: // print current information about the client
-				testCurrentUserStatus();
-				break;
-			case 15: // change current group
-				testChangeGroup();
-				break;
-			case 16: // add additional channel
-				testAddChannel();
-				break;
-			case 17: // remove additional channel
-				testRemoveChannel();
-				break;
-			case 18: // set file path
-				testSetFilePath();
-				break;
-			case 19: // request a file
-				testRequestFile();
-				break;
-			case 20: // push a file
-				testPushFile();
-				break;
-			case 21: // test forwarding schemes (typical vs. internal)
-				testForwarding();
-				break;
-			case 22: // test delay of forwarding schemes
-				testForwardingDelay();
-				break;
-			case 23: // test SNS content download
-				testDownloadNewSNSContent();
-				break;
-			case 24: // test repeated downloading of SNS content
-				testRepeatedSNSContentDownload();
-				break;
-			case 25: // test SNS content upload
-				testSNSContentUpload();
-				break;
-			case 26: // register user
-				testRegisterUser();
-				break;
-			case 27: // deregister user
-				testDeregisterUser();
-				break;
-			case 28: // find user
-				testFindRegisteredUser();
-				break;
-			case 29: // add a new friend
-				testAddNewFriend();
-				break;
-			case 30: // remove a friend
-				testRemoveFriend();
-				break;
-			case 31: // request current friends list
-				testRequestFriendsList();
-				break;
-			case 32: // request friend requesters list
-				testRequestFriendRequestersList();
-				break;
-			case 33: // request bi-directional friends
-				testRequestBiFriendsList();
-				break;
-			case 34: // request additional server info
-				testRequestServerInfo();
-				break;
-			case 35: // connect to a designated server
+			case 3: // connect to a designated server
 				testConnectToServer();
 				break;
-			case 36: // disconnect from a designated server
+			case 4: // disconnect from a designated server
 				testDisconnectFromServer();
 				break;
-			case 37: // log in to a designated server
+			case 10: // asynchronous login to default server
+				testLoginDS();
+				break;
+			case 11: // synchronously login to default server
+				testSyncLoginDS();
+				break;
+			case 12: // logout from default server
+				testLogoutDS();
+				break;
+			case 13: // log in to a designated server
 				testLoginServer();
 				break;
-			case 38: // log out from a designated server
+			case 14: // log out from a designated server
 				testLogoutServer();
 				break;
-			case 39: // request session information from a designated server
+			case 20: // request session info from default server
+				testSessionInfoDS();
+				break;
+			case 21: // synchronously request session info from default server
+				testSyncSessionInfoDS();
+				break;
+			case 22: // join a session
+				testJoinSession();
+				break;
+			case 23: // synchronously join a session
+				testSyncJoinSession();
+				break;
+			case 24: // leave the current session
+				testLeaveSession();
+				break;
+			case 25: // change current group
+				testChangeGroup();
+				break;
+			case 26: // request session information from a designated server
 				testRequestSessionInfoOfServer();
 				break;
-			case 40: // join a session of a designated server
+			case 27: // join a session of a designated server
 				testJoinSessionOfServer();
 				break;
-			case 41: // leave a session of a designated server
+			case 28: // leave a session of a designated server
 				testLeaveSessionOfServer();
 				break;
-			case 42: // print current group info of a designated server
-				testPrintGroupInfoOfServer();
+			case 40: // chat
+				testChat();
 				break;
-			case 43: // pull or push multiple files
-				testSendMultipleFiles();
-				break;
-			case 44: // split a file
-				testSplitFile();
-				break;
-			case 45: // merge files
-				testMergeFiles();
-				break;
-			case 46: // distribute a file and merge
-				testDistFileProc();
-				break;
-			case 47: // test multicast chat in current group
+			case 41: // test multicast chat in current group
 				testMulticastChat();
 				break;
-			case 48: // get additional blocking socket channel
-				testBlockingChannel();
+			case 42: // test CMDummyEvent
+				testDummyEvent();
 				break;
-			case 50: // test request for an attached file of SNS content
-				testRequestAttachedFileOfSNSContent();
+			case 43: // test CMUserEvent
+				testUserEvent();
 				break;
-			case 51: // test download next SNS content
-				testDownloadNextSNSContent();
+			case 44: // test datagram message
+				testDatagram();
+				break;			
+			case 45: // user position
+				testUserPosition();
+				break;			
+			case 50: // print group info
+				testPrintGroupInfo();
 				break;
-			case 52: // test download previous SNS content
-				testDownloadPreviousSNSContent();
+			case 51: // print current information about the client
+				testCurrentUserStatus();
 				break;
-			case 60: // test input network throughput
-				testMeasureInputThroughput();
-				break;
-			case 61: // test output network throughput
-				testMeasureOutputThroughput();
-				break;
-			case 62:	// test cancel receiving a file
-				cancelRecvFile();
-				break;
-			case 63:	// test cancel sending a file
-				cancelSendFile();
-				break;
-			case 64:	// print current channels information
+			case 52: 	// print current channels information
 				testPrintCurrentChannelInfo();
 				break;
-			case 99: // terminate CM
-				testTermination();
+			case 53: // request additional server info
+				testRequestServerInfo();
+				break;
+			case 54: // print current group info of a designated server
+				testPrintGroupInfoOfServer();
+				break;
+			case 55: // test input network throughput
+				testMeasureInputThroughput();
+				break;
+			case 56: // test output network throughput
+				testMeasureOutputThroughput();
+				break;
+			case 60: // add additional channel
+				testAddChannel();
+				break;
+			case 61: // remove additional channel
+				testRemoveChannel();
+				break;
+			case 62: // test blocking channel
+				testBlockingChannel();
+				break;
+			case 70: // set file path
+				testSetFilePath();
+				break;
+			case 71: // request a file
+				testRequestFile();
+				break;
+			case 72: // push a file
+				testPushFile();
+				break;
+			case 73:	// test cancel receiving a file
+				cancelRecvFile();
+				break;
+			case 74:	// test cancel sending a file
+				cancelSendFile();
+				break;
+			case 80: // test SNS content download
+				testDownloadNewSNSContent();
+				break;
+			case 81:
+				testDownloadNextSNSContent();
+				break;
+			case 82:
+				testDownloadPreviousSNSContent();
+				break;
+			case 83: // request an attached file of SNS content
+				testRequestAttachedFileOfSNSContent();
+				break;
+			case 84: // test SNS content upload
+				testSNSContentUpload();
+				break;
+			case 90: // register user
+				testRegisterUser();
+				break;
+			case 91: // deregister user
+				testDeregisterUser();
+				break;
+			case 92: // find user
+				testFindRegisteredUser();
+				break;
+			case 93: // add a new friend
+				testAddNewFriend();
+				break;
+			case 94: // remove a friend
+				testRemoveFriend();
+				break;
+			case 95: // request current friends list
+				testRequestFriendsList();
+				break;
+			case 96: // request friend requesters list
+				testRequestFriendRequestersList();
+				break;
+			case 97: // request bi-directional friends
+				testRequestBiFriendsList();
+				break;
+			case 101: // test forwarding schemes (typical vs. internal)
+				testForwarding();
+				break;
+			case 102: // test delay of forwarding schemes
+				testForwardingDelay();
+				break;
+			case 103: // test repeated downloading of SNS content
+				testRepeatedSNSContentDownload();
+				break;
+			case 104: // pull or push multiple files
+				testSendMultipleFiles();
+				break;
+			case 105: // split a file
+				testSplitFile();
+				break;
+			case 106: // merge files
+				testMergeFiles();
+				break;
+			case 107: // distribute a file and merge
+				testDistFileProc();
 				break;
 			default:
-				System.out.println("Unknown command.");
+				System.err.println("Unknown command.");
 				break;
 			}
 		}
@@ -310,6 +273,52 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		m_scan.close();
+	}
+	
+	public void printAllMenus()
+	{
+		System.out.println("---------------------------------- Help");
+		System.out.println("0: show all menus");
+		System.out.println("---------------------------------- Start/Stop");
+		System.out.println("999: terminate CM");
+		System.out.println("---------------------------------- Connection");
+		System.out.println("1: connect to default server, 2: disconnect from default server");
+		System.out.println("3: connect to designated server, 4: disconnect from designated server");
+		System.out.println("---------------------------------- Login");
+		System.out.println("10: login to default server, 11: synchronously login to default server");
+		System.out.println("12: logout from default server");
+		System.out.println("13: login to designated server, 14: logout from designated server");
+		System.out.println("---------------------------------- Session/Group");
+		System.out.println("20: request session information from default server");
+		System.out.println("21: synchronously request session information from default server");
+		System.out.println("22: join session of default server, 23: synchronously join session of default server");
+		System.out.println("24: leave session of default server, 25: change group of default server");
+		System.out.println("26: request session information from designated server");
+		System.out.println("27: join session of designated server, 28: leave session of designated server");
+		System.out.println("---------------------------------- Event Transmission");
+		System.out.println("40: chat, 41: multicast chat in current group");
+		System.out.println("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position");
+		System.out.println("---------------------------------- Information");
+		System.out.println("50: show group information of default server, 51: show current user status");
+		System.out.println("52: show current channels, 53: show current server information");
+		System.out.println("54: show group information of designated server");
+		System.out.println("55: measure input network throughput, 56: measure output network throughput");
+		System.out.println("---------------------------------- Channel");
+		System.out.println("60: add channel, 61: remove channel, 62: test blocking channel");
+		System.out.println("---------------------------------- File Transfer");
+		System.out.println("70: set file path, 71: request file, 72: push file");
+		System.out.println("73: cancel receiving file, 74: cancel sending file");
+		System.out.println("---------------------------------- Social Network Service");
+		System.out.println("80: request content list, 81: request next content list, 82: request previous content list");
+		System.out.println("83: request attached file, 84: upload content");
+		System.out.println("---------------------------------- User");
+		System.out.println("90: register new user, 91: deregister user, 92: find registered user");
+		System.out.println("93: add new friend, 94: remove friend, 95: show friends, 96: show friend requesters");
+		System.out.println("97: show bi-directional friends");
+		System.out.println("---------------------------------- Other CM Tests");
+		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
+		System.out.println("103: test repeated request of SNS content list");
+		System.out.println("104: pull/push multiple files, 105: split file, 106: merge files, 107: distribute and merge file");
 	}
 	
 	public void testConnectionDS()
@@ -435,7 +444,7 @@ public class CMClientApp {
 		System.out.println("======");
 	}
 	
-	public void testTermination()
+	public void testTerminateCM()
 	{
 		m_clientStub.terminateCM();
 		m_bRun = false;
@@ -862,6 +871,7 @@ public class CMClientApp {
 		String strGroupName = null;
 		System.out.println("====== change group");
 		try {
+			System.out.print("input target group name: ");
 			strGroupName = br.readLine();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

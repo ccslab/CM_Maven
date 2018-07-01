@@ -244,95 +244,109 @@ public class CMWinServer extends JFrame {
 		case 0:
 			printAllMenus();
 			break;
+		case 100:
+			startCM();
+			break;
+		case 999:
+			terminateCM();
+			return;
 		case 1: // print session information
 			printSessionInfo();
 			break;
 		case 2: // print selected group information
 			printGroupInfo();
 			break;
-		case 3: // set file path
-			setFilePath();
-			break;
-		case 4: // request a file
-			requestFile();
-			break;
-		case 5: // push a file
-			pushFile();
-			break;
-		case 6: // request registration to the default server
-			requestServerReg();
-			break;
-		case 7: // request deregistration from the default server
-			requestServerDereg();
-			break;
-		case 8: // connect to the default server
-			connectToDefaultServer();
-			break;
-		case 9: // disconnect from the default server
-			disconnectFromDefaultServer();
-			break;
-		case 10: // set a scheme for attachement download of SNS content
-			setAttachDownloadScheme();
-			break;
-		case 11:	// configure variables of user access simulation
-			configureUserAccessSimulation();
-			break;
-		case 12: 	// start user access simulation
-			startUserAccessSimulation();
-			break;
-		case 13:	// start user access simulation and calculate prefetch precision and recall
-			startUserAccessSimulationAndCalPrecRecall();
-			break;
-		case 14: 	// configure, simulate and write recent history to CMDB
-			writeRecentAccHistoryToDB();
-			break;
-		case 15:	// test input network throughput
+		case 3:	// test input network throughput
 			measureInputThroughput();
 			break;
-		case 16:	// test output network throughput
+		case 4:	// test output network throughput
 			measureOutputThroughput();
 			break;
-		case 17:	// test cancel receiving a file
-			cancelRecvFile();
-			break;
-		case 18:	// test cancel sending a file
-			cancelSendFile();
-			break;
-		case 19: 	// test add channel
-			addChannel();
-			break;
-		case 20: 	// test remove channel
-			removeChannel();
-			break;
-		case 21:	// print current channels information
+		case 5:	// print current channels information
 			printCurrentChannelInfo();
 			break;
-		case 99:
-			terminateCM();
-			return;
+		case 6:
+			printLoginUsers();
+			break;
+		case 20: // set file path
+			setFilePath();
+			break;
+		case 21: // request a file
+			requestFile();
+			break;
+		case 22: // push a file
+			pushFile();
+			break;
+		case 23:	// test cancel receiving a file
+			cancelRecvFile();
+			break;
+		case 24:	// test cancel sending a file
+			cancelSendFile();
+			break;
+		case 30: // request registration to the default server
+			requestServerReg();
+			break;
+		case 31: // request deregistration from the default server
+			requestServerDereg();
+			break;
+		case 32: // connect to the default server
+			connectToDefaultServer();
+			break;
+		case 33: // disconnect from the default server
+			disconnectFromDefaultServer();
+			break;
+		case 40: // set a scheme for attachement download of SNS content
+			setAttachDownloadScheme();
+			break;
+		case 50: 	// test add channel
+			addChannel();
+			break;
+		case 51: 	// test remove channel
+			removeChannel();
+			break;	
+		case 101:	// configure variables of user access simulation
+			configureUserAccessSimulation();
+			break;
+		case 102: 	// start user access simulation
+			startUserAccessSimulation();
+			break;
+		case 103:	// start user access simulation and calculate prefetch precision and recall
+			startUserAccessSimulationAndCalPrecRecall();
+			break;
+		case 104: 	// configure, simulate and write recent history to CMDB
+			writeRecentAccHistoryToDB();
+			break;
 		default:
 			//System.out.println("Unknown command.");
-			printMessage("Unknown command.\n");
+			printStyledMessage("Unknown command.\n", "bold");
 			break;
 		}
 	}
 	
 	public void printAllMenus()
 	{
-		printMessage("0: help, 1: session info, 2: group info\n");
-		printMessage("3: set file path, 4: request file, 5: push file\n");
-		printMessage("17: cancel receiving file, 18: cancel sending file\n");
-		printMessage("6: request registration to the default server\n");
-		printMessage("7: request deregistration from the default server\n");
-		printMessage("8: connect to the default server, 9: disconnect from the default server\n");
-		printMessage("10: set a scheme for attachment download of SNS content\n");
-		printMessage("11: config user access simulation, 12: start user access simulation\n");
-		printMessage("13: start user access simulation and calculate prefetch precision and recall\n");
-		printMessage("14: configure, simulate, and write recent history to CMDB\n");
-		printMessage("15: test input network throughput, 16: test output network throughput\n");
-		printMessage("19: add channel, 20: remove channel\n");
-		printMessage("21: print current channels information\n");
-		printMessage("99: terminate CM\n");
+		printMessage("---------------------------------- Help\n");
+		printMessage("0: show all menus\n");
+		printMessage("---------------------------------- Start/Stop\n");
+		printMessage("100: start CM, 999: terminate CM\n");
+		printMessage("---------------------------------- Information\n");
+		printMessage("1: show session information, 2: show group information\n");
+		printMessage("3: test input network throughput, 4: test output network throughput\n");
+		printMessage("5: show current channels, 6: show login users\n");
+		printMessage("---------------------------------- File Transfer\n");
+		printMessage("20: set file path, 21: request file, 22: push file\n");
+		printMessage("23: cancel receiving file, 24: cancel sending file\n");
+		printMessage("---------------------------------- Multi-server\n");
+		printMessage("30: register to default server, 31: deregister from default server\n");
+		printMessage("32: connect to default server, 33: disconnect from default server\n");
+		printMessage("---------------------------------- Social Network Service\n");
+		printMessage("40: set attachment download scheme\n");
+		printMessage("---------------------------------- Channel\n");
+		printMessage("50: add channel, 51: remove channel\n");
+		printMessage("---------------------------------- Other CM Tests\n");
+		printMessage("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
+		printMessage("103: start SNS user access simulation and measure prefetch accuracy\n");
+		printMessage("104: start and write recent SNS access history simulation to CM DB\n");
 	}
 	
 	public void startCM()
