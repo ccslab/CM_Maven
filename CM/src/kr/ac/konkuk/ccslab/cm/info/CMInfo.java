@@ -16,7 +16,7 @@ public class CMInfo {
 	public static final int EVENT_FIELD_LEN = 20;
 	public static final int TALK_LEN = 256;
 	public static final int DUMMY_LEN = 256;
-	public static final int FILE_BLOCK_LEN = 4092;
+	public static final int FILE_BLOCK_LEN = 4096;
 	public static final int SO_SNDBUF_LEN = 8192;
 	public static final int SO_RCVBUF_LEN = 8192;
 	public static final int MAX_EVENT_SIZE = 8192;
