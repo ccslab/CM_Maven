@@ -317,7 +317,7 @@ public class CMWinClient extends JFrame {
 		cmServiceMenu.add(eventSubMenu);
 		
 		JMenu infoSubMenu = new JMenu("Information");
-		JMenuItem groupInfoMenuItem = new JMenuItem("show gorup information of default server");
+		JMenuItem groupInfoMenuItem = new JMenuItem("show group information of default server");
 		groupInfoMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(groupInfoMenuItem);
 		JMenuItem userStatMenuItem = new JMenuItem("show current user status");
