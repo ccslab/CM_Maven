@@ -1,4 +1,4 @@
 client-file-path/
-CM/.classpath
-CM/.project
-CM/bin/
+bin/
+.classpath
+.project
