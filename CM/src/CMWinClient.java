@@ -357,6 +357,7 @@ public class CMWinClient extends JFrame {
 		fileTransferSubMenu.add(setPathMenuItem);
 		JMenuItem reqFileMenuItem = new JMenuItem("request file");
 		reqFileMenuItem.addActionListener(menuListener);
+		reqFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		fileTransferSubMenu.add(reqFileMenuItem);
 		JMenuItem pushFileMenuItem = new JMenuItem("push file");
 		pushFileMenuItem.addActionListener(menuListener);
@@ -2167,6 +2168,8 @@ public class CMWinClient extends JFrame {
 			strFileName = fnameField.getText();
 			strFileOwner = fownerField.getText();
 			strFileAppendMode = (String) fAppendBox.getSelectedItem();
+			
+			m_eventHandler.setStartTime(System.currentTimeMillis());	// set the start time of the request
 			
 			if(strFileAppendMode.equals("Default"))
 				bReturn = m_clientStub.requestFile(strFileName, strFileOwner);

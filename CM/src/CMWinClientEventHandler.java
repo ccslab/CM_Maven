@@ -505,6 +505,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 	private void processFileEvent(CMEvent cme)
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
+		long lDelay = 0;
+		
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_FILE_TRANSFER:
@@ -531,6 +533,9 @@ public class CMWinClientEventHandler implements CMEventHandler{
 			//		+fe.getFileSize()+" Bytes).");
 			printMessage("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
 					+fe.getFileSize()+" Bytes).\n");
+			lDelay = System.currentTimeMillis() - m_lStartTime;
+			printMessage("file-transfer delay: "+lDelay+" ms.\n");
+
 			if(m_bDistFileProc)
 				processFile(fe.getFileName());
 			if(m_bReqAttachedFile)
