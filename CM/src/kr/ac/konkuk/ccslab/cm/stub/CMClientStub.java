@@ -88,18 +88,15 @@ public class CMClientStub extends CMStub {
 			e1.printStackTrace();
 		}
 		
-		try {
-			CMConfigurator.init("cm-client.conf", m_cmInfo);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-client.conf").toString();
+		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
+		if(!bRet)
 			return false;
-		}
+
 		bRet = CMInteractionManager.init(m_cmInfo);
 		if(!bRet)
-		{
 			return false;
-		}
+
 		CMEventManager.startReceivingEvent(m_cmInfo);
 		CMCommManager.startReceivingMessage(m_cmInfo);
 		CMCommManager.startSendingMessage(m_cmInfo);

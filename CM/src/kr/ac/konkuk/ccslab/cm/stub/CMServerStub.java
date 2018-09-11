@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -72,18 +73,15 @@ public class CMServerStub extends CMStub {
 			e1.printStackTrace();
 		}
 
-		try {
-			CMConfigurator.init("cm-server.conf", m_cmInfo);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-server.conf").toString();
+		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
+		if(!bRet)
 			return false;
-		}
+
 		bRet = CMInteractionManager.init(m_cmInfo);
 		if(!bRet)
-		{
 			return false;
-		}
+
 		CMEventManager.startReceivingEvent(m_cmInfo);
 		CMCommManager.startReceivingMessage(m_cmInfo);
 		CMCommManager.startSendingMessage(m_cmInfo);
@@ -543,4 +541,5 @@ public class CMServerStub extends CMStub {
 		
 		return loginUsers;
 	}
+	
 }

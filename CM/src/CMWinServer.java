@@ -1,6 +1,9 @@
 import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Iterator;
@@ -169,6 +172,12 @@ public class CMWinServer extends JFrame {
 		JMenuItem outputThroughputMenuItem = new JMenuItem("test output network throughput");
 		outputThroughputMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(outputThroughputMenuItem);
+		JMenuItem showAllConfMenuItem = new JMenuItem("show all configurations");
+		showAllConfMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(showAllConfMenuItem);
+		JMenuItem changeConfMenuItem = new JMenuItem("change configuration");
+		changeConfMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(changeConfMenuItem);
 		
 		serviceMenu.add(infoSubMenu);
 		
@@ -265,8 +274,14 @@ public class CMWinServer extends JFrame {
 		case 5:	// print current channels information
 			printCurrentChannelInfo();
 			break;
-		case 6:
+		case 6: // print current login users
 			printLoginUsers();
+			break;
+		case 7: // print all current configurations
+			printConfigurations();
+			break;
+		case 8: // change a field value in the configuration file
+			changeConfiguration();
 			break;
 		case 20: // set file path
 			setFilePath();
@@ -333,6 +348,7 @@ public class CMWinServer extends JFrame {
 		printMessage("1: show session information, 2: show group information\n");
 		printMessage("3: test input network throughput, 4: test output network throughput\n");
 		printMessage("5: show current channels, 6: show login users\n");
+		printMessage("7: show all configurations, 8: change configuration\n");
 		printMessage("---------------------------------- File Transfer\n");
 		printMessage("20: set file path, 21: request file, 22: push file\n");
 		printMessage("23: cancel receiving file, 24: cancel sending file\n");
@@ -1505,6 +1521,28 @@ public class CMWinServer extends JFrame {
 			}
 		}
 	}
+	
+	public void printConfigurations()
+	{
+		String[] strConfigurations;
+		printMessage("========== print all current configurations\n");
+		Path confPath = m_serverStub.getCMInfo().getConfigurationInfo().getConfFileHome().resolve("cm-server.conf");
+		strConfigurations = CMConfigurator.getConfigurations(confPath.toString());
+		
+		printMessage("configuration file path: "+confPath.toString()+"\n");
+		for(String strConf : strConfigurations)
+		{
+			String[] strFieldValuePair;
+			strFieldValuePair = strConf.split("\\s+");
+			printMessage(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
+		}
+	}
+	
+	public void changeConfiguration()
+	{
+		// from here
+		printStyledMessage("To be developed!\n", "bold");
+	}
 
 	public void printMessage(String strText)
 	{
@@ -1673,6 +1711,12 @@ public class CMWinServer extends JFrame {
 				break;
 			case "show login users":
 				printLoginUsers();
+				break;
+			case "show all configurations":
+				printConfigurations();
+				break;
+			case "change configuration":
+				changeConfiguration();
 				break;
 			case "test input network throughput":
 				measureInputThroughput();

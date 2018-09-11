@@ -8,18 +8,23 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 public class CMConfigurator {
 	
 	// initialize field values of server configuration or client configuration
-	public static void init(String fName, CMInfo cmInfo) throws IOException
+	public static boolean init(String strConfFilePath, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
-		confInfo.setConfFileName(fName);
-
-		confInfo.setSystemType(CMConfigurator.getConfiguration(fName, "SYS_TYPE"));
-		confInfo.setServerAddress(CMConfigurator.getConfiguration(fName, "SERVER_ADDR"));
-		confInfo.setServerPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "SERVER_PORT")));
-		confInfo.setUDPPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "UDP_PORT")));
-		confInfo.setMulticastAddress(CMConfigurator.getConfiguration(fName, "MULTICAST_ADDR"));
-		confInfo.setMulticastPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "MULTICAST_PORT")));
+		File confFile = new File(strConfFilePath);
+		if(!confFile.exists())
+		{
+			System.err.println("CMConfigurator.init(): "+strConfFilePath+" does not exist!");
+			return false;
+		}
+		
+		confInfo.setSystemType(CMConfigurator.getConfiguration(strConfFilePath, "SYS_TYPE"));
+		confInfo.setServerAddress(CMConfigurator.getConfiguration(strConfFilePath, "SERVER_ADDR"));
+		confInfo.setServerPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SERVER_PORT")));
+		confInfo.setUDPPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "UDP_PORT")));
+		confInfo.setMulticastAddress(CMConfigurator.getConfiguration(strConfFilePath, "MULTICAST_ADDR"));
+		confInfo.setMulticastPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MULTICAST_PORT")));
 		//confInfo.setMyAddress(InetAddress.getLocalHost().getHostAddress());
 		if(confInfo.getServerAddress().equals("localhost"))
 		{
@@ -35,32 +40,32 @@ public class CMConfigurator {
 		}
 				
 		// default download directory
-		String strFilePath = CMConfigurator.getConfiguration(fName, "FILE_PATH");
+		String strFilePath = CMConfigurator.getConfiguration(strConfFilePath, "FILE_PATH");
 		if(strFilePath == null) strFilePath = "."; // if no default path is set, it is set to the current working directory
 		confInfo.setFilePath(strFilePath);
 		
 		// default append mode for the file transfer
-		confInfo.setFileAppendScheme(Byte.parseByte(CMConfigurator.getConfiguration(fName, "FILE_APPEND_SCHEME")));
+		confInfo.setFileAppendScheme(Byte.parseByte(CMConfigurator.getConfiguration(strConfFilePath, "FILE_APPEND_SCHEME")));
 		
 		// added delay value for the simulation of transmission delay
-		confInfo.setSimTransDelay(Integer.parseInt(CMConfigurator.getConfiguration(fName, "SIM_TRANS_DELAY")));
+		confInfo.setSimTransDelay(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SIM_TRANS_DELAY")));
 
 		if( confInfo.getSystemType().equals("SERVER") )
 		{
 			//confInfo.setMyAddress(CMConfigurator.getConfiguration(fName, "MY_ADDR"));
-			confInfo.setMyPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "MY_PORT")));
-			confInfo.setCommArch(CMConfigurator.getConfiguration(fName, "COMM_ARCH"));
-			confInfo.setFileTransferScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "FILE_TRANSFER_SCHEME")));
-			confInfo.setLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "LOGIN_SCHEME")));
-			confInfo.setSessionScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "SESSION_SCHEME")));
-			confInfo.setDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "DOWNLOAD_SCHEME")));
-			confInfo.setDownloadNum(Integer.parseInt(CMConfigurator.getConfiguration(fName, "DOWNLOAD_NUM")));
-			confInfo.setThumbnailHorSize(Integer.parseInt(CMConfigurator.getConfiguration(fName, "THUMBNAIL_HOR_SIZE")));
-			confInfo.setThumbnailVerSize(Integer.parseInt(CMConfigurator.getConfiguration(fName, "THUMBNAIL_VER_SIZE")));
-			confInfo.setAttachDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(fName, "ATTACH_DOWNLOAD_SCHEME")));
-			confInfo.setAttachAccessInterval(Integer.parseInt(CMConfigurator.getConfiguration(fName, "ATTACH_ACCESS_INTERVAL")));
-			confInfo.setAttachPrefetchThreshold(Double.parseDouble(CMConfigurator.getConfiguration(fName, "ATTACH_PREFETCH_THRESHOLD")));
-			confInfo.setSessionNumber(Integer.parseInt(CMConfigurator.getConfiguration(fName, "SESSION_NUM")));
+			confInfo.setMyPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MY_PORT")));
+			confInfo.setCommArch(CMConfigurator.getConfiguration(strConfFilePath, "COMM_ARCH"));
+			confInfo.setFileTransferScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "FILE_TRANSFER_SCHEME")));
+			confInfo.setLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "LOGIN_SCHEME")));
+			confInfo.setSessionScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SESSION_SCHEME")));
+			confInfo.setDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DOWNLOAD_SCHEME")));
+			confInfo.setDownloadNum(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DOWNLOAD_NUM")));
+			confInfo.setThumbnailHorSize(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "THUMBNAIL_HOR_SIZE")));
+			confInfo.setThumbnailVerSize(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "THUMBNAIL_VER_SIZE")));
+			confInfo.setAttachDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "ATTACH_DOWNLOAD_SCHEME")));
+			confInfo.setAttachAccessInterval(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "ATTACH_ACCESS_INTERVAL")));
+			confInfo.setAttachPrefetchThreshold(Double.parseDouble(CMConfigurator.getConfiguration(strConfFilePath, "ATTACH_PREFETCH_THRESHOLD")));
+			confInfo.setSessionNumber(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SESSION_NUM")));
 			
 			// store session configuration file names
 			if(confInfo.getSessionNumber() > 0)
@@ -70,18 +75,18 @@ public class CMConfigurator {
 				for(int i = 1; i <= confInfo.getSessionNumber(); i++)
 				{
 					String strFileField = "SESSION_FILE"+i;
-					String strFileName = CMConfigurator.getConfiguration(fName, strFileField);
+					String strFileName = CMConfigurator.getConfiguration(strConfFilePath, strFileField);
 					confInfo.getSessionConfFileList().addElement(strFileName);
 				}
 			}
 			
 			// DB configuration
-			confInfo.setDBUse(Integer.parseInt(CMConfigurator.getConfiguration(fName, "DB_USE")));
-			confInfo.setDBHost(CMConfigurator.getConfiguration(fName, "DB_HOST"));
-			confInfo.setDBUser(CMConfigurator.getConfiguration(fName, "DB_USER"));
-			confInfo.setDBPass(CMConfigurator.getConfiguration(fName, "DB_PASS"));
-			confInfo.setDBPort(Integer.parseInt(CMConfigurator.getConfiguration(fName, "DB_PORT")));
-			confInfo.setDBName(CMConfigurator.getConfiguration(fName, "DB_NAME"));
+			confInfo.setDBUse(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DB_USE")));
+			confInfo.setDBHost(CMConfigurator.getConfiguration(strConfFilePath, "DB_HOST"));
+			confInfo.setDBUser(CMConfigurator.getConfiguration(strConfFilePath, "DB_USER"));
+			confInfo.setDBPass(CMConfigurator.getConfiguration(strConfFilePath, "DB_PASS"));
+			confInfo.setDBPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DB_PORT")));
+			confInfo.setDBName(CMConfigurator.getConfiguration(strConfFilePath, "DB_NAME"));
 		}
 		else if( confInfo.getSystemType().equals("CLIENT") )
 		{
@@ -149,11 +154,20 @@ public class CMConfigurator {
 				//System.out.println("MY_ADDR: "+confInfo.getMyAddress());
 			}
 		}
+		
+		return true;
 	}
 	
-	public static String getConfiguration(String fileName, String fieldName) throws IOException
+	public static String getConfiguration(String strConfFilePath, String fieldName)
 	{
-		FileInputStream fis = new FileInputStream(fileName);
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream(strConfFilePath);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
 		String strLine = null;
 		String strValue = null;
 		String[] strToken = null;
@@ -171,10 +185,92 @@ public class CMConfigurator {
 				strValue = strToken[1];
 		}
 
-		fis.close();
+		try {
+			fis.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		scan.close();
 		
 		return strValue;
+	}
+	
+	public static String[] getConfigurations(String strConfFilePath)
+	{ 
+		FileInputStream fis;
+		int nFieldNum = 0;
+		Scanner scan;
+		String strLine;
+		String[] strFieldValuePairs;
+		int nCount = 0;
+		
+		try {
+			fis = new FileInputStream(strConfFilePath);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		
+		scan = new Scanner(fis);
+		
+		// figure out the number of configuration fields
+		while(scan.hasNextLine())
+		{
+			strLine = scan.nextLine();
+			if(strLine.equals("") || strLine.charAt(0) == '#' || strLine.charAt(0) == '!')
+				continue;
+
+			nFieldNum++;
+		}		
+		
+		try {
+			fis.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		scan.close();
+		
+		if(nFieldNum == 0)
+		{
+			System.err.println("CMConfigurator.getConfigurations(): there is no configuraion!");
+			return null;
+		}
+		
+		// get all the pair of a field and a value
+		strFieldValuePairs = new String[nFieldNum];
+		
+		try {
+			fis = new FileInputStream(strConfFilePath);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		scan = new Scanner(fis);
+		
+		nCount = 0;
+		while(scan.hasNextLine())
+		{
+			strLine = scan.nextLine();
+			if(strLine.equals("") || strLine.charAt(0) == '#' || strLine.charAt(0) == '!')
+				continue;
+
+			strLine = strLine.trim();
+			strFieldValuePairs[nCount++] = strLine;
+		}
+		
+		try {
+			fis.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		scan.close();
+		
+		return strFieldValuePairs;
 	}
 
 	public static boolean isDServer(CMInfo cmInfo)

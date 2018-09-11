@@ -369,20 +369,17 @@ public class CMInteractionManager {
 				return;
 			}
 			
+			String strConfPath = confInfo.getConfFileHome().resolve("cm-server.conf").toString();
+			
 			for(int i=1; i <= nSessionNum; i++)
 			{
 				CMSession session = new CMSession();
 				String strSessionName = null;
 				String strSessionConfFileName = null;
-				try {
-					strSessionName = CMConfigurator.getConfiguration(confInfo.getConfFileName(), "SESSION_NAME"+i);
-					strSessionConfFileName = CMConfigurator.getConfiguration(confInfo.getConfFileName(), "SESSION_FILE"+i);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return;
-				}
-				session.setSessionName(strSessionName);
+				strSessionName = CMConfigurator.getConfiguration(strConfPath, "SESSION_NAME"+i);
+				strSessionConfFileName = CMConfigurator.getConfiguration(strConfPath, "SESSION_FILE"+i);
+
+					session.setSessionName(strSessionName);
 				session.setAddress(confInfo.getMyAddress());
 				session.setPort(confInfo.getMyPort());
 				session.setSessionConfFileName(strSessionConfFileName);

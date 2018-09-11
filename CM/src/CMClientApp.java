@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -18,6 +19,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
@@ -176,6 +178,12 @@ public class CMClientApp {
 			case 56: // test output network throughput
 				testMeasureOutputThroughput();
 				break;
+			case 57: // print all configurations
+				testPrintConfigurations();
+				break;
+			case 58: // change configuration
+				testChangeConfiguration();
+				break;
 			case 60: // add additional channel
 				testAddChannel();
 				break;
@@ -303,6 +311,7 @@ public class CMClientApp {
 		System.out.println("52: show current channels, 53: show current server information");
 		System.out.println("54: show group information of designated server");
 		System.out.println("55: measure input network throughput, 56: measure output network throughput");
+		System.out.println("57: show all configurations, 58: change configuration");
 		System.out.println("---------------------------------- Channel");
 		System.out.println("60: add channel, 61: remove channel, 62: test blocking channel");
 		System.out.println("---------------------------------- File Transfer");
@@ -2645,6 +2654,30 @@ public class CMClientApp {
 		System.out.println(strChannels);
 	}
 
+	public void testPrintConfigurations()
+	{
+		String[] strConfigurations;
+		System.out.print("========== print all current configurations\n");
+		Path confPath = m_clientStub.getCMInfo().getConfigurationInfo().getConfFileHome().resolve("cm-client.conf");
+		strConfigurations = CMConfigurator.getConfigurations(confPath.toString());
+		
+		System.out.print("configuration file path: "+confPath.toString()+"\n");
+		for(String strConf : strConfigurations)
+		{
+			String[] strFieldValuePair;
+			strFieldValuePair = strConf.split("\\s+");
+			System.out.print(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
+		}
+		
+	}
+	
+	public void testChangeConfiguration()
+	{
+		// not yet
+		System.err.println("To be developed!");
+	}
+
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		CMClientApp client = new CMClientApp();

@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -34,6 +35,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
@@ -335,6 +337,12 @@ public class CMWinClient extends JFrame {
 		JMenuItem outThroughputMenuItem = new JMenuItem("measure output network throughput");
 		outThroughputMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(outThroughputMenuItem);
+		JMenuItem showAllConfMenuItem = new JMenuItem("show all configurations");
+		showAllConfMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(showAllConfMenuItem);
+		JMenuItem changeConfMenuItem = new JMenuItem("change configuration");
+		changeConfMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(changeConfMenuItem);
 		
 		cmServiceMenu.add(infoSubMenu);
 		
@@ -702,6 +710,12 @@ public class CMWinClient extends JFrame {
 		case 56: // test output network throughput
 			testMeasureOutputThroughput();
 			break;
+		case 57: // print all configurations
+			testPrintConfigurations();
+			break;
+		case 58: // change configuration
+			testChangeConfiguration();
+			break;
 		case 60: // add additional channel
 			testAddChannel();
 			break;
@@ -820,6 +834,7 @@ public class CMWinClient extends JFrame {
 		printMessage("52: show current channels, 53: show current server information\n");
 		printMessage("54: show group information of designated server\n");
 		printMessage("55: measure input network throughput, 56: measure output network throughput\n");
+		printMessage("57: show all configurations, 58: change configuration\n");
 		printMessage("---------------------------------- Channel\n");
 		printMessage("60: add channel, 61: remove channel, 62: test blocking channel\n");
 		printMessage("---------------------------------- File Transfer\n");
@@ -3801,6 +3816,29 @@ public class CMWinClient extends JFrame {
 		String strChannels = m_clientStub.getCurrentChannelInfo();
 		printMessage(strChannels);
 	}
+	
+	public void testPrintConfigurations()
+	{
+		String[] strConfigurations;
+		printMessage("========== print all current configurations\n");
+		Path confPath = m_clientStub.getCMInfo().getConfigurationInfo().getConfFileHome().resolve("cm-client.conf");
+		strConfigurations = CMConfigurator.getConfigurations(confPath.toString());
+		
+		printMessage("configuration file path: "+confPath.toString()+"\n");
+		for(String strConf : strConfigurations)
+		{
+			String[] strFieldValuePair;
+			strFieldValuePair = strConf.split("\\s+");
+			printMessage(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
+		}
+		
+	}
+	
+	public void testChangeConfiguration()
+	{
+		// not yet
+		printStyledMessage("To be developed!\n", "bold");
+	}
 		
 	private void requestAttachedFile(String strFileName)
 	{
@@ -4057,6 +4095,12 @@ public class CMWinClient extends JFrame {
 				break;
 			case "measure output network throughput":
 				testMeasureOutputThroughput();
+				break;
+			case "show all configurations":
+				testPrintConfigurations();
+				break;
+			case "change configuration":
+				testChangeConfiguration();
 				break;
 			case "add channel":
 				testAddChannel();

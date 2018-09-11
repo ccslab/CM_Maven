@@ -32,6 +32,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.nio.file.Path;
 
 /**
  * This class provides CM APIs of the common communication services that can be called by both the server and the client 
@@ -1968,4 +1969,11 @@ public class CMStub {
 		
 		return sb.toString();
 	}
+	
+	public void setConfigurationHome(Path homePath)
+	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		confInfo.setConfFileHome(homePath);
+	}
+
 }

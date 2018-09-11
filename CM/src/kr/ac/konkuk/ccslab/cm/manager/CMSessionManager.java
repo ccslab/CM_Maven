@@ -48,10 +48,6 @@ public class CMSessionManager {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				return;
 			}
 		
 			if(nGroupNum <= 0)
@@ -71,15 +67,11 @@ public class CMSessionManager {
 					String strGroupName = null;
 					String strGroupAddr = null;
 					int nGroupPort = -1;
-					try {
-						strGroupName = CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_NAME"+i);
-						strGroupAddr = CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_ADDR"+i);
-						nGroupPort = Integer.parseInt(CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_PORT"+i));
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						return;
-					}
+
+					strGroupName = CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_NAME"+i);
+					strGroupAddr = CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_ADDR"+i);
+					nGroupPort = Integer.parseInt(CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_PORT"+i));
+
 					group.setGroupName(strGroupName);
 					group.setGroupAddress(strGroupAddr);
 					group.setGroupPort(nGroupPort);

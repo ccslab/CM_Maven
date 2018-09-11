@@ -5,12 +5,14 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.util.*;
 
 public class CMServerApp {
@@ -89,8 +91,14 @@ public class CMServerApp {
 			case 5:	// print current channels information
 				printCurrentChannelInfo();
 				break;
-			case 6:
+			case 6: // print current login users
 				printLoginUsers();
+				break;
+			case 7: // print all current configurations
+				printConfigurations();
+				break;
+			case 8: // change a field value in the configuration file
+				changeConfiguration();
 				break;
 			case 20: // set file path
 				setFilePath();
@@ -167,6 +175,7 @@ public class CMServerApp {
 		System.out.print("1: show session information, 2: show group information\n");
 		System.out.print("3: test input network throughput, 4: test output network throughput\n");
 		System.out.print("5: show current channels, 6: show login users\n");
+		System.out.print("7: show all configurations, 8: change configuration\n");
 		System.out.print("---------------------------------- File Transfer\n");
 		System.out.print("20: set file path, 21: request file, 22: push file\n");
 		System.out.print("23: cancel receiving file, 24: cancel sending file\n");
@@ -1197,6 +1206,29 @@ public class CMServerApp {
 			}
 		}
 	}
+
+	public void printConfigurations()
+	{
+		String[] strConfigurations;
+		System.out.print("========== print all current configurations\n");
+		Path confPath = m_serverStub.getCMInfo().getConfigurationInfo().getConfFileHome().resolve("cm-server.conf");
+		strConfigurations = CMConfigurator.getConfigurations(confPath.toString());
+		
+		System.out.print("configuration file path: "+confPath.toString()+"\n");
+		for(String strConf : strConfigurations)
+		{
+			String[] strFieldValuePair;
+			strFieldValuePair = strConf.split("\\s+");
+			System.out.print(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
+		}
+	}
+	
+	public void changeConfiguration()
+	{
+		// from here
+		System.err.print("To be developed!\n");
+	}
+	
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

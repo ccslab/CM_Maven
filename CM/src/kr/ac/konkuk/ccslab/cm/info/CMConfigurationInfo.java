@@ -1,9 +1,14 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
 import java.io.File;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class CMConfigurationInfo {
+	private Path m_confFileHome;
+	
 	private int m_nMulticastPort;
 	private int m_nServerPort;
 	private int m_nMyPort;
@@ -15,7 +20,6 @@ public class CMConfigurationInfo {
 	private int m_bLoginScheme;
 	private int m_bSessionScheme;
 	private int m_nUDPPort;
-	private String m_strConfFileName;
 	private int m_nSessionNumber;
 	private int m_bDownloadScheme;
 	private int m_nDownloadNum;
@@ -46,7 +50,7 @@ public class CMConfigurationInfo {
 	
 	public CMConfigurationInfo()
 	{
-		m_strConfFileName = "";
+		m_confFileHome = Paths.get(".");
 		m_strSystemType = "";
 		m_strCommArch = "";
 		m_nServerPort = -1;
@@ -83,14 +87,14 @@ public class CMConfigurationInfo {
 	}
 
 	// set/get methods
-	public void setConfFileName(String fname)
+	public void setConfFileHome(Path filePath)
 	{
-		m_strConfFileName = fname;
+		m_confFileHome = filePath;
 	}
 	
-	public String getConfFileName()
+	public Path getConfFileHome()
 	{
-		return m_strConfFileName;
+		return m_confFileHome;
 	}
 	
 	public void setServerAddress(String addr)
