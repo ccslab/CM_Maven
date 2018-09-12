@@ -15,6 +15,9 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.util.*;
 
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
 public class CMServerApp {
 	private CMServerStub m_serverStub;
 	private CMServerEventHandler m_eventHandler;
@@ -1211,7 +1214,7 @@ public class CMServerApp {
 	{
 		String[] strConfigurations;
 		System.out.print("========== print all current configurations\n");
-		Path confPath = m_serverStub.getCMInfo().getConfigurationInfo().getConfFileHome().resolve("cm-server.conf");
+		Path confPath = m_serverStub.getConfigurationHome().resolve("cm-server.conf");
 		strConfigurations = CMConfigurator.getConfigurations(confPath.toString());
 		
 		System.out.print("configuration file path: "+confPath.toString()+"\n");
@@ -1225,8 +1228,28 @@ public class CMServerApp {
 	
 	public void changeConfiguration()
 	{
-		// from here
-		System.err.print("To be developed!\n");
+		boolean bRet = false;
+		String strField = null;
+		String strValue = null;
+		System.out.println("========== change configuration");
+		Path confPath = m_serverStub.getConfigurationHome().resolve("cm-server.conf");
+		
+		System.out.print("Field name: ");
+		strField = m_scan.next();
+		System.out.print("Value: ");
+		strValue = m_scan.next();
+		
+		bRet = CMConfigurator.changeConfiguration(confPath.toString(), strField, strValue);
+		if(bRet)
+		{
+			System.out.println("cm-server.conf file is successfully updated: ("+strField+"="+strValue+")");
+		}
+		else
+		{
+			System.err.println("The configuration change is failed!: ("+strField+"="+strValue+")");
+		}
+		
+		return;	
 	}
 	
 	

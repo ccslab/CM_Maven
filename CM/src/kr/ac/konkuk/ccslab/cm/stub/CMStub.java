@@ -1975,5 +1975,12 @@ public class CMStub {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		confInfo.setConfFileHome(homePath);
 	}
+	
+	public Path getConfigurationHome()
+	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		
+		return confInfo.getConfFileHome();
+	}
 
 }

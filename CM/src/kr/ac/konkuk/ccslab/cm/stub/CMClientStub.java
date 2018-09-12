@@ -72,6 +72,7 @@ public class CMClientStub extends CMStub {
 		boolean bRet = false;
 		
 		// Korean encoding
+		/*
 		System.setProperty("file.encoding", "euc_kr");
 		Field charset;
 		try {
@@ -87,6 +88,7 @@ public class CMClientStub extends CMStub {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		*/
 		
 		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-client.conf").toString();
 		bRet = CMConfigurator.init(strConfPath, m_cmInfo);

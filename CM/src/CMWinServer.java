@@ -1526,7 +1526,7 @@ public class CMWinServer extends JFrame {
 	{
 		String[] strConfigurations;
 		printMessage("========== print all current configurations\n");
-		Path confPath = m_serverStub.getCMInfo().getConfigurationInfo().getConfFileHome().resolve("cm-server.conf");
+		Path confPath = m_serverStub.getConfigurationHome().resolve("cm-server.conf");
 		strConfigurations = CMConfigurator.getConfigurations(confPath.toString());
 		
 		printMessage("configuration file path: "+confPath.toString()+"\n");
@@ -1540,8 +1540,39 @@ public class CMWinServer extends JFrame {
 	
 	public void changeConfiguration()
 	{
-		// from here
-		printStyledMessage("To be developed!\n", "bold");
+		boolean bRet = false;
+		String strField = null;
+		String strValue = null;
+		printMessage("========== change configuration\n");
+		Path confPath = m_serverStub.getConfigurationHome().resolve("cm-server.conf");
+		
+		JTextField fieldTextField = new JTextField();
+		JTextField valueTextField = new JTextField();
+		Object[] msg = {
+			"Field Name:", fieldTextField,
+			"Value:", valueTextField
+		};
+		int nRet = JOptionPane.showConfirmDialog(null, msg, "Change Configuration", JOptionPane.OK_CANCEL_OPTION);
+		if(nRet != JOptionPane.OK_OPTION) return;
+		strField = fieldTextField.getText().trim();
+		strValue = valueTextField.getText().trim();
+		if(strField.isEmpty() || strValue.isEmpty())
+		{
+			printStyledMessage("There is an empty input!\n", "bold");
+			return;
+		}
+		
+		bRet = CMConfigurator.changeConfiguration(confPath.toString(), strField, strValue);
+		if(bRet)
+		{
+			printMessage("cm-server.conf file is successfully updated: ("+strField+"="+strValue+")\n");
+		}
+		else
+		{
+			printStyledMessage("The configuration change is failed!: ("+strField+"="+strValue+")\n", "bold");
+		}
+		
+		return;
 	}
 
 	public void printMessage(String strText)

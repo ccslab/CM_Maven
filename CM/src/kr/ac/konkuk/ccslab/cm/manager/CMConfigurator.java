@@ -1,5 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -271,6 +274,76 @@ public class CMConfigurator {
 		scan.close();
 		
 		return strFieldValuePairs;
+	}
+	
+	public static boolean changeConfiguration(String strConfFilePath, String strField, String strValue)
+	{
+		boolean bRet = false;
+		BufferedReader fileBufReader = null;
+		StringBuffer strFileContentBuffer = null;
+		String strLine = null;
+		String[] strReadFieldValue = null;
+		boolean bModified = false;
+		
+		try {
+			fileBufReader = new BufferedReader(new FileReader(strConfFilePath));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
+		// read each line of the file and check out if the line includes the requested configuration field.
+		// If the line includes the requested field, the value is replaced with the given parameter.
+		// Each line is added to the string buffer. 
+		strFileContentBuffer = new StringBuffer();
+		try {
+			while((strLine = fileBufReader.readLine()) != null)
+			{
+				strLine = strLine.trim();
+				// if the read line is the (field,value) pair,
+				if(!strLine.equals("") && !strLine.startsWith("#") && !strLine.startsWith("!"))
+				{
+					strReadFieldValue = strLine.split("\\s+");
+					if(strReadFieldValue[0].equals(strField) && !strReadFieldValue[1].equals(strValue))
+					{
+						strLine = strLine.replace(strReadFieldValue[1], strValue);
+						bModified = true;
+					}
+				}
+				strFileContentBuffer.append(strLine+"\n");
+			}
+			
+			fileBufReader.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
+		// If the requested field value is successfully updated, 
+		// the file string (including the updated field value) is written to the file.
+		if(bModified)
+		{
+			Path filePath = Paths.get(strConfFilePath);
+			byte[] fileBytes = strFileContentBuffer.toString().getBytes();
+			try {
+				Files.write(filePath, fileBytes);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+			
+			bRet = true;
+		}
+		else
+		{
+			System.err.println("CMConfigurator.changeConfiguration(), file not modified for ("
+					+strField+", "+strValue+")!");
+		}
+
+		return bRet;
 	}
 
 	public static boolean isDServer(CMInfo cmInfo)
