@@ -14,7 +14,6 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
@@ -388,7 +387,7 @@ public class CMWinServerEventHandler implements CMEventHandler {
 	
 	private void processFile(String strSender, String strFile)
 	{
-		CMFileTransferInfo fileInfo = m_serverStub.getCMInfo().getFileTransferInfo();
+		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
 		String strFullSrcFilePath = null;
 		String strModifiedFile = null;
 		FileInputStream fis = null;
@@ -399,10 +398,11 @@ public class CMWinServerEventHandler implements CMEventHandler {
 
 		// change the modified file name
 		strModifiedFile = "m-"+strFile;
-		strModifiedFile = fileInfo.getFilePath()+File.separator+strSender+File.separator+strModifiedFile;
+		strModifiedFile = confInfo.getTransferedFileHome().toString()+File.separator+strSender+
+				File.separator+strModifiedFile;
 
 		// stylize the file
-		strFullSrcFilePath = fileInfo.getFilePath()+File.separator+strSender+File.separator+strFile;
+		strFullSrcFilePath = confInfo.getTransferedFileHome().toString()+File.separator+strSender+File.separator+strFile;
 		File srcFile = new File(strFullSrcFilePath);
 		long lFileSize = srcFile.length();
 		long lRemainBytes = lFileSize;

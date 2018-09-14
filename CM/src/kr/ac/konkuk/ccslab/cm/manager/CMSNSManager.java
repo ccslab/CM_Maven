@@ -179,7 +179,7 @@ public class CMSNSManager {
 			if(attach == null) return;
 			if(!attach.containsFileName(fe.getFileName())) return;
 			// add attached file info in attached_file_table of DB
-			String strFilePath = fInfo.getFilePath() + File.separator + fe.getSenderName();
+			String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + fe.getSenderName();
 			nContentID = attach.getContentID();
 			strFileName = fe.getFileName();
 			
@@ -2029,6 +2029,7 @@ public class CMSNSManager {
 	
 	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
 	{
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
@@ -2045,7 +2046,8 @@ public class CMSNSManager {
 		seAck.setFileName(strFileName);
 
 		// check whether the requested file exists or not
-		String strFilePath = fInfo.getFilePath() + File.separator + strWriter + File.separator + strFileName;
+		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + 
+				strWriter + File.separator + strFileName;
 		int nReturnCode = -1;
 		File file = new File(strFilePath);
 		if(!file.exists())

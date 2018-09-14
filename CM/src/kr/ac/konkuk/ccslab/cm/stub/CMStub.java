@@ -19,6 +19,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -1469,39 +1470,18 @@ public class CMStub {
 	/////////////////////////////////////////////////////////////////////
 	// file transfer 
 
-	/**
-	 * Sets the default file path for file transfer.
-	 * 
-	 * <p> CM applications that directly connect to each other can exchange a file with the CMStub class 
-	 * that is the parent class of the CMClientStub and the CMServerStub classes. In the client-server architecture, 
-	 * a client can push or pull a file to/from a server and vice versa. When CM is initialized by an application, 
-	 * the default directory is configured by the path information that is set in the configuration file 
-	 * (the FILE_PATH field). If the default directory does not exist, CM creates it. If the FILE_PATH field is not set, 
-	 * the default path is set to the current working directory (".").
-	 * <p> If the file transfer is requested, a sender (the server or the client) searches for the file 
-	 * in the default file path. If a client receives a file, CM stores the file in this file path. 
-	 * If a server receives a file, CM stores the file in a sub-directory of the default path. 
-	 * The sub-directory name is a sender (client) name.
-	 * 
-	 * @param filePath - the file path
-	 * @see CMStub#getFilePath()
-	 */
-	public void setFilePath(String filePath)
-	{
-		CMFileTransferManager.setFilePath(filePath, m_cmInfo);
-		return;
-	}
 	
 	/**
 	 * Gets the default file path for file transfer.
 	 * 
 	 * @return the default file path for file transfer
-	 * @see CMStub#setFilePath(String)
+	 * @see CMClientStub#setTransferedFileHome(Path)
+	 * @see CMServerStub#setTransferedFileHome(Path)
 	 */
-	public String getFilePath()
+	public Path getTransferedFileHome()
 	{
-		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
-		return fInfo.getFilePath();
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		return confInfo.getTransferedFileHome();
 	}
 	
 	/**
@@ -1882,7 +1862,7 @@ public class CMStub {
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMFileEvent replyEvent = null;
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		String strFilePath = fInfo.getFilePath() + File.separator + "throughput-test.jpg";
+		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + "throughput-test.jpg";
 		
 		fInfo.setStartTime(lStartTime);
 		bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
@@ -1982,5 +1962,5 @@ public class CMStub {
 		
 		return confInfo.getConfFileHome();
 	}
-
+	
 }

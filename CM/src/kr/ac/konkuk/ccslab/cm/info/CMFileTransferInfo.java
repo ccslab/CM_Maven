@@ -7,9 +7,9 @@ import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 
 import java.io.*;
+import java.nio.file.Path;
 
 public class CMFileTransferInfo {
-	private String m_strFilePath;
 	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable; // key is the receiver name
 	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable; // key is the sender name
 	private boolean m_bCancelSend;	// flag for canceling file push with the default channel
@@ -19,7 +19,6 @@ public class CMFileTransferInfo {
 	
 	public CMFileTransferInfo()
 	{
-		m_strFilePath = null;
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
 		m_bCancelSend = false;
@@ -28,21 +27,6 @@ public class CMFileTransferInfo {
 	}
 	
 	////////// set/get methods
-	
-	public void setFilePath(String path)
-	{
-		String strModPath = path.trim();
-		if(strModPath.endsWith(File.separator))
-		{
-			strModPath = strModPath.substring(0, strModPath.length()-1);
-		}
-		m_strFilePath = strModPath;
-	}
-	
-	public String getFilePath()
-	{
-		return m_strFilePath;
-	}
 	
 	public void setExecutorService(ExecutorService es)
 	{

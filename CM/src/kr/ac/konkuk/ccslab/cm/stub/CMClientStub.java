@@ -4,6 +4,7 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
@@ -53,6 +54,42 @@ public class CMClientStub extends CMStub {
 	public CMClientStub()
 	{
 		super();
+	}
+
+	/**
+	 * Sets the default file path for file transfer.
+	 * <br> This method updates the transfered-file path information in CM and the FILE_PATH field in 
+	 * the CM configuration file.
+	 * 
+	 * <p> CM applications that directly connect to each other can exchange a file with the CMStub class 
+	 * that is the parent class of the CMClientStub and the CMServerStub classes. In the client-server architecture, 
+	 * a client can push or pull a file to/from a server and vice versa. When CM is initialized by an application, 
+	 * the default directory is configured by the path information that is set in the configuration file 
+	 * (the FILE_PATH field). If the default directory does not exist, CM creates it. If the FILE_PATH field is not set, 
+	 * the default path is set to the current working directory (".").
+	 * <p> If the file transfer is requested, a sender (the server or the client) searches for the file 
+	 * in the default file path. If a client receives a file, CM stores the file in this file path. 
+	 * If a server receives a file, CM stores the file in a sub-directory of the default path. 
+	 * The sub-directory name is a sender (client) name.
+	 * 
+	 * @param filePath - the file path
+	 * @return true if the file path is successfully updated both in the CMConfigurationInfo class and 
+	 * the configuration file (cm-client.conf), or false otherwise.
+	 * @see CMStub#getTransferedFileHome()
+	 */
+	public boolean setTransferedFileHome(Path dir)
+	{
+		// to set in the CMConfigurationInfo class.
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		confInfo.setTransferedFileHome(dir);
+		// to set in the CM configuration file.
+		boolean bRet = false;
+		
+		Path confPath = getConfigurationHome();
+		confPath = confPath.resolve("cm-client.conf");
+		bRet = CMConfigurator.changeConfiguration(confPath.toString(), "FILE_PATH", dir.toString());
+		
+		return bRet;
 	}
 
 	/**

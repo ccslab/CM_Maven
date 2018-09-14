@@ -2,10 +2,8 @@ import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
-
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
@@ -1326,16 +1324,7 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
-		/*
-		if(!strPath.endsWith("/"))
-		{
-			System.out.println("Invalid file path!");
-			return;
-		}
-		*/
-		
-		//CMFileTransferManager.setFilePath(strPath, m_clientStub.getCMInfo());
-		m_clientStub.setFilePath(strPath);
+		m_clientStub.setTransferedFileHome(Paths.get(strPath));
 		
 		System.out.println("======");
 	}

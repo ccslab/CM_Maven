@@ -1,7 +1,6 @@
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -11,12 +10,11 @@ import java.io.RandomAccessFile;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Random;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.TitledBorder;
 import javax.swing.text.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -32,7 +30,6 @@ import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
@@ -163,9 +160,6 @@ public class CMWinClient extends JFrame {
 		*/
 		
 		setVisible(true);
-
-		m_clientStub = new CMClientStub();
-		m_eventHandler = new CMWinClientEventHandler(m_clientStub, this);
 
 		testStartCM();
 		
@@ -1007,7 +1001,12 @@ public class CMWinClient extends JFrame {
 
 	public void testStartCM()
 	{
-		boolean bRet = m_clientStub.startCM();
+		boolean bRet = false;
+		
+		m_clientStub = new CMClientStub();
+		m_eventHandler = new CMWinClientEventHandler(m_clientStub, this);
+		
+		bRet = m_clientStub.startCM();
 		if(!bRet)
 		{
 			printStyledMessage("CM initialization error!\n", "bold");
@@ -2125,37 +2124,14 @@ public class CMWinClient extends JFrame {
 
 	public void testSetFilePath()
 	{
-		//BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		//System.out.println("====== set file path");
 		printMessage("====== set file path\n");
 		String strPath = null;
-		
-		/*
-		System.out.print("file path (must end with \'/\'): ");
-		try {
-			strPath = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 		
 		strPath = JOptionPane.showInputDialog("file path: ");
 		if(strPath == null) return;
 		
-		/*
-		if(!strPath.endsWith("/"))
-		{
-			//System.out.println("Invalid file path!");
-			printMessage("Invalid file path! (must end with \'/\')");
-			return;
-		}
-		*/
+		m_clientStub.setTransferedFileHome(Paths.get(strPath));
 		
-		//CMFileTransferManager.setFilePath(strPath, m_clientStub.getCMInfo());
-		m_clientStub.setFilePath(strPath);
-		
-		//System.out.println("======");
 		printMessage("======\n");
 	}
 
@@ -2224,8 +2200,8 @@ public class CMWinClient extends JFrame {
 		if(strReceiver == null) return;
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
-		CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
-		File curDir = new File(fInfo.getFilePath());
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		File curDir = new File(confInfo.getTransferedFileHome().toString());
 		fc.setCurrentDirectory(curDir);
 		int fcRet = fc.showOpenDialog(this);
 		if(fcRet != JFileChooser.APPROVE_OPTION) return;
@@ -2617,21 +2593,6 @@ public class CMWinClient extends JFrame {
 
 		printMessage("====== test SNS content upload\n");
 		
-		/*
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		try {
-			System.out.print("Input message: ");
-			strMessage = br.readLine();
-			System.out.print("Input attached file path (0 for no attachment): ");
-			strFilePath = br.readLine();
-			if(strFilePath.equals("0"))
-				strFilePath="";
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-		
 		JTextField msgField = new JTextField();
 		JCheckBox attachedFilesBox = new JCheckBox();
 		JTextField replyOfField = new JTextField();
@@ -2668,8 +2629,8 @@ public class CMWinClient extends JFrame {
 			{
 				JFileChooser fc = new JFileChooser();
 				fc.setMultiSelectionEnabled(true);
-				CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
-				File curDir = new File(fInfo.getFilePath());
+				CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+				File curDir = new File(confInfo.getTransferedFileHome().toString());
 				fc.setCurrentDirectory(curDir);
 				int fcRet = fc.showOpenDialog(this);
 				if(fcRet == JFileChooser.APPROVE_OPTION)

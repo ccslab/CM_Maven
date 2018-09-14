@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -36,7 +37,7 @@ public class CMFileTransferManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		String strPath = confInfo.getFilePath();
+		String strPath = confInfo.getTransferedFileHome().toString();
 		
 		// if the default directory does not exist, create it.
 		File defaultPath = new File(strPath);
@@ -55,7 +56,6 @@ public class CMFileTransferManager {
 			}
 		}
 		
-		fInfo.setFilePath(strPath);
 		if(CMInfo._CM_DEBUG)
 			System.out.println("A default path for the file transfer: "+strPath);
 		
@@ -78,13 +78,6 @@ public class CMFileTransferManager {
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		ExecutorService es = fInfo.getExecutorService();
 		es.shutdown();	// need to check
-	}
-	
-	public static void setFilePath(String strFilePath, CMInfo cmInfo)
-	{
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		fInfo.setFilePath(strFilePath);
-		return;
 	}
 	
 	public static boolean requestFile(String strFileName, String strFileOwner, CMInfo cmInfo)
@@ -1120,6 +1113,7 @@ public class CMFileTransferManager {
 	private static void processREQUEST_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
 		if(CMInfo._CM_DEBUG)
@@ -1135,7 +1129,7 @@ public class CMFileTransferManager {
 		feAck.setFileName(strFileName);
 
 		// get the full path of the requested file
-		String strFullPath = fInfo.getFilePath() + File.separator + strFileName; 
+		String strFullPath = confInfo.getTransferedFileHome().toString() + File.separator + strFileName; 
 		// check the file existence
 		File file = new File(strFullPath);
 		if(!file.exists())
@@ -1211,7 +1205,7 @@ public class CMFileTransferManager {
 		long lFileSize = fe.getFileSize();
 		
 		// set a path of the received file
-		String strFullPath = fInfo.getFilePath();
+		String strFullPath = confInfo.getTransferedFileHome().toString();
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			strFullPath = strFullPath + File.separator + fe.getFileName();
@@ -1583,6 +1577,7 @@ public class CMFileTransferManager {
 	private static void processREQUEST_FILE_TRANSFER_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1597,7 +1592,7 @@ public class CMFileTransferManager {
 		feAck.setFileName(strFileName);
 
 		// get the full path of the requested file
-		String strFullPath = fInfo.getFilePath() + File.separator + strFileName; 
+		String strFullPath = confInfo.getTransferedFileHome().toString() + File.separator + strFileName; 
 		// check the file existence
 		File file = new File(strFullPath);
 		if(!file.exists())
@@ -1654,7 +1649,7 @@ public class CMFileTransferManager {
 		long lFileSize = fe.getFileSize();
 		
 		// set a path of the received file
-		String strFullPath = fInfo.getFilePath();
+		String strFullPath = confInfo.getTransferedFileHome().toString();
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			strFullPath = strFullPath + File.separator + fe.getFileName();

@@ -13,10 +13,8 @@ import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
-
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 public class CMServerApp {
 	private CMServerStub m_serverStub;
@@ -269,16 +267,7 @@ public class CMServerApp {
 			e.printStackTrace();
 		}
 		
-		/*
-		if(!strPath.endsWith("/"))
-		{
-			System.out.println("Invalid file path!");
-			return;
-		}
-		*/
-		
-		//CMFileTransferManager.setFilePath(strPath, m_serverStub.getCMInfo());
-		m_serverStub.setFilePath(strPath);
+		m_serverStub.setTransferedFileHome(Paths.get(strPath));
 		
 		System.out.println("======");
 	}

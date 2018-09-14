@@ -79,10 +79,6 @@ public class CMWinServer extends JFrame {
 		
 		setVisible(true);
 
-		m_serverStub = new CMServerStub();
-		m_eventHandler = new CMWinServerEventHandler(m_serverStub, this);
-		m_uaSim = new CMSNSUserAccessSimulator();
-
 		// start cm
 		startCM();		
 	}
@@ -367,8 +363,14 @@ public class CMWinServer extends JFrame {
 	
 	public void startCM()
 	{
+		boolean bRet = false;
+		
 		// start cm
-		boolean bRet = m_serverStub.startCM();
+		m_serverStub = new CMServerStub();
+		m_eventHandler = new CMWinServerEventHandler(m_serverStub, this);
+		m_uaSim = new CMSNSUserAccessSimulator();
+
+		bRet = m_serverStub.startCM();
 		if(!bRet)
 		{
 			printStyledMessage("CM initialization error!\n", "bold");
@@ -479,38 +481,17 @@ public class CMWinServer extends JFrame {
 
 	public void setFilePath()
 	{
-		//BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		//System.out.println("====== set file path");
 		printMessage("====== set file path\n");
 		String strPath = null;
-		/*
-		System.out.print("file path (must end with \'/\'): ");
-		try {
-			strPath = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
+
 		strPath = JOptionPane.showInputDialog("file path: ");
 		if(strPath == null)
 		{
 			return;
 		}
 		
-		/*
-		if(!strPath.endsWith("/"))
-		{
-			//System.out.println("Invalid file path!");
-			printMessage("Invalid file path!\n");
-			return;
-		}
-		*/
+		m_serverStub.setTransferedFileHome(Paths.get(strPath));
 		
-		//CMFileTransferManager.setFilePath(strPath, m_serverStub.getCMInfo());
-		m_serverStub.setFilePath(strPath);
-		
-		//System.out.println("======");
 		printMessage("======\n");
 	}
 	
@@ -579,8 +560,8 @@ public class CMWinServer extends JFrame {
 		if(strReceiver == null) return;
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
-		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
-		File curDir = new File(fInfo.getFilePath());
+		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		File curDir = new File(confInfo.getTransferedFileHome().toString());
 		fc.setCurrentDirectory(curDir);
 		int fcRet = fc.showOpenDialog(this);
 		if(fcRet != JFileChooser.APPROVE_OPTION) return;

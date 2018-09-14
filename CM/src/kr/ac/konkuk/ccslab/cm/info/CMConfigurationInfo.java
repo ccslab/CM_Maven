@@ -39,7 +39,7 @@ public class CMConfigurationInfo {
 	private String m_strDBName;
 	
 	// Default path for file transfer
-	private String m_strFilePath;
+	private Path m_transFileHome;
 	// File transfer scheme
 	private int m_bFileTransferScheme;
 	// File append scheme
@@ -79,7 +79,7 @@ public class CMConfigurationInfo {
 		m_nDBPort = -1;
 		m_strDBName = "";
 		
-		m_strFilePath = ".";
+		m_transFileHome = Paths.get(".");
 		m_bFileTransferScheme = 0;
 		m_bFileAppendScheme = 0;
 		
@@ -414,28 +414,19 @@ public class CMConfigurationInfo {
 
 	/////////////////////////////////////////////////////////////////////
 	
-	public void setFilePath(String path)
+	public void setTransferedFileHome(Path filePath)
 	{
-		//m_strFilePath = path;
-		StringTokenizer tokenizer = new StringTokenizer(path, "/\\");
-		StringBuffer sbuf = new StringBuffer();
-		while(tokenizer.hasMoreTokens())
-		{
-			sbuf.append(tokenizer.nextToken());
-			if(tokenizer.countTokens() > 0)
-				sbuf.append(File.separator);				
-		}
-		m_strFilePath = sbuf.toString();
+		m_transFileHome = filePath;
 		
 		if(CMInfo._CM_DEBUG)
-			System.out.println("CMConfigurationInfo.setFilePath(): "+m_strFilePath);
+			System.out.println("CMConfigurationInfo.setTransferedFileHome(): "+m_transFileHome.toString());
 		
 		return;
 	}
 	
-	public String getFilePath()
+	public Path getTransferedFileHome()
 	{
-		return m_strFilePath;
+		return m_transFileHome;
 	}
 	
 	public void setFileTransferScheme(int bScheme)
