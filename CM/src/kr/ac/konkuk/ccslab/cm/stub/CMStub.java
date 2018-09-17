@@ -66,6 +66,12 @@ public class CMStub {
 	 */
 	public void terminateCM()
 	{
+		if(!m_cmInfo.isStarted())
+		{
+			System.err.println("CMStub.terminate(), CM is not started yet!");
+			return;
+		}
+		
 		CMInteractionManager.terminate(m_cmInfo);
 		
 		// terminate threads

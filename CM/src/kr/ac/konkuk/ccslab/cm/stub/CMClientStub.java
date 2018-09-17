@@ -108,6 +108,12 @@ public class CMClientStub extends CMStub {
 	{
 		boolean bRet = false;
 		
+		if(m_cmInfo.isStarted())
+		{
+			System.err.println("CMClientStub.startCM(), already started!");
+			return false;
+		}
+
 		// Korean encoding
 		/*
 		System.setProperty("file.encoding", "euc_kr");
