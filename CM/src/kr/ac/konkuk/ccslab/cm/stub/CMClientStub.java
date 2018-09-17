@@ -91,6 +91,95 @@ public class CMClientStub extends CMStub {
 		
 		return bRet;
 	}
+	
+	/**
+	 * Sets server address to the client configuration file.
+	 * 
+	 * <p> This method must be called before an application starts CM because it updates the value of "SERVER_ADDR" 
+	 * field in the client configuration file (cm-client.conf).
+	 * 
+	 * 
+	 * @param strAddress - the server IP address
+	 * @return true if the server address is successfully set, or false otherwise.
+	 * @see CMClientStub#setServerPort(int)
+	 * @see CMClientStub#setServerInfo(String, int)
+	 */
+	public boolean setServerAddress(String strAddress)
+	{
+		boolean bRet = false;
+		
+		// check the current CM state
+		if(m_cmInfo.isStarted())
+		{
+			System.err.println("CMClientStub.setServerAddress(), CM already has started!");
+			return false;
+		}
+		
+		// get the configuration file path
+		Path confPath = getConfigurationHome().resolve("cm-client.conf");
+		
+		// set the server address
+		bRet = CMConfigurator.changeConfiguration(confPath.toString(), "SERVER_ADDR", strAddress);
+		
+		return bRet;
+	}
+	
+	/**
+	 * Sets server port number to the client configuration file.
+	 * 
+	 * <p> This method must be called before an application starts CM because it updates the value of "SERVER_PORT" 
+	 * field in the client configuration file (cm-client.conf). 
+	 * 
+	 * @param nPort - the server port number
+	 * @return true if the server port is successfully set, or false otherwise.
+	 * @see CMClientStub#setServerAddress(String)
+	 * @see CMClientStub#setServerInfo(String, int)
+	 */
+	public boolean setServerPort(int nPort)
+	{
+		boolean bRet = false;
+		
+		// check the current CM state
+		if(m_cmInfo.isStarted())
+		{
+			System.err.println("CMClientStub.setServerPort(), CM already has started!");
+			return false;
+		}
+		
+		// get the configuration file path
+		Path confPath = getConfigurationHome().resolve("cm-client.conf");
+				
+		// set the server address
+		bRet = CMConfigurator.changeConfiguration(confPath.toString(), "SERVER_PORT", String.valueOf(nPort));
+		
+		return bRet;
+	}
+	
+	/**
+	 * Sets server address and port number to the client configuration file.
+	 * 
+	 * <p> This method must be called before an application starts CM because it updates the values of "SERVER_ADDR"  
+	 * and "SERVER_PORT" fields in the client configuration file (cm-client.conf). 
+	 * 
+	 * @param strAddress - the server IP address
+	 * @param nPort - the server port number
+	 * @return true if the server address and port number are successfully set, or false otherwise.
+	 * @see CMClientStub#setServerAddress(String)
+	 * @see CMClientStub#setServerPort(int)
+	 */
+	public boolean setServerInfo(String strAddress, int nPort)
+	{
+		boolean bRet = false;
+		
+		bRet = setServerAddress(strAddress);
+		if(!bRet) return false;
+		
+		bRet = setServerPort(nPort);
+		if(!bRet) return false;
+		
+		return bRet;
+	}
+
 
 	/**
 	 * Initializes and starts the client CM.
