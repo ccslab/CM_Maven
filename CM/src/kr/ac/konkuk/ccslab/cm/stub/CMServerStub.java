@@ -124,6 +124,8 @@ public class CMServerStub extends CMStub {
 		CMCommManager.startReceivingMessage(m_cmInfo);
 		CMCommManager.startSendingMessage(m_cmInfo);
 		
+		m_cmInfo.setStarted(true);
+		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMServerStub.startCM(), succeeded.");
 		

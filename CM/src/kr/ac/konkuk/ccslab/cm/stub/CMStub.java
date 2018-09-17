@@ -92,6 +92,8 @@ public class CMStub {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		m_cmInfo.setStarted(false);
 	}
 	
 	// set/get methods

@@ -115,6 +115,8 @@ public class CMInfo {
 	
 	// application event handler
 	private CMEventHandler m_eventHandler;
+	// status info
+	private boolean m_bStarted;
 	
 	public CMInfo()
 	{
@@ -125,6 +127,9 @@ public class CMInfo {
 		m_commInfo = new CMCommInfo();
 		m_eventInfo = new CMEventInfo();
 		m_interactionInfo = new CMInteractionInfo();
+		
+		m_eventHandler = null;
+		m_bStarted = false;
 	}
 	
 	public CMConfigurationInfo getConfigurationInfo()
@@ -170,5 +175,15 @@ public class CMInfo {
 	public CMEventHandler getEventHandler()
 	{
 		return m_eventHandler;
+	}
+	
+	public void setStarted(boolean bStarted)
+	{
+		m_bStarted = bStarted;
+	}
+	
+	public boolean isStarted()
+	{
+		return m_bStarted;
 	}
 }

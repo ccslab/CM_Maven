@@ -10,7 +10,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMConfigurator {
 	
-	// initialize field values of server configuration or client configuration
+	// initialize field values of server configuration or client configuration.
+	// set field values of the given configuration file to the CMConfigurationInfo object.
 	public static boolean init(String strConfFilePath, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -161,6 +162,7 @@ public class CMConfigurator {
 		return true;
 	}
 	
+	// get a configuration field value of the given configuration file
 	public static String getConfiguration(String strConfFilePath, String fieldName)
 	{
 		FileInputStream fis;
@@ -199,6 +201,7 @@ public class CMConfigurator {
 		return strValue;
 	}
 	
+	// get all configuration field values of the given configuration file
 	public static String[] getConfigurations(String strConfFilePath)
 	{ 
 		FileInputStream fis;
@@ -276,6 +279,7 @@ public class CMConfigurator {
 		return strFieldValuePairs;
 	}
 	
+	// change a configuration field value in the given configuration file.
 	public static boolean changeConfiguration(String strConfFilePath, String strField, String strValue)
 	{
 		boolean bRet = false;
@@ -346,6 +350,7 @@ public class CMConfigurator {
 		return bRet;
 	}
 
+	// check whether the server info in the CMConfigurationInfo object is the default server or not.
 	public static boolean isDServer(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
