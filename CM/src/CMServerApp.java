@@ -74,6 +74,9 @@ public class CMServerApp {
 			case 0:
 				printAllMenus();
 				break;
+			case 100:
+				startCM();
+				break;
 			case 999:
 				terminateCM();
 				return;
@@ -171,7 +174,7 @@ public class CMServerApp {
 		System.out.print("---------------------------------- Help\n");
 		System.out.print("0: show all menus\n");
 		System.out.print("---------------------------------- Start/Stop\n");
-		System.out.print("999: terminate CM\n");
+		System.out.print("100: strat CM, 999: terminate CM\n");
 		System.out.print("---------------------------------- Information\n");
 		System.out.print("1: show session information, 2: show group information\n");
 		System.out.print("3: test input network throughput, 4: test output network throughput\n");
@@ -191,6 +194,17 @@ public class CMServerApp {
 		System.out.print("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
 		System.out.print("103: start SNS user access simulation and measure prefetch accuracy\n");
 		System.out.print("104: start and write recent SNS access history simulation to CM DB\n");
+	}
+	
+	public void startCM()
+	{
+		boolean bRet = m_serverStub.startCM();
+		if(!bRet)
+		{
+			System.err.println("CM initialization error!");
+			return;
+		}
+		startTest();
 	}
 	
 	public void terminateCM()
@@ -1247,13 +1261,7 @@ public class CMServerApp {
 		CMServerApp server = new CMServerApp();
 		CMServerStub cmStub = server.getServerStub();
 		cmStub.setEventHandler(server.getServerEventHandler());
-		boolean bRet = cmStub.startCM();
-		if(!bRet)
-		{
-			System.err.println("CM initialization error!");
-			return;
-		}
-		server.startTest();
+		server.startCM();
 		
 		System.out.println("Server application is terminated.");
 	}

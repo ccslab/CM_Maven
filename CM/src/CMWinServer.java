@@ -79,6 +79,11 @@ public class CMWinServer extends JFrame {
 		
 		setVisible(true);
 
+		// create CM stub object and set the event handler
+		m_serverStub = new CMServerStub();
+		m_eventHandler = new CMWinServerEventHandler(m_serverStub, this);
+		m_uaSim = new CMSNSUserAccessSimulator();
+
 		// start cm
 		startCM();		
 	}
@@ -366,10 +371,6 @@ public class CMWinServer extends JFrame {
 		boolean bRet = false;
 		
 		// start cm
-		m_serverStub = new CMServerStub();
-		m_eventHandler = new CMWinServerEventHandler(m_serverStub, this);
-		m_uaSim = new CMSNSUserAccessSimulator();
-
 		bRet = m_serverStub.startCM();
 		if(!bRet)
 		{

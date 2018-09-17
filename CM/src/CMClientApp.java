@@ -83,6 +83,9 @@ public class CMClientApp {
 			case 0:
 				printAllMenus();
 				break;
+			case 100:
+				testStartCM();
+				break;
 			case 999:
 				testTerminateCM();
 				break;			
@@ -289,7 +292,7 @@ public class CMClientApp {
 		System.out.println("---------------------------------- Help");
 		System.out.println("0: show all menus");
 		System.out.println("---------------------------------- Start/Stop");
-		System.out.println("999: terminate CM");
+		System.out.println("100: start CM, 999: terminate CM");
 		System.out.println("---------------------------------- Connection");
 		System.out.println("1: connect to default server, 2: disconnect from default server");
 		System.out.println("3: connect to designated server, 4: disconnect from designated server");
@@ -452,6 +455,17 @@ public class CMClientApp {
 		else
 			System.err.println("failed the logout request!");
 		System.out.println("======");
+	}
+	
+	public void testStartCM()
+	{
+		boolean bRet = m_clientStub.startCM();
+		if(!bRet)
+		{
+			System.err.println("CM initialization error!");
+			return;
+		}
+		startTest();
 	}
 	
 	public void testTerminateCM()
@@ -2695,13 +2709,7 @@ public class CMClientApp {
 		CMClientApp client = new CMClientApp();
 		CMClientStub cmStub = client.getClientStub();
 		cmStub.setEventHandler(client.getClientEventHandler());
-		boolean bRet = cmStub.startCM();
-		if(!bRet)
-		{
-			System.err.println("CM initialization error!");
-			return;
-		}
-		client.startTest();
+		client.testStartCM();
 		
 		System.out.println("Client application is terminated.");
 	}

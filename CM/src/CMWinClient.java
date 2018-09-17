@@ -161,6 +161,11 @@ public class CMWinClient extends JFrame {
 		
 		setVisible(true);
 
+		// create a CM object and set the event handler
+		m_clientStub = new CMClientStub();
+		m_eventHandler = new CMWinClientEventHandler(m_clientStub, this);
+		
+		// start CM
 		testStartCM();
 		
 		m_inTextField.requestFocus();
@@ -1002,9 +1007,6 @@ public class CMWinClient extends JFrame {
 	public void testStartCM()
 	{
 		boolean bRet = false;
-		
-		m_clientStub = new CMClientStub();
-		m_eventHandler = new CMWinClientEventHandler(m_clientStub, this);
 		
 		bRet = m_clientStub.startCM();
 		if(!bRet)
