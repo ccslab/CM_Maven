@@ -125,6 +125,20 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Gets server address from the client configuration file.
+	 * 
+	 * @return server address
+	 * @see CMClientStub#setServerAddress(String)
+	 */
+	public String getServerAddress()
+	{
+		String strServerAddress = null;
+		Path confPath = getConfigurationHome().resolve("cm-client.conf");
+		strServerAddress = CMConfigurator.getConfiguration(confPath.toString(), "SERVER_ADDR");
+		return strServerAddress;
+	}
+	
+	/**
 	 * Sets server port number to the client configuration file.
 	 * 
 	 * <p> This method must be called before an application starts CM because it updates the value of "SERVER_PORT" 
@@ -153,6 +167,20 @@ public class CMClientStub extends CMStub {
 		bRet = CMConfigurator.changeConfiguration(confPath.toString(), "SERVER_PORT", String.valueOf(nPort));
 		
 		return bRet;
+	}
+	
+	/**
+	 * Gets server port number from the client configuration file.
+	 * 
+	 * @return server port number
+	 * @see CMClientStub#setServerPort(int)
+	 */
+	public int getServerPort()
+	{
+		int nServerPort = -1;
+		Path confPath = getConfigurationHome().resolve("cm-client.conf");
+		nServerPort = Integer.parseInt(CMConfigurator.getConfiguration(confPath.toString(), "SERVER_PORT"));
+		return nServerPort;
 	}
 	
 	/**

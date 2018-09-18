@@ -370,6 +370,31 @@ public class CMWinServer extends JFrame {
 	{
 		boolean bRet = false;
 		
+		// get current server info from the server configuration file
+		String strCurServerAddress = null;
+		int nCurServerPort = -1;
+		
+		strCurServerAddress = m_serverStub.getServerAddress();
+		nCurServerPort = m_serverStub.getServerPort();
+		
+		// ask the user if he/she would like to change the server info
+		JTextField serverAddressTextField = new JTextField(strCurServerAddress);
+		JTextField serverPortTextField = new JTextField(String.valueOf(nCurServerPort));
+		Object msg[] = {
+				"Server Address: ", serverAddressTextField,
+				"Server Port: ", serverPortTextField
+		};
+		int option = JOptionPane.showConfirmDialog(null, msg, "Server Information", JOptionPane.OK_CANCEL_OPTION);
+
+		// update the server info if the user would like to do
+		if (option == JOptionPane.OK_OPTION) 
+		{
+			String strNewServerAddress = serverAddressTextField.getText();
+			int nNewServerPort = Integer.parseInt(serverPortTextField.getText());
+			if(!strNewServerAddress.equals(strCurServerAddress) || nNewServerPort != nCurServerPort)
+				m_serverStub.setServerInfo(strNewServerAddress, nNewServerPort);
+		}
+		
 		// start cm
 		bRet = m_serverStub.startCM();
 		if(!bRet)

@@ -198,6 +198,39 @@ public class CMServerApp {
 	
 	public void startCM()
 	{
+		// get current server info from the server configuration file
+		String strCurServerAddress = null;
+		int nCurServerPort = -1;
+		String strNewServerAddress = null;
+		String strNewServerPort = null;
+		
+		strCurServerAddress = m_serverStub.getServerAddress();
+		nCurServerPort = m_serverStub.getServerPort();
+		
+		// ask the user if he/she would like to change the server info
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.println("========== start CM");
+		System.out.println("current server address: "+strCurServerAddress);
+		System.out.println("current server port: "+nCurServerPort);
+		
+		try {
+			System.out.print("new server address (enter for current value): ");
+			strNewServerAddress = br.readLine().trim();
+			System.out.print("new server port (enter for current value): ");
+			strNewServerPort = br.readLine().trim();
+
+			// update the server info if the user would like to do
+			if(!strNewServerAddress.isEmpty() && !strNewServerAddress.equals(strCurServerAddress))
+				m_serverStub.setServerAddress(strNewServerAddress);
+			if(!strNewServerPort.isEmpty() && Integer.parseInt(strNewServerPort) != nCurServerPort)
+				m_serverStub.setServerPort(Integer.parseInt(strNewServerPort));
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		boolean bRet = m_serverStub.startCM();
 		if(!bRet)
 		{
