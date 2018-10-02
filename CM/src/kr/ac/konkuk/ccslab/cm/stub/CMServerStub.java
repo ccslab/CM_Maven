@@ -60,7 +60,7 @@ public class CMServerStub extends CMStub {
 	 * If a server receives a file, CM stores the file in a sub-directory of the default path. 
 	 * The sub-directory name is a sender (client) name.
 	 * 
-	 * @param filePath - the file path
+	 * @param dir - the file path
 	 * @return true if the file path is successfully updated both in the CMConfigurationInfo class and 
 	 * the configuration file (cm-server.conf), or false otherwise.
 	 * @see CMStub#getTransferedFileHome()
