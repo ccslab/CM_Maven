@@ -214,7 +214,7 @@ public class CMServerStub extends CMStub {
 			return false;
 		}
 		// Korean encoding
-		System.setProperty("file.encoding", "euc_kr");
+		System.setProperty("file.encoding", "UTF-8");
 		Field charset;
 		try {
 			charset = Charset.class.getDeclaredField("defaultCharset");
