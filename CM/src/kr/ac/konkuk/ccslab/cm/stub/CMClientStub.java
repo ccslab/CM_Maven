@@ -6,8 +6,11 @@ import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -268,8 +271,30 @@ public class CMClientStub extends CMStub {
 					+nAvailableProcessors+").");
 		}
 
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		Callable<Boolean> task = new Callable<Boolean>() {
+			@Override
+			public Boolean call()
+			{
+				boolean ret = CMInteractionManager.init(m_cmInfo);
+				return ret;
+			}
+		};
+		Future<Boolean> future = es.submit(task);
+		try {
+			bRet = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//////////
 
-		bRet = CMInteractionManager.init(m_cmInfo);
+		//bRet = CMInteractionManager.init(m_cmInfo);
+		
 		if(!bRet)
 			return false;
 
