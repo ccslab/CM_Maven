@@ -7,6 +7,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
@@ -18,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -234,6 +237,18 @@ public class CMServerStub extends CMStub {
 		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
 		if(!bRet)
 			return false;
+		
+		// create an executor service object
+		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		ExecutorService es = threadInfo.getExecutorService();
+		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
+		es = Executors.newFixedThreadPool(nAvailableProcessors);
+		threadInfo.setExecutorService(es);
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMClientStub.startCM(), executor service created; # available processors("
+					+nAvailableProcessors+").");
+		}
 
 		bRet = CMInteractionManager.init(m_cmInfo);
 		if(!bRet)
