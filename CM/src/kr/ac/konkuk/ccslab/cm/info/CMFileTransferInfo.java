@@ -13,7 +13,6 @@ public class CMFileTransferInfo {
 	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable; // key is the receiver name
 	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable; // key is the sender name
 	private boolean m_bCancelSend;	// flag for canceling file push with the default channel
-	private ExecutorService m_executorService;
 	
 	private long m_lStartTime;	// used for measuring the delay of the file transfer
 	
@@ -22,22 +21,11 @@ public class CMFileTransferInfo {
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
 		m_bCancelSend = false;
-		m_executorService = null;
 		m_lStartTime = -1;
 	}
 	
 	////////// set/get methods
-	
-	public void setExecutorService(ExecutorService es)
-	{
-		m_executorService = es;
-	}
-	
-	public ExecutorService getExecutorService()
-	{
-		return m_executorService;
-	}
-	
+		
 	public void setStartTime(long time)
 	{
 		m_lStartTime = time;

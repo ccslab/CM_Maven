@@ -6,6 +6,8 @@ import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -26,6 +28,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -253,6 +256,19 @@ public class CMClientStub extends CMStub {
 		if(!bRet)
 			return false;
 
+		// create an executor service object
+		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		ExecutorService es = threadInfo.getExecutorService();
+		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
+		es = Executors.newFixedThreadPool(nAvailableProcessors);
+		threadInfo.setExecutorService(es);
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMClientStub.startCM(), executor service created; # available processors("
+					+nAvailableProcessors+").");
+		}
+
+
 		bRet = CMInteractionManager.init(m_cmInfo);
 		if(!bRet)
 			return false;
@@ -279,6 +295,10 @@ public class CMClientStub extends CMStub {
 	public void terminateCM()
 	{
 		super.terminateCM();
+
+		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		ExecutorService es = threadInfo.getExecutorService();
+		es.shutdown();	// need to check
 
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMClientStub.terminateCM(), succeeded.");

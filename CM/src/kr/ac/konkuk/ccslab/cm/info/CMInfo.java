@@ -112,6 +112,7 @@ public class CMInfo {
 	private CMCommInfo m_commInfo;
 	private CMEventInfo m_eventInfo;
 	private CMInteractionInfo m_interactionInfo;
+	private CMThreadInfo m_threadInfo;
 	
 	// application event handler
 	private CMEventHandler m_eventHandler;
@@ -127,6 +128,7 @@ public class CMInfo {
 		m_commInfo = new CMCommInfo();
 		m_eventInfo = new CMEventInfo();
 		m_interactionInfo = new CMInteractionInfo();
+		m_threadInfo = new CMThreadInfo();
 		
 		m_eventHandler = null;
 		m_bStarted = false;
@@ -165,6 +167,11 @@ public class CMInfo {
 	public CMInteractionInfo getInteractionInfo()
 	{
 		return m_interactionInfo;
+	}
+	
+	public CMThreadInfo getThreadInfo()
+	{
+		return m_threadInfo;
 	}
 	
 	public void setEventHandler(CMEventHandler handler)

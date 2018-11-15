@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -25,6 +27,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 
 import java.sql.*;
 
@@ -108,7 +111,7 @@ public class CMInteractionManager {
 	
 	public static void terminate(CMInfo cmInfo)
 	{
-		CMFileTransferManager.terminate(cmInfo);
+		CMFileTransferManager.terminate(cmInfo);		
 	}
 	
 	public static boolean connectDefaultServer(CMInfo cmInfo)

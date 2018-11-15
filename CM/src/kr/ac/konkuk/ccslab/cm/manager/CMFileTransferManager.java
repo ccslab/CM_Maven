@@ -1,13 +1,10 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.*;
 import java.nio.channels.SocketChannel;
-import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -28,6 +25,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMRecvFileTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMSendFileTask;
 
@@ -36,7 +34,6 @@ public class CMFileTransferManager {
 	public static void init(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		String strPath = confInfo.getTransferedFileHome().toString();
 		
 		// if the default directory does not exist, create it.
@@ -58,26 +55,13 @@ public class CMFileTransferManager {
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("A default path for the file transfer: "+strPath);
-		
-		// create an executor service object
-		ExecutorService es = fInfo.getExecutorService();
-		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
-		es = Executors.newFixedThreadPool(nAvailableProcessors);
-		fInfo.setExecutorService(es);
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMFileTransferManager.init(), executor service created; # available processors("
-					+nAvailableProcessors+").");
-		}
-				
+						
 		return;
 	}
 	
 	public static void terminate(CMInfo cmInfo)
 	{
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		ExecutorService es = fInfo.getExecutorService();
-		es.shutdown();	// need to check
+		// nothing to do
 	}
 	
 	public static boolean requestFile(String strFileName, String strFileOwner, CMInfo cmInfo)
@@ -1576,7 +1560,6 @@ public class CMFileTransferManager {
 	
 	private static void processREQUEST_FILE_TRANSFER_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
 		if(CMInfo._CM_DEBUG)
@@ -1794,6 +1777,7 @@ public class CMFileTransferManager {
 		int nContentID = -1;
 		long lRecvSize = -1;	// received size by the receiver
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMThreadInfo threadInfo = cmInfo.getThreadInfo();
 		CMSendFileInfo sInfo = null;
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		
@@ -1831,7 +1815,7 @@ public class CMFileTransferManager {
 		// start a dedicated sending thread
 		Future<CMSendFileInfo> future = null;
 		CMSendFileTask sendFileTask = new CMSendFileTask(sInfo, commInfo.getSendBlockingEventQueue());
-		future = fInfo.getExecutorService().submit(sendFileTask, sInfo);
+		future = threadInfo.getExecutorService().submit(sendFileTask, sInfo);
 		sInfo.setSendTaskResult(future);		
 
 		return;		
@@ -1953,12 +1937,12 @@ public class CMFileTransferManager {
 	
 	private static void sendSTART_FILE_TRANSFER_CHAN_ACK(CMRecvFileInfo rfInfo, CMInfo cmInfo)
 	{
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMThreadInfo threadInfo = cmInfo.getThreadInfo();
 
 		// start a dedicated thread to receive the file
 		Future<CMRecvFileInfo> future = null;
 		CMRecvFileTask recvFileTask = new CMRecvFileTask(rfInfo);
-		future = fInfo.getExecutorService().submit(recvFileTask, rfInfo);
+		future = threadInfo.getExecutorService().submit(recvFileTask, rfInfo);
 		rfInfo.setRecvTaskResult(future);
 		
 		// send ack event
