@@ -253,11 +253,6 @@ public class CMClientStub extends CMStub {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-client.conf").toString();
-		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
-		if(!bRet)
-			return false;
 
 		// create an executor service object
 		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
@@ -273,7 +268,34 @@ public class CMClientStub extends CMStub {
 
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
+		
+		// initialize CMConfigurator
+		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-client.conf").toString();
+		
 		Callable<Boolean> task = new Callable<Boolean>() {
+			@Override
+			public Boolean call()
+			{
+				boolean ret = CMConfigurator.init(strConfPath, m_cmInfo);
+				return ret;
+			}
+		};
+		Future<Boolean> future = es.submit(task);
+		try {
+			bRet = future.get();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ExecutionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		if(!bRet)
+			return false;
+
+		// initialize CMInteractionManager
+		task = new Callable<Boolean>() {
 			@Override
 			public Boolean call()
 			{
@@ -281,7 +303,7 @@ public class CMClientStub extends CMStub {
 				return ret;
 			}
 		};
-		Future<Boolean> future = es.submit(task);
+		future = es.submit(task);
 		try {
 			bRet = future.get();
 		} catch (InterruptedException e) {
@@ -291,13 +313,13 @@ public class CMClientStub extends CMStub {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//////////
 
-		//bRet = CMInteractionManager.init(m_cmInfo);
-		
 		if(!bRet)
 			return false;
 
+		//////////
+
+		// start processing, sending, and receiving threads
 		CMEventManager.startReceivingEvent(m_cmInfo);
 		CMCommManager.startReceivingMessage(m_cmInfo);
 		CMCommManager.startSendingMessage(m_cmInfo);
