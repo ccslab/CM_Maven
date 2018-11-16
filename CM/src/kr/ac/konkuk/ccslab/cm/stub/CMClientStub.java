@@ -367,7 +367,35 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer()
 	{
-		return CMInteractionManager.connectDefaultServer(m_cmInfo);
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		Callable<Boolean> task = new Callable<Boolean>() {
+			@Override
+			public Boolean call()
+			{
+				Boolean bRet = CMInteractionManager.connectDefaultServer(m_cmInfo);
+				return bRet;
+			}
+		};
+		
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(task);
+		boolean bRet = false;
+		try {
+			bRet = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//////////
+		
+		//return CMInteractionManager.connectDefaultServer(m_cmInfo);
+		return bRet;
+		
 	}
 	
 	/**
@@ -381,7 +409,35 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean disconnectFromServer()
 	{
-		return CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		Callable<Boolean> task = new Callable<Boolean>() {
+			@Override
+			public Boolean call()
+			{
+				Boolean bRet = CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+				return bRet;
+			}
+		};
+		
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(task);
+		boolean bRet = false;
+		try {
+			bRet = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//////////
+
+		//return CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+		
+		return bRet;
 	}
 	
 	/**
@@ -2675,16 +2731,40 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer(String strServerName)
 	{
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
 		
-		boolean ret = false;
-		if( strServerName.equals("SERVER") )	// if a default server
-		{
-			ret = CMInteractionManager.connectDefaultServer(m_cmInfo);
-			return ret;
+		Callable<Boolean> task = new Callable<Boolean>() {
+			@Override
+			public Boolean call()
+			{
+				Boolean ret = false;
+				if( strServerName.equals("SERVER") )	// if a default server
+				{
+					ret = CMInteractionManager.connectDefaultServer(m_cmInfo);
+					return ret;
+				}
+				
+				ret = CMInteractionManager.connectAddServer(strServerName, m_cmInfo);
+				return ret;
+			}
+		};
+		
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(task);
+		boolean bRet = false;
+		try {
+			bRet = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		//////////
 		
-		ret = CMInteractionManager.connectAddServer(strServerName, m_cmInfo);
-		return ret;
+		return bRet;
 	}
 	
 	/**
@@ -2700,15 +2780,41 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean disconnectFromServer(String strServerName)
 	{
-		boolean ret = false;
-		if( strServerName.equals("SERVER") )	// if a default server
-		{
-			ret = CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
-			return ret;
-		}
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		Callable<Boolean> task = new Callable<Boolean>() {
+			@Override
+			public Boolean call()
+			{
+				Boolean ret = false;
+				if( strServerName.equals("SERVER") )	// if a default server
+				{
+					ret = CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+					return ret;
+				}
 
-		ret = CMInteractionManager.disconnectFromAddServer(strServerName, m_cmInfo);
-		return ret;
+				ret = CMInteractionManager.disconnectFromAddServer(strServerName, m_cmInfo);
+				return ret;
+			}
+		};
+		
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(task);
+		boolean bRet = false;
+		try {
+			bRet = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//////////
+		
+		return bRet;
+		
 	}
 	
 	/**

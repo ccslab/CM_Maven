@@ -1,5 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.stub;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -72,7 +75,31 @@ public class CMStub {
 			return;
 		}
 		
-		CMInteractionManager.terminate(m_cmInfo);
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		// terminate the interaction manager
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Runnable task = new Runnable() {
+			@Override
+			public void run()
+			{
+				CMInteractionManager.terminate(m_cmInfo);
+			}
+		};
+		Future<?> future = es.submit(task);
+		try {
+			future.get();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ExecutionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		//CMInteractionManager.terminate(m_cmInfo);		
+		//////////
 		
 		// terminate threads
 		CMEventInfo eventInfo = m_cmInfo.getEventInfo();
@@ -87,8 +114,31 @@ public class CMStub {
 		if(byteSender != null)
 			byteSender.interrupt();
 		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
 		// close all channels
-		CMCommManager.terminate(m_cmInfo);
+
+		task = new Runnable() {
+			@Override
+			public void run() {
+				CMCommManager.terminate(m_cmInfo);
+			}
+		};
+		future = es.submit(task);
+		try {
+			future.get();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ExecutionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		//CMCommManager.terminate(m_cmInfo);
+
+		//////////
 		
 		// deregister all cancelled keys in the selector
 		Selector sel = commInfo.getSelector();
