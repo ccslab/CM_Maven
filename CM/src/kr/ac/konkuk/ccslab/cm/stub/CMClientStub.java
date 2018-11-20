@@ -40,8 +40,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
-import kr.ac.konkuk.ccslab.cm.thread.CMOpenBlockSocketChannelTask;
-import kr.ac.konkuk.ccslab.cm.thread.CMOpenNonBlockSocketChannelTask;
+import kr.ac.konkuk.ccslab.cm.thread.CMOpenChannelTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMRemoveSocketChannelTask;
 
 /**
@@ -1378,12 +1377,12 @@ public class CMClientStub extends CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
-		CMOpenNonBlockSocketChannelTask task = new CMOpenNonBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, m_cmInfo);
 		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
-		Future<SocketChannel> future = es.submit(task);
+		Future<SelectableChannel> future = es.submit(task);
 		try {
-			sc = future.get();
+			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1484,12 +1483,12 @@ public class CMClientStub extends CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
-		CMOpenNonBlockSocketChannelTask task = new CMOpenNonBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, m_cmInfo);
 		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
-		Future<SocketChannel> future = es.submit(task);
+		Future<SelectableChannel> future = es.submit(task);
 		try {
-			sc = future.get();
+			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -1739,12 +1738,12 @@ public class CMClientStub extends CMStub {
 		
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
-		CMOpenBlockSocketChannelTask task = new CMOpenBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), true, m_cmInfo);
 		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
-		Future<SocketChannel> future = es.submit(task);
+		Future<SelectableChannel> future = es.submit(task);
 		try {
-			sc = future.get();
+			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1840,12 +1839,12 @@ public class CMClientStub extends CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
-		CMOpenBlockSocketChannelTask task = new CMOpenBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), true, m_cmInfo);
 		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
-		Future<SocketChannel> future = es.submit(task);
+		Future<SelectableChannel> future = es.submit(task);
 		try {
-			sc = future.get();
+			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
