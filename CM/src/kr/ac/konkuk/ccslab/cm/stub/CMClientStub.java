@@ -40,6 +40,9 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
+import kr.ac.konkuk.ccslab.cm.thread.CMOpenBlockSocketChannelTask;
+import kr.ac.konkuk.ccslab.cm.thread.CMOpenNonBlockSocketChannelTask;
+import kr.ac.konkuk.ccslab.cm.thread.CMRemoveSocketChannelTask;
 
 /**
  * This class provides APIs, through which a client developer can access most of the communication 
@@ -1363,31 +1366,44 @@ public class CMClientStub extends CMStub {
 			}			
 		}
 		
-		try {
-			scInfo = serverInfo.getNonBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nChKey);
-			if(sc != null)
-			{
-				System.err.println("CMClientStub.addNonBlockSocketChannel(), channel key("+nChKey
-						+") already exists.");
-				return false;
-			}
-			
-			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
-			if(sc == null)
-			{
-				System.err.println("CMClientStub.addNonBlockSocketChannel(), failed!: key("+nChKey+"), server("
-						+strServer+")");
-				return false;
-			}
-			scInfo.addChannel(nChKey, sc);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		scInfo = serverInfo.getNonBlockSocketChannelInfo();
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc != null)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), channel key("+nChKey
+					+") already exists.");
 			return false;
 		}
+		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		CMOpenNonBlockSocketChannelTask task = new CMOpenNonBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SocketChannel> future = es.submit(task);
+		try {
+			sc = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+		//		serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+
+		//////////
+		
+		if(sc == null)
+		{
+			System.err.println("CMClientStub.addNonBlockSocketChannel(), failed!: key("+nChKey+"), server("
+					+strServer+")");
+			return false;
+		}
+		scInfo.addChannel(nChKey, sc);
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
@@ -1456,31 +1472,44 @@ public class CMClientStub extends CMStub {
 			}			
 		}
 		
-		try {
-			scInfo = serverInfo.getNonBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nChKey);
-			if(sc != null)
-			{
-				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), channel key("+nChKey
-						+") already exists.");
-				return null;
-			}
-			
-			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
-			if(sc == null)
-			{
-				System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed!: key("+nChKey+"), server("
-						+strServer+")");
-				return null;
-			}
-			scInfo.addChannel(nChKey, sc);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		scInfo = serverInfo.getNonBlockSocketChannelInfo();
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc != null)
+		{
+			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), channel key("+nChKey
+					+") already exists.");
 			return null;
 		}
+		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		CMOpenNonBlockSocketChannelTask task = new CMOpenNonBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SocketChannel> future = es.submit(task);
+		try {
+			sc = future.get();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ExecutionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		//sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+		//		serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+
+		//////////
+		
+		if(sc == null)
+		{
+			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed!: key("+nChKey+"), server("
+					+strServer+")");
+			return null;
+		}
+		scInfo.addChannel(nChKey, sc);
 
 		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK);
 
@@ -1527,7 +1556,20 @@ public class CMClientStub extends CMStub {
 		else
 		{
 			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed: return code("+nReturnCode+")");
-			scInfo.removeChannel(nChKey);
+			////////// for Android client where network-related methods must be called in a separate thread
+			////////// rather than the MainActivity thread
+			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveSocketChannelTask(scInfo, nChKey));
+			try {
+				futureRemoveChannel.get();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//scInfo.removeChannel(nChKey);
+			//////////
 			sc = null;
 		}
 		
@@ -1574,7 +1616,26 @@ public class CMClientStub extends CMStub {
 		}
 		
 		scInfo = serverInfo.getNonBlockSocketChannelInfo();
-		result = scInfo.removeChannel(nChKey);
+		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(new CMRemoveSocketChannelTask(scInfo, nChKey));
+		try {
+			result = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//result = scInfo.removeChannel(nChKey);
+		
+		//////////
+		
 		if(result)
 		{
 			if(CMInfo._CM_DEBUG)
@@ -1668,29 +1729,41 @@ public class CMClientStub extends CMStub {
 			}			
 		}
 		
-		try {
-			scInfo = serverInfo.getBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nChKey);
-			if(sc != null)
-			{
-				System.err.println("CMClientStub.addBlockSocketChannel(), channel key("+nChKey+") already exists.");
-				return false;
-			}
-			
-			sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
-			if(sc == null)
-			{
-				System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("+nChKey+"), server("+strServer+")");
-				return false;
-			}
-			scInfo.addChannel(nChKey, sc);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		scInfo = serverInfo.getBlockSocketChannelInfo();
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc != null)
+		{
+			System.err.println("CMClientStub.addBlockSocketChannel(), channel key("+nChKey+") already exists.");
 			return false;
 		}
+		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		CMOpenBlockSocketChannelTask task = new CMOpenBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SocketChannel> future = es.submit(task);
+		try {
+			sc = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+		//		serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		
+		//////////
+		
+		if(sc == null)
+		{
+			System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("+nChKey+"), server("+strServer+")");
+			return false;
+		}
+		scInfo.addChannel(nChKey, sc);
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
@@ -1756,30 +1829,43 @@ public class CMClientStub extends CMStub {
 			}			
 		}
 		
-		try {
-			scInfo = serverInfo.getBlockSocketChannelInfo();
-			sc = (SocketChannel) scInfo.findChannel(nChKey);
-			if(sc != null)
-			{
-				System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("+nChKey+") already exists.");
-				return null;
-			}
-			
-			sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-					serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
-			if(sc == null)
-			{
-				System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed!: key("+nChKey+"), server("
-						+strServer+")");
-				return null;
-			}
-			scInfo.addChannel(nChKey, sc);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		scInfo = serverInfo.getBlockSocketChannelInfo();
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc != null)
+		{
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("+nChKey+") already exists.");
 			return null;
 		}
+		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		CMOpenBlockSocketChannelTask task = new CMOpenBlockSocketChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SocketChannel> future = es.submit(task);
+		try {
+			sc = future.get();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ExecutionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		//sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
+		//		serverInfo.getServerAddress(), serverInfo.getServerPort(), m_cmInfo);
+		
+		//////////
+		
+		if(sc == null)
+		{
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed!: key("+nChKey+"), server("
+					+strServer+")");
+			return null;
+		}
+		scInfo.addChannel(nChKey, sc);
 
 		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
 
@@ -1826,7 +1912,22 @@ public class CMClientStub extends CMStub {
 		else
 		{
 			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed: return code("+nReturnCode+")");
-			scInfo.removeChannel(nChKey);
+			////////// for Android client where network-related methods must be called in a separate thread
+			////////// rather than the MainActivity thread
+			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveSocketChannelTask(scInfo, nChKey));
+			try {
+				futureRemoveChannel.get();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//scInfo.removeChannel(nChKey);
+			//////////
+			
 			sc = null;
 		}
 
