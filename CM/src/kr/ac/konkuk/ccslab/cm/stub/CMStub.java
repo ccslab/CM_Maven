@@ -500,34 +500,47 @@ public class CMStub {
 			return false;
 		}
 		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_MULTICAST_CHANNEL,
+				strChAddress, nChPort, false, m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SelectableChannel> future = es.submit(task);
 		try {
-			
-			// from here
-			mc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, strChAddress, 
-					nChPort, m_cmInfo);
-			if(mc == null)
-			{
-				System.err.println("CMStub.addMulticastChannel() failed.");
-				return false;
-			}
-			
-			result = mcInfo.addChannel(sockAddress, mc); 
-			if(result)
-			{
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMStub.addMulticastChannel(), succeeded. session("+strSession+"), group("
-							+strGroup+"), address("+strChAddress+"), port("+nChPort+")");					
-				}
-			}
-			else
-			{
-				System.err.println("CMStub.addMulticastChannel(), failed! session("+strSession+"), group("
-						+strGroup+"), address("+strChAddress+"), port("+nChPort+")");				
-			}
-		} catch (IOException e) {
+			mc = (DatagramChannel) future.get();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//mc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, strChAddress, 
+		//		nChPort, m_cmInfo);
+		
+		//////////
+		
+		if(mc == null)
+		{
+			System.err.println("CMStub.addMulticastChannel() failed.");
+			return false;
+		}
+		
+		result = mcInfo.addChannel(sockAddress, mc); 
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMStub.addMulticastChannel(), succeeded. session("+strSession+"), group("
+						+strGroup+"), address("+strChAddress+"), port("+nChPort+")");					
+			}
+		}
+		else
+		{
+			System.err.println("CMStub.addMulticastChannel(), failed! session("+strSession+"), group("
+					+strGroup+"), address("+strChAddress+"), port("+nChPort+")");				
 		}
 		
 		return result;
@@ -566,7 +579,25 @@ public class CMStub {
 		CMChannelInfo<InetSocketAddress> mcInfo = group.getMulticastChannelInfo();
 		sockAddress = new InetSocketAddress(strChAddress, nChPort);
 		
-		result = mcInfo.removeChannel(sockAddress);
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		// from here
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(new CMRemoveChannelTask(mcInfo, sockAddress));
+		try {
+			result = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//result = mcInfo.removeChannel(sockAddress);
+		
+		//////////
+		
 		if(result)
 		{
 			if(CMInfo._CM_DEBUG)
