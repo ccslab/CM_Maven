@@ -41,7 +41,7 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.thread.CMOpenChannelTask;
-import kr.ac.konkuk.ccslab.cm.thread.CMRemoveSocketChannelTask;
+import kr.ac.konkuk.ccslab.cm.thread.CMRemoveChannelTask;
 
 /**
  * This class provides APIs, through which a client developer can access most of the communication 
@@ -1557,7 +1557,7 @@ public class CMClientStub extends CMStub {
 			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), failed: return code("+nReturnCode+")");
 			////////// for Android client where network-related methods must be called in a separate thread
 			////////// rather than the MainActivity thread
-			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveSocketChannelTask(scInfo, nChKey));
+			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
 			try {
 				futureRemoveChannel.get();
 			} catch (InterruptedException e) {
@@ -1620,7 +1620,7 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 
 		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
-		Future<Boolean> future = es.submit(new CMRemoveSocketChannelTask(scInfo, nChKey));
+		Future<Boolean> future = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
 		try {
 			result = future.get();
 		} catch (InterruptedException e) {
@@ -1913,7 +1913,7 @@ public class CMClientStub extends CMStub {
 			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed: return code("+nReturnCode+")");
 			////////// for Android client where network-related methods must be called in a separate thread
 			////////// rather than the MainActivity thread
-			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveSocketChannelTask(scInfo, nChKey));
+			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
 			try {
 				futureRemoveChannel.get();
 			} catch (InterruptedException e) {

@@ -4,11 +4,11 @@ import java.util.concurrent.Callable;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 
-public class CMRemoveSocketChannelTask implements Callable<Boolean> {
+public class CMRemoveChannelTask implements Callable<Boolean> {
 	private CMChannelInfo<Integer> m_chInfo;
 	private int m_nChKey;
 	
-	public CMRemoveSocketChannelTask(CMChannelInfo<Integer> chInfo, int nChKey)
+	public CMRemoveChannelTask(CMChannelInfo<Integer> chInfo, int nChKey)
 	{
 		m_chInfo = chInfo;
 		m_nChKey = nChKey;

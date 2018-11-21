@@ -29,6 +29,8 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
+import kr.ac.konkuk.ccslab.cm.thread.CMOpenChannelTask;
+import kr.ac.konkuk.ccslab.cm.thread.CMRemoveChannelTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -235,29 +237,45 @@ public class CMStub {
 			System.err.println("CMStub.addNonBlockDatagramChannel(), channel key("+nChPort+") already exists.");
 			return null;
 		}
+		
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
+				confInfo.getMyAddress(), nChPort, false, m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SelectableChannel> future = es.submit(task);
 		try {
-			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
-					confInfo.getMyAddress(), nChPort, m_cmInfo);
-			if(dc == null)
-			{
-				System.err.println("CMStub.addNonBlockDatagramChannel(), failed.");
-				return null;
-			}
-			
-			result = nonBlockDCInfo.addChannel(nChPort, dc);
-			if(result)
-			{
-				if(CMInfo._CM_DEBUG)
-					System.out.println("CMStub.addNonBlockDatagramChannel(), succeeded. port("+nChPort+")");
-			}
-			else
-			{
-				System.err.println("CMStub.addNonBlockDatagramChannel(), failed! port("+nChPort+")");
-				return null;
-			}
-		} catch (IOException e) {
+			dc = (DatagramChannel) future.get();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
+		//		confInfo.getMyAddress(), nChPort, m_cmInfo);
+
+		//////////
+		
+		if(dc == null)
+		{
+			System.err.println("CMStub.addNonBlockDatagramChannel(), failed.");
+			return null;
+		}
+		
+		result = nonBlockDCInfo.addChannel(nChPort, dc);
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMStub.addNonBlockDatagramChannel(), succeeded. port("+nChPort+")");
+		}
+		else
+		{
+			System.err.println("CMStub.addNonBlockDatagramChannel(), failed! port("+nChPort+")");
+			return null;
 		}
 		
 		return dc;
@@ -280,7 +298,25 @@ public class CMStub {
 		CMChannelInfo<Integer> dcInfo = commInfo.getNonBlockDatagramChannelInfo();
 		boolean result = false;
 
-		result = dcInfo.removeChannel(nChPort); 
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(new CMRemoveChannelTask(dcInfo, nChPort));
+		try {
+			result = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//result = dcInfo.removeChannel(nChPort);
+		
+		//////////
+		
 		if(result)
 		{
 			if(CMInfo._CM_DEBUG)
@@ -316,30 +352,41 @@ public class CMStub {
 			System.err.println("CMStub.addBlockDatagramChannel(), channel key("+nChPort+") already exists.");
 			return null;
 		}
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
+				confInfo.getMyAddress(), nChPort, true, m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SelectableChannel> future = es.submit(task);
 		try {
-			dc = (DatagramChannel) CMCommManager.openBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
-					confInfo.getMyAddress(), nChPort, m_cmInfo);
-			if(dc == null)
-			{
-				System.err.println("CMStub.addBlockDatagramChannel(), failed.");
-				return null;
-			}
-	
-			result = blockDCInfo.addChannel(nChPort, dc);
-			if(result)
-			{
-				if(CMInfo._CM_DEBUG)
-					System.out.println("CMStub.addBlockDatagramChannel(), succeeded. port("+nChPort+")");
-			}
-			else
-			{
-				System.err.println("CMStub.addBlockDatagramChannel(), failed! port("+nChPort+")");
-				return null;
-			}
-
-		} catch (IOException e) {
+			dc = (DatagramChannel) future.get();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//dc = (DatagramChannel) CMCommManager.openBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
+		//		confInfo.getMyAddress(), nChPort, m_cmInfo);
+		
+		//////////
+		
+		if(dc == null)
+		{
+			System.err.println("CMStub.addBlockDatagramChannel(), failed.");
+			return null;
+		}
+
+		result = blockDCInfo.addChannel(nChPort, dc);
+		if(result)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMStub.addBlockDatagramChannel(), succeeded. port("+nChPort+")");
+		}
+		else
+		{
+			System.err.println("CMStub.addBlockDatagramChannel(), failed! port("+nChPort+")");
+			return null;
 		}
 		
 		return dc;		
@@ -362,7 +409,25 @@ public class CMStub {
 		CMChannelInfo<Integer> dcInfo = commInfo.getBlockDatagramChannelInfo();
 		boolean result = false;
 
-		result = dcInfo.removeChannel(nChPort); 
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<Boolean> future = es.submit(new CMRemoveChannelTask(dcInfo, nChPort));
+		try {
+			result = future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//result = dcInfo.removeChannel(nChPort);
+		
+		//////////
+		
 		if(result)
 		{
 			if(CMInfo._CM_DEBUG)
@@ -436,6 +501,8 @@ public class CMStub {
 		}
 		
 		try {
+			
+			// from here
 			mc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, strChAddress, 
 					nChPort, m_cmInfo);
 			if(mc == null)
