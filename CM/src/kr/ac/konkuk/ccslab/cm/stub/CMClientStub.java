@@ -534,7 +534,9 @@ public class CMClientStub extends CMStub {
 		// If the user is not connected to the default server, he/she connects to it first.
 		if(nUserState == CMInfo.CM_INIT)
 		{
-			CMInteractionManager.connectDefaultServer(m_cmInfo);
+			//CMInteractionManager.connectDefaultServer(m_cmInfo);
+			if( !connectToServer() )
+				return false;
 		}
 		
 		switch( nUserState )
@@ -673,7 +675,9 @@ public class CMClientStub extends CMStub {
 		bRequestResult = send(se, "SERVER");
 		
 		// update local state
-		myself.setState(CMInfo.CM_CONNECT);
+		if(bRequestResult)
+			myself.setState(CMInfo.CM_CONNECT);
+		
 		if(bRequestResult)
 			System.out.println("["+myself.getName()+"] successfully sent the logout request to the default server.");
 		else
@@ -951,7 +955,8 @@ public class CMClientStub extends CMStub {
 		se.setUserName(getMyself().getName());
 		se.setSessionName(sname);
 		bResult = send(se, "SERVER");
-		getMyself().setCurrentSession(sname);
+		if(bResult)
+			getMyself().setCurrentSession(sname);
 		
 		se = null;
 		return bResult;
@@ -2933,21 +2938,23 @@ public class CMClientStub extends CMStub {
 	 * @param strServer - the server name
 	 * @param strUser - the user name
 	 * @param strPasswd - the password
+	 * @return true if the request is successfully sent to the server; false otherwise.
 	 * @see CMClientStub#loginCM(String, String)
 	 */
-	public void loginCM(String strServer, String strUser, String strPasswd)
+	public boolean loginCM(String strServer, String strUser, String strPasswd)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMServer tserver = null;
 		String myAddress = null;
 		int myUDPPort = -1;
+		boolean bResult = false;
 		
 		// if a server is the default server, call the original function.
 		if( strServer.equals("SERVER") )
 		{
-			loginCM(strUser, strPasswd);
-			return;
+			if( !loginCM(strUser, strPasswd) )
+				return false;
 		}
 
 		// get a server info
@@ -2955,7 +2962,7 @@ public class CMClientStub extends CMStub {
 		if( tserver == null )
 		{
 			System.out.println("CMClientStub.loginCM(..), server("+strServer+") not found!");
-			return;
+			return false;
 		}
 
 		// check local state
@@ -2963,7 +2970,9 @@ public class CMClientStub extends CMStub {
 		// If the client is not connected to the server, he/she connects to it first.
 		if(tserver.getClientState() == CMInfo.CM_INIT)
 		{
-			CMInteractionManager.connectAddServer(strServer, m_cmInfo);
+			//CMInteractionManager.connectAddServer(strServer, m_cmInfo);
+			if(!connectToServer(strServer))
+				return false;
 		}
 		
 		switch( tserver.getClientState() )
@@ -2974,7 +2983,7 @@ public class CMClientStub extends CMStub {
 		case CMInfo.CM_LOGIN:
 		case CMInfo.CM_SESSION_JOIN:
 			System.out.println("You already logged in to server("+strServer+").");
-			return;
+			return false;
 		}
 
 		// get my ip address and port
@@ -2991,10 +3000,10 @@ public class CMClientStub extends CMStub {
 		mse.setUDPPort(myUDPPort);
 
 		// send the event
-		send(mse, strServer);
+		bResult = send(mse, strServer);
 
 		mse = null;
-		return;
+		return bResult;
 	}
 	
 	/**
@@ -3011,17 +3020,19 @@ public class CMClientStub extends CMStub {
 	 * the same as those of the CMSessionEvent except an additional field, the server name.
 	 * 
 	 * @param strServer - the server name
+	 * @return true if successfully sent the logout request, false otherwise.
 	 * @see CMClientStub#logoutCM()
 	 */
-	public void logoutCM(String strServer)
+	public boolean logoutCM(String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		boolean bResult = false;
 		
 		// if a server is the default server, call the original function.
 		if(strServer.equals("SERVER"))
 		{
-			logoutCM();
-			return;
+			if(!logoutCM())
+				return false;
 		}
 
 		CMServer tserver = interInfo.findAddServer(strServer);
@@ -3029,7 +3040,7 @@ public class CMClientStub extends CMStub {
 		{
 			System.out.println("CMClientStub.logoutCM(..), server("+strServer+") info not found "
 					+ "in the add-server list!");
-			return;
+			return false;
 		}
 
 		// check state of the client of the server
@@ -3037,10 +3048,10 @@ public class CMClientStub extends CMStub {
 		{
 		case CMInfo.CM_INIT:
 			System.out.println("You should connect and log in to the server("+strServer+")."); 
-			return;
+			return false;
 		case CMInfo.CM_CONNECT:
 			System.out.println("You should log in to the server("+strServer+").");
-			return;
+			return false;
 		}
 
 		// remove and close all additional channels in EM and CM
@@ -3055,13 +3066,14 @@ public class CMClientStub extends CMStub {
 		tmse.setServerName(strServer);
 		tmse.setUserName(getMyself().getName());
 
-		send(tmse, strServer);
+		bResult = send(tmse, strServer);
 
 		// update the local state of the server
-		tserver.setClientState(CMInfo.CM_CONNECT);
+		if(bResult)
+			tserver.setClientState(CMInfo.CM_CONNECT);
 
 		tmse = null;
-		return;
+		return bResult;
 	}
 	
 	/**
@@ -3078,19 +3090,21 @@ public class CMClientStub extends CMStub {
 	 * the same as those of the CMSessionEvent except an additional field, the server name.
 	 * 
 	 * @param strServerName - the server name
+	 * @return true if the request is successfully sent to the server; false otherwise.
 	 * @see CMClientStub#requestSessionInfo()
 	 */
 	// requests available session information of a designated server
-	public void requestSessionInfo(String strServerName)
+	public boolean requestSessionInfo(String strServerName)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer tserver = null;
+		boolean bResult = false;
 
 		// if a server is the default server, call the original function
 		if( strServerName.equals("SERVER") )
 		{
-			requestSessionInfo();
-			return;
+			if(!requestSessionInfo())
+				return false;
 		}
 
 		// find a server info
@@ -3099,7 +3113,7 @@ public class CMClientStub extends CMStub {
 		{
 			System.out.println("CMClientStub.requestSessionInfo(..), server("+strServerName
 					+") info not found in the add-server list.");
-			return;
+			return false;
 		}
 
 		int	state = tserver.getClientState();
@@ -3108,21 +3122,25 @@ public class CMClientStub extends CMStub {
 		{
 			System.out.println("CMClientStub.requestSessionInfo(..), You should login the server("
 					+strServerName+").");
-			return;
+			return false;
 		}
 
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_REQUEST_SESSION_INFO);
 		mse.setUserName(getMyself().getName());
-		send(mse, strServerName);
+		bResult = send(mse, strServerName);
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMClientStub.requestSessionInfo(..) server("+strServerName+"), Ok");
+			if(bResult)
+				System.out.println("CMClientStub.requestSessionInfo(..) server("+strServerName+"), Ok");
+			else
+				System.err.println("CMClientStub.requestSessionInfo(..) server("+strServerName+"), request "
+						+ "transmission error!");
 		}
 	
 		mse = null;
-		return;
+		return bResult;
 	}
 	
 	/**
@@ -3140,19 +3158,21 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * @param strServer - the server name
 	 * @param strSession - the session name
+	 * @return true if the request is successful; false otherwise.
 	 * @see CMClientStub#joinSession(String)
 	 */
-	public void joinSession(String strServer, String strSession)
+	public boolean joinSession(String strServer, String strSession)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer tserver = null;
 		CMSession tsession = null;
+		boolean bResult = false;
 		
 		// if a server is the default server, call the original function
 		if( strServer.equals("SERVER") )
 		{
-			joinSession(strSession);
-			return;
+			if(!joinSession(strSession))
+				return false;
 		}
 
 		// find a server info
@@ -3161,7 +3181,7 @@ public class CMClientStub extends CMStub {
 		{
 			System.out.println("CMClientStub.joinSession(..), server("+strServer+") info "
 					+ "not found in the add-server list!");
-			return;
+			return false;
 		}
 		
 		// check local client state of the server
@@ -3169,13 +3189,13 @@ public class CMClientStub extends CMStub {
 		{
 		case CMInfo.CM_INIT:
 			System.out.println("You should connect and login server("+strServer+")."); 
-			return;
+			return false;
 		case CMInfo.CM_CONNECT:
 			System.out.println("You should login server("+strServer+")."); 
-			return;
+			return false;
 		case CMInfo.CM_SESSION_JOIN:
 			System.out.println("You have already joined a session of a server("+strServer+")."); 
-			return;
+			return false;
 		}
 
 		// check selected session
@@ -3184,7 +3204,7 @@ public class CMClientStub extends CMStub {
 		{
 			System.out.println("CMClientStub.joinSession(..), session("+strSession+") info of server("
 					+strServer+") not found! Request session info first!");
-			return;
+			return false;
 		}
 		
 		// make event
@@ -3195,12 +3215,13 @@ public class CMClientStub extends CMStub {
 		mse.setSessionName(strSession);
 
 		// send the event
-		send(mse, strServer);
+		bResult = send(mse, strServer);
 		// set current session of the client in the server info element
-		tserver.setCurrentSessionName(strSession);
+		if(bResult)
+			tserver.setCurrentSessionName(strSession);
 
 		mse = null;
-		return;
+		return bResult;
 	}
 	
 	/**
@@ -3217,18 +3238,20 @@ public class CMClientStub extends CMStub {
 	 * the same as those of the CMSessionEvent except an additional field, the server name.
 	 * 
 	 * @param strServer - the server name
+	 * @return true if successfully sent the leave-session request, false otherwise.
 	 * @see CMClientStub#leaveSession()
 	 */
-	public void leaveSession(String strServer)
+	public boolean leaveSession(String strServer)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMServer tserver = null;
+		boolean bResult = false;
 		
 		// if a server is the default server, call the original function
 		if( strServer.equals("SERVER") )
 		{
-			leaveSession();
-			return;
+			if(!leaveSession())
+				return false;
 		}
 
 		// find a server info
@@ -3237,7 +3260,7 @@ public class CMClientStub extends CMStub {
 		{
 			System.out.println("CMClientStub.leaveSession(..), server("+strServer+") info not found "
 					+ "in the add-server list!");
-			return;
+			return false;
 		}
 
 		// check the client state of the server
@@ -3245,13 +3268,13 @@ public class CMClientStub extends CMStub {
 		{
 		case CMInfo.CM_INIT:
 			System.out.println("You should connect, log in to server("+strServer+") and join a session.");
-			return;
+			return false;
 		case CMInfo.CM_CONNECT:
 			System.out.println("You should log in to server("+strServer+") and join a session.");
-			return;
+			return false;
 		case CMInfo.CM_LOGIN:
 			System.out.println("You should join a session of the server("+strServer+").");
-			return;
+			return false;
 		}
 
 		// terminate current group info (multicast channel, group member, Membership key)
@@ -3264,13 +3287,14 @@ public class CMClientStub extends CMStub {
 		mse.setUserName(getMyself().getName());
 		mse.setSessionName( tserver.getCurrentSessionName() );
 
-		send(mse, strServer);
+		bResult = send(mse, strServer);
 
 		// update the client state of the server
-		tserver.setClientState(CMInfo.CM_LOGIN);
+		if(bResult)
+			tserver.setClientState(CMInfo.CM_LOGIN);
 
 		mse = null;
-		return;
+		return bResult;
 	}
 	
 	/**
