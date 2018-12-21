@@ -1049,7 +1049,7 @@ public class CMWinClient extends JFrame {
 	
 	public void testTerminateCM()
 	{
-		m_clientStub.disconnectFromServer();
+		//m_clientStub.disconnectFromServer();
 		m_clientStub.terminateCM();
 		printMessage("Client CM terminates.\n");
 		// change the appearance of buttons in the client window frame

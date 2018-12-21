@@ -343,6 +343,8 @@ public class CMClientStub extends CMStub {
 	 */
 	public void terminateCM()
 	{
+		disconnectFromServer();
+		
 		super.terminateCM();
 
 		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
@@ -369,6 +371,12 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer()
 	{
+		// If CM has been terminated, it must start and this task includes the connection task as well.
+		if(!m_cmInfo.isStarted())
+		{
+			return startCM();
+		}
+		
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
@@ -2836,6 +2844,12 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer(String strServerName)
 	{
+		// If CM has been terminated, it must start and this task includes the connection task as well.
+		if(!m_cmInfo.isStarted())
+		{
+			return startCM();
+		}
+
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
