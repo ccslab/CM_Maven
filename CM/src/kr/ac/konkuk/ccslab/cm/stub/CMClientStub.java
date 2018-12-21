@@ -2844,10 +2844,17 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer(String strServerName)
 	{
-		// If CM has been terminated, it must start and this task includes the connection task as well.
+		// If CM has been terminated, it must start first.
 		if(!m_cmInfo.isStarted())
 		{
-			return startCM();
+			if(strServerName.equals("SERVER"))
+				return startCM();
+			else
+			{
+				System.err.println("CMClientStub.connectToServer("+strServerName+"), CM is terminated and "
+						+ "it must start first!");
+				return false;
+			}
 		}
 
 		////////// for Android client where network-related methods must be called in a separate thread
