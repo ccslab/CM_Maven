@@ -1997,7 +1997,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * measures the incoming network throughput from a CM node.
+	 * measures the outgoing network throughput to a CM node.
 	 * 
 	 * @param strTarget - the target CM node
 	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
