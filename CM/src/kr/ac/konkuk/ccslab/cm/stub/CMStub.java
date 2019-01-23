@@ -2106,12 +2106,34 @@ public class CMStub {
 		return sb.toString();
 	}
 	
+	/**
+	 * sets a path to the CM configuration file.
+	 * 
+	 * <p> After calling this method, when CM needs to access the configuration file, 
+	 * CM finds it (cm-server.conf for the server CM and cm-client.conf for the client CM) in this path. 
+	 *  
+	 * @param homePath the path to the CM configuration file
+	 * @see CMStub#getConfigurationHome()
+	 */
 	public void setConfigurationHome(Path homePath)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		confInfo.setConfFileHome(homePath);
 	}
 	
+	/**
+	 * gets the path to the CM configuration file.
+	 * 
+	 * <p>If the CM client needs to access the configuration file, the path to it can be retrieved as follows:
+	 * <br><center> cmClientStub.getConfigurationHome().resolve("cm-client.conf"); </center>
+	 * <br> cmClientStub is the reference to a CM client-stub object.
+	 * <br> If the CM server needs to access its configuration file, the path to it can be retrieved as follows:
+	 * <p><center> cmServerStub.getConfigurationHome().resolve("cm-server.conf"); </center>
+	 * <br> cmServerStub is the reference to a CM server-stub object. 
+	 * 
+	 * @return the path to the CM configuration file
+	 * @see CMStub#setConfigurationHome(Path)
+	 */
 	public Path getConfigurationHome()
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
