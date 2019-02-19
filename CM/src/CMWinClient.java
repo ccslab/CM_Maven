@@ -313,7 +313,10 @@ public class CMWinClient extends JFrame {
 		eventSubMenu.add(datagramMenuItem);
 		JMenuItem posMenuItem = new JMenuItem("test user position");
 		posMenuItem.addActionListener(menuListener);
-		eventSubMenu.add(posMenuItem);		
+		eventSubMenu.add(posMenuItem);
+		JMenuItem sendrecvMenuItem = new JMenuItem("test sendrecv");
+		sendrecvMenuItem.addActionListener(menuListener);
+		eventSubMenu.add(sendrecvMenuItem);
 		
 		cmServiceMenu.add(eventSubMenu);
 		
@@ -687,7 +690,10 @@ public class CMWinClient extends JFrame {
 			break;			
 		case 45: // user position
 			testUserPosition();
-			break;			
+			break;
+		case 46: // test sendrecv
+			testSendRecv();
+			break;
 		case 50: // print group info
 			testPrintGroupInfo();
 			break;
@@ -828,6 +834,7 @@ public class CMWinClient extends JFrame {
 		printMessage("---------------------------------- Event Transmission\n");
 		printMessage("40: chat, 41: multicast chat in current group\n");
 		printMessage("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position\n");
+		printMessage("46: test sendrecv\n");
 		printMessage("---------------------------------- Information\n");
 		printMessage("50: show group information of default server, 51: show current user status\n");
 		printMessage("52: show current channels, 53: show current server information\n");
@@ -1573,6 +1580,47 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 		
 		return;
+	}
+	
+	// test sendrecv
+	public void testSendRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		CMUserEvent rue = null;
+		String strTargetName = null;
+		
+		// a user event: (id, 111) (string id, "testSendRecv")
+		// a reply user event: (id, 222) (string id, "testReplySendRecv")
+		
+		printMessage("====== test sendrecv\n");
+		
+		// create a user event
+		ue.setID(111);
+		ue.setStringID("testSendRecv");
+		
+		// get target name
+		JTextField targetNameTextField = new JTextField();
+		Object[] message = {
+				"user event to be sent: (id, 111), (string id, \"testSendRecv\")", 
+				"reply event to be received: (id, 222), (string id, \"testReplySendRecv\")",
+				"Target name(empty for \"SERVER\"): ", targetNameTextField
+		};
+		int option = JOptionPane.showConfirmDialog(null, message, "Test sendrecv()", JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.OK_OPTION)
+		{
+			strTargetName = targetNameTextField.getText().trim();
+			if(strTargetName.isEmpty())
+				strTargetName = "SERVER";
+			rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, 10000);
+		}
+
+		if(rue == null)
+			printStyledMessage("The reply event is null!\n", "bold");
+		else
+			printMessage("Received reply event from ["+rue.getSender()+"]: (type, "+rue.getType()+
+					"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
+		
+		printMessage("======\n");
 	}
 
 	// print group information provided by the default server
@@ -4093,6 +4141,9 @@ public class CMWinClient extends JFrame {
 				break;
 			case "test user position":
 				testUserPosition();
+				break;
+			case "test sendrecv":
+				testSendRecv();
 				break;
 			case "show group information of default server":
 				testPrintGroupInfo();

@@ -303,13 +303,27 @@ public class CMWinServerEventHandler implements CMEventHandler {
 			}
 			
 		}
+		else if(ue.getStringID().equals("testSendRecv"))
+		{
+			printMessage("Received user event from ["+ue.getSender()+"] to ["+ue.getReceiver()+
+					"], (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")\n");
+
+			if(!m_serverStub.getMyself().getName().equals(ue.getReceiver()))
+				return;
+
+			CMUserEvent rue = new CMUserEvent();
+			rue.setID(222);
+			rue.setStringID("testReplySendRecv");
+			boolean ret = m_serverStub.send(rue, ue.getSender());
+			if(ret)
+				printMessage("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
+			else
+				printMessage("Failed to send the reply event!\n");			
+		}
 		else
 		{
-			//System.out.println("CMUserEvent received, strID("+ue.getStringID()+")");
-			printMessage("CMUserEvent received, strID("+ue.getStringID()+")\n");
-			//System.out.format("%-5s%-20s%-10s%-20s%n", "Type", "Field", "Length", "Value");
+			printMessage("CMUserEvent received from ["+ue.getSender()+"], strID("+ue.getStringID()+")\n");
 			printMessage(String.format("%-5s%-20s%-10s%-20s%n", "Type", "Field", "Length", "Value"));
-			//System.out.println("-----------------------------------------------------");
 			printMessage("-----------------------------------------------------\n");
 			Iterator<CMUserEventField> iter = ue.getAllEventFields().iterator();
 			while(iter.hasNext())
@@ -317,22 +331,16 @@ public class CMWinServerEventHandler implements CMEventHandler {
 				CMUserEventField uef = iter.next();
 				if(uef.nDataType == CMInfo.CM_BYTES)
 				{
-					//System.out.format("%-5s%-20s%-10d", uef.nDataType, uef.strFieldName, 
-					//					uef.nValueByteNum);
 					printMessage(String.format("%-5s%-20s%-10d", uef.nDataType, uef.strFieldName, 
 							uef.nValueByteNum));
 					for(int i = 0; i < uef.nValueByteNum; i++)
 					{
-						//System.out.print(uef.valueBytes[i]);
 						// not yet
 					}
-					//System.out.println();
 					printMessage("\n");
 				}
 				else
 				{
-					//System.out.format("%-5d%-20s%-10d%-20s%n", uef.nDataType, uef.strFieldName, 
-					//		uef.strFieldValue.length(), uef.strFieldValue);
 					printMessage(String.format("%-5d%-20s%-10d%-20s%n", uef.nDataType, uef.strFieldName, 
 							uef.strFieldValue.length(), uef.strFieldValue));
 				}
