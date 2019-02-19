@@ -6,9 +6,9 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 /**
  * This class represents a CM event.
  * <br> The CMEvent class is the superclass of every CM event. The CMEvent class includes the common header 
- * fields of a CM event such as which session and group (handler session and group names) should handle 
- * this event and which session and group members (distribution session and group names) this event should be 
- * forwarded to.  
+ * fields of a CM event such as sender, receiver, which session and group (handler session and group names) 
+ * should handle this event and which session and group members (distribution session and group names) 
+ * this event should be forwarded to.  
  * <p> CM nodes (a client or a server) communicate with each other by exchanging CM events. 
  * @author mlim
  * @see {@link CMConcurrencyEvent}, {@link CMConsistencyEvent}, {@link CMDataEvent}, {@link CMDummyEvent}, 
@@ -17,6 +17,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  */
 public class CMEvent extends CMObject {
 	
+	protected String m_strSender;
+	protected String m_strReceiver;
 	protected String m_strHandlerSession;
 	protected String m_strHandlerGroup;
 	protected String m_strDistributionSession;
@@ -32,6 +34,8 @@ public class CMEvent extends CMObject {
 	{
 		m_nType = CMInfo.CM_EVENT;
 		m_nID = -1;
+		m_strSender = "";
+		m_strReceiver = "";
 		m_strHandlerSession = "";
 		m_strHandlerGroup = "";
 		m_strDistributionSession = "";
@@ -49,6 +53,8 @@ public class CMEvent extends CMObject {
 	{
 		m_nType = CMInfo.CM_EVENT;
 		m_nID = -1;
+		m_strSender = "";
+		m_strReceiver = "";
 		m_strHandlerSession = "";
 		m_strHandlerGroup = "";
 		m_strDistributionSession = "";
@@ -131,6 +137,42 @@ public class CMEvent extends CMObject {
 	public int getID()
 	{
 		return m_nID;
+	}
+	
+	/**
+	 * Sets the sender name.
+	 * @param strName - the sender name
+	 */
+	public void setSender(String strName)
+	{
+		m_strSender = strName;
+	}
+	
+	/**
+	 * Returns the sender name.
+	 * @return a sender name.
+	 */
+	public String getSender()
+	{
+		return m_strSender;
+	}
+	
+	/**
+	 * Sets the receiver name.
+	 * @param strName - the receiver name.
+	 */
+	public void setReceiver(String strName)
+	{
+		m_strReceiver = strName;
+	}
+	
+	/**
+	 * Returns the receiver name.
+	 * @return a receiver name.
+	 */
+	public String getReceiver()
+	{
+		return m_strReceiver;
 	}
 
 	/**
@@ -277,25 +319,14 @@ public class CMEvent extends CMObject {
 	
 	protected void marshallHeader()
 	{
-		/*
-		typedef struct _cmEvent {
-			int byteNum;
-			int type;
-			unsigned int id;
-			char handlerSession[EVENT_FIELD_LEN];
-			char handlerRegion[EVENT_FIELD_LEN];
-			char distributionSession[EVENT_FIELD_LEN];
-			char distributionRegion[EVENT_FIELD_LEN];
-			unsigned char body[1];
-		} cmEvent;
-		*/
-		
-		//if( !CMEndianness.isBigEndian() )
-		//	m_bytes.order(ByteOrder.BIG_ENDIAN);
 		
 		m_bytes.putInt(m_nByteNum);
 		m_bytes.putInt(m_nType);
 		m_bytes.putInt(m_nID);
+		m_bytes.putInt(m_strSender.getBytes().length);
+		m_bytes.put(m_strSender.getBytes());
+		m_bytes.putInt(m_strReceiver.getBytes().length);
+		m_bytes.put(m_strReceiver.getBytes());
 		m_bytes.putInt(m_strHandlerSession.getBytes().length);
 		m_bytes.put(m_strHandlerSession.getBytes());
 		m_bytes.putInt(m_strHandlerGroup.getBytes().length);
@@ -305,64 +336,21 @@ public class CMEvent extends CMObject {
 		m_bytes.putInt(m_strDistributionGroup.getBytes().length);
 		m_bytes.put(m_strDistributionGroup.getBytes());
 		//m_bytes.rewind();
-		
-		//if( !CMEndianness.isBigEndian() )
-		//	m_bytes.order(ByteOrder.LITTLE_ENDIAN);
 
 	}
 	
 	protected void unmarshallHeader(ByteBuffer msg)
 	{
-		//int nStrNum;
-		
-		// add endian test
-		
 		m_nByteNum = msg.getInt();
 		m_nType = msg.getInt();
 		m_nID = msg.getInt();
-		
-		/*
-		nStrNum = msg.getInt();
-		byte[] strBytes = new byte[nStrNum];
-		msg.get(strBytes);
-		m_strHandlerSession = new String(strBytes);
-		*/
+
+		m_strSender = getStringFromByteBuffer(msg);
+		m_strReceiver = getStringFromByteBuffer(msg);
 		m_strHandlerSession = getStringFromByteBuffer(msg);
-		
-		/*
-		nStrNum = msg.getInt();
-		strBytes = new byte[nStrNum];
-		msg.get(strBytes);
-		m_strHandlerGroup = new String(strBytes);
-		*/
 		m_strHandlerGroup = getStringFromByteBuffer(msg);
-		
-		/*
-		nStrNum = msg.getInt();
-		strBytes = new byte[nStrNum];
-		msg.get(strBytes);
-		m_strDistributionSession = new String(strBytes);
-		*/
 		m_strDistributionSession = getStringFromByteBuffer(msg);
-		
-		/*
-		nStrNum = msg.getInt();
-		strBytes = new byte[nStrNum];
-		msg.get(strBytes);
-		m_strDistributionGroup = new String(strBytes);
-		*/
 		m_strDistributionGroup = getStringFromByteBuffer(msg);
-		
-		//msg.rewind();
-		
-		/*
-		if( !CMEndianness.isBigEndian() )
-		{
-			msg.order(ByteOrder.BIG_ENDIAN);
-			msg.put(msg);
-			msg.rewind();
-		}
-		*/
 
 	}
 	
@@ -387,7 +375,8 @@ public class CMEvent extends CMObject {
 	{
 		// can be re-implemented by sub-class
 		int nSize;
-		nSize = (Integer.BYTES)*7 + m_strHandlerSession.getBytes().length + m_strHandlerGroup.getBytes().length
+		nSize = (Integer.BYTES)*9 + m_strSender.getBytes().length + m_strReceiver.getBytes().length
+				+ m_strHandlerSession.getBytes().length + m_strHandlerGroup.getBytes().length
 				+ m_strDistributionSession.getBytes().length + m_strDistributionGroup.getBytes().length;
 		return nSize;
 	}
