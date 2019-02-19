@@ -13,6 +13,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
@@ -765,6 +766,10 @@ public class CMStub {
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		boolean ret = false;
 		
+		// set sender and receiver
+		cme.setSender(getMyself().getName());
+		cme.setReceiver(strTarget);
+		
 		// if a client in the c/s model, use internal forwarding by a server
 		if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT")
 				&& !strTarget.equals("SERVER") && !interInfo.isAddServer(strTarget))
@@ -823,6 +828,11 @@ public class CMStub {
 	public boolean send(CMEvent cme, String strTarget, int opt, int nSendPort, int nRecvPort, boolean isBlock)
 	{
 		boolean ret = false;
+
+		// set sender and receiver
+		cme.setSender(getMyself().getName());
+		cme.setReceiver(strTarget);
+
 		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock, m_cmInfo);
 		return ret;
 	}
@@ -1010,6 +1020,56 @@ public class CMStub {
 	}
 	
 	/**
+	 * Sends a CM event and receive a reply event.
+	 * 
+	 * <p> This method is used when a sender node needs to synchronously communicates with 
+	 * a receiver through the default non-blocking communication channel. 
+	 *  
+	 * Two CM nodes conducts the synchronous communication as follows:
+	 * <p> 1. A sender node sends an event to a receiver.
+	 * <br> 2. The sender waits until the receiver sends a reply event.
+	 * <br> 3. The sender receives the reply event.
+	 * <p> In the step 2, the application main thread suspends its execution after it calls this method. 
+	 * However, the sender still can receive events because CM consists of multiple threads, and 
+	 * the other threads can deal with the reception and process of events.
+	 * 
+	 * @param cme - the event to be sent
+	 * @param strReceiver - the target name
+	 * <br> The target node can be a server or a client. If the target is a client, the event and its 
+	 * reply event are delivered through the default server.
+	 * @param nWaitEventType - the event type of the reply event from 'strReceiver'
+	 * @param nWaitEventID - the event ID of the reply event from 'strReceiver'
+	 * @param nTimeout - the maximum time to wait in milliseconds.
+	 * <br> If nTimeout is greater than 0, the main thread is suspended until the timeout time elapses.
+	 * <br> If nTimeout is 0, the main thread is suspended until the reply event arrives without the timeout.
+	 * @return a reply CM event if it is successfully received, or null otherwise. 
+	 */
+	public CMEvent sendrecv(CMEvent cme, String strReceiver, int nWaitEventType, int nWaitEventID, 
+			int nTimeout)
+	{
+		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEvent replyEvent = null;
+
+		boolean bSendResult = send(cme, strReceiver);
+		if(!bSendResult) return null;
+
+		eventSync.init();
+		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver);
+		synchronized(eventSync)
+		{
+			try {
+				eventSync.wait(nTimeout);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			replyEvent = eventSync.getReplyEvent();
+		}
+
+		return replyEvent;
+	}
+	
+	/**
 	 * Sends a CM event to a node group
 	 * 
 	 * <p> This method is the same as calling send(cme, sessionName, groupName, CMInfo.CM_STREAM, 0)
@@ -1135,6 +1195,9 @@ public class CMStub {
 		CMMember member = null;
 		boolean ret = false;
 		
+		// set sender
+		cme.setSender(getMyself().getName());
+
 		// if a client in the c/s model, use internal forwarding by a server
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT"))
 		// if a client, use the internal forwarding by the server
@@ -1234,6 +1297,9 @@ public class CMStub {
 	 */
 	public boolean multicast(CMEvent cme, String sessionName, String groupName)
 	{
+		// set sender
+		cme.setSender(getMyself().getName());
+
 		boolean ret = false;
 		ret = CMEventManager.multicastEvent(cme, sessionName, groupName, m_cmInfo);
 		return ret;
@@ -1323,6 +1389,10 @@ public class CMStub {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		boolean ret = false;
+		
+		// set sender
+		cme.setSender(getMyself().getName());
+
 		// in the case of a client in the C/S model, use internal forwarding by all servers
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT"))
 		// if a client, use internal forwarding by all servers
@@ -1459,12 +1529,18 @@ public class CMStub {
 			return false;
 		}
 
+		// set sender
+		cme.setSender(getMyself().getName());
+
 		// if a client in the c/s model and a user is not null, use internal forwarding by a server
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT")
 		//		&& userName != null)
 		// if the system type is a client and a user is not null, use internal forwarding by a server
 		if(confInfo.getSystemType().equals("CLIENT") && userName != null)
 		{
+			// set receiver
+			cme.setReceiver(userName);
+
 			cme.setDistributionSession("CM_ONE_USER");
 			cme.setDistributionGroup(userName);
 			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, m_cmInfo);
@@ -1473,6 +1549,9 @@ public class CMStub {
 		}
 		else
 		{
+			// set receiver
+			cme.setReceiver(serverName);
+
 			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, m_cmInfo);
 		}
 		
@@ -1592,6 +1671,9 @@ public class CMStub {
 			System.out.println("CMStub::cast(), server("+serverName+") not found.");
 			return false;
 		}
+
+		// set sender
+		cme.setSender(getMyself().getName());
 
 		// if a client in the c/s model, use internal forwarding by a server
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT"))
@@ -1958,9 +2040,9 @@ public class CMStub {
 			return -1;
 
 		if(confInfo.isFileTransferScheme())
-			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN, strTarget);
 		else
-			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER, strTarget);
 		
 		synchronized(eventSync)
 		{
@@ -2027,9 +2109,9 @@ public class CMStub {
 			return -1;
 		
 		if(confInfo.isFileTransferScheme())
-			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, strTarget);
 		else
-			eventSync.setWaitingEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK, strTarget);
 		
 		synchronized(eventSync)
 		{

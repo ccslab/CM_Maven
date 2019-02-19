@@ -602,22 +602,19 @@ public class CMClientStub extends CMStub {
 		
 		bRequestResult = loginCM(strUserName, strPassword);
 		if(!bRequestResult) return null;
-		
-		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.LOGIN_ACK);
+
+		eventSync.init();
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.LOGIN_ACK, "SERVER");
 		synchronized(eventSync)
 		{
-			while(loginAckEvent == null)
-			{
-				try {
-					eventSync.wait(30000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				loginAckEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			try {
+				eventSync.wait(30000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			loginAckEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
-		eventSync.init();
 		
 		return loginAckEvent;
 	}
@@ -781,22 +778,19 @@ public class CMClientStub extends CMStub {
 		
 		bRequestResult = requestSessionInfo();
 		if(!bRequestResult) return null;
-		
-		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.RESPONSE_SESSION_INFO);
+
+		eventSync.init();
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.RESPONSE_SESSION_INFO, "SERVER");
 		synchronized(eventSync)
 		{
-			while(replyEvent == null)
-			{
-				try {
-					eventSync.wait(30000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			try {
+				eventSync.wait(30000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
-		eventSync.init();
 		
 		return replyEvent;
 	}
@@ -991,22 +985,19 @@ public class CMClientStub extends CMStub {
 		
 		bRequestResult = joinSession(sname);
 		if(!bRequestResult) return null;
-		
-		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.JOIN_SESSION_ACK);
+
+		eventSync.init();
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.JOIN_SESSION_ACK, "SERVER");
 		synchronized(eventSync)
 		{
-			while(replyEvent == null)
-			{
-				try {
-					eventSync.wait(30000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			try {
+				eventSync.wait(30000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
-		eventSync.init();
 		
 		return replyEvent;		
 	}
@@ -1523,7 +1514,8 @@ public class CMClientStub extends CMStub {
 		}
 		scInfo.addChannel(nChKey, sc);
 
-		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK);
+		eventSync.init();
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK, strServer);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
@@ -1537,18 +1529,14 @@ public class CMClientStub extends CMStub {
 		
 		synchronized(eventSync)
 		{
-			while(replyEvent == null)
-			{
-				try {
-					eventSync.wait(30000);  // timeout 30s
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
-			}	
+			try {
+				eventSync.wait(30000);  // timeout 30s
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
-		eventSync.init();
 
 		nReturnCode = replyEvent.getReturnCode();
 		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
@@ -1879,7 +1867,8 @@ public class CMClientStub extends CMStub {
 		}
 		scInfo.addChannel(nChKey, sc);
 
-		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
+		eventSync.init();
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK, strServer);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
@@ -1893,18 +1882,14 @@ public class CMClientStub extends CMStub {
 
 		synchronized(eventSync)
 		{
-			while(replyEvent == null)
-			{
-				try {
-					eventSync.wait(30000);  // timeout 30s
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
-			}			
+			try {
+				eventSync.wait(30000);  // timeout 30s
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
-		eventSync.init();
 
 		nReturnCode = replyEvent.getReturnCode();
 		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
@@ -2099,8 +2084,9 @@ public class CMClientStub extends CMStub {
 					+nChKey+"), server ("+strServer+").");
 			return false;
 		}
-		
-		eventSync.setWaitingEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
+
+		eventSync.init();
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK, strServer);
 		
 		se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
@@ -2114,18 +2100,14 @@ public class CMClientStub extends CMStub {
 		
 		synchronized(eventSync)
 		{
-			while(replyEvent == null)
-			{
-				try {
-					eventSync.wait(30000);  // timeout 30s
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+			try {
+				eventSync.wait(30000);  // timeout 30s
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
-		eventSync.init();
 
 		nReturnCode = replyEvent.getReturnCode();
 		if(nReturnCode == 1) // successfully remove the new channel info (key, channel) at the server

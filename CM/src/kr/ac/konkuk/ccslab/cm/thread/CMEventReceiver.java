@@ -72,8 +72,11 @@ public class CMEventReceiver extends Thread {
 
 			// check whether the main thread is waiting for an event
 			CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
-			if(eventSync.isWaiting() && cme.getType() == eventSync.getWaitingEventType() && 
-					cme.getID() == eventSync.getWaitingEventID())
+
+			if(eventSync.isWaiting() && !cme.getSender().isEmpty() && 
+					cme.getSender().equals(eventSync.getWaitedReceiver()) &&
+					cme.getType() == eventSync.getWaitedEventType() && 
+					cme.getID() == eventSync.getWaitedEventID())
 			{
 				eventSync.setReplyEvent(cme);
 				synchronized(eventSync)
