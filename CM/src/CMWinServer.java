@@ -24,6 +24,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
@@ -371,15 +372,17 @@ public class CMWinServer extends JFrame {
 		boolean bRet = false;
 		
 		// get current server info from the server configuration file
+		String strSavedServerAddress = null;
 		String strCurServerAddress = null;
-		int nCurServerPort = -1;
+		int nSavedServerPort = -1;
 		
-		strCurServerAddress = m_serverStub.getServerAddress();
-		nCurServerPort = m_serverStub.getServerPort();
+		strSavedServerAddress = m_serverStub.getServerAddress();
+		strCurServerAddress = CMCommManager.getLocalIP();
+		nSavedServerPort = m_serverStub.getServerPort();
 		
 		// ask the user if he/she would like to change the server info
 		JTextField serverAddressTextField = new JTextField(strCurServerAddress);
-		JTextField serverPortTextField = new JTextField(String.valueOf(nCurServerPort));
+		JTextField serverPortTextField = new JTextField(String.valueOf(nSavedServerPort));
 		Object msg[] = {
 				"Server Address: ", serverAddressTextField,
 				"Server Port: ", serverPortTextField
@@ -391,7 +394,7 @@ public class CMWinServer extends JFrame {
 		{
 			String strNewServerAddress = serverAddressTextField.getText();
 			int nNewServerPort = Integer.parseInt(serverPortTextField.getText());
-			if(!strNewServerAddress.equals(strCurServerAddress) || nNewServerPort != nCurServerPort)
+			if(!strNewServerAddress.equals(strSavedServerAddress) || nNewServerPort != nSavedServerPort)
 				m_serverStub.setServerInfo(strNewServerAddress, nNewServerPort);
 		}
 		

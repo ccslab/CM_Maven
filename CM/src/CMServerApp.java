@@ -5,6 +5,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
@@ -199,30 +200,44 @@ public class CMServerApp {
 	public void startCM()
 	{
 		// get current server info from the server configuration file
+		String strSavedServerAddress = null;
 		String strCurServerAddress = null;
-		int nCurServerPort = -1;
+		int nSavedServerPort = -1;
 		String strNewServerAddress = null;
 		String strNewServerPort = null;
+		int nNewServerPort = -1;
 		
-		strCurServerAddress = m_serverStub.getServerAddress();
-		nCurServerPort = m_serverStub.getServerPort();
+		strSavedServerAddress = m_serverStub.getServerAddress();
+		strCurServerAddress = CMCommManager.getLocalIP();
+		nSavedServerPort = m_serverStub.getServerPort();
 		
 		// ask the user if he/she would like to change the server info
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("========== start CM");
-		System.out.println("current server address: "+strCurServerAddress);
-		System.out.println("current server port: "+nCurServerPort);
+		System.out.println("detected server address: "+strCurServerAddress);
+		System.out.println("saved server port: "+nSavedServerPort);
 		
 		try {
-			System.out.print("new server address (enter for current value): ");
+			System.out.print("new server address (enter for detected value): ");
 			strNewServerAddress = br.readLine().trim();
-			System.out.print("new server port (enter for current value): ");
-			strNewServerPort = br.readLine().trim();
+			if(strNewServerAddress.isEmpty()) strNewServerAddress = strCurServerAddress;
 
+			System.out.print("new server port (enter for saved value): ");
+			strNewServerPort = br.readLine().trim();
+			try {
+				if(strNewServerPort.isEmpty()) 
+					nNewServerPort = nSavedServerPort;
+				else
+					nNewServerPort = Integer.parseInt(strNewServerPort);				
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				return;
+			}
+			
 			// update the server info if the user would like to do
-			if(!strNewServerAddress.isEmpty() && !strNewServerAddress.equals(strCurServerAddress))
+			if(!strNewServerAddress.equals(strSavedServerAddress))
 				m_serverStub.setServerAddress(strNewServerAddress);
-			if(!strNewServerPort.isEmpty() && Integer.parseInt(strNewServerPort) != nCurServerPort)
+			if(nNewServerPort != nSavedServerPort)
 				m_serverStub.setServerPort(Integer.parseInt(strNewServerPort));
 			
 		} catch (IOException e) {
