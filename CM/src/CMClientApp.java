@@ -5,6 +5,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
@@ -161,6 +164,9 @@ public class CMClientApp {
 			case 45: // user position
 				testUserPosition();
 				break;			
+			case 46: // test sendrecv
+				testSendRecv();
+				break;
 			case 50: // print group info
 				testPrintGroupInfo();
 				break;
@@ -310,6 +316,7 @@ public class CMClientApp {
 		System.out.println("---------------------------------- Event Transmission");
 		System.out.println("40: chat, 41: multicast chat in current group");
 		System.out.println("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position");
+		System.out.println("46: test sendrecv");
 		System.out.println("---------------------------------- Information");
 		System.out.println("50: show group information of default server, 51: show current user status");
 		System.out.println("52: show current channels, 53: show current server information");
@@ -863,6 +870,49 @@ public class CMClientApp {
 		ue.removeAllEventFields();
 		ue = null;
 		return;
+	}
+	
+	// test sendrecv
+	public void testSendRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		CMUserEvent rue = null;
+		String strTargetName = null;
+		
+		// a user event: (id, 111) (string id, "testSendRecv")
+		// a reply user event: (id, 222) (string id, "testReplySendRecv")
+		
+		System.out.println("====== test sendrecv");
+		
+		// create a user event
+		ue.setID(111);
+		ue.setStringID("testSendRecv");
+		
+		// get target name
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.println("user event to be sent: (id, 111), (string id, \"testSendRecv\")");
+		System.out.println("reply event to be received: (id, 222), (string id, \"testReplySendRecv\")");
+		System.out.print("Target name(empty for \"SERVER\"): ");
+
+		try {
+			strTargetName = br.readLine().trim();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		if(strTargetName.isEmpty())
+			strTargetName = "SERVER";
+		rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, 10000);
+
+		if(rue == null)
+			System.err.println("The reply event is null!");
+		else
+			System.out.println("Received reply event from ["+rue.getSender()+"]: (type, "+rue.getType()+
+					"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")");
+		
+		System.out.println("======");
 	}
 	
 	// print group information provided by the default server

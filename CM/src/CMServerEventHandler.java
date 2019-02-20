@@ -266,9 +266,26 @@ public class CMServerEventHandler implements CMEventHandler {
 			}
 			
 		}
+		else if(ue.getStringID().equals("testSendRecv"))
+		{
+			System.out.println("Received user event from ["+ue.getSender()+"] to ["+ue.getReceiver()+
+					"], (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")");
+
+			if(!m_serverStub.getMyself().getName().equals(ue.getReceiver()))
+				return;
+
+			CMUserEvent rue = new CMUserEvent();
+			rue.setID(222);
+			rue.setStringID("testReplySendRecv");
+			boolean ret = m_serverStub.send(rue, ue.getSender());
+			if(ret)
+				System.out.println("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")");
+			else
+				System.err.println("Failed to send the reply event!");			
+		}
 		else
 		{
-			System.out.println("CMUserEvent received, strID("+ue.getStringID()+")");
+			System.out.println("CMUserEvent received from ["+ue.getSender()+"], strID("+ue.getStringID()+")");
 			System.out.format("%-5s%-20s%-10s%-20s%n", "Type", "Field", "Length", "Value");
 			System.out.println("-----------------------------------------------------");
 			Iterator<CMUserEventField> iter = ue.getAllEventFields().iterator();
