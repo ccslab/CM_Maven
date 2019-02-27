@@ -1025,7 +1025,7 @@ public class CMStub {
 	 * <p> This method is used when a sender node needs to synchronously communicates with 
 	 * a receiver through the default non-blocking communication channel. 
 	 *  
-	 * Two CM nodes conducts the synchronous communication as follows:
+	 * Two CM nodes conduct the synchronous communication as follows:
 	 * <p> 1. A sender node sends an event to a receiver.
 	 * <br> 2. The sender waits until the receiver sends a reply event.
 	 * <br> 3. The sender receives the reply event.
@@ -1037,12 +1037,13 @@ public class CMStub {
 	 * @param strReceiver - the target name
 	 * <br> The target node can be a server or a client. If the target is a client, the event and its 
 	 * reply event are delivered through the default server.
-	 * @param nWaitEventType - the event type of the reply event from 'strReceiver'
-	 * @param nWaitEventID - the event ID of the reply event from 'strReceiver'
+	 * @param nWaitEventType - the waited event type of the reply event from 'strReceiver'
+	 * @param nWaitEventID - the waited event ID of the reply event from 'strReceiver'
 	 * @param nTimeout - the maximum time to wait in milliseconds.
 	 * <br> If nTimeout is greater than 0, the main thread is suspended until the timeout time elapses.
 	 * <br> If nTimeout is 0, the main thread is suspended until the reply event arrives without the timeout.
-	 * @return a reply CM event if it is successfully received, or null otherwise. 
+	 * @return a reply CM event if it is successfully received, or null otherwise.
+	 * @see CMStub#castrecv(CMEvent, String, String, int, int, int, int)
 	 */
 	public CMEvent sendrecv(CMEvent cme, String strReceiver, int nWaitEventType, int nWaitEventID, 
 			int nTimeout)
@@ -1280,6 +1281,38 @@ public class CMStub {
 		return ret;
 	}
 	
+	/**
+	 * Sends a CM event and receive multiple reply events.
+	 * 
+	 * <p> This method is used when a sender node needs to synchronously communicates with 
+	 * multiple receivers (CM group members, session members, or all login users) through 
+	 * the default non-blocking communication channel.
+	 *  
+	 * A sender node and multiple receiver nodes conduct the synchronous communication as follows:
+	 * <p> 1. A sender node sends an event to receivers that are specified by a session name and a group name.
+	 * <br> 2. The sender waits until at least the given minimum number of receivers send reply events.
+	 * <br> 3. The sender receives an array of received reply events.
+	 * <p> In the step 2, the application main thread suspends its execution after it calls this method. 
+	 * However, the sender still can receive events because CM consists of multiple threads, and 
+	 * the other threads can deal with the reception and process of events.
+	 * 
+	 * @param event - the event to be sent
+	 * @param strSessionName - the target session name
+	 * <br> If this parameter is null, it implies all sessions. If 'strGroupName' is not null, this parameter 
+	 * must not be null, either.
+	 * @param strGroupName - the target group name
+	 * <br> If this parameter is null, it implies all groups.
+	 * @param nWaitedEventType - the waited event type of the reply event
+	 * @param nWaitedEventID - the waited event ID of the reply event
+	 * @param nMinNumWaitedEvents - the minimum number of waited events
+	 * <br> If the sender waits until it receives at least 'nMinNumWaitedEvents' events.
+	 * @param nTimeout - the maximum time to wait in milliseconds.
+	 * <br> If nTimeout is greater than 0, the main thread is suspended until the timeout time elapses.
+	 * <br> If nTimeout is 0, the main thread is suspended until the all reply events arrives without the timeout.
+	 * @return an array of reply CM events if they are successfully received, or null otherwise.
+	 * <br> The size of the array can be greater than 'nMinNumWaitedEvents'.
+	 * @see CMStub#sendrecv(CMEvent, String, int, int, int)
+	 */
 	public CMEvent[] castrecv(CMEvent event, String strSessionName, String strGroupName, 
 			int nWaitedEventType, int nWaitedEventID, int nMinNumWaitedEvents, int nTimeout)
 	{
