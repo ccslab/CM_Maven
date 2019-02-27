@@ -1066,8 +1066,8 @@ public class CMStub {
 				e.printStackTrace();
 				return null;
 			}
-			replyEvent = eventSync.getReplyEvent();
 		}
+		replyEvent = eventSync.getReplyEvent();
 
 		return replyEvent;
 	}
@@ -1345,7 +1345,13 @@ public class CMStub {
 				e.printStackTrace();
 				return null;
 			}
-			eventArray = eventSync.getReplyEventListAsArray();
+		}
+		eventArray = eventSync.getReplyEventListAsArray();
+		if(eventArray != null && eventArray.length < nMinNumWaitedEvents)
+		{
+			System.err.println("CMStub.castrecv(), the number of received reply events ("+
+					eventArray.length+") is less than the given minimum number("+nMinNumWaitedEvents+")!");
+			return null;
 		}
 		
 		return eventArray;
