@@ -1050,11 +1050,12 @@ public class CMStub {
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
 		CMEvent replyEvent = null;
 
+		eventSync.init();
+		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver);
+
 		boolean bSendResult = send(cme, strReceiver);
 		if(!bSendResult) return null;
 
-		eventSync.init();
-		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver);
 		synchronized(eventSync)
 		{
 			try {
@@ -1062,6 +1063,7 @@ public class CMStub {
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				return null;
 			}
 			replyEvent = eventSync.getReplyEvent();
 		}
@@ -1276,6 +1278,44 @@ public class CMStub {
 		}
 
 		return ret;
+	}
+	
+	public CMEvent[] castrecv(CMEvent event, String strSessionName, String strGroupName, 
+			int nWaitedEventType, int nWaitedEventID, int nMinNumWaitedEvents, int nTimeout)
+	{
+		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEvent[] eventArray = null;
+		
+		eventSync.init();
+		eventSync.setWaitedEventType(nWaitedEventType);
+		eventSync.setWaitedEventID(nWaitedEventID);
+		if(nMinNumWaitedEvents < 0)
+		{
+			System.err.println("CMStub.castrecv(), nMinNumWaitedEvents = "+nMinNumWaitedEvents);
+			return null;
+		}
+		eventSync.setMinNumWaitedEvents(nMinNumWaitedEvents);
+		
+		boolean bCastResult = cast(event, strSessionName, strGroupName);
+		if(!bCastResult)
+		{
+			System.err.println("CMStub.castrecv(), error in cast()!");
+			return null;
+		}
+		
+		synchronized(eventSync)
+		{
+			try {
+				eventSync.wait(nTimeout);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			eventArray = eventSync.getReplyEventListAsArray();
+		}
+		
+		return eventArray;
 	}
 	
 	/**

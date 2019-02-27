@@ -413,6 +413,21 @@ public class CMClientEventHandler implements CMEventHandler {
 			else
 				System.err.println("Failed to send the reply event!");			
 		}
+		else if(ue.getStringID().equals("testCastRecv"))
+		{
+			System.out.println("Received user event from ["+ue.getSender()+"], to session["+
+					ue.getEventField(CMInfo.CM_STR, "Target Session")+"] and group["+
+					ue.getEventField(CMInfo.CM_STR,  "Target Group")+"], (id, "+ue.getID()+
+					"), (string id, "+ue.getStringID()+")");
+			CMUserEvent rue = new CMUserEvent();
+			rue.setID(223);
+			rue.setStringID("testReplyCastRecv");
+			boolean ret = m_clientStub.send(rue, ue.getSender());
+			if(ret)
+				System.out.println("Sent reply event: (id, "+rue.getID()+"), (sting id, "+rue.getStringID()+")");
+			else
+				System.err.println("Failed to send the reply event!");
+		}
 		else
 		{
 			System.out.println("CMUserEvent received from ["+ue.getSender()+"], strID("+ue.getStringID()+")");

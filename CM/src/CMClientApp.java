@@ -16,6 +16,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
@@ -167,6 +168,9 @@ public class CMClientApp {
 			case 46: // test sendrecv
 				testSendRecv();
 				break;
+			case 47: // test castrecv
+				testCastRecv();
+				break;
 			case 50: // print group info
 				testPrintGroupInfo();
 				break;
@@ -316,7 +320,7 @@ public class CMClientApp {
 		System.out.println("---------------------------------- Event Transmission");
 		System.out.println("40: chat, 41: multicast chat in current group");
 		System.out.println("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position");
-		System.out.println("46: test sendrecv");
+		System.out.println("46: test sendrecv, 47: test castrecv");
 		System.out.println("---------------------------------- Information");
 		System.out.println("50: show group information of default server, 51: show current user status");
 		System.out.println("52: show current channels, 53: show current server information");
@@ -913,6 +917,80 @@ public class CMClientApp {
 					"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")");
 		
 		System.out.println("======");
+	}
+	
+	// test castrecv
+	public void testCastRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		CMEvent[] rueArray = null;
+		String strTargetSession = null;
+		String strTargetGroup = null;
+		String strMinNumReplyEvents = null;
+		int nMinNumReplyEvents = 0;
+		int nTimeout = 10000;
+
+		// a user event: (id, 112) (string id, "testCastRecv")
+		// a reply user event: (id, 223) (string id, "testReplyCastRecv")
+		
+		System.out.println("====== test castrecv");
+		// set a user event
+		ue.setID(112);
+		ue.setStringID("testCastRecv");
+		
+		// set event target session and group
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.println("user event to be sent: (id, 112), (string id, \"testCastRecv\")");
+		System.out.println("reply event to be received: (id, 223), (string id, \"testReplyCastRecv\")");
+		
+		try {
+			System.out.print("Target session(empty for null): ");
+			strTargetSession = br.readLine().trim();
+			System.out.print("Target group(empty for null): ");
+			strTargetGroup = br.readLine().trim();
+			System.out.print("Minimum number of reply events(empty for 0): ");
+			strMinNumReplyEvents = br.readLine().trim();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		if(strTargetSession.isEmpty())
+			strTargetSession = null;
+		if(strTargetGroup.isEmpty())
+			strTargetGroup = null;
+		if(strMinNumReplyEvents.isEmpty())
+			strMinNumReplyEvents = "0";
+
+		try {
+			nMinNumReplyEvents = Integer.parseInt(strMinNumReplyEvents);
+		}catch(NumberFormatException e) {
+			e.printStackTrace();
+			System.err.println("Wrong number format!");
+			return;
+		}
+		
+		System.out.println("Target session: "+strTargetSession);
+		System.out.println("Target group: "+strTargetGroup);
+		System.out.println("Minimum number of reply events: "+nMinNumReplyEvents);
+		System.out.println("Waiting timeout: "+nTimeout+" ms");
+
+		rueArray = m_clientStub.castrecv(ue, strTargetSession, strTargetGroup, 
+				CMInfo.CM_USER_EVENT, 223, nMinNumReplyEvents, nTimeout);
+		
+		if(rueArray == null)
+		{
+			System.err.println("Error in castrecv()!");
+			return;
+		}
+		
+		System.out.println("Number of received reply events: "+rueArray.length);
+		System.out.print("Reply from: ");
+		for(int i = 0; i < rueArray.length; i++)
+			System.out.print(rueArray[i].getSender()+" ");
+		System.out.println();
+
 	}
 	
 	// print group information provided by the default server

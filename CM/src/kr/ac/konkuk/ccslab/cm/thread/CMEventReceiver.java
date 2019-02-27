@@ -78,10 +78,24 @@ public class CMEventReceiver extends Thread {
 					cme.getType() == eventSync.getWaitedEventType() && 
 					cme.getID() == eventSync.getWaitedEventID())
 			{
+				// waiting for a single reply event
 				eventSync.setReplyEvent(cme);
 				synchronized(eventSync)
 				{
 					eventSync.notify();
+				}
+			}
+			else if(eventSync.isWaiting() && 
+					eventSync.getWaitedEventType() == cme.getType() &&
+					eventSync.getWaitedEventID() == cme.getID() && 
+					eventSync.getMinNumWaitedEvents() >= 0 )
+			{
+				// waiting for more than one reply event
+				eventSync.addReplyEvent(cme);
+				synchronized(eventSync)
+				{
+					if(eventSync.isCompleteReplyEvents())
+						eventSync.notify();
 				}
 			}
 			else
@@ -102,7 +116,7 @@ public class CMEventReceiver extends Thread {
 					cme = null;			// clear the event				
 				}				
 			}
-			msg.m_buf = null;	// clear the received ByteBuffer
+			//msg.m_buf = null;	// clear the received ByteBuffer
 
 		}
 		

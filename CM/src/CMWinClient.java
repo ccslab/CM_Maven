@@ -25,6 +25,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
@@ -317,6 +318,9 @@ public class CMWinClient extends JFrame {
 		JMenuItem sendrecvMenuItem = new JMenuItem("test sendrecv");
 		sendrecvMenuItem.addActionListener(menuListener);
 		eventSubMenu.add(sendrecvMenuItem);
+		JMenuItem castrecvMenuItem = new JMenuItem("test castrecv");
+		castrecvMenuItem.addActionListener(menuListener);
+		eventSubMenu.add(castrecvMenuItem);
 		
 		cmServiceMenu.add(eventSubMenu);
 		
@@ -694,6 +698,9 @@ public class CMWinClient extends JFrame {
 		case 46: // test sendrecv
 			testSendRecv();
 			break;
+		case 47: // test castrecv
+			testCastRecv();
+			break;
 		case 50: // print group info
 			testPrintGroupInfo();
 			break;
@@ -834,7 +841,7 @@ public class CMWinClient extends JFrame {
 		printMessage("---------------------------------- Event Transmission\n");
 		printMessage("40: chat, 41: multicast chat in current group\n");
 		printMessage("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position\n");
-		printMessage("46: test sendrecv\n");
+		printMessage("46: test sendrecv, 47: test castrecv\n");
 		printMessage("---------------------------------- Information\n");
 		printMessage("50: show group information of default server, 51: show current user status\n");
 		printMessage("52: show current channels, 53: show current server information\n");
@@ -1588,17 +1595,18 @@ public class CMWinClient extends JFrame {
 		CMUserEvent ue = new CMUserEvent();
 		CMUserEvent rue = null;
 		String strTargetName = null;
+		int nTimeout = 10000;
 		
 		// a user event: (id, 111) (string id, "testSendRecv")
 		// a reply user event: (id, 222) (string id, "testReplySendRecv")
 		
 		printMessage("====== test sendrecv\n");
 		
-		// create a user event
+		// set a user event
 		ue.setID(111);
 		ue.setStringID("testSendRecv");
 		
-		// get target name
+		// set event target name
 		JTextField targetNameTextField = new JTextField();
 		Object[] message = {
 				"user event to be sent: (id, 111), (string id, \"testSendRecv\")", 
@@ -1611,7 +1619,9 @@ public class CMWinClient extends JFrame {
 			strTargetName = targetNameTextField.getText().trim();
 			if(strTargetName.isEmpty())
 				strTargetName = "SERVER";
-			rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, 10000);
+			printMessage("Target name: "+strTargetName+"\n");
+			printMessage("Waiting timeout: "+nTimeout+" ms\n");
+			rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, nTimeout);
 		}
 
 		if(rue == null)
@@ -1621,6 +1631,84 @@ public class CMWinClient extends JFrame {
 					"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
 		
 		printMessage("======\n");
+	}
+	
+	// test castrecv
+	public void testCastRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		CMEvent[] rueArray = null;
+		String strTargetSession = null;
+		String strTargetGroup = null;
+		String strMinNumReplyEvents = null;
+		int nMinNumReplyEvents = 0;
+		int nTimeout = 10000;
+
+		// a user event: (id, 112) (string id, "testCastRecv")
+		// a reply user event: (id, 223) (string id, "testReplyCastRecv")
+		
+		printMessage("====== test castrecv\n");
+		// set a user event
+		ue.setID(112);
+		ue.setStringID("testCastRecv");
+		
+		// set event target session and group
+		JTextField targetSessionTextField = new JTextField();
+		JTextField targetGroupTextField = new JTextField();
+		JTextField minNumReplyEventsTextField = new JTextField();
+		Object[] message = {
+				"user event to be sent: (id, 112), (string id, \"testCastRecv\")", 
+				"reply event to be received: (id, 223), (string id, \"testReplyCastRecv\")",
+				"Target session(empty for null): ", targetSessionTextField,
+				"Target group(empty for null): ", targetGroupTextField,
+				"Minimum number of reply events(empty for 0): ", minNumReplyEventsTextField
+		};
+		int option = JOptionPane.showConfirmDialog(null, message, "Test castrecv()", JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.OK_OPTION)
+		{
+			strTargetSession = targetSessionTextField.getText().trim();
+			ue.setEventField(CMInfo.CM_STR, "Target Session", strTargetSession);
+			strTargetGroup = targetGroupTextField.getText().trim();
+			ue.setEventField(CMInfo.CM_STR, "Target Group", strTargetGroup);
+			strMinNumReplyEvents = minNumReplyEventsTextField.getText().trim();
+			
+			if(strTargetSession.isEmpty())
+				strTargetSession = null;
+			if(strTargetGroup.isEmpty())
+				strTargetGroup = null;
+			if(strMinNumReplyEvents.isEmpty())
+				strMinNumReplyEvents = "0";
+
+			try {
+				nMinNumReplyEvents = Integer.parseInt(strMinNumReplyEvents);
+			}catch(NumberFormatException e) {
+				e.printStackTrace();
+				printStyledMessage("Wrong number format!\n", "bold");
+				return;
+			}
+			
+			printMessage("Target session: "+strTargetSession+"\n");
+			printMessage("Target group: "+strTargetGroup+"\n");
+			printMessage("Minimum number of reply events: "+nMinNumReplyEvents+"\n");
+			printMessage("Waiting timeout: "+nTimeout+" ms\n");
+
+			rueArray = m_clientStub.castrecv(ue, strTargetSession, strTargetGroup, 
+					CMInfo.CM_USER_EVENT, 223, nMinNumReplyEvents, nTimeout);
+			
+			if(rueArray == null)
+			{
+				printStyledMessage("Error in castrecv()!\n", "bold");
+				return;
+			}
+			
+			printMessage("Number of received reply events: "+rueArray.length+"\n");
+			printMessage("Reply from: ");
+			for(int i = 0; i < rueArray.length; i++)
+				printMessage(rueArray[i].getSender()+" ");
+			printMessage("\n");
+
+		}
+		
 	}
 
 	// print group information provided by the default server
@@ -4144,6 +4232,9 @@ public class CMWinClient extends JFrame {
 				break;
 			case "test sendrecv":
 				testSendRecv();
+				break;
+			case "test castrecv":
+				testCastRecv();
 				break;
 			case "show group information of default server":
 				testPrintGroupInfo();
