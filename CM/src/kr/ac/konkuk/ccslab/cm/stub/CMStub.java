@@ -1073,7 +1073,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Sends a CM event to a node group
+	 * Sends a CM event to a node group.
 	 * 
 	 * <p> This method is the same as calling send(cme, sessionName, groupName, CMInfo.CM_STREAM, 0)
 	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
@@ -1099,7 +1099,7 @@ public class CMStub {
 	}
 
 	/**
-	 * Sends a CM event to a node group
+	 * Sends a CM event to a node group.
 	 * 
 	 * <p> This method is the same as calling send(cme, sessionName, groupName, opt, 0)
 	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
@@ -1140,7 +1140,7 @@ public class CMStub {
 	}
 
 	/**
-	 * Sends a CM event to a node group
+	 * Sends a CM event to a node group.
 	 * 
 	 * <p> The cast method sends a CM event to a receivers group using multiple one-to-one transmission. 
 	 * The range of receivers can be set with a session and a group. That is, this method sends an event 
@@ -1305,7 +1305,7 @@ public class CMStub {
 	 * @param nWaitedEventType - the waited event type of the reply event
 	 * @param nWaitedEventID - the waited event ID of the reply event
 	 * @param nMinNumWaitedEvents - the minimum number of waited events
-	 * <br> If the sender waits until it receives at least 'nMinNumWaitedEvents' events.
+	 * <br> The sender waits until it receives at least 'nMinNumWaitedEvents' events.
 	 * @param nTimeout - the maximum time to wait in milliseconds.
 	 * <br> If nTimeout is greater than 0, the main thread is suspended until the timeout time elapses.
 	 * <br> If nTimeout is 0, the main thread is suspended until the all reply events arrives without the timeout.
@@ -1359,7 +1359,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Sends a CM event to a node group via multicast
+	 * Sends a CM event to a node group via multicast.
 	 * 
 	 * <p> If a CM server application sets the communication architecture as the CM_PS in the server configuration file, 
 	 * it creates a multicast channel assigned to each group. In this case, the server and client applications can send 
@@ -1386,7 +1386,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Sends a CM event to all connected nodes
+	 * Sends a CM event to all connected nodes.
 	 * 
 	 * <p> This method is the same as calling broadcast(cme, CMInfo.CM_STREAM, 0)
 	 * of the {@link CMStub#broadcast(CMEvent, int, int)} method.
@@ -1406,7 +1406,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Sends a CM event to all connected nodes
+	 * Sends a CM event to all connected nodes.
 	 * 
 	 * <p> This method is the same as calling broadcast(cme, opt, 0)
 	 * of the {@link CMStub#broadcast(CMEvent, int, int)} method.
@@ -1441,7 +1441,7 @@ public class CMStub {
 	}
 
 	/**
-	 * Sends a CM event to all connected nodes
+	 * Sends a CM event to all connected nodes.
 	 * 
 	 * <p> This method is the same as calling broadcast(cme, opt, 0)
 	 * of the {@link CMStub#broadcast(CMEvent, int, int)} method.
@@ -1639,7 +1639,7 @@ public class CMStub {
 	}
 
 	/**
-	 * Sends a CM event to a node group via a designated server
+	 * Sends a CM event to a node group via a designated server.
 	 * 
 	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, CMInfo.CM_STREAM, 0)
 	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
@@ -1666,7 +1666,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Sends a CM event to a node group via a designated server
+	 * Sends a CM event to a node group via a designated server.
 	 * 
 	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, opt, 0)
 	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
@@ -1708,7 +1708,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Sends a CM event to a node group via a designated server
+	 * Sends a CM event to a node group via a designated server.
 	 * 
 	 * <p> This method is usually used to send an event to a participating user node group through the designated server.
 	 * This method is the same as calling cast(cme, sessionName, groupName, opt, nChNum)
@@ -1803,7 +1803,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Requests to transfer a file from a owner (push mode).
+	 * Requests to transfer a file from a owner (pull mode).
 	 * 
 	 * <p> This method is the same as calling requestFile(strFileName, strFileOwner, CMInfo.FILE_DEFAULT) 
 	 * of the {@link CMStub#requestFile(String, String, byte)}.
@@ -1822,7 +1822,7 @@ public class CMStub {
 	}
 	
 	/**
-	 * Requests to transfer a file from a owner (push mode).
+	 * Requests to transfer a file from a owner (pull mode).
 	 * 
 	 * <p> If a client requests a file, the file owner can be a server. If a server requests a file, 
 	 * the file owner can be a client.
