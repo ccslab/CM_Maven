@@ -1309,7 +1309,8 @@ public class CMStub {
 	 * @param nTimeout - the maximum time to wait in milliseconds.
 	 * <br> If nTimeout is greater than 0, the main thread is suspended until the timeout time elapses.
 	 * <br> If nTimeout is 0, the main thread is suspended until the all reply events arrives without the timeout.
-	 * @return an array of reply CM events if they are successfully received, or null otherwise.
+	 * @return an array of reply CM events if the minimum number (nMinNumWaitedEvents) of reply events are 
+	 * successfully received, or null otherwise.
 	 * <br> The size of the array can be greater than 'nMinNumWaitedEvents'.
 	 * @see CMStub#sendrecv(CMEvent, String, int, int, int)
 	 */
