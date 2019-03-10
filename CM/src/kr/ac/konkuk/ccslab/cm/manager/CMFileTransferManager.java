@@ -1161,7 +1161,7 @@ public class CMFileTransferManager {
 					+"), return code("+fe.getReturnCode()+"), contentID("+fe.getContentID()+").");
 		}
 		
-		if(fe.getReturnCode() == 0 && fe.getFileName().equals("throughput.test"))
+		if(fe.getReturnCode() == 0 && fe.getFileName().equals("throughput-test.jpg"))
 		{
 			System.err.println("The requested file does not exists!");
 			synchronized(eventSync)
@@ -1413,6 +1413,8 @@ public class CMFileTransferManager {
 		// send the end of file transfer
 		fe = new CMFileEvent();
 		fe.setID(CMFileEvent.END_FILE_TRANSFER);
+		fe.setSender(strSenderName);
+		fe.setReceiver(strReceiver);
 		fe.setSenderName(strSenderName);
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
@@ -1500,6 +1502,8 @@ public class CMFileTransferManager {
 		// send ack
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.END_FILE_TRANSFER_ACK);
+		feAck.setSender(interInfo.getMyself().getName());
+		feAck.setReceiver(fe.getSender());
 		feAck.setReceiverName(interInfo.getMyself().getName());
 		feAck.setFileName(fe.getFileName());
 		feAck.setFileSize(fe.getFileSize());
@@ -1603,7 +1607,7 @@ public class CMFileTransferManager {
 					+"), return code("+fe.getReturnCode()+"), contentID("+fe.getContentID()+").");
 		}
 		
-		if(fe.getReturnCode() == 0 && fe.getFileName().equals("throughput.test"))
+		if(fe.getReturnCode() == 0 && fe.getFileName().equals("throughput-test.jpg"))
 		{
 			System.err.println("The requested file does not exists!");
 			synchronized(eventSync)
@@ -1862,6 +1866,8 @@ public class CMFileTransferManager {
 		// make ack event
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.END_FILE_TRANSFER_CHAN_ACK);
+		feAck.setSender(interInfo.getMyself().getName());
+		feAck.setReceiver(fe.getSender());
 		feAck.setReceiverName(interInfo.getMyself().getName());
 		feAck.setFileName(fe.getFileName());
 		feAck.setFileSize(fe.getFileSize());

@@ -555,6 +555,8 @@ public class CMInteractionManager {
 		}
 
 		seAck.setID(CMSessionEvent.LOGIN_ACK);
+		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setReceiver(se.getSender());
 		if(bValidUser)
 			seAck.setValidUser(1);
 		else
@@ -879,6 +881,8 @@ public class CMInteractionManager {
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.RESPONSE_SESSION_INFO);
+		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setReceiver(se.getSender());
 		seAck.setSessionNum(confInfo.getSessionNumber());
 		Iterator<CMSession> iterSession = interInfo.getSessionList().iterator();
 		while(iterSession.hasNext())
@@ -967,6 +971,8 @@ public class CMInteractionManager {
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK);
+		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChIndex);
 
@@ -1046,6 +1052,8 @@ public class CMInteractionManager {
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
+		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChKey);
 
@@ -1150,6 +1158,8 @@ public class CMInteractionManager {
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
+		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChKey);
 		

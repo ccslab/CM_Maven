@@ -196,6 +196,8 @@ public class CMSessionManager {
 		// send JOIN_SESSION_ACK
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.JOIN_SESSION_ACK);
+		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setReceiver(user.getName());
 		seAck.setHandlerSession(user.getCurrentSession());
 		seAck.setGroupNum(session.getGroupList().size());
 		Iterator<CMGroup> iterGroup = session.getGroupList().iterator();

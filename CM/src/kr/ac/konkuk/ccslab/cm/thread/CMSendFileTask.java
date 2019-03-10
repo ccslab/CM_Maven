@@ -140,6 +140,8 @@ public class CMSendFileTask implements Runnable {
 			// send END_FILE_TRANSFER_CHAN with the default TCP socket channel
 			fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);
+			fe.setSender(m_sendFileInfo.getSenderName());
+			fe.setReceiver(m_sendFileInfo.getReceiverName());
 			fe.setSenderName(m_sendFileInfo.getSenderName());
 			fe.setFileName(m_sendFileInfo.getFileName());
 			fe.setFileSize(m_sendFileInfo.getFileSize());

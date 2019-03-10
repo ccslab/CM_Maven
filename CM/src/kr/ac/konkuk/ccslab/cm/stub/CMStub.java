@@ -2119,6 +2119,7 @@ public class CMStub {
 		if(!bReturn)
 			return -1;
 
+		eventSync.init();
 		if(confInfo.isFileTransferScheme())
 			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN, strTarget);
 		else
@@ -2138,7 +2139,6 @@ public class CMStub {
 			}
 			lFileSize = replyEvent.getFileSize();
 		}
-		eventSync.init();
 		
 		if(replyEvent.getID() == CMFileEvent.REPLY_FILE_TRANSFER || replyEvent.getID() == CMFileEvent.REPLY_FILE_TRANSFER_CHAN)
 		{
@@ -2187,7 +2187,8 @@ public class CMStub {
 		
 		if(!bReturn)
 			return -1;
-		
+	
+		eventSync.init();
 		if(confInfo.isFileTransferScheme())
 			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, strTarget);
 		else
@@ -2198,7 +2199,7 @@ public class CMStub {
 			while(replyEvent == null)
 			{
 				try {
-					eventSync.wait();
+					eventSync.wait(30000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -2207,7 +2208,6 @@ public class CMStub {
 			}
 			lFileSize = replyEvent.getFileSize();
 		}
-		eventSync.init();
 				
 		lEndTime = System.currentTimeMillis();
 		lTransDelay = lEndTime - lStartTime;	// millisecond
