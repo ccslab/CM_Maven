@@ -1622,13 +1622,12 @@ public class CMWinClient extends JFrame {
 			printMessage("Target name: "+strTargetName+"\n");
 			printMessage("Waiting timeout: "+nTimeout+" ms\n");
 			rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, nTimeout);
+			if(rue == null)
+				printStyledMessage("The reply event is null!\n", "bold");
+			else
+				printMessage("Received reply event from ["+rue.getSender()+"]: (type, "+rue.getType()+
+						"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
 		}
-
-		if(rue == null)
-			printStyledMessage("The reply event is null!\n", "bold");
-		else
-			printMessage("Received reply event from ["+rue.getSender()+"]: (type, "+rue.getType()+
-					"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
 		
 		printMessage("======\n");
 	}
