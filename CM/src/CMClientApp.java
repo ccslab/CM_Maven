@@ -363,7 +363,6 @@ public class CMClientApp {
 	{
 		String strUserName = null;
 		String strPassword = null;
-		String strEncPassword = null;
 		boolean bRequestResult = false;
 		Console console = System.console();
 		if(console == null)
@@ -388,10 +387,7 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
-		// encrypt password
-		strEncPassword = CMUtil.getSHA1Hash(strPassword);
-		
-		bRequestResult = m_clientStub.loginCM(strUserName, strEncPassword);
+		bRequestResult = m_clientStub.loginCM(strUserName, strPassword);
 		if(bRequestResult)
 			System.out.println("successfully sent the login request.");
 		else
@@ -403,7 +399,6 @@ public class CMClientApp {
 	{
 		String strUserName = null;
 		String strPassword = null;
-		String strEncPassword = null;
 		CMSessionEvent loginAckEvent = null;
 		Console console = System.console();
 		if(console == null)
@@ -428,10 +423,7 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
-		// encrypt password
-		strEncPassword = CMUtil.getSHA1Hash(strPassword);
-		
-		loginAckEvent = m_clientStub.syncLoginCM(strUserName, strEncPassword);
+		loginAckEvent = m_clientStub.syncLoginCM(strUserName, strPassword);
 		if(loginAckEvent != null)
 		{
 			// print login result

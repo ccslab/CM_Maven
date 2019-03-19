@@ -42,6 +42,7 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.thread.CMOpenChannelTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMRemoveChannelTask;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 /**
  * This class provides APIs, through which a client developer can access most of the communication 
@@ -535,6 +536,7 @@ public class CMClientStub extends CMStub {
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		boolean bRequestResult = false;
+		String strEncPassword = null;
 		
 		// check local state
 		int nUserState = getMyself().getState();
@@ -558,11 +560,14 @@ public class CMClientStub extends CMStub {
 		String strMyAddr = confInfo.getMyAddress();		// client IP address
 		int nMyUDPPort = confInfo.getUDPPort();			// client UDP port
 		
+		// encrypt the plain password text
+		strEncPassword = CMUtil.getSHA1Hash(strPassword);
+		
 		// make an event
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.LOGIN);
 		se.setUserName(strUserName);
-		se.setPassword(strPassword);
+		se.setPassword(strEncPassword);
 		se.setHostAddress(strMyAddr);
 		se.setUDPPort(nMyUDPPort);
 		

@@ -907,7 +907,6 @@ public class CMWinClient extends JFrame {
 	{
 		String strUserName = null;
 		String strPassword = null;
-		String strEncPassword = null;
 		boolean bRequestResult = false;
 
 		printMessage("====== login to default server\n");
@@ -922,11 +921,9 @@ public class CMWinClient extends JFrame {
 		{
 			strUserName = userNameField.getText();
 			strPassword = new String(passwordField.getPassword()); // security problem?
-			// encrypt password
-			strEncPassword = CMUtil.getSHA1Hash(strPassword);
 			
 			m_eventHandler.setStartTime(System.currentTimeMillis());
-			bRequestResult = m_clientStub.loginCM(strUserName, strEncPassword);
+			bRequestResult = m_clientStub.loginCM(strUserName, strPassword);
 			long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 			if(bRequestResult)
 			{
@@ -947,7 +944,6 @@ public class CMWinClient extends JFrame {
 	{
 		String strUserName = null;
 		String strPassword = null;
-		String strEncPassword = null;
 		CMSessionEvent loginAckEvent = null;
 
 		printMessage("====== synchronous login to default server\n");
@@ -962,11 +958,9 @@ public class CMWinClient extends JFrame {
 		{
 			strUserName = userNameField.getText();
 			strPassword = new String(passwordField.getPassword()); // security problem?
-			// encrypt password
-			strEncPassword = CMUtil.getSHA1Hash(strPassword);
 			
 			m_eventHandler.setStartTime(System.currentTimeMillis());
-			loginAckEvent = m_clientStub.syncLoginCM(strUserName, strEncPassword);
+			loginAckEvent = m_clientStub.syncLoginCM(strUserName, strPassword);
 			long lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 			if(loginAckEvent != null)
 			{
