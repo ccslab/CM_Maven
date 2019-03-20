@@ -15,7 +15,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  * {@link CMFileEvent}, {@link CMInterestEvent}, {@link CMMultiServerEvent}, {@link CMSessionEvent}, 
  * {@link CMSNSEvent}, {@link CMUserEvent}
  */
-public class CMEvent extends CMObject {
+public abstract class CMEvent extends CMObject {
 	
 	protected String m_strSender;
 	protected String m_strReceiver;
@@ -354,17 +354,9 @@ public class CMEvent extends CMObject {
 
 	}
 	
-	protected void marshallBody()
-	{
-		m_bytes.clear();
-		// should be implemented in sub-classes
-	}
+	protected abstract void marshallBody();
 	
-	protected void unmarshallBody(ByteBuffer msg)
-	{
-		msg.clear();
-		// should be implemented in sub-classes
-	}
+	protected abstract void unmarshallBody(ByteBuffer msg);
 
 	protected void setByteNum(int nByteNum)
 	{
