@@ -141,14 +141,6 @@ public class CMSessionEvent extends CMEvent {
 		unmarshallBody(msg);
 	}
 	
-	public CMSessionEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
 	// set/get methods
 	public void setHostAddress(String host)
 	{

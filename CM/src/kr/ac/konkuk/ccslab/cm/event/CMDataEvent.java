@@ -41,14 +41,6 @@ public class CMDataEvent extends CMEvent{
 		unmarshallBody(msg);
 	}
 	
-	public CMDataEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
 	// set/get methods
 	public void setUserName(String name)
 	{

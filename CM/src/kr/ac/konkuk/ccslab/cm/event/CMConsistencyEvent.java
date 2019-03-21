@@ -41,14 +41,6 @@ public class CMConsistencyEvent extends CMEvent {
 		unmarshallBody(msg);
 	}
 	
-	public CMConsistencyEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		return this;
-		// the allocated memory should be deallocated after the event is processed.
-	}
-	
 	public void setEventSource(int src)
 	{
 		m_nEventSource = src;

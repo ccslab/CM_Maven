@@ -118,14 +118,6 @@ public class CMSNSEvent extends CMEvent{
 		unmarshallBody(msg);
 	}
 	
-	public CMSNSEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
 	// set/get methods
 	public void setUserName(String name)
 	{
