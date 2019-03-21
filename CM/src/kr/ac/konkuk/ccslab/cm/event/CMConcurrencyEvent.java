@@ -29,15 +29,7 @@ public class CMConcurrencyEvent extends CMEvent {
 		unmarshallHeader(msg);
 		unmarshallBody(msg);
 	}
-	
-	public CMConcurrencyEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
+
 	public void setTargetObjectID(int id)
 	{
 		m_nTargetObjectID = id;

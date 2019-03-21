@@ -66,14 +66,6 @@ public class CMInterestEvent extends CMEvent{
 		unmarshallBody(msg);
 	}
 	
-	public CMInterestEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
 	// set/get methods
 	public void setUserName(String name)
 	{

@@ -24,14 +24,6 @@ public class CMUserEvent extends CMEvent {
 		unmarshallHeader(msg);
 		unmarshallBody(msg);
 	}
-	
-	public CMUserEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
 
 	// set/get methods
 	public Vector<CMUserEventField> getAllEventFields()

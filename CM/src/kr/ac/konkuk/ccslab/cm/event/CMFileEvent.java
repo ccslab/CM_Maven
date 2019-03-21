@@ -83,14 +83,6 @@ public class CMFileEvent extends CMEvent{
 		unmarshallBody(msg);
 	}
 	
-	public CMFileEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
 	// set/get methods
 	public void setReceiverName(String uName)
 	{
