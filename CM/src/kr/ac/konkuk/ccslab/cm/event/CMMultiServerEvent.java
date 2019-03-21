@@ -126,14 +126,6 @@ public class CMMultiServerEvent extends CMEvent{
 		unmarshallBody(msg);
 	}
 	
-	public CMMultiServerEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
 	// set/get methods
 	public void setServerName(String sname)
 	{

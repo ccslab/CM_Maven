@@ -22,14 +22,6 @@ public class CMDummyEvent extends CMEvent{
 		unmarshallBody(msg);
 	}
 	
-	public CMDummyEvent unmarshall(ByteBuffer msg)
-	{
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
-		
-		return this;
-	}
-	
 	// set/get methods
 	public void setDummyInfo(String info)
 	{
