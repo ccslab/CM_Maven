@@ -2983,6 +2983,7 @@ public class CMClientStub extends CMStub {
 		String myAddress = null;
 		int myUDPPort = -1;
 		boolean bResult = false;
+		String strEncPasswd = null;
 		
 		// if a server is the default server, call the original function.
 		if( strServer.equals("SERVER") )
@@ -3024,12 +3025,15 @@ public class CMClientStub extends CMStub {
 		myAddress = confInfo.getMyAddress();
 		myUDPPort = confInfo.getUDPPort();
 		
+		// encrypt password
+		strEncPasswd = CMUtil.getSHA1Hash(strPasswd);
+
 		// make an event
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.ADD_LOGIN);
 		mse.setServerName(strServer);
 		mse.setUserName(strUser);
-		mse.setPassword(strPasswd);
+		mse.setPassword(strEncPasswd);
 		mse.setHostAddress(myAddress);
 		mse.setUDPPort(myUDPPort);
 
@@ -3373,6 +3377,7 @@ public class CMClientStub extends CMStub {
 	public void registerUser(String strName, String strPasswd)
 	{
 		int nState = -1;
+		String strEncPasswd = null;
 
 		// check if the user is connected to a default server
 		nState = getMyself().getState();
@@ -3383,11 +3388,14 @@ public class CMClientStub extends CMStub {
 			return;
 		}
 
+		// encrypt password
+		strEncPasswd = CMUtil.getSHA1Hash(strPasswd);
+
 		// make a request event
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REGISTER_USER);
 		se.setUserName(strName);
-		se.setPassword(strPasswd);
+		se.setPassword(strEncPasswd);
 
 		// send the request (a default server will send back REGISTER_USER_ACK event)
 		send(se, "SERVER");
@@ -3436,6 +3444,7 @@ public class CMClientStub extends CMStub {
 	public void deregisterUser(String strName, String strPasswd)
 	{
 		int nState = -1;
+		String strEncPasswd = null;
 
 		// check if the user is connected to a default server
 		nState = getMyself().getState();
@@ -3446,11 +3455,14 @@ public class CMClientStub extends CMStub {
 			return;
 		}
 
+		// encrypt password
+		strEncPasswd = CMUtil.getSHA1Hash(strPasswd);
+
 		// make a request event
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.DEREGISTER_USER);
 		se.setUserName(strName);
-		se.setPassword(strPasswd);
+		se.setPassword(strEncPasswd);
 
 		// send the request (a default server will send back DEREGISTER_USER_ACK event)
 		send(se, "SERVER");

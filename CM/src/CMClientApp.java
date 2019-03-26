@@ -1956,7 +1956,6 @@ public class CMClientApp {
 		String strName = null;
 		String strPasswd = null;
 		String strRePasswd = null;
-		String strEncPasswd = null;
 		Console console = System.console();
 		if(console == null)
 		{
@@ -1993,11 +1992,7 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 
-		// encrypt password
-		strEncPasswd = CMUtil.getSHA1Hash(strPasswd);
-
-		//m_clientStub.registerUser(strName, strPasswd);
-		m_clientStub.registerUser(strName, strEncPasswd);
+		m_clientStub.registerUser(strName, strPasswd);
 		System.out.println("======");
 		return;
 	}
@@ -2006,7 +2001,6 @@ public class CMClientApp {
 	{
 		String strName = null;
 		String strPasswd = null;
-		String strEncPasswd = null;
 		Console console = System.console();
 		if(console == null)
 		{
@@ -2033,10 +2027,7 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
-		// encrypt password
-		strEncPasswd = CMUtil.getSHA1Hash(strPasswd);
-		//m_clientStub.deregisterUser(strName, strPasswd);
-		m_clientStub.deregisterUser(strName, strEncPasswd);
+		m_clientStub.deregisterUser(strName, strPasswd);
 		System.out.println("======");
 		return;
 	}
@@ -2161,7 +2152,6 @@ public class CMClientApp {
 		String strServerName = null;
 		String user = null;
 		String password = null;
-		String strEncPasswd = null;
 		Console console = System.console();
 		if(console == null)
 		{
@@ -2187,11 +2177,8 @@ public class CMClientApp {
 				{
 					password = new String(console.readPassword("Password: "));
 				}
-				// encrypt password
-				strEncPasswd = CMUtil.getSHA1Hash(password);
 				
-				//m_clientStub.loginCM(user, password);
-				m_clientStub.loginCM(user, strEncPasswd);
+				m_clientStub.loginCM(user, password);
 			}
 			else // use the login info for the default server
 			{

@@ -2818,46 +2818,6 @@ public class CMWinClient extends JFrame {
 		String strName = null;
 		String strPasswd = null;
 		String strRePasswd = null;
-		String strEncPasswd = null;
-		
-		/*
-		Console console = System.console();
-		if(console == null)
-		{
-			System.err.println("Unable to obtain console.");
-		}
-		*/
-
-		/*
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.println("====== register a user");
-		try {
-			System.out.print("Input user name: ");
-			strName = br.readLine();
-			if(console == null)
-			{
-				System.out.print("Input password: ");
-				strPasswd = br.readLine();
-				System.out.print("Retype password: ");
-				strRePasswd = br.readLine();
-			}
-			else
-			{
-				strPasswd = new String(console.readPassword("Input password: "));
-				strRePasswd = new String(console.readPassword("Retype password: "));
-			}
-			
-			if(!strPasswd.equals(strRePasswd))
-			{
-				System.err.println("Password input error");
-				return;
-			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 		
 		printMessage("====== register a user\n");
 		JTextField nameField = new JTextField();
@@ -2881,12 +2841,7 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 
-		// encrypt password
-		strEncPasswd = CMUtil.getSHA1Hash(strPasswd);
-
-		//m_clientStub.registerUser(strName, strPasswd);
-		m_clientStub.registerUser(strName, strEncPasswd);
-		//System.out.println("======");
+		m_clientStub.registerUser(strName, strPasswd);
 		printMessage("======\n");
 		
 		return;
@@ -2896,35 +2851,6 @@ public class CMWinClient extends JFrame {
 	{
 		String strName = null;
 		String strPasswd = null;
-		String strEncPasswd = null;
-		
-		/*
-		Console console = System.console();
-		if(console == null)
-		{
-			System.err.println("Unable to obtain console.");
-		}
-
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-		System.out.println("====== Deregister a user");
-		try {
-			System.out.print("Input user name: ");
-			strName = br.readLine();
-			if(console == null)
-			{
-				System.out.print("Input password: ");
-				strPasswd = br.readLine();
-			}
-			else
-			{
-				strPasswd = new String(console.readPassword("Input password: "));
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 		
 		printMessage("====== Deregister a user\n");
 		JTextField nameField = new JTextField();
@@ -2938,12 +2864,8 @@ public class CMWinClient extends JFrame {
 		strName = nameField.getText();
 		strPasswd = new String(passwdField.getPassword());	// security problem?
 		
-		// encrypt password
-		strEncPasswd = CMUtil.getSHA1Hash(strPasswd);
-		//m_clientStub.deregisterUser(strName, strPasswd);
-		m_clientStub.deregisterUser(strName, strEncPasswd);
+		m_clientStub.deregisterUser(strName, strPasswd);
 
-		//System.out.println("======");
 		printMessage("======\n");
 		
 		return;
@@ -3113,53 +3035,7 @@ public class CMWinClient extends JFrame {
 		String strServerName = null;
 		String user = null;
 		String password = null;
-		String strEncPasswd = null;
-		
-		/*
-		Console console = System.console();
-		if(console == null)
-		{
-			System.err.println("Unable to obtain console.");
-		}
-
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-		System.out.println("====== log in to a designated server");
-		try {
-			System.out.print("Input server name: ");
-			strServerName = br.readLine();
-			if( strServerName.equals("SERVER") )	// login to a default server
-			{
-				System.out.print("User name: ");
-				user = br.readLine();
-				if(console == null)
-				{
-					System.out.print("Password: ");
-					password = br.readLine();
-				}
-				else
-				{
-					password = new String(console.readPassword("Password: "));
-				}
-				// encrypt password
-				strEncPasswd = CMUtil.getSHA1Hash(password);
-				
-				//m_clientStub.loginCM(user, password);
-				m_clientStub.loginCM(user, strEncPasswd);
-			}
-			else // use the login info for the default server
-			{
-				CMUser myself = m_clientStub.getCMInfo().getInteractionInfo().getMyself();
-				user = myself.getName();
-				password = myself.getPasswd();
-				m_clientStub.loginCM(strServerName, user, password);
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-		
+						
 		printMessage("====== log in to a designated server\n");
 		strServerName = JOptionPane.showInputDialog("Server Name: ");
 		if(strServerName == null) return;
@@ -3177,10 +3053,8 @@ public class CMWinClient extends JFrame {
 			{
 				user = userNameField.getText();
 				String strPassword = new String(passwordField.getPassword()); // security problem?
-				// encrypt password
-				strEncPasswd = CMUtil.getSHA1Hash(strPassword);
 
-				m_clientStub.loginCM(user, strEncPasswd);
+				m_clientStub.loginCM(user, strPassword);
 			}
 		}
 		else // use the login info for the default server
