@@ -15,9 +15,7 @@ public class CMDummyEvent extends CMEvent{
 	
 	public CMDummyEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_DUMMY_EVENT;
-		m_strDummyInfo = "";
-
+		this();
 		unmarshall(msg);
 	}
 	

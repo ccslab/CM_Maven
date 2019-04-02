@@ -51,17 +51,7 @@ public abstract class CMEvent extends CMObject {
 	 */
 	public CMEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_EVENT;
-		m_nID = -1;
-		m_strSender = "";
-		m_strReceiver = "";
-		m_strHandlerSession = "";
-		m_strHandlerGroup = "";
-		m_strDistributionSession = "";
-		m_strDistributionGroup = "";
-		m_nByteNum = -1;
-		m_bytes = null;
-		
+		this();
 		unmarshall(msg);
 	}
 

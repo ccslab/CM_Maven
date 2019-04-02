@@ -27,16 +27,7 @@ public class CMConsistencyEvent extends CMEvent {
 	
 	public CMConsistencyEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_CONSISTENCY_EVENT;
-		m_fTranslation[0] = 0.0f;
-		m_fTranslation[1] = 0.0f;
-		m_fTranslation[2] = 0.0f;
-		m_fRotation[0] = 0.0f;
-		m_fRotation[1] = 0.0f;
-		m_fRotation[2] = 0.0f;
-		m_fRotation[3] = 0.0f;
-		m_nEventSource = -1;
-
+		this();
 		unmarshall(msg);
 	}
 	

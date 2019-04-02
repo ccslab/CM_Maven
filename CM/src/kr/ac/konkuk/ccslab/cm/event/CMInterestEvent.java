@@ -44,24 +44,7 @@ public class CMInterestEvent extends CMEvent{
 	
 	public CMInterestEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_INTEREST_EVENT;
-		m_strUserName = "";
-		m_strPasswd = "";
-		m_strHostAddr = "";
-		m_nUDPPort = -1;
-		m_strCurrentGroup = "";
-		m_strTalk = "";
-		m_strCollideObj = "";
-		
-		m_pq = new CMPosition();
-		m_pq.m_p.m_x = 0.0f;
-		m_pq.m_p.m_y = 0.0f;
-		m_pq.m_p.m_z = 0.0f;
-		m_pq.m_q.m_w = 0.0f;
-		m_pq.m_q.m_x = 0.0f;
-		m_pq.m_q.m_y = 0.0f;
-		m_pq.m_q.m_z = 0.0f;
-		
+		this();
 		unmarshall(msg);
 	}
 	
