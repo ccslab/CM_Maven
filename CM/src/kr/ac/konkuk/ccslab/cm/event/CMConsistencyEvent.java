@@ -37,8 +37,7 @@ public class CMConsistencyEvent extends CMEvent {
 		m_fRotation[3] = 0.0f;
 		m_nEventSource = -1;
 
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 	
 	public void setEventSource(int src)
@@ -128,7 +127,6 @@ public class CMConsistencyEvent extends CMEvent {
 			m_bytes.putFloat(m_fTranslation[0]);
 			m_bytes.putFloat(m_fTranslation[1]);
 			m_bytes.putFloat(m_fTranslation[2]);
-			m_bytes.clear();
 			break;
 		case CMConsistencyEvent.ROTATION:
 			m_bytes.putInt(m_nEventSource);
@@ -136,7 +134,6 @@ public class CMConsistencyEvent extends CMEvent {
 			m_bytes.putFloat(m_fRotation[1]);
 			m_bytes.putFloat(m_fRotation[2]);
 			m_bytes.putFloat(m_fRotation[3]);
-			m_bytes.clear();
 			break;
 		case CMConsistencyEvent.TRANS_ROTATION:
 			m_bytes.putInt(m_nEventSource);
@@ -147,7 +144,6 @@ public class CMConsistencyEvent extends CMEvent {
 			m_bytes.putFloat(m_fRotation[1]);
 			m_bytes.putFloat(m_fRotation[2]);
 			m_bytes.putFloat(m_fRotation[3]);
-			m_bytes.clear();
 			break;
 		default:
 			System.out.println("CMConsistencyEvent.marshallBody(), unknown event id("+m_nID+").");
@@ -165,7 +161,6 @@ public class CMConsistencyEvent extends CMEvent {
 			m_fTranslation[0] = msg.getFloat();
 			m_fTranslation[1] = msg.getFloat();
 			m_fTranslation[2] = msg.getFloat();
-			msg.clear();
 			break;
 		case CMConsistencyEvent.ROTATION:
 			m_nEventSource = msg.getInt();
@@ -173,7 +168,6 @@ public class CMConsistencyEvent extends CMEvent {
 			m_fRotation[1] = msg.getFloat();
 			m_fRotation[2] = msg.getFloat();
 			m_fRotation[3] = msg.getFloat();
-			msg.clear();
 			break;
 		case CMConsistencyEvent.TRANS_ROTATION:
 			m_nEventSource = msg.getInt();
@@ -184,7 +178,6 @@ public class CMConsistencyEvent extends CMEvent {
 			m_fRotation[1] = msg.getFloat();
 			m_fRotation[2] = msg.getFloat();
 			m_fRotation[3] = msg.getFloat();
-			msg.clear();
 			break;
 		default:
 			System.out.println("CMConsistencyEvent.unmarshallBody(), unknown event id("+m_nID+").");

@@ -79,8 +79,7 @@ public class CMFileEvent extends CMEvent{
 		m_nContentID = -1;
 		m_byteFileAppendFlag = -1;
 		
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 	
 	// set/get methods
@@ -264,7 +263,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putInt(m_nContentID);
 			m_bytes.put(m_byteFileAppendFlag);
-			m_bytes.clear();
 			break;
 		case REPLY_FILE_TRANSFER:
 		case REPLY_FILE_TRANSFER_CHAN:
@@ -272,7 +270,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
-			m_bytes.clear();
 			break;
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
@@ -283,7 +280,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.put(m_byteFileAppendFlag);
-			m_bytes.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
@@ -293,7 +289,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putLong(m_lReceivedFileSize);
-			m_bytes.clear();			
 			break;
 		case CONTINUE_FILE_TRANSFER:
 			m_bytes.putInt(m_strSenderName.getBytes().length);
@@ -303,7 +298,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putInt(m_nBlockSize);
 			m_bytes.put(m_cFileBlock);
-			m_bytes.clear();
 			break;
 		case CONTINUE_FILE_TRANSFER_ACK:
 			m_bytes.putInt(m_strReceiverName.getBytes().length);
@@ -312,7 +306,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putLong(m_lReceivedFileSize);
 			m_bytes.putInt(m_nContentID);
-			m_bytes.clear();
 			break;
 		case END_FILE_TRANSFER:
 		case END_FILE_TRANSFER_CHAN:
@@ -322,7 +315,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
-			m_bytes.clear();
 			break;
 		case END_FILE_TRANSFER_ACK:
 		case END_FILE_TRANSFER_CHAN_ACK:
@@ -333,13 +325,11 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
-			m_bytes.clear();
 			break;
 		case REQUEST_DIST_FILE_PROC:
 			m_bytes.putInt(m_strReceiverName.getBytes().length);
 			m_bytes.put(m_strReceiverName.getBytes());
 			m_bytes.putInt(m_nContentID);
-			m_bytes.clear();
 			break;
 		case CANCEL_FILE_SEND:
 		case CANCEL_FILE_SEND_CHAN:
@@ -348,7 +338,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.put(m_strSenderName.getBytes());
 			m_bytes.putInt(m_strReceiverName.getBytes().length);
 			m_bytes.put(m_strReceiverName.getBytes());
-			m_bytes.clear();
 			break;
 		case CANCEL_FILE_SEND_ACK:
 		case CANCEL_FILE_SEND_CHAN_ACK:
@@ -358,7 +347,6 @@ public class CMFileEvent extends CMEvent{
 			m_bytes.putInt(m_strReceiverName.getBytes().length);
 			m_bytes.put(m_strReceiverName.getBytes());
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.clear();
 			break;			
 		default:
 			System.out.println("CMFileEvent.marshallBody(), unknown event id("+m_nID+").");
@@ -377,14 +365,12 @@ public class CMFileEvent extends CMEvent{
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_byteFileAppendFlag = msg.get();
-			msg.clear();
 			break;
 		case REPLY_FILE_TRANSFER:
 		case REPLY_FILE_TRANSFER_CHAN:
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
-			msg.clear();
 			break;
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
@@ -393,7 +379,6 @@ public class CMFileEvent extends CMEvent{
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
 			m_byteFileAppendFlag = msg.get();
-			msg.clear();
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
@@ -401,7 +386,6 @@ public class CMFileEvent extends CMEvent{
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_lReceivedFileSize = msg.getLong();
-			msg.clear();
 			break;
 		case CONTINUE_FILE_TRANSFER:
 			m_strSenderName = getStringFromByteBuffer(msg);
@@ -409,14 +393,12 @@ public class CMFileEvent extends CMEvent{
 			m_nContentID = msg.getInt();
 			m_nBlockSize = msg.getInt();
 			msg.get(m_cFileBlock);
-			msg.clear();
 			break;
 		case CONTINUE_FILE_TRANSFER_ACK:
 			m_strReceiverName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lReceivedFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
-			msg.clear();
 			break;
 		case END_FILE_TRANSFER:
 		case END_FILE_TRANSFER_CHAN:
@@ -424,7 +406,6 @@ public class CMFileEvent extends CMEvent{
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
-			msg.clear();
 			break;
 		case END_FILE_TRANSFER_ACK:
 		case END_FILE_TRANSFER_CHAN_ACK:
@@ -433,19 +414,16 @@ public class CMFileEvent extends CMEvent{
 			m_lFileSize = msg.getLong();
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
-			msg.clear();
 			break;
 		case REQUEST_DIST_FILE_PROC:
 			m_strReceiverName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
-			msg.clear();
 			break;
 		case CANCEL_FILE_SEND:
 		case CANCEL_FILE_SEND_CHAN:
 		case CANCEL_FILE_RECV_CHAN:
 			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strReceiverName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CANCEL_FILE_SEND_ACK:
 		case CANCEL_FILE_SEND_CHAN_ACK:
@@ -453,7 +431,6 @@ public class CMFileEvent extends CMEvent{
 			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strReceiverName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
-			msg.clear();
 			break;			
 		default:
 			System.out.println("CMFileEvent.unmarshallBody(), unknown event id("+m_nID+").");

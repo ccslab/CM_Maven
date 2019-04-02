@@ -21,8 +21,7 @@ public class CMUserEvent extends CMEvent {
 		m_strID = "defaultID";
 		m_eventFieldList = new Vector<CMUserEventField>();
 
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 
 	// set/get methods
@@ -211,7 +210,6 @@ public class CMUserEvent extends CMEvent {
 				m_bytes.put(uef.strFieldValue.getBytes());
 			}
 		}
-		m_bytes.clear();
 		
 		return;
 	}
@@ -246,7 +244,6 @@ public class CMUserEvent extends CMEvent {
 				setEventField(nDataType, strFieldName, strFieldValue);
 			}
 		}
-		msg.clear();
 		
 		return;
 	}
