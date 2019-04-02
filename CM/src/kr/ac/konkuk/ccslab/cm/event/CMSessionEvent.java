@@ -137,8 +137,7 @@ public class CMSessionEvent extends CMEvent {
 		m_sessionList = new Vector<CMSessionInfo>();
 		m_groupList = new Vector<CMGroupInfo>();
 
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 	
 	// set/get methods
@@ -671,12 +670,10 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.putInt(m_strHostAddr.getBytes().length);
 			m_bytes.put(m_strHostAddr.getBytes());
 			m_bytes.putInt(m_nUDPPort);
-			m_bytes.clear();
 			break;
 		case LOGOUT:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case LOGIN_ACK:
 			m_bytes.putInt(m_bValidUser);
@@ -687,12 +684,10 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.putInt(m_bSessionScheme);
 			m_bytes.putInt(m_nAttachDownloadScheme);
 			m_bytes.putInt(m_nUDPPort);			// server udp port
-			m_bytes.clear();
 			break;
 		case REQUEST_SESSION_INFO:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case RESPONSE_SESSION_INFO:
 			if(m_nSessionNum != m_sessionList.size())
@@ -715,14 +710,12 @@ public class CMSessionEvent extends CMEvent {
 				m_bytes.putInt(tsi.getPort());
 				m_bytes.putInt(tsi.getUserNum());
 			}
-			m_bytes.clear();
 			break;
 		case JOIN_SESSION:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strSessionName.getBytes().length);
 			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.clear();
 			break;
 		case JOIN_SESSION_ACK:
 			if(m_nGroupNum != m_groupList.size())
@@ -744,25 +737,21 @@ public class CMSessionEvent extends CMEvent {
 				m_bytes.put(tgi.getGroupAddress().getBytes());
 				m_bytes.putInt(tgi.getGroupPort());
 			}
-			m_bytes.clear();
 			break;
 		case LEAVE_SESSION:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strSessionName.getBytes().length);
 			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.clear();
 			break;
 		case LEAVE_SESSION_ACK:
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.clear();
 			break;
 		case SESSION_TALK:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strTalk.getBytes().length);
 			m_bytes.put(m_strTalk.getBytes());
-			m_bytes.clear();
 			break;
 		case SESSION_ADD_USER:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -771,19 +760,16 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.put(m_strHostAddr.getBytes());
 			m_bytes.putInt(m_strSessionName.getBytes().length);
 			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.clear();
 			break;
 		case SESSION_REMOVE_USER:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case CHANGE_SESSION:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strSessionName.getBytes().length);
 			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 		case ADD_BLOCK_SOCKET_CHANNEL:
@@ -791,7 +777,6 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.putInt(m_strChannelName.getBytes().length);
 			m_bytes.put(m_strChannelName.getBytes());
 			m_bytes.putInt(m_nChannelNum);
-			m_bytes.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
@@ -800,14 +785,12 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.put(m_strChannelName.getBytes());
 			m_bytes.putInt(m_nChannelNum);
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.clear();
 			break;
 		case REGISTER_USER:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strPasswd.getBytes().length);
 			m_bytes.put(m_strPasswd.getBytes());
-			m_bytes.clear();
 			break;
 		case REGISTER_USER_ACK:
 			m_bytes.putInt(m_nReturnCode);
@@ -815,25 +798,21 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strCreationTime.getBytes().length);
 			m_bytes.put(m_strCreationTime.getBytes());
-			m_bytes.clear();
 			break;
 		case DEREGISTER_USER:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strPasswd.getBytes().length);
 			m_bytes.put(m_strPasswd.getBytes());
-			m_bytes.clear();
 			break;
 		case DEREGISTER_USER_ACK:
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case FIND_REGISTERED_USER:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case FIND_REGISTERED_USER_ACK:
 			m_bytes.putInt(m_nReturnCode);
@@ -841,7 +820,6 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strCreationTime.getBytes().length);
 			m_bytes.put(m_strCreationTime.getBytes());
-			m_bytes.clear();
 			break;
 		default:
 			System.out.println("CMSessionEvent.marshallBody(), unknown event id("+m_nID+").");
@@ -861,11 +839,9 @@ public class CMSessionEvent extends CMEvent {
 			m_strPasswd = getStringFromByteBuffer(msg);
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_nUDPPort = msg.getInt();
-			msg.clear();
 			break;
 		case LOGOUT:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case LOGIN_ACK:
 			m_bValidUser = msg.getInt();
@@ -875,11 +851,9 @@ public class CMSessionEvent extends CMEvent {
 			m_bSessionScheme = msg.getInt();
 			m_nAttachDownloadScheme = msg.getInt();
 			m_nUDPPort = msg.getInt();
-			msg.clear();
 			break;
 		case REQUEST_SESSION_INFO:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case RESPONSE_SESSION_INFO:
 			m_sessionList.removeAllElements();
@@ -893,12 +867,10 @@ public class CMSessionEvent extends CMEvent {
 				tsi.setUserNum(msg.getInt());
 				addSessionInfo(tsi);
 			}
-			msg.clear();
 			break;
 		case JOIN_SESSION:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strSessionName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case JOIN_SESSION_ACK:
 			m_groupList.removeAllElements();
@@ -911,43 +883,35 @@ public class CMSessionEvent extends CMEvent {
 				tgi.setGroupPort(msg.getInt());
 				addGroupInfo(tgi);
 			}
-			msg.clear();
 			break;
 		case LEAVE_SESSION:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strSessionName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case LEAVE_SESSION_ACK:
 			m_nReturnCode = msg.getInt();
-			msg.clear();
 			break;
 		case SESSION_TALK:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strTalk = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case SESSION_ADD_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_strSessionName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case SESSION_REMOVE_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CHANGE_SESSION:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strSessionName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 		case ADD_BLOCK_SOCKET_CHANNEL:
 		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
-			msg.clear();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
@@ -955,38 +919,31 @@ public class CMSessionEvent extends CMEvent {
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
 			m_nReturnCode = msg.getInt();
-			msg.clear();
 			break;
 		case REGISTER_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strPasswd = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case REGISTER_USER_ACK:
 			m_nReturnCode = msg.getInt();
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strCreationTime = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case DEREGISTER_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strPasswd = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case DEREGISTER_USER_ACK:
 			m_nReturnCode = msg.getInt();
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case FIND_REGISTERED_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case FIND_REGISTERED_USER_ACK:
 			m_nReturnCode = msg.getInt();
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strCreationTime = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		default:
 			System.out.println("CMSessionEvent.unmarshallBody(), unknown event id("+m_nID+").");

@@ -26,8 +26,7 @@ public class CMConcurrencyEvent extends CMEvent {
 		m_nTargetObjectID = -1;
 		m_strUserName = "";
 		
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 
 	public void setTargetObjectID(int id)
@@ -65,14 +64,12 @@ public class CMConcurrencyEvent extends CMEvent {
 		m_bytes.putInt(m_strUserName.getBytes().length);
 		m_bytes.put(m_strUserName.getBytes());
 		m_bytes.putInt(m_nTargetObjectID);
-		m_bytes.clear();
 	}
 	
 	protected void unmarshallBody(ByteBuffer msg)
 	{
 		m_strUserName = getStringFromByteBuffer(msg);
 		m_nTargetObjectID = msg.getInt();
-		msg.clear();
 	}
 
 }

@@ -114,8 +114,7 @@ public class CMSNSEvent extends CMEvent{
 		m_friendList = new ArrayList<String>();
 		m_nAttachDownloadScheme = -1;
 
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 	
 	// set/get methods
@@ -533,7 +532,6 @@ public class CMSNSEvent extends CMEvent{
 					m_bytes.put(m_fileNameList.get(i).getBytes());
 				}
 			}
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CONTENT_UPLOAD_RESPONSE:
 			m_bytes.putInt(m_nReturnCode);
@@ -542,7 +540,6 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.put(m_strDate.getBytes());
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_REQUEST:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -550,7 +547,6 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.putInt(m_strWriterName.getBytes().length);
 			m_bytes.put(m_strWriterName.getBytes());	// requested writer name
 			m_bytes.putInt(m_nContentOffset);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_RESPONSE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -560,7 +556,6 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.putInt(m_nContentOffset);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putLong(m_lServerTime);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_READY:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -569,7 +564,6 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.put(m_strWriterName.getBytes());	// requested writer name
 			m_bytes.putInt(m_nContentOffset);
 			m_bytes.putLong(m_lServerTime);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -594,7 +588,6 @@ public class CMSNSEvent extends CMEvent{
 					m_bytes.put(m_fileNameList.get(i).getBytes());
 				}
 			}
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -603,14 +596,12 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.put(m_strWriterName.getBytes());
 			m_bytes.putInt(m_nContentOffset);
 			m_bytes.putInt(m_nNumContents);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END_RESPONSE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_nContentOffset);
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND:
 		case CMSNSEvent.REMOVE_FRIEND:
@@ -618,7 +609,6 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strFriendName.getBytes().length);
 			m_bytes.put(m_strFriendName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND_ACK:
 		case CMSNSEvent.REMOVE_FRIEND_ACK:
@@ -627,14 +617,12 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strFriendName.getBytes().length);
 			m_bytes.put(m_strFriendName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.REQUEST_FRIEND_LIST:
 		case CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST:
 		case CMSNSEvent.REQUEST_BI_FRIEND_LIST:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.RESPONSE_FRIEND_LIST:
 		case CMSNSEvent.RESPONSE_FRIEND_REQUESTER_LIST:
@@ -648,13 +636,11 @@ public class CMSNSEvent extends CMEvent{
 				m_bytes.putInt(m_friendList.get(i).getBytes().length);
 				m_bytes.put(m_friendList.get(i).getBytes());
 			}
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILES:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_nContentID);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.ATTACHED_FILES_NOT_FOUND:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -666,7 +652,6 @@ public class CMSNSEvent extends CMEvent{
 				m_bytes.putInt(m_fileNameList.get(i).getBytes().length);
 				m_bytes.put(m_fileNameList.get(i).getBytes());
 			}
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -676,7 +661,6 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.put(m_strWriterName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
 			m_bytes.put(m_strFileName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.RESPONSE_ATTACHED_FILE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -687,11 +671,9 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.putInt(m_strFileName.getBytes().length);
 			m_bytes.put(m_strFileName.getBytes());
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.CHANGE_ATTACH_DOWNLOAD_SCHEME:
 			m_bytes.putInt(m_nAttachDownloadScheme);
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.ACCESS_ATTACHED_FILE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -701,12 +683,10 @@ public class CMSNSEvent extends CMEvent{
 			m_bytes.put(m_strWriterName.getBytes());
 			m_bytes.putInt(m_strFileName.getBytes().length);
 			m_bytes.put(m_strFileName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMSNSEvent.PREFETCH_COMPLETED:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		default:
 			System.out.println("CMSNSEvent.marshallBody(), unknown event id("+m_nID+").");
@@ -737,20 +717,17 @@ public class CMSNSEvent extends CMEvent{
 					m_fileNameList.add(getStringFromByteBuffer(msg));
 				}
 			}
-			msg.clear();
 			break;
 		case CMSNSEvent.CONTENT_UPLOAD_RESPONSE:
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
 			m_strDate = getStringFromByteBuffer(msg);
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_REQUEST:
 			m_strUserName = getStringFromByteBuffer(msg);	// requester name
 			m_strWriterName = getStringFromByteBuffer(msg);	// requested writer name
 			m_nContentOffset = msg.getInt();
-			msg.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_RESPONSE:
 			m_strUserName = getStringFromByteBuffer(msg);	// requester name
@@ -758,14 +735,12 @@ public class CMSNSEvent extends CMEvent{
 			m_nContentOffset = msg.getInt();
 			m_nReturnCode = msg.getInt();
 			m_lServerTime = msg.getLong();
-			msg.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_READY:
 			m_strUserName = getStringFromByteBuffer(msg);	// requester name
 			m_strWriterName = getStringFromByteBuffer(msg);	// requested writer name
 			m_nContentOffset = msg.getInt();
 			m_lServerTime = msg.getLong();
-			msg.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD:
 			m_strUserName = getStringFromByteBuffer(msg);
@@ -786,39 +761,33 @@ public class CMSNSEvent extends CMEvent{
 					m_fileNameList.add(getStringFromByteBuffer(msg));
 				}
 			}
-			msg.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strWriterName = getStringFromByteBuffer(msg);
 			m_nContentOffset = msg.getInt();
 			m_nNumContents = msg.getInt();
-			msg.clear();
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END_RESPONSE:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_nContentOffset = msg.getInt();
 			m_nReturnCode = msg.getInt();
-			msg.clear();
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND:
 		case CMSNSEvent.REMOVE_FRIEND:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strFriendName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND_ACK:
 		case CMSNSEvent.REMOVE_FRIEND_ACK:
 			m_nReturnCode = msg.getInt();
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strFriendName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMSNSEvent.REQUEST_FRIEND_LIST:
 		case CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST:
 		case CMSNSEvent.REQUEST_BI_FRIEND_LIST:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMSNSEvent.RESPONSE_FRIEND_LIST:
 		case CMSNSEvent.RESPONSE_FRIEND_REQUESTER_LIST:
@@ -831,12 +800,10 @@ public class CMSNSEvent extends CMEvent{
 			{
 				m_friendList.add(getStringFromByteBuffer(msg));
 			}
-			msg.clear();
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILES:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
-			msg.clear();
 			break;
 		case CMSNSEvent.ATTACHED_FILES_NOT_FOUND:
 			m_strUserName = getStringFromByteBuffer(msg);
@@ -847,14 +814,12 @@ public class CMSNSEvent extends CMEvent{
 			{
 				m_fileNameList.add(getStringFromByteBuffer(msg));
 			}
-			msg.clear();
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILE:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_strWriterName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMSNSEvent.RESPONSE_ATTACHED_FILE:
 			m_strUserName = getStringFromByteBuffer(msg);
@@ -862,22 +827,18 @@ public class CMSNSEvent extends CMEvent{
 			m_strWriterName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
-			msg.clear();
 			break;
 		case CMSNSEvent.CHANGE_ATTACH_DOWNLOAD_SCHEME:
 			m_nAttachDownloadScheme = msg.getInt();
-			msg.clear();
 			break;
 		case CMSNSEvent.ACCESS_ATTACHED_FILE:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_strWriterName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMSNSEvent.PREFETCH_COMPLETED:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		default:
 			System.out.println("CMSNSEvent.unmarshallBody(), unknown event id("+m_nID+").");

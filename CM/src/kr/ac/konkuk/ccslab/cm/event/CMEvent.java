@@ -62,8 +62,7 @@ public abstract class CMEvent extends CMObject {
 		m_nByteNum = -1;
 		m_bytes = null;
 		
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 
 	/**
@@ -89,6 +88,7 @@ public abstract class CMEvent extends CMObject {
 		bResult = allocate();
 		if(bResult)
 		{
+			m_bytes.clear();
 			marshallHeader();
 			marshallBody();
 		}
@@ -115,6 +115,7 @@ public abstract class CMEvent extends CMObject {
 	public CMEvent unmarshall(ByteBuffer msg)
 	{
 		// should be implemented in sub-classes
+		msg.clear();
 		unmarshallHeader(msg);
 		unmarshallBody(msg);
 		return this;

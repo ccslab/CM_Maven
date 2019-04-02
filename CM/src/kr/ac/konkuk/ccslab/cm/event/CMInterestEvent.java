@@ -62,8 +62,7 @@ public class CMInterestEvent extends CMEvent{
 		m_pq.m_q.m_y = 0.0f;
 		m_pq.m_q.m_z = 0.0f;
 		
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 	
 	// set/get methods
@@ -241,12 +240,10 @@ public class CMInterestEvent extends CMEvent{
 			m_bytes.putFloat(m_pq.m_q.m_x);
 			m_bytes.putFloat(m_pq.m_q.m_y);
 			m_bytes.putFloat(m_pq.m_q.m_z);
-			m_bytes.clear();
 			break;
 		case CMInterestEvent.USER_LEAVE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMInterestEvent.USER_MOVE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -258,21 +255,18 @@ public class CMInterestEvent extends CMEvent{
 			m_bytes.putFloat(m_pq.m_q.m_x);
 			m_bytes.putFloat(m_pq.m_q.m_y);
 			m_bytes.putFloat(m_pq.m_q.m_z);
-			m_bytes.clear();
 			break;
 		case CMInterestEvent.USER_COLLIDE:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strCollideObj.getBytes().length);
 			m_bytes.put(m_strCollideObj.getBytes());
-			m_bytes.clear();
 			break;
 		case CMInterestEvent.USER_TALK:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
 			m_bytes.putInt(m_strTalk.getBytes().length);
 			m_bytes.put(m_strTalk.getBytes());
-			m_bytes.clear();
 			break;
 		default:
 			System.out.println("CMInterestEvent.marshallBody(), unknown event id("+m_nID+").");
@@ -299,11 +293,9 @@ public class CMInterestEvent extends CMEvent{
 			m_pq.m_q.m_y = msg.getFloat();
 			m_pq.m_q.m_z = msg.getFloat();
 			
-			msg.clear();
 			break;
 		case CMInterestEvent.USER_LEAVE:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMInterestEvent.USER_MOVE:
 			m_strUserName = getStringFromByteBuffer(msg);
@@ -316,17 +308,14 @@ public class CMInterestEvent extends CMEvent{
 			m_pq.m_q.m_y = msg.getFloat();
 			m_pq.m_q.m_z = msg.getFloat();
 			
-			msg.clear();			
 			break;
 		case CMInterestEvent.USER_COLLIDE:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strCollideObj = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMInterestEvent.USER_TALK:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strTalk = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		default:
 			System.out.println("CMInterestEvent.unmarshallBody(), unknown event id("+m_nID+").");

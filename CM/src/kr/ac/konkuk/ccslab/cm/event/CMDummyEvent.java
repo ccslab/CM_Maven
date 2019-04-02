@@ -18,8 +18,7 @@ public class CMDummyEvent extends CMEvent{
 		m_nType = CMInfo.CM_DUMMY_EVENT;
 		m_strDummyInfo = "";
 
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 	
 	// set/get methods
@@ -55,12 +54,10 @@ public class CMDummyEvent extends CMEvent{
 	{
 		m_bytes.putInt(m_strDummyInfo.getBytes().length);
 		m_bytes.put(m_strDummyInfo.getBytes());
-		m_bytes.clear();
 	}
 	
 	protected void unmarshallBody(ByteBuffer msg)
 	{
 		m_strDummyInfo = getStringFromByteBuffer(msg);
-		msg.clear();
 	}
 }

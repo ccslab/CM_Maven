@@ -37,8 +37,7 @@ public class CMDataEvent extends CMEvent{
 		
 		m_pq = new CMPosition();
 
-		unmarshallHeader(msg);
-		unmarshallBody(msg);
+		unmarshall(msg);
 	}
 	
 	// set/get methods
@@ -171,7 +170,6 @@ public class CMDataEvent extends CMEvent{
 			m_bytes.putFloat(m_pq.m_q.m_x);
 			m_bytes.putFloat(m_pq.m_q.m_y);
 			m_bytes.putFloat(m_pq.m_q.m_z);
-			m_bytes.clear();
 			break;
 		case CMDataEvent.NEW_USER:
 			m_bytes.putInt(m_strUserName.getBytes().length);
@@ -179,17 +177,14 @@ public class CMDataEvent extends CMEvent{
 			m_bytes.putInt(m_strHostAddr.getBytes().length);
 			m_bytes.put(m_strHostAddr.getBytes());
 			m_bytes.putInt(m_nUDPPort);
-			m_bytes.clear();
 			break;
 		case CMDataEvent.REMOVE_USER:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		case CMDataEvent.REQUEST_INHABITANT:
 			m_bytes.putInt(m_strUserName.getBytes().length);
 			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.clear();
 			break;
 		default:
 			System.out.println("CMDataEvent.marshallBody(), unknown event id("+m_nID+").");
@@ -214,21 +209,17 @@ public class CMDataEvent extends CMEvent{
 			m_pq.m_q.m_x = msg.getFloat();
 			m_pq.m_q.m_y = msg.getFloat();
 			m_pq.m_q.m_z = msg.getFloat();
-			msg.clear();
 			break;
 		case CMDataEvent.NEW_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_nUDPPort = msg.getInt();
-			msg.clear();
 			break;
 		case CMDataEvent.REMOVE_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		case CMDataEvent.REQUEST_INHABITANT:
 			m_strUserName = getStringFromByteBuffer(msg);
-			msg.clear();
 			break;
 		default:
 			System.out.println("CMDataEvent.unmarshallBody(), unknown event id("+m_nID+").");
