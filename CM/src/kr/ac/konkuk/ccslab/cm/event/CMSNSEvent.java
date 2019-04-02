@@ -87,33 +87,7 @@ public class CMSNSEvent extends CMEvent{
 	
 	public CMSNSEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_SNS_EVENT;
-
-		m_strUserName = "?";
-		m_nContentOffset = -1;		
-		m_nReturnCode = -1;
-		m_lServerTime = -1;
-		m_nNumContents = -1;
-
-		m_nContentID = -1;
-		m_strDate = "?";
-		m_strWriterName = "?";
-		//m_strAttachedFileName = "?";
-		m_strMessage = "?";
-		m_nNumAttachedFiles = -1;
-		m_nReplyOf = -1;
-		m_nLevelOfDisclosure = -1;
-		m_fileNameList = new ArrayList<String>();
-		m_strFileName = null;
-
-		m_nEstDelay = 0;		
-
-		m_strFriendName = "";
-		m_nTotalNumFriends = 0;
-		m_nNumFriends = 0;
-		m_friendList = new ArrayList<String>();
-		m_nAttachDownloadScheme = -1;
-
+		this();
 		unmarshall(msg);
 	}
 	

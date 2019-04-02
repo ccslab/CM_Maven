@@ -29,14 +29,7 @@ public class CMDataEvent extends CMEvent{
 	
 	public CMDataEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_DATA_EVENT;
-		m_strUserName = "?";
-		m_strPasswd = "?";
-		m_strHostAddr = "?";
-		m_nUDPPort = -1;
-		
-		m_pq = new CMPosition();
-
+		this();
 		unmarshall(msg);
 	}
 	

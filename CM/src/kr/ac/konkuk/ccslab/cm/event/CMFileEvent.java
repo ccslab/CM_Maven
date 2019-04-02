@@ -66,19 +66,7 @@ public class CMFileEvent extends CMEvent{
 	
 	public CMFileEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_FILE_EVENT;
-		m_nID = -1;
-		m_strReceiverName = "?";
-		m_strSenderName = "?";
-		m_strFileName = "?";
-		m_lFileSize = 0;
-		m_lReceivedFileSize = 0;
-		m_nReturnCode = -1;
-		m_nBlockSize = -1;
-		m_cFileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
-		m_nContentID = -1;
-		m_byteFileAppendFlag = -1;
-		
+		this();
 		unmarshall(msg);
 	}
 	

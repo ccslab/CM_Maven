@@ -22,10 +22,7 @@ public class CMConcurrencyEvent extends CMEvent {
 	
 	public CMConcurrencyEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_CONCURRENCY_EVENT;
-		m_nTargetObjectID = -1;
-		m_strUserName = "";
-		
+		this();		
 		unmarshall(msg);
 	}
 

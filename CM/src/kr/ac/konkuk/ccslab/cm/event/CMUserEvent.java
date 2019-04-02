@@ -17,10 +17,7 @@ public class CMUserEvent extends CMEvent {
 	
 	public CMUserEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_USER_EVENT;
-		m_strID = "defaultID";
-		m_eventFieldList = new Vector<CMUserEventField>();
-
+		this();
 		unmarshall(msg);
 	}
 

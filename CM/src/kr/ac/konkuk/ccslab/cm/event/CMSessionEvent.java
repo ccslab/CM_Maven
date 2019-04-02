@@ -111,32 +111,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	public CMSessionEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_SESSION_EVENT;
-		m_strHostAddr = "?";
-		m_strPasswd = "?";
-		m_strUserName = "?";
-		m_nUDPPort = -1;
-		m_bValidUser = -1;
-		m_strSessionName = "?";
-		m_strCurrentGroupName = "?";
-		m_strCurrentAddress = "?";
-		m_nCurrentPort = -1;
-		m_nSessionNum = -1;
-		m_nGroupNum = -1;
-		m_strCommArch = "?";
-		m_bFileTransferScheme = -1;
-		m_bLoginScheme = -1;
-		m_bSessionScheme = -1;
-		m_nAttachDownloadScheme = -1;
-		m_nReturnCode = -1;
-		m_strTalk = "?";
-		m_strChannelName = "?";
-		m_nChannelNum = -1;
-		m_strCreationTime = "?";
-		
-		m_sessionList = new Vector<CMSessionInfo>();
-		m_groupList = new Vector<CMGroupInfo>();
-
+		this();
 		unmarshall(msg);
 	}
 	

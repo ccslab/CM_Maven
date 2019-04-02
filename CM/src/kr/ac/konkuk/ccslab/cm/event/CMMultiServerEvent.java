@@ -96,32 +96,7 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public CMMultiServerEvent(ByteBuffer msg)
 	{
-		m_nType = CMInfo.CM_MULTI_SERVER_EVENT;
-
-		m_strServerName = "";
-		m_strServerAddress = "";
-		m_nServerPort = -1;
-		m_nServerUDPPort = -1;
-		m_nReturnCode = -1;
-		m_nServerNum = -1;
-		m_nSessionNum = -1;
-
-		m_strUserName = "";
-		m_strPassword = "";
-		m_strHostAddress = "";
-		m_nUDPPort = -1;
-		m_bValidUser = -1;
-		m_strCommArch = "";
-		m_bLoginScheme = -1;
-		m_bSessionScheme = -1;
-		m_strSessionName = "";
-		m_nGroupNum = -1;
-		m_strGroupName = "";
-
-		m_serverList = new Vector<CMServerInfo>();
-		m_sessionList = new Vector<CMSessionInfo>();
-		m_groupList = new Vector<CMGroupInfo>();
-
+		this();
 		unmarshall(msg);
 	}
 	
