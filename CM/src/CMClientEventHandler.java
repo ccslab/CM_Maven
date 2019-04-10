@@ -37,6 +37,8 @@ public class CMClientEventHandler implements CMEventHandler {
 	private boolean m_bDistFileProc;	// for distributed file processing
 	private String m_strExt;			// for distributed file processing
 	private String[] m_filePieces;		// for distributed file processing
+	private int m_nMinNumWaitedEvents;  // for checking the completion of asynchronous castrecv service
+	private int m_nRecvReplyEvents;		// for checking the completion of asynchronous castrecv service
 		
 	public CMClientEventHandler(CMClientStub stub)
 	{
@@ -140,6 +142,26 @@ public class CMClientEventHandler implements CMEventHandler {
 	public String[] getFilePieces()
 	{
 		return m_filePieces;
+	}
+	
+	public void setMinNumWaitedEvents(int num)
+	{
+		m_nMinNumWaitedEvents = num;
+	}
+	
+	public int getMinNumWaitedEvents()
+	{
+		return m_nMinNumWaitedEvents;
+	}
+	
+	public void setRecvReplyEvents(int num)
+	{
+		m_nRecvReplyEvents = num;
+	}
+	
+	public int getRecvReplyEvents()
+	{
+		return m_nRecvReplyEvents;
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////
@@ -427,6 +449,30 @@ public class CMClientEventHandler implements CMEventHandler {
 				System.out.println("Sent reply event: (id, "+rue.getID()+"), (sting id, "+rue.getStringID()+")");
 			else
 				System.err.println("Failed to send the reply event!");
+		}
+		else if(ue.getStringID().equals("testReplySendRecv")) // for testing asynchronous sendrecv service
+		{
+			long lServerResponseDelay = System.currentTimeMillis() - m_lStartTime;
+			System.out.println("Asynchronously received reply event from ["+ue.getSender()+"]: (type, "+ue.getType()+
+					"), (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")");
+			System.out.println("Server response delay: "+lServerResponseDelay+"ms.");
+
+		}
+		else if(ue.getStringID().equals("testReplyCastRecv")) // for testing asynchronous castrecv service
+		{
+			System.out.println("Asynchronously received reply event from ["+ue.getSender()+"]: (type, "+ue.getType()+
+					"), (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")");
+			m_nRecvReplyEvents++;
+			
+			if(m_nRecvReplyEvents == m_nMinNumWaitedEvents)
+			{
+				long lServerResponseDelay = System.currentTimeMillis() - m_lStartTime;
+				System.out.println("Complete to receive requested number of reply events.");
+				System.out.println("Number of received reply events: "+m_nRecvReplyEvents);
+				System.out.println("Server response delay: "+lServerResponseDelay+"ms.");
+				m_nRecvReplyEvents = 0;
+			}
+			
 		}
 		else
 		{

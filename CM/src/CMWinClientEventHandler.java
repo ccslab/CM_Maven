@@ -528,8 +528,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		}
 		else if(ue.getStringID().equals("testReplyCastRecv")) // for testing asynchronous castrecv service
 		{
-			printMessage("Asynchronously received reply event from ["+ue.getSender()+"]: (type, "+ue.getType()+
-					"), (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")\n");
+			//printMessage("Asynchronously received reply event from ["+ue.getSender()+"]: (type, "+ue.getType()+
+			//		"), (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")\n");
 			m_nRecvReplyEvents++;
 			
 			if(m_nRecvReplyEvents == m_nMinNumWaitedEvents)

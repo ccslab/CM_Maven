@@ -171,6 +171,12 @@ public class CMClientApp {
 			case 47: // test castrecv
 				testCastRecv();
 				break;
+			case 48: // test asynchronous sendrecv
+				testAsyncSendRecv();
+				break;
+			case 49: // test asynchronous castrecv
+				testAsyncCastRecv();
+				break;
 			case 50: // print group info
 				testPrintGroupInfo();
 				break;
@@ -321,6 +327,7 @@ public class CMClientApp {
 		System.out.println("40: chat, 41: multicast chat in current group");
 		System.out.println("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position");
 		System.out.println("46: test sendrecv, 47: test castrecv");
+		System.out.println("48: test asynchronous sendrecv, 49: test asynchronous castrecv");
 		System.out.println("---------------------------------- Information");
 		System.out.println("50: show group information of default server, 51: show current user status");
 		System.out.println("52: show current channels, 53: show current server information");
@@ -900,13 +907,19 @@ public class CMClientApp {
 		
 		if(strTargetName.isEmpty())
 			strTargetName = "SERVER";
+		
+		long lStartTime = System.currentTimeMillis();
 		rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, 10000);
+		long lServerResponseDelay = System.currentTimeMillis() - lStartTime;
 
 		if(rue == null)
 			System.err.println("The reply event is null!");
 		else
+		{
 			System.out.println("Received reply event from ["+rue.getSender()+"]: (type, "+rue.getType()+
 					"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")");
+			System.out.println("Server response delay: "+lServerResponseDelay+"ms.");
+		}
 		
 		System.out.println("======");
 	}
@@ -968,9 +981,11 @@ public class CMClientApp {
 		System.out.println("Minimum number of reply events: "+nMinNumReplyEvents);
 		System.out.println("Waiting timeout: "+nTimeout+" ms");
 
+		long lStartTime = System.currentTimeMillis();
 		rueArray = m_clientStub.castrecv(ue, strTargetSession, strTargetGroup, 
 				CMInfo.CM_USER_EVENT, 223, nMinNumReplyEvents, nTimeout);
-		
+		long lServerResponseDelay = System.currentTimeMillis() - lStartTime;
+
 		if(rueArray == null)
 		{
 			System.err.println("Error in castrecv()!");
@@ -982,7 +997,120 @@ public class CMClientApp {
 		for(int i = 0; i < rueArray.length; i++)
 			System.out.print(rueArray[i].getSender()+" ");
 		System.out.println();
+		System.out.println("Server response delay: "+lServerResponseDelay+"ms.");
+		System.out.println("======");
 
+	}
+	
+	// test asynchronous sendrecv
+	public void testAsyncSendRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		boolean bRet = false;
+		String strTargetName = null;
+		
+		// a user event: (id, 111) (string id, "testSendRecv")
+		// a reply user event: (id, 222) (string id, "testReplySendRecv")
+		
+		System.out.println("====== test asynchronous sendrecv");
+		
+		// create a user event
+		ue.setID(111);
+		ue.setStringID("testSendRecv");
+		
+		// get target name
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.println("user event to be sent: (id, 111), (string id, \"testSendRecv\")");
+		System.out.println("reply event to be received: (id, 222), (string id, \"testReplySendRecv\")");
+		System.out.print("Target name(empty for \"SERVER\"): ");
+
+		try {
+			strTargetName = br.readLine().trim();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		if(strTargetName.isEmpty())
+			strTargetName = "SERVER";
+
+		m_eventHandler.setStartTime(System.currentTimeMillis());
+		bRet = m_clientStub.send(ue, strTargetName);
+
+		if(!bRet)
+			System.err.println("Error in asynchronous sendrecv service!");
+		
+		System.out.println("======");
+	}
+	
+	// test asynchronous castrecv
+	public void testAsyncCastRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		boolean bRet = false;
+		String strTargetSession = null;
+		String strTargetGroup = null;
+		String strMinNumReplyEvents = null;
+		int nMinNumReplyEvents = 0;
+
+		// a user event: (id, 112) (string id, "testCastRecv")
+		// a reply user event: (id, 223) (string id, "testReplyCastRecv")
+		
+		System.out.println("====== test asynchronous castrecv");
+		// set a user event
+		ue.setID(112);
+		ue.setStringID("testCastRecv");
+		
+		// set event target session and group
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		System.out.println("user event to be sent: (id, 112), (string id, \"testCastRecv\")");
+		System.out.println("reply event to be received: (id, 223), (string id, \"testReplyCastRecv\")");
+		
+		try {
+			System.out.print("Target session(empty for null): ");
+			strTargetSession = br.readLine().trim();
+			System.out.print("Target group(empty for null): ");
+			strTargetGroup = br.readLine().trim();
+			System.out.print("Minimum number of reply events(empty for 0): ");
+			strMinNumReplyEvents = br.readLine().trim();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		if(strTargetSession.isEmpty())
+			strTargetSession = null;
+		if(strTargetGroup.isEmpty())
+			strTargetGroup = null;
+		if(strMinNumReplyEvents.isEmpty())
+			strMinNumReplyEvents = "0";
+
+		try {
+			nMinNumReplyEvents = Integer.parseInt(strMinNumReplyEvents);
+		}catch(NumberFormatException e) {
+			e.printStackTrace();
+			System.err.println("Wrong number format!");
+			return;
+		}
+		
+		System.out.println("Target session: "+strTargetSession);
+		System.out.println("Target group: "+strTargetGroup);
+		System.out.println("Minimum number of reply events: "+nMinNumReplyEvents);
+
+		m_eventHandler.setStartTime(System.currentTimeMillis());
+		m_eventHandler.setMinNumWaitedEvents(nMinNumReplyEvents);
+		m_eventHandler.setRecvReplyEvents(0);
+		bRet = m_clientStub.cast(ue, strTargetSession, strTargetGroup);
+		
+		if(!bRet)
+		{
+			System.err.println("Error in asynchronous castrecv service!");
+			return;
+		}
+		System.out.println("======");
+		
 	}
 	
 	// print group information provided by the default server
