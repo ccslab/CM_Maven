@@ -43,6 +43,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 	private String m_strExt;			// for distributed file processing
 	private String[] m_filePieces;		// for distributed file processing
 	private boolean m_bReqAttachedFile;	// for storing the fact that the client requests an attachment
+	private int m_nMinNumWaitedEvents;  // for checking the completion of asynchronous castrecv service
+	private int m_nRecvReplyEvents;		// for checking the completion of asynchronous castrecv service
 	
 	public CMWinClientEventHandler(CMClientStub clientStub, CMWinClient client)
 	{
@@ -61,6 +63,8 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		m_strExt = null;
 		m_filePieces = null;
 		m_bReqAttachedFile = false;
+		m_nMinNumWaitedEvents = 0;
+		m_nRecvReplyEvents = 0;
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////
@@ -166,6 +170,25 @@ public class CMWinClientEventHandler implements CMEventHandler{
 		return m_bReqAttachedFile;
 	}
 
+	public void setMinNumWaitedEvents(int num)
+	{
+		m_nMinNumWaitedEvents = num;
+	}
+	
+	public int getMinNumWaitedEvents()
+	{
+		return m_nMinNumWaitedEvents;
+	}
+	
+	public void setRecvReplyEvents(int num)
+	{
+		m_nRecvReplyEvents = num;
+	}
+	
+	public int getRecvReplyEvents()
+	{
+		return m_nRecvReplyEvents;
+	}
 	//////////////////////////////////////////////////////////////////////////////
 	
 	@Override
@@ -494,6 +517,30 @@ public class CMWinClientEventHandler implements CMEventHandler{
 				printMessage("Sent reply event: (id, "+rue.getID()+"), (sting id, "+rue.getStringID()+")\n");
 			else
 				printMessage("Failed to send the reply event!\n");
+		}
+		else if(ue.getStringID().equals("testReplySendRecv")) // for testing asynchronous sendrecv service
+		{
+			long lServerResponseDelay = System.currentTimeMillis() - m_lStartTime;
+			printMessage("Asynchronously received reply event from ["+ue.getSender()+"]: (type, "+ue.getType()+
+					"), (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")\n");
+			printMessage("Server response delay: "+lServerResponseDelay+"ms.\n");
+
+		}
+		else if(ue.getStringID().equals("testReplyCastRecv")) // for testing asynchronous castrecv service
+		{
+			printMessage("Asynchronously received reply event from ["+ue.getSender()+"]: (type, "+ue.getType()+
+					"), (id, "+ue.getID()+"), (string id, "+ue.getStringID()+")\n");
+			m_nRecvReplyEvents++;
+			
+			if(m_nRecvReplyEvents == m_nMinNumWaitedEvents)
+			{
+				long lServerResponseDelay = System.currentTimeMillis() - m_lStartTime;
+				printMessage("Complete to receive requested number of reply events.\n");
+				printMessage("Number of received reply events: "+m_nRecvReplyEvents+"\n");
+				printMessage("Server response delay: "+lServerResponseDelay+"ms.\n");
+				m_nRecvReplyEvents = 0;
+			}
+			
 		}
 		else
 		{

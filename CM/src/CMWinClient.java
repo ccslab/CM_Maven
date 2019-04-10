@@ -321,6 +321,12 @@ public class CMWinClient extends JFrame {
 		JMenuItem castrecvMenuItem = new JMenuItem("test castrecv");
 		castrecvMenuItem.addActionListener(menuListener);
 		eventSubMenu.add(castrecvMenuItem);
+		JMenuItem asyncSendRecvMenuItem = new JMenuItem("test asynchronous sendrecv");
+		asyncSendRecvMenuItem.addActionListener(menuListener);
+		eventSubMenu.add(asyncSendRecvMenuItem);
+		JMenuItem asyncCastRecvMenuItem = new JMenuItem("test asynchronous castrecv");
+		asyncCastRecvMenuItem.addActionListener(menuListener);
+		eventSubMenu.add(asyncCastRecvMenuItem);
 		
 		cmServiceMenu.add(eventSubMenu);
 		
@@ -607,7 +613,6 @@ public class CMWinClient extends JFrame {
 		try {
 			nCommand = Integer.parseInt(strInput);
 		} catch (NumberFormatException e) {
-			//System.out.println("Incorrect command number!");
 			printMessage("Incorrect command number!\n");
 			return;
 		}
@@ -700,6 +705,12 @@ public class CMWinClient extends JFrame {
 			break;
 		case 47: // test castrecv
 			testCastRecv();
+			break;
+		case 48: // test asynchronous sendrecv
+			testAsyncSendRecv();
+			break;
+		case 49: // test asynchronous castrecv
+			testAsyncCastRecv();
 			break;
 		case 50: // print group info
 			testPrintGroupInfo();
@@ -842,6 +853,7 @@ public class CMWinClient extends JFrame {
 		printMessage("40: chat, 41: multicast chat in current group\n");
 		printMessage("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position\n");
 		printMessage("46: test sendrecv, 47: test castrecv\n");
+		printMessage("48: test asynchronous sendrecv, 49: test asynchronous castrecv\n");
 		printMessage("---------------------------------- Information\n");
 		printMessage("50: show group information of default server, 51: show current user status\n");
 		printMessage("52: show current channels, 53: show current server information\n");
@@ -1410,82 +1422,16 @@ public class CMWinClient extends JFrame {
 
 	public void testUserEvent()
 	{
-		//String strInput = null;
 		String strReceiver = null;
-		//boolean bEnd = false;
-		//String[] strTokens = null;
 		int nValueByteNum = -1;
 		CMUser myself = m_clientStub.getCMInfo().getInteractionInfo().getMyself();
 		
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
-			//System.out.println("You should join a session and a group!");
 			printMessage("You should join a session and a group!\n");
 			return;
 		}
 
-		/*
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.println("====== test CMUserEvent");
-		System.out.println("data type: CM_INT(0) CM_LONG(1) CM_FLOAT(2) CM_DOUBLE(3) CM_CHAR(4) CM_STR(5) CM_BYTES(6)");
-		System.out.println("Type \"end\" to stop.");
-		
-		CMUserEvent ue = new CMUserEvent();
-		ue.setStringID("testID");
-		ue.setHandlerSession(myself.getCurrentSession());
-		ue.setHandlerGroup(myself.getCurrentGroup());
-		while(!bEnd)
-		{
-			System.out.println("If the data type is CM_BYTES, the number of bytes must be given "
-					+ "in the third parameter.");
-			System.out.print("(data type, field name, value): ");
-			try {
-				strInput = br.readLine();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				ue.removeAllEventFields();
-				ue = null;
-				return;
-			}
-			
-			if(strInput.equals("end"))
-			{
-				bEnd = true;
-			}
-			else
-			{
-				strInput.trim();
-				strTokens = strInput.split("\\s+");
-				if(Integer.parseInt(strTokens[0]) == CMInfo.CM_BYTES)
-				{
-					nValueByteNum = Integer.parseInt(strTokens[2]);
-					if(nValueByteNum < 0)
-					{
-						System.out.println("CMClientApp.testUserEvent(), Invalid nValueByteNum("
-								+nValueByteNum+")");
-						ue.removeAllEventFields();
-						ue = null;
-						return;
-					}
-					byte[] valueBytes = new byte[nValueByteNum];
-					for(int i = 0; i < nValueByteNum; i++)
-						valueBytes[i] = 1;	// dummy data
-					ue.setEventBytesField(strTokens[1], nValueByteNum, valueBytes);	
-				}
-				else
-					ue.setEventField(Integer.parseInt(strTokens[0]), strTokens[1], strTokens[2]);
-			}
-		}
-		
-		System.out.print("receiver: ");
-		try {
-			strReceiver = br.readLine();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 		printMessage("====== test CMUserEvent\n");
 		
 		String strFieldNum = null;
@@ -1544,14 +1490,11 @@ public class CMWinClient extends JFrame {
 			
 			for(int i = 0, j = 0; i < nFieldNum*2; i+=2, j++)
 			{
-				//if(Integer.parseInt(eventFields[i].getText()) == CMInfo.CM_BYTES)
 				if(dataTypeBoxes[j].getSelectedIndex() == CMInfo.CM_BYTES)
 				{
 					nValueByteNum = Integer.parseInt(eventFields[i+1].getText());
 					if(nValueByteNum < 0)
 					{
-						//System.out.println("CMClientApp.testUserEvent(), Invalid nValueByteNum("
-						//		+nValueByteNum+")");
 						printMessage("CMClientApp.testUserEvent(), Invalid nValueByteNum("
 								+nValueByteNum+")\n");
 						ue.removeAllEventFields();
@@ -1570,14 +1513,12 @@ public class CMWinClient extends JFrame {
 				}
 				
 			}
-			
+
 			m_clientStub.send(ue, strReceiver);
 			ue.removeAllEventFields();
 			ue = null;
 		}
 		
-
-		//System.out.println("======");
 		printMessage("======\n");
 		
 		return;
@@ -1615,15 +1556,22 @@ public class CMWinClient extends JFrame {
 				strTargetName = "SERVER";
 			printMessage("Target name: "+strTargetName+"\n");
 			printMessage("Waiting timeout: "+nTimeout+" ms\n");
+
+			long lStartTime = System.currentTimeMillis();
 			rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, nTimeout);
+			long lServerResponseDelay = System.currentTimeMillis() - lStartTime;
+
 			if(rue == null)
 				printStyledMessage("The reply event is null!\n", "bold");
 			else
-				printMessage("Received reply event from ["+rue.getSender()+"]: (type, "+rue.getType()+
+			{
+				printMessage("Synchronously received reply event from ["+rue.getSender()+"]: (type, "+rue.getType()+
 						"), (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
+				printMessage("Server response delay: "+lServerResponseDelay+"ms.\n");
+			}
+			printMessage("======\n");
 		}
 		
-		printMessage("======\n");
 	}
 	
 	// test castrecv
@@ -1685,23 +1633,139 @@ public class CMWinClient extends JFrame {
 			printMessage("Minimum number of reply events: "+nMinNumReplyEvents+"\n");
 			printMessage("Waiting timeout: "+nTimeout+" ms\n");
 
+			long lStartTime = System.currentTimeMillis();
 			rueArray = m_clientStub.castrecv(ue, strTargetSession, strTargetGroup, 
 					CMInfo.CM_USER_EVENT, 223, nMinNumReplyEvents, nTimeout);
-			
+			long lServerResponseDelay = System.currentTimeMillis() - lStartTime;
 			if(rueArray == null)
 			{
 				printStyledMessage("Error in castrecv()!\n", "bold");
 				return;
 			}
 			
-			printMessage("Number of received reply events: "+rueArray.length+"\n");
+			printMessage("Number of synchronously received reply events: "+rueArray.length+"\n");
 			printMessage("Reply from: ");
 			for(int i = 0; i < rueArray.length; i++)
 				printMessage(rueArray[i].getSender()+" ");
 			printMessage("\n");
+			printMessage("Server response delay: "+lServerResponseDelay+"ms.\n");
+			printMessage("======\n");
+		}
+	
+	}
+	
+	// test asynchronous sendrecv
+	public void testAsyncSendRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		boolean bRet = false;
+		String strTargetName = null;
+		
+		// a user event: (id, 111) (string id, "testSendRecv")
+		// a reply user event: (id, 222) (string id, "testReplySendRecv")
+		
+		printMessage("====== test asynchronous sendrecv\n");
+		
+		// set a user event
+		ue.setID(111);
+		ue.setStringID("testSendRecv");
+		
+		// set event target name
+		JTextField targetNameTextField = new JTextField();
+		Object[] message = {
+				"user event to be sent: (id, 111), (string id, \"testSendRecv\")", 
+				"reply event to be received: (id, 222), (string id, \"testReplySendRecv\")",
+				"Target name(empty for \"SERVER\"): ", targetNameTextField
+		};
+		int option = JOptionPane.showConfirmDialog(null, message, "Test asynchronous sendrecv()", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.OK_OPTION)
+		{
+			strTargetName = targetNameTextField.getText().trim();
+			if(strTargetName.isEmpty())
+				strTargetName = "SERVER";
+			printMessage("Target name: "+strTargetName+"\n");
 
+			m_eventHandler.setStartTime(System.currentTimeMillis());
+			bRet = m_clientStub.send(ue, strTargetName);
+
+			if(!bRet)
+				printStyledMessage("Error in asynchronous sendrecv service!\n", "bold");
+			printMessage("======\n");
 		}
 		
+	}
+	
+	// test asynchronous castrecv
+	public void testAsyncCastRecv()
+	{
+		CMUserEvent ue = new CMUserEvent();
+		boolean bRet = false;
+		String strTargetSession = null;
+		String strTargetGroup = null;
+		String strMinNumReplyEvents = null;
+		int nMinNumReplyEvents = 0;
+
+		// a user event: (id, 112) (string id, "testCastRecv")
+		// a reply user event: (id, 223) (string id, "testReplyCastRecv")
+		
+		printMessage("====== test asynchronous castrecv\n");
+		// set a user event
+		ue.setID(112);
+		ue.setStringID("testCastRecv");
+		
+		// set event target session and group
+		JTextField targetSessionTextField = new JTextField();
+		JTextField targetGroupTextField = new JTextField();
+		JTextField minNumReplyEventsTextField = new JTextField();
+		Object[] message = {
+				"user event to be sent: (id, 112), (string id, \"testCastRecv\")", 
+				"reply event to be received: (id, 223), (string id, \"testReplyCastRecv\")",
+				"Target session(empty for null): ", targetSessionTextField,
+				"Target group(empty for null): ", targetGroupTextField,
+				"Minimum number of reply events(empty for 0): ", minNumReplyEventsTextField
+		};
+		int option = JOptionPane.showConfirmDialog(null, message, "Test asynchronous castrecv()", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.OK_OPTION)
+		{
+			strTargetSession = targetSessionTextField.getText().trim();
+			ue.setEventField(CMInfo.CM_STR, "Target Session", strTargetSession);
+			strTargetGroup = targetGroupTextField.getText().trim();
+			ue.setEventField(CMInfo.CM_STR, "Target Group", strTargetGroup);
+			strMinNumReplyEvents = minNumReplyEventsTextField.getText().trim();
+			
+			if(strTargetSession.isEmpty())
+				strTargetSession = null;
+			if(strTargetGroup.isEmpty())
+				strTargetGroup = null;
+			if(strMinNumReplyEvents.isEmpty())
+				strMinNumReplyEvents = "0";
+
+			try {
+				nMinNumReplyEvents = Integer.parseInt(strMinNumReplyEvents);
+			}catch(NumberFormatException e) {
+				e.printStackTrace();
+				printStyledMessage("Wrong number format!\n", "bold");
+				return;
+			}
+			
+			printMessage("Target session: "+strTargetSession+"\n");
+			printMessage("Target group: "+strTargetGroup+"\n");
+			printMessage("Minimum number of reply events: "+nMinNumReplyEvents+"\n");
+
+			m_eventHandler.setStartTime(System.currentTimeMillis());
+			m_eventHandler.setMinNumWaitedEvents(nMinNumReplyEvents);
+			m_eventHandler.setRecvReplyEvents(0);
+			bRet = m_clientStub.cast(ue, strTargetSession, strTargetGroup);
+			if(!bRet)
+			{
+				printStyledMessage("Error in asynchronous castrecv service!\n", "bold");
+				return;
+			}
+			
+			printMessage("======\n");
+		}
 	}
 
 	// print group information provided by the default server
@@ -4102,6 +4166,12 @@ public class CMWinClient extends JFrame {
 				break;
 			case "test castrecv":
 				testCastRecv();
+				break;
+			case "test asynchronous sendrecv":
+				testAsyncSendRecv();
+				break;
+			case "test asynchronous castrecv":
+				testAsyncCastRecv();
 				break;
 			case "show group information of default server":
 				testPrintGroupInfo();

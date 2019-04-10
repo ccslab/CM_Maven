@@ -84,6 +84,8 @@ public class CMEventReceiver extends Thread {
 				{
 					eventSync.notify();
 				}
+				// initialize waited event info
+				eventSync.setWaitedEvent(-1, -1, null);
 			}
 			else if(eventSync.isWaiting() && 
 					eventSync.getWaitedEventType() == cme.getType() &&
@@ -95,7 +97,12 @@ public class CMEventReceiver extends Thread {
 				synchronized(eventSync)
 				{
 					if(eventSync.isCompleteReplyEvents())
+					{
 						eventSync.notify();
+						// initialize waited event info
+						eventSync.setWaitedEvent(-1, -1, null);
+						eventSync.setMinNumWaitedEvents(0);
+					}
 				}
 			}
 			else

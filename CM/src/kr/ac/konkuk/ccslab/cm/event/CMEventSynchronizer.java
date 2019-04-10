@@ -129,6 +129,11 @@ public class CMEventSynchronizer {
 		return m_replyEvent;
 	}
 	
+	public synchronized void setWaitedReceiver(String strReceiver)
+	{
+		m_strWaitedReceiver = strReceiver;
+	}
+	
 	public synchronized String getWaitedReceiver()
 	{
 		return m_strWaitedReceiver;
