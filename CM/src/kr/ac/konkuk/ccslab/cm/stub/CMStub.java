@@ -1075,8 +1075,8 @@ public class CMStub {
 	/**
 	 * Sends a CM event to a node group.
 	 * 
-	 * <p> This method is the same as calling send(cme, sessionName, groupName, CMInfo.CM_STREAM, 0)
-	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
+	 * <p> This method is the same as calling cast(cme, sessionName, groupName, CMInfo.CM_STREAM, 0)
+	 * of the {@link CMStub#cast(CMEvent, String, String, int, int)} method.
 	 * 
 	 * @param cme - the CM event
 	 * @param sessionName - the target session name
@@ -1101,8 +1101,8 @@ public class CMStub {
 	/**
 	 * Sends a CM event to a node group.
 	 * 
-	 * <p> This method is the same as calling send(cme, sessionName, groupName, opt, 0)
-	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
+	 * <p> This method is the same as calling cast(cme, sessionName, groupName, opt, 0)
+	 * of the {@link CMStub#cast(CMEvent, String, String, int, int)} method.
 	 * 
 	 * @param cme - the CM event
 	 * @param sessionName - the target session name
@@ -1641,8 +1641,8 @@ public class CMStub {
 	/**
 	 * Sends a CM event to a node group via a designated server.
 	 * 
-	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, CMInfo.CM_STREAM, 0)
-	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
+	 * <p> This method is the same as calling cast(cme, serverName, sessionName, groupName, CMInfo.CM_STREAM, 0)
+	 * of the {@link CMStub#cast(CMEvent, String, String, String, int, int)} method.
 	 *  
 	 * @param cme - the CM event
 	 * @param serverName - the server name
@@ -1668,8 +1668,8 @@ public class CMStub {
 	/**
 	 * Sends a CM event to a node group via a designated server.
 	 * 
-	 * <p> This method is the same as calling send(cme, serverName, sessionName, groupName, opt, 0)
-	 * of the {@link CMStub#send(CMEvent, String, String, int, int)} method.
+	 * <p> This method is the same as calling cast(cme, serverName, sessionName, groupName, opt, 0)
+	 * of the {@link CMStub#cast(CMEvent, String, String, String, int, int)} method.
 	 *   
 	 * @param cme - the CM event
 	 * @param serverName - the server name
