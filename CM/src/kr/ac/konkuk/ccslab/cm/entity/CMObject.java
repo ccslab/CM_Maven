@@ -41,4 +41,11 @@ public class CMObject {
 	{
 		return m_nType;
 	}
+	
+	@Override
+	public String toString()
+	{
+		String strType = "{ \"type\": "+m_nType+" }";
+		return strType;
+	}
 }

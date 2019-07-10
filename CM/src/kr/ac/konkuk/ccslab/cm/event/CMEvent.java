@@ -292,6 +292,25 @@ public abstract class CMEvent extends CMObject {
 		return m_strDistributionGroup;
 	}
 	
+	@Override
+	public String toString()
+	{
+		StringBuffer strEventHeader = new StringBuffer();
+		strEventHeader.append("{");
+		strEventHeader.append(super.toString()+", "); // m_nType of CMObject
+		strEventHeader.append("\"ID\": "+m_nID+", ");
+		strEventHeader.append("\"ByteNum\": "+m_nByteNum+", ");
+		strEventHeader.append("\"sender\": \""+m_strSender+"\", ");
+		strEventHeader.append("\"receiver\": \""+m_strReceiver+"\", ");
+		strEventHeader.append("\"handlerSession\": \""+m_strHandlerSession+"\", ");
+		strEventHeader.append("\"handlerGroup\": \""+m_strHandlerGroup+"\", ");
+		strEventHeader.append("\"distributionSession\": \""+m_strDistributionSession+"\", ");
+		strEventHeader.append("\"distributionGroup\": \""+m_strDistributionGroup+"\"");
+		strEventHeader.append("}");
+		
+		return strEventHeader.toString();
+	}
+	
 	/////////////////////////////////////////////////
 	
 	protected boolean allocate()
