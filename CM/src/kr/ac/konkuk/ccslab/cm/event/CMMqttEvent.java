@@ -27,6 +27,10 @@ public abstract class CMMqttEvent extends CMEvent {
 	public static final int PINGRESP = 13;
 	public static final int DISCONNECT = 14;
 	
+	// member variable
+	// required in variable header of most packets except connect and ping packets
+	private int m_nPacketID;
+	
 	// abstract methods
 	protected abstract int getFixedHeaderByteNum();
 	protected abstract int getVarHeaderByteNum();
@@ -37,6 +41,28 @@ public abstract class CMMqttEvent extends CMEvent {
 	protected abstract void unmarshallVarHeader();
 	protected abstract void marshallPayload();
 	protected abstract void unmarshallPayload();
+	
+	public CMMqttEvent()
+	{
+		m_nType = CMInfo.CM_MQTT_EVENT;
+		m_nPacketID = -1;
+	}
+	
+	public CMMqttEvent(ByteBuffer msg)
+	{
+		this();
+		unmarshall(msg);
+	}
+	
+	public void setPacketID(int nID)
+	{
+		m_nPacketID = nID;
+	}
+	
+	public int getPacketID()
+	{
+		return m_nPacketID;
+	}
 	
 	@Override
 	public String toString()
