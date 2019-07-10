@@ -54,17 +54,31 @@ public abstract class CMMqttEvent extends CMEvent {
 		unmarshall(msg);
 	}
 	
+	/**
+	 * sets MQTT packet ID.
+	 * @param nID - packet ID.
+	 */
 	public void setPacketID(int nID)
 	{
 		m_nPacketID = nID;
 	}
 	
+	/**
+	 * gets MQTT packet ID.
+	 * @return packet ID.
+	 */
 	public int getPacketID()
 	{
 		return m_nPacketID;
 	}
 	
-	@Override
+	/**
+	 * compares the equality of the given CMMqttEvent object.
+	 * <p> obj is the same as this object if their packet IDs are equal.
+	 * @param obj - CMMqttEvent object.
+	 * @return true if obj is the same as this object; false otherwise.
+	 */
+	@Override	
 	public boolean equals(Object obj)
 	{
 		if(!super.equals(obj)) return false;
@@ -76,6 +90,10 @@ public abstract class CMMqttEvent extends CMEvent {
 		return false;
 	}
 	
+	/**
+	 * returns the string representation of this CMMqttEvent object.
+	 * @return string of this object.
+	 */
 	@Override
 	public String toString()
 	{
