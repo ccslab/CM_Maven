@@ -39,6 +39,12 @@ public abstract class CMMqttEvent extends CMEvent {
 	protected abstract void unmarshallPayload();
 	
 	@Override
+	public String toString()
+	{
+		return super.toString();
+	}
+	
+	@Override
 	protected int getByteNum()
 	{
 		int nByteNum = 0;
