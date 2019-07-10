@@ -293,6 +293,24 @@ public abstract class CMEvent extends CMObject {
 	}
 	
 	@Override
+	public boolean equals(Object obj)
+	{
+		if(!super.equals(obj)) return false;
+		CMEvent cme = (CMEvent) obj;
+		
+		if(m_nID == cme.getID() && m_nByteNum == cme.getByteNum() &&
+				m_strSender.equals(cme.getSender()) &&
+				m_strReceiver.equals(cme.getReceiver()) &&
+				m_strHandlerSession.equals(cme.getHandlerSession()) &&
+				m_strHandlerGroup.equals(cme.getHandlerGroup()) &&
+				m_strDistributionSession.equals(cme.getDistributionSession()) &&
+				m_strDistributionGroup.equals(cme.getDistributionGroup()))
+			return true;
+		
+		return false;
+	}
+	
+	@Override
 	public String toString()
 	{
 		StringBuffer strEventHeader = new StringBuffer();

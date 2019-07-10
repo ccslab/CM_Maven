@@ -43,6 +43,19 @@ public class CMObject {
 	}
 	
 	@Override
+	public boolean equals(Object obj)
+	{
+		if(obj == null) return false;
+		if(!this.getClass().equals(obj.getClass())) return false;
+		if(this == obj) return true;
+		
+		CMObject cmo = (CMObject) obj;
+		if(m_nType == cmo.getType())
+			return true;
+		return false;
+	}
+	
+	@Override
 	public String toString()
 	{
 		String strType = "{ \"type\": "+m_nType+" }";

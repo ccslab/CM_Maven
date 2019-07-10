@@ -65,6 +65,18 @@ public abstract class CMMqttEvent extends CMEvent {
 	}
 	
 	@Override
+	public boolean equals(Object obj)
+	{
+		if(!super.equals(obj)) return false;
+		
+		CMMqttEvent mqttEvent = (CMMqttEvent) obj;
+		if(m_nPacketID != -1 && m_nPacketID == mqttEvent.getPacketID())
+			return true;
+		
+		return false;
+	}
+	
+	@Override
 	public String toString()
 	{
 		return super.toString();
@@ -77,13 +89,18 @@ public abstract class CMMqttEvent extends CMEvent {
 		int nFixedHeaderByteNum = 0;
 		int nVarHeaderByteNum = 0;
 		int nPayloadByteNum = 0;
+		
 		nByteNum = super.getByteNum();
 		
-		nFixedHeaderByteNum = getFixedHeaderByteNum();
 		nVarHeaderByteNum = getVarHeaderByteNum();
 		nPayloadByteNum = getPayloadByteNum();
-		nByteNum += nFixedHeaderByteNum + nVarHeaderByteNum + nPayloadByteNum;
-		
+		nByteNum += nVarHeaderByteNum + nPayloadByteNum;
+
+		// m_nRemainLength of the fixed header is determined after getVarHeaderByteNum() and 
+		// getPayloadByteNum() are completed.
+		nFixedHeaderByteNum = getFixedHeaderByteNum();
+		nByteNum += nFixedHeaderByteNum;
+
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEvent.getByteNum(): fixed header("+nFixedHeaderByteNum
