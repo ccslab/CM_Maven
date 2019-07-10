@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm.event;
 
 import java.nio.ByteBuffer;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 /**
  * This class represents CM events that belong to the MQTT control packets.
  * @author mlim
@@ -40,17 +42,31 @@ public abstract class CMMqttEvent extends CMEvent {
 	protected int getByteNum()
 	{
 		int nByteNum = 0;
+		int nFixedHeaderByteNum = 0;
+		int nVarHeaderByteNum = 0;
+		int nPayloadByteNum = 0;
 		nByteNum = super.getByteNum();
 		
-		nByteNum += getFixedHeaderByteNum() + getVarHeaderByteNum() + getPayloadByteNum();
+		nFixedHeaderByteNum = getFixedHeaderByteNum();
+		nVarHeaderByteNum = getVarHeaderByteNum();
+		nPayloadByteNum = getPayloadByteNum();
+		nByteNum += nFixedHeaderByteNum + nVarHeaderByteNum + nPayloadByteNum;
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEvent.getByteNum(): fixed header("+nFixedHeaderByteNum
+					+")+ var header("+nVarHeaderByteNum+")+ payload("+nPayloadByteNum
+					+") = "+nByteNum);
+		}
 		
 		return nByteNum;
 	}
 	
 	@Override
-	protected void marshallBody() {
+	protected void marshallBody() 
+	{
 		// TODO Auto-generated method stub
-
+		// from here
 	}
 
 	@Override
