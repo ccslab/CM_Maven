@@ -53,6 +53,7 @@ public class CMInfo {
 	public static final int CM_USER_EVENT = 314;
 	public static final int CM_SNS_EVENT = 315;
 	public static final int CM_MULTI_SERVER_EVENT = 316;
+	public static final int CM_MQTT_EVENT = 317;
 	
 	//public static final int CM_COMM_SOCKET = 401;
 	//public static final int CM_SERVER_SOCKET = 402;
