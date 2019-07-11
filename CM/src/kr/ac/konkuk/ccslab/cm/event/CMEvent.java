@@ -351,18 +351,12 @@ public abstract class CMEvent extends CMObject {
 		m_bytes.putInt(m_nByteNum);
 		m_bytes.putInt(m_nType);
 		m_bytes.putInt(m_nID);
-		m_bytes.putInt(m_strSender.getBytes().length);
-		m_bytes.put(m_strSender.getBytes());
-		m_bytes.putInt(m_strReceiver.getBytes().length);
-		m_bytes.put(m_strReceiver.getBytes());
-		m_bytes.putInt(m_strHandlerSession.getBytes().length);
-		m_bytes.put(m_strHandlerSession.getBytes());
-		m_bytes.putInt(m_strHandlerGroup.getBytes().length);
-		m_bytes.put(m_strHandlerGroup.getBytes());
-		m_bytes.putInt(m_strDistributionSession.getBytes().length);
-		m_bytes.put(m_strDistributionSession.getBytes());
-		m_bytes.putInt(m_strDistributionGroup.getBytes().length);
-		m_bytes.put(m_strDistributionGroup.getBytes());
+		putStringToByteBuffer(m_strSender);
+		putStringToByteBuffer(m_strReceiver);
+		putStringToByteBuffer(m_strHandlerSession);
+		putStringToByteBuffer(m_strHandlerGroup);
+		putStringToByteBuffer(m_strDistributionSession);
+		putStringToByteBuffer(m_strDistributionGroup);
 		//m_bytes.rewind();
 
 	}
@@ -399,6 +393,13 @@ public abstract class CMEvent extends CMObject {
 				+ m_strHandlerSession.getBytes().length + m_strHandlerGroup.getBytes().length
 				+ m_strDistributionSession.getBytes().length + m_strDistributionGroup.getBytes().length;
 		return nSize;
+	}
+	
+	protected void putStringToByteBuffer(String str)
+	{
+		int nStrLength = str.getBytes().length;
+		m_bytes.putInt(nStrLength);
+		m_bytes.put(str.getBytes());
 	}
 	
 	protected String getStringFromByteBuffer(ByteBuffer msg)
