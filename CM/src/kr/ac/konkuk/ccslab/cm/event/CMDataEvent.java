@@ -151,10 +151,8 @@ public class CMDataEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case CMDataEvent.INHABITANT:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddr.getBytes().length);
-			m_bytes.put(m_strHostAddr.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
 			m_bytes.putFloat(m_pq.m_p.m_x);
 			m_bytes.putFloat(m_pq.m_p.m_y);
@@ -165,19 +163,15 @@ public class CMDataEvent extends CMEvent{
 			m_bytes.putFloat(m_pq.m_q.m_z);
 			break;
 		case CMDataEvent.NEW_USER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddr.getBytes().length);
-			m_bytes.put(m_strHostAddr.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
 			break;
 		case CMDataEvent.REMOVE_USER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case CMDataEvent.REQUEST_INHABITANT:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		default:
 			System.out.println("CMDataEvent.marshallBody(), unknown event id("+m_nID+").");

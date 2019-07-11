@@ -148,7 +148,34 @@ public abstract class CMMqttEvent extends CMEvent {
 		unmarshallVarHeader();
 		unmarshallPayload();
 		
-		return;		
+		return;
+	}
+	
+	
+	/* not yet
+	@Override
+	protected String getStringFromByteBuffer(ByteBuffer buf)
+	{
+		
 	}
 
+	@Override
+	protected void putStringToByteBuffer(String str)
+	{
+		
+	}
+	
+	// put 2 bytes number to ByteBuffer
+	protected void putInt2BytesToByteBuffer(int num)
+	{
+		
+	}
+	
+	// get integer with 2 bytes from ByteBuffer
+	protected int getInt2BytesFromByteBuffer(ByteBuffer buf)
+	{
+		
+	}
+	*/
+	
 }

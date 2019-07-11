@@ -58,8 +58,7 @@ public class CMConcurrencyEvent extends CMEvent {
 	
 	protected void marshallBody()
 	{
-		m_bytes.putInt(m_strUserName.getBytes().length);
-		m_bytes.put(m_strUserName.getBytes());
+		putStringToByteBuffer(m_strUserName);
 		m_bytes.putInt(m_nTargetObjectID);
 	}
 	

@@ -50,8 +50,7 @@ public class CMDummyEvent extends CMEvent{
 	
 	protected void marshallBody()
 	{
-		m_bytes.putInt(m_strDummyInfo.getBytes().length);
-		m_bytes.put(m_strDummyInfo.getBytes());
+		putStringToByteBuffer(m_strDummyInfo);
 	}
 	
 	protected void unmarshallBody(ByteBuffer msg)

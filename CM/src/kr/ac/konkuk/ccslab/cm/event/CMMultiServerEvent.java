@@ -867,7 +867,7 @@ public class CMMultiServerEvent extends CMEvent{
 		return nByteNum;
 	}
 	
-	public void marshallBody()
+	protected void marshallBody()
 	{
 		Iterator<CMServerInfo> iterServerList;
 		Iterator<CMSessionInfo> iterSessionList;
@@ -876,25 +876,20 @@ public class CMMultiServerEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQ_SERVER_REG:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strServerAddress.getBytes().length);
-			m_bytes.put(m_strServerAddress.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strServerAddress);
 			m_bytes.putInt(m_nServerPort);
 			m_bytes.putInt(m_nServerUDPPort);
 			break;
 		case RES_SERVER_REG:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case REQ_SERVER_DEREG:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			break;
 		case RES_SERVER_DEREG:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case NOTIFY_SERVER_INFO:
@@ -910,56 +905,41 @@ public class CMMultiServerEvent extends CMEvent{
 			while(iterServerList.hasNext())
 			{
 				CMServerInfo tsi = iterServerList.next();
-				m_bytes.putInt(tsi.getServerName().getBytes().length);
-				m_bytes.put(tsi.getServerName().getBytes());
-				m_bytes.putInt(tsi.getServerAddress().getBytes().length);
-				m_bytes.put(tsi.getServerAddress().getBytes());
+				putStringToByteBuffer(tsi.getServerName());
+				putStringToByteBuffer(tsi.getServerAddress());
 				m_bytes.putInt(tsi.getServerPort());
 				m_bytes.putInt(tsi.getServerUDPPort());
 			}
 			break;
 		case NOTIFY_SERVER_LEAVE:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			break;
 		case REQ_SERVER_INFO:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case ADD_LOGIN:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strPassword.getBytes().length);
-			m_bytes.put(m_strPassword.getBytes());
-			m_bytes.putInt(m_strHostAddress.getBytes().length);
-			m_bytes.put(m_strHostAddress.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strPassword);
+			putStringToByteBuffer(m_strHostAddress);
 			m_bytes.putInt(m_nUDPPort);
 			break;
 		case ADD_LOGIN_ACK:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			m_bytes.putInt(m_bValidUser);
-			m_bytes.putInt(m_strCommArch.getBytes().length);
-			m_bytes.put(m_strCommArch.getBytes());
+			putStringToByteBuffer(m_strCommArch);
 			m_bytes.putInt(m_bLoginScheme);
 			m_bytes.putInt(m_bSessionScheme);
 			m_bytes.putInt(m_nServerUDPPort);
 			break;
 		case ADD_LOGOUT:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case ADD_JOIN_SESSION:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_JOIN_SESSION_ACK:
 			if(m_nGroupNum != m_groupList.size())
@@ -968,120 +948,80 @@ public class CMMultiServerEvent extends CMEvent{
 				m_bytes = null;
 				return;
 			}
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			m_bytes.putInt(m_nGroupNum);
 			
 			iterGroupList = m_groupList.iterator();
 			while(iterGroupList.hasNext())
 			{
 				CMGroupInfo tgi = iterGroupList.next();
-				m_bytes.putInt(tgi.getGroupName().getBytes().length);
-				m_bytes.put(tgi.getGroupName().getBytes());
-				m_bytes.putInt(tgi.getGroupAddress().getBytes().length);
-				m_bytes.put(tgi.getGroupAddress().getBytes());
+				putStringToByteBuffer(tgi.getGroupName());
+				putStringToByteBuffer(tgi.getGroupAddress());
 				m_bytes.putInt(tgi.getGroupPort());
 			}
 			break;
 		case ADD_LEAVE_SESSION:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_LEAVE_SESSION_ACK:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case ADD_CHANGE_SESSION:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_SESSION_ADD_USER:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddress.getBytes().length);
-			m_bytes.put(m_strHostAddress.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddress);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_SESSION_REMOVE_USER:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case ADD_JOIN_GROUP:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddress.getBytes().length);
-			m_bytes.put(m_strHostAddress.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddress);
 			m_bytes.putInt(m_nUDPPort);
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.putInt(m_strGroupName.getBytes().length);
-			m_bytes.put(m_strGroupName.getBytes());
+			putStringToByteBuffer(m_strSessionName);
+			putStringToByteBuffer(m_strGroupName);
 			break;
 		case ADD_LEAVE_GROUP:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.putInt(m_strGroupName.getBytes().length);
-			m_bytes.put(m_strGroupName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
+			putStringToByteBuffer(m_strGroupName);
 			break;
 		case ADD_GROUP_INHABITANT:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddress.getBytes().length);
-			m_bytes.put(m_strHostAddress.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddress);
 			m_bytes.putInt(m_nUDPPort);
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.putInt(m_strGroupName.getBytes().length);
-			m_bytes.put(m_strGroupName.getBytes());
+			putStringToByteBuffer(m_strSessionName);
+			putStringToByteBuffer(m_strGroupName);
 			break;
 		case ADD_NEW_GROUP_USER:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddress.getBytes().length);
-			m_bytes.put(m_strHostAddress.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddress);
 			m_bytes.putInt(m_nUDPPort);
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.putInt(m_strGroupName.getBytes().length);
-			m_bytes.put(m_strGroupName.getBytes());
+			putStringToByteBuffer(m_strSessionName);
+			putStringToByteBuffer(m_strGroupName);
 			break;
 		case ADD_REMOVE_GROUP_USER:
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
-			m_bytes.putInt(m_strGroupName.getBytes().length);
-			m_bytes.put(m_strGroupName.getBytes());
+			putStringToByteBuffer(m_strServerName);
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
+			putStringToByteBuffer(m_strGroupName);
 			break;
 		case ADD_REQUEST_SESSION_INFO:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case ADD_RESPONSE_SESSION_INFO:
 			if(m_nSessionNum != m_sessionList.size())
@@ -1091,18 +1031,15 @@ public class CMMultiServerEvent extends CMEvent{
 				return;
 			}
 			
-			m_bytes.putInt(m_strServerName.getBytes().length);
-			m_bytes.put(m_strServerName.getBytes());
+			putStringToByteBuffer(m_strServerName);
 			m_bytes.putInt(m_nSessionNum);
 			
 			iterSessionList = m_sessionList.iterator();
 			while(iterSessionList.hasNext())
 			{
 				CMSessionInfo tsi = iterSessionList.next();
-				m_bytes.putInt(tsi.getSessionName().getBytes().length);
-				m_bytes.put(tsi.getSessionName().getBytes());
-				m_bytes.putInt(tsi.getAddress().getBytes().length);
-				m_bytes.put(tsi.getAddress().getBytes());
+				putStringToByteBuffer(tsi.getSessionName());
+				putStringToByteBuffer(tsi.getAddress());
 				m_bytes.putInt(tsi.getPort());
 				m_bytes.putInt(tsi.getUserNum());
 			}
@@ -1114,7 +1051,7 @@ public class CMMultiServerEvent extends CMEvent{
 		}
 	}
 
-	public void unmarshallBody(ByteBuffer msg)
+	protected void unmarshallBody(ByteBuffer msg)
 	{
 		int i = 0;
 

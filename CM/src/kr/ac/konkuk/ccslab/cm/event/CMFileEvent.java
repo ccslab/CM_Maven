@@ -245,95 +245,75 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_FILE_TRANSFER:
 		case REQUEST_FILE_TRANSFER_CHAN:
-			m_bytes.putInt(m_strReceiverName.getBytes().length);
-			m_bytes.put(m_strReceiverName.getBytes());
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.put(m_byteFileAppendFlag);
 			break;
 		case REPLY_FILE_TRANSFER:
 		case REPLY_FILE_TRANSFER_CHAN:
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
-			m_bytes.putInt(m_strSenderName.getBytes().length);
-			m_bytes.put(m_strSenderName.getBytes());
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.put(m_byteFileAppendFlag);
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
-			m_bytes.putInt(m_strReceiverName.getBytes().length);
-			m_bytes.put(m_strReceiverName.getBytes());
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putLong(m_lReceivedFileSize);
 			break;
 		case CONTINUE_FILE_TRANSFER:
-			m_bytes.putInt(m_strSenderName.getBytes().length);
-			m_bytes.put(m_strSenderName.getBytes());
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putInt(m_nBlockSize);
 			m_bytes.put(m_cFileBlock);
 			break;
 		case CONTINUE_FILE_TRANSFER_ACK:
-			m_bytes.putInt(m_strReceiverName.getBytes().length);
-			m_bytes.put(m_strReceiverName.getBytes());
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lReceivedFileSize);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case END_FILE_TRANSFER:
 		case END_FILE_TRANSFER_CHAN:
-			m_bytes.putInt(m_strSenderName.getBytes().length);
-			m_bytes.put(m_strSenderName.getBytes());
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case END_FILE_TRANSFER_ACK:
 		case END_FILE_TRANSFER_CHAN_ACK:
-			m_bytes.putInt(m_strReceiverName.getBytes().length);
-			m_bytes.put(m_strReceiverName.getBytes());
-			m_bytes.putInt(m_strFileName.getBytes().length);
-			m_bytes.put(m_strFileName.getBytes());
+			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case REQUEST_DIST_FILE_PROC:
-			m_bytes.putInt(m_strReceiverName.getBytes().length);
-			m_bytes.put(m_strReceiverName.getBytes());
+			putStringToByteBuffer(m_strReceiverName);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case CANCEL_FILE_SEND:
 		case CANCEL_FILE_SEND_CHAN:
 		case CANCEL_FILE_RECV_CHAN:
-			m_bytes.putInt(m_strSenderName.getBytes().length);
-			m_bytes.put(m_strSenderName.getBytes());
-			m_bytes.putInt(m_strReceiverName.getBytes().length);
-			m_bytes.put(m_strReceiverName.getBytes());
+			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strReceiverName);
 			break;
 		case CANCEL_FILE_SEND_ACK:
 		case CANCEL_FILE_SEND_CHAN_ACK:
 		case CANCEL_FILE_RECV_CHAN_ACK:
-			m_bytes.putInt(m_strSenderName.getBytes().length);
-			m_bytes.put(m_strSenderName.getBytes());
-			m_bytes.putInt(m_strReceiverName.getBytes().length);
-			m_bytes.put(m_strReceiverName.getBytes());
+			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strReceiverName);
 			m_bytes.putInt(m_nReturnCode);
 			break;			
 		default:

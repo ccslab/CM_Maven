@@ -209,13 +209,10 @@ public class CMInterestEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case CMInterestEvent.USER_ENTER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddr.getBytes().length);
-			m_bytes.put(m_strHostAddr.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
-			m_bytes.putInt(m_strCurrentGroup.getBytes().length);
-			m_bytes.put(m_strCurrentGroup.getBytes());
+			putStringToByteBuffer(m_strCurrentGroup);
 			m_bytes.putFloat(m_pq.m_p.m_x);
 			m_bytes.putFloat(m_pq.m_p.m_y);
 			m_bytes.putFloat(m_pq.m_p.m_z);
@@ -225,12 +222,10 @@ public class CMInterestEvent extends CMEvent{
 			m_bytes.putFloat(m_pq.m_q.m_z);
 			break;
 		case CMInterestEvent.USER_LEAVE:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case CMInterestEvent.USER_MOVE:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			m_bytes.putFloat(m_pq.m_p.m_x);
 			m_bytes.putFloat(m_pq.m_p.m_y);
 			m_bytes.putFloat(m_pq.m_p.m_z);
@@ -240,16 +235,12 @@ public class CMInterestEvent extends CMEvent{
 			m_bytes.putFloat(m_pq.m_q.m_z);
 			break;
 		case CMInterestEvent.USER_COLLIDE:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strCollideObj.getBytes().length);
-			m_bytes.put(m_strCollideObj.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strCollideObj);
 			break;
 		case CMInterestEvent.USER_TALK:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strTalk.getBytes().length);
-			m_bytes.put(m_strTalk.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strTalk);
 			break;
 		default:
 			System.out.println("CMInterestEvent.marshallBody(), unknown event id("+m_nID+").");
