@@ -638,22 +638,17 @@ public class CMSessionEvent extends CMEvent {
 		switch(m_nID)
 		{
 		case LOGIN:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strPasswd.getBytes().length);
-			m_bytes.put(m_strPasswd.getBytes());
-			m_bytes.putInt(m_strHostAddr.getBytes().length);
-			m_bytes.put(m_strHostAddr.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strPasswd);
+			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
 			break;
 		case LOGOUT:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case LOGIN_ACK:
 			m_bytes.putInt(m_bValidUser);
-			m_bytes.putInt(m_strCommArch.getBytes().length);
-			m_bytes.put(m_strCommArch.getBytes());
+			putStringToByteBuffer(m_strCommArch);
 			m_bytes.putInt(m_bFileTransferScheme);
 			m_bytes.putInt(m_bLoginScheme);
 			m_bytes.putInt(m_bSessionScheme);
@@ -661,8 +656,7 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.putInt(m_nUDPPort);			// server udp port
 			break;
 		case REQUEST_SESSION_INFO:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case RESPONSE_SESSION_INFO:
 			if(m_nSessionNum != m_sessionList.size())
@@ -678,19 +672,15 @@ public class CMSessionEvent extends CMEvent {
 			while(iterSessionList.hasNext())
 			{
 				CMSessionInfo tsi = iterSessionList.next();
-				m_bytes.putInt(tsi.getSessionName().getBytes().length);
-				m_bytes.put(tsi.getSessionName().getBytes());
-				m_bytes.putInt(tsi.getAddress().getBytes().length);
-				m_bytes.put(tsi.getAddress().getBytes());
+				putStringToByteBuffer(tsi.getSessionName());
+				putStringToByteBuffer(tsi.getAddress());
 				m_bytes.putInt(tsi.getPort());
 				m_bytes.putInt(tsi.getUserNum());
 			}
 			break;
 		case JOIN_SESSION:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case JOIN_SESSION_ACK:
 			if(m_nGroupNum != m_groupList.size())
@@ -706,95 +696,71 @@ public class CMSessionEvent extends CMEvent {
 			while(iterGroupList.hasNext())
 			{
 				CMGroupInfo tgi = iterGroupList.next();
-				m_bytes.putInt(tgi.getGroupName().getBytes().length);
-				m_bytes.put(tgi.getGroupName().getBytes());
-				m_bytes.putInt(tgi.getGroupAddress().getBytes().length);
-				m_bytes.put(tgi.getGroupAddress().getBytes());
+				putStringToByteBuffer(tgi.getGroupName());
+				putStringToByteBuffer(tgi.getGroupAddress());
 				m_bytes.putInt(tgi.getGroupPort());
 			}
 			break;
 		case LEAVE_SESSION:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case LEAVE_SESSION_ACK:
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case SESSION_TALK:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strTalk.getBytes().length);
-			m_bytes.put(m_strTalk.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strTalk);
 			break;
 		case SESSION_ADD_USER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strHostAddr.getBytes().length);
-			m_bytes.put(m_strHostAddr.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strHostAddr);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case SESSION_REMOVE_USER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case CHANGE_SESSION:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strSessionName.getBytes().length);
-			m_bytes.put(m_strSessionName.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 		case ADD_BLOCK_SOCKET_CHANNEL:
 		case REMOVE_BLOCK_SOCKET_CHANNEL:
-			m_bytes.putInt(m_strChannelName.getBytes().length);
-			m_bytes.put(m_strChannelName.getBytes());
+			putStringToByteBuffer(m_strChannelName);
 			m_bytes.putInt(m_nChannelNum);
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
 		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
-			m_bytes.putInt(m_strChannelName.getBytes().length);
-			m_bytes.put(m_strChannelName.getBytes());
+			putStringToByteBuffer(m_strChannelName);
 			m_bytes.putInt(m_nChannelNum);
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case REGISTER_USER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strPasswd.getBytes().length);
-			m_bytes.put(m_strPasswd.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strPasswd);
 			break;
 		case REGISTER_USER_ACK:
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strCreationTime.getBytes().length);
-			m_bytes.put(m_strCreationTime.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strCreationTime);
 			break;
 		case DEREGISTER_USER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strPasswd.getBytes().length);
-			m_bytes.put(m_strPasswd.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strPasswd);
 			break;
 		case DEREGISTER_USER_ACK:
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case FIND_REGISTERED_USER:
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
+			putStringToByteBuffer(m_strUserName);
 			break;
 		case FIND_REGISTERED_USER_ACK:
 			m_bytes.putInt(m_nReturnCode);
-			m_bytes.putInt(m_strUserName.getBytes().length);
-			m_bytes.put(m_strUserName.getBytes());
-			m_bytes.putInt(m_strCreationTime.getBytes().length);
-			m_bytes.put(m_strCreationTime.getBytes());
+			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(m_strCreationTime);
 			break;
 		default:
 			System.out.println("CMSessionEvent.marshallBody(), unknown event id("+m_nID+").");

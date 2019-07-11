@@ -186,16 +186,14 @@ public class CMUserEvent extends CMEvent {
 		CMUserEventField uef = null;
 		Iterator<CMUserEventField> iterEventFieldList = m_eventFieldList.iterator();
 		
-		m_bytes.putInt(m_strID.getBytes().length);
-		m_bytes.put(m_strID.getBytes());
+		putStringToByteBuffer(m_strID);
 		
 		while(iterEventFieldList.hasNext())
 		{
 			uef = iterEventFieldList.next();
 			
 			m_bytes.putInt(uef.nDataType);
-			m_bytes.putInt(uef.strFieldName.getBytes().length);
-			m_bytes.put(uef.strFieldName.getBytes());
+			putStringToByteBuffer(uef.strFieldName);
 			if(uef.nDataType == CMInfo.CM_BYTES)
 			{
 				m_bytes.putInt(uef.nValueByteNum);
@@ -203,8 +201,7 @@ public class CMUserEvent extends CMEvent {
 			}
 			else
 			{
-				m_bytes.putInt(uef.strFieldValue.getBytes().length);
-				m_bytes.put(uef.strFieldValue.getBytes());
+				putStringToByteBuffer(uef.strFieldValue);
 			}
 		}
 		
