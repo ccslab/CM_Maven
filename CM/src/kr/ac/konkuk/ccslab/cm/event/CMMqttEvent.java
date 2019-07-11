@@ -151,31 +151,70 @@ public abstract class CMMqttEvent extends CMEvent {
 		return;
 	}
 	
-	
-	/* not yet
-	@Override
-	protected String getStringFromByteBuffer(ByteBuffer buf)
-	{
-		
-	}
-
 	@Override
 	protected void putStringToByteBuffer(String str)
 	{
-		
+		int nStrLength = str.getBytes().length;
+		putInt2BytesToByteBuffer(nStrLength);
+		m_bytes.put(str.getBytes());
 	}
 	
+	@Override
+	protected String getStringFromByteBuffer(ByteBuffer buf)
+	{
+		int nStrLength = 0;
+		byte[] strBytes;
+		String str = null;
+		
+		nStrLength = getInt2BytesFromByteBuffer(buf);
+		strBytes = new byte[nStrLength];
+		buf.get(strBytes);
+		str = new String(strBytes);
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEvent.getStringFromByteBuffer(), str("+str+")");
+		}
+		
+		return str;
+	}
+
 	// put 2 bytes number to ByteBuffer
 	protected void putInt2BytesToByteBuffer(int num)
 	{
+		byte[] numBytes = new byte[2];
+		numBytes[0] = 0;
+		numBytes[1] = 0;
 		
-	}
+		numBytes[0] = (byte)((num & 0x0000ff00) >> 8);
+		numBytes[1] = (byte)(num & 0x000000ff);
+		
+		m_bytes.put(numBytes);
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEvent.putInt2BytesToByteBuffer(), num("+num
+					+"), numBytes[0]("+numBytes[0]+"), numBytes[1]("+numBytes[1]+")");
+		}
+	}	
 	
 	// get integer with 2 bytes from ByteBuffer
 	protected int getInt2BytesFromByteBuffer(ByteBuffer buf)
 	{
+		int num = 0;
+		byte[] numBytes = new byte[2];
+		buf.get(numBytes);
 		
+		num = (num | numBytes[0]) << 8;
+		num = num | numBytes[1];
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEvent.getInt2BytesFromByteBuffer(), numBytes[0]("
+					+numBytes[0]+"), numBytes[1]("+numBytes[1]+"), num("+num+")");
+		}
+		
+		return num;
 	}
-	*/
 	
 }
