@@ -347,7 +347,66 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
 	//////////////////////////////////////////////////
 	// setter/getter (payload)
-
+	
+	public void set(String strClientID, String strWillTopic, String strWillMessage, 
+			String strUserName, String strPassword)
+	{
+		m_strClientID = strClientID;
+		m_strWillTopic = strWillTopic;
+		m_strWillMessage = strWillMessage;
+		m_strUserName = strUserName;
+		m_strPassword = strPassword;
+	}
+	
+	public void setClientID(String strClientID)
+	{
+		m_strClientID = strClientID;
+	}
+	
+	public String getClientID()
+	{
+		return m_strClientID;
+	}
+	
+	public void setWillTopic(String strWillTopic)
+	{
+		m_strWillTopic = strWillTopic;
+	}
+	
+	public String getWillTopic()
+	{
+		return m_strWillTopic;
+	}
+	
+	public void setWillMessage(String strWillMessage)
+	{
+		m_strWillMessage = strWillMessage;
+	}
+	
+	public String getWillMessage()
+	{
+		return m_strWillMessage;
+	}
+	
+	public void setUserName(String strUserName)
+	{
+		m_strUserName = strUserName;
+	}
+	
+	public String getUserName()
+	{
+		return m_strUserName;
+	}
+	
+	public void setPassword(String strPassword)
+	{
+		m_strPassword = strPassword;
+	}
+	
+	public String getPassword()
+	{
+		return m_strPassword;
+	}
 	
 	//////////////////////////////////////////////////
 	// overridden methods (payload)
@@ -355,19 +414,33 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	@Override
 	protected int getPayloadByteNum() {
 		// TODO Auto-generated method stub
-		return 0;
+		int nByteNum = 0;
+		nByteNum += 2 + m_strClientID.getBytes().length;	// client id
+		nByteNum += 2 + m_strWillTopic.getBytes().length;	// will topic
+		nByteNum += 2 + m_strWillMessage.getBytes().length;	// will message
+		nByteNum += 2 + m_strUserName.getBytes().length;	// user name
+		nByteNum += 2 + m_strPassword.getBytes().length;	// password
+		return nByteNum;
 	}
 
 	@Override
 	protected void marshallPayload() {
 		// TODO Auto-generated method stub
-
+		putStringToByteBuffer(m_strClientID);	// client id
+		putStringToByteBuffer(m_strWillTopic);	// will topic
+		putStringToByteBuffer(m_strWillMessage);	// will message
+		putStringToByteBuffer(m_strUserName);	// user name
+		putStringToByteBuffer(m_strPassword);	// password
 	}
 
 	@Override
 	protected void unmarshallPayload(ByteBuffer buf) {
 		// TODO Auto-generated method stub
-
+		m_strClientID = getStringFromByteBuffer(buf);	// client id
+		m_strWillTopic = getStringFromByteBuffer(buf);	// will topic
+		m_strWillMessage = getStringFromByteBuffer(buf);	// will message
+		m_strUserName = getStringFromByteBuffer(buf);	// user name
+		m_strPassword = getStringFromByteBuffer(buf);	// password
 	}
 
 }
