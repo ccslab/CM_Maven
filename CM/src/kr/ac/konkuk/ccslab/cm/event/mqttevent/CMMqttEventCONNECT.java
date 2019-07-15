@@ -420,12 +420,27 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		nByteNum += 2 + m_strWillMessage.getBytes().length;	// will message
 		nByteNum += 2 + m_strUserName.getBytes().length;	// user name
 		nByteNum += 2 + m_strPassword.getBytes().length;	// password
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.getPayloadByteNum(): "+ nByteNum);
+		}
+		
 		return nByteNum;
 	}
 
 	@Override
 	protected void marshallPayload() {
 		// TODO Auto-generated method stub
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.marshallPayload(): ");
+			System.out.println("client id: "+m_strClientID+", will topic: "+m_strWillTopic
+					+", will message: "+m_strWillMessage+", user name: "+m_strUserName
+					+", password: "+m_strPassword);
+		}
+		
 		putStringToByteBuffer(m_strClientID);	// client id
 		putStringToByteBuffer(m_strWillTopic);	// will topic
 		putStringToByteBuffer(m_strWillMessage);	// will message
@@ -441,6 +456,14 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		m_strWillMessage = getStringFromByteBuffer(buf);	// will message
 		m_strUserName = getStringFromByteBuffer(buf);	// user name
 		m_strPassword = getStringFromByteBuffer(buf);	// password
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.unmarshallPayload(): ");
+			System.out.println("client id: "+m_strClientID+", will topic: "+m_strWillTopic
+					+", will message: "+m_strWillMessage+", user name: "+m_strUserName
+					+", password: "+m_strPassword);
+		}
 	}
 
 }
