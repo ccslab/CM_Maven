@@ -25,7 +25,7 @@ public abstract class CMEvent extends CMObject {
 	protected String m_strDistributionGroup;
 	protected int m_nID;
 	protected int m_nByteNum;	// total number of bytes in the event
-	ByteBuffer m_bytes;
+	protected ByteBuffer m_bytes;
 
 	/**
 	 * Creates an empty CMEvent object.

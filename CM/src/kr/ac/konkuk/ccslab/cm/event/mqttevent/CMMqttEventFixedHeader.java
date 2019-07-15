@@ -1,4 +1,4 @@
-package kr.ac.konkuk.ccslab.cm.event;
+package kr.ac.konkuk.ccslab.cm.event.mqttevent;
 
 import java.nio.ByteBuffer;
 
