@@ -12,12 +12,14 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  */
 public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
+	//////////////////////////////////////////////////
 	// member variables (variable header)
 	private String m_strProtocolName; // encoding with 2 bytes length and the string length
 	private byte m_protocolLevel;	// 1 byte
 	private byte m_connectFlag;		// 1 byte
 	private int m_nKeepAlive;		// 2 bytes
 	
+	//////////////////////////////////////////////////
 	// member variables (payload)
 	private String m_strClientID;	// encoding with 2 bytes length and the string length
 	private String m_strWillTopic;	// encoding with 2 bytes length and the string length
@@ -25,7 +27,9 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	private String m_strUserName;	// encoding with 2 bytes length and the string length
 	private String m_strPassword;	// encoding with 2 bytes length and the string length
 	
+	//////////////////////////////////////////////////
 	// constructors
+
 	public CMMqttEventCONNECT() {
 		// initialize CM event ID
 		m_nID = CMMqttEvent.CONNECT;
@@ -53,6 +57,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		unmarshall(msg);
 	}
 	
+	//////////////////////////////////////////////////
 	// setter/getter (variable header)
 	public void set(byte connectFlag, int nKeepAlive)
 	{
@@ -246,12 +251,41 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setCleanSessionFlag(boolean bCleanSession)
 	{
 		// print current connect flag
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.setCleanSessionFlag(): "+bCleanSession);
+			System.out.println("connect flag (before): "+getConnectFlagString());
+		}
 		
 		// set clean-session flag
-		
+		if(bCleanSession)
+			m_connectFlag |= 0x02;	// 0b0000 0010
+		else
+			m_connectFlag &= 0xfd;	// 0b1111 1101
+				
 		// print modified connect flag
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("connect flag (after): "+getConnectFlagString());
+		}
 	}
-
+	
+	public boolean isCleanSessionFlag()
+	{
+		if((m_connectFlag & 0x02) == 0) return false;
+		else return true;
+	}
+	
+	public void setKeepAlive(int seconds)
+	{
+		m_nKeepAlive = seconds;
+	}
+	
+	public int getKeepAlive()
+	{
+		return m_nKeepAlive;
+	}
+		
 	private String getConnectFlagString()
 	{
 		String strConnFlag = String.format("%8s", Integer.toBinaryString(m_connectFlag & 0xff))
@@ -259,14 +293,11 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		return strConnFlag;
 	}
 	
-	@Override
-	protected int getVarHeaderByteNum() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+	//////////////////////////////////////////////////
+	// overridden methods (variable header)
 
 	@Override
-	protected int getPayloadByteNum() {
+	protected int getVarHeaderByteNum() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
@@ -281,6 +312,19 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	protected void unmarshallVarHeader(ByteBuffer buf) {
 		// TODO Auto-generated method stub
 
+	}
+
+	//////////////////////////////////////////////////
+	// setter/getter (payload)
+
+	
+	//////////////////////////////////////////////////
+	// overridden methods (payload)
+
+	@Override
+	protected int getPayloadByteNum() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	@Override
