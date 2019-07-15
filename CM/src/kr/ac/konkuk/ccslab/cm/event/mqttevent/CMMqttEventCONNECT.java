@@ -299,18 +299,49 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	@Override
 	protected int getVarHeaderByteNum() {
 		// TODO Auto-generated method stub
-		return 0;
+		int nByteNum = 0;
+		nByteNum += 2 + m_strProtocolName.getBytes().length;	// protocol name
+		nByteNum += 1+1+2;	// protocol level, flag, keep alive
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.getVarHeaderByteNum: "+nByteNum);
+		}
+
+		return nByteNum;
 	}
 
 	@Override
 	protected void marshallVarHeader() {
 		// TODO Auto-generated method stub
-
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.marshallVarHeader(): ");
+			System.out.println("protocol name: "+m_strProtocolName+", protocol level: "
+					+m_protocolLevel+", connect flags: "+m_connectFlag
+					+", keep alive: "+m_nKeepAlive);
+		}
+		putStringToByteBuffer(m_strProtocolName);	// protocol name
+		m_bytes.put(m_protocolLevel);	// protocol level
+		m_bytes.put(m_connectFlag);		// connect flags
+		putInt2BytesToByteBuffer(m_nKeepAlive);		// keep alive
 	}
 
 	@Override
 	protected void unmarshallVarHeader(ByteBuffer buf) {
 		// TODO Auto-generated method stub
+		m_strProtocolName = getStringFromByteBuffer(buf);
+		m_protocolLevel = buf.get();
+		m_connectFlag = buf.get();
+		m_nKeepAlive = getInt2BytesFromByteBuffer(buf);
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.unmarshallVarHeader(): ");
+			System.out.println("protocol name: "+m_strProtocolName+", protocol level: "
+					+m_protocolLevel+", connect flags: "+m_connectFlag
+					+", keep alive: "+m_nKeepAlive);
+		}
 
 	}
 
