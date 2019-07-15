@@ -29,18 +29,18 @@ public abstract class CMMqttEvent extends CMEvent {
 	
 	// member variable
 	// required in variable header of most packets except connect and ping packets
-	private int m_nPacketID;
+	protected int m_nPacketID;
 	
 	// abstract methods
 	protected abstract int getFixedHeaderByteNum();
 	protected abstract int getVarHeaderByteNum();
 	protected abstract int getPayloadByteNum();
 	protected abstract void marshallFixedHeader();
-	protected abstract void unmarshallFixedHeader();
+	protected abstract void unmarshallFixedHeader(ByteBuffer buf);
 	protected abstract void marshallVarHeader();
-	protected abstract void unmarshallVarHeader();
+	protected abstract void unmarshallVarHeader(ByteBuffer buf);
 	protected abstract void marshallPayload();
-	protected abstract void unmarshallPayload();
+	protected abstract void unmarshallPayload(ByteBuffer buf);
 	
 	public CMMqttEvent()
 	{
@@ -141,12 +141,12 @@ public abstract class CMMqttEvent extends CMEvent {
 	}
 
 	@Override
-	protected void unmarshallBody(ByteBuffer msg) 
+	protected void unmarshallBody(ByteBuffer buf) 
 	{
 		// TODO Auto-generated method stub
-		unmarshallFixedHeader();
-		unmarshallVarHeader();
-		unmarshallPayload();
+		unmarshallFixedHeader(buf);
+		unmarshallVarHeader(buf);
+		unmarshallPayload(buf);
 		
 		return;
 	}
