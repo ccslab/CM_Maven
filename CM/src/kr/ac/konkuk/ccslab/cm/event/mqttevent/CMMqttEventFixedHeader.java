@@ -26,6 +26,13 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 	}
 	
 	// setter/getter
+	
+	public void setFixedHeader(byte packetType, byte flag)
+	{
+		m_packetType = packetType;
+		m_flag = flag;
+	}
+	
 	public void setPacketType(byte type)
 	{
 		m_packetType = type;

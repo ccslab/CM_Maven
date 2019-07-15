@@ -59,7 +59,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	
 	//////////////////////////////////////////////////
 	// setter/getter (variable header)
-	public void set(byte connectFlag, int nKeepAlive)
+	public void setVarHeader(byte connectFlag, int nKeepAlive)
 	{
 		m_connectFlag = connectFlag;
 		m_nKeepAlive = nKeepAlive;
@@ -348,7 +348,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (payload)
 	
-	public void set(String strClientID, String strWillTopic, String strWillMessage, 
+	public void setPayload(String strClientID, String strWillTopic, String strWillMessage, 
 			String strUserName, String strPassword)
 	{
 		m_strClientID = strClientID;
