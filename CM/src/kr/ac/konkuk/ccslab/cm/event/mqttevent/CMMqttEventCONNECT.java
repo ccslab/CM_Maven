@@ -177,8 +177,77 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setWillQoS(byte qos)
 	{
 		// print current connect flag
-		// from here
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.setWillQoS(): "+qos);
+			System.out.println("connect flag (before): "+getConnectFlagString());
+		}
+		
 		// set will-QoS flag
+		m_connectFlag &= 0xe7;	// 0b1110 0111
+		m_connectFlag |= (qos << 3);
+		
+		// print modified connect flag
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("connect flag (after): "+getConnectFlagString());
+		}
+	}
+	
+	public byte getWillQoS()
+	{
+		// print current connect flag
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.getWillQoS(): ");
+			System.out.println("connect flag: "+getConnectFlagString());
+		}
+		// get will qos
+		byte willQoS = 0;
+		willQoS = (byte)((m_connectFlag & 0x18) >> 3);
+		
+		// print will qos
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("will QoS: "+willQoS);
+		}
+		
+		return willQoS;
+	}
+	
+	public void setWillFlag(boolean bWill)
+	{
+		// print current connect flag
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventCONNECT.setWillFlag(): "+bWill);
+			System.out.println("connect flag (before): "+getConnectFlagString());
+		}
+		
+		// set will flag
+		if(bWill)
+			m_connectFlag |= 0x04;	// 0b0000 0100
+		else
+			m_connectFlag &= 0xfb;	// 0b1111 1011
+		
+		// print modified connect flag
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("connect flag (after): "+getConnectFlagString());
+		}
+	}
+	
+	public boolean isWillFlag()
+	{
+		if((m_connectFlag & 0x04) == 0) return false;
+		else return true;
+	}
+	
+	public void setCleanSessionFlag(boolean bCleanSession)
+	{
+		// print current connect flag
+		
+		// set clean-session flag
 		
 		// print modified connect flag
 	}
