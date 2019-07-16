@@ -103,7 +103,8 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		{
 			System.out.println("CMMqttEventFixedHeader.marshallFixedHeader(): ");
 			System.out.println("packet type: "+m_packetType+", flag: "+m_flag);
-			System.out.println("encoded byte: "+String.format("%08x", byteTypeFlag));
+			System.out.println("encoded byte: "+String.format("%8s", 
+					Integer.toBinaryString(byteTypeFlag & 0xff)).replace(' ', '0'));
 		}
 		// put the encoded type and flag to the ByteBuffer
 		m_bytes.put(byteTypeFlag);
@@ -127,8 +128,8 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 			// print the encoded byte
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("encoded reamining length byte: "+
-						String.format("%08x", encodedByte));
+				System.out.println("encoded reamining length byte: "+String.format("%8s", 
+						Integer.toBinaryString(encodedByte & 0xff)).replace(' ', '0'));
 			}
 		} while( X > 0 );
 		
@@ -141,15 +142,16 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 
 		// decoding byte 1: packet type (4 bits) + flag (4 bits)
 		byte byteTypeFlag = buf.get();
-		m_packetType &= 0x00; // initialize the variable
-		m_packetType = (byte)((byteTypeFlag | 0xf0) >> 4);
-		m_flag &= 0x00;	// initizliae the variable
-		m_flag = (byte)(byteTypeFlag | 0x0f);
+		m_packetType = 0; // initialize the variable
+		m_packetType = (byte)((byteTypeFlag & 0xf0) >> 4);
+		m_flag = 0;	// initizliae the variable
+		m_flag = (byte)(byteTypeFlag & 0x0f);
 		// print current byte value and the decoded packet type and flag
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventFixedHeader.unmarshallFixedHeader(): ");
-			System.out.println("byte 1: "+String.format("%08x",  byteTypeFlag));
+			System.out.println("byte 1: "+String.format("%8s", 
+					Integer.toBinaryString(byteTypeFlag & 0xff)).replace(' ', '0'));
 			System.out.println("packet type: "+m_packetType+", flag: "+m_flag);
 		}
 		
@@ -162,7 +164,8 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 			encodedByte = buf.get();
 			// print the encoded byte
 			if(CMInfo._CM_DEBUG)
-				System.out.println("remaining length byte: "+String.format("%08x", encodedByte));
+				System.out.println("remaining length byte: "+String.format("%8s", 
+						Integer.toBinaryString(encodedByte & 0xff)).replace(' ', '0'));
 			m_nRemainingLength += (encodedByte & 127)*nMultiplier;
 			nMultiplier *= 128;
 			if(nMultiplier > 128*128*128)
