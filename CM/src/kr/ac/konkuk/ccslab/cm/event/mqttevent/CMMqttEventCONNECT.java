@@ -466,4 +466,32 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		}
 	}
 
+	//////////////////////////////////////////////////
+	// overridden methods
+
+	@Override
+	public String toString()
+	{
+		StringBuffer strBufVarHeader = new StringBuffer();
+		strBufVarHeader.append("{");
+		strBufVarHeader.append(super.toString()+", ");
+		strBufVarHeader.append("\"protocolName\": \""+m_strProtocolName+"\", ");
+		strBufVarHeader.append("\"protocolLevel\": "+m_protocolLevel+", ");
+		strBufVarHeader.append("\"connectFlag\": \""+getConnectFlagString()+"\", ");
+		strBufVarHeader.append("\"keepAlive\": "+m_nKeepAlive+", ");
+		strBufVarHeader.append("}");
+		
+		StringBuffer strBufCONNECTBuffer = new StringBuffer();
+		strBufCONNECTBuffer.append(strBufVarHeader);
+		strBufCONNECTBuffer.append("{");
+		strBufCONNECTBuffer.append("\"clientID\": \""+m_strClientID+"\", ");
+		strBufCONNECTBuffer.append("\"willTopic\": \""+m_strWillTopic+"\", ");
+		strBufCONNECTBuffer.append("\"willMessage\": \""+m_strWillMessage+"\", ");
+		strBufCONNECTBuffer.append("\"userName\": \""+m_strUserName+"\", ");
+		strBufCONNECTBuffer.append("\"password\": \""+m_strPassword+"\"");
+		strBufCONNECTBuffer.append("}");
+		
+		return strBufCONNECTBuffer.toString();
+	}
+
 }
