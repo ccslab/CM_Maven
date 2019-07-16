@@ -179,6 +179,22 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		return;
 	}
 
+	@Override
+	public String toString()
+	{
+		StringBuffer strBufMqttFixedHeader;
+
+		strBufMqttFixedHeader = new StringBuffer();
+		strBufMqttFixedHeader.append("{");
+		strBufMqttFixedHeader.append(super.toString()+", ");	// CMMqttEvent
+		strBufMqttFixedHeader.append("\"packetType\": "+m_packetType+", ");
+		strBufMqttFixedHeader.append("\"flag\": "+m_flag+", ");
+		strBufMqttFixedHeader.append("\remainingLenght\": "+m_nRemainingLength);
+		strBufMqttFixedHeader.append("}");
+		
+		return strBufMqttFixedHeader.toString();
+	}
+	
 	/*
 	// abstract methods that must be implemented by a sub-class
 	protected abstract int getVarHeaderByteNum();
