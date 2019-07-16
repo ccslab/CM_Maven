@@ -174,7 +174,7 @@ public abstract class CMMqttEvent extends CMEvent {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMMqttEvent.getStringFromByteBuffer(), str("+str+")");
+			System.out.println("CMMqttEvent.getStringFromByteBuffer(), str(\""+str+"\")");
 		}
 		
 		return str;

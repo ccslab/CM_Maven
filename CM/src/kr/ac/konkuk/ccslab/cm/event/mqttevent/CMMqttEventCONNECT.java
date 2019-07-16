@@ -318,7 +318,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		{
 			System.out.println("CMMqttEventCONNECT.marshallVarHeader(): ");
 			System.out.println("protocol name: "+m_strProtocolName+", protocol level: "
-					+m_protocolLevel+", connect flags: "+m_connectFlag
+					+m_protocolLevel+", connect flags: "+getConnectFlagString()
 					+", keep alive: "+m_nKeepAlive);
 		}
 		putStringToByteBuffer(m_strProtocolName);	// protocol name
@@ -339,7 +339,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		{
 			System.out.println("CMMqttEventCONNECT.unmarshallVarHeader(): ");
 			System.out.println("protocol name: "+m_strProtocolName+", protocol level: "
-					+m_protocolLevel+", connect flags: "+m_connectFlag
+					+m_protocolLevel+", connect flags: "+getConnectFlagString()
 					+", keep alive: "+m_nKeepAlive);
 		}
 
