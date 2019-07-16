@@ -2,6 +2,12 @@ package kr.ac.konkuk.ccslab.cm.event.mqttevent;
 
 import java.nio.ByteBuffer;
 
+/**
+ * This class represents a CM event that the variable header and payload of 
+ * MQTT CONNACK packet.
+ * @author CCSLab, Konkuk University
+ *
+ */
 public class CMMqttEventCONNACK extends CMMqttEventFixedHeader {
 
 	//////////////////////////////////////////////////
