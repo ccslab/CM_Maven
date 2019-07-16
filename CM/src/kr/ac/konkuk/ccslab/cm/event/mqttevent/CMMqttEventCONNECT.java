@@ -473,7 +473,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public String toString()
 	{
 		StringBuffer strBufVarHeader = new StringBuffer();
-		strBufVarHeader.append("{");
+		strBufVarHeader.append("CMMqttEventCONNECT {");
 		strBufVarHeader.append(super.toString()+", ");
 		strBufVarHeader.append("\"protocolName\": \""+m_strProtocolName+"\", ");
 		strBufVarHeader.append("\"protocolLevel\": "+m_protocolLevel+", ");

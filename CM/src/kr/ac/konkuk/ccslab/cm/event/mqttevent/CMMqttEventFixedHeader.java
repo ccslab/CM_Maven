@@ -189,7 +189,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		strBufMqttFixedHeader.append(super.toString()+", ");	// CMMqttEvent
 		strBufMqttFixedHeader.append("\"packetType\": "+m_packetType+", ");
 		strBufMqttFixedHeader.append("\"flag\": "+m_flag+", ");
-		strBufMqttFixedHeader.append("\remainingLenght\": "+m_nRemainingLength);
+		strBufMqttFixedHeader.append("\"remainingLength\": "+m_nRemainingLength);
 		strBufMqttFixedHeader.append("}");
 		
 		return strBufMqttFixedHeader.toString();
