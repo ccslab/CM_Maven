@@ -7,9 +7,8 @@ public class CMMqttEventTest {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
+		System.out.println("===================");
 		CMMqttEventCONNECT mqttCONNECTEvent = new CMMqttEventCONNECT();
-		System.out.println(mqttCONNECTEvent.toString());
-		
 		mqttCONNECTEvent.setUserNameFlag(true);
 		mqttCONNECTEvent.setWillQoS((byte)2);
 		mqttCONNECTEvent.setWillFlag(true);
@@ -20,14 +19,14 @@ public class CMMqttEventTest {
 		mqttCONNECTEvent.setWillMessage("mqtt-connect-test-message");
 		mqttCONNECTEvent.setUserName("ccslab");
 		mqttCONNECTEvent.setPassword("ccslab");
-		
-		System.out.println("----- after setting CONNECT packet");
+
+		System.out.println("------------------- after setting member variables");
 		System.out.println(mqttCONNECTEvent.toString());
 		
 		ByteBuffer buf = mqttCONNECTEvent.marshall();
 		CMMqttEventCONNECT mqttCONNECTEvent2 = new CMMqttEventCONNECT(buf);
 		
-		System.out.println("----- after marshalling/unmarshalling the event");
+		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttCONNECTEvent2.toString());
 	}
 
