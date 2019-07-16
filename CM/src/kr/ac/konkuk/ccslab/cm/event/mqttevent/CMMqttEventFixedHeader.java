@@ -63,6 +63,12 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		return m_nRemainingLength;
 	}
 	
+	protected String getBinaryStringOfByte(byte inputByte)
+	{
+		String strBinaryString = String.format("%8s", Integer.toBinaryString(inputByte & 0xff))
+				.replace(' ', '0');
+		return strBinaryString;
+	}
 	
 	@Override
 	protected int getFixedHeaderByteNum() {
@@ -103,8 +109,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		{
 			System.out.println("CMMqttEventFixedHeader.marshallFixedHeader(): ");
 			System.out.println("packet type: "+m_packetType+", flag: "+m_flag);
-			System.out.println("encoded byte: "+String.format("%8s", 
-					Integer.toBinaryString(byteTypeFlag & 0xff)).replace(' ', '0'));
+			System.out.println("encoded byte: "+getBinaryStringOfByte(byteTypeFlag));
 		}
 		// put the encoded type and flag to the ByteBuffer
 		m_bytes.put(byteTypeFlag);
@@ -128,8 +133,8 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 			// print the encoded byte
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("encoded reamining length byte: "+String.format("%8s", 
-						Integer.toBinaryString(encodedByte & 0xff)).replace(' ', '0'));
+				System.out.println("encoded reamining length byte: "+
+						getBinaryStringOfByte(encodedByte));
 			}
 		} while( X > 0 );
 		
@@ -150,8 +155,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventFixedHeader.unmarshallFixedHeader(): ");
-			System.out.println("byte 1: "+String.format("%8s", 
-					Integer.toBinaryString(byteTypeFlag & 0xff)).replace(' ', '0'));
+			System.out.println("byte 1: "+getBinaryStringOfByte(byteTypeFlag));
 			System.out.println("packet type: "+m_packetType+", flag: "+m_flag);
 		}
 		
@@ -164,8 +168,9 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 			encodedByte = buf.get();
 			// print the encoded byte
 			if(CMInfo._CM_DEBUG)
-				System.out.println("remaining length byte: "+String.format("%8s", 
-						Integer.toBinaryString(encodedByte & 0xff)).replace(' ', '0'));
+			{
+				System.out.println("remaining length byte: "+getBinaryStringOfByte(encodedByte));
+			}
 			m_nRemainingLength += (encodedByte & 127)*nMultiplier;
 			nMultiplier *= 128;
 			if(nMultiplier > 128*128*128)
