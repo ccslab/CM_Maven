@@ -34,12 +34,12 @@ public abstract class CMMqttEvent extends CMEvent {
 	
 	// abstract methods
 	protected abstract int getFixedHeaderByteNum();
-	protected abstract int getVarHeaderByteNum();
-	protected abstract int getPayloadByteNum();
 	protected abstract void marshallFixedHeader();
 	protected abstract void unmarshallFixedHeader(ByteBuffer buf);
+	protected abstract int getVarHeaderByteNum();
 	protected abstract void marshallVarHeader();
 	protected abstract void unmarshallVarHeader(ByteBuffer buf);
+	protected abstract int getPayloadByteNum();
 	protected abstract void marshallPayload();
 	protected abstract void unmarshallPayload(ByteBuffer buf);
 	
