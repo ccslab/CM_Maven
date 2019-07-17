@@ -2,6 +2,7 @@ import java.nio.ByteBuffer;
 
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 
 public class CMMqttEventTest {
@@ -13,6 +14,7 @@ public class CMMqttEventTest {
 		tester.testCONNECT();
 		tester.testCONNACK();
 		tester.testPUBLISH();
+		tester.testPUBACK();
 	}
 
 	private void testCONNECT()
@@ -73,5 +75,20 @@ public class CMMqttEventTest {
 		
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttPublish2.toString());
+	}
+	
+	private void testPUBACK()
+	{
+		System.out.println("===================");
+		CMMqttEventPUBACK mqttPuback = new CMMqttEventPUBACK();
+		mqttPuback.setPacketID(5);
+		System.out.println("------------------- after setting member variables");
+		System.out.println(mqttPuback.toString());
+		
+		ByteBuffer buf = mqttPuback.marshall();
+		CMMqttEventPUBACK mqttPuback2 = new CMMqttEventPUBACK(buf);
+		
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttPuback2.toString());
 	}
 }
