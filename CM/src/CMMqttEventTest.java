@@ -2,6 +2,7 @@ import java.nio.ByteBuffer;
 
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 
 public class CMMqttEventTest {
 
@@ -9,8 +10,9 @@ public class CMMqttEventTest {
 		// TODO Auto-generated method stub
 		CMMqttEventTest tester = new CMMqttEventTest();
 		
-		tester.testCONNECT();
-		tester.testCONNACK();
+		//tester.testCONNECT();
+		//tester.testCONNACK();
+		tester.testPUBLISH();
 	}
 
 	private void testCONNECT()
@@ -50,5 +52,26 @@ public class CMMqttEventTest {
 		CMMqttEventCONNACK mqttConnack2 = new CMMqttEventCONNACK(buf);
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttConnack2.toString());
+	}
+	
+	private void testPUBLISH()
+	{
+		System.out.println("===================");
+		CMMqttEventPUBLISH mqttPublish = new CMMqttEventPUBLISH();
+		mqttPublish.setDupFlag(false);
+		mqttPublish.setQoS((byte)1);
+		mqttPublish.setRetainFlag(true);
+		mqttPublish.setTopicName("CM/mqtt/test");
+		mqttPublish.setPacketID(1);
+		mqttPublish.setAppMessage("test app message");
+		
+		System.out.println("------------------- after setting member variables");
+		System.out.println(mqttPublish.toString());
+		
+		ByteBuffer buf = mqttPublish.marshall();
+		CMMqttEventPUBLISH mqttPublish2 = new CMMqttEventPUBLISH(buf);
+		
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttPublish2.toString());
 	}
 }
