@@ -61,8 +61,8 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		// print current m_flag
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMMqttEventPUBLISH.setDupFlag(): ");
-			System.out.println("packet type + flag (before): "+getBinaryStringOfByte(m_flag));
+			System.out.println("CMMqttEventPUBLISH.setDupFlag(): "+bFlag);
+			System.out.println("flag (before): "+getBinaryString(m_flag, 4));
 		}
 		
 		// set m_flag
@@ -74,7 +74,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		// print modified m_flag
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("packet type + flag (after): "+getBinaryStringOfByte(m_flag));
+			System.out.println("flag (after): "+getBinaryString(m_flag, 4));
 		}
 	}
 	
@@ -89,8 +89,8 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		// print current m_flag
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMMqttEventPUBLISH.setQoS(): ");
-			System.out.println("packet type + flag (before): "+getBinaryStringOfByte(m_flag));
+			System.out.println("CMMqttEventPUBLISH.setQoS(): "+qos);
+			System.out.println("flag (before): "+getBinaryString(m_flag, 4));
 		}
 		
 		// set m_flag
@@ -100,7 +100,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		// print modified m_flag
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("packet type + flag (after): "+getBinaryStringOfByte(m_flag));
+			System.out.println("flag (after): "+getBinaryString(m_flag, 4));
 		}
 	}
 	
@@ -116,8 +116,8 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		// print current m_flag
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMMqttEventPUBLISH().setRetainFlag(): ");
-			System.out.println("packet type + flag (before): "+getBinaryStringOfByte(m_flag));
+			System.out.println("CMMqttEventPUBLISH().setRetainFlag(): "+bFlag);
+			System.out.println("flag (before): "+getBinaryString(m_flag, 4));
 		}
 		
 		// set m_flag
@@ -129,7 +129,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		// print modified m_flag
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("packet type + flag (after): "+getBinaryStringOfByte(m_flag));
+			System.out.println("flag (after): "+getBinaryString(m_flag, 4));
 		}
 	}
 	

@@ -10,8 +10,8 @@ public class CMMqttEventTest {
 		// TODO Auto-generated method stub
 		CMMqttEventTest tester = new CMMqttEventTest();
 		
-		//tester.testCONNECT();
-		//tester.testCONNACK();
+		tester.testCONNECT();
+		tester.testCONNACK();
 		tester.testPUBLISH();
 	}
 

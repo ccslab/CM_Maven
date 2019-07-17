@@ -70,6 +70,14 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		return strBinaryString;
 	}
 	
+	protected String getBinaryString(byte inputByte, int nLSBits)
+	{
+		String strFormat = "%"+nLSBits+"s";
+		String strBinaryString = String.format(strFormat, Integer
+				.toBinaryString(inputByte & 0xff)).replace(' ', '0');
+		return strBinaryString;
+	}
+	
 	@Override
 	protected int getFixedHeaderByteNum() {
 		// TODO Auto-generated method stub
