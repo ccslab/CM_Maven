@@ -3,6 +3,7 @@ import java.nio.ByteBuffer;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
@@ -19,6 +20,7 @@ public class CMMqttEventTest {
 		tester.testPUBACK();
 		tester.testPUBREC();
 		tester.testPUBREL();
+		tester.testPUBCOMP();
 	}
 
 	private void testCONNECT()
@@ -124,6 +126,21 @@ public class CMMqttEventTest {
 		
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttPubrel2.toString());
+	}
+
+	private void testPUBCOMP()
+	{
+		System.out.println("===================");
+		CMMqttEventPUBCOMP mqttPubcomp = new CMMqttEventPUBCOMP();
+		mqttPubcomp.setPacketID(127);
+		System.out.println("------------------- after setting member variables");
+		System.out.println(mqttPubcomp.toString());
+		
+		ByteBuffer buf = mqttPubcomp.marshall();
+		CMMqttEventPUBCOMP mqttPubcomp2 = new CMMqttEventPUBCOMP(buf);
+		
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttPubcomp2.toString());
 	}
 
 }
