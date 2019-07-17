@@ -21,7 +21,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// member variables (variable header)
 	String m_strTopicName;
-	// int m_nPacketID that is declared in CMMqttEvent is used in this packet.
+	int m_nPacketID;	// 2 bytes
 	
 	//////////////////////////////////////////////////
 	// member variables (variable header)
@@ -43,6 +43,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		
 		// initialize varaible header
 		m_strTopicName = "";
+		m_nPacketID = -1;
 		// initialize payload
 		m_strAppMessage = "";
 	}
@@ -150,6 +151,24 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	public String getTopicName()
 	{
 		return m_strTopicName;
+	}
+	
+	/**
+	 * sets MQTT packet ID.
+	 * @param nID - packet ID.
+	 */
+	public void setPacketID(int nID)
+	{
+		m_nPacketID = nID;
+	}
+	
+	/**
+	 * gets MQTT packet ID.
+	 * @return packet ID.
+	 */
+	public int getPacketID()
+	{
+		return m_nPacketID;
 	}
 		
 	//////////////////////////////////////////////////

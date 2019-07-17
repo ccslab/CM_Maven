@@ -28,10 +28,6 @@ public abstract class CMMqttEvent extends CMEvent {
 	public static final int PINGRESP = 13;
 	public static final int DISCONNECT = 14;
 	
-	// member variable
-	// required in variable header of most packets except connect and ping packets
-	protected int m_nPacketID;
-	
 	// abstract methods
 	protected abstract int getFixedHeaderByteNum();
 	protected abstract void marshallFixedHeader();
@@ -46,7 +42,6 @@ public abstract class CMMqttEvent extends CMEvent {
 	public CMMqttEvent()
 	{
 		m_nType = CMInfo.CM_MQTT_EVENT;
-		m_nPacketID = -1;
 	}
 	
 	public CMMqttEvent(ByteBuffer msg)
@@ -54,43 +49,7 @@ public abstract class CMMqttEvent extends CMEvent {
 		this();
 		unmarshall(msg);
 	}
-	
-	/**
-	 * sets MQTT packet ID.
-	 * @param nID - packet ID.
-	 */
-	public void setPacketID(int nID)
-	{
-		m_nPacketID = nID;
-	}
-	
-	/**
-	 * gets MQTT packet ID.
-	 * @return packet ID.
-	 */
-	public int getPacketID()
-	{
-		return m_nPacketID;
-	}
-	
-	/**
-	 * compares the equality of the given CMMqttEvent object.
-	 * <p> obj is the same as this object if their packet IDs are equal.
-	 * @param obj - CMMqttEvent object.
-	 * @return true if obj is the same as this object; false otherwise.
-	 */
-	@Override	
-	public boolean equals(Object obj)
-	{
-		if(!super.equals(obj)) return false;
 		
-		CMMqttEvent mqttEvent = (CMMqttEvent) obj;
-		if(m_nPacketID != -1 && m_nPacketID == mqttEvent.getPacketID())
-			return true;
-		
-		return false;
-	}
-	
 	/**
 	 * returns the string representation of this CMMqttEvent object.
 	 * @return string of this object.

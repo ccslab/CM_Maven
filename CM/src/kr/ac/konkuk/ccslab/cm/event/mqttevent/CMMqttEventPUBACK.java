@@ -12,7 +12,7 @@ public class CMMqttEventPUBACK extends CMMqttEventFixedHeader {
 
 	//////////////////////////////////////////////////
 	// member variables (variable header)
-	// int m_nPacketID that is declared in CMMqttEvent is used in this packet.
+	int m_nPacketID;
 
 	//////////////////////////////////////////////////
 	// constructors
@@ -24,7 +24,8 @@ public class CMMqttEventPUBACK extends CMMqttEventFixedHeader {
 		// initialize fixed header
 		m_packetType = CMMqttEvent.PUBACK;
 		m_flag = 0;
-		// initialize variable header (packet ID) at the CMMqttEvent constructor
+		// initialize variable header
+		m_nPacketID = -1;
 	}
 	
 	public CMMqttEventPUBACK(ByteBuffer msg)
@@ -33,6 +34,27 @@ public class CMMqttEventPUBACK extends CMMqttEventFixedHeader {
 		unmarshall(msg);
 	}
 	
+	//////////////////////////////////////////////////
+	// setter/getter (variable header)
+
+	/**
+	 * sets MQTT packet ID.
+	 * @param nID - packet ID.
+	 */
+	public void setPacketID(int nID)
+	{
+		m_nPacketID = nID;
+	}
+	
+	/**
+	 * gets MQTT packet ID.
+	 * @return packet ID.
+	 */
+	public int getPacketID()
+	{
+		return m_nPacketID;
+	}
+
 	//////////////////////////////////////////////////
 	// overridden methods (variable header)
 
