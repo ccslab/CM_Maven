@@ -1,4 +1,5 @@
 package kr.ac.konkuk.ccslab.cm.event;
+import java.awt.geom.FlatteningPathIterator;
 import java.nio.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
@@ -94,49 +95,26 @@ public class CMDataEvent extends CMEvent{
 	
 	protected int getByteNum()
 	{
-		/*
-		typedef struct _inhabitant {
-			int userID; --> deleted
-			char userName[NAME_NUM];
-			char hostAddr[EVENT_FIELD_LEN];
-			int nUDPPort;
-			float pos[3];
-			float quat[4];
-		} inhabitant;
-
-		typedef struct _newUser {
-			int userID; --> deleted
-			char userName[NAME_NUM];
-			char hostAddr[EVENT_FIELD_LEN];
-			int nUDPPort;
-		} newUser;
-
-		typedef struct _removeUser {
-			int userID; --> deleted
-			char userName[NAME_NUM];
-		} removeUser;
-
-		typedef struct _requestInhabitant {
-			char userName[NAME_NUM];
-		} requestInhabitant;
-		*/
 		int nByteNum = 0;
 		nByteNum = super.getByteNum();
 		
 		switch(m_nID)
 		{
 		case CMDataEvent.INHABITANT:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strHostAddr.getBytes().length
-					+ 7*Float.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strHostAddr.getBytes().length;
+			nByteNum += Integer.BYTES + 7*Float.BYTES;
 			break;
 		case CMDataEvent.NEW_USER:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strHostAddr.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+			+ m_strHostAddr.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case CMDataEvent.REMOVE_USER:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case CMDataEvent.REQUEST_INHABITANT:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		default:
 			nByteNum = -1;

@@ -184,52 +184,65 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_FILE_TRANSFER:
 		case REQUEST_FILE_TRANSFER_CHAN:
-			nByteNum += 3*Integer.BYTES + m_strReceiverName.getBytes().length + m_strFileName.getBytes().length
-					+ Byte.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Integer.BYTES + Byte.BYTES;
 			break;
 		case REPLY_FILE_TRANSFER:
 		case REPLY_FILE_TRANSFER_CHAN:
-			nByteNum += 3*Integer.BYTES + m_strFileName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			break;
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
-			nByteNum += 3*Integer.BYTES + m_strSenderName.getBytes().length + m_strFileName.getBytes().length
-					+ Long.BYTES + Byte.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Long.BYTES + Integer.BYTES + Byte.BYTES;
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
-			nByteNum += 3*Integer.BYTES + m_strReceiverName.getBytes().length + m_strFileName.getBytes().length 
-					+ Long.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Integer.BYTES + Long.BYTES;
 			break;
 		case CONTINUE_FILE_TRANSFER:
-			nByteNum += 4*Integer.BYTES + m_strSenderName.getBytes().length + m_strFileName.getBytes().length 
-					+ CMInfo.FILE_BLOCK_LEN;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += 2*Integer.BYTES + CMInfo.FILE_BLOCK_LEN;
 			break;
 		case CONTINUE_FILE_TRANSFER_ACK:
-			nByteNum += 3*Integer.BYTES + m_strReceiverName.getBytes().length + m_strFileName.getBytes().length 
-					+ Long.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Long.BYTES + Integer.BYTES;
 			break;
 		case END_FILE_TRANSFER:
 		case END_FILE_TRANSFER_CHAN:
-			nByteNum += 3*Integer.BYTES + m_strSenderName.getBytes().length + m_strFileName.getBytes().length 
-					+ Long.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Long.BYTES + Integer.BYTES;
 			break;
 		case END_FILE_TRANSFER_ACK:
 		case END_FILE_TRANSFER_CHAN_ACK:
-			nByteNum += 4*Integer.BYTES + Long.BYTES + m_strReceiverName.getBytes().length + m_strFileName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Long.BYTES + 2*Integer.BYTES;
 			break;
 		case REQUEST_DIST_FILE_PROC:
-			nByteNum += 2*Integer.BYTES + m_strReceiverName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case CANCEL_FILE_SEND:
 		case CANCEL_FILE_SEND_CHAN:
 		case CANCEL_FILE_RECV_CHAN:
-			nByteNum += 2*Integer.BYTES + m_strSenderName.getBytes().length + m_strReceiverName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
+				+ m_strReceiverName.getBytes().length;
 			break;
 		case CANCEL_FILE_SEND_ACK:
 		case CANCEL_FILE_SEND_CHAN_ACK:
 		case CANCEL_FILE_RECV_CHAN_ACK:
-			nByteNum += 3*Integer.BYTES + m_strSenderName.getBytes().length + m_strReceiverName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
+				+ m_strReceiverName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		default:
 			nByteNum = -1;

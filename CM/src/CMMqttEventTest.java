@@ -154,7 +154,7 @@ public class CMMqttEventTest {
 		mqttSubscribe.setPacketID(0);
 		CMList<CMMqttTopicQoS> topicQoSList = mqttSubscribe.getTopicQoSList();
 		topicQoSList.addElement(new CMMqttTopicQoS("CM/mqtt", (byte)0));
-		//topicQoSList.addElement(new CMMqttTopicQoS("CM/iot/temp", (byte)2));
+		topicQoSList.addElement(new CMMqttTopicQoS("CM/iot/temp", (byte)2));
 		System.out.println("------------------- after setting member variables");
 		System.out.println(mqttSubscribe.toString());
 		

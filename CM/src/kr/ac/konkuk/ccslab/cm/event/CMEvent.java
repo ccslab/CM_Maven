@@ -389,32 +389,76 @@ public abstract class CMEvent extends CMObject {
 	{
 		// can be re-implemented by sub-class
 		int nSize;
-		nSize = (Integer.BYTES)*9 + m_strSender.getBytes().length + m_strReceiver.getBytes().length
-				+ m_strHandlerSession.getBytes().length + m_strHandlerGroup.getBytes().length
-				+ m_strDistributionSession.getBytes().length + m_strDistributionGroup.getBytes().length;
+		nSize = (Integer.BYTES)*3;	// 3 int fields
+		// 6 string fields
+		nSize += 6*CMInfo.STRING_LEN_BYTES_LEN + m_strSender.getBytes().length
+				+ m_strReceiver.getBytes().length + m_strHandlerSession.getBytes().length
+				+ m_strHandlerGroup.getBytes().length + m_strDistributionSession.getBytes().length
+				+ m_strDistributionGroup.getBytes().length;
 		return nSize;
 	}
 	
 	protected void putStringToByteBuffer(String str)
 	{
 		int nStrLength = str.getBytes().length;
-		m_bytes.putInt(nStrLength);
+		putInt2BytesToByteBuffer(nStrLength);
 		m_bytes.put(str.getBytes());
 	}
 	
-	protected String getStringFromByteBuffer(ByteBuffer msg)
+	protected String getStringFromByteBuffer(ByteBuffer buf)
 	{
-		int nStrNum;
+		int nStrLength = 0;
 		byte[] strBytes;
 		String str = null;
 		
-		nStrNum = msg.getInt();
-		strBytes = new byte[nStrNum];
-		msg.get(strBytes);
+		nStrLength = getInt2BytesFromByteBuffer(buf);
+		strBytes = new byte[nStrLength];
+		buf.get(strBytes);
 		str = new String(strBytes);
 		
-		strBytes =  null;
+		if(CMInfo._CM_DEBUG_2)
+		{
+			System.out.println("CMEvent.getStringFromByteBuffer(), str(\""+str+"\")");
+		}
+		
 		return str;
 	}
+
+	// put 2 bytes number to ByteBuffer
+	protected void putInt2BytesToByteBuffer(int num)
+	{
+		byte[] numBytes = new byte[2];
+		numBytes[0] = 0;
+		numBytes[1] = 0;
+		
+		numBytes[0] = (byte)((num & 0x0000ff00) >> 8);
+		numBytes[1] = (byte)(num & 0x000000ff);
+		
+		m_bytes.put(numBytes);
+		
+		if(CMInfo._CM_DEBUG_2)
+		{
+			System.out.println("CMEvent.putInt2BytesToByteBuffer(), num("+num
+					+"), numBytes[0]("+numBytes[0]+"), numBytes[1]("+numBytes[1]+")");
+		}
+	}	
 	
+	// get integer with 2 bytes from ByteBuffer
+	protected int getInt2BytesFromByteBuffer(ByteBuffer buf)
+	{
+		int num = 0;
+		byte[] numBytes = new byte[2];
+		buf.get(numBytes);
+		
+		num = (num | numBytes[0]) << 8;
+		num = num | numBytes[1];
+		
+		if(CMInfo._CM_DEBUG_2)
+		{
+			System.out.println("CMEvent.getInt2BytesFromByteBuffer(), numBytes[0]("
+					+numBytes[0]+"), numBytes[1]("+numBytes[1]+"), num("+num+")");
+		}
+		
+		return num;
+	}
 }

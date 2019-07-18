@@ -52,7 +52,8 @@ public class CMConcurrencyEvent extends CMEvent {
 	{
 		int nByteNum = 0;
 		nByteNum = super.getByteNum();
-		nByteNum += m_strUserName.getBytes().length + 2*Integer.BYTES;
+		nByteNum += Integer.BYTES;	// m_nTargetObjectID
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 		return nByteNum;
 	}
 	

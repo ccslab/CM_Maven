@@ -70,23 +70,6 @@ public class CMConsistencyEvent extends CMEvent {
 	
 	protected int getByteNum()
 	{
-		/*
-		typedef struct _translation {
-			int eventSource;
-			float pos[3];
-		} translation;
-
-		typedef struct _rotation {
-			int eventSource;
-			float quat[4];
-		} rotation;
-
-		typedef struct _transRotation {
-			int eventSource;
-			float pos[3];
-			float quat[4];
-		} transRotation;
-		 */
 		int nByteNum = 0;
 		nByteNum = super.getByteNum();
 		

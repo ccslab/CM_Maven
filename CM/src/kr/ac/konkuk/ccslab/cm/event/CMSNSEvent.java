@@ -317,62 +317,6 @@ public class CMSNSEvent extends CMEvent{
 	
 	protected int getByteNum()
 	{
-		/*
-		typedef struct _contentUploadRequest {
-			char strUserName[NAME_NUM];
-			char strMessage[TALK_LEN];
-			char strAttachedFileName[NAME_NUM];
-		} contentUploadRequest;
-
-		typedef struct _contentUploadResponse {
-			int nReturnCode;
-			int nContentID;			// sequence number
-			char strDate[NAME_NUM];	// creation date and time
-			char strUserName[NAME_NUM];
-		} contentUploadResponse;
-
-		typedef struct _contentDownloadRequest {
-			char strUserName[NAME_NUM];	// requester name
-			int nContentOffset;			// index of the first content to be downloaded
-		} contentDownloadRequest;
-
-		typedef struct _contentDownloadResponse {
-			char strUserName[NAME_NUM];	// requester name
-			int nContentOffset;			// index of the first content to be downloaded
-			int nReturnCode;			// result of the download request
-			unsigned long ulServerTime;			// current time value at the server side
-		} contentDownloadResponse;
-
-		typedef struct _contentDownloadReady {
-			char strUserName[NAME_NUM];	// requester name
-			int nContentOffset;			// index of the first content to be downloaded
-			unsigned long ulServerTime;			// current time value at the server side ( same as that of contentDownloadResponse )
-		} contentDownloadReady;
-
-		typedef struct _contentDownload {
-			char strUserName[NAME_NUM];	// requester name
-			int nContentOffset;			// index of the first content to be downloaded
-			int nContentID;				// current content id
-			char strDate[NAME_NUM];		// date
-			char strWriterName[NAME_NUM];	// writer name
-			char strAttachedFileName[NAME_NUM];	// attached file name
-			char strMessage[TALK_LEN];	// message body
-			int nEstDelay;				// download delay of this content (4 simulation)
-		} contentDownload;
-
-		typedef struct _contentDownloadEnd {
-			char strUserName[NAME_NUM];	// requester name
-			int nContentOffset;			// index of the first downloaded content
-			int nNumContents;			// number of downloaded contents
-		} contentDownloadEnd;
-
-		typedef struct _contentDownloadEndResponse {
-			char strUserName[NAME_NUM];	// requester name
-			int nContentOffset;			// index of the first downloaded content
-			int nReturnCode;			// result of the download
-		} contentDownloadEndResponse;
-		*/
-		
 		int nByteNum = 0;
 		nByteNum = super.getByteNum();
 		int i = 0;
@@ -380,58 +324,74 @@ public class CMSNSEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case CMSNSEvent.CONTENT_UPLOAD_REQUEST:
-			nByteNum += 6*Integer.BYTES + m_strUserName.getBytes().length + m_strMessage.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strMessage.getBytes().length;
+			nByteNum += 3*Integer.BYTES;
 			if(m_nNumAttachedFiles > 0)
 			{
 				for(i = 0; i < m_fileNameList.size(); i++)
 				{
-					nByteNum += Integer.BYTES + m_fileNameList.get(i).getBytes().length;
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_fileNameList.get(i).getBytes().length;
 				}
 			}
 			break;
 		case CMSNSEvent.CONTENT_UPLOAD_RESPONSE:
-			nByteNum += 4*Integer.BYTES + m_strDate.getBytes().length + m_strUserName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strDate.getBytes().length
+					+ m_strUserName.getBytes().length;
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_REQUEST:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strWriterName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strWriterName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_RESPONSE:
-			nByteNum += 4*Integer.BYTES + m_strUserName.getBytes().length + m_strWriterName.getBytes().length 
-					+ Long.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strWriterName.getBytes().length;
+			nByteNum += 2*Integer.BYTES + Long.BYTES;
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_READY:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strWriterName.getBytes().length 
-					+ Long.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strWriterName.getBytes().length;
+			nByteNum += Integer.BYTES + Long.BYTES;
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD:
-			nByteNum += 10*Integer.BYTES + m_strUserName.getBytes().length + m_strDate.getBytes().length
-						+ m_strWriterName.getBytes().length + m_strMessage.getBytes().length;
+			nByteNum += 4*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strDate.getBytes().length + m_strWriterName.getBytes().length
+				+ m_strMessage.getBytes().length;
+			nByteNum += 6*Integer.BYTES;
 			if(m_nNumAttachedFiles > 0)
 			{
 				for(i = 0; i < m_fileNameList.size(); i++)
 				{
-					nByteNum += Integer.BYTES + m_fileNameList.get(i).getBytes().length;
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_fileNameList.get(i).getBytes().length;
 				}
 			}
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END:
-			nByteNum += 4*Integer.BYTES + m_strUserName.getBytes().length + m_strWriterName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strWriterName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END_RESPONSE:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND: // user name, friend name
 		case CMSNSEvent.REMOVE_FRIEND:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strFriendName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strFriendName.getBytes().length;
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND_ACK: // return code, user name, friend name
 		case CMSNSEvent.REMOVE_FRIEND_ACK:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strFriendName.getBytes().length;
+			nByteNum += Integer.BYTES;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strFriendName.getBytes().length;
 			break;
 		case CMSNSEvent.REQUEST_FRIEND_LIST: // user name
 		case CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST: // user name
 		case CMSNSEvent.REQUEST_BI_FRIEND_LIST:	// user name
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case CMSNSEvent.RESPONSE_FRIEND_LIST:
 			// user name, total # friends, cur # friends, friend name list
@@ -439,42 +399,48 @@ public class CMSNSEvent extends CMEvent{
 			// user name, total # requesters, cur # requesters, requester name list
 		case CMSNSEvent.RESPONSE_BI_FRIEND_LIST:
 			// user name, total # bi-friends, cur # bi-friends, bi-friend name list
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			if(m_friendList != null)
 			{
 				for(i = 0; i < m_friendList.size(); i++)
 				{
-					nByteNum += Integer.BYTES + m_friendList.get(i).getBytes().length;
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_friendList.get(i).getBytes().length;
 				}
 			}
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILES:	// user name, content ID
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case CMSNSEvent.ATTACHED_FILES_NOT_FOUND:	// user name, content ID, # files not found, name list
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			for(i = 0; i < m_fileNameList.size(); i++)
 			{
-				nByteNum += Integer.BYTES + m_fileNameList.get(i).getBytes().length;
+				nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_fileNameList.get(i).getBytes().length;
 			}
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILE:	// user name, content ID, writer name, file name
-			nByteNum += 4*Integer.BYTES + m_strUserName.getBytes().length + m_strWriterName.getBytes().length
-						+ m_strFileName.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strWriterName.getBytes().length	+ m_strFileName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case CMSNSEvent.RESPONSE_ATTACHED_FILE:	// user name, content ID, writer name, file name, return code
-			nByteNum += 5*Integer.BYTES + m_strUserName.getBytes().length + m_strWriterName.getBytes().length
-						+ m_strFileName.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strWriterName.getBytes().length	+ m_strFileName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			break;
 		case CMSNSEvent.CHANGE_ATTACH_DOWNLOAD_SCHEME: // attachment download scheme
 			nByteNum += Integer.BYTES;
 			break;
 		case CMSNSEvent.ACCESS_ATTACHED_FILE:	// user name, content ID, writer name, file name
-			nByteNum += 4*Integer.BYTES + m_strUserName.getBytes().length + m_strWriterName.getBytes().length
-						+ m_strFileName.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strWriterName.getBytes().length	+ m_strFileName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case CMSNSEvent.PREFETCH_COMPLETED:		// user name
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		default:
 			nByteNum = -1;

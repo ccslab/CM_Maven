@@ -67,12 +67,12 @@ public abstract class CMMqttEvent extends CMEvent {
 		int nFixedHeaderByteNum = 0;
 		int nVarHeaderByteNum = 0;
 		int nPayloadByteNum = 0;
+		int nCMEventHeaderByteNum = 0;
 		
-		nByteNum = super.getByteNum();
-		
+		nCMEventHeaderByteNum = super.getByteNum();
 		nVarHeaderByteNum = getVarHeaderByteNum();
 		nPayloadByteNum = getPayloadByteNum();
-		nByteNum += nVarHeaderByteNum + nPayloadByteNum;
+		nByteNum += nCMEventHeaderByteNum + nVarHeaderByteNum + nPayloadByteNum;
 
 		// m_nRemainLength of the fixed header is determined after getVarHeaderByteNum() and 
 		// getPayloadByteNum() are completed.
@@ -81,9 +81,9 @@ public abstract class CMMqttEvent extends CMEvent {
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMMqttEvent.getByteNum(): fixed header("+nFixedHeaderByteNum
-					+")+ var header("+nVarHeaderByteNum+")+ payload("+nPayloadByteNum
-					+") = "+nByteNum);
+			System.out.println("CMMqttEvent.getByteNum(): cm header("+nCMEventHeaderByteNum
+					+") + fixed header("+nFixedHeaderByteNum+") + var header("+nVarHeaderByteNum
+					+") + payload("+nPayloadByteNum+") = "+nByteNum);
 		}
 		
 		return nByteNum;
@@ -109,72 +109,6 @@ public abstract class CMMqttEvent extends CMEvent {
 		unmarshallPayload(buf);
 		
 		return;
-	}
-	
-	@Override
-	protected void putStringToByteBuffer(String str)
-	{
-		int nStrLength = str.getBytes().length;
-		putInt2BytesToByteBuffer(nStrLength);
-		m_bytes.put(str.getBytes());
-	}
-	
-	@Override
-	protected String getStringFromByteBuffer(ByteBuffer buf)
-	{
-		int nStrLength = 0;
-		byte[] strBytes;
-		String str = null;
-		
-		nStrLength = getInt2BytesFromByteBuffer(buf);
-		strBytes = new byte[nStrLength];
-		buf.get(strBytes);
-		str = new String(strBytes);
-		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMMqttEvent.getStringFromByteBuffer(), str(\""+str+"\")");
-		}
-		
-		return str;
-	}
-
-	// put 2 bytes number to ByteBuffer
-	protected void putInt2BytesToByteBuffer(int num)
-	{
-		byte[] numBytes = new byte[2];
-		numBytes[0] = 0;
-		numBytes[1] = 0;
-		
-		numBytes[0] = (byte)((num & 0x0000ff00) >> 8);
-		numBytes[1] = (byte)(num & 0x000000ff);
-		
-		m_bytes.put(numBytes);
-		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMMqttEvent.putInt2BytesToByteBuffer(), num("+num
-					+"), numBytes[0]("+numBytes[0]+"), numBytes[1]("+numBytes[1]+")");
-		}
-	}	
-	
-	// get integer with 2 bytes from ByteBuffer
-	protected int getInt2BytesFromByteBuffer(ByteBuffer buf)
-	{
-		int num = 0;
-		byte[] numBytes = new byte[2];
-		buf.get(numBytes);
-		
-		num = (num | numBytes[0]) << 8;
-		num = num | numBytes[1];
-		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMMqttEvent.getInt2BytesFromByteBuffer(), numBytes[0]("
-					+numBytes[0]+"), numBytes[1]("+numBytes[1]+"), num("+num+")");
-		}
-		
-		return num;
 	}
 	
 }

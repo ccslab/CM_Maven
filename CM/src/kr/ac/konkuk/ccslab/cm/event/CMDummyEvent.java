@@ -34,16 +34,10 @@ public class CMDummyEvent extends CMEvent{
 	
 	protected int getByteNum()
 	{
-		/*
-		typedef struct _dummyEvent{
-			char dummyInfo[DUMMY_LEN];
-		} dummyEvent;
-		*/
-		
 		int nByteNum = 0;
 		nByteNum = super.getByteNum(); // get header length
 		
-		nByteNum += Integer.BYTES + m_strDummyInfo.getBytes().length; // get body length
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strDummyInfo.getBytes().length; // get body length
 		
 		return nByteNum;
 	}

@@ -167,11 +167,12 @@ public class CMUserEvent extends CMEvent {
 		nByteNum = super.getByteNum();
 		
 		// body byte num
-		nByteNum += Integer.BYTES + m_strID.getBytes().length;
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strID.getBytes().length;
 		while(iterEventFieldList.hasNext())
 		{
 			uef = iterEventFieldList.next();
-			nByteNum += 3*Integer.BYTES; // nDataType, field name len, field value len
+			nByteNum += Integer.BYTES; // nDataType
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN; // field name len, field value len
 			if(uef.nDataType == CMInfo.CM_BYTES)
 				nByteNum += uef.strFieldName.getBytes().length + uef.nValueByteNum;
 			else

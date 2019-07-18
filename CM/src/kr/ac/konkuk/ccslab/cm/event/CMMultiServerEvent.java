@@ -577,165 +577,6 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	protected int getByteNum()
 	{
-		/*
-		typedef struct _reqServerReg{
-			char strServerName[NAME_NUM];	// name of requesting server (which must not be "SERVER")
-			char strServerAddress[NAME_NUM];
-			int nServerPort;
-			int nServerUDPPort;
-		} reqServerReg;
-
-		typedef struct _resServerReg{
-			char strServerName[NAME_NUM];	// name of requesting server
-			int nReturnCode;				// return code (1 ok, 0 error)
-		} resServerReg;
-
-		typedef struct _reqServerDereg{
-			char strServerName[NAME_NUM];	// name of requesting server
-		} reqServerDereg;
-
-		typedef struct _resServerDereg{
-			char strServerName[NAME_NUM];	// name of requesting server
-			int nReturnCode;				// return code (1 ok, 0 error)
-		} resServerDereg;
-
-		typedef struct _notifyServerInfo {
-			int nServerNum;
-			unsigned char server[1];
-		} notifyServerInfo;
-
-		typedef struct _serverInfo {
-			char strServerName[NAME_NUM];
-			char strServerAddress[NAME_NUM];
-			int nServerPort;
-			int nServerUDPPort;
-			unsigned char server[1];
-		} serverInfo;
-
-		typedef struct _noitfyServerLeave {
-			char strServerName[NAME_NUM];
-		} notifyServerLeave;
-
-		typedef struct _reqServerInfo {
-			char strUserName[NAME_NUM];
-		} reqServerInfo;
-
-		typedef struct _addLogin {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-			char strPassword[NAME_NUM];
-			char strHostAddress[NAME_NUM];
-			int nUDPPort;
-		} addLogin;
-
-		typedef struct _addLoginAck {
-			char strServerName[NAME_NUM];
-			bool bValidUser;
-			int nUserID;	// deleted
-			char strCommArch[NAME_NUM];
-			bool bLoginScheme;
-			bool bSessionScheme;
-			int nServerUDPPort;
-		} addLoginAck;
-
-		typedef struct _addLogout {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-		} addLogout;
-
-		typedef struct _addJoinSession {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-			char strSessionName[NAME_NUM];
-		} addJoinSession;
-
-		typedef struct _addJoinSessionAck {
-			char strServerName[NAME_NUM];
-			int nRegionNum;
-			unsigned char next[1];		// add rInfo struct
-		} addJoinSessionAck;
-
-		typedef struct _addLeaveSession {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-			char strSessionName[NAME_NUM];
-		} addLeaveSession;
-
-		typedef struct _addLeaveSessionAck {
-			char strServerName[NAME_NUM];
-			int nReturnCode;
-		} addLeaveSessionAck;
-
-		typedef struct _addChangeSession {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-			char strSessionName[NAME_NUM];
-		} addChangeSession;
-
-		typedef struct _addSessionAddUser {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-			char strHostAddress[NAME_NUM];
-			char strSessionName[NAME_NUM];
-		} addSessionAddUser;
-
-		typedef struct _addSessionRemoveUser {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-		} addSessionRemoveUser;
-
-		typedef struct _addJoinRegion {
-			char strServerName[NAME_NUM];
-			int nUserID;	// deleted
-			char strUserName[NAME_NUM];
-			char strHostAddress[NAME_NUM];
-			int nUDPPort;
-			char strSessionName[NAME_NUM];
-			char strRegionName[NAME_NUM];
-		} addJoinRegion;
-
-		typedef struct _addLeaveRegion {
-			char strServerName[NAME_NUM];
-			char strUserName[NAME_NUM];
-			char strSessionName[NAME_NUM];
-			char strRegionName[NAME_NUM];
-		} addLeaveRegion;
-
-		typedef struct _addRegionInhabitant {
-			char strServerName[NAME_NUM];
-			int nUserID;	// deleted
-			char strUserName[NAME_NUM];
-			char strHostAddress[NAME_NUM];
-			int nUDPPort;
-			char strSessionName[NAME_NUM];
-			char strRegionName[NAME_NUM];
-		} addRegionInhabitant;
-
-		typedef struct _addNewRegionUser {
-			char strServerName[NAME_NUM];
-			int nUserID;	// deleted
-			char strUserName[NAME_NUM];
-			char strHostAddress[NAME_NUM];
-			int nUDPPort;
-			char strSessionName[NAME_NUM];
-			char strRegionName[NAME_NUM];
-		} addNewRegionUser;
-
-		typedef struct _addRemoveRegionUser {
-			char strServerName[NAME_NUM];
-			int nUserID;	// deleted
-			char strUserName[NAME_NUM];
-			char strSessionName[NAME_NUM];
-			char strRegionName[NAME_NUM];
-		} addRemoveRegionUser;
-
-		typedef struct _addResponseSessionInfo {
-			char strServerName[NAME_NUM];
-			int nSessionNum;
-			unsigned char session[1];
-		} addResponseSessionInfo;
-		*/
-		
 		Iterator<CMServerInfo> iterServerList;
 		Iterator<CMSessionInfo> iterSessionList;
 		Iterator<CMGroupInfo> iterGroupList;
@@ -747,17 +588,20 @@ public class CMMultiServerEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQ_SERVER_REG:
-			nByteNum += 4*Integer.BYTES + m_strServerName.getBytes().length 
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length 
 					+ m_strServerAddress.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			break;
 		case RES_SERVER_REG:
-			nByteNum += 2*Integer.BYTES + m_strServerName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case REQ_SERVER_DEREG:
-			nByteNum += Integer.BYTES + m_strServerName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length;
 			break;
 		case RES_SERVER_DEREG:
-			nByteNum += 2*Integer.BYTES + m_strServerName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case NOTIFY_SERVER_INFO:
 			nByteNum += Integer.BYTES; // server num
@@ -766,96 +610,114 @@ public class CMMultiServerEvent extends CMEvent{
 			while(iterServerList.hasNext())
 			{
 				CMServerInfo tsi = iterServerList.next();
-				nElementByteNum += 4*Integer.BYTES + tsi.getServerName().getBytes().length 
+				nElementByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + tsi.getServerName().getBytes().length 
 								+ tsi.getServerAddress().getBytes().length;
+				nElementByteNum += 2*Integer.BYTES;
 			}
 			nByteNum += nElementByteNum;
 			break;
 		case NOTIFY_SERVER_LEAVE:
-			nByteNum += Integer.BYTES + m_strServerName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length;
 			break;
 		case REQ_SERVER_INFO:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case ADD_LOGIN:
-			nByteNum += 5*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strPassword.getBytes().length + m_strHostAddress.getBytes().length;
+			nByteNum += 4*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strPassword.getBytes().length
+				+ m_strHostAddress.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case ADD_LOGIN_ACK:
-			nByteNum += 6*Integer.BYTES + m_strServerName.getBytes().length + m_strCommArch.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strCommArch.getBytes().length;
+			nByteNum += 4*Integer.BYTES;
 			break;
 		case ADD_LOGOUT:
-			nByteNum += 2*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length;
 			break;
 		case ADD_JOIN_SESSION:
-			nByteNum += 3*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strSessionName.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
 			break;
 		case ADD_JOIN_SESSION_ACK:
-			nByteNum += 2*Integer.BYTES + m_strServerName.getBytes().length; // server name, group num
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length; // server name
+			nByteNum += Integer.BYTES;	// group num
 			nElementByteNum = 0;
 			iterGroupList = m_groupList.iterator();
 			while(iterGroupList.hasNext())
 			{
 				CMGroupInfo tgi = iterGroupList.next();
-				nElementByteNum += 3*Integer.BYTES + tgi.getGroupName().getBytes().length 
+				nElementByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + tgi.getGroupName().getBytes().length 
 								+ tgi.getGroupAddress().getBytes().length;
+				nElementByteNum += Integer.BYTES;
 			}
 			nByteNum += nElementByteNum;
 			break;
 		case ADD_LEAVE_SESSION:
-			nByteNum += 3*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strSessionName.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length 
+				+ m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
 			break;
 		case ADD_LEAVE_SESSION_ACK:
-			nByteNum += 2*Integer.BYTES + m_strServerName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case ADD_CHANGE_SESSION:
-			nByteNum += 3*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strSessionName.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
 			break;
 		case ADD_SESSION_ADD_USER:
-			nByteNum += 4*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strHostAddress.getBytes().length + m_strSessionName.getBytes().length;
+			nByteNum += 4*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strHostAddress.getBytes().length
+				+ m_strSessionName.getBytes().length;
 			break;
 		case ADD_SESSION_REMOVE_USER:
-			nByteNum += 2*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length;
 			break;
 		case ADD_JOIN_GROUP:
-			nByteNum += 6*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strHostAddress.getBytes().length + m_strSessionName.getBytes().length 
-					+ m_strGroupName.getBytes().length;
+			nByteNum += 5*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strHostAddress.getBytes().length
+				+ m_strSessionName.getBytes().length + m_strGroupName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case ADD_LEAVE_GROUP:
-			nByteNum += 4*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strSessionName.getBytes().length + m_strGroupName.getBytes().length;
+			nByteNum += 4*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strSessionName.getBytes().length
+				+ m_strGroupName.getBytes().length;
 			break;
 		case ADD_GROUP_INHABITANT:
-			nByteNum += 6*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strHostAddress.getBytes().length + m_strSessionName.getBytes().length 
-					+ m_strGroupName.getBytes().length;
+			nByteNum += 5*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strHostAddress.getBytes().length
+				+ m_strSessionName.getBytes().length + m_strGroupName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case ADD_NEW_GROUP_USER:
-			nByteNum += 6*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strHostAddress.getBytes().length + m_strSessionName.getBytes().length 
-					+ m_strGroupName.getBytes().length;
+			nByteNum += 5*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strHostAddress.getBytes().length
+				+ m_strSessionName.getBytes().length + m_strGroupName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case ADD_REMOVE_GROUP_USER:
-			nByteNum += 4*Integer.BYTES + m_strServerName.getBytes().length + m_strUserName.getBytes().length
-					+ m_strSessionName.getBytes().length + m_strGroupName.getBytes().length;
+			nByteNum += 4*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
+				+ m_strUserName.getBytes().length + m_strSessionName.getBytes().length
+				+ m_strGroupName.getBytes().length;
 			break;
 		case ADD_REQUEST_SESSION_INFO:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case ADD_RESPONSE_SESSION_INFO:
-			nByteNum += 2*Integer.BYTES + m_strServerName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			nElementByteNum = 0;
 			iterSessionList = m_sessionList.iterator();
 			while(iterSessionList.hasNext())
 			{
 				CMSessionInfo tsi = iterSessionList.next();
-				nElementByteNum += 4*Integer.BYTES + tsi.getSessionName().getBytes().length
+				nElementByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + tsi.getSessionName().getBytes().length
 								+ tsi.getAddress().getBytes().length;
+				nElementByteNum += 2*Integer.BYTES;
 			}
 			nByteNum += nElementByteNum;
 			break;

@@ -534,17 +534,19 @@ public class CMSessionEvent extends CMEvent {
 		switch(m_nID)
 		{
 		case LOGIN:
-			nByteNum += 4*Integer.BYTES + m_strUserName.getBytes().length + m_strPasswd.getBytes().length
-						+ m_strHostAddr.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strPasswd.getBytes().length	+ m_strHostAddr.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case LOGOUT:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case LOGIN_ACK:
-			nByteNum += 7*Integer.BYTES + m_strCommArch.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strCommArch.getBytes().length;
+			nByteNum += 6*Integer.BYTES;
 			break;
 		case REQUEST_SESSION_INFO:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case RESPONSE_SESSION_INFO:
 			nByteNum += Integer.BYTES;
@@ -553,13 +555,15 @@ public class CMSessionEvent extends CMEvent {
 			while(iterSessionList.hasNext())
 			{
 				CMSessionInfo tsi = iterSessionList.next();
-				nElementByteNum += 4*Integer.BYTES + tsi.getSessionName().getBytes().length
+				nElementByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + tsi.getSessionName().getBytes().length
 								+ tsi.getAddress().getBytes().length;
+				nElementByteNum += 2*Integer.BYTES;
 			}
 			nByteNum += nElementByteNum;
 			break;
 		case JOIN_SESSION:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strSessionName.getBytes().length;
 			break;
 		case JOIN_SESSION_ACK:
 			nByteNum += Integer.BYTES; // group num
@@ -568,59 +572,70 @@ public class CMSessionEvent extends CMEvent {
 			while(iterGroupList.hasNext())
 			{
 				CMGroupInfo tgi = iterGroupList.next();
-				nElementByteNum += 3*Integer.BYTES + tgi.getGroupName().getBytes().length 
+				nElementByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + tgi.getGroupName().getBytes().length 
 								+ tgi.getGroupAddress().getBytes().length;
+				nElementByteNum += Integer.BYTES;
 			}
 			nByteNum += nElementByteNum;
 			break;
 		case LEAVE_SESSION:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strSessionName.getBytes().length;
 			break;
 		case LEAVE_SESSION_ACK:
 			nByteNum += Integer.BYTES;
 			break;
 		case SESSION_TALK:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strTalk.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strTalk.getBytes().length;
 			break;
 		case SESSION_ADD_USER:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length + m_strHostAddr.getBytes().length
-						+ m_strSessionName.getBytes().length;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strHostAddr.getBytes().length + m_strSessionName.getBytes().length;
 			break;
 		case SESSION_REMOVE_USER:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case CHANGE_SESSION:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strSessionName.getBytes().length;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 		case ADD_BLOCK_SOCKET_CHANNEL:
 		case REMOVE_BLOCK_SOCKET_CHANNEL:
-			nByteNum += 2*Integer.BYTES + m_strChannelName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
 		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
-			nByteNum += 3*Integer.BYTES + m_strChannelName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
 			break;
 		case REGISTER_USER:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strPasswd.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strPasswd.getBytes().length;
 			break;
 		case REGISTER_USER_ACK:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length 
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length 
 					+ m_strCreationTime.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case DEREGISTER_USER:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strPasswd.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strPasswd.getBytes().length;
 			break;
 		case DEREGISTER_USER_ACK:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		case FIND_REGISTERED_USER:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case FIND_REGISTERED_USER_ACK:
-			nByteNum += 3*Integer.BYTES + m_strUserName.getBytes().length 
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length 
 					+ m_strCreationTime.getBytes().length;
+			nByteNum += Integer.BYTES;
 			break;
 		default:
 			nByteNum = -1;

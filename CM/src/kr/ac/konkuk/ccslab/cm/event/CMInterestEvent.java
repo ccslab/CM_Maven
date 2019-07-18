@@ -143,58 +143,29 @@ public class CMInterestEvent extends CMEvent{
 	///////////////////////////////////////////////////////////////////////
 	protected int getByteNum()
 	{
-		/*
-		typedef struct _userEntered {
-			int userID; //--> deleted
-			char userName[NAME_NUM];
-			char hostAddr[EVENT_FIELD_LEN];
-			int nUDPPort;
-			char currentRegion[EVENT_FIELD_LEN];
-			float pos[3];
-			float quat[4];
-		} userEntered;
-
-		typedef struct _userLeaved {
-			char userName[NAME_NUM];
-		} userLeaved;
-
-		typedef struct _userMoved {
-			char userName[NAME_NUM];
-			float pos[3];
-			float quat[4];
-		} userMoved;
-
-		typedef struct _collision {
-			char userName[NAME_NUM];
-			char collideObj[EVENT_FIELD_LEN];
-		} collision;	
-
-		typedef struct _talk {
-			char userName[NAME_NUM];
-			char talk[TALK_LEN];
-		} talk;
-		*/
-		
 		int nByteNum = 0;
 		nByteNum = super.getByteNum();
 		
 		switch(m_nID)
 		{
 		case CMInterestEvent.USER_ENTER:
-			nByteNum += 4*Integer.BYTES + m_strUserName.getBytes().length + m_strHostAddr.getBytes().length
-					+ m_strCurrentGroup.getBytes().length + 7*Float.BYTES;
+			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strHostAddr.getBytes().length + m_strCurrentGroup.getBytes().length;
+			nByteNum += Integer.BYTES + 7*Float.BYTES;
 			break;
 		case CMInterestEvent.USER_LEAVE:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
 			break;
 		case CMInterestEvent.USER_MOVE:
-			nByteNum += Integer.BYTES + m_strUserName.getBytes().length + 7*Float.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length + 7*Float.BYTES;
 			break;
 		case CMInterestEvent.USER_COLLIDE:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strCollideObj.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strCollideObj.getBytes().length;
 			break;
 		case CMInterestEvent.USER_TALK:
-			nByteNum += 2*Integer.BYTES + m_strUserName.getBytes().length + m_strTalk.getBytes().length;
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
+				+ m_strTalk.getBytes().length;
 			break;
 		default:
 			nByteNum = -1;
