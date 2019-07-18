@@ -1,5 +1,7 @@
 import java.nio.ByteBuffer;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
@@ -7,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 
 public class CMMqttEventTest {
 
@@ -21,6 +24,7 @@ public class CMMqttEventTest {
 		tester.testPUBREC();
 		tester.testPUBREL();
 		tester.testPUBCOMP();
+		tester.testSUBSCRIBE();
 	}
 
 	private void testCONNECT()
@@ -141,6 +145,24 @@ public class CMMqttEventTest {
 		
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttPubcomp2.toString());
+	}
+	
+	private void testSUBSCRIBE()
+	{
+		System.out.println("===================");
+		CMMqttEventSUBSCRIBE mqttSubscribe = new CMMqttEventSUBSCRIBE();
+		mqttSubscribe.setPacketID(0);
+		CMList<CMMqttTopicQoS> topicQoSList = mqttSubscribe.getTopicQoSList();
+		topicQoSList.addElement(new CMMqttTopicQoS("CM/mqtt", (byte)0));
+		//topicQoSList.addElement(new CMMqttTopicQoS("CM/iot/temp", (byte)2));
+		System.out.println("------------------- after setting member variables");
+		System.out.println(mqttSubscribe.toString());
+		
+		ByteBuffer buf = mqttSubscribe.marshall();
+		CMMqttEventSUBSCRIBE mqttSubscribe2 = new CMMqttEventSUBSCRIBE(buf);
+		
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttSubscribe2.toString());		
 	}
 
 }
