@@ -2,6 +2,7 @@ import java.nio.ByteBuffer;
 
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGRESP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
@@ -33,6 +34,7 @@ public class CMMqttEventTest {
 		tester.testUNSUBACK();
 		tester.testPINGREQ();
 		tester.testPINGRESP();
+		tester.testDISCONNECT();
 	}
 
 	private void testCONNECT()
@@ -254,6 +256,19 @@ public class CMMqttEventTest {
 
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttPingresp2.toString());
+	}
+
+	private void testDISCONNECT()
+	{
+		System.out.println("=================== test DISCONNECT");
+		CMMqttEventDISCONNECT mqttDisconnect = new CMMqttEventDISCONNECT();
+		System.out.println(mqttDisconnect.toString());
+		
+		ByteBuffer buf = mqttDisconnect.marshall();
+		CMMqttEventDISCONNECT mqttDisconnect2 = new CMMqttEventDISCONNECT(buf);
+
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttDisconnect2.toString());
 	}
 
 }
