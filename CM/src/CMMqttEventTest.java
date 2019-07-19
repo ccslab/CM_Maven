@@ -9,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 
 public class CMMqttEventTest {
@@ -27,11 +28,12 @@ public class CMMqttEventTest {
 		tester.testSUBSCRIBE();
 		tester.testSUBACK();
 		tester.testUNSUBSCRIBE();
+		tester.testUNSUBACK();
 	}
 
 	private void testCONNECT()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test CONNECT");
 		CMMqttEventCONNECT mqttCONNECTEvent = new CMMqttEventCONNECT();
 		mqttCONNECTEvent.setUserNameFlag(true);
 		mqttCONNECTEvent.setWillQoS((byte)2);
@@ -56,7 +58,7 @@ public class CMMqttEventTest {
 	
 	private void testCONNACK()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test CONNACK");
 		CMMqttEventCONNACK mqttConnack = new CMMqttEventCONNACK();
 		mqttConnack.setVarHeader(true, (byte)5);
 		System.out.println("------------------- after setting member variables");
@@ -70,7 +72,7 @@ public class CMMqttEventTest {
 	
 	private void testPUBLISH()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test PUBLISH");
 		CMMqttEventPUBLISH mqttPublish = new CMMqttEventPUBLISH();
 		mqttPublish.setDupFlag(false);
 		mqttPublish.setQoS((byte)1);
@@ -91,7 +93,7 @@ public class CMMqttEventTest {
 	
 	private void testPUBACK()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test PUBACK");
 		CMMqttEventPUBACK mqttPuback = new CMMqttEventPUBACK();
 		mqttPuback.setPacketID(5);
 		System.out.println("------------------- after setting member variables");
@@ -106,7 +108,7 @@ public class CMMqttEventTest {
 	
 	private void testPUBREC()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test PUBREC");
 		CMMqttEventPUBREC mqttPubrec = new CMMqttEventPUBREC();
 		mqttPubrec.setPacketID(3);
 		System.out.println("------------------- after setting member variables");
@@ -121,7 +123,7 @@ public class CMMqttEventTest {
 
 	private void testPUBREL()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test PUBREL");
 		CMMqttEventPUBREL mqttPubrel = new CMMqttEventPUBREL();
 		mqttPubrel.setPacketID(7);
 		System.out.println("------------------- after setting member variables");
@@ -136,7 +138,7 @@ public class CMMqttEventTest {
 
 	private void testPUBCOMP()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test PUBCOMP");
 		CMMqttEventPUBCOMP mqttPubcomp = new CMMqttEventPUBCOMP();
 		mqttPubcomp.setPacketID(127);
 		System.out.println("------------------- after setting member variables");
@@ -151,7 +153,7 @@ public class CMMqttEventTest {
 	
 	private void testSUBSCRIBE()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test SUBSCRIBE");
 		CMMqttEventSUBSCRIBE mqttSubscribe = new CMMqttEventSUBSCRIBE();
 		mqttSubscribe.setPacketID(0);
 		mqttSubscribe.addTopicQoS("CM/mqtt", (byte)0);
@@ -170,7 +172,7 @@ public class CMMqttEventTest {
 	
 	private void testSUBACK()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test SUBACK");
 		CMMqttEventSUBACK mqttSuback = new CMMqttEventSUBACK();
 		mqttSuback.setPacketID(0);
 		mqttSuback.addReturnCode((byte)0);
@@ -190,7 +192,7 @@ public class CMMqttEventTest {
 
 	private void testUNSUBSCRIBE()
 	{
-		System.out.println("===================");
+		System.out.println("=================== test UNSUBSCRIBE");
 		CMMqttEventUNSUBSCRIBE mqttUnsubsribe = new CMMqttEventUNSUBSCRIBE();
 		mqttUnsubsribe.setPacketID(0);
 		mqttUnsubsribe.addTopic("CM/mqtt");
@@ -206,5 +208,21 @@ public class CMMqttEventTest {
 
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttUnsubscribe2.toString());
+	}
+	
+	private void testUNSUBACK()
+	{
+		System.out.println("=================== test UNSUBACK");
+		CMMqttEventUNSUBACK mqttUnsuback = new CMMqttEventUNSUBACK();
+		mqttUnsuback.setPacketID(0);
+		
+		System.out.println("------------------- after setting member variables");
+		System.out.println(mqttUnsuback.toString());
+		
+		ByteBuffer buf = mqttUnsuback.marshall();
+		CMMqttEventUNSUBACK mqttUnsuback2 = new CMMqttEventUNSUBACK(buf);
+		
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttUnsuback2.toString());
 	}
 }
