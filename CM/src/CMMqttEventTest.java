@@ -2,6 +2,8 @@ import java.nio.ByteBuffer;
 
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGRESP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
@@ -29,6 +31,8 @@ public class CMMqttEventTest {
 		tester.testSUBACK();
 		tester.testUNSUBSCRIBE();
 		tester.testUNSUBACK();
+		tester.testPINGREQ();
+		tester.testPINGRESP();
 	}
 
 	private void testCONNECT()
@@ -225,4 +229,31 @@ public class CMMqttEventTest {
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttUnsuback2.toString());
 	}
+	
+	private void testPINGREQ()
+	{
+		System.out.println("=================== test PINGREQ");
+		CMMqttEventPINGREQ mqttPingreq = new CMMqttEventPINGREQ();
+		System.out.println(mqttPingreq.toString());
+		
+		ByteBuffer buf = mqttPingreq.marshall();
+		CMMqttEventPINGREQ mqttPingreq2 = new CMMqttEventPINGREQ(buf);
+
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttPingreq2.toString());
+	}
+	
+	private void testPINGRESP()
+	{
+		System.out.println("=================== test PINGRESP");
+		CMMqttEventPINGRESP mqttPingresp = new CMMqttEventPINGRESP();
+		System.out.println(mqttPingresp.toString());
+		
+		ByteBuffer buf = mqttPingresp.marshall();
+		CMMqttEventPINGRESP mqttPingresp2 = new CMMqttEventPINGRESP(buf);
+
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttPingresp2.toString());
+	}
+
 }
