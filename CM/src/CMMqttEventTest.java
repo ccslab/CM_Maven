@@ -1,7 +1,5 @@
 import java.nio.ByteBuffer;
 
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
-import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
@@ -9,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 
 public class CMMqttEventTest {
@@ -25,6 +24,7 @@ public class CMMqttEventTest {
 		tester.testPUBREL();
 		tester.testPUBCOMP();
 		tester.testSUBSCRIBE();
+		tester.testSUBACK();
 	}
 
 	private void testCONNECT()
@@ -164,6 +164,26 @@ public class CMMqttEventTest {
 		
 		System.out.println("------------------- after marshalling/unmarshalling the event");
 		System.out.println(mqttSubscribe2.toString());		
+	}
+	
+	private void testSUBACK()
+	{
+		System.out.println("===================");
+		CMMqttEventSUBACK mqttSuback = new CMMqttEventSUBACK();
+		mqttSuback.setPacketID(0);
+		mqttSuback.addReturnCode((byte)0);
+		mqttSuback.addReturnCode((byte)2);
+		mqttSuback.addReturnCode((byte)0x80);
+		mqttSuback.removeReturnCode((byte)0x80);
+
+		System.out.println("------------------- after setting member variables");
+		System.out.println(mqttSuback.toString());
+		
+		ByteBuffer buf = mqttSuback.marshall();
+		CMMqttEventSUBACK mqttSuback2 = new CMMqttEventSUBACK(buf);
+
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttSuback2.toString());
 	}
 
 }
