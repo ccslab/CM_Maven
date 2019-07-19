@@ -152,9 +152,10 @@ public class CMMqttEventTest {
 		System.out.println("===================");
 		CMMqttEventSUBSCRIBE mqttSubscribe = new CMMqttEventSUBSCRIBE();
 		mqttSubscribe.setPacketID(0);
-		CMList<CMMqttTopicQoS> topicQoSList = mqttSubscribe.getTopicQoSList();
-		topicQoSList.addElement(new CMMqttTopicQoS("CM/mqtt", (byte)0));
-		topicQoSList.addElement(new CMMqttTopicQoS("CM/iot/temp", (byte)2));
+		mqttSubscribe.addTopicQoS("CM/mqtt", (byte)0);
+		mqttSubscribe.addTopicQoS("test/to be deleted", (byte)1);
+		mqttSubscribe.addTopicQoS("CM/iot/temp", (byte)2);
+		mqttSubscribe.removeTopicQoS("test/to be deleted");
 		System.out.println("------------------- after setting member variables");
 		System.out.println(mqttSubscribe.toString());
 		

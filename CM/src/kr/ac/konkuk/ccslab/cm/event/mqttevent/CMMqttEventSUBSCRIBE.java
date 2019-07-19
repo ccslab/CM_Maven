@@ -98,6 +98,23 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 	{
 		return m_topicQoSList;
 	}
+	
+	public boolean addTopicQoS(String strTopic, byte qos)
+	{
+		CMMqttTopicQoS topicQoS = new CMMqttTopicQoS(strTopic, qos);
+		return m_topicQoSList.addElement(topicQoS);
+	}
+	
+	public boolean removeTopicQoS(String strTopic)
+	{
+		CMMqttTopicQoS topicQoS = new CMMqttTopicQoS(strTopic, (byte)0);
+		return m_topicQoSList.removeElement(topicQoS);
+	}
+	
+	public void removeAllTopicQoS()
+	{
+		m_topicQoSList.removeAllElements();
+	}
 
 	//////////////////////////////////////////////////
 	// overridden methods (payload)
