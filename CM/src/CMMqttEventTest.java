@@ -9,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 
 public class CMMqttEventTest {
 
@@ -25,6 +26,7 @@ public class CMMqttEventTest {
 		tester.testPUBCOMP();
 		tester.testSUBSCRIBE();
 		tester.testSUBACK();
+		tester.testUNSUBSCRIBE();
 	}
 
 	private void testCONNECT()
@@ -173,8 +175,8 @@ public class CMMqttEventTest {
 		mqttSuback.setPacketID(0);
 		mqttSuback.addReturnCode((byte)0);
 		mqttSuback.addReturnCode((byte)2);
-		mqttSuback.addReturnCode((byte)0x80);
-		mqttSuback.removeReturnCode((byte)0x80);
+		mqttSuback.addReturnCode((byte)128);
+		mqttSuback.removeReturnCode((byte)128);
 
 		System.out.println("------------------- after setting member variables");
 		System.out.println(mqttSuback.toString());
@@ -186,4 +188,23 @@ public class CMMqttEventTest {
 		System.out.println(mqttSuback2.toString());
 	}
 
+	private void testUNSUBSCRIBE()
+	{
+		System.out.println("===================");
+		CMMqttEventUNSUBSCRIBE mqttUnsubsribe = new CMMqttEventUNSUBSCRIBE();
+		mqttUnsubsribe.setPacketID(0);
+		mqttUnsubsribe.addTopic("CM/mqtt");
+		mqttUnsubsribe.addTopic("CM/iot/location");
+		mqttUnsubsribe.addTopic("test/delTopic");
+		mqttUnsubsribe.removeTopic("test/delTopic");
+
+		System.out.println("------------------- after setting member variables");
+		System.out.println(mqttUnsubsribe.toString());
+		
+		ByteBuffer buf = mqttUnsubsribe.marshall();
+		CMMqttEventUNSUBSCRIBE mqttUnsubscribe2 = new CMMqttEventUNSUBSCRIBE(buf);
+
+		System.out.println("------------------- after marshalling/unmarshalling the event");
+		System.out.println(mqttUnsubscribe2.toString());
+	}
 }
