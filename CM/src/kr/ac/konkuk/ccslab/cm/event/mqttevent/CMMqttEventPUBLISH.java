@@ -178,7 +178,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	protected int getVarHeaderByteNum()
 	{
 		int nByteNum = 0;
-		nByteNum += 2 + m_strTopicName.getBytes().length;	// topic name
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strTopicName.getBytes().length;	// topic name
 		nByteNum += 2;	// packet identifier
 
 		return nByteNum;

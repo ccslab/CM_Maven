@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
  * This class represents a CM event that the variable header and payload of 
@@ -108,7 +109,7 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 		for(CMMqttTopicQoS topicQoS : m_topicQoSList.getList())
 		{
 			// string length bytes (2 bytes) + string length + qos byte 
-			nPayloadByteNum += 2 + topicQoS.getTopic().getBytes().length + 1;
+			nPayloadByteNum += CMInfo.STRING_LEN_BYTES_LEN + topicQoS.getTopic().getBytes().length + 1;
 		}
 		return nPayloadByteNum;
 	}

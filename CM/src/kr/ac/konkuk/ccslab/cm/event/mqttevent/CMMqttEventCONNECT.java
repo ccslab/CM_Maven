@@ -301,7 +301,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	protected int getVarHeaderByteNum() {
 		// TODO Auto-generated method stub
 		int nByteNum = 0;
-		nByteNum += 2 + m_strProtocolName.getBytes().length;	// protocol name
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strProtocolName.getBytes().length;	// protocol name
 		nByteNum += 1+1+2;	// protocol level, flag, keep alive
 
 		if(CMInfo._CM_DEBUG)
@@ -416,11 +416,11 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	protected int getPayloadByteNum() {
 		// TODO Auto-generated method stub
 		int nByteNum = 0;
-		nByteNum += 2 + m_strClientID.getBytes().length;	// client id
-		nByteNum += 2 + m_strWillTopic.getBytes().length;	// will topic
-		nByteNum += 2 + m_strWillMessage.getBytes().length;	// will message
-		nByteNum += 2 + m_strUserName.getBytes().length;	// user name
-		nByteNum += 2 + m_strPassword.getBytes().length;	// password
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strClientID.getBytes().length;	// client id
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strWillTopic.getBytes().length;	// will topic
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strWillMessage.getBytes().length;	// will message
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;	// user name
+		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strPassword.getBytes().length;	// password
 		
 		if(CMInfo._CM_DEBUG)
 		{
