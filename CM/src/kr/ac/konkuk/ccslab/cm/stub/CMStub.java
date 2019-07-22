@@ -16,6 +16,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
@@ -70,7 +71,7 @@ public class CMStub {
 	public boolean init()
 	{
 		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
-		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		
 		// add cm service managers
 		// managerList.addElement(new CMMqttManager(m_cmInfo));
@@ -214,27 +215,27 @@ public class CMStub {
 	}
 	
 	// event handler
-	public CMAppEventHandler addEventHandler(int nEventType, CMAppEventHandler handler)
+	public CMEventHandler addEventHandler(int nEventType, CMEventHandler handler)
 	{
-		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		return handlerHashtable.put(nEventType, handler);
 	}
 	
-	public CMAppEventHandler findEventHandler(int nEventType)
+	public CMEventHandler findEventHandler(int nEventType)
 	{
-		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		return handlerHashtable.get(nEventType);
 	}
 	
-	public CMAppEventHandler removeEventHandler(int nEventType)
+	public CMEventHandler removeEventHandler(int nEventType)
 	{
-		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		return handlerHashtable.remove(nEventType);
 	}
 	
 	public void removeAllEventHandler()
 	{
-		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		handlerHashtable.clear();
 	}
 	

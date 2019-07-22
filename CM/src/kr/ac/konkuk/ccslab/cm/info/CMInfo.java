@@ -5,6 +5,7 @@ import java.util.Hashtable;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.manager.CMServiceManager;
 
 public class CMInfo {
@@ -124,7 +125,7 @@ public class CMInfo {
 	// CM service manager list
 	private CMList<CMServiceManager> m_serviceManagerList;
 	// CM event handler hash table
-	private Hashtable<Integer, CMAppEventHandler> m_eventHandlerHashtable;
+	private Hashtable<Integer, CMEventHandler> m_eventHandlerHashtable;
 	
 	// application event handler
 	private CMAppEventHandler m_appEventHandler;
@@ -143,7 +144,7 @@ public class CMInfo {
 		m_threadInfo = new CMThreadInfo();
 		
 		m_serviceManagerList = new CMList<CMServiceManager>();
-		m_eventHandlerHashtable = new Hashtable<Integer, CMAppEventHandler>();
+		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
 		
 		m_appEventHandler = null;
 		m_bStarted = false;
@@ -199,12 +200,12 @@ public class CMInfo {
 		return m_serviceManagerList;
 	}
 	
-	public void setEventHandlerHashtable(Hashtable<Integer, CMAppEventHandler> handlerHashtable)
+	public void setEventHandlerHashtable(Hashtable<Integer, CMEventHandler> handlerHashtable)
 	{
 		m_eventHandlerHashtable = handlerHashtable;
 	}
 	
-	public Hashtable<Integer, CMAppEventHandler> getEventHandlerHashtable()
+	public Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
 	{
 		return m_eventHandlerHashtable;
 	}
