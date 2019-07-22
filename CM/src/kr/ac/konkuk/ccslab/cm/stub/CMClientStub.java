@@ -232,6 +232,8 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean startCM()
 	{
+		super.init();	// initialize CMStub
+		
 		boolean bRet = false;
 		
 		if(m_cmInfo.isStarted())

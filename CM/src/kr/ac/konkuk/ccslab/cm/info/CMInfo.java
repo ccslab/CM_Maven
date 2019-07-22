@@ -48,6 +48,7 @@ public class CMInfo {
 	public static final int CM_INTERACTION_MANAGER = 206;
 	public static final int CM_FILE_MANAGER = 207;
 	public static final int CM_SNS_MANAGER = 208;
+	public static final int CM_MQTT_MANAGER = 209;
 	
 	public static final int CM_EVENT = 301;
 	public static final int CM_SESSION_EVENT = 302;
