@@ -6,6 +6,7 @@ import java.util.concurrent.Future;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
@@ -14,7 +15,8 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
-import kr.ac.konkuk.ccslab.cm.event.CMEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -27,6 +29,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMServiceManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
@@ -62,6 +65,20 @@ public class CMStub {
 	public CMStub()
 	{
 		m_cmInfo = new CMInfo();
+	}
+	
+	public boolean init()
+	{
+		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
+		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		
+		// add cm service managers
+		// managerList.addElement(new CMMqttManager(m_cmInfo));
+		
+		// add cm event handlers
+		// handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(m_cmInfo));
+		
+		return true;
 	}
 
 	/**
@@ -169,20 +186,72 @@ public class CMStub {
 	{
 		return m_cmInfo;
 	}
+
+	// service manager
+	public boolean addServiceManager(CMServiceManager manager)
+	{
+		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
+		return managerList.addElement(manager);
+	}
+
+	public CMServiceManager findServiceManager(CMServiceManager manager)
+	{
+		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
+		return managerList.findElement(manager);
+	}
+
+	public boolean removeServiceManager(CMServiceManager manager)
+	{
+		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
+		return managerList.removeElement(manager);
+	}
+	
+	public void removeAllServiceManager()
+	{
+		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
+		managerList.removeAllElements();
+		return;
+	}
+	
+	// event handler
+	public CMAppEventHandler addEventHandler(CMEvent event, CMAppEventHandler handler)
+	{
+		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		return handlerHashtable.put(event, handler);
+	}
+	
+	public CMAppEventHandler findEventHandler(CMEvent event)
+	{
+		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		return handlerHashtable.get(event);
+	}
+	
+	public CMAppEventHandler removeEventHandler(CMEvent event)
+	{
+		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		return handlerHashtable.remove(event);
+	}
+	
+	public void removeAllEventHandler()
+	{
+		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		handlerHashtable.clear();
+	}
+	
 	
 	/**
 	 * Registers the event handler of the application.
 	 * 
 	 * <p> An event handler has a role of receiving a CM event whenever it is received. A developer can define an event 
 	 * handler class which includes application codes so that the application can do any task when a CM event is received.
-	 * The event handler class must implement the {@link CMEventHandler} interface which defines an event processing 
-	 * method, {@link CMEventHandler#processEvent(CMEvent)}. 
+	 * The event handler class must implement the {@link CMAppEventHandler} interface which defines an event processing 
+	 * method, {@link CMAppEventHandler#processEvent(CMEvent)}. 
 	 *
 	 * @param handler - the event handler of the application.
 	 */
-	public void setEventHandler(CMEventHandler handler)
+	public void setAppEventHandler(CMAppEventHandler handler)
 	{
-		m_cmInfo.setEventHandler(handler);
+		m_cmInfo.setAppEventHandler(handler);
 	}
 	
 	/**
@@ -190,9 +259,9 @@ public class CMStub {
 	 * 
 	 * @return the registered event handler of the application.
 	 */
-	public CMEventHandler getEventHandler()
+	public CMAppEventHandler getAppEventHandler()
 	{
-		return m_cmInfo.getEventHandler();
+		return m_cmInfo.getAppEventHandler();
 	}
 	
 	/**

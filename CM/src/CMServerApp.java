@@ -1308,7 +1308,7 @@ public class CMServerApp {
 		// TODO Auto-generated method stub
 		CMServerApp server = new CMServerApp();
 		CMServerStub cmStub = server.getServerStub();
-		cmStub.setEventHandler(server.getServerEventHandler());
+		cmStub.setAppEventHandler(server.getServerEventHandler());
 		server.startCM();
 		
 		System.out.println("Server application is terminated.");

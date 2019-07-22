@@ -1809,6 +1809,6 @@ public class CMWinServer extends JFrame {
 	{
 		CMWinServer server = new CMWinServer();
 		CMServerStub cmStub = server.getServerStub();
-		cmStub.setEventHandler(server.getServerEventHandler());
+		cmStub.setAppEventHandler(server.getServerEventHandler());
 	}
 }

@@ -2975,7 +2975,7 @@ public class CMClientApp {
 		// TODO Auto-generated method stub
 		CMClientApp client = new CMClientApp();
 		CMClientStub cmStub = client.getClientStub();
-		cmStub.setEventHandler(client.getClientEventHandler());
+		cmStub.setAppEventHandler(client.getClientEventHandler());
 		client.testStartCM();
 		
 		System.out.println("Client application is terminated.");

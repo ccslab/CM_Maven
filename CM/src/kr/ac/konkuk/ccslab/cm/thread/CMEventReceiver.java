@@ -110,7 +110,7 @@ public class CMEventReceiver extends Thread {
 				if(bForwardToApp)
 				{
 					// deliver msg to stub module
-					m_cmInfo.getEventHandler().processEvent(cme);
+					m_cmInfo.getAppEventHandler().processEvent(cme);
 					
 					if(cme.getType() == CMInfo.CM_USER_EVENT)
 					{
@@ -196,7 +196,7 @@ public class CMEventReceiver extends Thread {
 				// notify to the application
 				CMSessionEvent se = new CMSessionEvent();
 				se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
-				m_cmInfo.getEventHandler().processEvent(se);
+				m_cmInfo.getAppEventHandler().processEvent(se);
 				se = null;
 			}
 			else if(chKey.intValue() > 0) // additional channel
@@ -227,7 +227,7 @@ public class CMEventReceiver extends Thread {
 					CMMessage msg = new CMMessage();
 					msg.m_buf = CMEventManager.marshallEvent(tse);
 					CMInteractionManager.processEvent(msg, m_cmInfo);
-					m_cmInfo.getEventHandler().processEvent(tse);
+					m_cmInfo.getAppEventHandler().processEvent(tse);
 					tse = null;
 					msg.m_buf = null;
 				}

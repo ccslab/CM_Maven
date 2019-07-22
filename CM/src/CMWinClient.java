@@ -4357,7 +4357,7 @@ public class CMWinClient extends JFrame {
 		// TODO Auto-generated method stub
 		CMWinClient client = new CMWinClient();
 		CMClientStub cmStub = client.getClientStub();
-		cmStub.setEventHandler(client.getClientEventHandler());
+		cmStub.setAppEventHandler(client.getClientEventHandler());
 	}
 
 }

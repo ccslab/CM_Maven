@@ -1,6 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
-import kr.ac.konkuk.ccslab.cm.event.CMEventHandler;
+import java.util.Hashtable;
+
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
+import kr.ac.konkuk.ccslab.cm.event.CMEvent;
+import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.manager.CMServiceManager;
 
 public class CMInfo {
 	//// global variables
@@ -34,7 +39,7 @@ public class CMInfo {
 	public static final int CM_SNS_CONTENT = 106;
 	public static final int CM_SNS_CONTENT_LIST = 107;
 	
-	public static final int CM_MANAGER = 201;
+	//public static final int CM_MANAGER = 201;
 	public static final int CM_COMM_MANAGER = 202;
 	public static final int CM_SESSION_MANAGER = 203;
 	public static final int CM_GROUP_MANAGER = 204;
@@ -116,8 +121,13 @@ public class CMInfo {
 	private CMInteractionInfo m_interactionInfo;
 	private CMThreadInfo m_threadInfo;
 	
+	// CM service manager list
+	private CMList<CMServiceManager> m_serviceManagerList;
+	// CM event handler hash table
+	private Hashtable<CMEvent, CMAppEventHandler> m_eventHandlerHashtable;
+	
 	// application event handler
-	private CMEventHandler m_eventHandler;
+	private CMAppEventHandler m_appEventHandler;
 	// status info
 	private boolean m_bStarted;
 	
@@ -132,7 +142,10 @@ public class CMInfo {
 		m_interactionInfo = new CMInteractionInfo();
 		m_threadInfo = new CMThreadInfo();
 		
-		m_eventHandler = null;
+		m_serviceManagerList = new CMList<CMServiceManager>();
+		m_eventHandlerHashtable = new Hashtable<CMEvent, CMAppEventHandler>();
+		
+		m_appEventHandler = null;
 		m_bStarted = false;
 	}
 	
@@ -176,14 +189,34 @@ public class CMInfo {
 		return m_threadInfo;
 	}
 	
-	public void setEventHandler(CMEventHandler handler)
+	public void setServiceManagerList(CMList<CMServiceManager> list)
 	{
-		m_eventHandler = handler;
+		m_serviceManagerList = list;
 	}
 	
-	public CMEventHandler getEventHandler()
+	public CMList<CMServiceManager> getServiceManagerList()
 	{
-		return m_eventHandler;
+		return m_serviceManagerList;
+	}
+	
+	public void setEventHandlerHashtable(Hashtable<CMEvent, CMAppEventHandler> handlerHashtable)
+	{
+		m_eventHandlerHashtable = handlerHashtable;
+	}
+	
+	public Hashtable<CMEvent, CMAppEventHandler> getEventHandlerHashtable()
+	{
+		return m_eventHandlerHashtable;
+	}
+	
+	public void setAppEventHandler(CMAppEventHandler handler)
+	{
+		m_appEventHandler = handler;
+	}
+	
+	public CMAppEventHandler getAppEventHandler()
+	{
+		return m_appEventHandler;
 	}
 	
 	public void setStarted(boolean bStarted)
