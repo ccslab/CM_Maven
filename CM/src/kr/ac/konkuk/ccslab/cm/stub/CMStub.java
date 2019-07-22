@@ -70,7 +70,7 @@ public class CMStub {
 	public boolean init()
 	{
 		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
-		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		
 		// add cm service managers
 		// managerList.addElement(new CMMqttManager(m_cmInfo));
@@ -214,27 +214,27 @@ public class CMStub {
 	}
 	
 	// event handler
-	public CMAppEventHandler addEventHandler(CMEvent event, CMAppEventHandler handler)
+	public CMAppEventHandler addEventHandler(int nEventType, CMAppEventHandler handler)
 	{
-		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
-		return handlerHashtable.put(event, handler);
+		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		return handlerHashtable.put(nEventType, handler);
 	}
 	
-	public CMAppEventHandler findEventHandler(CMEvent event)
+	public CMAppEventHandler findEventHandler(int nEventType)
 	{
-		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
-		return handlerHashtable.get(event);
+		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		return handlerHashtable.get(nEventType);
 	}
 	
-	public CMAppEventHandler removeEventHandler(CMEvent event)
+	public CMAppEventHandler removeEventHandler(int nEventType)
 	{
-		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
-		return handlerHashtable.remove(event);
+		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		return handlerHashtable.remove(nEventType);
 	}
 	
 	public void removeAllEventHandler()
 	{
-		Hashtable<CMEvent, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMAppEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		handlerHashtable.clear();
 	}
 	

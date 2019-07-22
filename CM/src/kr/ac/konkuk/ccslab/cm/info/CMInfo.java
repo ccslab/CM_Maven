@@ -124,7 +124,7 @@ public class CMInfo {
 	// CM service manager list
 	private CMList<CMServiceManager> m_serviceManagerList;
 	// CM event handler hash table
-	private Hashtable<CMEvent, CMAppEventHandler> m_eventHandlerHashtable;
+	private Hashtable<Integer, CMAppEventHandler> m_eventHandlerHashtable;
 	
 	// application event handler
 	private CMAppEventHandler m_appEventHandler;
@@ -143,7 +143,7 @@ public class CMInfo {
 		m_threadInfo = new CMThreadInfo();
 		
 		m_serviceManagerList = new CMList<CMServiceManager>();
-		m_eventHandlerHashtable = new Hashtable<CMEvent, CMAppEventHandler>();
+		m_eventHandlerHashtable = new Hashtable<Integer, CMAppEventHandler>();
 		
 		m_appEventHandler = null;
 		m_bStarted = false;
@@ -199,12 +199,12 @@ public class CMInfo {
 		return m_serviceManagerList;
 	}
 	
-	public void setEventHandlerHashtable(Hashtable<CMEvent, CMAppEventHandler> handlerHashtable)
+	public void setEventHandlerHashtable(Hashtable<Integer, CMAppEventHandler> handlerHashtable)
 	{
 		m_eventHandlerHashtable = handlerHashtable;
 	}
 	
-	public Hashtable<CMEvent, CMAppEventHandler> getEventHandlerHashtable()
+	public Hashtable<Integer, CMAppEventHandler> getEventHandlerHashtable()
 	{
 		return m_eventHandlerHashtable;
 	}
