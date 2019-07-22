@@ -20,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
+import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
@@ -328,6 +329,14 @@ public class CMInteractionManager {
 				cmEvent = null;
 				return true;
 			}
+		}
+		
+		// The above process of finding an event handler will be changed to as follows:
+		Hashtable<Integer, CMEventHandler> handlerHashtable = cmInfo.getEventHandlerHashtable();
+		CMEventHandler handler = handlerHashtable.get(cmEvent.getType());
+		if(handler != null)
+		{
+			handler.processEvent(cmEvent);
 		}
 		
 		// distribution to other session members or group members, if required
