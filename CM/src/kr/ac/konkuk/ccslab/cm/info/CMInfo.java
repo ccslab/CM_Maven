@@ -122,6 +122,7 @@ public class CMInfo {
 	private CMEventInfo m_eventInfo;
 	private CMInteractionInfo m_interactionInfo;
 	private CMThreadInfo m_threadInfo;
+	private CMMqttInfo m_mqttInfo;
 	
 	// CM service manager list
 	private CMList<CMServiceManager> m_serviceManagerList;
@@ -143,6 +144,7 @@ public class CMInfo {
 		m_eventInfo = new CMEventInfo();
 		m_interactionInfo = new CMInteractionInfo();
 		m_threadInfo = new CMThreadInfo();
+		m_mqttInfo = new CMMqttInfo();
 		
 		m_serviceManagerList = new CMList<CMServiceManager>();
 		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
@@ -189,6 +191,11 @@ public class CMInfo {
 	public CMThreadInfo getThreadInfo()
 	{
 		return m_threadInfo;
+	}
+	
+	public CMMqttInfo getMqttInfo()
+	{
+		return m_mqttInfo;
 	}
 	
 	public void setServiceManagerList(CMList<CMServiceManager> list)
