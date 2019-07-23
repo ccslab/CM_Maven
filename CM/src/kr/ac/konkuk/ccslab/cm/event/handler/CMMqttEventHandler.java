@@ -17,7 +17,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	public CMMqttEventHandler(CMInfo cmInfo)
 	{
 		super(cmInfo);
-		m_nType = CMInfo.CM_MQTT_MANAGER;
+		m_nType = CMInfo.CM_MQTT_EVENT_HANDLER;
 	}
 	
 	@Override

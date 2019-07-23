@@ -21,6 +21,7 @@ public class CMMqttManager extends CMServiceManager {
 	public CMMqttManager(CMInfo cmInfo)
 	{
 		super(cmInfo);
+		m_nType = CMInfo.CM_MQTT_MANAGER;
 	}
 	
 	public boolean connect(String strClientID)
