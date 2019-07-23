@@ -576,7 +576,7 @@ public class CMClientStub extends CMStub {
 		// set information on the local user
 		CMUser myself = getMyself();
 		myself.setName(strUserName);
-		myself.setPasswd(strPassword);
+		myself.setPasswd(strEncPassword);
 		myself.setHost(strMyAddr);
 		myself.setUDPPort(nMyUDPPort);
 		
