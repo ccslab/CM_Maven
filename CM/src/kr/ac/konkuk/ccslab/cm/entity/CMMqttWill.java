@@ -68,4 +68,13 @@ public class CMMqttWill {
 	{
 		return m_bWillRetain;
 	}
+	
+	// overridden methods
+	@Override
+	public String toString()
+	{
+		String str = "CMMqttWill{ \"willMessage\": "+m_strWillMessage+", \"willTopic\": "+m_strWillTopic
+				+", \"willQoS\": "+m_willQoS+", \"willRetain\": "+m_bWillRetain+"}";
+		return str;
+	}
 }

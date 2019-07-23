@@ -15,7 +15,7 @@ public class CMMqttSession {
 	// list of sent QoS 1 and QoS 2 events that have not been completely acknowledged 
 	// (4 client: client->server, 4 server: server->client)
 	private CMList<CMMqttEvent> m_sentUnAckEventList;
-	// // list of received QoS 2 events that have not been completely acknowledged 
+	// list of received QoS 2 events that have not been completely acknowledged 
 	// (4 client: client<-server, 4 server: server<-client)
 	private CMList<CMMqttEvent> m_recvUnAckEventList;
 	// list of events pending transmission to the client (4 server)
