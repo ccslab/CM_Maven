@@ -22,8 +22,60 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	@Override
 	public boolean processEvent(CMEvent event) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		boolean bRet = false;
+		CMMqttEvent mqttEvent = (CMMqttEvent)event;
+		
+		switch(event.getID())
+		{
+		case CMMqttEvent.CONNECT:
+			bRet = processCONNECT(mqttEvent);
+			break;
+		case CMMqttEvent.CONNACK:
+			bRet = processCONNACK(mqttEvent);
+			break;
+		case CMMqttEvent.PUBLISH:
+			bRet = processPUBLISH(mqttEvent);
+			break;
+		case CMMqttEvent.PUBACK:
+			bRet = processPUBACK(mqttEvent);
+			break;
+		case CMMqttEvent.PUBREC:
+			bRet = processPUBREC(mqttEvent);
+			break;
+		case CMMqttEvent.PUBREL:
+			bRet = processPUBREL(mqttEvent);
+			break;
+		case CMMqttEvent.PUBCOMP:
+			bRet = processPUBCOMP(mqttEvent);
+			break;
+		case CMMqttEvent.SUBSCRIBE:
+			bRet = processSUBSCRIBE(mqttEvent);
+			break;
+		case CMMqttEvent.SUBACK:
+			bRet = processSUBACK(mqttEvent);
+			break;
+		case CMMqttEvent.UNSUBSCRIBE:
+			bRet = processUNSUBSCRIBE(mqttEvent);
+			break;
+		case CMMqttEvent.UNSUBACK:
+			bRet = processUNSUBACK(mqttEvent);
+			break;
+		case CMMqttEvent.PINGREQ:
+			bRet = processPINGREQ(mqttEvent);
+			break;
+		case CMMqttEvent.PINGRESP:
+			bRet = processPINGRESP(mqttEvent);
+			break;
+		case CMMqttEvent.DISCONNECT:
+			bRet = processDISCONNECT(mqttEvent);
+			break;
+		default:
+			System.err.println("CMMqttEventHandler.processEvent(), invalid event id: ("
+					+event.getID()+")!");
+			return false;
+		}
+		return bRet;
 	}
 
 	private boolean processCONNECT(CMMqttEvent event)
@@ -87,6 +139,11 @@ public class CMMqttEventHandler extends CMEventHandler {
 	}
 	
 	private boolean processUNSUBSCRIBE(CMMqttEvent event)
+	{
+		return false;
+	}
+	
+	private boolean processUNSUBACK(CMMqttEvent event)
 	{
 		return false;
 	}
