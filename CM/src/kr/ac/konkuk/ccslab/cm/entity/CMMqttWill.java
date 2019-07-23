@@ -54,6 +54,11 @@ public class CMMqttWill {
 		m_willQoS = qos;
 	}
 	
+	public byte getWillQoS()
+	{
+		return m_willQoS;
+	}
+	
 	public void setWillRetain(boolean bRetain)
 	{
 		m_bWillRetain = bRetain;
