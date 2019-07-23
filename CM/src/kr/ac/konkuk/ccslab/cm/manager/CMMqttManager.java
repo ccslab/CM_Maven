@@ -1,11 +1,14 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 
 /**
  * The CMMqttManager class represents a CM service object with which an application can 
@@ -65,10 +68,32 @@ public class CMMqttManager extends CMServiceManager {
 		conEvent.setPassword(myself.getPasswd());
 		
 		// process the clean-session flag
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession mqttSession = mqttInfo.getMqttSession();
+		if(mqttSession != null && conEvent.isCleanSessionFlag())
+			mqttSession = null;
+		if(mqttSession == null)
+		{
+			mqttSession = new CMMqttSession();
+			mqttInfo.setMqttSession(mqttSession);
+		}
 		
+		// process will message
+		if(conEvent.isWillFlag())
+		{
+			CMMqttWill will = new CMMqttWill();
+			will.setWillMessage(conEvent.getWillMessage());
+			will.setWillTopic(conEvent.getWillTopic());
+			will.setWillQoS(conEvent.getWillQoS());
+			will.setWillRetain(conEvent.isWillRetainFlag());
+			mqttSession.setMqttWill(will);
+		}
 		
-		// from here
-		return true;
+		// send CONNECT event
+		boolean bRet = false;
+		bRet = CMEventManager.unicastEvent(conEvent, "SERVER", m_cmInfo);
+		
+		return bRet;
 	}
 	
 	public boolean publish(String strTopic, String strMsg)
