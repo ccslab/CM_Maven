@@ -91,9 +91,17 @@ public class CMMqttEventHandler extends CMEventHandler {
 		boolean bConnAckFlag = false;
 		byte returnCode = 0;	// connection success
 		
-		// validate CONNECT packet format
+		// print the received CONNECT event
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processCONNECT(): "+conEvent.toString());
+		}
+		
+		// validate CONNECT packet format and set return code
 		// If the format is invalid, the server responds with the failure return code.
 		// In MQTT v3.1.1, if the format is invalid, the server disconnects with the client.
+		returnCode = validateCONNECT(conEvent);
+		
 		
 		// from here
 		
