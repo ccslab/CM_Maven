@@ -9,7 +9,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  *
  */
 public abstract class CMServiceManager extends CMObject {
-	CMInfo m_cmInfo;
+	protected CMInfo m_cmInfo;
 	
 	public CMServiceManager(CMInfo cmInfo)
 	{

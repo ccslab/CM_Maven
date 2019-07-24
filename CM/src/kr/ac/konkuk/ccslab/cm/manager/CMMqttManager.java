@@ -53,6 +53,8 @@ public class CMMqttManager extends CMServiceManager {
 		
 		// make CONNECT event
 		CMMqttEventCONNECT conEvent = new CMMqttEventCONNECT();
+		// set CM event header
+		conEvent.setSender(myself.getName());
 		// set variable header
 		conEvent.setUserNameFlag(true);	// to use CM user name
 		conEvent.setPasswordFlag(true);	// to use CM user password
