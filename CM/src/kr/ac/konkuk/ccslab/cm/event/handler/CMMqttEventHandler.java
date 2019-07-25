@@ -1,5 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
@@ -9,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 
 /**
  * The CMMqttEventHandler class represents a CM event handler that processes 
@@ -90,6 +93,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttEventCONNACK ackEvent = new CMMqttEventCONNACK();
 		boolean bConnAckFlag = false;
 		byte returnCode = 0;	// connection success
+		boolean bRet = false;
 		
 		// print the received CONNECT event
 		if(CMInfo._CM_DEBUG)
@@ -101,12 +105,57 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// If the format is invalid, the server responds with the failure return code.
 		// In MQTT v3.1.1, if the format is invalid, the server disconnects with the client.
 		returnCode = validateCONNECT(conEvent);
+		if( returnCode != 0 ) // if the validation failed,
+		{
+			ackEvent.setReturnCode((byte)6);
+			bRet = CMEventManager.unicastEvent(ackEvent, conEvent.getSender(), m_cmInfo);
+			return bRet;
+		}
 		
+		// to determine ack flag
+		CMMqttSession mqttSession = mqttInfo.getMqttSessionHashtable().get(conEvent.getSender());
+		if(conEvent.isCleanSessionFlag())
+			bConnAckFlag = false;
+		else if( mqttSession != null )
+			bConnAckFlag = true;
+		else
+			bConnAckFlag = false;
 		
-		// from here
+		// to process clean-session flag
+		if(mqttSession != null && conEvent.isCleanSessionFlag())
+		{
+			mqttInfo.getMqttSessionHashtable().remove(conEvent.getSender());
+			mqttSession = null;
+		}
+		if(mqttSession == null)
+		{
+			mqttSession = new CMMqttSession();
+			mqttInfo.getMqttSessionHashtable().put(conEvent.getSender(), mqttSession);
+		}
 		
+		// to process will flag
+		if(conEvent.isWillFlag())
+		{
+			CMMqttWill will = new CMMqttWill();
+			will.setWillMessage(conEvent.getWillMessage());
+			will.setWillTopic(conEvent.getWillTopic());
+			will.setWillQoS(conEvent.getWillQoS());
+			will.setWillRetain(conEvent.isWillRetainFlag());
+			mqttSession.setMqttWill(will);
+		}
 		
-		return false;
+		// to process keep-alive value (not yet)
+		if(conEvent.getKeepAlive() > 0)
+		{
+			// will be incorporated with the CM keep-alive strategy
+		}
+		
+		// to send CONNACK event
+		ackEvent.setConnAckFlag(bConnAckFlag);
+		ackEvent.setReturnCode(returnCode);
+		bRet = CMEventManager.unicastEvent(ackEvent, conEvent.getSender(), m_cmInfo);
+		
+		return bRet;
 	}
 	
 	// return value 0 : success
@@ -229,7 +278,10 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processCONNACK(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventCONNACK connackEvent = (CMMqttEventCONNACK)event;
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMMqttEventHandler.processCONNACK(): "+connackEvent.toString());
+		return true;
 	}
 	
 	private boolean processPUBLISH(CMMqttEvent event)
