@@ -72,11 +72,11 @@ public class CMStub {
 	
 	public boolean init()
 	{
-		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
+		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
 		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		
 		// add cm service managers
-		managerList.addElement(new CMMqttManager(m_cmInfo));
+		managerHashtable.put(CMInfo.CM_MQTT_MANAGER, new CMMqttManager(m_cmInfo));
 		
 		// add cm event handlers
 		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(m_cmInfo));
@@ -191,28 +191,28 @@ public class CMStub {
 	}
 
 	// service manager
-	public boolean addServiceManager(CMServiceManager manager)
+	public CMServiceManager addServiceManager(int nType, CMServiceManager manager)
 	{
-		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
-		return managerList.addElement(manager);
+		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
+		return managerHashtable.put(nType, manager);
 	}
 
-	public CMServiceManager findServiceManager(CMServiceManager manager)
+	public CMServiceManager findServiceManager(int nType)
 	{
-		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
-		return managerList.findElement(manager);
+		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
+		return managerHashtable.get(nType);
 	}
 
-	public boolean removeServiceManager(CMServiceManager manager)
+	public CMServiceManager removeServiceManager(int nType)
 	{
-		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
-		return managerList.removeElement(manager);
+		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
+		return managerHashtable.remove(nType);
 	}
 	
 	public void removeAllServiceManager()
 	{
-		CMList<CMServiceManager> managerList = m_cmInfo.getServiceManagerList();
-		managerList.removeAllElements();
+		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
+		managerHashtable.clear();
 		return;
 	}
 	

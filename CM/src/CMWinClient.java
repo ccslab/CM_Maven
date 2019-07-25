@@ -35,6 +35,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
@@ -823,6 +824,9 @@ public class CMWinClient extends JFrame {
 		case 107: // distribute a file and merge
 			testDistFileProc();
 			break;
+		case 200: // MQTT connect
+			testMqttConnect();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -872,6 +876,8 @@ public class CMWinClient extends JFrame {
 		printMessage("90: register new user, 91: deregister user, 92: find registered user\n");
 		printMessage("93: add new friend, 94: remove friend, 95: show friends, 96: show friend requesters\n");
 		printMessage("97: show bi-directional friends\n");
+		printMessage("---------------------------------- MQTT\n");
+		printMessage("200: connect\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -3924,6 +3930,15 @@ public class CMWinClient extends JFrame {
 		}
 		
 		return;
+	}
+	
+	public void testMqttConnect()
+	{
+		printMessage("========== MQTT connect\n");
+		
+		CMMqttManager mqttManager = (CMMqttManager) m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		mqttManager.connect(m_clientStub.getMyself().getName());
+		//from here
 	}
 		
 	private void requestAttachedFile(String strFileName)

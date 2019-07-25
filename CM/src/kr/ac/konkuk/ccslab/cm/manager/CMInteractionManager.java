@@ -293,6 +293,7 @@ public class CMInteractionManager {
 		// check session handler
 		String strHandlerSession = cmEvent.getHandlerSession();
 		String strHandlerGroup = cmEvent.getHandlerGroup();
+		boolean bProcessed = false;
 		if(strHandlerSession != null && !strHandlerSession.equals(""))
 		{
 			// deliver msg to session manager
@@ -301,6 +302,8 @@ public class CMInteractionManager {
 				CMGroupManager.processEvent(msg, cmInfo);
 			else
 				CMSessionManager.processEvent(msg, cmInfo);
+			
+			bProcessed = true;
 		}
 		else
 		{
@@ -309,34 +312,53 @@ public class CMInteractionManager {
 			{
 			case CMInfo.CM_FILE_EVENT:
 				CMFileTransferManager.processEvent(msg, cmInfo);
+				bProcessed = true;
 				break;
 			case CMInfo.CM_SNS_EVENT:
 				CMSNSManager.processEvent(msg, cmInfo);
+				bProcessed = true;
 				break;
 			case CMInfo.CM_SESSION_EVENT:
 				bReturn = processSessionEvent(msg, cmInfo);
+				bProcessed = true;
 				break;
 			case CMInfo.CM_MULTI_SERVER_EVENT:
 				processMultiServerEvent(msg, cmInfo);
+				bProcessed = true;
 				break;
 			case CMInfo.CM_USER_EVENT:
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMInteractionManager.processEvent(), user event, nothing to do.");
+				bProcessed = true;
 				break;
 			default:
+				bProcessed = false;
+				/*
 				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
 						+nEventType);
 				cmEvent = null;
 				return true;
+				*/
+				
 			}
 		}
 		
 		// The above process of finding an event handler will be changed to as follows:
-		Hashtable<Integer, CMEventHandler> handlerHashtable = cmInfo.getEventHandlerHashtable();
-		CMEventHandler handler = handlerHashtable.get(cmEvent.getType());
-		if(handler != null)
+		if(!bProcessed)
 		{
-			handler.processEvent(cmEvent);
+			Hashtable<Integer, CMEventHandler> handlerHashtable = cmInfo.getEventHandlerHashtable();
+			CMEventHandler handler = handlerHashtable.get(cmEvent.getType());
+			if(handler != null)
+			{
+				handler.processEvent(cmEvent);
+			}
+			else {
+				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
+						+cmEvent.getType());
+				cmEvent = null;
+				return true;
+			}
+			
 		}
 		
 		// distribution to other session members or group members, if required

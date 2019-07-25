@@ -26,7 +26,7 @@ public class CMInfo {
 	public static final int SO_SNDBUF_LEN = 8192;
 	public static final int SO_RCVBUF_LEN = 8192;
 	public static final int MAX_EVENT_SIZE = 8192;
-	public static final int MIN_EVENT_SIZE = 32;
+	public static final int MIN_EVENT_SIZE = 24;
 	public static final int STRING_LEN_BYTES_LEN = 2;
 	
 	// big/little endian
@@ -128,7 +128,7 @@ public class CMInfo {
 	private CMMqttInfo m_mqttInfo;
 	
 	// CM service manager list
-	private CMList<CMServiceManager> m_serviceManagerList;
+	private Hashtable<Integer, CMServiceManager> m_serviceManagerHashtable;
 	// CM event handler hash table
 	private Hashtable<Integer, CMEventHandler> m_eventHandlerHashtable;
 	
@@ -149,7 +149,7 @@ public class CMInfo {
 		m_threadInfo = new CMThreadInfo();
 		m_mqttInfo = new CMMqttInfo();
 		
-		m_serviceManagerList = new CMList<CMServiceManager>();
+		m_serviceManagerHashtable = new Hashtable<Integer, CMServiceManager>();
 		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
 		
 		m_appEventHandler = null;
@@ -201,14 +201,14 @@ public class CMInfo {
 		return m_mqttInfo;
 	}
 	
-	public void setServiceManagerList(CMList<CMServiceManager> list)
+	public void setServiceManagerHashtable(Hashtable<Integer, CMServiceManager> managerHashtable)
 	{
-		m_serviceManagerList = list;
+		m_serviceManagerHashtable = managerHashtable;
 	}
 	
-	public CMList<CMServiceManager> getServiceManagerList()
+	public Hashtable<Integer, CMServiceManager> getServiceManagerHashtable()
 	{
-		return m_serviceManagerList;
+		return m_serviceManagerHashtable;
 	}
 	
 	public void setEventHandlerHashtable(Hashtable<Integer, CMEventHandler> handlerHashtable)

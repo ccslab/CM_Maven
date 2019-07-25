@@ -24,6 +24,21 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGRESP;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
@@ -90,18 +105,76 @@ public class CMEventManager {
 		case CMInfo.CM_USER_EVENT:
 			CMUserEvent ue = new CMUserEvent(buf);
 			return ue;
+		case CMInfo.CM_MQTT_EVENT:
+			int nEventID = getEventID(buf);
+			switch(nEventID)
+			{
+			case CMMqttEvent.CONNECT:
+				CMMqttEventCONNECT conEvent = new CMMqttEventCONNECT(buf);
+				return conEvent;
+			case CMMqttEvent.CONNACK:
+				CMMqttEventCONNACK connackEvent = new CMMqttEventCONNACK(buf);
+				return connackEvent;
+			case CMMqttEvent.PUBLISH:
+				CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH(buf);
+				return pubEvent;
+			case CMMqttEvent.PUBACK:
+				CMMqttEventPUBACK pubackEvent = new CMMqttEventPUBACK(buf);
+				return pubackEvent;
+			case CMMqttEvent.PUBREC:
+				CMMqttEventPUBREC pubrecEvent = new CMMqttEventPUBREC(buf);
+				return pubrecEvent;
+			case CMMqttEvent.PUBREL:
+				CMMqttEventPUBREL pubrelEvent = new CMMqttEventPUBREL(buf);
+				return pubrelEvent;
+			case CMMqttEvent.PUBCOMP:
+				CMMqttEventPUBCOMP pubcompEvent = new CMMqttEventPUBCOMP(buf);
+				return pubcompEvent;
+			case CMMqttEvent.SUBSCRIBE:
+				CMMqttEventSUBSCRIBE subEvent = new CMMqttEventSUBSCRIBE(buf);
+				return subEvent;
+			case CMMqttEvent.SUBACK:
+				CMMqttEventSUBACK subackEvent = new CMMqttEventSUBACK(buf);
+				return subackEvent;
+			case CMMqttEvent.UNSUBSCRIBE:
+				CMMqttEventUNSUBSCRIBE unsubEvent = new CMMqttEventUNSUBSCRIBE(buf);
+				return unsubEvent;
+			case CMMqttEvent.UNSUBACK:
+				CMMqttEventUNSUBACK unsubackEvent = new CMMqttEventUNSUBACK(buf);
+				return unsubackEvent;
+			case CMMqttEvent.PINGREQ:
+				CMMqttEventPINGREQ pingreqEvent = new CMMqttEventPINGREQ(buf);
+				return pingreqEvent;
+			case CMMqttEvent.PINGRESP:
+				CMMqttEventPINGRESP pingrespEvent = new CMMqttEventPINGRESP(buf);
+				return pingrespEvent;
+			case CMMqttEvent.DISCONNECT:
+				CMMqttEventDISCONNECT disconEvent = new CMMqttEventDISCONNECT(buf);
+				return disconEvent;
+			default:
+				System.err.println("CMEventManager.unmarshallEvent(), unknown MQTT event ID: "+nEventID);
+				return null;
+			}
+			// from here
 		default:
-			System.out.println("CMEventManager.unmarshallEvent(), unknown event type: "+nEventType);
+			System.err.println("CMEventManager.unmarshallEvent(), unknown event type: "+nEventType);
 			return null;
 		}
 	}
 	
-	public static int getEventType(ByteBuffer buf)
+	private static int getEventType(ByteBuffer buf)
 	{
 		int nType = -1;
-		nType = buf.getInt(Integer.BYTES);
+		nType = buf.getInt(Integer.BYTES);	// position = 4
 		
 		return nType;
+	}
+	
+	private static int getEventID(ByteBuffer buf)
+	{
+		int nID = -1;
+		nID = buf.getInt(2*Integer.BYTES);	// position = 8
+		return nID;
 	}
 	
 	///////////////////////////////////////////////////////////////

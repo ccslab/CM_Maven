@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.event.handler;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
@@ -91,6 +92,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttEventCONNECT conEvent = (CMMqttEventCONNECT)event;
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		CMMqttEventCONNACK ackEvent = new CMMqttEventCONNACK();
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
 		boolean bConnAckFlag = false;
 		byte returnCode = 0;	// connection success
 		boolean bRet = false;
@@ -107,6 +109,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		returnCode = validateCONNECT(conEvent);
 		if( returnCode != 0 ) // if the validation failed,
 		{
+			ackEvent.setSender(myself.getName());
 			ackEvent.setReturnCode((byte)6);
 			bRet = CMEventManager.unicastEvent(ackEvent, conEvent.getSender(), m_cmInfo);
 			return bRet;
@@ -151,6 +154,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		// to send CONNACK event
+		ackEvent.setSender(myself.getName());
 		ackEvent.setConnAckFlag(bConnAckFlag);
 		ackEvent.setReturnCode(returnCode);
 		bRet = CMEventManager.unicastEvent(ackEvent, conEvent.getSender(), m_cmInfo);

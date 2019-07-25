@@ -67,7 +67,8 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	
 	public void setProtocolName(String strName)
 	{
-		m_strProtocolName = strName;
+		if(strName != null)
+			m_strProtocolName = strName;
 	}
 	
 	public String getProtocolName()
@@ -352,16 +353,22 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setPayload(String strClientID, String strWillTopic, String strWillMessage, 
 			String strUserName, String strPassword)
 	{
-		m_strClientID = strClientID;
-		m_strWillTopic = strWillTopic;
-		m_strWillMessage = strWillMessage;
-		m_strUserName = strUserName;
-		m_strPassword = strPassword;
+		if(strClientID != null)
+			m_strClientID = strClientID;
+		if(strWillTopic != null)
+			m_strWillTopic = strWillTopic;
+		if(strWillMessage != null)
+			m_strWillMessage = strWillMessage;
+		if(strUserName != null)
+			m_strUserName = strUserName;
+		if(strPassword != null)
+			m_strPassword = strPassword;
 	}
 	
 	public void setClientID(String strClientID)
 	{
-		m_strClientID = strClientID;
+		if(strClientID != null)
+			m_strClientID = strClientID;
 	}
 	
 	public String getClientID()
@@ -371,7 +378,8 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	
 	public void setWillTopic(String strWillTopic)
 	{
-		m_strWillTopic = strWillTopic;
+		if(strWillTopic != null)
+			m_strWillTopic = strWillTopic;
 	}
 	
 	public String getWillTopic()
@@ -381,7 +389,8 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	
 	public void setWillMessage(String strWillMessage)
 	{
-		m_strWillMessage = strWillMessage;
+		if(strWillMessage != null)
+			m_strWillMessage = strWillMessage;
 	}
 	
 	public String getWillMessage()
@@ -391,7 +400,8 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	
 	public void setUserName(String strUserName)
 	{
-		m_strUserName = strUserName;
+		if(strUserName != null)
+			m_strUserName = strUserName;
 	}
 	
 	public String getUserName()
@@ -401,7 +411,8 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	
 	public void setPassword(String strPassword)
 	{
-		m_strPassword = strPassword;
+		if(strPassword != null)
+			m_strPassword = strPassword;
 	}
 	
 	public String getPassword()
