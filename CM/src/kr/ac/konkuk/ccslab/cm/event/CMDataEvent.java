@@ -37,7 +37,8 @@ public class CMDataEvent extends CMEvent{
 	// set/get methods
 	public void setUserName(String name)
 	{
-		m_strUserName = name;
+		if(name != null)
+			m_strUserName = name;
 	}
 	
 	public String getUserName()
@@ -47,7 +48,8 @@ public class CMDataEvent extends CMEvent{
 	
 	public void setPassword(String passwd)
 	{
-		m_strPasswd = passwd;
+		if(passwd != null)
+			m_strPasswd = passwd;
 	}
 	
 	public String getPassword()
@@ -57,7 +59,8 @@ public class CMDataEvent extends CMEvent{
 	
 	public void setHostAddress(String host)
 	{
-		m_strHostAddr = host;
+		if(host != null)
+			m_strHostAddr = host;
 	}
 	
 	public String getHostAddress()
@@ -77,13 +80,16 @@ public class CMDataEvent extends CMEvent{
 	
 	public void setPosition(CMPosition pq)
 	{
-		m_pq.m_p.m_x = pq.m_p.m_x;
-		m_pq.m_p.m_y = pq.m_p.m_y;
-		m_pq.m_p.m_z = pq.m_p.m_z;
-		m_pq.m_q.m_w = pq.m_q.m_w;
-		m_pq.m_q.m_x = pq.m_q.m_x;
-		m_pq.m_q.m_y = pq.m_q.m_y;
-		m_pq.m_q.m_z = pq.m_q.m_z;
+		if(pq != null)
+		{
+			m_pq.m_p.m_x = pq.m_p.m_x;
+			m_pq.m_p.m_y = pq.m_p.m_y;
+			m_pq.m_p.m_z = pq.m_p.m_z;
+			m_pq.m_q.m_w = pq.m_q.m_w;
+			m_pq.m_q.m_x = pq.m_q.m_x;
+			m_pq.m_q.m_y = pq.m_q.m_y;
+			m_pq.m_q.m_z = pq.m_q.m_z;
+		}
 	}
 	
 	public CMPosition getPosition()

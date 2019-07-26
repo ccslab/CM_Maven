@@ -51,7 +51,8 @@ public class CMInterestEvent extends CMEvent{
 	// set/get methods
 	public void setUserName(String name)
 	{
-		m_strUserName = name;
+		if(name != null)
+			m_strUserName = name;
 	}
 	
 	public String getUserName()
@@ -61,7 +62,8 @@ public class CMInterestEvent extends CMEvent{
 	
 	public void setPassword(String passwd)
 	{
-		m_strPasswd = passwd;
+		if(passwd != null)
+			m_strPasswd = passwd;
 	}
 	
 	public String getPassword()
@@ -71,7 +73,8 @@ public class CMInterestEvent extends CMEvent{
 	
 	public void setHostAddress(String host)
 	{
-		m_strHostAddr = host;
+		if(host != null)
+			m_strHostAddr = host;
 	}
 	
 	public String getHostAddress()
@@ -91,7 +94,8 @@ public class CMInterestEvent extends CMEvent{
 	
 	public void setCurrentGroup(String gName)
 	{
-		m_strCurrentGroup = gName;
+		if(gName != null)
+			m_strCurrentGroup = gName;
 	}
 	
 	public String getCurrentGroup()
@@ -101,7 +105,8 @@ public class CMInterestEvent extends CMEvent{
 	
 	public void setTalk(String talk)
 	{
-		m_strTalk = talk;
+		if(talk != null)
+			m_strTalk = talk;
 	}
 	
 	public String getTalk()
@@ -111,7 +116,8 @@ public class CMInterestEvent extends CMEvent{
 	
 	public void setPoint3f(CMPoint3f p)
 	{
-		m_pq.m_p.setPoint(p.m_x, p.m_y, p.m_z);
+		if(p != null)
+			m_pq.m_p.setPoint(p.m_x, p.m_y, p.m_z);
 	}
 	
 	public CMPoint3f getPoint3f()
@@ -121,8 +127,11 @@ public class CMInterestEvent extends CMEvent{
 	
 	public void setPosition(CMPosition pq)
 	{
-		m_pq.m_p.setPoint(pq.m_p.m_x, pq.m_p.m_y, pq.m_p.m_z);
-		m_pq.m_q.setQuat(pq.m_q.m_w, pq.m_q.m_x, pq.m_q.m_y, pq.m_q.m_z);
+		if(pq != null)
+		{
+			m_pq.m_p.setPoint(pq.m_p.m_x, pq.m_p.m_y, pq.m_p.m_z);
+			m_pq.m_q.setQuat(pq.m_q.m_w, pq.m_q.m_x, pq.m_q.m_y, pq.m_q.m_z);
+		}
 	}
 	
 	public CMPosition getPosition()
@@ -132,7 +141,8 @@ public class CMInterestEvent extends CMEvent{
 	
 	public void setCollideObj(String oName)
 	{
-		m_strCollideObj = oName;
+		if(oName != null)
+			m_strCollideObj = oName;
 	}
 	
 	public String getCollideObj()

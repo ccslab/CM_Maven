@@ -118,7 +118,8 @@ public class CMSessionEvent extends CMEvent {
 	// set/get methods
 	public void setHostAddress(String host)
 	{
-		m_strHostAddr = host;
+		if(host != null)
+			m_strHostAddr = host;
 	}
 	
 	public String getHostAddress()
@@ -138,7 +139,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setPassword(String passwd)
 	{
-		m_strPasswd = passwd;
+		if(passwd != null)
+			m_strPasswd = passwd;
 	}
 	
 	public String getPassword()
@@ -148,7 +150,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setUserName(String uname)
 	{
-		m_strUserName = uname;
+		if(uname != null)
+			m_strUserName = uname;
 	}
 	
 	public String getUserName()
@@ -168,7 +171,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setSessionName(String sname)
 	{
-		m_strSessionName = sname;
+		if(sname != null)
+			m_strSessionName = sname;
 	}
 	
 	public String getSessionName()
@@ -178,7 +182,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setCommArch(String commArch)
 	{
-		m_strCommArch = commArch;
+		if(commArch != null)
+			m_strCommArch = commArch;
 	}
 	
 	public String getCommArch()
@@ -238,7 +243,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setTalk(String talk)
 	{
-		m_strTalk = talk;
+		if(talk != null)
+			m_strTalk = talk;
 	}
 	
 	public String getTalk()
@@ -248,7 +254,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setCurrentGroupName(String gname)
 	{
-		m_strCurrentGroupName = gname;
+		if(gname != null)
+			m_strCurrentGroupName = gname;
 	}
 	
 	public String getCurrentGroupName()
@@ -258,7 +265,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setCurrentAddress(String addr)
 	{
-		m_strCurrentAddress = addr;
+		if(addr != null)
+			m_strCurrentAddress = addr;
 	}
 	
 	public String getCurrentAddress()
@@ -278,7 +286,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setChannelName(String name)
 	{
-		m_strChannelName = name;
+		if(name != null)
+			m_strChannelName = name;
 	}
 	
 	public String getChannelName()
@@ -318,7 +327,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public void setCreationTime(String time)
 	{
-		m_strCreationTime = time;
+		if(time != null)
+			m_strCreationTime = time;
 	}
 	
 	public String getCreationTime()
@@ -328,6 +338,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public boolean addSessionInfo(CMSessionInfo si)
 	{
+		if(si == null) return false;
+		
 		CMSessionInfo tsi = findSessionInfo(si.getSessionName());
 		
 		if( tsi != null )
@@ -350,6 +362,8 @@ public class CMSessionEvent extends CMEvent {
 		boolean found = false;
 		CMSessionInfo tsi;
 		Iterator<CMSessionInfo> iter = m_sessionList.iterator();
+		
+		if(sname == null) return false;
 		
 		while(iter.hasNext() && !found)
 		{
@@ -395,6 +409,8 @@ public class CMSessionEvent extends CMEvent {
 		CMSessionInfo tsi = null;
 		Iterator<CMSessionInfo> iter = m_sessionList.iterator();
 		
+		if(sname == null) return null;
+		
 		while(iter.hasNext() && !found)
 		{
 			tsi = iter.next();
@@ -425,6 +441,8 @@ public class CMSessionEvent extends CMEvent {
 	
 	public boolean addGroupInfo(CMGroupInfo gi)
 	{
+		if(gi == null) return false;
+		
 		CMGroupInfo tgi = findGroupInfo(gi.getGroupName());
 		
 		if( tgi != null )
@@ -447,6 +465,8 @@ public class CMSessionEvent extends CMEvent {
 		boolean found = false;
 		CMGroupInfo tgi;
 		Iterator<CMGroupInfo> iter = m_groupList.iterator();
+		
+		if(gname == null) return false;
 		
 		while(iter.hasNext() && !found)
 		{
@@ -491,6 +511,8 @@ public class CMSessionEvent extends CMEvent {
 		boolean found = false;
 		CMGroupInfo tgi = null;
 		Iterator<CMGroupInfo> iter = m_groupList.iterator();
+		
+		if(gname == null) return null;
 		
 		while(iter.hasNext() && !found)
 		{

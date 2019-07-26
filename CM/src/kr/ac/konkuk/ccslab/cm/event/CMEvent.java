@@ -136,7 +136,8 @@ public abstract class CMEvent extends CMObject {
 	 */
 	public void setSender(String strName)
 	{
-		m_strSender = strName;
+		if(strName != null)
+			m_strSender = strName;
 	}
 	
 	/**
@@ -154,7 +155,8 @@ public abstract class CMEvent extends CMObject {
 	 */
 	public void setReceiver(String strName)
 	{
-		m_strReceiver = strName;
+		if(strName != null)
+			m_strReceiver = strName;
 	}
 	
 	/**
@@ -177,7 +179,8 @@ public abstract class CMEvent extends CMObject {
 	 */
 	public void setHandlerSession(String sName)
 	{
-		m_strHandlerSession = sName;
+		if(sName != null)
+			m_strHandlerSession = sName;
 	}
 	
 	/**
@@ -194,7 +197,8 @@ public abstract class CMEvent extends CMObject {
 	 */
 	public void setHandlerGroup(String gName)
 	{
-		m_strHandlerGroup = gName;
+		if(gName != null)
+			m_strHandlerGroup = gName;
 	}
 	
 	/**
@@ -218,7 +222,8 @@ public abstract class CMEvent extends CMObject {
 	 */
 	public void setDistributionSession(String sName)
 	{
-		m_strDistributionSession = sName;
+		if(sName != null)
+			m_strDistributionSession = sName;
 	}
 	
 	/**
@@ -241,7 +246,8 @@ public abstract class CMEvent extends CMObject {
 	 */
 	public void setDistributionGroup(String gName)
 	{
-		m_strDistributionGroup = gName;
+		if(gName != null)
+			m_strDistributionGroup = gName;
 	}
 
 	/**
@@ -400,7 +406,9 @@ public abstract class CMEvent extends CMObject {
 	
 	protected void putStringToByteBuffer(String str)
 	{
-		int nStrLength = str.getBytes().length;
+		int nStrLength = 0;
+		if(str != null)
+			nStrLength = str.getBytes().length;
 		putInt2BytesToByteBuffer(nStrLength);
 		m_bytes.put(str.getBytes());
 	}

@@ -94,7 +94,8 @@ public class CMSNSEvent extends CMEvent{
 	// set/get methods
 	public void setUserName(String name)
 	{
-		m_strUserName = name;
+		if(name != null)
+			m_strUserName = name;
 	}
 	
 	public String getUserName()
@@ -154,7 +155,8 @@ public class CMSNSEvent extends CMEvent{
 	
 	public void setDate(String date)
 	{
-		m_strDate = date;
+		if(date != null)
+			m_strDate = date;
 	}
 	
 	public String getDate()
@@ -164,7 +166,8 @@ public class CMSNSEvent extends CMEvent{
 	
 	public void setWriterName(String name)
 	{
-		m_strWriterName = name;
+		if(name != null)
+			m_strWriterName = name;
 	}
 	
 	public String getWriterName()
@@ -189,7 +192,8 @@ public class CMSNSEvent extends CMEvent{
 	
 	public void setMessage(String msg)
 	{
-		m_strMessage = msg;
+		if(msg != null)
+			m_strMessage = msg;
 	}
 	
 	public String getMessage()
@@ -229,7 +233,8 @@ public class CMSNSEvent extends CMEvent{
 	
 	public void setFileNameList(ArrayList<String> flist)
 	{
-		m_fileNameList = flist;
+		if(flist != null)
+			m_fileNameList = flist;
 	}
 	
 	public ArrayList<String> getFileNameList()
@@ -239,7 +244,8 @@ public class CMSNSEvent extends CMEvent{
 	
 	public void setFileName(String fname)
 	{
-		m_strFileName = fname;
+		if(fname != null)
+			m_strFileName = fname;
 	}
 	
 	public String getFileName()
@@ -259,7 +265,8 @@ public class CMSNSEvent extends CMEvent{
 	
 	public void setFriendName(String name)
 	{
-		m_strFriendName = name;
+		if(name != null)
+			m_strFriendName = name;
 	}
 	
 	public String getFriendName()
@@ -289,7 +296,8 @@ public class CMSNSEvent extends CMEvent{
 	
 	public void setFriendList(ArrayList<String> friendList)
 	{
-		m_friendList = friendList;
+		if(friendList != null)
+			m_friendList = friendList;
 	}
 	
 	public ArrayList<String> getFriendList()

@@ -73,7 +73,8 @@ public class CMFileEvent extends CMEvent{
 	// set/get methods
 	public void setReceiverName(String uName)
 	{
-		m_strReceiverName = uName;
+		if(uName != null)
+			m_strReceiverName = uName;
 	}
 	public String getReceiverName()
 	{
@@ -82,7 +83,8 @@ public class CMFileEvent extends CMEvent{
 	
 	public void setSenderName(String sName)
 	{
-		m_strSenderName = sName;
+		if(sName != null)
+			m_strSenderName = sName;
 	}
 	
 	public String getSenderName()
@@ -92,7 +94,8 @@ public class CMFileEvent extends CMEvent{
 	
 	public void setFileName(String fName)
 	{
-		m_strFileName = fName;
+		if(fName != null)
+			m_strFileName = fName;
 	}
 	
 	public String getFileName()

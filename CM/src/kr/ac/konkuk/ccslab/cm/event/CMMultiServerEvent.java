@@ -103,7 +103,8 @@ public class CMMultiServerEvent extends CMEvent{
 	// set/get methods
 	public void setServerName(String sname)
 	{
-		m_strServerName = sname;
+		if(sname != null)
+			m_strServerName = sname;
 	}
 	
 	public String getServerName()
@@ -113,7 +114,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public void setServerAddress(String saddr)
 	{
-		m_strServerAddress = saddr;
+		if(saddr != null)
+			m_strServerAddress = saddr;
 	}
 	
 	public String getServerAddress()
@@ -173,7 +175,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public void setUserName(String name)
 	{
-		m_strUserName = name;
+		if(name != null)
+			m_strUserName = name;
 	}
 	
 	public String getUserName()
@@ -183,7 +186,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public void setPassword(String passwd)
 	{
-		m_strPassword = passwd;
+		if(passwd != null)
+			m_strPassword = passwd;
 	}
 	
 	public String getPassword()
@@ -193,7 +197,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public void setHostAddress(String host)
 	{
-		m_strHostAddress = host;
+		if(host != null)
+			m_strHostAddress = host;
 	}
 	
 	public String getHostAddress()
@@ -223,7 +228,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public void setCommArch(String arch)
 	{
-		m_strCommArch = arch;
+		if(arch != null)
+			m_strCommArch = arch;
 	}
 	
 	public String getCommArch()
@@ -253,7 +259,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public void setSessionName(String name)
 	{
-		m_strSessionName = name;
+		if(name != null)
+			m_strSessionName = name;
 	}
 	
 	public String getSessionName()
@@ -273,7 +280,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public void setGroupName(String name)
 	{
-		m_strGroupName = name;
+		if(name != null)
+			m_strGroupName = name;
 	}
 	
 	public String getGroupName()
@@ -284,6 +292,8 @@ public class CMMultiServerEvent extends CMEvent{
 	// control vectors of server info, session info, group info
 	public boolean addServerInfo(CMServerInfo si)
 	{
+		if(si == null) return false;
+		
 		CMServerInfo tsi = findServerInfo(si.getServerName());
 		
 		if( tsi != null )
@@ -306,6 +316,8 @@ public class CMMultiServerEvent extends CMEvent{
 		boolean found = false;
 		CMServerInfo tsi;
 		Iterator<CMServerInfo> iter = m_serverList.iterator();
+		
+		if(serverName == null) return false;
 		
 		while(iter.hasNext() && !found)
 		{
@@ -351,6 +363,8 @@ public class CMMultiServerEvent extends CMEvent{
 		CMServerInfo tsi = null;
 		Iterator<CMServerInfo> iter = m_serverList.iterator();
 		
+		if(serverName == null) return null;
+		
 		while(iter.hasNext() && !found)
 		{
 			tsi = iter.next();
@@ -381,6 +395,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public boolean addSessionInfo(CMSessionInfo si)
 	{
+		if(si == null) return false;
+		
 		CMSessionInfo tsi = findSessionInfo(si.getSessionName());
 		
 		if( tsi != null )
@@ -403,6 +419,8 @@ public class CMMultiServerEvent extends CMEvent{
 		boolean found = false;
 		CMSessionInfo tsi;
 		Iterator<CMSessionInfo> iter = m_sessionList.iterator();
+		
+		if(sname == null) return false;
 		
 		while(iter.hasNext() && !found)
 		{
@@ -448,6 +466,8 @@ public class CMMultiServerEvent extends CMEvent{
 		CMSessionInfo tsi = null;
 		Iterator<CMSessionInfo> iter = m_sessionList.iterator();
 		
+		if(sname == null) return null;
+		
 		while(iter.hasNext() && !found)
 		{
 			tsi = iter.next();
@@ -478,6 +498,8 @@ public class CMMultiServerEvent extends CMEvent{
 	
 	public boolean addGroupInfo(CMGroupInfo gi)
 	{
+		if(gi == null) return false;
+		
 		CMGroupInfo tgi = findGroupInfo(gi.getGroupName());
 		
 		if( tgi != null )
@@ -500,6 +522,8 @@ public class CMMultiServerEvent extends CMEvent{
 		boolean found = false;
 		CMGroupInfo tgi;
 		Iterator<CMGroupInfo> iter = m_groupList.iterator();
+		
+		if(gname == null) return false;
 		
 		while(iter.hasNext() && !found)
 		{
@@ -544,6 +568,8 @@ public class CMMultiServerEvent extends CMEvent{
 		boolean found = false;
 		CMGroupInfo tgi = null;
 		Iterator<CMGroupInfo> iter = m_groupList.iterator();
+		
+		if(gname == null) return null;
 		
 		while(iter.hasNext() && !found)
 		{

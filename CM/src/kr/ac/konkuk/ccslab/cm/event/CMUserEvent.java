@@ -29,7 +29,8 @@ public class CMUserEvent extends CMEvent {
 	
 	public void setStringID(String strID)
 	{
-		m_strID = strID;
+		if(strID != null)
+			m_strID = strID;
 	}
 	
 	public String getStringID()
@@ -104,6 +105,8 @@ public class CMUserEvent extends CMEvent {
 		boolean bFound = false;
 		Iterator<CMUserEventField> iterEventFieldList = m_eventFieldList.iterator();
 		
+		if(strFieldName == null) return null;
+		
 		while(iterEventFieldList.hasNext() && !bFound)
 		{
 			uef = iterEventFieldList.next();
@@ -121,6 +124,8 @@ public class CMUserEvent extends CMEvent {
 		CMUserEventField uef = null;
 		boolean bFound = false;
 		Iterator<CMUserEventField> iterEventFieldList = m_eventFieldList.iterator();
+		
+		if(strFieldName == null) return;
 		
 		while(iterEventFieldList.hasNext() && !bFound)
 		{

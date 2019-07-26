@@ -22,7 +22,8 @@ public class CMDummyEvent extends CMEvent{
 	// set/get methods
 	public void setDummyInfo(String info)
 	{
-		m_strDummyInfo = info;
+		if(info != null)
+			m_strDummyInfo = info;
 	}
 	
 	public String getDummyInfo()

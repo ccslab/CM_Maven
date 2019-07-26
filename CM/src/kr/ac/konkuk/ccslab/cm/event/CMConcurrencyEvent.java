@@ -38,7 +38,8 @@ public class CMConcurrencyEvent extends CMEvent {
 	
 	public void setUserName(String uName)
 	{
-		m_strUserName = uName;
+		if(uName != null)
+			m_strUserName = uName;
 	}
 	
 	public String getUserName()
