@@ -5,7 +5,9 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
@@ -26,6 +28,7 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean connect(String strClientID)
 	{
+		// client -> server
 		boolean bRet = false;
 		bRet = connect(null, null, false, (byte)0, false, false, 0);
 		return bRet;
@@ -34,6 +37,7 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean connect(String strWillTopic, String strWillMessage, boolean bWillRetain,
 			byte willQoS, boolean bWillFlag, boolean bCleanSession, int nKeepAlive)
 	{
+		// client -> server
 		// check if the client has logged in to the default server.
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		if(confInfo.getSystemType().equals("SERVER"))
@@ -73,8 +77,6 @@ public class CMMqttManager extends CMServiceManager {
 		// process the clean-session flag
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		CMMqttSession mqttSession = mqttInfo.getMqttSession();
-		if(mqttSession != null && conEvent.isCleanSessionFlag())
-			mqttSession = null;
 		if(mqttSession == null)
 		{
 			mqttSession = new CMMqttSession();
@@ -101,18 +103,112 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean publish(String strTopic, String strMsg)
 	{
-		return true;
+		// client -> server
+		boolean bRet = false;
+		bRet = publish("SERVER", -1, strTopic, strMsg, (byte)0, false, false);
+		return bRet;
+	}
+	
+	public boolean publish(String strReceiver, String strTopic, String strMsg)
+	{
+		// client -> server or server -> client
+		boolean bRet = false;
+		bRet = publish(strReceiver, -1, strTopic, strMsg, (byte)0, false, false);
+		return bRet;
 	}
 	
 	public boolean publish(int nPacketID, String strTopic, String strMsg, byte qos)
 	{
-		return true;
+		// client -> server
+		boolean bRet = false;
+		bRet = publish("SERVER", nPacketID, strTopic, strMsg, qos, false, false);
+		return bRet;
+	}
+	
+	public boolean publish(String strReceiver, int nPacketID, String strTopic, String strMsg, byte qos)
+	{
+		// client -> server or server -> client
+		boolean bRet = false;
+		bRet = publish(strReceiver, nPacketID, strTopic, strMsg, qos, false, false);
+		return bRet;
 	}
 	
 	public boolean publish(String strReceiver, int nPacketID, String strTopic,
 			String strMsg, byte qos, boolean bDupFlag, boolean bRetainFlag)
 	{
-		return true;
+		// client -> server or server -> client
+		boolean bRet = false;
+		
+		// check whether the client is a log-in user.
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		if(strSysType.equals("CLIENT"))
+		{
+			if(myself.getState() == CMInfo.CM_INIT || myself.getState() == CMInfo.CM_CONNECT)
+			{
+				System.err.println("CMMqttManager.publish(): you must log in to the default server!");
+				return false;
+			}
+		}
+		
+		// make PUBLISH event
+		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
+		// set sender (in CM event header)
+		pubEvent.setSender(myself.getName());
+		// set fixed header
+		pubEvent.setDupFlag(bDupFlag);
+		pubEvent.setQoS(qos);
+		pubEvent.setRetainFlag(bRetainFlag);
+		// set variable header
+		pubEvent.setTopicName(strTopic);
+		pubEvent.setPacketID(nPacketID);
+		// set payload
+		pubEvent.setAppMessage(strMsg);
+		
+		// send PUBLISH event
+		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, m_cmInfo);
+		if(!bRet)
+			return false; 
+		
+		// process QoS 1 or 2
+		if( qos == 1 || qos == 2 )
+		{
+			// to get session information
+			CMMqttSession session = null;
+			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+			if(strSysType.equals("CLIENT"))
+			{
+				session = mqttInfo.getMqttSession();
+			}
+			else if(strSysType.equals("SERVER"))
+			{
+				session = mqttInfo.getMqttSessionHashtable().get(strReceiver);
+			}
+			
+			if(session == null)
+			{
+				System.err.println("CMMqttManager.publish(): QoS("+qos+"), but session is null!");
+				return false;
+			}
+			
+			// add the sent event to the sent-unack-event-list
+			CMList<CMMqttEvent> sentUnackEventList = session.getSentUnAckEventList();
+			bRet = sentUnackEventList.addElement(pubEvent);
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMMqttManager.publish(): stored to sent unack event list: "
+						+pubEvent.toString());
+			}
+			if(!bRet)
+			{
+				System.err.println("CMMqttManager.publish(): error to store to sent unack event list: "
+						+pubEvent.toString());
+				return false;
+			}
+		}
+		
+		return bRet;
 	}
 	
 	public boolean subscribe(String strTopicFilter, byte qos)
