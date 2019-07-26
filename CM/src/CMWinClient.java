@@ -827,6 +827,9 @@ public class CMWinClient extends JFrame {
 		case 200: // MQTT connect
 			testMqttConnect();
 			break;
+		case 201: // MQTT publish
+			testMqttPublish();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -877,7 +880,7 @@ public class CMWinClient extends JFrame {
 		printMessage("93: add new friend, 94: remove friend, 95: show friends, 96: show friend requesters\n");
 		printMessage("97: show bi-directional friends\n");
 		printMessage("---------------------------------- MQTT\n");
-		printMessage("200: connect\n");
+		printMessage("200: connect, 201: publish\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -3938,7 +3941,15 @@ public class CMWinClient extends JFrame {
 		
 		CMMqttManager mqttManager = (CMMqttManager) m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
 		mqttManager.connect(m_clientStub.getMyself().getName());
-		//from here
+		
+	}
+	
+	public void testMqttPublish()
+	{
+		printMessage("========== MQTT publish\n");
+		
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		mqttManager.publish("/CM/test", "This is a test message.");
 	}
 		
 	private void requestAttachedFile(String strFileName)

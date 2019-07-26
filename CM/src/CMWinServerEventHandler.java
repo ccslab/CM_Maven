@@ -15,6 +15,9 @@ import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
@@ -603,6 +606,18 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		case CMMqttEvent.CONNECT:
 			CMMqttEventCONNECT conEvent = (CMMqttEventCONNECT)cme;
 			printMessage("received "+conEvent.toString()+"\n");
+			break;
+		case CMMqttEvent.PUBLISH:
+			CMMqttEventPUBLISH pubEvent = (CMMqttEventPUBLISH)cme;
+			printMessage("received "+pubEvent.toString()+"\n");
+			break;
+		case CMMqttEvent.PUBACK:
+			CMMqttEventPUBACK pubackEvent = (CMMqttEventPUBACK)cme;
+			printMessage("received "+pubackEvent.toString()+"\n");
+			break;
+		case CMMqttEvent.PUBREC:
+			CMMqttEventPUBREC pubrecEvent = (CMMqttEventPUBREC)cme;
+			printMessage("received "+pubrecEvent.toString()+"\n");
 			break;
 		}
 		
