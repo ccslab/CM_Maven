@@ -145,7 +145,8 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 
 	public void setTopicName(String strTopic)
 	{
-		m_strTopicName = strTopic;
+		if(strTopic != null)
+			m_strTopicName = strTopic;
 	}
 	
 	public String getTopicName()
@@ -203,7 +204,8 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 
 	public void setAppMessage(String strMsg)
 	{
-		m_strAppMessage = strMsg;
+		if(strMsg != null)
+			m_strAppMessage = strMsg;
 	}
 	
 	public String getAppMessage()

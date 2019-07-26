@@ -91,7 +91,8 @@ public class CMMqttEventUNSUBSCRIBE extends CMMqttEventFixedHeader {
 	
 	public void setTopicList(CMList<String> topicList)
 	{
-		m_topicList = topicList;
+		if(topicList != null)
+			m_topicList = topicList;
 	}
 	
 	public CMList<String> getTopicList()

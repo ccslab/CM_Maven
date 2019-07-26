@@ -91,7 +91,8 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 
 	public void setTopicQoSList(CMList<CMMqttTopicQoS> topicQoSList)
 	{
-		m_topicQoSList = topicQoSList;
+		if(topicQoSList != null)
+			m_topicQoSList = topicQoSList;
 	}
 	
 	public CMList<CMMqttTopicQoS> getTopicQoSList()

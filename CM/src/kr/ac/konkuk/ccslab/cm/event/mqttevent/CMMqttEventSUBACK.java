@@ -96,7 +96,8 @@ public class CMMqttEventSUBACK extends CMMqttEventFixedHeader {
 
 	public void setReturnCodeList(CMList<Byte> returnCodeList)
 	{
-		m_returnCodeList = returnCodeList;
+		if(returnCodeList != null)
+			m_returnCodeList = returnCodeList;
 	}
 	
 	public CMList<Byte> getReturnCodeList()
