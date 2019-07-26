@@ -13,6 +13,8 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
@@ -59,6 +61,9 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			break;
 		case CMInfo.CM_MULTI_SERVER_EVENT:
 			processMultiServerEvent(cme);
+			break;
+		case CMInfo.CM_MQTT_EVENT:
+			processMqttEvent(cme);
 			break;
 		default:
 			return;
@@ -588,6 +593,19 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			break;
 		}
 
+		return;
+	}
+	
+	private void processMqttEvent(CMEvent cme)
+	{
+		switch(cme.getID())
+		{
+		case CMMqttEvent.CONNECT:
+			CMMqttEventCONNECT conEvent = (CMMqttEventCONNECT)cme;
+			printMessage("received "+conEvent.toString()+"\n");
+			break;
+		}
+		
 		return;
 	}
 	

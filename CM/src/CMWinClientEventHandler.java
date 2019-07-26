@@ -17,6 +17,8 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -218,6 +220,9 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMInfo.CM_MULTI_SERVER_EVENT:
 			processMultiServerEvent(cme);
+			break;
+		case CMInfo.CM_MQTT_EVENT:
+			processMqttEvent(cme);
 			break;
 		default:
 			return;
@@ -1048,6 +1053,19 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		case CMMultiServerEvent.ADD_LOGIN_ACK:
 			//System.out.println("This client successfully logs in to server["+mse.getServerName()+"].");
 			printMessage("This client successfully logs in to server["+mse.getServerName()+"].\n");
+			break;
+		}
+		
+		return;
+	}
+	
+	private void processMqttEvent(CMEvent cme)
+	{
+		switch(cme.getID())
+		{
+		case CMMqttEvent.CONNACK:
+			CMMqttEventCONNACK conackEvent = (CMMqttEventCONNACK)cme;
+			printMessage("received "+conackEvent.toString()+"\n");
 			break;
 		}
 		
