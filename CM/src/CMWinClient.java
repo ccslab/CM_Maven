@@ -3949,7 +3949,7 @@ public class CMWinClient extends JFrame {
 		printMessage("========== MQTT publish\n");
 		
 		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
-		mqttManager.publish("/CM/test", "This is a test message.");
+		mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
 	}
 		
 	private void requestAttachedFile(String strFileName)

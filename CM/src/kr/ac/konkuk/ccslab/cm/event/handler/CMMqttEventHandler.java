@@ -416,11 +416,11 @@ public class CMMqttEventHandler extends CMEventHandler {
 		pubackEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEVentPUBACK constructor
 		// set variable header
-		pubackEvent.setPacketID(pubackEvent.getPacketID());
+		pubackEvent.setPacketID(pubEvent.getPacketID());
 		
 		// send ack to the PUBLISH sender
 		boolean bRet = false;
-		String strPubSender = pubackEvent.getSender();
+		String strPubSender = pubEvent.getSender();
 		bRet = CMEventManager.unicastEvent(pubackEvent, strPubSender, m_cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
