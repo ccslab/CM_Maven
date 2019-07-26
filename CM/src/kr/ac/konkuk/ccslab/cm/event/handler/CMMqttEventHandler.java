@@ -1,7 +1,12 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
+import java.util.Hashtable;
+import java.util.Set;
+import java.util.Vector;
+
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -16,6 +21,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 
 /**
  * The CMMqttEventHandler class represents a CM event handler that processes 
@@ -293,7 +299,75 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processPUBLISH(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventPUBLISH pubEvent = (CMMqttEventPUBLISH)event;
+		boolean bRet = false;
+		// print received event
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBLISH(): received "
+					+pubEvent.toString());
+		}
+		
+		// response
+		switch(pubEvent.getQoS())
+		{
+		case 0:
+			// do nothing
+			break;
+		case 1:
+			// send PUBACK
+			bRet = sendPUBACK(pubEvent);
+			if(!bRet)
+				return false; 
+			break;
+		case 2:
+			// store received PUBLISH event
+			bRet = storeRecvPUBLISH(pubEvent);
+			if(!bRet)
+				return false;
+			// send PUBREC
+			bRet = sendPUBREC(pubEvent);
+			if(!bRet)
+				return false;
+			break;
+		default:
+			System.err.println("CMMqttEventHandler.processPUBLISH(), wrong QoS: "
+					+pubEvent.getQoS());
+			return false;
+		}
+		
+		// if CM is server, it forwards the event to the subscribers
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			String strTopicName = pubEvent.getTopicName();
+			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
+					.get(CMInfo.CM_MQTT_MANAGER);
+			// to search for clients with the matching topic filters
+			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+			Hashtable<String, CMMqttSession> sessionHashtable = 
+					mqttInfo.getMqttSessionHashtable();
+			Set<String> keys = sessionHashtable.keySet();
+			for(String key : keys)
+			{
+				CMMqttSession session = sessionHashtable.get(key);
+				Vector<CMMqttTopicQoS> filterVector = session.getSubscriptionList().getList();
+				boolean bFound = false;
+				for(int i = 0; i < filterVector.size(); i++)
+				{
+					String strFilter = filterVector.elementAt(i).getTopic();
+					bFound = isTopicMatch(strTopicName, strFilter);
+					if(bFound)
+					{
+						mqttManager.publish(key, pubEvent.getPacketID(), pubEvent.getTopicName(),
+								pubEvent.getAppMessage(), filterVector.elementAt(i).getQoS(),
+								false, pubEvent.isRetainFlag());
+					}
+				}
+			}
+		}
+		
+		return bRet;
 	}
 	
 	private boolean storeRecvPUBLISH(CMMqttEventPUBLISH pubEvent)
