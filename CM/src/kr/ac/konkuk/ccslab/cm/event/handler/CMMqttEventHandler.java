@@ -389,10 +389,38 @@ public class CMMqttEventHandler extends CMEventHandler {
 		return bRet;
 	}
 	
-	private boolean isTopicMatch(String strTopic, String strFilter)
+	public static boolean isTopicMatch(String strTopic, String strFilter)
 	{
+		strTopic = strTopic.trim();
+		strFilter = strFilter.trim();
 		
-		return false;
+		// get tokens
+		String[] topicTokens = strTopic.split("/");
+		String[] filterTokens = strFilter.split("/");
+		
+		int i = 0;
+		for(i = 0; i < filterTokens.length; i++)
+		{
+			String filterToken = filterTokens[i];
+			if(filterToken.equals("#") && i == filterTokens.length - 1)
+				return true;
+			
+			// # of topic level is less than # of filter level
+			if( i == topicTokens.length )
+				return false;
+			
+			String topicToken = topicTokens[i];
+			if(filterToken.equals(topicToken) || filterToken.equals("+"))
+				continue;
+			else
+				return false;
+		}
+		
+		// # of topic level is greater than # of topic filter
+		if( i < topicTokens.length )
+			return false;
+		
+		return true;
 	}
 	
 	private boolean processPUBACK(CMMqttEvent event)

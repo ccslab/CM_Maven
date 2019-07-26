@@ -1,5 +1,6 @@
 import java.nio.ByteBuffer;
 
+import kr.ac.konkuk.ccslab.cm.event.handler.CMMqttEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
@@ -14,6 +15,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMMqttEventTest {
 
@@ -35,6 +37,17 @@ public class CMMqttEventTest {
 		tester.testPINGREQ();
 		tester.testPINGRESP();
 		tester.testDISCONNECT();
+		
+		boolean bRet = CMMqttEventHandler.isTopicMatch("/test/temp", "/test/temp");
+		System.out.println("isTopicMatch(\"/test/temp\", \"/test/temp\"): "+bRet);
+		bRet = CMMqttEventHandler.isTopicMatch("/test/temp", "/+/temp");
+		System.out.println("isTopicMatch(\"/test/temp\", \"/+/temp\"): "+bRet);
+		bRet = CMMqttEventHandler.isTopicMatch("/test/temp", "#");
+		System.out.println("isTopicMatch(\"/test/temp\", \"#\"): "+bRet);
+		bRet = CMMqttEventHandler.isTopicMatch("/test/temp", "/test/");
+		System.out.println("isTopicMatch(\"/test/temp\", \"/test/\"): "+bRet);
+		bRet = CMMqttEventHandler.isTopicMatch("/test/temp", "/test/temp/konkuk");
+		System.out.println("isTopicMatch(\"/test/temp\", \"/test/temp/konkuk\"): "+bRet);
 	}
 
 	private void testCONNECT()
