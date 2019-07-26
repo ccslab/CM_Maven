@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -7,7 +8,9 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
@@ -293,13 +296,102 @@ public class CMMqttEventHandler extends CMEventHandler {
 		return false;
 	}
 	
+	private boolean storeRecvPUBLISH(CMMqttEventPUBLISH pubEvent)
+	{
+		// to get session information
+		CMMqttSession session = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		if(strSysType.equals("CLIENT"))
+		{
+			session = mqttInfo.getMqttSession();
+		}
+		else if(strSysType.equals("SERVER"))
+		{
+			session = mqttInfo.getMqttSessionHashtable().get(pubEvent.getSender());
+		}
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.storeRecvPUBLISH(): session is null!");
+			return false;
+		}
+		
+		// to add event to recvUnackEventList
+		CMList<CMMqttEvent> recvUnackEventList = session.getRecvUnAckEventList();
+		boolean bRet = recvUnackEventList.addElement(pubEvent);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.storeRecvPUBLISH(): Ok "+pubEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.storeRecvPUBLISH(): FAILED! "+pubEvent.toString());
+			return false;
+		}
+		
+		return bRet;
+	}
+	
 	private boolean sendPUBACK(CMMqttEventPUBLISH pubEvent)
 	{
-		return false;
+		// initialize PUBACK event
+		CMMqttEventPUBACK pubackEvent = new CMMqttEventPUBACK();
+		// set sender (in CM event header)
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		pubackEvent.setSender(myself.getName());
+		// set fixed header in the CMMqttEVentPUBACK constructor
+		// set variable header
+		pubackEvent.setPacketID(pubackEvent.getPacketID());
+		
+		// send ack to the PUBLISH sender
+		boolean bRet = false;
+		String strPubSender = pubackEvent.getSender();
+		bRet = CMEventManager.unicastEvent(pubackEvent, strPubSender, m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.sendPUBACK(): Ok "+pubackEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.sendPUBACK(): FAILED! "+pubackEvent.toString());
+			return false;
+		}
+
+		return bRet;
 	}
 	
 	private boolean sendPUBREC(CMMqttEventPUBLISH pubEvent)
 	{
+		// initialize PUBREC event
+		CMMqttEventPUBREC recEvent = new CMMqttEventPUBREC();
+		// set sender (in CM event header)
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		recEvent.setSender(myself.getName());
+		// set fixed header in the CMMqttEventPUBREC constructor
+		// set variable header
+		recEvent.setPacketID(pubEvent.getPacketID());
+		
+		// send to the PUBLISH sender
+		boolean bRet = false;
+		String strPubSender = pubEvent.getSender();
+		bRet = CMEventManager.unicastEvent(recEvent, strPubSender, m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.sendPUBREC(): Ok "+recEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.sendPUBREC(): FAILED! "+recEvent.toString());
+			return false;
+		}
+		
+		return bRet;
+	}
+	
+	private boolean isTopicMatch(String strTopic, String strFilter)
+	{
+		
 		return false;
 	}
 	
