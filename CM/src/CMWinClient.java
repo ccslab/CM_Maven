@@ -3938,9 +3938,46 @@ public class CMWinClient extends JFrame {
 	public void testMqttConnect()
 	{
 		printMessage("========== MQTT connect\n");
+		JTextField willTopicTextField = new JTextField();
+		JTextField willMessageTextField = new JTextField();
+		JCheckBox willRetainBox = new JCheckBox();
+		String[] qosArray = {"0", "1", "2"};
+		JComboBox<String> willQoSComboBox = new JComboBox<String>(qosArray);
+		JCheckBox willFlagBox = new JCheckBox();
+		JCheckBox cleanSessionBox = new JCheckBox();
+		JTextField keepAliveTextField = new JTextField();
+		Object[] msg = {
+				"will Topic", willTopicTextField,
+				"will message", willMessageTextField,
+				"will retain", willRetainBox,
+				"will QoS", willQoSComboBox,
+				"will flag", willFlagBox,
+				"clean session", cleanSessionBox,
+				"keep alive", keepAliveTextField
+		};
+		int nRet = JOptionPane.showConfirmDialog(null, msg, "MQTT connect", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(nRet != JOptionPane.OK_OPTION) return;
+
+		String strWillTopic = willTopicTextField.getText().trim();
+		String strWillMessage = willMessageTextField.getText().trim();
+		boolean bWillRetain = willRetainBox.isSelected();
+		byte willQoS = (byte) willQoSComboBox.getSelectedIndex();
+		boolean bWillFlag = willFlagBox.isSelected();
+		boolean bCleanSession = cleanSessionBox.isSelected();
+		int nKeepAlive = 0;
+		try {
+			String strKeepAlive = keepAliveTextField.getText().trim();
+			if(!strKeepAlive.isEmpty())
+				nKeepAlive = Integer.parseInt(strKeepAlive);			
+		}catch(NumberFormatException ne) {
+			printStyledMessage("Keep alive is not a number!\n", "bold");
+			return;
+		}
 		
 		CMMqttManager mqttManager = (CMMqttManager) m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
-		mqttManager.connect(m_clientStub.getMyself().getName());
+		mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag, 
+				bCleanSession, nKeepAlive);
 		
 	}
 	
