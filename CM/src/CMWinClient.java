@@ -3984,9 +3984,53 @@ public class CMWinClient extends JFrame {
 	public void testMqttPublish()
 	{
 		printMessage("========== MQTT publish\n");
+		JTextField receiverTextField = new JTextField();
+		JTextField packetIDTextField = new JTextField();
+		JTextField topicTextField = new JTextField();
+		JTextField messageTextField = new JTextField();
+		String[] qosArray = {"0", "1", "2"};
+		JComboBox<String> qosComboBox = new JComboBox<String>(qosArray);
+		JCheckBox dupFlagBox = new JCheckBox();
+		JCheckBox retainFlagBox = new JCheckBox();
+		Object[] msg = {
+				"receiver", receiverTextField,
+				"packet ID", packetIDTextField,
+				"topic", topicTextField,
+				"message", messageTextField,
+				"QoS", qosComboBox,
+				"dup flag", dupFlagBox,
+				"retain flag", retainFlagBox
+		};
+		int nRet = JOptionPane.showConfirmDialog(null, msg, "MQTT publish", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(nRet != JOptionPane.OK_OPTION) return;
+
+		String strReceiver = receiverTextField.getText().trim();
+		if(strReceiver.isEmpty())
+		{
+			strReceiver = "SERVER";
+		}
+		int nPacketID = 0;
+		String strPacketID = packetIDTextField.getText().trim();
+		if(!strPacketID.isEmpty())
+		{
+			try {
+				nPacketID = Integer.parseInt(strPacketID);				
+			} catch (NumberFormatException ne) {
+				printStyledMessage("Packet ID must be a number!\n", "bold");
+				return;
+			}
+		}
+		String strTopic = topicTextField.getText().trim();
+		String strMessage = messageTextField.getText().trim();
+		byte qos = (byte) qosComboBox.getSelectedIndex();
+		boolean bDupFlag = dupFlagBox.isSelected();
+		boolean bRetainFlag = retainFlagBox.isSelected();
 		
 		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
-		mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
+		//mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
+		mqttManager.publish(strReceiver, nPacketID, strTopic, strMessage, qos, bDupFlag, 
+				bRetainFlag);
 	}
 		
 	private void requestAttachedFile(String strFileName)
