@@ -52,7 +52,7 @@ public class CMMqttTopicQoS {
 		if(this == obj) return true;
 		
 		CMMqttTopicQoS topicQoS = (CMMqttTopicQoS) obj;
-		if(m_strTopic.contentEquals(topicQoS.getTopic()))
+		if(m_strTopic.equals(topicQoS.getTopic()))
 			return true;
 		else
 			return false;

@@ -193,8 +193,7 @@ public class CMMqttManager extends CMServiceManager {
 			}
 			
 			// add the sent event to the sent-unack-event-list
-			CMList<CMMqttEvent> sentUnackEventList = session.getSentUnAckEventList();
-			bRet = sentUnackEventList.addElement(pubEvent);
+			bRet = session.addSentUnAckEvent(pubEvent);
 			if(bRet && CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMMqttManager.publish(): stored to sent unack event list: "
