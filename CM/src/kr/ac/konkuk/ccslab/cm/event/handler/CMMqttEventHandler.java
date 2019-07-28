@@ -499,11 +499,63 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processPUBACK(CMMqttEvent event)
 	{
-		return false;
+		// A receiver of PUBLISH event with QoS 1 sends the PUBACK event.
+		CMMqttEventPUBACK pubackEvent = (CMMqttEventPUBACK)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBACK(), received "
+					+pubackEvent.toString());
+		}
+		
+		// to get session information
+		CMMqttSession session = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		
+		if(strSysType.equals("CLIENT"))
+		{
+			session = mqttInfo.getMqttSession();
+		}
+		else if(strSysType.equals("SERVER"))
+		{
+			session = mqttInfo.getMqttSessionHashtable().get(pubackEvent.getSender());
+		}
+		else
+		{
+			System.err.println("CMMqttEventHandler.processPUBACK(), wrong system type! ("
+					+strSysType+")");
+			return false;
+		}
+		
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processPUBACK(), session is null!");
+			return false;
+		}
+		
+		// remove the corresponding PUBLISH event (with the same packet ID) 
+		// from the sent-unack-event list
+		boolean bRet = session.removeSentUnAckEvent(pubackEvent.getPacketID());
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBACK(), deleted PUBLISH event "
+					+"with packet ID ("+pubackEvent.getPacketID()+").");
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBACK(), error to delete PUBLISH "
+					+"event with packet ID ("+pubackEvent.getPacketID()+")!");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean processPUBREC(CMMqttEvent event)
 	{
+		
+		// from here
 		return false;
 	}
 	
