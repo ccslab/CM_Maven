@@ -14,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
@@ -647,9 +648,79 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processPUBREL(CMMqttEvent event)
 	{
+		// The PUBLISH sender with QoS 2 sends PUBREL in response to PUBREC.
+		CMMqttEventPUBREL relEvent = (CMMqttEventPUBREL)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBREL(), received "
+					+relEvent.toString());
+		}
 		
-		// from here
-		return false;
+		// to get session information
+		CMMqttSession session = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		
+		if(strSysType.equals("CLIENT"))
+		{
+			session = mqttInfo.getMqttSession();
+		}
+		else if(strSysType.equals("SERVER"))
+		{
+			session = mqttInfo.getMqttSessionHashtable().get(relEvent.getSender());
+		}
+		else
+		{
+			System.err.println("CMMqttEventHandler.processPUBREL(), wrong system type! ("
+					+strSysType+")");
+			return false;
+		}
+		
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processPUBREL(), session is null!");
+			return false;
+		}
+
+		// to delete PUBLISH event from the session
+		int nPacketID = relEvent.getPacketID();
+		boolean bRet = session.removeRecvUnAckEvent(nPacketID);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBREL(), deleted PUBLISH event "
+					+"with packet ID ("+nPacketID+").");
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBREL(), error to delete "
+					+"PUBLISH event with packet ID ("+nPacketID+")!");
+			return false;
+		}
+		
+		// to make and send PUBCOMP event
+		CMMqttEventPUBCOMP compEvent = new CMMqttEventPUBCOMP();
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		// set sender (in CM event header)
+		compEvent.setSender(myself.getName());
+		// set fixed header in the CMMqttEventPUBCOMP constructor
+		// set variable header
+		compEvent.setPacketID(nPacketID);
+		
+		bRet = CMEventManager.unicastEvent(compEvent, relEvent.getSender(), m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBREL(), sent "
+					+compEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBREL(), error to send "
+					+compEvent.toString());
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean processPUBCOMP(CMMqttEvent event)
