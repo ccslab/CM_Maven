@@ -16,6 +16,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
@@ -534,18 +535,19 @@ public class CMMqttEventHandler extends CMEventHandler {
 			return false;
 		}
 		
-		// remove the corresponding PUBLISH event (with the same packet ID) 
+		// to remove the corresponding PUBLISH event (with the same packet ID) 
 		// from the sent-unack-event list
-		boolean bRet = session.removeSentUnAckEvent(pubackEvent.getPacketID());
+		int nPacketID = pubackEvent.getPacketID();
+		boolean bRet = session.removeSentUnAckEvent(nPacketID);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBACK(), deleted PUBLISH event "
-					+"with packet ID ("+pubackEvent.getPacketID()+").");
+					+"with packet ID ("+nPacketID+").");
 		}
 		if(!bRet)
 		{
 			System.err.println("CMMqttEventHandler.processPUBACK(), error to delete PUBLISH "
-					+"event with packet ID ("+pubackEvent.getPacketID()+")!");
+					+"event with packet ID ("+nPacketID+")!");
 			return false;
 		}
 		
@@ -554,13 +556,99 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processPUBREC(CMMqttEvent event)
 	{
+		// A receiver of PUBLISH event with QoS 2 sends the PUBACK event.
+		CMMqttEventPUBREC recEvent = (CMMqttEventPUBREC)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBREC(), received "
+					+recEvent.toString());
+		}
+
+		// to get session information
+		CMMqttSession session = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		
-		// from here
-		return false;
+		if(strSysType.equals("CLIENT"))
+		{
+			session = mqttInfo.getMqttSession();
+		}
+		else if(strSysType.equals("SERVER"))
+		{
+			session = mqttInfo.getMqttSessionHashtable().get(recEvent.getSender());
+		}
+		else
+		{
+			System.err.println("CMMqttEventHandler.processPUBREC(), wrong system type! ("
+					+strSysType+")");
+			return false;
+		}
+		
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processPUBREC(), session is null!");
+			return false;
+		}
+
+		// to remove PUBLISH event in the session (with the same packet ID)
+		int nPacketID = recEvent.getPacketID();
+		boolean bRet = session.removeSentUnAckEvent(nPacketID);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBREC(), deleted PUBLISH event "
+					+"with packet ID ("+nPacketID+").");
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBREC(), error to delete "
+					+"PUBLISH event with packet ID ("+nPacketID+")!");
+			return false;
+		}
+		
+		// to add PUBREC event to the session
+		bRet = session.addRecvUnAckEvent(recEvent);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBREC(), added PUBREC event "
+					+"with packet ID ("+nPacketID+").");
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBREC(), error to delete "
+					+"PUBREC event with packet ID ("+nPacketID+")!");
+			return false;
+		}
+		
+		// make and send PUBREL event
+		CMMqttEventPUBREL relEvent =  new CMMqttEventPUBREL();
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		// set sender (CM event header)
+		relEvent.setSender(myself.getName());
+		// set fixed header in the CMMqttEventPUBREL constructor
+		// set variable header
+		relEvent.setPacketID(nPacketID);
+		
+		bRet = CMEventManager.unicastEvent(relEvent, recEvent.getSender(), m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBREC(), sent "
+					+relEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBREC(), error to send "
+					+relEvent.toString());
+			return false;
+		}
+
+		return true;
 	}
 	
 	private boolean processPUBREL(CMMqttEvent event)
 	{
+		
+		// from here
 		return false;
 	}
 	
