@@ -115,6 +115,12 @@ public class CMMqttSession {
 		return m_subscriptionList.removeElement(topicQoS);
 	}
 	
+	public void removeAllSubscription()
+	{
+		m_subscriptionList.removeAllElements();
+		return;
+	}
+	
 	//////////////////////// sent-unack-event list
 	
 	public boolean addSentUnAckEvent(CMMqttEventPUBLISH pubEvent)
@@ -149,6 +155,12 @@ public class CMMqttSession {
 			return false;
 		
 		return m_sentUnAckEventList.removeElement(pubEvent);
+	}
+	
+	public void removeAllSentUnAckEvent()
+	{
+		m_sentUnAckEventList.removeAllElements();
+		return;
 	}
 	
 	//////////////////////// recv-unack-event list
@@ -202,5 +214,11 @@ public class CMMqttSession {
 			return false;
 		
 		return m_recvUnAckEventList.removeElement(mqttEvent);
+	}
+	
+	public void removeAllRecvUnAckEvent()
+	{
+		m_recvUnAckEventList.removeAllElements();
+		return;
 	}
 }
