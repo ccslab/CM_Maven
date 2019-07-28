@@ -725,7 +725,57 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processPUBCOMP(CMMqttEvent event)
 	{
-		return false;
+		// The PUBLISH receiver with QoS 2 sends PUBCOMP in response to PUBREL.
+		CMMqttEventPUBCOMP compEvent = (CMMqttEventPUBCOMP)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBCOMP(), received "
+					+compEvent.toString());
+		}
+		
+		// to get session information
+		CMMqttSession session = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		
+		if(strSysType.equals("CLIENT"))
+		{
+			session = mqttInfo.getMqttSession();
+		}
+		else if(strSysType.equals("SERVER"))
+		{
+			session = mqttInfo.getMqttSessionHashtable().get(compEvent.getSender());
+		}
+		else
+		{
+			System.err.println("CMMqttEventHandler.processPUBCOMP(), wrong system type! ("
+					+strSysType+")");
+			return false;
+		}
+		
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processPUBCOMP(), session is null!");
+			return false;
+		}
+
+		// to delete PUBREC
+		int nPacketID = compEvent.getPacketID();
+		boolean bRet = session.removeRecvUnAckEvent(nPacketID);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBCOMP(), deleted PUBREC event "
+					+"with packet ID ("+nPacketID+").");
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBCOMP(), error to delete "
+					+"PUBREC event with packet ID ("+nPacketID+")!");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean processSUBSCRIBE(CMMqttEvent event)
