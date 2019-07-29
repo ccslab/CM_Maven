@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
@@ -212,17 +213,62 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean subscribe(String strTopicFilter, byte qos)
 	{
-		return true;
+		boolean bRet = subscribe(-1, strTopicFilter, qos); 
+		return bRet;
 	}
 	
-	public boolean subscribe(String nPacketID, String strTopicFilterString, byte qos)
+	public boolean subscribe(int nPacketID, String strTopicFilter, byte qos)
 	{
-		return true;
+		CMMqttTopicQoS topicQoS = new CMMqttTopicQoS(strTopicFilter, qos);
+		CMList<CMMqttTopicQoS> topicQoSList = new CMList<CMMqttTopicQoS>();
+		topicQoSList.addElement(topicQoS);
+		boolean bRet = subscribe(nPacketID, topicQoSList);
+		
+		return bRet;
 	}
 	
 	public boolean subscribe(int nPacketID, CMList<CMMqttTopicQoS> topicQoSList)
 	{
-		return true;
+		// to check the CM system type
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			System.err.println("CMMqttManager.subscribe(), the system type is SERVER!");
+			return false;
+		}
+		
+		// to check if the user completes to log in to the default server, or not
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		int nState = myself.getState();
+		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMMqttManager.subscribe(), you must log in to the "
+					+"default server!");
+			return false;
+		}
+		
+		// check the topic/qos pair list
+		if(topicQoSList.isEmpty())
+		{
+			System.err.println("CMMqttManager.subscribe(), the topic/QoS pair list "
+					+"is empty!");
+			return false;
+		}
+		
+		// make and send a SUBSCRIBE event
+		CMMqttEventSUBSCRIBE subEvent = new CMMqttEventSUBSCRIBE();
+		// set sender (in CM event header)
+		subEvent.setSender(myself.getName());
+		// set fixed header in the SUBSCRIBE constructor
+		// set variable header
+		subEvent.setPacketID(nPacketID);
+		// set payload
+		subEvent.setTopicQoSList(topicQoSList);
+		
+		boolean bRet = false;
+		bRet = CMEventManager.unicastEvent(subEvent, "SERVER", m_cmInfo);
+		
+		return bRet;
 	}
 	
 	public boolean unsubscribe(String strTopic)
