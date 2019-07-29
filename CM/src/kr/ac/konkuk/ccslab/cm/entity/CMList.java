@@ -89,4 +89,21 @@ public class CMList<T> {
 		return m_list;
 	}
 	
+	@Override
+	public String toString()
+	{
+		StringBuffer strBuffer = new StringBuffer();
+		strBuffer.append("[");
+		int nCount = 0;
+		for(T element : m_list)
+		{
+			strBuffer.append(element.toString());
+			nCount++;
+			if(nCount < m_list.size())
+				strBuffer.append(", ");
+		}
+		strBuffer.append("]");
+		return strBuffer.toString();
+	}
+	
 }

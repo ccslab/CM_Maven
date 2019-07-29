@@ -18,6 +18,8 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
@@ -309,6 +311,10 @@ public class CMMqttEventHandler extends CMEventHandler {
 			System.out.println("CMMqttEventHandler.processPUBLISH(): received "
 					+pubEvent.toString());
 		}
+		
+		// to check and process the retain flag (not yet)
+		
+		// to check and process the DUP flag (not yet)
 		
 		// response
 		switch(pubEvent.getQoS())
@@ -780,12 +786,93 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processSUBSCRIBE(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventSUBSCRIBE subEvent = (CMMqttEventSUBSCRIBE)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processSUBSCRIBE(), received "
+					+subEvent.toString());
+		}
+		
+		// to check the topic/qos list
+		if(subEvent.getTopicQoSList().isEmpty())
+		{
+			System.err.println("CMMqttEventHandler.processSUBSCRIBE(), there is "
+					+"no (topic, qos) pair in the event!");
+			return false;
+		}
+		
+		// to get client session information
+		String strClient = subEvent.getSender();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
+		CMMqttSession session = sessionHashtable.get(strClient);
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processSUBSCRIBE(), session of client ("
+					+strClient+") is null!");
+			return false;
+		}
+		
+		// make SUBACK event
+		CMMqttEventSUBACK ackEvent = new CMMqttEventSUBACK();
+		// set sender (in CM event header)
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		ackEvent.setSender(myself.getName());
+		// set fixed header in the SUBACK constructor
+		// set variable header
+		ackEvent.setPacketID(subEvent.getPacketID());
+		// set payload
+		CMList<Byte> returnCodeList = ackEvent.getReturnCodeList();
+		
+		// add or update the requested (topic, qos) to the existing subscription
+		CMList<CMMqttTopicQoS> subscriptionList = session.getSubscriptionList();
+		CMList<CMMqttTopicQoS> reqSubList = subEvent.getTopicQoSList();
+		Vector<CMMqttTopicQoS> reqSubVector = reqSubList.getList();
+		byte qos = -1;
+		for(CMMqttTopicQoS topicQoS : reqSubVector)
+		{
+			CMMqttTopicQoS tempTopicQoS = subscriptionList.findElement(topicQoS);
+			if(tempTopicQoS != null)
+				subscriptionList.removeElement(tempTopicQoS);
+			subscriptionList.addElement(topicQoS);
+			
+			// send retained event that matches with the added topic (not yet)
+			
+			// determine a return code per topic
+			qos = topicQoS.getQoS();
+			if(qos >= 0 && qos <= 2)
+				returnCodeList.addElement(qos);
+			else
+				returnCodeList.addElement((byte)0x80); // failure
+		}
+		
+		// send SUBACK event
+		boolean bRet = CMEventManager.unicastEvent(ackEvent, subEvent.getSender(), m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processSUBSCRIBE(), sent "
+					+ackEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processSUBSCRIBE(), error to send "
+					+ackEvent.toString());
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean processSUBACK(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventSUBACK ackEvent = (CMMqttEventSUBACK)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processSUBACK(), received "
+					+ackEvent.toString());
+		}
+		
+		return true;
 	}
 	
 	private boolean processUNSUBSCRIBE(CMMqttEvent event)
