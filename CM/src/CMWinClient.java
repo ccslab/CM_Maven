@@ -19,6 +19,8 @@ import javax.swing.text.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
@@ -830,6 +832,9 @@ public class CMWinClient extends JFrame {
 		case 201: // MQTT publish
 			testMqttPublish();
 			break;
+		case 202: // MQTT subscribe
+			testMqttSubscribe();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -880,7 +885,7 @@ public class CMWinClient extends JFrame {
 		printMessage("93: add new friend, 94: remove friend, 95: show friends, 96: show friend requesters\n");
 		printMessage("97: show bi-directional friends\n");
 		printMessage("---------------------------------- MQTT\n");
-		printMessage("200: connect, 201: publish\n");
+		printMessage("200: connect, 201: publish, 202: subscribe\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -4031,6 +4036,40 @@ public class CMWinClient extends JFrame {
 		//mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
 		mqttManager.publish(strReceiver, nPacketID, strTopic, strMessage, qos, bDupFlag, 
 				bRetainFlag);
+	}
+	
+	private void testMqttSubscribe()
+	{
+		printMessage("========== MQTT subscribe\n");
+		JTextField packetIDTextField = new JTextField();
+		JTextField topicFilterTextField = new JTextField();
+		String[] qosArray = {"0", "1", "2"};
+		JComboBox<String> qosComboBox = new JComboBox<String>(qosArray);
+		Object[] msg = {
+				"packet ID", packetIDTextField,
+				"topic filter", topicFilterTextField,
+				"QoS", qosComboBox
+		};
+		int nRet = JOptionPane.showConfirmDialog(null, msg, "MQTT subscribe", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(nRet != JOptionPane.OK_OPTION) return;
+
+		int nPacketID = 0;
+		String strPacketID = packetIDTextField.getText().trim();
+		if(!strPacketID.isEmpty())
+		{
+			try {
+				nPacketID = Integer.parseInt(strPacketID);				
+			} catch (NumberFormatException ne) {
+				printStyledMessage("Packet ID must be a number!\n", "bold");
+				return;
+			}
+		}
+		String strTopicFilter = topicFilterTextField.getText().trim();
+		byte qos = (byte) qosComboBox.getSelectedIndex();
+
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		mqttManager.subscribe(nPacketID, strTopicFilter, qos);
 	}
 		
 	private void requestAttachedFile(String strFileName)

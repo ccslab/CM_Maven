@@ -24,6 +24,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -1091,6 +1092,10 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		case CMMqttEvent.PUBCOMP:
 			CMMqttEventPUBCOMP pubcompEvent = (CMMqttEventPUBCOMP)cme;
 			printMessage("received "+pubcompEvent.toString()+"\n");
+			break;
+		case CMMqttEvent.SUBACK:
+			CMMqttEventSUBACK subackEvent = (CMMqttEventSUBACK)cme;
+			printMessage("received "+subackEvent.toString()+"\n");
 			break;
 		}
 		
