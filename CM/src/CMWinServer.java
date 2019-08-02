@@ -26,6 +26,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
@@ -320,7 +321,13 @@ public class CMWinServer extends JFrame {
 			break;
 		case 51: 	// test remove channel
 			removeChannel();
-			break;	
+			break;
+		case 60:	// find session info
+			findMqttSessionInfo();
+			break;
+		case 61:	// print all session info
+			printAllMqttSessionInfo();
+			break;
 		case 101:	// configure variables of user access simulation
 			configureUserAccessSimulation();
 			break;
@@ -361,6 +368,8 @@ public class CMWinServer extends JFrame {
 		printMessage("40: set attachment download scheme\n");
 		printMessage("---------------------------------- Channel\n");
 		printMessage("50: add channel, 51: remove channel\n");
+		printMessage("---------------------------------- MQTT\n");
+		printMessage("60: find session info, 61: print all session info\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
 		printMessage("103: start SNS user access simulation and measure prefetch accuracy\n");
@@ -1581,6 +1590,40 @@ public class CMWinServer extends JFrame {
 		{
 			printStyledMessage("The configuration change is failed!: ("+strField+"="+strValue+")\n", "bold");
 		}
+		
+		return;
+	}
+	
+	public void findMqttSessionInfo()
+	{
+		printMessage("========== find MQTT session info\n");
+		String strUser = null;
+		strUser = JOptionPane.showInputDialog("User name").trim();
+		if(strUser == null || strUser.equals("")) 
+			return;
+		
+		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
+		printMessage("MQTT session of \""+strUser+"\" is \n");
+		printMessage(mqttManager.getSessionInfo(strUser)+"\n");
+		
+		return;
+	}
+	
+	public void printAllMqttSessionInfo()
+	{
+		printMessage("========== print all MQTT session info\n");
+		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
+		printMessage(mqttManager.getAllSessionInfo());
 		
 		return;
 	}

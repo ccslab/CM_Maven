@@ -1,5 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
+import java.util.Hashtable;
+import java.util.PrimitiveIterator.OfDouble;
+
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
@@ -294,5 +297,74 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean disconnect()
 	{
 		return true;
+	}
+	
+	// get MQTT session information (4 client)
+	public String getMySessionInfo()
+	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			System.err.println("CMMqttManager.getMySessionInfo(), the system type is SERVER!");
+			return null;
+		}
+		
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSession();
+		if(session == null)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMMqttManager.getMySessionInfo(), session is null.");
+			return "MQTT session is null.";
+		}
+		
+		return session.toString();
+	}
+	
+	// get MQTT session information (4 server)
+	public String getSessionInfo(String strUserName)
+	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(!confInfo.getSystemType().equals("SERVER"))
+		{
+			System.err.println("CMMqttManager.getSessionInfo(), the system type is not SERVER!");
+			return null;
+		}
+		
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUserName);
+		if(session == null)
+		{
+			if(CMInfo._CM_DEBUG)
+				System.err.println("CMMqttManager.getSessionInfo(), session of user("
+						+strUserName+") not found!");
+			String strReturn = "session of user \""+strUserName+"\" not found!";
+			return strReturn;
+		}
+		
+		return session.toString();
+	}
+	
+	// get all MQTT session information (4 server)
+	public String getAllSessionInfo()
+	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(!confInfo.getSystemType().equals("SERVER"))
+		{
+			System.err.println("CMMqttManager.getAllSessionInfo(), the system type is not SERVER!");
+			return null;
+		}
+		
+		StringBuffer strBuf = new StringBuffer();
+		strBuf.append("All MQTT session list\n");
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
+		for(String strUser : sessionHashtable.keySet())
+		{
+			strBuf.append("session of user: "+strUser+"\n");
+			strBuf.append(getSessionInfo(strUser)+"\n");
+		}
+		
+		return strBuf.toString();
 	}
 }

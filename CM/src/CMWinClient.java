@@ -835,6 +835,9 @@ public class CMWinClient extends JFrame {
 		case 202: // MQTT subscribe
 			testMqttSubscribe();
 			break;
+		case 203: // print MQTT session info
+			testPrintMqttSessionInfo();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -885,7 +888,7 @@ public class CMWinClient extends JFrame {
 		printMessage("93: add new friend, 94: remove friend, 95: show friends, 96: show friend requesters\n");
 		printMessage("97: show bi-directional friends\n");
 		printMessage("---------------------------------- MQTT\n");
-		printMessage("200: connect, 201: publish, 202: subscribe\n");
+		printMessage("200: connect, 201: publish, 202: subscribe, 203: print session info\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -3981,6 +3984,11 @@ public class CMWinClient extends JFrame {
 		}
 		
 		CMMqttManager mqttManager = (CMMqttManager) m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
 		mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag, 
 				bCleanSession, nKeepAlive);
 		
@@ -4033,12 +4041,17 @@ public class CMWinClient extends JFrame {
 		boolean bRetainFlag = retainFlagBox.isSelected();
 		
 		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
 		//mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
 		mqttManager.publish(strReceiver, nPacketID, strTopic, strMessage, qos, bDupFlag, 
 				bRetainFlag);
 	}
 	
-	private void testMqttSubscribe()
+	public void testMqttSubscribe()
 	{
 		printMessage("========== MQTT subscribe\n");
 		JTextField packetIDTextField = new JTextField();
@@ -4069,7 +4082,24 @@ public class CMWinClient extends JFrame {
 		byte qos = (byte) qosComboBox.getSelectedIndex();
 
 		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
 		mqttManager.subscribe(nPacketID, strTopicFilter, qos);
+	}
+	
+	public void testPrintMqttSessionInfo()
+	{
+		printMessage("========== print MQTT session info\n");
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
+		printMessage(mqttManager.getMySessionInfo()+"\n");
 	}
 		
 	private void requestAttachedFile(String strFileName)

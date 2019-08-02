@@ -221,4 +221,22 @@ public class CMMqttSession {
 		m_recvUnAckEventList.removeAllElements();
 		return;
 	}
+	
+	//////////////////////////////////// Overridden methods
+	
+	@Override
+	public String toString()
+	{
+		StringBuffer strBuf = new StringBuffer();
+		strBuf.append("CMMqttSession {\n");
+		if(m_mqttWill == null)
+			strBuf.append("Mqtt-Will is null!\n");
+		else
+			strBuf.append(m_mqttWill.toString()+"\n");
+		
+		strBuf.append("Subscription List: "+m_subscriptionList.toString()+"\n");
+		strBuf.append("}\n");
+		
+		return strBuf.toString();
+	}
 }
