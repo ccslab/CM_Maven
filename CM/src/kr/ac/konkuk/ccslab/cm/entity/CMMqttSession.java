@@ -12,8 +12,10 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 public class CMMqttSession {
 	// to store will message
 	private CMMqttWill m_mqttWill;
-	// list of subscriptions (4 server)
+	// list of determined subscriptions
 	private CMList<CMMqttTopicQoS> m_subscriptionList;
+	// list of requested subscriptions (4 client)
+	private CMList<CMMqttTopicQoS> m_reqSubscriptionList;
 	// list of sent QoS 1 and QoS 2 PUBLISH events that have not been completely acknowledged 
 	// (4 client: client->server, 4 server: server->client)
 	private CMList<CMMqttEventPUBLISH> m_sentUnAckEventList;
@@ -27,6 +29,7 @@ public class CMMqttSession {
 	{
 		m_mqttWill = null;
 		m_subscriptionList = new CMList<CMMqttTopicQoS>();
+		m_reqSubscriptionList = null;
 		m_sentUnAckEventList = new CMList<CMMqttEventPUBLISH>();
 		m_recvUnAckEventList = new CMList<CMMqttEvent>();
 		m_pendingTransEventList = new CMList<CMMqttEvent>();
@@ -53,6 +56,16 @@ public class CMMqttSession {
 	public CMList<CMMqttTopicQoS> getSubscriptionList()
 	{
 		return m_subscriptionList;
+	}
+	
+	public void setReqSubscriptionList(CMList<CMMqttTopicQoS> reqSubscriptionList)
+	{
+		m_reqSubscriptionList = reqSubscriptionList;
+	}
+	
+	public CMList<CMMqttTopicQoS> getReqSubscriptionList()
+	{
+		return m_reqSubscriptionList;
 	}
 	
 	// sent-unack-event list

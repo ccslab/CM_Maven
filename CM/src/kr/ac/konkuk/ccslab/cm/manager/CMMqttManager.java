@@ -87,7 +87,7 @@ public class CMMqttManager extends CMServiceManager {
 			mqttInfo.setMqttSession(mqttSession);
 		}
 		
-		// process will message
+		// store will message at the client session
 		if(conEvent.isWillFlag())
 		{
 			CMMqttWill will = new CMMqttWill();
@@ -267,6 +267,16 @@ public class CMMqttManager extends CMServiceManager {
 		subEvent.setPacketID(nPacketID);
 		// set payload
 		subEvent.setTopicQoSList(topicQoSList);
+		
+		// temporarily store the requested topic/qos list at the client session
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSession();
+		if(session == null)
+		{
+			System.err.println("CMMqttManager.subscribe(), the client session is null!");
+			return false;
+		}
+		session.setReqSubscriptionList(topicQoSList);
 		
 		boolean bRet = false;
 		bRet = CMEventManager.unicastEvent(subEvent, "SERVER", m_cmInfo);

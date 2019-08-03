@@ -872,6 +872,41 @@ public class CMMqttEventHandler extends CMEventHandler {
 					+ackEvent.toString());
 		}
 		
+		// add approved subscription to the subscription list
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSession();
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processSUBACK(), session is null!");
+			return false;
+		}
+		CMList<CMMqttTopicQoS> subscriptionList = session.getSubscriptionList();		
+		Vector<CMMqttTopicQoS> reqSubscriptionVector = session.getReqSubscriptionList().getList();
+		Vector<Byte> returnCodeVector = ackEvent.getReturnCodeList().getList(); 
+		
+		if(returnCodeVector.size() != reqSubscriptionVector.size())
+		{
+			System.err.println("CMMqttEventHandler.processSUBACK(), # return code list ("
+					+returnCodeVector.size()+") and # req subscription list ("
+					+reqSubscriptionVector.size()+") are different!");
+			return false;
+		}
+		
+		for(int i = 0; i < returnCodeVector.size(); i++)
+		{
+			byte returnCode = returnCodeVector.elementAt(i);
+			CMMqttTopicQoS topicQoS = reqSubscriptionVector.elementAt(i);
+			if(returnCode != (byte)0x80)
+			{
+				CMMqttTopicQoS subscription = subscriptionList.findElement(topicQoS);
+				if(subscription != null)
+					subscriptionList.removeElement(subscription);
+				subscriptionList.addElement(topicQoS);
+			}
+		}
+		
+		session.setReqSubscriptionList(null);
+		
 		return true;
 	}
 	
