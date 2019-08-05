@@ -12,6 +12,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
@@ -286,17 +287,82 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean unsubscribe(String strTopic)
 	{
-		return true;
+		boolean bRet = unsubscribe(-1, strTopic);
+		return bRet;
 	}
 	
 	public boolean unsubscribe(int nPacketID, String strTopic)
 	{
-		return true;
+		boolean bRet = false;
+		CMList<String> topicList = new CMList<String>();
+		topicList.addElement(strTopic);
+		bRet = unsubscribe(nPacketID, topicList);
+		return bRet;
 	}
 	
 	public boolean unsubscribe(int nPacketID, CMList<String> topicList)
 	{
-		return true;
+		// to check the CM system type
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			System.err.println("CMMqttManager.unsubscribe(), the system type is SERVER!");
+			return false;
+		}
+		
+		// to check if the user completes to log in to the default server, or not
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		int nState = myself.getState();
+		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMMqttManager.unsubscribe(), you must log in to the "
+					+"default server!");
+			return false;
+		}
+
+		// check the topic list
+		if(topicList.isEmpty())
+		{
+			System.err.println("CMMqttManager.unsubscribe(), the topic list is empty!");
+			return false;
+		}
+		
+		// remove the local topic filters matched with the requested topics
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSession();
+		if(session == null)
+		{
+			System.err.println("CMMqttManager.unsubscribe(), the client session is null!");
+			return false;
+		}
+		CMList<CMMqttTopicQoS> subList = session.getSubscriptionList();
+		if(subList == null || subList.isEmpty())
+		{
+			System.err.println("CMMqttManager.unsubscribe(), the subscription list of "
+					+"client session is null or empty!");
+			return false;
+		}
+		for(String topic : topicList.getList())
+		{
+			CMMqttTopicQoS topicQoS = new CMMqttTopicQoS();
+			topicQoS.setTopic(topic);
+			subList.removeElement(topicQoS);
+		}
+
+		// make and send an UNSUBSCRIBE event
+		CMMqttEventUNSUBSCRIBE unsubEvent = new CMMqttEventUNSUBSCRIBE();
+		// set sender (in CM event header)
+		unsubEvent.setSender(myself.getName());
+		// set fixed header in the UNSUBSCRIBE constructor
+		// set variable header
+		unsubEvent.setPacketID(nPacketID);
+		// set payload
+		unsubEvent.setTopicList(topicList);
+		
+		boolean bRet = false;
+		bRet = CMEventManager.unicastEvent(unsubEvent, "SERVER", m_cmInfo);
+
+		return bRet;
 	}
 	
 	public boolean requestPing()

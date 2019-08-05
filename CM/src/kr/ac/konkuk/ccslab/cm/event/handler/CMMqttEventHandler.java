@@ -20,6 +20,8 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
@@ -912,12 +914,79 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processUNSUBSCRIBE(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventUNSUBSCRIBE unsubEvent = (CMMqttEventUNSUBSCRIBE)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processUNSUBSCRIBE(), received "
+					+unsubEvent.toString());
+		}
+		
+		// to check the topic list
+		if(unsubEvent.getTopicList().isEmpty())
+		{
+			System.err.println("CMMqttEventHandler.processUNSUBSCRIBE(), there is "
+					+"no topic list in the event!");
+			return false;
+		}
+		
+		// to get client session information
+		String strClient = unsubEvent.getSender();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
+		CMMqttSession session = sessionHashtable.get(strClient);
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processUNSUBSCRIBE(), session of client ("
+					+strClient+") is null!");
+		}
+		else
+		{
+			// delete any matched subscription with the requested topic filter
+			CMList<CMMqttTopicQoS> subList = session.getSubscriptionList();
+			Vector<String> topicVector = unsubEvent.getTopicList().getList(); 
+			for(String strTopic : topicVector)
+			{
+				CMMqttTopicQoS topicQoS = new CMMqttTopicQoS();
+				topicQoS.setTopic(strTopic);
+				subList.removeElement(topicQoS);
+			}
+		}
+		
+		// make and send UNSUBACK event
+		CMMqttEventUNSUBACK unsubAckEvent = new CMMqttEventUNSUBACK();
+		// set sender (in CM event header)
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		unsubAckEvent.setSender(myself.getName());
+		// set fixed header in the UNSUBACK constructor
+		// set variable header
+		unsubAckEvent.setPacketID(unsubEvent.getPacketID());
+		
+		boolean bRet = false;
+		bRet = CMEventManager.unicastEvent(unsubAckEvent, strClient, m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processUNSUBSCRIBE(), sent "
+					+unsubAckEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processUNSUBSCRIBE(), error to send "
+					+unsubAckEvent.toString());
+			return false;
+		}
+
+		return true;
 	}
 	
 	private boolean processUNSUBACK(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventUNSUBACK unsubAckEvent = (CMMqttEventUNSUBACK)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processUNSUBACK(), received "
+					+unsubAckEvent.toString());
+		}
+		return true;
 	}
 	
 	private boolean processPINGREQ(CMMqttEvent event)
