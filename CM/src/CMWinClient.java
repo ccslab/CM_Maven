@@ -838,6 +838,9 @@ public class CMWinClient extends JFrame {
 		case 203: // print MQTT session info
 			testPrintMqttSessionInfo();
 			break;
+		case 204: // MQTT unsubscribe
+			testMqttUnsubscribe();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -889,6 +892,7 @@ public class CMWinClient extends JFrame {
 		printMessage("97: show bi-directional friends\n");
 		printMessage("---------------------------------- MQTT\n");
 		printMessage("200: connect, 201: publish, 202: subscribe, 203: print session info\n");
+		printMessage("204: unsubscribe \n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -4100,6 +4104,23 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 		printMessage(mqttManager.getMySessionInfo()+"\n");
+	}
+	
+	public void testMqttUnsubscribe()
+	{
+		printMessage("========== MQTT unsubscribe\n");
+		String strTopic = null;
+		strTopic = JOptionPane.showInputDialog("Topic to unsubscribe").trim();
+		if(strTopic == null || strTopic.equals("")) 
+			return;
+
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
+		mqttManager.unsubscribe(strTopic);
 	}
 		
 	private void requestAttachedFile(String strFileName)
