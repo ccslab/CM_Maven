@@ -104,6 +104,16 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		bRet = CMEventManager.unicastEvent(conEvent, "SERVER", m_cmInfo);
 		
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttManager.connect(), sent "+conEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttManager.connect(), error to send "+conEvent.toString());
+			return false;
+		}
+		
 		return bRet;
 	}
 	
@@ -174,8 +184,15 @@ public class CMMqttManager extends CMServiceManager {
 		
 		// send PUBLISH event
 		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttManager.publish(), sent "+pubEvent.toString());
+		}
 		if(!bRet)
-			return false; 
+		{
+			System.err.println("CMMqttManager.publish(), error to send "+pubEvent.toString());
+			return false;
+		}
 		
 		// process QoS 1 or 2
 		if( qos == 1 || qos == 2 )
@@ -282,6 +299,15 @@ public class CMMqttManager extends CMServiceManager {
 		
 		boolean bRet = false;
 		bRet = CMEventManager.unicastEvent(subEvent, "SERVER", m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttManager.subscribe(), sent "+subEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttManager.subscribe(), error to send "+subEvent.toString());
+			return false;
+		}
 		
 		return bRet;
 	}
@@ -363,6 +389,17 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		bRet = CMEventManager.unicastEvent(unsubEvent, "SERVER", m_cmInfo);
 
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttManager.unsubscribe(), sent "+unsubEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttManager.unsubscribe(), error to send "+unsubEvent
+					.toString());
+			return false;
+		}
+
 		return bRet;
 	}
 	
@@ -415,6 +452,17 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		bRet = CMEventManager.unicastEvent(disconEvent, "SERVER", m_cmInfo);
 		
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttManager.disconnect(), sent "+disconEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttManager.disconnect(), error to send "
+					+disconEvent.toString());
+			return false;
+		}
+
 		return bRet;
 	}
 	

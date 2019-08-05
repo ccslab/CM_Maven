@@ -116,7 +116,8 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// print the received CONNECT event
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMMqttEventHandler.processCONNECT(): "+conEvent.toString());
+			System.out.println("CMMqttEventHandler.processCONNECT(): received "
+					+conEvent.toString());
 		}
 		
 		// validate CONNECT packet format and set return code
@@ -175,6 +176,18 @@ public class CMMqttEventHandler extends CMEventHandler {
 		ackEvent.setReturnCode(returnCode);
 		bRet = CMEventManager.unicastEvent(ackEvent, conEvent.getSender(), m_cmInfo);
 		
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processCONNECT(), sent "
+					+ackEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processCONNECT(), error to send "
+					+ackEvent.toString());
+			return false;
+		}
+
 		return bRet;
 	}
 	
@@ -300,7 +313,10 @@ public class CMMqttEventHandler extends CMEventHandler {
 	{
 		CMMqttEventCONNACK connackEvent = (CMMqttEventCONNACK)event;
 		if(CMInfo._CM_DEBUG)
-			System.out.println("CMMqttEventHandler.processCONNACK(): "+connackEvent.toString());
+		{
+			System.out.println("CMMqttEventHandler.processCONNACK(): received "
+					+connackEvent.toString());
+		}
 		return true;
 	}
 	
