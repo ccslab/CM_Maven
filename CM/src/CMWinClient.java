@@ -841,6 +841,9 @@ public class CMWinClient extends JFrame {
 		case 204: // MQTT unsubscribe
 			testMqttUnsubscribe();
 			break;
+		case 205: // MQTT disconnect
+			testMqttDisconnect();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -892,7 +895,7 @@ public class CMWinClient extends JFrame {
 		printMessage("97: show bi-directional friends\n");
 		printMessage("---------------------------------- MQTT\n");
 		printMessage("200: connect, 201: publish, 202: subscribe, 203: print session info\n");
-		printMessage("204: unsubscribe \n");
+		printMessage("204: unsubscribe, 205: disconnect \n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -4121,6 +4124,18 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 		mqttManager.unsubscribe(strTopic);
+	}
+	
+	public void testMqttDisconnect()
+	{
+		printMessage("========== MQTT disconnect\n");
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
+		mqttManager.disconnect();
 	}
 		
 	private void requestAttachedFile(String strFileName)

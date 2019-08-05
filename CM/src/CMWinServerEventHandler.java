@@ -15,6 +15,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
@@ -638,6 +639,10 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		case CMMqttEvent.UNSUBSCRIBE:
 			CMMqttEventUNSUBSCRIBE unsubEvent = (CMMqttEventUNSUBSCRIBE)cme;
 			printMessage("received "+unsubEvent.toString()+"\n");
+			break;
+		case CMMqttEvent.DISCONNECT:
+			CMMqttEventDISCONNECT disconEvent = (CMMqttEventDISCONNECT)cme;
+			printMessage("received "+disconEvent.toString()+"\n");
 			break;
 		}
 		
