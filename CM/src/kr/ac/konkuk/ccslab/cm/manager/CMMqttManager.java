@@ -10,6 +10,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
@@ -367,12 +368,54 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean requestPing()
 	{
-		return true;
+		// not yet
+		System.err.println("CMMqttManager.requestPing(), not implemented yet!");
+		return false;
 	}
 	
 	public boolean disconnect()
 	{
-		return true;
+		// to check the CM system type
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			System.err.println("CMMqttManager.disconnect(), the system type is SERVER!");
+			return false;
+		}
+		
+		// to check if the user completes to log in to the default server, or not
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		int nState = myself.getState();
+		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
+		{
+			System.err.println("CMMqttManager.disconnect(), you must log in to the "
+					+"default server!");
+			return false;
+		}
+
+		// get the client session
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSession();
+		if(session == null)
+		{
+			System.err.println("CMMqttManager.disconnect(), the client session is null!");
+			return false;
+		}
+
+		// remove will info at the client session
+		if(session.getMqttWill() != null)
+			session.setMqttWill(null);
+		
+		// make and send DISCONNECT event
+		CMMqttEventDISCONNECT disconEvent = new CMMqttEventDISCONNECT();
+		// set sender (in CM event header)
+		disconEvent.setSender(myself.getName());
+		// set fixed header in DISCONNECT constructor
+		
+		boolean bRet = false;
+		bRet = CMEventManager.unicastEvent(disconEvent, "SERVER", m_cmInfo);
+		
+		return bRet;
 	}
 	
 	// get MQTT session information (4 client)

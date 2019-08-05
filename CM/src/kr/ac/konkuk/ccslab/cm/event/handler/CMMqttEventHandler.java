@@ -13,6 +13,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
@@ -1001,7 +1002,31 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processDISCONNECT(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventDISCONNECT disconEvent = (CMMqttEventDISCONNECT)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processDISCONNECT(), received "
+					+disconEvent.toString());
+		}
+		
+		// to get client session information
+		String strClient = disconEvent.getSender();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
+		CMMqttSession session = sessionHashtable.get(strClient);
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.processDISCONNECT(), session of client ("
+					+strClient+") is null!");
+		}
+
+		// to delete will information
+		if(session.getMqttWill() != null)
+		{
+			session.setMqttWill(null);
+		}
+		
+		return true;
 	}
 	
 }
