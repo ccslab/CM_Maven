@@ -4054,8 +4054,7 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 		//mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
-		mqttManager.publish(strReceiver, nPacketID, strTopic, strMessage, qos, bDupFlag, 
-				bRetainFlag);
+		mqttManager.publish(nPacketID, strTopic, strMessage, qos, bDupFlag,	bRetainFlag);
 	}
 	
 	public void testMqttSubscribe()

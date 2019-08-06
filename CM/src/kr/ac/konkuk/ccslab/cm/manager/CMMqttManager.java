@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import java.util.Hashtable;
+import java.util.Set;
+import java.util.Vector;
 import java.util.PrimitiveIterator.OfDouble;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
@@ -119,53 +121,47 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean publish(String strTopic, String strMsg)
 	{
-		// client -> server
-		boolean bRet = false;
-		bRet = publish("SERVER", -1, strTopic, strMsg, (byte)0, false, false);
-		return bRet;
-	}
-	
-	public boolean publish(String strReceiver, String strTopic, String strMsg)
-	{
 		// client -> server or server -> client
 		boolean bRet = false;
-		bRet = publish(strReceiver, -1, strTopic, strMsg, (byte)0, false, false);
+		bRet = publish(-1, strTopic, strMsg, (byte)0, false, false);
 		return bRet;
 	}
 	
 	public boolean publish(int nPacketID, String strTopic, String strMsg, byte qos)
 	{
+		// client -> server or server -> client
+		boolean bRet = false;
+		bRet = publish(nPacketID, strTopic, strMsg, qos, false, false);
+		return bRet;
+	}
+	
+	public boolean publish(int nPacketID, String strTopic, String strMsg, byte qos, 
+				boolean bDupFlag, boolean bRetainFlag)
+	{
+		// client -> server or server -> client
+		boolean bRet = false;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		if(strSysType.equals("SERVER"))
+			bRet = publishFromServer(nPacketID, strTopic, strMsg, qos, bDupFlag, bRetainFlag);
+		else
+			bRet = publishFromClient(nPacketID, strTopic, strMsg, qos, bDupFlag, bRetainFlag);
+		return bRet;
+	}
+	
+	private boolean publishFromClient(int nPacketID, String strTopic, String strMsg, 
+			byte qos, boolean bDupFlag, boolean bRetainFlag)
+	{
 		// client -> server
-		boolean bRet = false;
-		bRet = publish("SERVER", nPacketID, strTopic, strMsg, qos, false, false);
-		return bRet;
-	}
-	
-	public boolean publish(String strReceiver, int nPacketID, String strTopic, String strMsg, byte qos)
-	{
-		// client -> server or server -> client
-		boolean bRet = false;
-		bRet = publish(strReceiver, nPacketID, strTopic, strMsg, qos, false, false);
-		return bRet;
-	}
-	
-	public boolean publish(String strReceiver, int nPacketID, String strTopic,
-			String strMsg, byte qos, boolean bDupFlag, boolean bRetainFlag)
-	{
-		// client -> server or server -> client
 		boolean bRet = false;
 		
 		// check whether the client is a log-in user.
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		String strSysType = confInfo.getSystemType();
 		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
-		if(strSysType.equals("CLIENT"))
+		if(myself.getState() == CMInfo.CM_INIT || myself.getState() == CMInfo.CM_CONNECT)
 		{
-			if(myself.getState() == CMInfo.CM_INIT || myself.getState() == CMInfo.CM_CONNECT)
-			{
-				System.err.println("CMMqttManager.publish(): you must log in to the default server!");
-				return false;
-			}
+			System.err.println("CMMqttManager.publishFromClient(): "
+					+ "you must log in to the default server!");
+			return false;
 		}
 		
 		// make PUBLISH event
@@ -183,35 +179,32 @@ public class CMMqttManager extends CMServiceManager {
 		pubEvent.setAppMessage(strMsg);
 		
 		// send PUBLISH event
+		String strReceiver = "SERVER";
 		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, m_cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMMqttManager.publish(), sent "+pubEvent.toString());
+			System.out.println("CMMqttManager.publishFromClient(), sent "
+					+pubEvent.toString());
 		}
 		if(!bRet)
 		{
-			System.err.println("CMMqttManager.publish(), error to send "+pubEvent.toString());
+			System.err.println("CMMqttManager.publishFromClient(), error to send "
+					+pubEvent.toString());
 			return false;
 		}
 		
-		// process QoS 1 or 2
+		// process QoS 1 or 2 case for the sent packet
 		if( qos == 1 || qos == 2 )
 		{
 			// to get session information
 			CMMqttSession session = null;
 			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
-			if(strSysType.equals("CLIENT"))
-			{
-				session = mqttInfo.getMqttSession();
-			}
-			else if(strSysType.equals("SERVER"))
-			{
-				session = mqttInfo.getMqttSessionHashtable().get(strReceiver);
-			}
+			session = mqttInfo.getMqttSession();
 			
 			if(session == null)
 			{
-				System.err.println("CMMqttManager.publish(): QoS("+qos+"), but session is null!");
+				System.err.println("CMMqttManager.publishFromClient(): QoS("
+						+qos+"), but session is null!");
 				return false;
 			}
 			
@@ -219,18 +212,140 @@ public class CMMqttManager extends CMServiceManager {
 			bRet = session.addSentUnAckEvent(pubEvent);
 			if(bRet && CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMMqttManager.publish(): stored to sent unack event list: "
-						+pubEvent.toString());
+				System.out.println("CMMqttManager.publishFromClient(): "
+						+ "stored to sent unack event list: "+pubEvent.toString());
 			}
 			if(!bRet)
 			{
-				System.err.println("CMMqttManager.publish(): error to store to sent unack event list: "
-						+pubEvent.toString());
+				System.err.println("CMMqttManager.publishFromClient(): "
+						+ "error to store to sent unack event list: "+pubEvent.toString());
 				return false;
 			}
 		}
 		
 		return bRet;
+	}
+	
+	private boolean publishFromServer(int nPacketID, String strTopic, String strMsg, 
+			byte qos, boolean bDupFlag, boolean bRetainFlag)
+	{
+		// server -> client
+
+		boolean bRet = false;
+		
+		// make PUBLISH event
+		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
+		// set sender (in CM event header)
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		pubEvent.setSender(myself.getName());
+		// set fixed header
+		pubEvent.setDupFlag(false);	// In the server, the dup-flag is reset
+		pubEvent.setQoS(qos);
+		pubEvent.setRetainFlag(bRetainFlag);
+		// set variable header
+		pubEvent.setTopicName(strTopic);
+		pubEvent.setPacketID(nPacketID);
+		// set payload
+		pubEvent.setAppMessage(strMsg);
+		
+		// find subscribers and send the PUBLISH event
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttSession> sessionHashtable =	mqttInfo.getMqttSessionHashtable();
+		Set<String> keys = sessionHashtable.keySet();
+		for(String key : keys)
+		{
+			CMMqttSession session = sessionHashtable.get(key);
+			Vector<CMMqttTopicQoS> filterVector = session.getSubscriptionList().getList();
+			boolean bFound = false;
+			byte maxQoS = 0;
+			for(int i = 0; i < filterVector.size(); i++)
+			{
+				String strFilter = filterVector.elementAt(i).getTopic();
+				bFound = isTopicMatch(strTopic, strFilter);
+				if(bFound)	// find maximum matching QoS
+				{
+					byte reqQoS = filterVector.elementAt(i).getQoS();
+					if(reqQoS > maxQoS)
+						maxQoS = reqQoS;
+				}
+			}  // end for
+			
+			if(bFound)
+			{
+				// adapt to the subscribed QoS
+				int sentQoS = qos;
+				if(maxQoS < qos)
+				{
+					sentQoS = maxQoS;
+					pubEvent.setQoS(maxQoS);
+				}
+				
+				bRet = CMEventManager.unicastEvent(pubEvent, key, m_cmInfo);
+				if(bRet && CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMMqttManager.publishFromServer(), sent ("
+							+key+"): "+pubEvent.toString());
+				}
+				if(!bRet)
+				{
+					System.err.println("CMMqttManager.publishFromServer(), error to send ("
+							+key+"): ");
+				}
+				
+				// process QoS 1 or 2 case for the sent packet
+				if(bRet && (sentQoS == 1 || sentQoS == 2))
+				{
+					bRet = session.addSentUnAckEvent(pubEvent);
+					if(bRet && CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMMqttManager.publishFromServer(): "
+								+ "stored to sent unack event list: "+pubEvent.toString());
+					}
+					if(!bRet)
+					{
+						System.err.println("CMMqttManager.publishFromServer(): error "
+							+ "to store to sent unack event list: "+pubEvent.toString());
+					}
+				} // end if
+			} // end if
+
+		}	// end for
+	
+		return true;
+	}
+	
+	public static boolean isTopicMatch(String strTopic, String strFilter)
+	{
+		strTopic = strTopic.trim();
+		strFilter = strFilter.trim();
+		
+		// get tokens
+		String[] topicTokens = strTopic.split("/");
+		String[] filterTokens = strFilter.split("/");
+		
+		int i = 0;
+		for(i = 0; i < filterTokens.length; i++)
+		{
+			String filterToken = filterTokens[i];
+			if(filterToken.equals("#") && i == filterTokens.length - 1)
+				return true;
+			
+			// # of topic level is less than # of filter level
+			if( i == topicTokens.length )
+				return false;
+			
+			String topicToken = topicTokens[i];
+			if(filterToken.equals(topicToken) || filterToken.equals("+"))
+				continue;
+			else
+				return false;
+		}
+		
+		// # of topic level is greater than # of topic filter
+		if( i < topicTokens.length )
+			return false;
+		
+		return true;
 	}
 	
 	public boolean subscribe(String strTopicFilter, byte qos)

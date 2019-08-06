@@ -367,31 +367,11 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
-			String strTopicName = pubEvent.getTopicName();
 			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
 					.get(CMInfo.CM_MQTT_MANAGER);
-			// to search for clients with the matching topic filters
-			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
-			Hashtable<String, CMMqttSession> sessionHashtable = 
-					mqttInfo.getMqttSessionHashtable();
-			Set<String> keys = sessionHashtable.keySet();
-			for(String key : keys)
-			{
-				CMMqttSession session = sessionHashtable.get(key);
-				Vector<CMMqttTopicQoS> filterVector = session.getSubscriptionList().getList();
-				boolean bFound = false;
-				for(int i = 0; i < filterVector.size(); i++)
-				{
-					String strFilter = filterVector.elementAt(i).getTopic();
-					bFound = isTopicMatch(strTopicName, strFilter);
-					if(bFound)
-					{
-						mqttManager.publish(key, pubEvent.getPacketID(), pubEvent.getTopicName(),
-								pubEvent.getAppMessage(), filterVector.elementAt(i).getQoS(),
-								false, pubEvent.isRetainFlag());
-					}
-				}
-			}
+			mqttManager.publish(pubEvent.getPacketID(), pubEvent.getTopicName(), 
+					pubEvent.getAppMessage(), pubEvent.getQoS(), pubEvent.isDupFlag(), 
+					pubEvent.isRetainFlag());
 		}
 		
 		return bRet;
@@ -488,40 +468,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		return bRet;
-	}
-	
-	public static boolean isTopicMatch(String strTopic, String strFilter)
-	{
-		strTopic = strTopic.trim();
-		strFilter = strFilter.trim();
-		
-		// get tokens
-		String[] topicTokens = strTopic.split("/");
-		String[] filterTokens = strFilter.split("/");
-		
-		int i = 0;
-		for(i = 0; i < filterTokens.length; i++)
-		{
-			String filterToken = filterTokens[i];
-			if(filterToken.equals("#") && i == filterTokens.length - 1)
-				return true;
-			
-			// # of topic level is less than # of filter level
-			if( i == topicTokens.length )
-				return false;
-			
-			String topicToken = topicTokens[i];
-			if(filterToken.equals(topicToken) || filterToken.equals("+"))
-				continue;
-			else
-				return false;
-		}
-		
-		// # of topic level is greater than # of topic filter
-		if( i < topicTokens.length )
-			return false;
-		
-		return true;
 	}
 	
 	private boolean processPUBACK(CMMqttEvent event)
