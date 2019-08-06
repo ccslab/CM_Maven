@@ -4,6 +4,8 @@ import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
+import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
@@ -17,10 +19,12 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 
 public class CMEventReceiver extends Thread {
 	private CMBlockingEventQueue m_queue;
@@ -220,6 +224,9 @@ public class CMEventReceiver extends Thread {
 				}
 				else if(chKey.intValue() == 0)
 				{
+					// send MQTT will event
+					sendMqttWill(strUser);
+					
 					// if the removed channel is default channel (#ch:0), process logout of the user
 					CMSessionEvent tse = new CMSessionEvent();
 					tse.setID(CMSessionEvent.LOGOUT);
@@ -299,5 +306,22 @@ public class CMEventReceiver extends Thread {
 			System.out.println("CMEventReceiver.processUnexpectedDisconnection(), ends.");
 		
 		return;
+	}
+	
+	// send MQTT will event if the disconnected client has will information
+	private boolean sendMqttWill(String strUser)
+	{
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUser);
+		if(session == null) return false;
+		CMMqttWill mqttWill = session.getMqttWill();
+		if(mqttWill == null) return false;
+		
+		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
+				.get(CMInfo.CM_MQTT_MANAGER);
+		boolean bRet = false;
+		bRet = mqttManager.publish(-1, mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
+				mqttWill.getWillQoS());
+		return bRet;
 	}
 }
