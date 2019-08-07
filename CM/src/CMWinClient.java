@@ -4004,7 +4004,6 @@ public class CMWinClient extends JFrame {
 	public void testMqttPublish()
 	{
 		printMessage("========== MQTT publish\n");
-		JTextField receiverTextField = new JTextField();
 		JTextField packetIDTextField = new JTextField();
 		JTextField topicTextField = new JTextField();
 		JTextField messageTextField = new JTextField();
@@ -4013,7 +4012,6 @@ public class CMWinClient extends JFrame {
 		JCheckBox dupFlagBox = new JCheckBox();
 		JCheckBox retainFlagBox = new JCheckBox();
 		Object[] msg = {
-				"receiver", receiverTextField,
 				"packet ID", packetIDTextField,
 				"topic", topicTextField,
 				"message", messageTextField,
@@ -4025,11 +4023,6 @@ public class CMWinClient extends JFrame {
 				JOptionPane.OK_CANCEL_OPTION);
 		if(nRet != JOptionPane.OK_OPTION) return;
 
-		String strReceiver = receiverTextField.getText().trim();
-		if(strReceiver.isEmpty())
-		{
-			strReceiver = "SERVER";
-		}
 		int nPacketID = 0;
 		String strPacketID = packetIDTextField.getText().trim();
 		if(!strPacketID.isEmpty())
