@@ -22,8 +22,8 @@ public class CMMqttSession {
 	// list of received QoS 2 PUBLISH and PUBREC events that have not been completely acknowledged 
 	// (4 client: client<-server, 4 server: server<-client)
 	private CMList<CMMqttEvent> m_recvUnAckEventList;
-	// list of events pending transmission to the client (4 server)
-	private CMList<CMMqttEvent> m_pendingTransEventList;
+	// list of pending PUBLISH events of transmission to the client (4 server)
+	private CMList<CMMqttEventPUBLISH> m_pendingTransEventList;
 	
 	public CMMqttSession()
 	{
@@ -32,7 +32,7 @@ public class CMMqttSession {
 		m_reqSubscriptionList = null;
 		m_sentUnAckEventList = new CMList<CMMqttEventPUBLISH>();
 		m_recvUnAckEventList = new CMList<CMMqttEvent>();
-		m_pendingTransEventList = new CMList<CMMqttEvent>();
+		m_pendingTransEventList = new CMList<CMMqttEventPUBLISH>();
 	}
 	
 	//////////////////////// setter/getter
@@ -91,12 +91,12 @@ public class CMMqttSession {
 	}
 	
 	// pending-trans-event list
-	public void setPendingTransEventList(CMList<CMMqttEvent> eventList)
+	public void setPendingTransEventList(CMList<CMMqttEventPUBLISH> eventList)
 	{
 		m_pendingTransEventList = eventList;
 	}
 	
-	public CMList<CMMqttEvent> getPendingTransEventList()
+	public CMList<CMMqttEventPUBLISH> getPendingTransEventList()
 	{
 		return m_pendingTransEventList;
 	}
@@ -234,7 +234,49 @@ public class CMMqttSession {
 		m_recvUnAckEventList.removeAllElements();
 		return;
 	}
+
+	//////////////////////// pending-trans-event list
 	
+	public boolean addPendingTransEvent(CMMqttEventPUBLISH pubEvent)
+	{
+		CMMqttEventPUBLISH mqttEvent = findPendingTransEvent(pubEvent.getPacketID());
+		if(mqttEvent != null)
+		{
+			System.err.println("CMMqttSession.addPendingTransEvent(), the same packet ID ("
+					+pubEvent.getPacketID()+") already exists!");
+			System.err.println(mqttEvent.toString());
+			return false;			
+		}
+		
+		return m_pendingTransEventList.addElement(pubEvent);
+	}
+	
+	public CMMqttEventPUBLISH findPendingTransEvent(int nPacketID)
+	{
+		for(CMMqttEventPUBLISH pubEvent : m_pendingTransEventList.getList())
+		{
+			if(pubEvent.getPacketID() == nPacketID)
+				return pubEvent;
+		}
+		
+		return null;
+	}
+	
+	public boolean removePendingTransEvent(int nPacketID)
+	{
+		CMMqttEventPUBLISH pubEvent = findPendingTransEvent(nPacketID);
+		if(pubEvent == null)
+			return false;
+		
+		return m_pendingTransEventList.removeElement(pubEvent);
+	}
+	
+	public void removeAllPendingTransEvent()
+	{
+		m_pendingTransEventList.removeAllElements();
+		return;
+	}
+
 	//////////////////////////////////// Overridden methods
 	
 	@Override
