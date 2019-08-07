@@ -272,6 +272,22 @@ public class CMMqttManager extends CMServiceManager {
 			
 			if(bFound)
 			{
+				// send all pending events of this client (key)
+				if(!session.getPendingTransEventList().isEmpty())
+				{
+					for(CMMqttEventPUBLISH pendingEvent : session.getPendingTransEventList().getList())
+					{
+						bRet = CMEventManager.unicastEvent(pendingEvent, key, m_cmInfo);
+						if(!bRet)
+						{
+							System.err.println("CMMqttManager.publishFromServer(), error to send "
+									+"pending event: "+pendingEvent.toString());
+							return false;
+						}
+						session.removeAllPendingTransEvent();
+					}
+				}
+				
 				// adapt to the subscribed QoS
 				int sentQoS = qos;
 				if(maxQoS < qos)
@@ -290,6 +306,11 @@ public class CMMqttManager extends CMServiceManager {
 				{
 					System.err.println("CMMqttManager.publishFromServer(), error to send ("
 							+key+"): ");
+					if(sentQoS == 1 || sentQoS == 2)
+					{
+						// add this event to the pending event list
+						session.addPendingTransEvent(pubEvent);
+					}
 				}
 				
 				// process QoS 1 or 2 case for the sent packet
