@@ -79,7 +79,7 @@ public abstract class CMMqttEvent extends CMEvent {
 		nFixedHeaderByteNum = getFixedHeaderByteNum();
 		nByteNum += nFixedHeaderByteNum;
 
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEvent.getByteNum(): cm header("+nCMEventHeaderByteNum
 					+") + fixed header("+nFixedHeaderByteNum+") + var header("+nVarHeaderByteNum

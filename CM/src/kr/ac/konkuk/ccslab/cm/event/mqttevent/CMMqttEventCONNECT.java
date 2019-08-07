@@ -99,7 +99,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setUserNameFlag(boolean bUser)
 	{
 		// print current connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.setUserNameFlag(): "+bUser);
 			System.out.println("connect flag (before): "+getBinaryStringOfByte(m_connectFlag));
@@ -112,7 +112,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 			m_connectFlag &= 0x7f;	// 0b0111 1111
 		
 		// print modified connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("connect flag (after): "+getBinaryStringOfByte(m_connectFlag));
 		}
@@ -127,7 +127,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setPasswordFlag(boolean bPassword)
 	{
 		// print current connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.setPasswordFlag(): "+bPassword);
 			System.out.println("connect flag (before): "+getBinaryStringOfByte(m_connectFlag));
@@ -140,7 +140,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 			m_connectFlag &= 0xbf;	// 0b1011 1111
 		
 		// print modified connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("connect flag (after): "+getBinaryStringOfByte(m_connectFlag));
 		}
@@ -155,7 +155,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setWillRetainFlag(boolean bWillRetain)
 	{
 		// print current connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.setWillRetainFlag(): "+bWillRetain);
 			System.out.println("connect flag (before): "+getBinaryStringOfByte(m_connectFlag));
@@ -168,7 +168,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 			m_connectFlag &= 0xdf;	// 0b1101 1111
 		
 		// print modified connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("connect flag (after): "+getBinaryStringOfByte(m_connectFlag));
 		}
@@ -183,7 +183,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setWillQoS(byte qos)
 	{
 		// print current connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.setWillQoS(): "+qos);
 			System.out.println("connect flag (before): "+getBinaryStringOfByte(m_connectFlag));
@@ -194,7 +194,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		m_connectFlag |= (qos << 3);
 		
 		// print modified connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("connect flag (after): "+getBinaryStringOfByte(m_connectFlag));
 		}
@@ -203,7 +203,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public byte getWillQoS()
 	{
 		// print current connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.getWillQoS(): ");
 			System.out.println("connect flag: "+getBinaryStringOfByte(m_connectFlag));
@@ -213,7 +213,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		willQoS = (byte)((m_connectFlag & 0x18) >> 3);
 		
 		// print will qos
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("will QoS: "+willQoS);
 		}
@@ -224,7 +224,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setWillFlag(boolean bWill)
 	{
 		// print current connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.setWillFlag(): "+bWill);
 			System.out.println("connect flag (before): "+getBinaryStringOfByte(m_connectFlag));
@@ -237,7 +237,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 			m_connectFlag &= 0xfb;	// 0b1111 1011
 		
 		// print modified connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("connect flag (after): "+getBinaryStringOfByte(m_connectFlag));
 		}
@@ -252,7 +252,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	public void setCleanSessionFlag(boolean bCleanSession)
 	{
 		// print current connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.setCleanSessionFlag(): "+bCleanSession);
 			System.out.println("connect flag (before): "+getBinaryStringOfByte(m_connectFlag));
@@ -265,7 +265,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 			m_connectFlag &= 0xfd;	// 0b1111 1101
 				
 		// print modified connect flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("connect flag (after): "+getBinaryStringOfByte(m_connectFlag));
 		}
@@ -305,7 +305,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strProtocolName.getBytes().length;	// protocol name
 		nByteNum += 1+1+2;	// protocol level, flag, keep alive
 
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.getVarHeaderByteNum: "+nByteNum);
 		}
@@ -316,7 +316,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	@Override
 	protected void marshallVarHeader() {
 		// TODO Auto-generated method stub
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.marshallVarHeader(): ");
 			System.out.println("protocol name: "+m_strProtocolName+", protocol level: "
@@ -337,7 +337,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		m_connectFlag = buf.get();
 		m_nKeepAlive = getInt2BytesFromByteBuffer(buf);
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.unmarshallVarHeader(): ");
 			System.out.println("protocol name: "+m_strProtocolName+", protocol level: "
@@ -433,7 +433,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;	// user name
 		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strPassword.getBytes().length;	// password
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.getPayloadByteNum(): "+ nByteNum);
 		}
@@ -445,7 +445,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	protected void marshallPayload() {
 		// TODO Auto-generated method stub
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.marshallPayload(): ");
 			System.out.println("client id: "+m_strClientID+", will topic: "+m_strWillTopic
@@ -469,7 +469,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		m_strUserName = getStringFromByteBuffer(buf);	// user name
 		m_strPassword = getStringFromByteBuffer(buf);	// password
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.unmarshallPayload(): ");
 			System.out.println("client id: "+m_strClientID+", will topic: "+m_strWillTopic

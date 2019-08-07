@@ -60,7 +60,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	public void setDupFlag(boolean bFlag)
 	{
 		// print current m_flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventPUBLISH.setDupFlag(): "+bFlag);
 			System.out.println("flag (before): "+getBinaryString(m_flag, 4));
@@ -73,7 +73,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 			m_flag &= 0xf7;	// 0b1111 0111
 		
 		// print modified m_flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("flag (after): "+getBinaryString(m_flag, 4));
 		}
@@ -88,7 +88,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	public void setQoS(byte qos)
 	{
 		// print current m_flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventPUBLISH.setQoS(): "+qos);
 			System.out.println("flag (before): "+getBinaryString(m_flag, 4));
@@ -99,7 +99,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		m_flag |= qos << 1;
 		
 		// print modified m_flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("flag (after): "+getBinaryString(m_flag, 4));
 		}
@@ -115,7 +115,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	public void setRetainFlag(boolean bFlag)
 	{
 		// print current m_flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventPUBLISH().setRetainFlag(): "+bFlag);
 			System.out.println("flag (before): "+getBinaryString(m_flag, 4));
@@ -128,7 +128,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 			m_flag &= 0xfe;	// 0b1111 1110
 		
 		// print modified m_flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("flag (after): "+getBinaryString(m_flag, 4));
 		}

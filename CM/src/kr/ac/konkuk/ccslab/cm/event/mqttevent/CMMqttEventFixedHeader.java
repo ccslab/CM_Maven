@@ -113,7 +113,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		byteTypeFlag = (byte)((byteTypeFlag | m_packetType) << 4);
 		byteTypeFlag = (byte)(byteTypeFlag | m_flag);
 		// print current value and the encoded byte
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventFixedHeader.marshallFixedHeader(): ");
 			System.out.println("packet type: "+m_packetType+", flag: "+m_flag);
@@ -124,7 +124,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		
 		// encoding byte 2: remaining length (1 ~ 4 bytes)
 		// print current value
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("remaining length: "+m_nRemainingLength);
 		}
@@ -139,7 +139,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 			// put the encoded byte to the ByteBuffer
 			m_bytes.put(encodedByte);
 			// print the encoded byte
-			if(CMInfo._CM_DEBUG)
+			if(CMInfo._CM_DEBUG_2)
 			{
 				System.out.println("encoded reamining length byte: "+
 						getBinaryStringOfByte(encodedByte));
@@ -160,7 +160,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		m_flag = 0;	// initizliae the variable
 		m_flag = (byte)(byteTypeFlag & 0x0f);
 		// print current byte value and the decoded packet type and flag
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventFixedHeader.unmarshallFixedHeader(): ");
 			System.out.println("byte 1: "+getBinaryStringOfByte(byteTypeFlag));
@@ -175,7 +175,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		do {
 			encodedByte = buf.get();
 			// print the encoded byte
-			if(CMInfo._CM_DEBUG)
+			if(CMInfo._CM_DEBUG_2)
 			{
 				System.out.println("remaining length byte: "+getBinaryStringOfByte(encodedByte));
 			}
@@ -189,7 +189,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		} while( (encodedByte & 128) != 0 );
 		
 		// print the decoded remaining length
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("remaining length: "+m_nRemainingLength);
 		
 		return;
