@@ -25,9 +25,8 @@ public class CMMqttSession {
 	// list of received QoS 2 PUBLISH and PUBREC events that have not been completely acknowledged 
 	// (4 client: client<-server, 4 server: server<-client)
 	private CMList<CMMqttEvent> m_recvUnAckEventList;
-	// list of pending QoS 1 and QoS 2 events of transmission to the client (4 server)
-	// PUBLISH, PUBACK, PUBREL, PUBREC, PUBCOMP
-	private CMList<CMMqttEvent> m_pendingTransEventList;
+	// list of pending QoS 1 and QoS 2 PUBLISH events of transmission to the client (4 server)
+	private CMList<CMMqttEventPUBLISH> m_pendingTransEventList;
 	
 	public CMMqttSession()
 	{
@@ -36,7 +35,7 @@ public class CMMqttSession {
 		m_reqSubscriptionList = null;
 		m_sentUnAckEventList = new CMList<CMMqttEvent>();
 		m_recvUnAckEventList = new CMList<CMMqttEvent>();
-		m_pendingTransEventList = new CMList<CMMqttEvent>();
+		m_pendingTransEventList = new CMList<CMMqttEventPUBLISH>();
 	}
 	
 	//////////////////////// setter/getter
@@ -95,12 +94,12 @@ public class CMMqttSession {
 	}
 	
 	// pending-trans-event list
-	public void setPendingTransEventList(CMList<CMMqttEvent> eventList)
+	public void setPendingTransEventList(CMList<CMMqttEventPUBLISH> eventList)
 	{
 		m_pendingTransEventList = eventList;
 	}
 	
-	public CMList<CMMqttEvent> getPendingTransEventList()
+	public CMList<CMMqttEventPUBLISH> getPendingTransEventList()
 	{
 		return m_pendingTransEventList;
 	}
@@ -234,9 +233,9 @@ public class CMMqttSession {
 
 	//////////////////////// pending-trans-event list
 	
-	public boolean addPendingTransEvent(CMMqttEvent pendingEvent)
+	public boolean addPendingTransEvent(CMMqttEventPUBLISH pendingEvent)
 	{
-		int nID = getMQTTPacketID(pendingEvent);
+		int nID = pendingEvent.getPacketID();
 		CMMqttEvent mqttEvent = findPendingTransEvent(nID);
 		if(mqttEvent != null)
 		{
@@ -249,12 +248,12 @@ public class CMMqttSession {
 		return m_pendingTransEventList.addElement(pendingEvent);
 	}
 	
-	public CMMqttEvent findPendingTransEvent(int nPacketID)
+	public CMMqttEventPUBLISH findPendingTransEvent(int nPacketID)
 	{
 		int nID = -1;
-		for(CMMqttEvent pendingEvent : m_pendingTransEventList.getList())
+		for(CMMqttEventPUBLISH pendingEvent : m_pendingTransEventList.getList())
 		{
-			nID = getMQTTPacketID(pendingEvent);
+			nID = pendingEvent.getPacketID();
 			if(nID == nPacketID)
 				return pendingEvent;
 		}
@@ -264,7 +263,7 @@ public class CMMqttSession {
 	
 	public boolean removePendingTransEvent(int nPacketID)
 	{
-		CMMqttEvent pendingEvent = findPendingTransEvent(nPacketID);
+		CMMqttEventPUBLISH pendingEvent = findPendingTransEvent(nPacketID);
 		if(pendingEvent == null)
 			return false;
 		
