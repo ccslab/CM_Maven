@@ -436,6 +436,19 @@ public class CMMqttEventHandler extends CMEventHandler {
 		if(!bRet)
 		{
 			System.err.println("CMMqttEventHandler.sendPUBACK(): FAILED! "+pubackEvent.toString());
+			CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+			if(confInfo.getSystemType().equals("SERVER"))
+			{
+				CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+				CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strPubSender);
+				if(session == null)
+				{
+					System.err.println("CMMqttEventHandler.sendPUBACK(), receiver ("+strPubSender
+							+"), session is null!");
+					return false;
+				}
+				session.addPendingTransEvent(pubackEvent);
+			}
 			return false;
 		}
 
@@ -464,6 +477,19 @@ public class CMMqttEventHandler extends CMEventHandler {
 		if(!bRet)
 		{
 			System.err.println("CMMqttEventHandler.sendPUBREC(): FAILED! "+recEvent.toString());
+			CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+			if(confInfo.getSystemType().equals("SERVER"))
+			{
+				CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+				CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strPubSender);
+				if(session == null)
+				{
+					System.err.println("CMMqttEventHandler.sendPUBREC(), receiver ("+strPubSender
+							+"), session is null!");
+					return false;
+				}
+				session.addPendingTransEvent(recEvent);
+			}
 			return false;
 		}
 		
@@ -611,6 +637,11 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			System.err.println("CMMqttEventHandler.processPUBREC(), error to send "
 					+relEvent.toString());
+			if(strSysType.equals("SERVER"))
+			{
+				// add to transmission-pending list
+				session.addPendingTransEvent(relEvent);
+			}
 			return false;
 		}
 
@@ -688,6 +719,12 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			System.err.println("CMMqttEventHandler.processPUBREL(), error to send "
 					+compEvent.toString());
+			if(strSysType.equals("SERVER"))
+			{
+				// add to transmission-pending list
+				session.addPendingTransEvent(compEvent);
+			}
+
 			return false;
 		}
 		
