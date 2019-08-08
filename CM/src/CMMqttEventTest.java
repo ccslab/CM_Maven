@@ -1,6 +1,7 @@
 import java.nio.ByteBuffer;
 
 import kr.ac.konkuk.ccslab.cm.event.handler.CMMqttEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
@@ -69,7 +70,9 @@ public class CMMqttEventTest {
 		System.out.println("------------------- after setting member variables");
 		System.out.println(mqttCONNECTEvent.toString());
 		
-		ByteBuffer buf = mqttCONNECTEvent.marshall();
+		//ByteBuffer buf = mqttCONNECTEvent.marshall();
+		CMMqttEvent mqttEvent = (CMMqttEvent)mqttCONNECTEvent;
+		ByteBuffer buf = mqttEvent.marshall();
 		CMMqttEventCONNECT mqttCONNECTEvent2 = new CMMqttEventCONNECT(buf);
 		
 		System.out.println("------------------- after marshalling/unmarshalling the event");

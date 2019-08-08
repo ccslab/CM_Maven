@@ -1,8 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 
 /**
  * The CMMqttSession class represents a MQTT session.
@@ -16,23 +19,24 @@ public class CMMqttSession {
 	private CMList<CMMqttTopicQoS> m_subscriptionList;
 	// list of requested subscriptions (4 client)
 	private CMList<CMMqttTopicQoS> m_reqSubscriptionList;
-	// list of sent QoS 1 and QoS 2 PUBLISH events that have not been completely acknowledged 
+	// list of sent QoS 1 and QoS 2 events (PUBLISH, PUBREL) that have not been completely acknowledged 
 	// (4 client: client->server, 4 server: server->client)
-	private CMList<CMMqttEventPUBLISH> m_sentUnAckEventList;
+	private CMList<CMMqttEvent> m_sentUnAckEventList;
 	// list of received QoS 2 PUBLISH and PUBREC events that have not been completely acknowledged 
 	// (4 client: client<-server, 4 server: server<-client)
 	private CMList<CMMqttEvent> m_recvUnAckEventList;
-	// list of pending PUBLISH events of transmission to the client (4 server)
-	private CMList<CMMqttEventPUBLISH> m_pendingTransEventList;
+	// list of pending QoS 1 and QoS 2 events of transmission to the client (4 server)
+	// PUBLISH, PUBACK, PUBREL, PUBREC, PUBCOMP
+	private CMList<CMMqttEvent> m_pendingTransEventList;
 	
 	public CMMqttSession()
 	{
 		m_mqttWill = null;
 		m_subscriptionList = new CMList<CMMqttTopicQoS>();
 		m_reqSubscriptionList = null;
-		m_sentUnAckEventList = new CMList<CMMqttEventPUBLISH>();
+		m_sentUnAckEventList = new CMList<CMMqttEvent>();
 		m_recvUnAckEventList = new CMList<CMMqttEvent>();
-		m_pendingTransEventList = new CMList<CMMqttEventPUBLISH>();
+		m_pendingTransEventList = new CMList<CMMqttEvent>();
 	}
 	
 	//////////////////////// setter/getter
@@ -69,12 +73,12 @@ public class CMMqttSession {
 	}
 	
 	// sent-unack-event list
-	public void setSentUnAckEventList(CMList<CMMqttEventPUBLISH> eventList)
+	public void setSentUnAckEventList(CMList<CMMqttEvent> eventList)
 	{
 		m_sentUnAckEventList = eventList;
 	}
 	
-	public CMList<CMMqttEventPUBLISH> getSentUnAckEventList()
+	public CMList<CMMqttEvent> getSentUnAckEventList()
 	{
 		return m_sentUnAckEventList;
 	}
@@ -91,12 +95,12 @@ public class CMMqttSession {
 	}
 	
 	// pending-trans-event list
-	public void setPendingTransEventList(CMList<CMMqttEventPUBLISH> eventList)
+	public void setPendingTransEventList(CMList<CMMqttEvent> eventList)
 	{
 		m_pendingTransEventList = eventList;
 	}
 	
-	public CMList<CMMqttEventPUBLISH> getPendingTransEventList()
+	public CMList<CMMqttEvent> getPendingTransEventList()
 	{
 		return m_pendingTransEventList;
 	}
@@ -136,26 +140,29 @@ public class CMMqttSession {
 	
 	//////////////////////// sent-unack-event list
 	
-	public boolean addSentUnAckEvent(CMMqttEventPUBLISH pubEvent)
+	public boolean addSentUnAckEvent(CMMqttEvent unackEvent)
 	{
-		CMMqttEventPUBLISH mqttEvent = findSentUnAckEvent(pubEvent.getPacketID());
+		int nID = getMQTTPacketID(unackEvent);
+		CMMqttEvent mqttEvent = findSentUnAckEvent(nID);
 		if(mqttEvent != null)
 		{
 			System.err.println("CMMqttSession.addSentUnAckEvent(), the same packet ID ("
-					+pubEvent.getPacketID()+") already exists!");
+					+nID+") already exists!");
 			System.err.println(mqttEvent.toString());
 			return false;			
 		}
 		
-		return m_sentUnAckEventList.addElement(pubEvent);
+		return m_sentUnAckEventList.addElement(unackEvent);
 	}
 	
-	public CMMqttEventPUBLISH findSentUnAckEvent(int nPacketID)
+	public CMMqttEvent findSentUnAckEvent(int nPacketID)
 	{
-		for(CMMqttEventPUBLISH pubEvent : m_sentUnAckEventList.getList())
+		int nID = -1;
+		for(CMMqttEvent unackEvent : m_sentUnAckEventList.getList())
 		{
-			if(pubEvent.getPacketID() == nPacketID)
-				return pubEvent;
+			nID = getMQTTPacketID(unackEvent);
+			if(nID == nPacketID)
+				return unackEvent;
 		}
 		
 		return null;
@@ -163,11 +170,11 @@ public class CMMqttSession {
 	
 	public boolean removeSentUnAckEvent(int nPacketID)
 	{
-		CMMqttEventPUBLISH pubEvent = findSentUnAckEvent(nPacketID);
-		if(pubEvent == null)
+		CMMqttEvent unackEvent = findSentUnAckEvent(nPacketID);
+		if(unackEvent == null)
 			return false;
 		
-		return m_sentUnAckEventList.removeElement(pubEvent);
+		return m_sentUnAckEventList.removeElement(unackEvent);
 	}
 	
 	public void removeAllSentUnAckEvent()
@@ -180,12 +187,7 @@ public class CMMqttSession {
 
 	public boolean addRecvUnAckEvent(CMMqttEvent mqttEvent)
 	{
-		int nID = -1;
-		if(mqttEvent instanceof CMMqttEventPUBLISH)
-			nID = ((CMMqttEventPUBLISH)mqttEvent).getPacketID();
-		else if(mqttEvent instanceof CMMqttEventPUBREC)
-			nID = ((CMMqttEventPUBREC)mqttEvent).getPacketID();
-		
+		int nID = getMQTTPacketID(mqttEvent);
 		CMMqttEvent event = findRecvUnAckEvent(nID);
 		if(event != null)
 		{
@@ -204,15 +206,10 @@ public class CMMqttSession {
 	
 	public CMMqttEvent findRecvUnAckEvent(int nPacketID)
 	{
-		
+		int nID = -1;
 		for(CMMqttEvent mqttEvent : m_recvUnAckEventList.getList())
 		{
-			int nID = -1;
-			if(mqttEvent instanceof CMMqttEventPUBLISH)
-				nID = ((CMMqttEventPUBLISH)mqttEvent).getPacketID();
-			else if(mqttEvent instanceof CMMqttEventPUBREC)
-				nID = ((CMMqttEventPUBREC)mqttEvent).getPacketID();
-			
+			nID = getMQTTPacketID(mqttEvent);
 			if(nID == nPacketID)
 				return mqttEvent;
 		}
@@ -237,26 +234,29 @@ public class CMMqttSession {
 
 	//////////////////////// pending-trans-event list
 	
-	public boolean addPendingTransEvent(CMMqttEventPUBLISH pubEvent)
+	public boolean addPendingTransEvent(CMMqttEvent pendingEvent)
 	{
-		CMMqttEventPUBLISH mqttEvent = findPendingTransEvent(pubEvent.getPacketID());
+		int nID = getMQTTPacketID(pendingEvent);
+		CMMqttEvent mqttEvent = findPendingTransEvent(nID);
 		if(mqttEvent != null)
 		{
 			System.err.println("CMMqttSession.addPendingTransEvent(), the same packet ID ("
-					+pubEvent.getPacketID()+") already exists!");
+					+nID+") already exists!");
 			System.err.println(mqttEvent.toString());
 			return false;			
 		}
 		
-		return m_pendingTransEventList.addElement(pubEvent);
+		return m_pendingTransEventList.addElement(pendingEvent);
 	}
 	
-	public CMMqttEventPUBLISH findPendingTransEvent(int nPacketID)
+	public CMMqttEvent findPendingTransEvent(int nPacketID)
 	{
-		for(CMMqttEventPUBLISH pubEvent : m_pendingTransEventList.getList())
+		int nID = -1;
+		for(CMMqttEvent pendingEvent : m_pendingTransEventList.getList())
 		{
-			if(pubEvent.getPacketID() == nPacketID)
-				return pubEvent;
+			nID = getMQTTPacketID(pendingEvent);
+			if(nID == nPacketID)
+				return pendingEvent;
 		}
 		
 		return null;
@@ -264,11 +264,11 @@ public class CMMqttSession {
 	
 	public boolean removePendingTransEvent(int nPacketID)
 	{
-		CMMqttEventPUBLISH pubEvent = findPendingTransEvent(nPacketID);
-		if(pubEvent == null)
+		CMMqttEvent pendingEvent = findPendingTransEvent(nPacketID);
+		if(pendingEvent == null)
 			return false;
 		
-		return m_pendingTransEventList.removeElement(pubEvent);
+		return m_pendingTransEventList.removeElement(pendingEvent);
 	}
 	
 	public void removeAllPendingTransEvent()
@@ -294,4 +294,24 @@ public class CMMqttSession {
 		
 		return strBuf.toString();
 	}
+	
+	///////////////////////////////////// private methods
+	
+	private int getMQTTPacketID(CMMqttEvent mqttEvent)
+	{
+		int nID = -1;
+		if(mqttEvent instanceof CMMqttEventPUBLISH)
+			nID = ((CMMqttEventPUBLISH)mqttEvent).getPacketID();
+		else if(mqttEvent instanceof CMMqttEventPUBACK)
+			nID = ((CMMqttEventPUBACK)mqttEvent).getPacketID();
+		else if(mqttEvent instanceof CMMqttEventPUBREC)
+			nID = ((CMMqttEventPUBREC)mqttEvent).getPacketID();
+		else if(mqttEvent instanceof CMMqttEventPUBREL)
+			nID = ((CMMqttEventPUBREL)mqttEvent).getPacketID();
+		else if(mqttEvent instanceof CMMqttEventPUBCOMP)
+			nID = ((CMMqttEventPUBCOMP)mqttEvent).getPacketID();
+		
+		return nID;
+	}
+	
 }
