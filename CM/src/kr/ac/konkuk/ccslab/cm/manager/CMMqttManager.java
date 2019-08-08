@@ -272,21 +272,9 @@ public class CMMqttManager extends CMServiceManager {
 			
 			if(bFound)
 			{
-				// send all pending events of this client (key)
-				if(!session.getPendingTransEventList().isEmpty())
-				{
-					for(CMMqttEventPUBLISH pendingEvent : session.getPendingTransEventList().getList())
-					{
-						bRet = CMEventManager.unicastEvent(pendingEvent, key, m_cmInfo);
-						if(!bRet)
-						{
-							System.err.println("CMMqttManager.publishFromServer(), error to send "
-									+"pending event: "+pendingEvent.toString());
-							return false;
-						}
-						session.removeAllPendingTransEvent();
-					}
-				}
+				// send and clear all pending events of this client (key)
+				if(!sendAndClearPendingTransEvents(key, session))
+					return false;
 				
 				// adapt to the subscribed QoS
 				int sentQoS = qos;
@@ -332,6 +320,74 @@ public class CMMqttManager extends CMServiceManager {
 
 		}	// end for
 	
+		return true;
+	}
+	
+	// send and clear all transmission-pending events (QoS 1 or 2)
+	public boolean sendAndClearPendingTransEvents(String strReceiver, CMMqttSession session)
+	{
+		// server -> client
+		if(session == null)
+		{
+			System.err.println("CMMqttManager.sendAndClearPendingTransEvents(), receiver ("
+					+strReceiver+"), session is null!");
+			return true;
+		}
+		
+		if(session.getPendingTransEventList().isEmpty())
+		{
+			System.out.println("CMMqttManager.sendAndClearPendingTransEvents(), the list is empty "
+					+"for receiver ("+strReceiver+")");
+			return true;
+		}
+
+		boolean bRet = false;
+		for(CMMqttEvent pendingEvent : session.getPendingTransEventList().getList())
+		{
+			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver, m_cmInfo);
+			if(!bRet)
+			{
+				System.err.println("CMMqttManager.sendAndClearPendingTransEvents(), error: receiver ("
+						+strReceiver+"), "+pendingEvent.toString());
+				return false;
+			}
+			session.removeAllPendingTransEvent();
+		}
+
+		return true;
+	}
+	
+	// send and clear all sent-unack events (QoS 1 or 2)
+	public boolean resendSentUnAckEvents(String strReceiver, CMMqttSession session)
+	{
+		// client -> server or server -> client
+		if(session == null)
+		{
+			System.err.println("CMMqttManager.sendAndClearSentUnAckEvents(), receiver ("
+					+strReceiver+"), session is null!");
+			return true;
+		}
+		
+		if(session.getSentUnAckEventList().isEmpty())
+		{
+			System.out.println("CMMqttManager.sendAndClearSentUnAckEvents(), the list is empty "
+					+"for receiver ("+strReceiver+")");
+			return true;
+		}
+		
+		boolean bRet = false;
+		for(CMMqttEvent unackEvent : session.getSentUnAckEventList().getList())
+		{
+			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver, m_cmInfo);
+			if(!bRet)
+			{
+				System.err.println("CMMqttManager.resendSentUnAckEvents(), error: receiver ("
+						+strReceiver+"), "+unackEvent.toString());
+				// do not need to put the event to the pending list because it still exists 
+				// in the sent-unack-event list.
+			}
+		}
+		
 		return true;
 	}
 	
