@@ -284,6 +284,21 @@ public class CMMqttManager extends CMServiceManager {
 					pubEvent.setQoS(maxQoS);
 				}
 				
+				// check whether the same packet ID is in use or not
+				if(session.findSentUnAckEvent(nPacketID) != null || 
+						session.findRecvUnAckEvent(nPacketID) != null)
+				{
+					System.err.println("CMMqttManager.publishFromServer(), packet ID ("+nPacketID
+							+") is already in use in sent-unack-event or recv-unack-event list !");
+					bRet = session.addPendingTransEvent(pubEvent);
+					if(bRet && CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMMqttManager.publishFromServer(), event ("+nPacketID
+								+") is added to the transmission-pending-event list.");
+					}
+					return false;
+				}
+				
 				bRet = CMEventManager.unicastEvent(pubEvent, key, m_cmInfo);
 				if(bRet && CMInfo._CM_DEBUG)
 				{
