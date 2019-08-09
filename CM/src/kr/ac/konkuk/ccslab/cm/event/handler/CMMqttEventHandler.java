@@ -375,6 +375,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	{
 		CMMqttEventPUBLISH pubEvent = (CMMqttEventPUBLISH)event;
 		boolean bRet = false;
+		boolean bDuplicate = false;
 		// print received event
 		if(CMInfo._CM_DEBUG)
 		{
@@ -400,13 +401,14 @@ public class CMMqttEventHandler extends CMEventHandler {
 			break;
 		case 2:
 			// check duplicate packet reception
-			bRet = isDuplicatePUBLISH(pubEvent);
-			if(!bRet)
-				return false;
-			// store received PUBLISH event
-			bRet = storeRecvPUBLISH(pubEvent);
-			if(!bRet)
-				return false;
+			bDuplicate = isDuplicatePUBLISH(pubEvent);
+			if(!bDuplicate)
+			{
+				// store received PUBLISH event
+				bRet = storeRecvPUBLISH(pubEvent);
+				if(!bRet)
+					return false;
+			}
 			// send PUBREC
 			bRet = sendPUBREC(pubEvent);
 			if(!bRet)
@@ -420,7 +422,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// if CM is server, it forwards the event to the subscribers
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		if(confInfo.getSystemType().equals("SERVER"))
+		if(!bDuplicate && confInfo.getSystemType().equals("SERVER"))
 		{
 			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
 					.get(CMInfo.CM_MQTT_MANAGER);
@@ -459,10 +461,10 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			System.err.println("CMMqttEventHandler.isDuplicatePUBLISH(), event with packet ID ("
 					+nPacketID+") is received and still in use in the recv-unack-event list!");
-			return false;
+			return true;
 		}
 		
-		return true;
+		return false;
 	}
 	
 	private boolean storeRecvPUBLISH(CMMqttEventPUBLISH pubEvent)

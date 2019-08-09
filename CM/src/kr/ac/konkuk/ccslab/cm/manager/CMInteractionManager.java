@@ -350,7 +350,7 @@ public class CMInteractionManager {
 			CMEventHandler handler = handlerHashtable.get(cmEvent.getType());
 			if(handler != null)
 			{
-				handler.processEvent(cmEvent);
+				bReturn = handler.processEvent(cmEvent);
 			}
 			else {
 				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
