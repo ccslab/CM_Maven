@@ -399,6 +399,10 @@ public class CMMqttEventHandler extends CMEventHandler {
 				return false; 
 			break;
 		case 2:
+			// check duplicate packet reception
+			bRet = isDuplicatePUBLISH(pubEvent);
+			if(!bRet)
+				return false;
 			// store received PUBLISH event
 			bRet = storeRecvPUBLISH(pubEvent);
 			if(!bRet)
@@ -426,6 +430,39 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		return bRet;
+	}
+	
+	private boolean isDuplicatePUBLISH(CMMqttEventPUBLISH pubEvent)
+	{
+		// to get session information
+		CMMqttSession session = null;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		String strSysType = confInfo.getSystemType();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		if(strSysType.equals("CLIENT"))
+		{
+			session = mqttInfo.getMqttSession();
+		}
+		else if(strSysType.equals("SERVER"))
+		{
+			session = mqttInfo.getMqttSessionHashtable().get(pubEvent.getSender());
+		}
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.isDuplicatePUBLISH(): session is null!");
+			return false;
+		}
+		
+		// to check whether the same packet ID is in the recv-unack-event list
+		int nPacketID = pubEvent.getPacketID();
+		if(session.findRecvUnAckEvent(nPacketID) != null)
+		{
+			System.err.println("CMMqttEventHandler.isDuplicatePUBLISH(), event with packet ID ("
+					+nPacketID+") is received and still in use in the recv-unack-event list!");
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean storeRecvPUBLISH(CMMqttEventPUBLISH pubEvent)
