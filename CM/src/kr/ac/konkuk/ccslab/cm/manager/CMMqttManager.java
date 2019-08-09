@@ -285,8 +285,8 @@ public class CMMqttManager extends CMServiceManager {
 				}
 				
 				// check whether the same packet ID is in use or not
-				if(session.findSentUnAckEvent(nPacketID) != null || 
-						session.findRecvUnAckEvent(nPacketID) != null)
+				if( (sentQoS == 1 || sentQoS == 2) && (session.findSentUnAckEvent(nPacketID) != null 
+						|| session.findRecvUnAckEvent(nPacketID) != null) )
 				{
 					System.err.println("CMMqttManager.publishFromServer(), packet ID ("+nPacketID
 							+") is already in use in sent-unack-event or recv-unack-event list !");
