@@ -344,6 +344,30 @@ public class CMMqttEventHandler extends CMEventHandler {
 			System.out.println("CMMqttEventHandler.processCONNACK(): received "
 					+connackEvent.toString());
 		}
+		
+		// if the MQTT connect request is successful,
+		if(connackEvent.getReturnCode() == (byte)0)
+		{
+			// resent all sent-unack events to the server
+			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+			CMMqttSession session = mqttInfo.getMqttSession();
+			if(session == null)
+			{
+				System.err.println("CMMqttEventHandler.processCONNACK(), session is null!");
+				return false;
+			}
+			
+			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
+					.get(CMInfo.CM_MQTT_MANAGER);
+			boolean bRet = mqttManager.resendSentUnAckEvents(connackEvent.getSender(), session);
+			if(!bRet)
+			{
+				System.err.println("CMMqttEventHandler.processCONNACK(), error to resend all "
+						+"sent-unack events to the server!");
+				return false;
+			}
+		}
+		
 		return true;
 	}
 	
