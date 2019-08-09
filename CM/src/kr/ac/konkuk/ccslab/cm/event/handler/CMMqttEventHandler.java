@@ -106,6 +106,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	{
 		// initialization
 		CMMqttEventCONNECT conEvent = (CMMqttEventCONNECT)event;
+		String strClient = conEvent.getSender();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		CMMqttEventCONNACK ackEvent = new CMMqttEventCONNACK();
 		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
@@ -128,12 +129,12 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			ackEvent.setSender(myself.getName());
 			ackEvent.setReturnCode((byte)6);
-			bRet = CMEventManager.unicastEvent(ackEvent, conEvent.getSender(), m_cmInfo);
+			bRet = CMEventManager.unicastEvent(ackEvent, strClient, m_cmInfo);
 			return bRet;
 		}
 		
 		// to determine ack flag
-		CMMqttSession mqttSession = mqttInfo.getMqttSessionHashtable().get(conEvent.getSender());
+		CMMqttSession mqttSession = mqttInfo.getMqttSessionHashtable().get(strClient);
 		if(conEvent.isCleanSessionFlag())
 			bConnAckFlag = false;
 		else if( mqttSession != null )
@@ -144,13 +145,13 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// to process clean-session flag
 		if(mqttSession != null && conEvent.isCleanSessionFlag())
 		{
-			mqttInfo.getMqttSessionHashtable().remove(conEvent.getSender());
+			mqttInfo.getMqttSessionHashtable().remove(strClient);
 			mqttSession = null;
 		}
 		if(mqttSession == null)
 		{
 			mqttSession = new CMMqttSession();
-			mqttInfo.getMqttSessionHashtable().put(conEvent.getSender(), mqttSession);
+			mqttInfo.getMqttSessionHashtable().put(strClient, mqttSession);
 		}
 		
 		// to process will flag
@@ -174,7 +175,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		ackEvent.setSender(myself.getName());
 		ackEvent.setConnAckFlag(bConnAckFlag);
 		ackEvent.setReturnCode(returnCode);
-		bRet = CMEventManager.unicastEvent(ackEvent, conEvent.getSender(), m_cmInfo);
+		bRet = CMEventManager.unicastEvent(ackEvent, strClient, m_cmInfo);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -185,6 +186,32 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			System.err.println("CMMqttEventHandler.processCONNECT(), error to send "
 					+ackEvent.toString());
+			return false;
+		}
+
+		// to get CMMqttManager
+		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
+										.get(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttEventHandler.processCONNECT(), CMMqttManager is null!");
+			return false;
+		}
+
+		// to send all transmission-pending events to this client
+		bRet = mqttManager.sendAndClearPendingTransEvents(strClient, mqttSession);
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processCONNECT(), error to send and cleear "
+					+"transmission pending events to client ("+strClient+")!");
+			return false;
+		}
+		// to send all sent-unack events to this client
+		bRet = mqttManager.resendSentUnAckEvents(strClient, mqttSession);
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processCONNECT(), error to resend all "
+					+"sent-unack events to client ("+strClient+")!");
 			return false;
 		}
 
@@ -569,26 +596,27 @@ public class CMMqttEventHandler extends CMEventHandler {
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBREC(), deleted PUBLISH event "
-					+"with packet ID ("+nPacketID+").");
+					+"with packet ID ("+nPacketID+") from the sent-unack-event list.");
 		}
 		if(!bRet)
 		{
 			System.err.println("CMMqttEventHandler.processPUBREC(), error to delete "
-					+"PUBLISH event with packet ID ("+nPacketID+")!");
+					+"PUBLISH event with packet ID ("+nPacketID+") from the sent-unack-event-list !");
 			return false;
 		}
 		
 		// to add PUBREC event to the session
 		bRet = session.addRecvUnAckEvent(recEvent);
+
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBREC(), added PUBREC event "
-					+"with packet ID ("+nPacketID+").");
+					+"with packet ID ("+nPacketID+") to the recv-unack-event list.");				
 		}
 		if(!bRet)
 		{
-			System.err.println("CMMqttEventHandler.processPUBREC(), error to delete "
-					+"PUBREC event with packet ID ("+nPacketID+")!");
+			System.err.println("CMMqttEventHandler.processPUBREC(), error to add "
+					+"PUBREC event with packet ID ("+nPacketID+") to the recv-unack-event list!");
 			return false;
 		}
 		
@@ -602,16 +630,33 @@ public class CMMqttEventHandler extends CMEventHandler {
 		relEvent.setPacketID(nPacketID);
 		
 		bRet = CMEventManager.unicastEvent(relEvent, recEvent.getSender(), m_cmInfo);
-		if(bRet && CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMMqttEventHandler.processPUBREC(), sent "
-					+relEvent.toString());
-		}
 		if(!bRet)
 		{
 			System.err.println("CMMqttEventHandler.processPUBREC(), error to send "
 					+relEvent.toString());
 			return false;
+		}
+		else
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMMqttEventHandler.processPUBREC(), sent "
+						+relEvent.toString());
+			}
+			
+			// add PUBREL to the sent-unack-event list
+			bRet = session.addSentUnAckEvent(relEvent);
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMMqttEventHandler.processPUBREC(), added PUBREL event with "
+						+"packet ID ("+nPacketID+") to the sent-unack-event list.");
+			}
+			if(!bRet)
+			{
+				System.err.println("CMMqttEventHandler.processPUBREC(), error to add PUBREL event "
+						+"with packet ID ("+nPacketID+") to the sent-unack-event list !");
+				return false;
+			}
 		}
 
 		return true;
@@ -731,18 +776,32 @@ public class CMMqttEventHandler extends CMEventHandler {
 			return false;
 		}
 
-		// to delete PUBREC
+		// to delete PUBREL from the sent-unack-event list
 		int nPacketID = compEvent.getPacketID();
-		boolean bRet = session.removeRecvUnAckEvent(nPacketID);
+		boolean bRet = session.removeSentUnAckEvent(nPacketID);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPUBCOMP(), deleted PUBREL event "
+					+"with packet ID ("+nPacketID+") from the sent-unack-event list");
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPUBCOMP(), error to delete PUBREL event "
+					+"with packet ID ("+nPacketID+") from the sent-unack-event list!");
+			return false;
+		}
+		
+		// to delete PUBREC from the recv-unack-event list
+		bRet = session.removeRecvUnAckEvent(nPacketID);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBCOMP(), deleted PUBREC event "
-					+"with packet ID ("+nPacketID+").");
+					+"with packet ID ("+nPacketID+") from the recv-unack-event list.");
 		}
 		if(!bRet)
 		{
 			System.err.println("CMMqttEventHandler.processPUBCOMP(), error to delete "
-					+"PUBREC event with packet ID ("+nPacketID+")!");
+					+"PUBREC event with packet ID ("+nPacketID+") from the recv-unack-event list!");
 			return false;
 		}
 		
