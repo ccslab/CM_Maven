@@ -393,6 +393,12 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		for(CMMqttEvent unackEvent : session.getSentUnAckEventList().getList())
 		{
+			// set DUP flag in the case of PUBLISH
+			if(unackEvent instanceof CMMqttEventPUBLISH)
+			{
+				((CMMqttEventPUBLISH)unackEvent).setDupFlag(true);
+			}
+			
 			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver, m_cmInfo);
 			if(!bRet)
 			{
