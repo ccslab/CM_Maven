@@ -374,7 +374,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	private boolean processPUBLISH(CMMqttEvent event)
 	{
 		CMMqttEventPUBLISH pubEvent = (CMMqttEventPUBLISH)event;
-		boolean bRet = false;
+		boolean bRet = true;
 		boolean bDuplicate = false;
 		// print received event
 		if(CMInfo._CM_DEBUG)
@@ -382,8 +382,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 			System.out.println("CMMqttEventHandler.processPUBLISH(): received "
 					+pubEvent.toString());
 		}
-		
-		// to check and process the retain flag (not yet)
 		
 		// response
 		switch(pubEvent.getQoS())
@@ -431,56 +429,60 @@ public class CMMqttEventHandler extends CMEventHandler {
 			// process the retain flag
 			if(pubEvent.isRetainFlag())
 			{
-				// get retain-event hash table
-				CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
-				Hashtable<String, CMMqttEventPUBLISH> retainHashtable = 
-						mqttInfo.getMqttRetainHashtable();
-				CMMqttEventPUBLISH oldEvent = null;
-
-				// check whether the application message is zero byte or not
-				if(pubEvent.getAppMessage().isEmpty())
-				{
-					// delete the retain event
-					oldEvent = retainHashtable.remove(pubEvent.getTopicName());
-					if(CMInfo._CM_DEBUG)
-					{
-						if(oldEvent != null)
-						{
-							System.out.println("CMMqttEventHandler.processPUBLISH(), "
-									+ "deleted retain event "+oldEvent.toString());
-						}
-						else {
-							System.err.println("CMMqttEventHandler.processPUBLISH(), "
-									+"no retain event with topic ("+pubEvent.getTopicName());
-						}
-					}
-				}
-				else
-				{
-					// retain the PUBLISH event about the topic
-					oldEvent = retainHashtable.put(pubEvent.getTopicName(), 
-							pubEvent);
-					if(CMInfo._CM_DEBUG)
-					{
-						if(oldEvent != null)
-						{
-							System.out.println("CMMqttEventHandler.processPUBLISH(), "
-									+ "old retain event "+oldEvent.toString()+" is "
-											+ "replaced by the new retain event.");
-						}
-						else
-						{
-							System.out.println("CMMqttEventHandler.processPUBLISH(), "
-									+ "retain new event "+pubEvent.toString());
-						}
-						
-					}
-					
-				}
+				processRetainEvent(pubEvent);
 			}
 		}
 		
 		return bRet;
+	}
+	
+	private void processRetainEvent(CMMqttEventPUBLISH pubEvent)
+	{
+		// get retain-event hash table
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = 
+				mqttInfo.getMqttRetainHashtable();
+		CMMqttEventPUBLISH oldEvent = null;
+
+		// check whether the application message is zero byte or not
+		if(pubEvent.getAppMessage().isEmpty())
+		{
+			// delete the retain event
+			oldEvent = retainHashtable.remove(pubEvent.getTopicName());
+			if(CMInfo._CM_DEBUG)
+			{
+				if(oldEvent != null)
+				{
+					System.out.println("CMMqttEventHandler.processRetainEvent(), "
+							+ "deleted retain event "+oldEvent.toString());
+				}
+				else {
+					System.err.println("CMMqttEventHandler.processRetainEvent(), "
+							+"no retain event with topic \""+pubEvent.getTopicName()+"\"!");
+				}
+			}
+		}
+		else
+		{
+			// retain the PUBLISH event about the topic
+			oldEvent = retainHashtable.put(pubEvent.getTopicName(), 
+					pubEvent);
+			if(CMInfo._CM_DEBUG)
+			{
+				if(oldEvent != null)
+				{
+					System.out.println("CMMqttEventHandler.processRetainEvent(), "
+							+ "old retain event "+oldEvent.toString()+" is "
+									+ "replaced by the new retain event.");
+				}
+
+				System.out.println("CMMqttEventHandler.processRetainEvent(), "
+						+ "added new retained event "+pubEvent.toString());
+			}
+			
+		}
+
+		return;
 	}
 	
 	private boolean isDuplicatePUBLISH(CMMqttEventPUBLISH pubEvent)
