@@ -385,8 +385,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to check and process the retain flag (not yet)
 		
-		// to check and process the DUP flag (not yet)
-		
 		// response
 		switch(pubEvent.getQoS())
 		{
@@ -426,9 +424,60 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
 					.get(CMInfo.CM_MQTT_MANAGER);
+			// DUP flag = false, RETAIN flag = false
 			mqttManager.publish(pubEvent.getPacketID(), pubEvent.getTopicName(), 
-					pubEvent.getAppMessage(), pubEvent.getQoS(), pubEvent.isDupFlag(), 
-					pubEvent.isRetainFlag());
+					pubEvent.getAppMessage(), pubEvent.getQoS(), false, false);
+			
+			// process the retain flag
+			if(pubEvent.isRetainFlag())
+			{
+				// get retain-event hash table
+				CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+				Hashtable<String, CMMqttEventPUBLISH> retainHashtable = 
+						mqttInfo.getMqttRetainHashtable();
+				CMMqttEventPUBLISH oldEvent = null;
+
+				// check whether the application message is zero byte or not
+				if(pubEvent.getAppMessage().isEmpty())
+				{
+					// delete the retain event
+					oldEvent = retainHashtable.remove(pubEvent.getTopicName());
+					if(CMInfo._CM_DEBUG)
+					{
+						if(oldEvent != null)
+						{
+							System.out.println("CMMqttEventHandler.processPUBLISH(), "
+									+ "deleted retain event "+oldEvent.toString());
+						}
+						else {
+							System.err.println("CMMqttEventHandler.processPUBLISH(), "
+									+"no retain event with topic ("+pubEvent.getTopicName());
+						}
+					}
+				}
+				else
+				{
+					// retain the PUBLISH event about the topic
+					oldEvent = retainHashtable.put(pubEvent.getTopicName(), 
+							pubEvent);
+					if(CMInfo._CM_DEBUG)
+					{
+						if(oldEvent != null)
+						{
+							System.out.println("CMMqttEventHandler.processPUBLISH(), "
+									+ "old retain event "+oldEvent.toString()+" is "
+											+ "replaced by the new retain event.");
+						}
+						else
+						{
+							System.out.println("CMMqttEventHandler.processPUBLISH(), "
+									+ "retain new event "+pubEvent.toString());
+						}
+						
+					}
+					
+				}
+			}
 		}
 		
 		return bRet;

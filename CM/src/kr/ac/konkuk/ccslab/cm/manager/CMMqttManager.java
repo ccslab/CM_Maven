@@ -239,7 +239,7 @@ public class CMMqttManager extends CMServiceManager {
 		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
 		pubEvent.setSender(myself.getName());
 		// set fixed header
-		pubEvent.setDupFlag(false);	// In the server, the dup-flag is reset
+		pubEvent.setDupFlag(bDupFlag);
 		pubEvent.setQoS(qos);
 		pubEvent.setRetainFlag(bRetainFlag);
 		// set variable header
