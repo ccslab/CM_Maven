@@ -231,8 +231,6 @@ public class CMMqttManager extends CMServiceManager {
 	{
 		// server -> client
 
-		boolean bRet = false;
-		
 		// make PUBLISH event
 		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
 		// set sender (in CM event header)
@@ -255,86 +253,119 @@ public class CMMqttManager extends CMServiceManager {
 		for(String key : keys)
 		{
 			CMMqttSession session = sessionHashtable.get(key);
-			Vector<CMMqttTopicQoS> filterVector = session.getSubscriptionList().getList();
-			boolean bFound = false;
-			byte maxQoS = 0;
-			for(int i = 0; i < filterVector.size(); i++)
-			{
-				String strFilter = filterVector.elementAt(i).getTopic();
-				bFound = isTopicMatch(strTopic, strFilter);
-				if(bFound)	// find maximum matching QoS
-				{
-					byte reqQoS = filterVector.elementAt(i).getQoS();
-					if(reqQoS > maxQoS)
-						maxQoS = reqQoS;
-				}
-			}  // end for
-			
-			if(bFound)
-			{
-				// send and clear all pending events of this client (key)
-				if(!sendAndClearPendingTransEvents(key, session))
-					return false;
-				
-				// adapt to the subscribed QoS
-				int sentQoS = qos;
-				if(maxQoS < qos)
-				{
-					sentQoS = maxQoS;
-					pubEvent.setQoS(maxQoS);
-				}
-				
-				// check whether the same packet ID is in use or not
-				if( (sentQoS == 1 || sentQoS == 2) && (session.findSentUnAckEvent(nPacketID) != null 
-						|| session.findRecvUnAckEvent(nPacketID) != null) )
-				{
-					System.err.println("CMMqttManager.publishFromServer(), packet ID ("+nPacketID
-							+") is already in use in sent-unack-event or recv-unack-event list !");
-					bRet = session.addPendingTransEvent(pubEvent);
-					if(bRet && CMInfo._CM_DEBUG)
-					{
-						System.out.println("CMMqttManager.publishFromServer(), event ("+nPacketID
-								+") is added to the transmission-pending-event list.");
-					}
-					return false;
-				}
-				
-				bRet = CMEventManager.unicastEvent(pubEvent, key, m_cmInfo);
-				if(bRet && CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMMqttManager.publishFromServer(), sent ("
-							+key+"): "+pubEvent.toString());
-				}
-				if(!bRet)
-				{
-					System.err.println("CMMqttManager.publishFromServer(), error to send ("
-							+key+"): ");
-					if(sentQoS == 1 || sentQoS == 2)
-					{
-						// add this event to the pending event list
-						session.addPendingTransEvent(pubEvent);
-					}
-				}
-				
-				// process QoS 1 or 2 case for the sent packet
-				if(bRet && (sentQoS == 1 || sentQoS == 2))
-				{
-					bRet = session.addSentUnAckEvent(pubEvent);
-					if(bRet && CMInfo._CM_DEBUG)
-					{
-						System.out.println("CMMqttManager.publishFromServer(): "
-								+ "stored to sent unack event list: "+pubEvent.toString());
-					}
-					if(!bRet)
-					{
-						System.err.println("CMMqttManager.publishFromServer(): error "
-							+ "to store to sent unack event list: "+pubEvent.toString());
-					}
-				} // end if
-			} // end if
-
-		}	// end for
+			CMList<CMMqttTopicQoS> subList = session.getSubscriptionList();
+			publishFromServerToOneClient(pubEvent, key, subList);
+		}
 	
+		return true;
+	}
+	
+	// publish event from server to one client
+	public boolean publishFromServerToOneClient(CMMqttEventPUBLISH pubEvent, String strClient, 
+			CMList<CMMqttTopicQoS> subscriptionList)
+	{
+		if(subscriptionList == null)
+		{
+			System.err.println("CMMqttManager.publishFromServerToOneClient(), subscription list of "
+					+"client ("+strClient+") is null!");
+			return false;
+		}
+		
+		Vector<CMMqttTopicQoS> filterVector = subscriptionList.getList();
+		String strTopic = pubEvent.getTopicName();
+		
+		boolean bFound = false;
+		byte maxQoS = 0;
+		for(int i = 0; i < filterVector.size(); i++)
+		{
+			String strFilter = filterVector.elementAt(i).getTopic();
+			bFound = isTopicMatch(strTopic, strFilter);
+			if(bFound)	// find maximum matching QoS
+			{
+				byte reqQoS = filterVector.elementAt(i).getQoS();
+				if(reqQoS > maxQoS)
+					maxQoS = reqQoS;
+			}
+		}  // end for
+
+		if(!bFound)
+		{
+			return false;
+		}
+		
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable(); 
+		CMMqttSession session = sessionHashtable.get(strClient);
+		byte qos = pubEvent.getQoS();
+		int nPacketID = pubEvent.getPacketID();
+		boolean bRet = false;
+
+		// send and clear all pending events of this client (key)
+		if(!sendAndClearPendingTransEvents(strClient, session))
+			return false;
+		
+		// adapt to the subscribed QoS
+		int sentQoS = qos;
+		if(maxQoS < qos)
+		{
+			sentQoS = maxQoS;
+			pubEvent.setQoS(maxQoS);
+		}
+			
+		// check whether the same packet ID is in use or not
+		if( (sentQoS == 1 || sentQoS == 2) && (session.findSentUnAckEvent(nPacketID) != null 
+				|| session.findRecvUnAckEvent(nPacketID) != null) )
+		{
+			System.err.println("CMMqttManager.publishFromServerToOneClient(), "
+					+ "client ("+strClient+"), "
+					+ "packet ID ("+nPacketID
+					+") is already in use in sent-unack-event or recv-unack-event list !");
+			bRet = session.addPendingTransEvent(pubEvent);
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMMqttManager.publishFromServerToOneClient(), "
+						+ "event ("+nPacketID+") is added to the transmission-pending-event list.");
+			}
+			return false;
+		}
+			
+		bRet = CMEventManager.unicastEvent(pubEvent, strClient, m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttManager.publishFromServerToOneClient(), sent ("
+					+strClient+"): "+pubEvent.toString());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttManager.publishFromServerToOneClient(), error to send ("
+					+strClient+"): ");
+			if(sentQoS == 1 || sentQoS == 2)
+			{
+				// add this event to the pending event list
+				session.addPendingTransEvent(pubEvent);
+			}
+			return false;
+		}
+			
+		// process QoS 1 or 2 case for the sent packet
+		if(bRet && (sentQoS == 1 || sentQoS == 2))
+		{
+			bRet = session.addSentUnAckEvent(pubEvent);
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMMqttManager.publishFromServerToOneClient(): "
+						+ "stored to sent unack event list of client ("+strClient+") : "
+						+pubEvent.toString());
+			}
+			if(!bRet)
+			{
+				System.err.println("CMMqttManager.publishFromServer(): error "
+						+ "to store to sent unack event list of client ("+strClient+") : "
+						+pubEvent.toString());
+				return false;
+			}
+		} // end if
+
 		return true;
 	}
 	

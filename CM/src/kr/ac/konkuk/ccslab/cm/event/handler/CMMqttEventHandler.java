@@ -464,6 +464,11 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		else
 		{
+			// change the PUBLISH event before retain it
+			// The server will send the retained event
+			pubEvent.setSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+			// DUP flag is reset
+			pubEvent.setDupFlag(false);
 			// retain the PUBLISH event about the topic
 			oldEvent = retainHashtable.put(pubEvent.getTopicName(), 
 					pubEvent);
@@ -974,8 +979,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 				subscriptionList.removeElement(tempTopicQoS);
 			subscriptionList.addElement(topicQoS);
 			
-			// send retained event that matches with the added topic (not yet)
-			
 			// determine a return code per topic
 			qos = topicQoS.getQoS();
 			if(qos >= 0 && qos <= 2)
@@ -997,8 +1000,28 @@ public class CMMqttEventHandler extends CMEventHandler {
 					+ackEvent.toString());
 			return false;
 		}
+
+		// send retained event that matches with the added topic
+		sendRetainedEvents(subEvent.getSender(), reqSubList);
 		
 		return true;
+	}
+	
+	private void sendRetainedEvents(String strClient, CMList<CMMqttTopicQoS> topicQoSList)
+	{
+		// get retain event list
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = mqttInfo.getMqttRetainHashtable();
+		// get mqtt manager
+		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
+				.get(CMInfo.CM_MQTT_MANAGER);
+		for(String strTopic : retainHashtable.keySet())
+		{
+			CMMqttEventPUBLISH retainEvent = retainHashtable.get(strTopic);
+			mqttManager.publishFromServerToOneClient(retainEvent, strClient, topicQoSList);
+		}
+
+		return;
 	}
 	
 	private boolean processSUBACK(CMMqttEvent event)
