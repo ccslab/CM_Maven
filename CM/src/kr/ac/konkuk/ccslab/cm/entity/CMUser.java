@@ -108,6 +108,29 @@ public class CMUser extends CMObject {
 	public void setState(int state)
 	{
 		m_nState = state;
+		
+		switch(m_nState)
+		{
+		case CMInfo.CM_INIT:
+		case CMInfo.CM_CONNECT:
+			m_strName = "?";
+			m_strPasswd = "?";
+			m_strHost = "?";
+			m_nUDPPort = -1;
+			m_strCurrentSession = "?";
+			m_strCurrentGroup = "?";
+			break;
+		case CMInfo.CM_LOGIN:
+			m_strCurrentSession = "?";
+			m_strCurrentGroup = "?";
+			break;
+		case CMInfo.CM_SESSION_JOIN:
+			break;
+		default:
+			System.err.println("CMUser.setState(), invalid state ("+state+")");
+		}
+		
+		return;
 	}
 	
 	public void setAttachDownloadScheme(int scheme)

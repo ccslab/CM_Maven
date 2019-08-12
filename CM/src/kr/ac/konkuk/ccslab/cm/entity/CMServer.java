@@ -38,10 +38,10 @@ public class CMServer extends CMServerInfo {
 		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
 		
-		m_strCurrentSessionName = "";
-		m_strCurrentGroupName = "";
+		m_strCurrentSessionName = "?";
+		m_strCurrentGroupName = "?";
 		m_nClientState = CMInfo.CM_INIT;
-		m_strCommArch = "";
+		m_strCommArch = "?";
 		m_bLoginScheme = false;
 		m_bSessionScheme = false;
 		m_sessionList = new Vector<CMSession>();
@@ -82,6 +82,27 @@ public class CMServer extends CMServerInfo {
 	public void setClientState(int state)
 	{
 		m_nClientState = state;
+		
+		switch(m_nClientState)
+		{
+		case CMInfo.CM_INIT:
+		case CMInfo.CM_CONNECT:
+			m_strCurrentSessionName = "?";
+			m_strCurrentGroupName = "?";
+			m_strCommArch = "?";
+			m_bLoginScheme = false;
+			m_bSessionScheme = false;
+			break;
+		case CMInfo.CM_LOGIN:
+			m_strCurrentSessionName = "?";
+			m_strCurrentGroupName = "?";
+			break;
+		case CMInfo.CM_SESSION_JOIN:
+			break;
+		default:
+			System.err.println("CMServer.setClientState(), invalid state ("+state+")");
+		}
+
 	}
 	
 	public int getClientState()
