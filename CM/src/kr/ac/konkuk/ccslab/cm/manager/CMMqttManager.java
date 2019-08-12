@@ -736,13 +736,36 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		StringBuffer strBuf = new StringBuffer();
-		strBuf.append("All MQTT session list\n");
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
+		strBuf.append("# All MQTT session list: "+sessionHashtable.size()+"\n");
 		for(String strUser : sessionHashtable.keySet())
 		{
 			strBuf.append("session of user: "+strUser+"\n");
 			strBuf.append(getSessionInfo(strUser)+"\n");
+		}
+		
+		return strBuf.toString();
+	}
+	
+	// get all MQTT retain information (4 server)
+	public String getAllRetainInfo()
+	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(!confInfo.getSystemType().equals("SERVER"))
+		{
+			System.err.println("CMMqttManager.getAllRetainInfo(), the system type is not SERVER!");
+			return null;
+		}
+		
+		StringBuffer strBuf = new StringBuffer();
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = mqttInfo.getMqttRetainHashtable();
+		strBuf.append("# All MQTT retained events: "+retainHashtable.size()+"\n");
+		for(String strTopic : retainHashtable.keySet())
+		{
+			strBuf.append("topic : "+strTopic+"\n");
+			strBuf.append("event : "+retainHashtable.get(strTopic).toString()+"\n");
 		}
 		
 		return strBuf.toString();

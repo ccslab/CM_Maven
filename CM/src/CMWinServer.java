@@ -328,6 +328,9 @@ public class CMWinServer extends JFrame {
 		case 61:	// print all session info
 			printAllMqttSessionInfo();
 			break;
+		case 62:	// print all retain info
+			printAllMqttRetainInfo();
+			break;
 		case 101:	// configure variables of user access simulation
 			configureUserAccessSimulation();
 			break;
@@ -369,7 +372,7 @@ public class CMWinServer extends JFrame {
 		printMessage("---------------------------------- Channel\n");
 		printMessage("50: add channel, 51: remove channel\n");
 		printMessage("---------------------------------- MQTT\n");
-		printMessage("60: find session info, 61: print all session info\n");
+		printMessage("60: find session info, 61: print all session info, 62: print all retain info\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
 		printMessage("103: start SNS user access simulation and measure prefetch accuracy\n");
@@ -1624,6 +1627,20 @@ public class CMWinServer extends JFrame {
 			return;
 		}
 		printMessage(mqttManager.getAllSessionInfo());
+		
+		return;
+	}
+	
+	public void printAllMqttRetainInfo()
+	{
+		printMessage("=========== print all MQTT retain info\n");
+		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			printStyledMessage("CMMqttManager is null!\n", "bold");
+			return;
+		}
+		printMessage(mqttManager.getAllRetainInfo());
 		
 		return;
 	}
