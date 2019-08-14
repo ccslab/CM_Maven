@@ -205,6 +205,7 @@ public class CMMqttManager extends CMServiceManager {
 			{
 				System.err.println("CMMqttManager.publishFromClient(): QoS("
 						+qos+"), but session is null!");
+				System.err.println("To create a new session, execute MQTT connect.");
 				return false;
 			}
 			
@@ -537,6 +538,7 @@ public class CMMqttManager extends CMServiceManager {
 		if(session == null)
 		{
 			System.err.println("CMMqttManager.subscribe(), the client session is null!");
+			System.err.println("To create a new session, execute MQTT connect.");
 			return false;
 		}
 		session.setReqSubscriptionList(topicQoSList);
@@ -604,6 +606,7 @@ public class CMMqttManager extends CMServiceManager {
 		if(session == null)
 		{
 			System.err.println("CMMqttManager.unsubscribe(), the client session is null!");
+			System.err.println("To create a new session, execute MQTT connect.");
 			return false;
 		}
 		CMList<CMMqttTopicQoS> subList = session.getSubscriptionList();
