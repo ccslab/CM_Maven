@@ -64,155 +64,155 @@ public class CMCommInfo {
 	}
 	
 	// set/get methods
-	public CMBlockingEventQueue getRecvBlockingEventQueue()
+	public synchronized CMBlockingEventQueue getRecvBlockingEventQueue()
 	{
 		return m_recvQueue;
 	}
 	
-	public CMBlockingEventQueue getSendBlockingEventQueue()
+	public synchronized CMBlockingEventQueue getSendBlockingEventQueue()
 	{
 		return m_sendQueue;
 	}
 	
-	public void setNonBlockServerSocketChannel(ServerSocketChannel ssc)
+	public synchronized void setNonBlockServerSocketChannel(ServerSocketChannel ssc)
 	{
 		m_nonBlockServerSocketChannel = ssc;
 	}
 	
-	public ServerSocketChannel getNonBlockServerSocketChannel()
+	public synchronized ServerSocketChannel getNonBlockServerSocketChannel()
 	{
 		return m_nonBlockServerSocketChannel;
 	}
 	
-	public void setBlockServerSocketChannel(ServerSocketChannel ssc)
+	public synchronized void setBlockServerSocketChannel(ServerSocketChannel ssc)
 	{
 		m_blockServerSocketChannel = ssc;
 	}
 	
-	public ServerSocketChannel getBlockServerSocketChannel()
+	public synchronized ServerSocketChannel getBlockServerSocketChannel()
 	{
 		return m_blockServerSocketChannel;
 	}
 	
-	public void setByteReceiver(CMByteReceiver receiver)
+	public synchronized void setByteReceiver(CMByteReceiver receiver)
 	{
 		m_byteReceiver = receiver;
 	}
 	
-	public CMByteReceiver getByteReceiver()
+	public synchronized CMByteReceiver getByteReceiver()
 	{
 		return m_byteReceiver;
 	}
 	
-	public void setByteSender(CMByteSender sender)
+	public synchronized void setByteSender(CMByteSender sender)
 	{
 		m_byteSender = sender;
 	}
 	
-	public CMByteSender getByteSender()
+	public synchronized CMByteSender getByteSender()
 	{
 		return m_byteSender;
 	}
 	
 	/*
-	public void setDatagramID(int id)
+	public synchronized void setDatagramID(int id)
 	{
 		m_nDatagramID = id;
 	}
 	
-	public int getDatagramID()
+	public synchronized int getDatagramID()
 	{
 		return m_nDatagramID;
 	}
 	*/
 	
-	public void setStartTime(long start)
+	public synchronized void setStartTime(long start)
 	{
 		m_lStart = start;
 	}
 	
-	public long getStartTime()
+	public synchronized long getStartTime()
 	{
 		return m_lStart;
 	}
 	
-	public void setEndTime(long end)
+	public synchronized void setEndTime(long end)
 	{
 		m_lEnd = end;
 	}
 	
-	public long getEndTime()
+	public synchronized long getEndTime()
 	{
 		return m_lEnd;
 	}
 	
-	public void setPDelay(long delay)
+	public synchronized void setPDelay(long delay)
 	{
 		m_lPDelay = delay;
 	}
 	
-	public long getPDelay()
+	public synchronized long getPDelay()
 	{
 		return m_lPDelay;
 	}
 	
-	public void setRecvCount(long count)
+	public synchronized void setRecvCount(long count)
 	{
 		m_lRecvCount = count;
 	}
 	
-	public long getRecvCount()
+	public synchronized long getRecvCount()
 	{
 		return m_lRecvCount;
 	}
 	
-	public void setTotalByte(long num)
+	public synchronized void setTotalByte(long num)
 	{
 		m_lTotalByte = num;
 	}
 	
-	public long getTotalByte()
+	public synchronized long getTotalByte()
 	{
 		return m_lTotalByte;
 	}
 	
-	public Selector getSelector()
+	public synchronized Selector getSelector()
 	{
 		return m_selector;
 	}
 	
-	public CMChannelInfo<Integer> getNonBlockDatagramChannelInfo()
+	public synchronized CMChannelInfo<Integer> getNonBlockDatagramChannelInfo()
 	{
 		return m_nonBlockDCInfo;
 	}
 	
-	public CMChannelInfo<Integer> getBlockDatagramChannelInfo()
+	public synchronized CMChannelInfo<Integer> getBlockDatagramChannelInfo()
 	{
 		return m_blockDCInfo;
 	}
 		
 	/*
-	public Vector<SocketChannel> getSocketChannelList()
+	public synchronized Vector<SocketChannel> getSocketChannelList()
 	{
 		return m_scList;
 	}
 	
-	public Vector<DatagramChannel> getDatagramChannelList()
+	public synchronized Vector<DatagramChannel> getDatagramChannelList()
 	{
 		return m_dcList;
 	}
 	
-	public Vector<MulticastChannel> getMulticastChannelList()
+	public synchronized Vector<MulticastChannel> getMulticastChannelList()
 	{
 		return m_mcList;
 	}
 
-	public Vector<SelectableChannel> getToBeDeletedChannelList()
+	public synchronized Vector<SelectableChannel> getToBeDeletedChannelList()
 	{
 		return m_toBeDeletedChannelList;
 	}
 	
-	public Vector<CMDatagramPacket> getDatagramPacketList()
+	public synchronized Vector<CMDatagramPacket> getDatagramPacketList()
 	{
 		return m_datagramPacketList;
 	}
@@ -220,7 +220,7 @@ public class CMCommInfo {
 	
 	/*
 	// sc,dc list management (mc list not included)
-	public SelectableChannel findChannel(SelectableChannel ch)
+	public synchronized SelectableChannel findChannel(SelectableChannel ch)
 	{
 		if(ch instanceof SocketChannel)
 			return findSocketChannel((SocketChannel)ch);
@@ -231,7 +231,7 @@ public class CMCommInfo {
 		return null;
 	}
 	
-	public boolean addChannel(SelectableChannel ch)
+	public synchronized boolean addChannel(SelectableChannel ch)
 	{
 		if(ch instanceof SocketChannel)
 			return addSocketChannel((SocketChannel)ch);
@@ -242,7 +242,7 @@ public class CMCommInfo {
 		return false;
 	}
 	
-	public boolean removeChannel(SelectableChannel ch)
+	public synchronized boolean removeChannel(SelectableChannel ch)
 	{
 		if(ch instanceof SocketChannel)
 			return removeSocketChannel((SocketChannel)ch);
@@ -254,14 +254,14 @@ public class CMCommInfo {
 	}
 	
 	// sc,dc,mc list
-	public void removeAllChannel()
+	public synchronized void removeAllChannel()
 	{
 		m_scList.removeAllElements();
 		m_dcList.removeAllElements();
 		m_mcList.removeAllElements();
 	}
 	
-	public SocketChannel findSocketChannel(SocketChannel ch)
+	public synchronized SocketChannel findSocketChannel(SocketChannel ch)
 	{
 		boolean bFound = false;
 		SocketChannel tch = null;
@@ -278,7 +278,7 @@ public class CMCommInfo {
 		return tch;
 	}
 	
-	public boolean addSocketChannel(SocketChannel ch)
+	public synchronized boolean addSocketChannel(SocketChannel ch)
 	{
 		if( findSocketChannel(ch) != null )
 		{
@@ -290,7 +290,7 @@ public class CMCommInfo {
 		return  true;
 	}
 	
-	public boolean removeSocketChannel(SocketChannel ch)
+	public synchronized boolean removeSocketChannel(SocketChannel ch)
 	{
 		boolean bFound = false;
 		SocketChannel tch = null;
@@ -307,13 +307,13 @@ public class CMCommInfo {
 		return bFound;
 	}
 	
-	public void removeAllSocketChannels()
+	public synchronized void removeAllSocketChannels()
 	{
 		m_scList.removeAllElements();
 		return;
 	}
 
-	public DatagramChannel findDatagramChannel(DatagramChannel ch)
+	public synchronized DatagramChannel findDatagramChannel(DatagramChannel ch)
 	{
 		boolean bFound = false;
 		DatagramChannel tch = null;
@@ -329,7 +329,7 @@ public class CMCommInfo {
 		return tch;
 	}
 	
-	public boolean addDatagramChannel(DatagramChannel ch)
+	public synchronized boolean addDatagramChannel(DatagramChannel ch)
 	{
 		if( findDatagramChannel(ch) != null )
 		{
@@ -341,7 +341,7 @@ public class CMCommInfo {
 		return  true;
 	}
 	
-	public boolean removeDatagramChannel(DatagramChannel ch)
+	public synchronized boolean removeDatagramChannel(DatagramChannel ch)
 	{
 		boolean bFound = false;
 		DatagramChannel tch = null;
@@ -358,13 +358,13 @@ public class CMCommInfo {
 		return bFound;
 	}
 	
-	public void removeAllDatagramChannels()
+	public synchronized void removeAllDatagramChannels()
 	{
 		m_dcList.removeAllElements();
 		return;
 	}
 
-	public MulticastChannel findMulticastChannel(MulticastChannel ch)
+	public synchronized MulticastChannel findMulticastChannel(MulticastChannel ch)
 	{
 		boolean bFound = false;
 		MulticastChannel tch = null;
@@ -380,7 +380,7 @@ public class CMCommInfo {
 		return tch;
 	}
 	
-	public boolean addMulticastChannel(MulticastChannel ch)
+	public synchronized boolean addMulticastChannel(MulticastChannel ch)
 	{
 		if( findMulticastChannel(ch) != null )
 		{
@@ -392,7 +392,7 @@ public class CMCommInfo {
 		return  true;
 	}
 	
-	public boolean removeMulticastChannel(MulticastChannel ch)
+	public synchronized boolean removeMulticastChannel(MulticastChannel ch)
 	{
 		boolean bFound = false;
 		MulticastChannel tch = null;
@@ -409,7 +409,7 @@ public class CMCommInfo {
 		return bFound;
 	}
 	
-	public void removeAllMulticastChannels()
+	public synchronized void removeAllMulticastChannels()
 	{
 		m_mcList.removeAllElements();
 		return;
