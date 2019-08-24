@@ -398,8 +398,8 @@ public class CMMqttManager extends CMServiceManager {
 						+strReceiver+"), "+pendingEvent.toString());
 				return false;
 			}
-			session.removeAllPendingTransEvent();
 		}
+		session.removeAllPendingTransEvent();
 
 		return true;
 	}
