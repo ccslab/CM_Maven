@@ -13,7 +13,7 @@ public class CMMember extends CMObject{
 	}
 	
 	// add member information
-	public boolean addMember(CMUser user)
+	public synchronized boolean addMember(CMUser user)
 	{
 		if(isMember(user.getName()))
 		{
@@ -32,7 +32,7 @@ public class CMMember extends CMObject{
 	}
 	
 	// remove member item (reference)
-	public boolean removeMember(CMUser user)
+	public synchronized boolean removeMember(CMUser user)
 	{
 		Iterator<CMUser> iter = m_memberList.iterator();
 		int nRemovedNum = 0;
@@ -60,7 +60,7 @@ public class CMMember extends CMObject{
 	}
 
 	// remove member reference and the member object
-	public boolean removeMemberObject(CMUser user)
+	public synchronized boolean removeMemberObject(CMUser user)
 	{
 		Iterator<CMUser> iter = m_memberList.iterator();
 		int nRemovedNum = 0;
@@ -91,7 +91,7 @@ public class CMMember extends CMObject{
 	}
 
 	// remove member item (reference) with user name
-	public boolean removeMember(String name)
+	public synchronized boolean removeMember(String name)
 	{
 		Iterator<CMUser> iter = m_memberList.iterator();
 		int nRemovedNum = 0;
@@ -121,7 +121,7 @@ public class CMMember extends CMObject{
 	}
 
 	// remove member item (reference) and the member object with user name
-	public boolean removeMemberObject(String name)
+	public synchronized boolean removeMemberObject(String name)
 	{
 		Iterator<CMUser> iter = m_memberList.iterator();
 		int nRemovedNum = 0;
@@ -152,7 +152,7 @@ public class CMMember extends CMObject{
 	}
 
 	// remove all member items (references)
-	public boolean removeAllMembers()
+	public synchronized boolean removeAllMembers()
 	{
 		if( m_memberList.isEmpty() )
 		{
@@ -172,7 +172,7 @@ public class CMMember extends CMObject{
 	}
 
 	// remove all member items (references) and the member objects
-	public boolean removeAllMemberObjects()
+	public synchronized boolean removeAllMemberObjects()
 	{
 		if( m_memberList.isEmpty() )
 		{
@@ -202,7 +202,7 @@ public class CMMember extends CMObject{
 	}
 
 	// check if a given user is a member
-	public boolean isMember(CMUser user)
+	public synchronized boolean isMember(CMUser user)
 	{
 		Iterator<CMUser> iter = m_memberList.iterator();
 		while(iter.hasNext())
@@ -218,7 +218,7 @@ public class CMMember extends CMObject{
 	}
 	
 	// check if a given user name is that of a member
-	public boolean isMember(String name)
+	public synchronized boolean isMember(String name)
 	{
 		Iterator<CMUser> iter = m_memberList.iterator();
 		while(iter.hasNext())
@@ -234,13 +234,13 @@ public class CMMember extends CMObject{
 	}
 	
 	// check if the member list is empty
-	public boolean isEmpty()
+	public synchronized boolean isEmpty()
 	{
 		return m_memberList.isEmpty();
 	}
 	
 	// find member information
-	public CMUser findMember(String name)
+	public synchronized CMUser findMember(String name)
 	{
 		CMUser tuser;
 		Iterator<CMUser> iter = m_memberList.iterator();
@@ -255,13 +255,13 @@ public class CMMember extends CMObject{
 	}
 	
 	// get number of members
-	public int getMemberNum()
+	public synchronized int getMemberNum()
 	{
 		return m_memberList.size();
 	}
 	
 	// get all members (return member vector)
-	public Vector<CMUser> getAllMembers()
+	public synchronized Vector<CMUser> getAllMembers()
 	{
 		return m_memberList;
 	}
