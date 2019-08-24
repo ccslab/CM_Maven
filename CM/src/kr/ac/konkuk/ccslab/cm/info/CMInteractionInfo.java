@@ -28,27 +28,27 @@ public class CMInteractionInfo {
 	}
 	
 	// get methods
-	public CMMember getLoginUsers()
+	public synchronized CMMember getLoginUsers()
 	{
 		return m_loginUsers;
 	}
 	
-	public Vector<CMSession> getSessionList()
+	public synchronized Vector<CMSession> getSessionList()
 	{
 		return m_sessionList;
 	}
 	
-	public CMUser getMyself()
+	public synchronized CMUser getMyself()
 	{
 		return m_myself;
 	}
 	
-	public CMServer getDefaultServerInfo()
+	public synchronized CMServer getDefaultServerInfo()
 	{
 		return m_defaultServerInfo;
 	}
 	
-	public Vector<CMServer> getAddServerList()
+	public synchronized Vector<CMServer> getAddServerList()
 	{
 		return m_addServerList;
 	}
@@ -57,7 +57,7 @@ public class CMInteractionInfo {
 	// session membership management
 	
 	// check if a session is member or not
-	public boolean isMember(String strSessionName)
+	public synchronized boolean isMember(String strSessionName)
 	{
 		CMSession tSession = null;
 		boolean bFound = false;
@@ -79,7 +79,7 @@ public class CMInteractionInfo {
 	// create a session and add it to the session list
 	// strAddr: address of a server which manages the session
 	// nPort: port of a server which manages the session
-	public CMSession createSession(String strSessionName, String strAddr, int nPort)
+	public synchronized CMSession createSession(String strSessionName, String strAddr, int nPort)
 	{
 		CMSession cmSession = null;
 		if( isMember(strSessionName) )
@@ -94,7 +94,7 @@ public class CMInteractionInfo {
 		return cmSession;
 	}
 
-	public boolean addSession(CMSession session)
+	public synchronized boolean addSession(CMSession session)
 	{
 		String sname = session.getSessionName();
 		
@@ -111,7 +111,7 @@ public class CMInteractionInfo {
 		return true;
 	}
 
-	public boolean removeSession(String strSessionName)
+	public synchronized boolean removeSession(String strSessionName)
 	{
 		CMSession tSession = null;
 		boolean bFound = false;
@@ -141,7 +141,7 @@ public class CMInteractionInfo {
 		return bFound;
 	}
 
-	public CMSession findSession(String strSessionName)
+	public synchronized CMSession findSession(String strSessionName)
 	{
 		CMSession tSession = null;
 		boolean bFound = false;
@@ -163,7 +163,7 @@ public class CMInteractionInfo {
 		return tSession;
 	}
 	
-	public CMSession findSessionWithUserName(String strUserName)
+	public synchronized CMSession findSessionWithUserName(String strUserName)
 	{
 		CMSession tSession = null;
 		boolean bFound = false;
@@ -188,7 +188,7 @@ public class CMInteractionInfo {
 	// membership management of additional server info
 
 	// check if a server is member or not
-	public boolean isAddServer(String strServerName)
+	public synchronized boolean isAddServer(String strServerName)
 	{
 		CMServer tServer = null;
 		boolean bFound = false;
@@ -208,7 +208,7 @@ public class CMInteractionInfo {
 	}
 	
 	// create additional server info and add it to the add-server list
-	public CMServer createAddServer(String strServerName, String strAddr, int nPort, int nUDPPort)
+	public synchronized CMServer createAddServer(String strServerName, String strAddr, int nPort, int nUDPPort)
 	{
 		CMServer cmServer = null;
 		if( isMember(strServerName) )
@@ -223,7 +223,7 @@ public class CMInteractionInfo {
 		return cmServer;
 	}
 
-	public boolean addAddServer(CMServer server)
+	public synchronized boolean addAddServer(CMServer server)
 	{
 		String sname = server.getServerName();
 		
@@ -240,7 +240,7 @@ public class CMInteractionInfo {
 		return true;
 	}
 
-	public boolean removeAddServer(String strServerName)
+	public synchronized boolean removeAddServer(String strServerName)
 	{
 		CMServer tServer = null;
 		boolean bFound = false;
@@ -270,7 +270,7 @@ public class CMInteractionInfo {
 		return bFound;
 	}
 
-	public CMServer findAddServer(String strServerName)
+	public synchronized CMServer findAddServer(String strServerName)
 	{
 		CMServer tServer = null;
 		boolean bFound = false;
