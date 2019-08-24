@@ -31,42 +31,42 @@ public class CMServerInfo {
 		m_nServerUDPPort = sudpport;
 	}
 
-	public void setServerName(String sname)
+	public synchronized void setServerName(String sname)
 	{
 		m_strServerName = sname;
 	}
 	
-	public void setServerAddress(String saddr)
+	public synchronized void setServerAddress(String saddr)
 	{
 		m_strServerAddress = saddr;
 	}
 	
-	public void setServerPort(int port)
+	public synchronized void setServerPort(int port)
 	{
 		m_nServerPort = port;
 	}
 	
-	public void setServerUDPPort(int port)
+	public synchronized void setServerUDPPort(int port)
 	{
 		m_nServerUDPPort = port;
 	}
 
-	public String getServerName()
+	public synchronized String getServerName()
 	{
 		return m_strServerName;
 	}
 	
-	public String getServerAddress()
+	public synchronized String getServerAddress()
 	{
 		return m_strServerAddress;
 	}
 	
-	public int getServerPort()
+	public synchronized int getServerPort()
 	{
 		return m_nServerPort;
 	}
 	
-	public int getServerUDPPort()
+	public synchronized int getServerUDPPort()
 	{
 		return m_nServerUDPPort;
 	}

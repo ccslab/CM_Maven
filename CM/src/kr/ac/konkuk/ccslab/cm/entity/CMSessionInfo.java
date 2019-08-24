@@ -60,7 +60,7 @@ public class CMSessionInfo {
 	 * Sets the session name.
 	 * @param name - the session name
 	 */
-	public void setSessionName(String name)
+	public synchronized void setSessionName(String name)
 	{
 		m_strSessionName = name;
 	}
@@ -69,7 +69,7 @@ public class CMSessionInfo {
 	 * Sets the session address.
 	 * @param addr - the session address (The IP address of a CM server that manages the session.)
 	 */
-	public void setAddress(String addr)
+	public synchronized void setAddress(String addr)
 	{
 		m_strAddress = addr;
 	}
@@ -78,7 +78,7 @@ public class CMSessionInfo {
 	 * Sets the session port number.
 	 * @param port - the session port number (The port number of a CM server that manages the session.)
 	 */
-	public void setPort(int port)
+	public synchronized void setPort(int port)
 	{
 		m_nPort = port;
 	}
@@ -87,7 +87,7 @@ public class CMSessionInfo {
 	 * Sets the current number of session members.
 	 * @param num - the current number of users who belong to the session.
 	 */
-	public void setUserNum(int num)
+	public synchronized void setUserNum(int num)
 	{
 		m_nUserNum = num;
 	}
@@ -96,7 +96,7 @@ public class CMSessionInfo {
 	 * Gets the session name.
 	 * @return - the session name, or an empty string if the session name is not available.
 	 */
-	public String getSessionName()
+	public synchronized String getSessionName()
 	{
 		return m_strSessionName;
 	}
@@ -105,7 +105,7 @@ public class CMSessionInfo {
 	 * Gets the session address.
 	 * @return - the session address, or an empty string if the session address is not available.
 	 */
-	public String getAddress()
+	public synchronized String getAddress()
 	{
 		return m_strAddress;
 	}
@@ -114,7 +114,7 @@ public class CMSessionInfo {
 	 * Gets the session port number.
 	 * @return - the session port number, or -1 if the port number is not available.
 	 */
-	public int getPort()
+	public synchronized int getPort()
 	{
 		return m_nPort;
 	}
@@ -123,7 +123,7 @@ public class CMSessionInfo {
 	 * Gets the current number of session members.
 	 * @return - the current number of session members, or -1 if the current number is not available.
 	 */
-	public int getUserNum()
+	public synchronized int getUserNum()
 	{
 		return m_nUserNum;
 	}

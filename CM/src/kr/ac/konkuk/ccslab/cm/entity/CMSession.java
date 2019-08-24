@@ -33,22 +33,22 @@ public class CMSession extends CMSessionInfo {
 	}
 
 	// set/get methods
-	public CMMember getSessionUsers()
+	public synchronized CMMember getSessionUsers()
 	{
 		return m_sessionUsers;
 	}
 	
-	public Vector<CMGroup> getGroupList()
+	public synchronized Vector<CMGroup> getGroupList()
 	{
 		return m_groupList;
 	}
 	
-	public String getSessionConfFileName()
+	public synchronized String getSessionConfFileName()
 	{
 		return m_sessionConfFileName;
 	}
 	
-	public void setSessionConfFileName(String fname)
+	public synchronized void setSessionConfFileName(String fname)
 	{
 		m_sessionConfFileName = fname;
 	}
@@ -57,7 +57,7 @@ public class CMSession extends CMSessionInfo {
 	// group membership management
 	
 	// check if a group is member or not of this session
-	public boolean isMember(String strGroupName)
+	public synchronized boolean isMember(String strGroupName)
 	{
 		CMGroup tGroup = null;
 		boolean bFound = false;
@@ -77,7 +77,7 @@ public class CMSession extends CMSessionInfo {
 	}
 	
 	// create a group and add it to the group list
-	public CMGroup createGroup(String strGroupName, String strMA, int nPort)
+	public synchronized CMGroup createGroup(String strGroupName, String strMA, int nPort)
 	{
 		CMGroup cmGroup = null;
 		if( isMember(strGroupName) )
@@ -93,7 +93,7 @@ public class CMSession extends CMSessionInfo {
 		return cmGroup;
 	}
 	
-	public boolean addGroup(CMGroup group)
+	public synchronized boolean addGroup(CMGroup group)
 	{
 		String gname = group.getGroupName();
 		
@@ -112,7 +112,7 @@ public class CMSession extends CMSessionInfo {
 		return true;
 	}
 	
-	public boolean removeGroup(String strGroupName)
+	public synchronized boolean removeGroup(String strGroupName)
 	{
 		CMGroup tGroup = null;
 		boolean bFound = false;
@@ -144,7 +144,7 @@ public class CMSession extends CMSessionInfo {
 		return bFound;
 	}
 	
-	public CMGroup findGroup(String strGroupName)
+	public synchronized CMGroup findGroup(String strGroupName)
 	{
 		CMGroup tGroup = null;
 		boolean bFound = false;
@@ -166,7 +166,7 @@ public class CMSession extends CMSessionInfo {
 		return tGroup;
 	}
 	
-	public CMGroup findGroupWithUserName(String strUserName)
+	public synchronized CMGroup findGroupWithUserName(String strUserName)
 	{
 		CMGroup tGroup = null;
 		boolean bFound = false;

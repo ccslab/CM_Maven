@@ -24,22 +24,22 @@ public class CMGroup extends CMGroupInfo {
 	}
 	
 	// set/get methods
-	public CMMember getGroupUsers()
+	public synchronized CMMember getGroupUsers()
 	{
 		return m_groupUsers;
 	}
 	
-	public CMChannelInfo<InetSocketAddress> getMulticastChannelInfo()
+	public synchronized CMChannelInfo<InetSocketAddress> getMulticastChannelInfo()
 	{
 		return m_mcInfo;
 	}
 	
-	public MembershipKey getMembershipKey()
+	public synchronized MembershipKey getMembershipKey()
 	{
 		return m_membershipKey;
 	}
 	
-	public void setMembershipKey(MembershipKey key)
+	public synchronized void setMembershipKey(MembershipKey key)
 	{
 		m_membershipKey = key;
 	}
