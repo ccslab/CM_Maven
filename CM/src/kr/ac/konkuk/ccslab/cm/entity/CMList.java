@@ -13,7 +13,7 @@ public class CMList<T> {
 		m_list = new Vector<T>();
 	}
 	
-	public boolean addElement(T element)
+	public synchronized boolean addElement(T element)
 	{
 		if(m_list.contains(element))
 		{
@@ -32,7 +32,7 @@ public class CMList<T> {
 		return true;
 	}
 	
-	public boolean removeElement(T element)
+	public synchronized boolean removeElement(T element)
 	{
 		boolean bResult = false;
 		
@@ -51,12 +51,12 @@ public class CMList<T> {
 		return bResult;
 	}
 	
-	public void removeAllElements()
+	public synchronized void removeAllElements()
 	{
 		m_list.removeAllElements();
 	}
 	
-	public T findElement(T element)
+	public synchronized T findElement(T element)
 	{
 		T tempElement = null;
 		boolean bFound = false;
@@ -74,17 +74,17 @@ public class CMList<T> {
 		return null;
 	}
 	
-	public int getSize()
+	public synchronized int getSize()
 	{
 		return m_list.size();
 	}
 	
-	public boolean isEmpty()
+	public synchronized boolean isEmpty()
 	{
 		return m_list.isEmpty();
 	}
 	
-	public Vector<T> getList()
+	public synchronized Vector<T> getList()
 	{
 		return m_list;
 	}
