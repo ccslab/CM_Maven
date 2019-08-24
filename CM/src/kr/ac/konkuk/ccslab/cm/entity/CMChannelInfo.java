@@ -12,16 +12,16 @@ import java.nio.channels.*;
 // Used by CMUser (user channels), CMCommInfo (datagram channels), CMGroup (multicast channels),
 // and CMServer (server channels)
 public class CMChannelInfo<K> {
-	private HashMap<K, SelectableChannel> m_chMap;
+	private Hashtable<K, SelectableChannel> m_chHashtable;
 	
 	public CMChannelInfo()
 	{
-		m_chMap = new HashMap<K, SelectableChannel>();
+		m_chHashtable = new Hashtable<K, SelectableChannel>();
 	}
 	
 	// management of the HashMap of channels
 
-	public boolean addChannel(K key, SelectableChannel ch)
+	public synchronized boolean addChannel(K key, SelectableChannel ch)
 	{
 		
 		if(ch == null)
@@ -31,7 +31,7 @@ public class CMChannelInfo<K> {
 		}
 		
 		// check if key already exists or not
-		if(m_chMap.containsKey(key))
+		if(m_chHashtable.containsKey(key))
 		{
 			System.err.println("CMChannelInfo.addChannel(), channel key("
 					+key+") already exists.");
@@ -39,35 +39,35 @@ public class CMChannelInfo<K> {
 		}
 		
 		// check if the same ch already exists or not
-		if(m_chMap.containsValue(ch))
+		if(m_chHashtable.containsValue(ch))
 		{
 			System.err.println("CMChannelInfo.addChanel(), channel already exists.");
 			return false;
 		}
 		
-		m_chMap.put(key, ch);
+		m_chHashtable.put(key, ch);
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMChannelInfo.addChannel(), succeeded: ch("+ch.hashCode()+"), key("+key.toString()
-				+"), current # channels ("+m_chMap.size()+").");
+				+"), current # channels ("+m_chHashtable.size()+").");
 		}
 
 		return true;
 	}
 
-	public boolean removeChannel(K key)
+	public synchronized boolean removeChannel(K key)
 	{
 		SelectableChannel ch = null;
 		
-		if(!m_chMap.containsKey(key))
+		if(!m_chHashtable.containsKey(key))
 		{
 			System.err.println("CMChannelInfo.removeChannel(), channel key("
 					+key.toString()+") does not exists.");
 			return false;
 		}
 		
-		ch = m_chMap.get(key);
+		ch = m_chHashtable.get(key);
 		if(ch != null && ch.isOpen())
 		{
 			try {
@@ -78,21 +78,21 @@ public class CMChannelInfo<K> {
 			}
 		}
 		
-		m_chMap.remove(key);
+		m_chHashtable.remove(key);
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMChannelInfo.removeChannel(), succeeded: ch("+ch.hashCode()+"), key("+key.toString()
-				+"), current # channels("+m_chMap.size()+").");
+				+"), current # channels("+m_chHashtable.size()+").");
 		}
 
 		return true;
 	}
 
-	public void removeAllChannels()
+	public synchronized void removeAllChannels()
 	{
 		SelectableChannel ch = null;
-		Iterator<Entry<K, SelectableChannel>> iter = m_chMap.entrySet().iterator();
+		Iterator<Entry<K, SelectableChannel>> iter = m_chHashtable.entrySet().iterator();
 		
 		while( iter.hasNext() )
 		{
@@ -109,16 +109,16 @@ public class CMChannelInfo<K> {
 			}
 		}
 
-		m_chMap.clear();
+		m_chHashtable.clear();
 	}
 
 	// removes all channels except the default channel that is specified by the default key (defaultKey)
-	public boolean removeAllAddedChannels(K defaultKey)
+	public synchronized boolean removeAllAddedChannels(K defaultKey)
 	{
 		SelectableChannel ch = null;
 		
-		Iterator<Entry<K, SelectableChannel>> iter = m_chMap.entrySet().iterator();
-		if(m_chMap.isEmpty())
+		Iterator<Entry<K, SelectableChannel>> iter = m_chHashtable.entrySet().iterator();
+		if(m_chHashtable.isEmpty())
 		{
 			System.out.println("CMChannelInfo.removeAllAddedChannels(), channel map is empty.");
 			return false;
@@ -146,17 +146,17 @@ public class CMChannelInfo<K> {
 		return true;
 	}
 
-	public SelectableChannel findChannel(K key)
+	public synchronized SelectableChannel findChannel(K key)
 	{
-		return m_chMap.get(key);
+		return m_chHashtable.get(key);
 	}
 	
-	public K findChannelKey(SelectableChannel ch)
+	public synchronized K findChannelKey(SelectableChannel ch)
 	{
 		boolean bFound = false;
 		K ret = null;
 		SelectableChannel tch = null;
-		Iterator<Entry<K, SelectableChannel>> iter = m_chMap.entrySet().iterator();
+		Iterator<Entry<K, SelectableChannel>> iter = m_chHashtable.entrySet().iterator();
 		
 		while(iter.hasNext() && !bFound)
 		{
@@ -173,9 +173,9 @@ public class CMChannelInfo<K> {
 		return ret;
 	}
 	
-	public int getSize()
+	public synchronized int getSize()
 	{
-		return m_chMap.size();
+		return m_chHashtable.size();
 	}
 	
 	@Override
@@ -185,7 +185,7 @@ public class CMChannelInfo<K> {
 		if(getSize() == 0) return null;
 		
 		sb = new StringBuffer();
-		Set<Entry<K, SelectableChannel>> hashMapSet = m_chMap.entrySet();
+		Set<Entry<K, SelectableChannel>> hashMapSet = m_chHashtable.entrySet();
 		Iterator<Entry<K, SelectableChannel>> iter = hashMapSet.iterator();
 		while(iter.hasNext())
 		{
