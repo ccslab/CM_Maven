@@ -13,32 +13,32 @@ public class CMDBInfo {
 		m_strDBURL = null;
 	}
 	
-	public void setConnection(Connection conn)
+	public synchronized void setConnection(Connection conn)
 	{
 		m_connection = conn;
 	}
 	
-	public Connection getConnection()
+	public synchronized Connection getConnection()
 	{
 		return m_connection;
 	}
 	
-	public void setStatement(Statement stat)
+	public synchronized void setStatement(Statement stat)
 	{
 		m_statement = stat;
 	}
 	
-	public Statement getStatement()
+	public synchronized Statement getStatement()
 	{
 		return m_statement;
 	}
 
-	public void setDBURL(String strDBURL)
+	public synchronized void setDBURL(String strDBURL)
 	{
 		m_strDBURL = strDBURL;
 	}
 	
-	public String getDBURL()
+	public synchronized String getDBURL()
 	{
 		return m_strDBURL;
 	}

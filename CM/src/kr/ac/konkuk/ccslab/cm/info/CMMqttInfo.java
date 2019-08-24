@@ -29,32 +29,32 @@ public class CMMqttInfo {
 	}
 	
 	// setter/getter
-	public void setMqttSession(CMMqttSession session)
+	public synchronized void setMqttSession(CMMqttSession session)
 	{
 		m_mqttSession = session;
 	}
 	
-	public CMMqttSession getMqttSession()
+	public synchronized CMMqttSession getMqttSession()
 	{
 		return m_mqttSession;
 	}
 	
-	public void setMqttSessionHashtable(Hashtable<String, CMMqttSession> sessionHashtable)
+	public synchronized void setMqttSessionHashtable(Hashtable<String, CMMqttSession> sessionHashtable)
 	{
 		m_mqttSessionHashtable = sessionHashtable;
 	}
 	
-	public Hashtable<String, CMMqttSession> getMqttSessionHashtable()
+	public synchronized Hashtable<String, CMMqttSession> getMqttSessionHashtable()
 	{
 		return m_mqttSessionHashtable;
 	}
 	
-	public void setMqttRetainHashtable(Hashtable<String, CMMqttEventPUBLISH> retainHashtable)
+	public synchronized void setMqttRetainHashtable(Hashtable<String, CMMqttEventPUBLISH> retainHashtable)
 	{
 		m_mqttRetainHashtable = retainHashtable;
 	}
 	
-	public Hashtable<String, CMMqttEventPUBLISH> getMqttRetainHashtable()
+	public synchronized Hashtable<String, CMMqttEventPUBLISH> getMqttRetainHashtable()
 	{
 		return m_mqttRetainHashtable;
 	}
