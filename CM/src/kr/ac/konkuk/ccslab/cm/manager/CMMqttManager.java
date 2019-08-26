@@ -14,6 +14,8 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -406,20 +408,20 @@ public class CMMqttManager extends CMServiceManager {
 		return true;
 	}
 	
-	// send and clear all sent-unack publish events (QoS 1 or 2)
+	// resend all sent-unack publish events (QoS 1 or 2)
 	public boolean resendSentUnAckPublish(String strReceiver, CMMqttSession session)
 	{
 		// client -> server or server -> client
 		if(session == null)
 		{
-			System.err.println("CMMqttManager.sendAndClearSentUnAckPublish(), receiver ("
+			System.err.println("CMMqttManager.resendSentUnAckPublish(), receiver ("
 					+strReceiver+"), session is null!");
 			return true;
 		}
 		
 		if(session.getSentUnAckPublishList().isEmpty())
 		{
-			System.out.println("CMMqttManager.sendAndClearSentUnAckPublish(), the list is "
+			System.out.println("CMMqttManager.resendSentUnAckPublish(), the list is "
 					+ "empty for receiver ("+strReceiver+")");
 			return true;
 		}
@@ -437,6 +439,50 @@ public class CMMqttManager extends CMServiceManager {
 						+ "receiver ("+strReceiver+"), "+unackEvent.toString());
 				// do not need to put the event to the pending list because it still exists 
 				// in the sent-unack-publish list.
+			}
+		}
+		
+		return true;
+	}
+	
+	// resend all sent-unack pubrel events (QoS 2)
+	public boolean resendSentUnAckPubrel(String strReceiver, CMMqttSession session)
+	{
+		// client -> server or server -> client
+		if(session == null)
+		{
+			System.err.println("CMMqttManager.resendSentUnAckPubrel(), receiver ("
+					+strReceiver+"), session is null!");
+			return true;
+		}
+		
+		// recv-unack-pubrec list == sent-unack-pubrel list
+		if(session.getRecvUnAckPubrecList().isEmpty())
+		{
+			System.out.println("CMMqttManager.resendSentUnAckPubrel(), the list is "
+					+ "empty for receiver ("+strReceiver+")");
+			return true;
+		}
+		
+		boolean bRet = false;
+		for(CMMqttEventPUBREC unackEvent : session.getRecvUnAckPubrecList().getList())
+		{
+			int nPacketID = unackEvent.getPacketID();
+			// make a corresponding PUBREL event
+			CMMqttEventPUBREL relEvent =  new CMMqttEventPUBREL();
+			CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+			// set sender (CM event header)
+			relEvent.setSender(myself.getName());
+			// set fixed header in the CMMqttEventPUBREL constructor
+			// set variable header
+			relEvent.setPacketID(nPacketID);
+
+			// send the PUBREL event
+			bRet = CMEventManager.unicastEvent(relEvent, strReceiver, m_cmInfo);
+			if(!bRet)
+			{
+				System.err.println("CMMqttManager.resendSentUnAckPubrel(), error: "
+						+ "receiver ("+strReceiver+"), "+unackEvent.toString());
 			}
 		}
 		

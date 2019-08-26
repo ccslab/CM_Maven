@@ -198,14 +198,21 @@ public class CMMqttEventHandler extends CMEventHandler {
 			return false;
 		}
 
-		// to send all sent-unack-publish events to this client
+		// to resend all sent-unack-pubrel events to this client (QoS 2)
+		bRet = mqttManager.resendSentUnAckPubrel(strClient, mqttSession);
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processCONNECT(), error to resend all "
+					+"sent-unack-pubrel events to client ("+strClient+")!");
+		}
+		// to resend all sent-unack-publish events to this client (QoS 1 or 2)
 		bRet = mqttManager.resendSentUnAckPublish(strClient, mqttSession);
 		if(!bRet)
 		{
 			System.err.println("CMMqttEventHandler.processCONNECT(), error to resend all "
 					+"sent-unack-publish events to client ("+strClient+")!");
 		}
-		// to send all transmission-pending-publish events to this client
+		// to resend all transmission-pending-publish events to this client (QoS 1 or 2)
 		bRet = mqttManager.sendAndClearPendingTransPublish(strClient, mqttSession);
 		if(!bRet)
 		{
@@ -346,7 +353,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// if the MQTT connect request is successful,
 		if(connackEvent.getReturnCode() == (byte)0)
 		{
-			// resent all sent-unack-publish events to the server
 			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 			CMMqttSession session = mqttInfo.getMqttSession();
 			if(session == null)
@@ -354,15 +360,25 @@ public class CMMqttEventHandler extends CMEventHandler {
 				System.err.println("CMMqttEventHandler.processCONNACK(), session is null!");
 				return false;
 			}
-			
+
 			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
 					.get(CMInfo.CM_MQTT_MANAGER);
-			boolean bRet = mqttManager.resendSentUnAckPublish(connackEvent.getSender(), session);
+			
+			// resent all sent-unack-pubrel events to the server
+			boolean bRet = mqttManager.resendSentUnAckPubrel(connackEvent.getSender(), 
+					session);
+			if(!bRet)
+			{
+				System.err.println("CMMqttEventHandler.processCONNACK(), error to resend all "
+						+"sent-unack-pubrel events to the server!");
+			}
+			
+			// resent all sent-unack-publish events to the server
+			bRet = mqttManager.resendSentUnAckPublish(connackEvent.getSender(), session);
 			if(!bRet)
 			{
 				System.err.println("CMMqttEventHandler.processCONNACK(), error to resend all "
 						+"sent-unack-publish events to the server!");
-				return false;
 			}
 		}
 		
