@@ -19,23 +19,27 @@ public class CMMqttSession {
 	private CMList<CMMqttTopicQoS> m_subscriptionList;
 	// list of requested subscriptions (4 client)
 	private CMList<CMMqttTopicQoS> m_reqSubscriptionList;
-	// list of sent QoS 1 and QoS 2 events (PUBLISH, PUBREL) that have not been completely acknowledged 
+	// list of sent QoS 1 and QoS 2 PUBLISH events that have not been completely acknowledged 
 	// (4 client: client->server, 4 server: server->client)
-	private CMList<CMMqttEvent> m_sentUnAckEventList;
-	// list of received QoS 2 PUBLISH and PUBREC events that have not been completely acknowledged 
+	private CMList<CMMqttEventPUBLISH> m_sentUnAckPublishList;
+	// list of received QoS 2 PUBLISH events that have not been completely acknowledged 
 	// (4 client: client<-server, 4 server: server<-client)
-	private CMList<CMMqttEvent> m_recvUnAckEventList;
+	private CMList<CMMqttEventPUBLISH> m_recvUnAckPublishList;
+	// list of received QoS 2 PUBREC events that have not been completely acknowledged 
+	// (4 client: client<-server, 4 server: server<-client)
+	private CMList<CMMqttEventPUBREC> m_recvUnAckPubrecList; 
 	// list of pending QoS 1 and QoS 2 PUBLISH events of transmission to the client (4 server)
-	private CMList<CMMqttEventPUBLISH> m_pendingTransEventList;
+	private CMList<CMMqttEventPUBLISH> m_pendingTransPublishList;
 	
 	public CMMqttSession()
 	{
 		m_mqttWill = null;
 		m_subscriptionList = new CMList<CMMqttTopicQoS>();
 		m_reqSubscriptionList = null;
-		m_sentUnAckEventList = new CMList<CMMqttEvent>();
-		m_recvUnAckEventList = new CMList<CMMqttEvent>();
-		m_pendingTransEventList = new CMList<CMMqttEventPUBLISH>();
+		m_sentUnAckPublishList = new CMList<CMMqttEventPUBLISH>();
+		m_recvUnAckPublishList = new CMList<CMMqttEventPUBLISH>();
+		m_recvUnAckPubrecList = new CMList<CMMqttEventPUBREC>();
+		m_pendingTransPublishList = new CMList<CMMqttEventPUBLISH>();
 	}
 	
 	//////////////////////// setter/getter
@@ -71,37 +75,48 @@ public class CMMqttSession {
 		return m_reqSubscriptionList;
 	}
 	
-	// sent-unack-event list
-	public void setSentUnAckEventList(CMList<CMMqttEvent> eventList)
+	// sent-unack-publish list
+	public void setSentUnAckPublishList(CMList<CMMqttEventPUBLISH> pubList)
 	{
-		m_sentUnAckEventList = eventList;
+		m_sentUnAckPublishList = pubList;
 	}
 	
-	public CMList<CMMqttEvent> getSentUnAckEventList()
+	public CMList<CMMqttEventPUBLISH> getSentUnAckPublishList()
 	{
-		return m_sentUnAckEventList;
+		return m_sentUnAckPublishList;
 	}
 	
-	// recv-unack-event list
-	public void setRecvUnAckEventList(CMList<CMMqttEvent> eventList)
+	// recv-unack-publish list
+	public void setRecvUnAckPublishList(CMList<CMMqttEventPUBLISH> pubList)
 	{
-		m_recvUnAckEventList = eventList;
+		m_recvUnAckPublishList = pubList;
 	}
 	
-	public CMList<CMMqttEvent> getRecvUnAckEventList()
+	public CMList<CMMqttEventPUBLISH> getRecvUnAckPublishList()
 	{
-		return m_recvUnAckEventList;
+		return m_recvUnAckPublishList;
 	}
 	
-	// pending-trans-event list
-	public void setPendingTransEventList(CMList<CMMqttEventPUBLISH> eventList)
+	// recv-unack-pubrec list
+	public void setRecvUnAckPubrecList(CMList<CMMqttEventPUBREC> recList)
 	{
-		m_pendingTransEventList = eventList;
+		m_recvUnAckPubrecList = recList;
 	}
 	
-	public CMList<CMMqttEventPUBLISH> getPendingTransEventList()
+	public CMList<CMMqttEventPUBREC> getRecvUnAckPubrecList()
 	{
-		return m_pendingTransEventList;
+		return m_recvUnAckPubrecList;
+	}
+	
+	// pending-trans-publish list
+	public void setPendingTransPublishList(CMList<CMMqttEventPUBLISH> eventList)
+	{
+		m_pendingTransPublishList = eventList;
+	}
+	
+	public CMList<CMMqttEventPUBLISH> getPendingTransPublishList()
+	{
+		return m_pendingTransPublishList;
 	}
 	
 	//////////////////////// subscription list
@@ -137,29 +152,29 @@ public class CMMqttSession {
 		return;
 	}
 	
-	//////////////////////// sent-unack-event list
+	//////////////////////// sent-unack-publish list
 	
-	public boolean addSentUnAckEvent(CMMqttEvent unackEvent)
+	public boolean addSentUnAckPublish(CMMqttEventPUBLISH pubEvent)
 	{
-		int nID = getMQTTPacketID(unackEvent);
-		CMMqttEvent mqttEvent = findSentUnAckEvent(nID);
+		int nID = pubEvent.getPacketID();
+		CMMqttEventPUBLISH mqttEvent = findSentUnAckPublish(nID);
 		if(mqttEvent != null)
 		{
-			System.err.println("CMMqttSession.addSentUnAckEvent(), the same packet ID ("
+			System.err.println("CMMqttSession.addSentUnAckPublish(), the same packet ID ("
 					+nID+") already exists!");
 			System.err.println(mqttEvent.toString());
 			return false;			
 		}
 		
-		return m_sentUnAckEventList.addElement(unackEvent);
+		return m_sentUnAckPublishList.addElement(pubEvent);
 	}
 	
-	public CMMqttEvent findSentUnAckEvent(int nPacketID)
+	public CMMqttEventPUBLISH findSentUnAckPublish(int nPacketID)
 	{
 		int nID = -1;
-		for(CMMqttEvent unackEvent : m_sentUnAckEventList.getList())
+		for(CMMqttEventPUBLISH unackEvent : m_sentUnAckPublishList.getList())
 		{
-			nID = getMQTTPacketID(unackEvent);
+			nID = unackEvent.getPacketID();
 			if(nID == nPacketID)
 				return unackEvent;
 		}
@@ -167,91 +182,135 @@ public class CMMqttSession {
 		return null;
 	}
 	
-	public boolean removeSentUnAckEvent(int nPacketID)
+	public boolean removeSentUnAckPublish(int nPacketID)
 	{
-		CMMqttEvent unackEvent = findSentUnAckEvent(nPacketID);
+		CMMqttEventPUBLISH unackEvent = findSentUnAckPublish(nPacketID);
 		if(unackEvent == null)
 			return false;
 		
-		return m_sentUnAckEventList.removeElement(unackEvent);
+		return m_sentUnAckPublishList.removeElement(unackEvent);
 	}
 	
-	public void removeAllSentUnAckEvent()
+	public void removeAllSentUnAckPublish()
 	{
-		m_sentUnAckEventList.removeAllElements();
+		m_sentUnAckPublishList.removeAllElements();
 		return;
 	}
 	
-	//////////////////////// recv-unack-event list
+	//////////////////////// recv-unack-publish list
 
-	public boolean addRecvUnAckEvent(CMMqttEvent mqttEvent)
+	public boolean addRecvUnAckPublish(CMMqttEventPUBLISH pubEvent)
 	{
-		int nID = getMQTTPacketID(mqttEvent);
-		CMMqttEvent event = findRecvUnAckEvent(nID);
-		if(event != null)
+		int nID = pubEvent.getPacketID(); 
+		CMMqttEventPUBLISH unackEvent = findRecvUnAckPublish(nID);
+		if(unackEvent != null)
 		{
-			System.err.println("CMMqttSession.addRecvUnAckEvent(), the same packet ID ("
+			System.err.println("CMMqttSession.addRecvUnAckPublish(), the same packet ID ("
 					+nID+") already exists!");
-			if(event instanceof CMMqttEventPUBLISH)
-				System.err.println(((CMMqttEventPUBLISH)event).toString());
-			else if(event instanceof CMMqttEventPUBREC)
-				System.err.println(((CMMqttEventPUBREC)event).toString());
+			System.err.println(unackEvent.toString());
 			
 			return false;
 		}
 		
-		return m_recvUnAckEventList.addElement(mqttEvent);
+		return m_recvUnAckPublishList.addElement(pubEvent);
 	}
 	
-	public CMMqttEvent findRecvUnAckEvent(int nPacketID)
+	public CMMqttEventPUBLISH findRecvUnAckPublish(int nPacketID)
 	{
 		int nID = -1;
-		for(CMMqttEvent mqttEvent : m_recvUnAckEventList.getList())
+		for(CMMqttEventPUBLISH unackEvent : m_recvUnAckPublishList.getList())
 		{
-			nID = getMQTTPacketID(mqttEvent);
+			nID = unackEvent.getPacketID();
 			if(nID == nPacketID)
-				return mqttEvent;
+				return unackEvent;
 		}
 		
 		return null;
 	}
 	
-	public boolean removeRecvUnAckEvent(int nPacketID)
+	public boolean removeRecvUnAckPublish(int nPacketID)
 	{
-		CMMqttEvent mqttEvent = findRecvUnAckEvent(nPacketID);
-		if(mqttEvent == null)
+		CMMqttEventPUBLISH unackEvent = findRecvUnAckPublish(nPacketID);
+		if(unackEvent == null)
 			return false;
 		
-		return m_recvUnAckEventList.removeElement(mqttEvent);
+		return m_recvUnAckPublishList.removeElement(unackEvent);
 	}
 	
-	public void removeAllRecvUnAckEvent()
+	public void removeAllRecvUnAckPublish()
 	{
-		m_recvUnAckEventList.removeAllElements();
+		m_recvUnAckPublishList.removeAllElements();
 		return;
 	}
+	
+	//////////////////////// recv-unack-pubrec list
+
+	public boolean addRecvUnAckPubrec(CMMqttEventPUBREC recEvent)
+	{
+		int nID = recEvent.getPacketID(); 
+		CMMqttEventPUBREC unackEvent = findRecvUnAckPubrec(nID);
+		if(unackEvent != null)
+		{
+			System.err.println("CMMqttSession.addRecvUnAckPubrec(), the same packet ID ("
+					+nID+") already exists!");
+			System.err.println(unackEvent.toString());
+			
+			return false;
+		}
+		
+		return m_recvUnAckPubrecList.addElement(recEvent);
+	}
+	
+	public CMMqttEventPUBREC findRecvUnAckPubrec(int nPacketID)
+	{
+		int nID = -1;
+		for(CMMqttEventPUBREC unackEvent : m_recvUnAckPubrecList.getList())
+		{
+			nID = unackEvent.getPacketID();
+			if(nID == nPacketID)
+				return unackEvent;
+		}
+		
+		return null;
+	}
+	
+	public boolean removeRecvUnAckPubrec(int nPacketID)
+	{
+		CMMqttEventPUBREC unackEvent = findRecvUnAckPubrec(nPacketID);
+		if(unackEvent == null)
+			return false;
+		
+		return m_recvUnAckPubrecList.removeElement(unackEvent);
+	}
+	
+	public void removeAllRecvUnAckPubrec()
+	{
+		m_recvUnAckPubrecList.removeAllElements();
+		return;
+	}
+	
 
 	//////////////////////// pending-trans-event list
 	
-	public boolean addPendingTransEvent(CMMqttEventPUBLISH pendingEvent)
+	public boolean addPendingTransPublish(CMMqttEventPUBLISH pubEvent)
 	{
-		int nID = pendingEvent.getPacketID();
-		CMMqttEvent mqttEvent = findPendingTransEvent(nID);
-		if(mqttEvent != null)
+		int nID = pubEvent.getPacketID();
+		CMMqttEventPUBLISH pendingEvent = findPendingTransPublish(nID);
+		if(pendingEvent != null)
 		{
-			System.err.println("CMMqttSession.addPendingTransEvent(), the same packet ID ("
+			System.err.println("CMMqttSession.addPendingTransPublish(), the same packet ID ("
 					+nID+") already exists!");
-			System.err.println(mqttEvent.toString());
+			System.err.println(pendingEvent.toString());
 			return false;			
 		}
 		
-		return m_pendingTransEventList.addElement(pendingEvent);
+		return m_pendingTransPublishList.addElement(pubEvent);
 	}
 	
-	public CMMqttEventPUBLISH findPendingTransEvent(int nPacketID)
+	public CMMqttEventPUBLISH findPendingTransPublish(int nPacketID)
 	{
 		int nID = -1;
-		for(CMMqttEventPUBLISH pendingEvent : m_pendingTransEventList.getList())
+		for(CMMqttEventPUBLISH pendingEvent : m_pendingTransPublishList.getList())
 		{
 			nID = pendingEvent.getPacketID();
 			if(nID == nPacketID)
@@ -261,18 +320,18 @@ public class CMMqttSession {
 		return null;
 	}
 	
-	public boolean removePendingTransEvent(int nPacketID)
+	public boolean removePendingTransPublish(int nPacketID)
 	{
-		CMMqttEventPUBLISH pendingEvent = findPendingTransEvent(nPacketID);
+		CMMqttEventPUBLISH pendingEvent = findPendingTransPublish(nPacketID);
 		if(pendingEvent == null)
 			return false;
 		
-		return m_pendingTransEventList.removeElement(pendingEvent);
+		return m_pendingTransPublishList.removeElement(pendingEvent);
 	}
 	
-	public void removeAllPendingTransEvent()
+	public void removeAllPendingTransPublish()
 	{
-		m_pendingTransEventList.removeAllElements();
+		m_pendingTransPublishList.removeAllElements();
 		return;
 	}
 
@@ -295,7 +354,8 @@ public class CMMqttSession {
 	}
 	
 	///////////////////////////////////// private methods
-	
+
+	/*
 	private int getMQTTPacketID(CMMqttEvent mqttEvent)
 	{
 		int nID = -1;
@@ -312,5 +372,5 @@ public class CMMqttSession {
 		
 		return nID;
 	}
-	
+	*/
 }

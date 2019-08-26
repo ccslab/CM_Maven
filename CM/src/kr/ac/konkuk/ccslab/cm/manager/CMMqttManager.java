@@ -209,17 +209,17 @@ public class CMMqttManager extends CMServiceManager {
 				return false;
 			}
 			
-			// add the sent event to the sent-unack-event-list
-			bRet = session.addSentUnAckEvent(pubEvent);
+			// add the sent event to the sent-unack-publish-list
+			bRet = session.addSentUnAckPublish(pubEvent);
 			if(bRet && CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMMqttManager.publishFromClient(): "
-						+ "stored to sent unack event list: "+pubEvent.toString());
+						+ "stored to sent unack publish list: "+pubEvent.toString());
 			}
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.publishFromClient(): "
-						+ "error to store to sent unack event list: "+pubEvent.toString());
+						+ "error to store to sent unack publish list: "+pubEvent.toString());
 				return false;
 			}
 		}
@@ -302,8 +302,10 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 
 		// send and clear all pending events of this client (key)
+		/*
 		if(!sendAndClearPendingTransEvents(strClient, session))
 			return false;
+		*/
 		
 		// adapt to the subscribed QoS
 		int sentQoS = qos;
@@ -314,18 +316,18 @@ public class CMMqttManager extends CMServiceManager {
 		}
 			
 		// check whether the same packet ID is in use or not
-		if( (sentQoS == 1 || sentQoS == 2) && (session.findSentUnAckEvent(nPacketID) != null 
-				|| session.findRecvUnAckEvent(nPacketID) != null) )
+		if( (sentQoS == 1 || sentQoS == 2) && 
+				(session.findSentUnAckPublish(nPacketID) != null) )
 		{
 			System.err.println("CMMqttManager.publishFromServerToOneClient(), "
 					+ "client ("+strClient+"), "
 					+ "packet ID ("+nPacketID
-					+") is already in use in sent-unack-event or recv-unack-event list !");
-			bRet = session.addPendingTransEvent(pubEvent);
+					+") is already in use in sent-unack-publish list !");
+			bRet = session.addPendingTransPublish(pubEvent);
 			if(bRet && CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMMqttManager.publishFromServerToOneClient(), "
-						+ "event ("+nPacketID+") is added to the transmission-pending-event list.");
+						+ "event ("+nPacketID+") is added to the transmission-pending-publish list.");
 			}
 			return false;
 		}
@@ -343,7 +345,7 @@ public class CMMqttManager extends CMServiceManager {
 			if(sentQoS == 1 || sentQoS == 2)
 			{
 				// add this event to the pending event list
-				session.addPendingTransEvent(pubEvent);
+				session.addPendingTransPublish(pubEvent);
 			}
 			return false;
 		}
@@ -351,17 +353,17 @@ public class CMMqttManager extends CMServiceManager {
 		// process QoS 1 or 2 case for the sent packet
 		if(bRet && (sentQoS == 1 || sentQoS == 2))
 		{
-			bRet = session.addSentUnAckEvent(pubEvent);
+			bRet = session.addSentUnAckPublish(pubEvent);
 			if(bRet && CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMMqttManager.publishFromServerToOneClient(): "
-						+ "stored to sent unack event list of client ("+strClient+") : "
+						+ "stored to sent unack publish list of client ("+strClient+") : "
 						+pubEvent.toString());
 			}
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.publishFromServer(): error "
-						+ "to store to sent unack event list of client ("+strClient+") : "
+						+ "to store to sent unack event publish of client ("+strClient+") : "
 						+pubEvent.toString());
 				return false;
 			}
@@ -371,7 +373,7 @@ public class CMMqttManager extends CMServiceManager {
 	}
 	
 	// send and clear all transmission-pending events (QoS 1 or 2)
-	public boolean sendAndClearPendingTransEvents(String strReceiver, CMMqttSession session)
+	public boolean sendAndClearPendingTransPublish(String strReceiver, CMMqttSession session)
 	{
 		// server -> client
 		if(session == null)
@@ -381,7 +383,7 @@ public class CMMqttManager extends CMServiceManager {
 			return true;
 		}
 		
-		if(session.getPendingTransEventList().isEmpty())
+		if(session.getPendingTransPublishList().isEmpty())
 		{
 			System.out.println("CMMqttManager.sendAndClearPendingTransEvents(), the list is empty "
 					+"for receiver ("+strReceiver+")");
@@ -389,7 +391,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 
 		boolean bRet = false;
-		for(CMMqttEvent pendingEvent : session.getPendingTransEventList().getList())
+		for(CMMqttEvent pendingEvent : session.getPendingTransPublishList().getList())
 		{
 			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver, m_cmInfo);
 			if(!bRet)
@@ -399,45 +401,42 @@ public class CMMqttManager extends CMServiceManager {
 				return false;
 			}
 		}
-		session.removeAllPendingTransEvent();
+		session.removeAllPendingTransPublish();
 
 		return true;
 	}
 	
-	// send and clear all sent-unack events (QoS 1 or 2)
-	public boolean resendSentUnAckEvents(String strReceiver, CMMqttSession session)
+	// send and clear all sent-unack publish events (QoS 1 or 2)
+	public boolean resendSentUnAckPublish(String strReceiver, CMMqttSession session)
 	{
 		// client -> server or server -> client
 		if(session == null)
 		{
-			System.err.println("CMMqttManager.sendAndClearSentUnAckEvents(), receiver ("
+			System.err.println("CMMqttManager.sendAndClearSentUnAckPublish(), receiver ("
 					+strReceiver+"), session is null!");
 			return true;
 		}
 		
-		if(session.getSentUnAckEventList().isEmpty())
+		if(session.getSentUnAckPublishList().isEmpty())
 		{
-			System.out.println("CMMqttManager.sendAndClearSentUnAckEvents(), the list is empty "
-					+"for receiver ("+strReceiver+")");
+			System.out.println("CMMqttManager.sendAndClearSentUnAckPublish(), the list is "
+					+ "empty for receiver ("+strReceiver+")");
 			return true;
 		}
 		
 		boolean bRet = false;
-		for(CMMqttEvent unackEvent : session.getSentUnAckEventList().getList())
+		for(CMMqttEventPUBLISH unackEvent : session.getSentUnAckPublishList().getList())
 		{
-			// set DUP flag in the case of PUBLISH
-			if(unackEvent instanceof CMMqttEventPUBLISH)
-			{
-				((CMMqttEventPUBLISH)unackEvent).setDupFlag(true);
-			}
+			// set DUP flag
+			unackEvent.setDupFlag(true);
 			
 			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver, m_cmInfo);
 			if(!bRet)
 			{
-				System.err.println("CMMqttManager.resendSentUnAckEvents(), error: receiver ("
-						+strReceiver+"), "+unackEvent.toString());
+				System.err.println("CMMqttManager.resendSentUnAckPublish(), error: "
+						+ "receiver ("+strReceiver+"), "+unackEvent.toString());
 				// do not need to put the event to the pending list because it still exists 
-				// in the sent-unack-event list.
+				// in the sent-unack-publish list.
 			}
 		}
 		
