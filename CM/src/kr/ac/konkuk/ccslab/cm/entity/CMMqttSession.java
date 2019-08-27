@@ -1,11 +1,18 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
+import java.util.Random;
+
+import com.sun.org.apache.xpath.internal.operations.Mod;
+
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
  * The CMMqttSession class represents a MQTT session.
@@ -31,6 +38,13 @@ public class CMMqttSession {
 	// list of pending QoS 1 and QoS 2 PUBLISH events of transmission to the client (4 server)
 	private CMList<CMMqttEventPUBLISH> m_pendingTransPublishList;
 	
+	// currently available packet ID
+	private int m_nNextAssignedPacketID;	// 4 client
+	// used to get an available packet ID of SUBSCRIBE packet 
+	private CMList<CMMqttEventSUBSCRIBE> m_sentUnAckSubList;
+	// used to get an available packet ID of UNSUBSCRIBE packet
+	private CMList<CMMqttEventUNSUBSCRIBE> m_sentUnAckUnsubList;
+	
 	public CMMqttSession()
 	{
 		m_mqttWill = null;
@@ -40,6 +54,11 @@ public class CMMqttSession {
 		m_recvUnAckPublishList = new CMList<CMMqttEventPUBLISH>();
 		m_recvUnAckPubrecList = new CMList<CMMqttEventPUBREC>();
 		m_pendingTransPublishList = new CMList<CMMqttEventPUBLISH>();
+		
+		Random random = new Random();
+		m_nNextAssignedPacketID = random.nextInt(CMInfo.MQTT_ID_RANGE);
+		m_sentUnAckSubList = new CMList<CMMqttEventSUBSCRIBE>();
+		m_sentUnAckUnsubList = new CMList<CMMqttEventUNSUBSCRIBE>();
 	}
 	
 	//////////////////////// setter/getter
@@ -117,6 +136,127 @@ public class CMMqttSession {
 	public CMList<CMMqttEventPUBLISH> getPendingTransPublishList()
 	{
 		return m_pendingTransPublishList;
+	}
+	
+	// next assigned packet ID
+	public int getNextAssignedPacketID(int nEventID)
+	{
+		switch(nEventID)
+		{
+		case CMMqttEvent.PUBLISH:
+			m_nNextAssignedPacketID = findNextPacketIDForPUBLISH();
+			break;
+		case CMMqttEvent.SUBSCRIBE:
+			m_nNextAssignedPacketID = findNextPacketIDForSUBSCRIBE();
+			break;
+		case CMMqttEvent.UNSUBSCRIBE:
+			m_nNextAssignedPacketID = findNextPacketIDForUNSUBSCRIBE();
+			break;
+		default:
+			System.err.println("CMMqttSession.getNextAssignedPacketID(), invalid MQTT "
+					+"event ID ("+nEventID+")!");
+			return -1;
+		}
+		
+		return m_nNextAssignedPacketID;
+	}
+	
+	private int findNextPacketIDForPUBLISH()
+	{
+		int m_nNextPacketID = m_nNextAssignedPacketID;
+		boolean bFound = false;
+		CMMqttEventPUBLISH unackPublish = null;
+		CMMqttEventPUBREC unackPubrec = null;
+		
+		do
+		{
+			m_nNextPacketID = (m_nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
+			unackPublish = findSentUnAckPublish(m_nNextPacketID);
+			if(unackPublish == null)
+			{
+				bFound = true;
+				continue;
+			}
+			unackPubrec = findRecvUnAckPubrec(m_nNextPacketID);
+			if(unackPubrec == null)
+			{
+				bFound = true;
+				continue;
+			}
+			
+			bFound = false;
+			
+		}while(bFound);
+		
+		return m_nNextPacketID;
+	}
+	
+	private int findNextPacketIDForSUBSCRIBE()
+	{
+		int m_nNextPacketID = m_nNextAssignedPacketID;
+		boolean bFound = false;
+		CMMqttEventSUBSCRIBE unackSubscribe = null;
+		
+		do
+		{
+			m_nNextPacketID = (m_nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
+			unackSubscribe = findSentUnAckSubscribe(m_nNextPacketID);
+			if(unackSubscribe == null)
+			{
+				bFound = true;
+				continue;
+			}
+			
+			bFound = false;
+			
+		}while(bFound);
+		
+		return m_nNextPacketID;		
+	}
+	
+	private int findNextPacketIDForUNSUBSCRIBE()
+	{
+		int m_nNextPacketID = m_nNextAssignedPacketID;
+		boolean bFound = false;
+		CMMqttEventUNSUBSCRIBE unackUnsubscribe = null;
+		
+		do
+		{
+			m_nNextPacketID = (m_nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
+			unackUnsubscribe = findSentUnAckUnsubscribe(m_nNextPacketID);
+			if(unackUnsubscribe == null)
+			{
+				bFound = true;
+				continue;
+			}
+			
+			bFound = false;
+			
+		}while(bFound);
+		
+		return m_nNextPacketID;		
+	}
+	
+	// sent-unack-subscribe list
+	public void setSentUnAckSubList(CMList<CMMqttEventSUBSCRIBE> eventList)
+	{
+		m_sentUnAckSubList = eventList;
+	}
+	
+	public CMList<CMMqttEventSUBSCRIBE> getSentUnAckSubList()
+	{
+		return m_sentUnAckSubList;
+	}
+	
+	// sent-unack-unsubscribe list
+	public void setSentUnAckUnsubList(CMList<CMMqttEventUNSUBSCRIBE> eventList)
+	{
+		m_sentUnAckUnsubList = eventList;
+	}
+	
+	public CMList<CMMqttEventUNSUBSCRIBE> getSentUnAckUnsubList()
+	{
+		return m_sentUnAckUnsubList;
 	}
 	
 	//////////////////////// subscription list
@@ -335,6 +475,96 @@ public class CMMqttSession {
 		return;
 	}
 
+	//////////////////////// sent-unack-subscribe list
+
+	public boolean addSentUnAckSubscribe(CMMqttEventSUBSCRIBE subEvent)
+	{
+		int nID = subEvent.getPacketID();
+		CMMqttEventSUBSCRIBE unackEvent = findSentUnAckSubscribe(nID);
+		if(unackEvent != null)
+		{
+			System.err.println("CMMqttSession.addSentUnAckSubscribe(), the same packet ID ("
+					+nID+") already exists!");
+			System.err.println(unackEvent.toString());
+			return false;			
+		}
+		
+		return m_sentUnAckSubList.addElement(subEvent);		
+	}
+	
+	public CMMqttEventSUBSCRIBE findSentUnAckSubscribe(int nPacketID)
+	{
+		int nID = -1;
+		for(CMMqttEventSUBSCRIBE unackEvent : m_sentUnAckSubList.getList())
+		{
+			nID = unackEvent.getPacketID();
+			if(nID == nPacketID)
+				return unackEvent;
+		}
+		
+		return null;		
+	}
+	
+	public boolean removeSentUnAckSubscribe(int nPacketID)
+	{
+		CMMqttEventSUBSCRIBE unackEvent = findSentUnAckSubscribe(nPacketID);
+		if(unackEvent == null)
+			return false;
+		
+		return m_sentUnAckSubList.removeElement(unackEvent);		
+	}
+	
+	public void removeAllSentUnAckSubscribe()
+	{
+		m_sentUnAckSubList.removeAllElements();
+		return;
+	}
+	
+	//////////////////////// sent-unack-unsubscribe list
+
+	public boolean addSentUnAckUnsubscribe(CMMqttEventUNSUBSCRIBE unsubEvent)
+	{
+		int nID = unsubEvent.getPacketID();
+		CMMqttEventUNSUBSCRIBE unackEvent = findSentUnAckUnsubscribe(nID);
+		if(unackEvent != null)
+		{
+			System.err.println("CMMqttSession.addSentUnAckUnsubscribe(), the same packet ID ("
+					+nID+") already exists!");
+			System.err.println(unackEvent.toString());
+			return false;			
+		}
+		
+		return m_sentUnAckUnsubList.addElement(unsubEvent);				
+	}
+	
+	public CMMqttEventUNSUBSCRIBE findSentUnAckUnsubscribe(int nPacketID)
+	{
+		int nID = -1;
+		for(CMMqttEventUNSUBSCRIBE unackEvent : m_sentUnAckUnsubList.getList())
+		{
+			nID = unackEvent.getPacketID();
+			if(nID == nPacketID)
+				return unackEvent;
+		}
+		
+		return null;				
+	}
+	
+	public boolean removeSentUnAckUnsubscribe(int nPacketID)
+	{
+		CMMqttEventUNSUBSCRIBE unackEvent = findSentUnAckUnsubscribe(nPacketID);
+		if(unackEvent == null)
+			return false;
+		
+		return m_sentUnAckUnsubList.removeElement(unackEvent);				
+	}
+	
+	public void removeAllSentUnAckUnsubscribe()
+	{
+		m_sentUnAckUnsubList.removeAllElements();
+		return;
+	}
+	
 	//////////////////////////////////// Overridden methods
 	
 	@Override

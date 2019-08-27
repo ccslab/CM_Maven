@@ -125,19 +125,19 @@ public class CMMqttManager extends CMServiceManager {
 	{
 		// client -> server or server -> client
 		boolean bRet = false;
-		bRet = publish(-1, strTopic, strMsg, (byte)0, false, false);
+		bRet = publish(strTopic, strMsg, (byte)0, false, false);
 		return bRet;
 	}
 	
-	public boolean publish(int nPacketID, String strTopic, String strMsg, byte qos)
+	public boolean publish(String strTopic, String strMsg, byte qos)
 	{
 		// client -> server or server -> client
 		boolean bRet = false;
-		bRet = publish(nPacketID, strTopic, strMsg, qos, false, false);
+		bRet = publish(strTopic, strMsg, qos, false, false);
 		return bRet;
 	}
 	
-	public boolean publish(int nPacketID, String strTopic, String strMsg, byte qos, 
+	public boolean publish(String strTopic, String strMsg, byte qos, 
 				boolean bDupFlag, boolean bRetainFlag)
 	{
 		// client -> server or server -> client
@@ -145,13 +145,13 @@ public class CMMqttManager extends CMServiceManager {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		String strSysType = confInfo.getSystemType();
 		if(strSysType.equals("SERVER"))
-			bRet = publishFromServer(nPacketID, strTopic, strMsg, qos, bDupFlag, bRetainFlag);
+			bRet = publishFromServer(strTopic, strMsg, qos, bDupFlag, bRetainFlag);
 		else
-			bRet = publishFromClient(nPacketID, strTopic, strMsg, qos, bDupFlag, bRetainFlag);
+			bRet = publishFromClient(strTopic, strMsg, qos, bDupFlag, bRetainFlag);
 		return bRet;
 	}
 	
-	private boolean publishFromClient(int nPacketID, String strTopic, String strMsg, 
+	private boolean publishFromClient(String strTopic, String strMsg, 
 			byte qos, boolean bDupFlag, boolean bRetainFlag)
 	{
 		// client -> server
@@ -165,7 +165,20 @@ public class CMMqttManager extends CMServiceManager {
 					+ "you must log in to the default server!");
 			return false;
 		}
+
+		// to get session information
+		CMMqttSession session = null;
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		session = mqttInfo.getMqttSession();
 		
+		if(session == null)
+		{
+			System.err.println("CMMqttManager.publishFromClient(): QoS("
+					+qos+"), but session is null!");
+			System.err.println("To create a new session, execute MQTT connect.");
+			return false;
+		}
+
 		// make PUBLISH event
 		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
 		// set sender (in CM event header)
@@ -176,7 +189,14 @@ public class CMMqttManager extends CMServiceManager {
 		pubEvent.setRetainFlag(bRetainFlag);
 		// set variable header
 		pubEvent.setTopicName(strTopic);
-		pubEvent.setPacketID(nPacketID);
+		if( qos == 1 || qos == 2 )
+		{
+			pubEvent.setPacketID(session.getNextAssignedPacketID(CMMqttEvent.PUBLISH));
+		}
+		else
+		{
+			pubEvent.setPacketID(-1);	
+		}
 		// set payload
 		pubEvent.setAppMessage(strMsg);
 		
@@ -197,20 +217,7 @@ public class CMMqttManager extends CMServiceManager {
 		
 		// process QoS 1 or 2 case for the sent packet
 		if( qos == 1 || qos == 2 )
-		{
-			// to get session information
-			CMMqttSession session = null;
-			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
-			session = mqttInfo.getMqttSession();
-			
-			if(session == null)
-			{
-				System.err.println("CMMqttManager.publishFromClient(): QoS("
-						+qos+"), but session is null!");
-				System.err.println("To create a new session, execute MQTT connect.");
-				return false;
-			}
-			
+		{			
 			// add the sent event to the sent-unack-publish-list
 			bRet = session.addSentUnAckPublish(pubEvent);
 			if(bRet && CMInfo._CM_DEBUG)
@@ -229,7 +236,7 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
-	private boolean publishFromServer(int nPacketID, String strTopic, String strMsg, 
+	private boolean publishFromServer(String strTopic, String strMsg, 
 			byte qos, boolean bDupFlag, boolean bRetainFlag)
 	{
 		// server -> client
@@ -245,7 +252,7 @@ public class CMMqttManager extends CMServiceManager {
 		pubEvent.setRetainFlag(bRetainFlag);
 		// set variable header
 		pubEvent.setTopicName(strTopic);
-		pubEvent.setPacketID(nPacketID);
+		pubEvent.setPacketID(-1); // if qos > 0, packet ID will be assigned later.
 		// set payload
 		pubEvent.setAppMessage(strMsg);
 		
@@ -316,22 +323,27 @@ public class CMMqttManager extends CMServiceManager {
 			sentQoS = maxQoS;
 			pubEvent.setQoS(maxQoS);
 		}
-			
-		// check whether the same packet ID is in use or not
-		if( (sentQoS == 1 || sentQoS == 2) && 
-				(session.findSentUnAckPublish(nPacketID) != null) )
+		
+		if( sentQoS == 1 || sentQoS == 2 )
 		{
-			System.err.println("CMMqttManager.publishFromServerToOneClient(), "
-					+ "client ("+strClient+"), "
-					+ "packet ID ("+nPacketID
-					+") is already in use in sent-unack-publish list !");
-			bRet = session.addPendingTransPublish(pubEvent);
-			if(bRet && CMInfo._CM_DEBUG)
+			// assign a packet ID
+			pubEvent.setPacketID(session.getNextAssignedPacketID(CMMqttEvent.PUBLISH));
+			
+			// check whether the same packet ID is in use or not
+			if(session.findSentUnAckPublish(nPacketID) != null)
 			{
-				System.out.println("CMMqttManager.publishFromServerToOneClient(), "
-						+ "event ("+nPacketID+") is added to the transmission-pending-publish list.");
+				System.err.println("CMMqttManager.publishFromServerToOneClient(), "
+						+ "client ("+strClient+"), "
+						+ "packet ID ("+nPacketID
+						+") is already in use in sent-unack-publish list !");
+				bRet = session.addPendingTransPublish(pubEvent);
+				if(bRet && CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMMqttManager.publishFromServerToOneClient(), "
+							+ "event ("+nPacketID+") is added to the transmission-pending-publish list.");
+				}
+				return false;				
 			}
-			return false;
 		}
 			
 		bRet = CMEventManager.unicastEvent(pubEvent, strClient, m_cmInfo);
@@ -525,21 +537,15 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean subscribe(String strTopicFilter, byte qos)
 	{
-		boolean bRet = subscribe(-1, strTopicFilter, qos); 
-		return bRet;
-	}
-	
-	public boolean subscribe(int nPacketID, String strTopicFilter, byte qos)
-	{
 		CMMqttTopicQoS topicQoS = new CMMqttTopicQoS(strTopicFilter, qos);
 		CMList<CMMqttTopicQoS> topicQoSList = new CMList<CMMqttTopicQoS>();
 		topicQoSList.addElement(topicQoS);
-		boolean bRet = subscribe(nPacketID, topicQoSList);
+		boolean bRet = subscribe(topicQoSList);
 		
 		return bRet;
 	}
 	
-	public boolean subscribe(int nPacketID, CMList<CMMqttTopicQoS> topicQoSList)
+	public boolean subscribe(CMList<CMMqttTopicQoS> topicQoSList)
 	{
 		// to check the CM system type
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -567,16 +573,6 @@ public class CMMqttManager extends CMServiceManager {
 			return false;
 		}
 		
-		// make and send a SUBSCRIBE event
-		CMMqttEventSUBSCRIBE subEvent = new CMMqttEventSUBSCRIBE();
-		// set sender (in CM event header)
-		subEvent.setSender(myself.getName());
-		// set fixed header in the SUBSCRIBE constructor
-		// set variable header
-		subEvent.setPacketID(nPacketID);
-		// set payload
-		subEvent.setTopicQoSList(topicQoSList);
-		
 		// temporarily store the requested topic/qos list at the client session
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		CMMqttSession session = mqttInfo.getMqttSession();
@@ -587,7 +583,17 @@ public class CMMqttManager extends CMServiceManager {
 			return false;
 		}
 		session.setReqSubscriptionList(topicQoSList);
-		
+
+		// make and send a SUBSCRIBE event
+		CMMqttEventSUBSCRIBE subEvent = new CMMqttEventSUBSCRIBE();
+		// set sender (in CM event header)
+		subEvent.setSender(myself.getName());
+		// set fixed header in the SUBSCRIBE constructor
+		// set variable header
+		subEvent.setPacketID(session.getNextAssignedPacketID(CMMqttEvent.SUBSCRIBE));
+		// set payload
+		subEvent.setTopicQoSList(topicQoSList);
+				
 		boolean bRet = false;
 		bRet = CMEventManager.unicastEvent(subEvent, "SERVER", m_cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
@@ -605,20 +611,14 @@ public class CMMqttManager extends CMServiceManager {
 	
 	public boolean unsubscribe(String strTopic)
 	{
-		boolean bRet = unsubscribe(-1, strTopic);
-		return bRet;
-	}
-	
-	public boolean unsubscribe(int nPacketID, String strTopic)
-	{
 		boolean bRet = false;
 		CMList<String> topicList = new CMList<String>();
 		topicList.addElement(strTopic);
-		bRet = unsubscribe(nPacketID, topicList);
+		bRet = unsubscribe(topicList);
 		return bRet;
 	}
 	
-	public boolean unsubscribe(int nPacketID, CMList<String> topicList)
+	public boolean unsubscribe(CMList<String> topicList)
 	{
 		// to check the CM system type
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -674,7 +674,7 @@ public class CMMqttManager extends CMServiceManager {
 		unsubEvent.setSender(myself.getName());
 		// set fixed header in the UNSUBSCRIBE constructor
 		// set variable header
-		unsubEvent.setPacketID(nPacketID);
+		unsubEvent.setPacketID(session.getNextAssignedPacketID(CMMqttEvent.UNSUBSCRIBE));
 		// set payload
 		unsubEvent.setTopicList(topicList);
 		

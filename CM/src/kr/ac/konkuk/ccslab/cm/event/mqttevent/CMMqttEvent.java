@@ -111,4 +111,9 @@ public abstract class CMMqttEvent extends CMEvent {
 		return;
 	}
 	
+	public int getPacketID()
+	{
+		return -1;
+	}
+	
 }

@@ -28,6 +28,7 @@ public class CMInfo {
 	public static final int MAX_EVENT_SIZE = 8192;
 	public static final int MIN_EVENT_SIZE = 24;
 	public static final int STRING_LEN_BYTES_LEN = 2;
+	public static final int MQTT_ID_RANGE = 65536;
 	
 	// big/little endian
 	public static final int CM_BIG_ENDIAN = 0;

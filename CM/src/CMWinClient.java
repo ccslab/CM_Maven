@@ -4004,7 +4004,6 @@ public class CMWinClient extends JFrame {
 	public void testMqttPublish()
 	{
 		printMessage("========== MQTT publish\n");
-		JTextField packetIDTextField = new JTextField();
 		JTextField topicTextField = new JTextField();
 		JTextField messageTextField = new JTextField();
 		String[] qosArray = {"0", "1", "2"};
@@ -4012,7 +4011,6 @@ public class CMWinClient extends JFrame {
 		JCheckBox dupFlagBox = new JCheckBox();
 		JCheckBox retainFlagBox = new JCheckBox();
 		Object[] msg = {
-				"packet ID", packetIDTextField,
 				"topic", topicTextField,
 				"message", messageTextField,
 				"QoS", qosComboBox,
@@ -4023,17 +4021,6 @@ public class CMWinClient extends JFrame {
 				JOptionPane.OK_CANCEL_OPTION);
 		if(nRet != JOptionPane.OK_OPTION) return;
 
-		int nPacketID = 0;
-		String strPacketID = packetIDTextField.getText().trim();
-		if(!strPacketID.isEmpty())
-		{
-			try {
-				nPacketID = Integer.parseInt(strPacketID);				
-			} catch (NumberFormatException ne) {
-				printStyledMessage("Packet ID must be a number!\n", "bold");
-				return;
-			}
-		}
 		String strTopic = topicTextField.getText().trim();
 		String strMessage = messageTextField.getText().trim();
 		byte qos = (byte) qosComboBox.getSelectedIndex();
@@ -4047,18 +4034,16 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 		//mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
-		mqttManager.publish(nPacketID, strTopic, strMessage, qos, bDupFlag,	bRetainFlag);
+		mqttManager.publish(strTopic, strMessage, qos, bDupFlag,	bRetainFlag);
 	}
 	
 	public void testMqttSubscribe()
 	{
 		printMessage("========== MQTT subscribe\n");
-		JTextField packetIDTextField = new JTextField();
 		JTextField topicFilterTextField = new JTextField();
 		String[] qosArray = {"0", "1", "2"};
 		JComboBox<String> qosComboBox = new JComboBox<String>(qosArray);
 		Object[] msg = {
-				"packet ID", packetIDTextField,
 				"topic filter", topicFilterTextField,
 				"QoS", qosComboBox
 		};
@@ -4066,17 +4051,6 @@ public class CMWinClient extends JFrame {
 				JOptionPane.OK_CANCEL_OPTION);
 		if(nRet != JOptionPane.OK_OPTION) return;
 
-		int nPacketID = 0;
-		String strPacketID = packetIDTextField.getText().trim();
-		if(!strPacketID.isEmpty())
-		{
-			try {
-				nPacketID = Integer.parseInt(strPacketID);				
-			} catch (NumberFormatException ne) {
-				printStyledMessage("Packet ID must be a number!\n", "bold");
-				return;
-			}
-		}
 		String strTopicFilter = topicFilterTextField.getText().trim();
 		byte qos = (byte) qosComboBox.getSelectedIndex();
 
@@ -4086,7 +4060,7 @@ public class CMWinClient extends JFrame {
 			printStyledMessage("CMMqttManager is null!\n", "bold");
 			return;
 		}
-		mqttManager.subscribe(nPacketID, strTopicFilter, qos);
+		mqttManager.subscribe(strTopicFilter, qos);
 	}
 	
 	public void testPrintMqttSessionInfo()

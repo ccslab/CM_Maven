@@ -439,7 +439,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 				CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
 						.get(CMInfo.CM_MQTT_MANAGER);
 				// DUP flag = false, RETAIN flag = false
-				mqttManager.publish(pubEvent.getPacketID(), pubEvent.getTopicName(), 
+				mqttManager.publish(pubEvent.getTopicName(), 
 						pubEvent.getAppMessage(), pubEvent.getQoS(), false, false);				
 			}
 			
