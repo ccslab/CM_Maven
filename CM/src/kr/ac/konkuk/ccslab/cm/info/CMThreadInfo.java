@@ -12,12 +12,12 @@ public class CMThreadInfo {
 
 	///// set/get methods
 	
-	public void setExecutorService(ExecutorService es)
+	public synchronized void setExecutorService(ExecutorService es)
 	{
 		m_executorService = es;
 	}
 	
-	public ExecutorService getExecutorService()
+	public synchronized ExecutorService getExecutorService()
 	{
 		return m_executorService;
 	}

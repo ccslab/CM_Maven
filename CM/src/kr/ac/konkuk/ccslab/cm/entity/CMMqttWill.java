@@ -29,42 +29,42 @@ public class CMMqttWill {
 	}
 	
 	// setter/getter
-	public void setWillMessage(String strMsg)
+	public synchronized void setWillMessage(String strMsg)
 	{
 		m_strWillMessage = strMsg;
 	}
 	
-	public String getWillMessage()
+	public synchronized String getWillMessage()
 	{
 		return m_strWillMessage;
 	}
 	
-	public void setWillTopic(String strTopic)
+	public synchronized void setWillTopic(String strTopic)
 	{
 		m_strWillTopic = strTopic;
 	}
 	
-	public String getWillTopic()
+	public synchronized String getWillTopic()
 	{
 		return m_strWillTopic;
 	}
 	
-	public void setWillQoS(byte qos)
+	public synchronized void setWillQoS(byte qos)
 	{
 		m_willQoS = qos;
 	}
 	
-	public byte getWillQoS()
+	public synchronized byte getWillQoS()
 	{
 		return m_willQoS;
 	}
 	
-	public void setWillRetain(boolean bRetain)
+	public synchronized void setWillRetain(boolean bRetain)
 	{
 		m_bWillRetain = bRetain;
 	}
 	
-	public boolean isWillRetain()
+	public synchronized boolean isWillRetain()
 	{
 		return m_bWillRetain;
 	}

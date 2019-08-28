@@ -157,87 +157,87 @@ public class CMInfo {
 		m_bStarted = false;
 	}
 	
-	public CMConfigurationInfo getConfigurationInfo()
+	public synchronized CMConfigurationInfo getConfigurationInfo()
 	{
 		return m_confInfo;
 	}
 	
-	public CMSNSInfo getSNSInfo()
+	public synchronized CMSNSInfo getSNSInfo()
 	{
 		return m_snsInfo;
 	}
 	
-	public CMFileTransferInfo getFileTransferInfo()
+	public synchronized CMFileTransferInfo getFileTransferInfo()
 	{
 		return m_fileTransferInfo;
 	}
 	
-	public CMDBInfo getDBInfo()
+	public synchronized CMDBInfo getDBInfo()
 	{
 		return m_dbInfo;
 	}
 	
-	public CMCommInfo getCommInfo()
+	public synchronized CMCommInfo getCommInfo()
 	{
 		return m_commInfo;
 	}
 	
-	public CMEventInfo getEventInfo()
+	public synchronized CMEventInfo getEventInfo()
 	{
 		return m_eventInfo;
 	}
 	
-	public CMInteractionInfo getInteractionInfo()
+	public synchronized CMInteractionInfo getInteractionInfo()
 	{
 		return m_interactionInfo;
 	}
 	
-	public CMThreadInfo getThreadInfo()
+	public synchronized CMThreadInfo getThreadInfo()
 	{
 		return m_threadInfo;
 	}
 	
-	public CMMqttInfo getMqttInfo()
+	public synchronized CMMqttInfo getMqttInfo()
 	{
 		return m_mqttInfo;
 	}
 	
-	public void setServiceManagerHashtable(Hashtable<Integer, CMServiceManager> managerHashtable)
+	public synchronized void setServiceManagerHashtable(Hashtable<Integer, CMServiceManager> managerHashtable)
 	{
 		m_serviceManagerHashtable = managerHashtable;
 	}
 	
-	public Hashtable<Integer, CMServiceManager> getServiceManagerHashtable()
+	public synchronized Hashtable<Integer, CMServiceManager> getServiceManagerHashtable()
 	{
 		return m_serviceManagerHashtable;
 	}
 	
-	public void setEventHandlerHashtable(Hashtable<Integer, CMEventHandler> handlerHashtable)
+	public synchronized void setEventHandlerHashtable(Hashtable<Integer, CMEventHandler> handlerHashtable)
 	{
 		m_eventHandlerHashtable = handlerHashtable;
 	}
 	
-	public Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
+	public synchronized Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
 	{
 		return m_eventHandlerHashtable;
 	}
 	
-	public void setAppEventHandler(CMAppEventHandler handler)
+	public synchronized void setAppEventHandler(CMAppEventHandler handler)
 	{
 		m_appEventHandler = handler;
 	}
 	
-	public CMAppEventHandler getAppEventHandler()
+	public synchronized CMAppEventHandler getAppEventHandler()
 	{
 		return m_appEventHandler;
 	}
 	
-	public void setStarted(boolean bStarted)
+	public synchronized void setStarted(boolean bStarted)
 	{
 		m_bStarted = bStarted;
 	}
 	
-	public boolean isStarted()
+	public synchronized boolean isStarted()
 	{
 		return m_bStarted;
 	}

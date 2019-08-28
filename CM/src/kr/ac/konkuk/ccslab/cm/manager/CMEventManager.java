@@ -48,7 +48,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 public class CMEventManager {
 
-	public static CMEventReceiver startReceivingEvent(CMInfo cmInfo)
+	public synchronized static CMEventReceiver startReceivingEvent(CMInfo cmInfo)
 	{
 		CMEventInfo eventInfo = cmInfo.getEventInfo();
 		CMEventReceiver eventReceiver = new CMEventReceiver(cmInfo);
@@ -58,12 +58,12 @@ public class CMEventManager {
 		return eventReceiver;
 	}
 	
-	public static ByteBuffer marshallEvent(CMEvent cmEvent)
+	public synchronized static ByteBuffer marshallEvent(CMEvent cmEvent)
 	{
 		return cmEvent.marshall();
 	}
 	
-	public static CMEvent unmarshallEvent(ByteBuffer buf)
+	public synchronized static CMEvent unmarshallEvent(ByteBuffer buf)
 	{
 		if( buf == null )
 		{
@@ -180,12 +180,12 @@ public class CMEventManager {
 	///////////////////////////////////////////////////////////////
 	// event transmission methods
 	
-	public static boolean unicastEvent(CMEvent cme, String strReceiver, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, CMInfo cmInfo)
 	{
 		return unicastEvent(cme, strReceiver, CMInfo.CM_STREAM, 0, false, cmInfo);
 	}
 	
-	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
 		
@@ -206,12 +206,12 @@ public class CMEventManager {
 		return bReturn;
 	}
 	
-	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, CMInfo cmInfo)
 	{
 		return unicastEvent(cme, strReceiver, opt, nKey, false, cmInfo);
 	}
 	
-	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock, CMInfo cmInfo)
 	{
 		return unicastEvent(cme, strReceiver, opt, nKey, 0, isBlock, cmInfo);
 	}
@@ -219,7 +219,7 @@ public class CMEventManager {
 	// nKey: the channel key. For the stream channel, nKey is an integer greater than or equal to 0.
 	// For the datagram channel, nKey is an integer that is a port number of this channel.
 	// nRecvPort: if this value is 0, the default receiver port number is used.
-	public static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, int nRecvPort, 
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, int nRecvPort, 
 			boolean isBlock, CMInfo cmInfo)
 	{
 		CMMember loginUsers = null;
@@ -379,7 +379,7 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public static boolean unicastEvent(CMEvent cme, SocketChannel sc, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, SocketChannel sc, CMInfo cmInfo)
 	{
 		//int nSentBytes = -1;
 		CMMessage msg = null;
@@ -410,7 +410,7 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName, CMInfo cmInfo)
+	public synchronized static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
@@ -476,7 +476,7 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public static boolean multicastEvent(CMEvent cme, DatagramChannel dc, String strMA, int nPort, CMInfo cmInfo)
+	public synchronized static boolean multicastEvent(CMEvent cme, DatagramChannel dc, String strMA, int nPort, CMInfo cmInfo)
 	{
 		//int nSentBytes = -1;
 		CMCommInfo commInfo = cmInfo.getCommInfo();
@@ -509,18 +509,18 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public static boolean broadcastEvent(CMEvent cme, CMInfo cmInfo)
+	public synchronized static boolean broadcastEvent(CMEvent cme, CMInfo cmInfo)
 	{
 		return broadcastEvent(cme, CMInfo.CM_STREAM, 0, cmInfo);
 	}
 	
-	public static boolean broadcastEvent(CMEvent cme, int opt, CMInfo cmInfo)
+	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, CMInfo cmInfo)
 	{
 		return broadcastEvent(cme, opt, 0, cmInfo);
 	}
 	
 	// send an event to all login users (server)
-	public static boolean broadcastEvent(CMEvent cme, int opt, int nChNum, CMInfo cmInfo)
+	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, int nChNum, CMInfo cmInfo)
 	{
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
@@ -604,18 +604,18 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public static boolean castEvent(CMEvent cme, CMMember users, CMInfo cmInfo)
+	public synchronized static boolean castEvent(CMEvent cme, CMMember users, CMInfo cmInfo)
 	{
 		return castEvent(cme, users, CMInfo.CM_STREAM, 0, cmInfo);
 	}
 	
-	public static boolean castEvent(CMEvent cme, CMMember users, int opt, CMInfo cmInfo)
+	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, CMInfo cmInfo)
 	{
 		return castEvent(cme, users, opt, 0, cmInfo);
 	}
 	
 	// send an event to a specific user group with multiple unicast transmissions
-	public static boolean castEvent(CMEvent cme, CMMember users, int opt, int nChNum, CMInfo cmInfo)
+	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, int nChNum, CMInfo cmInfo)
 	{
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
@@ -706,7 +706,7 @@ public class CMEventManager {
 	 * adds a channel with a strName, ch ,nChNum, and loginUsers information. If strName exists in loginUsers, 
 	 * add (nKey, ch). Otherwise, addSocketChannel() fails. The default key value is 0.
 	*/
-	public static boolean addSocketChannel(String strUserName, SelectableChannel ch, int nKey, boolean isBlock, 
+	public synchronized static boolean addSocketChannel(String strUserName, SelectableChannel ch, int nKey, boolean isBlock, 
 			CMMember loginUsers)
 	{
 		CMUser user = null;
@@ -731,7 +731,7 @@ public class CMEventManager {
 	
 	//remove a socket channel with strName and nChNum from loginUsers. 
 	//If all channels are removed, ??? (not clear)
-	public static boolean removeSocketChannel(String strUserName, SelectableChannel ch, int nKey, boolean isBlock, 
+	public synchronized static boolean removeSocketChannel(String strUserName, SelectableChannel ch, int nKey, boolean isBlock, 
 			CMMember loginUsers)
 	{
 		CMUser user = null;
@@ -756,7 +756,7 @@ public class CMEventManager {
 
 	//remove a socket channel with ch from loginUsers. 
 	//If all channels are removed, ??? (not clear)
-	public static boolean removeSocketChannel(SelectableChannel ch, boolean isBlock, CMMember loginUsers)
+	public synchronized static boolean removeSocketChannel(SelectableChannel ch, boolean isBlock, CMMember loginUsers)
 	{
 		CMUser tuser = null;
 		//int nKey = -1;
@@ -801,7 +801,7 @@ public class CMEventManager {
 	}
 	
 	//remove all socket channels of strName from loginUsers
-	public static boolean removeAllSocketChannels(String strUserName, boolean isBlock, CMMember loginUsers)
+	public synchronized static boolean removeAllSocketChannels(String strUserName, boolean isBlock, CMMember loginUsers)
 	{
 		CMUser user = null;
 		user = loginUsers.findMember(strUserName);
@@ -822,7 +822,7 @@ public class CMEventManager {
 	}
 	
 	// remove all additional socket channels(ch# greater than 0) of strUserName from loginUsers.
-	public static boolean removeAllAddedSocketChannels(String strUserName, int nDefaultKey, boolean isBlock, 
+	public synchronized static boolean removeAllAddedSocketChannels(String strUserName, int nDefaultKey, boolean isBlock, 
 			CMMember loginUsers)
 	{
 		CMUser user = null;
@@ -845,7 +845,7 @@ public class CMEventManager {
 	}
 	
 	// find a channel with strUserName and nChNum.
-	public static SelectableChannel findSocketChannel(String strUserName, int nKey, boolean isBlock, CMMember loginUsers)
+	public synchronized static SelectableChannel findSocketChannel(String strUserName, int nKey, boolean isBlock, CMMember loginUsers)
 	{
 		CMUser user = null;
 		SelectableChannel ch = null;
@@ -874,7 +874,7 @@ public class CMEventManager {
 	}
 	
 	// find a user who connects with a socket channel in loginUsers.
-	public static String findUserWithSocketChannel(SelectableChannel ch, CMMember loginUsers)
+	public synchronized static String findUserWithSocketChannel(SelectableChannel ch, CMMember loginUsers)
 	{
 		String strUserName = null;
 		boolean isBlock = false;

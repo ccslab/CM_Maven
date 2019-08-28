@@ -49,37 +49,37 @@ public class CMServer extends CMServerInfo {
 	
 	// set/get methods
 	
-	public CMChannelInfo<Integer> getNonBlockSocketChannelInfo()
+	public synchronized CMChannelInfo<Integer> getNonBlockSocketChannelInfo()
 	{
 		return m_nonBlockSocketChannelInfo;
 	}
 	
-	public CMChannelInfo<Integer> getBlockSocketChannelInfo()
+	public synchronized CMChannelInfo<Integer> getBlockSocketChannelInfo()
 	{
 		return m_blockSocketChannelInfo;
 	}
 	
-	public void setCurrentSessionName(String name)
+	public synchronized void setCurrentSessionName(String name)
 	{
 		m_strCurrentSessionName = name;
 	}
 	
-	public String getCurrentSessionName()
+	public synchronized String getCurrentSessionName()
 	{
 		return m_strCurrentSessionName;
 	}
 	
-	public void setCurrentGroupName(String name)
+	public synchronized void setCurrentGroupName(String name)
 	{
 		m_strCurrentGroupName = name;
 	}
 	
-	public String getCurrentGroupName()
+	public synchronized String getCurrentGroupName()
 	{
 		return m_strCurrentGroupName;
 	}
 	
-	public void setClientState(int state)
+	public synchronized void setClientState(int state)
 	{
 		m_nClientState = state;
 		
@@ -105,48 +105,48 @@ public class CMServer extends CMServerInfo {
 
 	}
 	
-	public int getClientState()
+	public synchronized int getClientState()
 	{
 		return m_nClientState;
 	}
 	
-	public void setCommArch(String ca)
+	public synchronized void setCommArch(String ca)
 	{
 		m_strCommArch = ca;
 	}
 	
-	public String getCommArch()
+	public synchronized String getCommArch()
 	{
 		return m_strCommArch;
 	}
 	
-	public void setLoginScheme(boolean bLogin)
+	public synchronized void setLoginScheme(boolean bLogin)
 	{
 		m_bLoginScheme = bLogin;
 	}
 	
-	public boolean isLoginScheme()
+	public synchronized boolean isLoginScheme()
 	{
 		return m_bLoginScheme;
 	}
 	
-	public void setSessionScheme(boolean bSession)
+	public synchronized void setSessionScheme(boolean bSession)
 	{
 		m_bSessionScheme = bSession;
 	}
 	
-	public boolean isSessionScheme()
+	public synchronized boolean isSessionScheme()
 	{
 		return m_bSessionScheme;
 	}
 	
 	// session management
-	public int getSessionNum()
+	public synchronized int getSessionNum()
 	{
 		return m_sessionList.size();
 	}
 	
-	public boolean isMember(String strSessionName)
+	public synchronized boolean isMember(String strSessionName)
 	{
 		CMSession tSession = null;
 		boolean bFound = false;
@@ -165,7 +165,7 @@ public class CMServer extends CMServerInfo {
 		return bFound;
 	}
 
-	public boolean addSession(CMSession session)
+	public synchronized boolean addSession(CMSession session)
 	{
 		String sname = session.getSessionName();
 		
@@ -184,7 +184,7 @@ public class CMServer extends CMServerInfo {
 		return true;
 	}
 
-	public boolean removeSession(String strSessionName)
+	public synchronized boolean removeSession(String strSessionName)
 	{
 		CMSession tSession = null;
 		boolean bFound = false;
@@ -216,7 +216,7 @@ public class CMServer extends CMServerInfo {
 		return bFound;
 	}
 
-	public CMSession findSession(String strSessionName)
+	public synchronized CMSession findSession(String strSessionName)
 	{
 		CMSession tSession = null;
 		boolean bFound = false;
@@ -238,7 +238,7 @@ public class CMServer extends CMServerInfo {
 		return tSession;
 	}
 	
-	public Vector<CMSession> getSessionList()
+	public synchronized Vector<CMSession> getSessionList()
 	{
 		return m_sessionList;
 	}

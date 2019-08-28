@@ -65,47 +65,47 @@ public class CMUser extends CMObject {
 	}
 	
 	// set methods
-	public void setID(int id)
+	public synchronized void setID(int id)
 	{
 		m_nID = id;
 	}
 	
-	public void setName(String name)
+	public synchronized void setName(String name)
 	{
 		m_strName = name;
 	}
 	
-	public void setPasswd(String passwd)
+	public synchronized void setPasswd(String passwd)
 	{
 		m_strPasswd = passwd;
 	}
 	
-	public void setHost(String host)
+	public synchronized void setHost(String host)
 	{
 		m_strHost = host;
 	}
 	
-	public void setUDPPort(int port)
+	public synchronized void setUDPPort(int port)
 	{
 		m_nUDPPort = port;
 	}
 	
-	public void setPosition(CMPosition pq)
+	public synchronized void setPosition(CMPosition pq)
 	{
 		m_pq = pq;
 	}
 	
-	public void setCurrentSession(String sName)
+	public synchronized void setCurrentSession(String sName)
 	{
 		m_strCurrentSession = sName;
 	}
 	
-	public void setCurrentGroup(String gName)
+	public synchronized void setCurrentGroup(String gName)
 	{
 		m_strCurrentGroup = gName;
 	}
 
-	public void setState(int state)
+	public synchronized void setState(int state)
 	{
 		m_nState = state;
 		
@@ -133,88 +133,88 @@ public class CMUser extends CMObject {
 		return;
 	}
 	
-	public void setAttachDownloadScheme(int scheme)
+	public synchronized void setAttachDownloadScheme(int scheme)
 	{
 		m_nAttachDownloadScheme = scheme;
 	}
 	
-	public void setAttachAccessHistoryList(CMSNSAttachAccessHistoryList list)
+	public synchronized void setAttachAccessHistoryList(CMSNSAttachAccessHistoryList list)
 	{
 		m_historyList = list;
 	}
 	
-	public void setLastLoginDate(Calendar date)
+	public synchronized void setLastLoginDate(Calendar date)
 	{
 		m_lastLoginDate = date;
 	}
 	
 	// get methods
-	public int getID()
+	public synchronized int getID()
 	{
 		return m_nID;
 	}
 	
-	public String getName()
+	public synchronized String getName()
 	{
 		return m_strName;
 	}
 	
-	public String getPasswd()
+	public synchronized String getPasswd()
 	{
 		return m_strPasswd;
 	}
 	
-	public String getHost()
+	public synchronized String getHost()
 	{
 		return m_strHost;
 	}
 	
-	public int getUDPPort()
+	public synchronized int getUDPPort()
 	{
 		return m_nUDPPort;
 	}
 	
-	public CMPosition getPosition()
+	public synchronized CMPosition getPosition()
 	{
 		return m_pq;
 	}
 	
-	public String getCurrentSession()
+	public synchronized String getCurrentSession()
 	{
 		return m_strCurrentSession;
 	}
 	
-	public String getCurrentGroup()
+	public synchronized String getCurrentGroup()
 	{
 		return m_strCurrentGroup;
 	}
 	
-	public int getState()
+	public synchronized int getState()
 	{
 		return m_nState;
 	}
 	
-	public CMChannelInfo<Integer> getNonBlockSocketChannelInfo()
+	public synchronized CMChannelInfo<Integer> getNonBlockSocketChannelInfo()
 	{
 		return m_nonBlockSocketChannelInfo;
 	}
 	
-	public CMChannelInfo<Integer> getBlockSocketChannelInfo()
+	public synchronized CMChannelInfo<Integer> getBlockSocketChannelInfo()
 	{
 		return m_blockSocketChannelInfo;
 	}
 	
-	public int getAttachDownloadScheme()
+	public synchronized int getAttachDownloadScheme()
 	{
 		return m_nAttachDownloadScheme;
 	}
 	
-	public CMSNSAttachAccessHistoryList getAttachAccessHistoryList()
+	public synchronized CMSNSAttachAccessHistoryList getAttachAccessHistoryList()
 	{
 		return m_historyList;
 	}
 	
-	public Calendar getLastLoginDate()
+	public synchronized Calendar getLastLoginDate()
 	{
 		return m_lastLoginDate;
 	}

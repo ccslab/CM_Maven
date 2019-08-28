@@ -35,92 +35,92 @@ public class CMSNSInfo {
 	/////////////////////////////////////////////////////////////
 	// get/set methods
 	
-	public void setSNSContentList(CMSNSContentList contList)
+	public synchronized void setSNSContentList(CMSNSContentList contList)
 	{
 		m_contentList = contList;
 	}
 	
-	public CMSNSContentList getSNSContentList()
+	public synchronized CMSNSContentList getSNSContentList()
 	{
 		return m_contentList;
 	}
 	
-	public void setSendSNSAttach(CMSNSAttach attach)
+	public synchronized void setSendSNSAttach(CMSNSAttach attach)
 	{
 		m_sendAttach = attach;
 	}
 	
-	public CMSNSAttach getSendSNSAttach()
+	public synchronized CMSNSAttach getSendSNSAttach()
 	{
 		return m_sendAttach;
 	}
 	
-	public void setRecvSNSAttachHashtable(CMSNSAttachHashtable attachTable)
+	public synchronized void setRecvSNSAttachHashtable(CMSNSAttachHashtable attachTable)
 	{
 		m_recvAttachHashtable = attachTable;
 	}
 	
-	public CMSNSAttachHashtable getRecvSNSAttachHashtable()
+	public synchronized CMSNSAttachHashtable getRecvSNSAttachHashtable()
 	{
 		return m_recvAttachHashtable;
 	}
 	
-	public void setSendSNSAttachHashtable(CMSNSAttachHashtable attachTable)
+	public synchronized void setSendSNSAttachHashtable(CMSNSAttachHashtable attachTable)
 	{
 		m_sendAttachHashtable = attachTable;
 	}
 	
-	public CMSNSAttachHashtable getSendSNSAttachHashtable()
+	public synchronized CMSNSAttachHashtable getSendSNSAttachHashtable()
 	{
 		return m_sendAttachHashtable;
 	}
 	
-	public void setRecvSNSAttachList(CMSNSAttachList attachList)
+	public synchronized void setRecvSNSAttachList(CMSNSAttachList attachList)
 	{
 		m_recvAttachList = attachList;
 	}
 	
-	public CMSNSAttachList getRecvSNSAttachList()
+	public synchronized CMSNSAttachList getRecvSNSAttachList()
 	{
 		return m_recvAttachList;
 	}
 	
-	public void setPrefetchMap(CMSNSPrefetchHashMap prefetchMap)
+	public synchronized void setPrefetchMap(CMSNSPrefetchHashMap prefetchMap)
 	{
 		m_prefetchMap = prefetchMap;
 	}
 	
-	public CMSNSPrefetchHashMap getPrefetchMap()
+	public synchronized CMSNSPrefetchHashMap getPrefetchMap()
 	{
 		return m_prefetchMap;
 	}
 	
-	public void setLastlyReqWriter(String strWriter)
+	public synchronized void setLastlyReqWriter(String strWriter)
 	{
 		m_strLastlyReqWriter = strWriter;
 	}
 	
-	public String getLastlyReqWriter()
+	public synchronized String getLastlyReqWriter()
 	{
 		return m_strLastlyReqWriter;
 	}
 	
-	public void setLastlyReqOffset(int nOffset)
+	public synchronized void setLastlyReqOffset(int nOffset)
 	{
 		m_nLastlyReqOffset = nOffset;
 	}
 	
-	public int getLastlyReqOffset()
+	public synchronized int getLastlyReqOffset()
 	{
 		return m_nLastlyReqOffset;
 	}
 	
-	public void setLastlyDownContentNum(int nNum)
+	public synchronized void setLastlyDownContentNum(int nNum)
 	{
 		m_nLastlyDownContentNum = nNum;
 	}
 	
-	public int getLastlyDownContentNum()
+	public synchronized int getLastlyDownContentNum()
 	{
 		return m_nLastlyDownContentNum;
 	}

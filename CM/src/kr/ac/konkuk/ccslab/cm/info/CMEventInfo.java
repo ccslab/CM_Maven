@@ -15,22 +15,22 @@ public class CMEventInfo {
 	
 	// set/get methods
 
-	public void setEventReceiver(CMEventReceiver receiver)
+	public synchronized void setEventReceiver(CMEventReceiver receiver)
 	{
 		m_eventReceiver = receiver;
 	}
 	
-	public CMEventReceiver getEventReceiver()
+	public synchronized CMEventReceiver getEventReceiver()
 	{
 		return m_eventReceiver;
 	}
 	
-	public void setEventSynchronizer(CMEventSynchronizer sync)
+	public synchronized void setEventSynchronizer(CMEventSynchronizer sync)
 	{
 		m_eventSynchronizer = sync;
 	}
 	
-	public CMEventSynchronizer getEventSynchronizer()
+	public synchronized CMEventSynchronizer getEventSynchronizer()
 	{
 		return m_eventSynchronizer;
 	}

@@ -1,7 +1,5 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
-import java.io.File;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -87,102 +85,102 @@ public class CMConfigurationInfo {
 	}
 
 	// set/get methods
-	public void setConfFileHome(Path filePath)
+	public synchronized void setConfFileHome(Path filePath)
 	{
 		m_confFileHome = filePath;
 	}
 	
-	public Path getConfFileHome()
+	public synchronized Path getConfFileHome()
 	{
 		return m_confFileHome;
 	}
 	
-	public void setServerAddress(String addr)
+	public synchronized void setServerAddress(String addr)
 	{
 		m_strServerAddress = addr;
 	}
 	
-	public String getServerAddress()
+	public synchronized String getServerAddress()
 	{
 		return m_strServerAddress;
 	}
 	
-	public void setServerPort(int port)
+	public synchronized void setServerPort(int port)
 	{
 		m_nServerPort = port;
 	}
 	
-	public int getServerPort()
+	public synchronized int getServerPort()
 	{
 		return m_nServerPort;
 	}
 	
-	public void setMyAddress(String addr)
+	public synchronized void setMyAddress(String addr)
 	{
 		m_strMyAddress = addr;
 	}
 	
-	public String getMyAddress()
+	public synchronized String getMyAddress()
 	{
 		return m_strMyAddress;
 	}
 	
-	public void setMyPort(int port)
+	public synchronized void setMyPort(int port)
 	{
 		m_nMyPort = port;
 	}
 	
-	public int getMyPort()
+	public synchronized int getMyPort()
 	{
 		return m_nMyPort;
 	}
 	
-	public void setMulticastAddress(String addr)
+	public synchronized void setMulticastAddress(String addr)
 	{
 		m_strMulticastAddress = addr;
 	}
 	
-	public String getMulticastAddress()
+	public synchronized String getMulticastAddress()
 	{
 		return m_strMulticastAddress;
 	}
 	
-	public void setMulticastPort(int port)
+	public synchronized void setMulticastPort(int port)
 	{
 		m_nMulticastPort = port;
 	}
 	
-	public int getMulticastPort()
+	public synchronized int getMulticastPort()
 	{
 		return m_nMulticastPort;
 	}
 	
-	public void setSystemType(String type)
+	public synchronized void setSystemType(String type)
 	{
 		m_strSystemType = type;
 	}
 	
-	public String getSystemType()
+	public synchronized String getSystemType()
 	{
 		return m_strSystemType;
 	}
 	
-	public void setCommArch(String commArch)
+	public synchronized void setCommArch(String commArch)
 	{
 		m_strCommArch = commArch;
 	}
 	
-	public String getCommArch()
+	public synchronized String getCommArch()
 	{
 		return m_strCommArch;
 	}
 	
-	public void setLoginScheme(int bScheme)
+	public synchronized void setLoginScheme(int bScheme)
 	{
 		m_bLoginScheme = bScheme;
 	}
 	
-	public void setLoginScheme(boolean bScheme)
+	public synchronized void setLoginScheme(boolean bScheme)
 	{
 		if(bScheme) 
 			m_bLoginScheme = 1;
@@ -190,7 +188,7 @@ public class CMConfigurationInfo {
 			m_bLoginScheme = 0;
 	}
 	
-	public boolean isLoginScheme()
+	public synchronized boolean isLoginScheme()
 	{
 		boolean bScheme = false;
 		if(m_bLoginScheme == 0)
@@ -201,12 +199,12 @@ public class CMConfigurationInfo {
 		return bScheme;
 	}
 	
-	public void setSessionScheme(int bScheme)
+	public synchronized void setSessionScheme(int bScheme)
 	{
 		m_bSessionScheme = bScheme;
 	}
 	
-	public void setSessionScheme(boolean bScheme)
+	public synchronized void setSessionScheme(boolean bScheme)
 	{
 		if(bScheme)
 			m_bSessionScheme = 1;
@@ -214,7 +212,7 @@ public class CMConfigurationInfo {
 			m_bSessionScheme = 0;
 	}
 	
-	public boolean isSessionScheme()
+	public synchronized boolean isSessionScheme()
 	{
 		boolean bScheme = false;
 		if(m_bSessionScheme == 0)
@@ -225,12 +223,12 @@ public class CMConfigurationInfo {
 		return bScheme;
 	}
 	
-	public void setDownloadScheme(int bScheme)
+	public synchronized void setDownloadScheme(int bScheme)
 	{
 		m_bDownloadScheme = bScheme;
 	}
 	
-	public void setDownloadScheme(boolean bScheme)
+	public synchronized void setDownloadScheme(boolean bScheme)
 	{
 		if(bScheme)
 			m_bDownloadScheme = 1;
@@ -238,7 +236,7 @@ public class CMConfigurationInfo {
 			m_bDownloadScheme = 0;
 	}
 	
-	public boolean isDownloadScheme()
+	public synchronized boolean isDownloadScheme()
 	{
 		boolean bScheme = false;
 		
@@ -250,99 +248,99 @@ public class CMConfigurationInfo {
 		return bScheme;
 	}
 	
-	public void setDownloadNum(int num)
+	public synchronized void setDownloadNum(int num)
 	{
 		m_nDownloadNum = num;
 	}
 	
-	public int getDownloadNum()
+	public synchronized int getDownloadNum()
 	{
 		return m_nDownloadNum;
 	}
 	
-	public void setThumbnailHorSize(int nHorizon)
+	public synchronized void setThumbnailHorSize(int nHorizon)
 	{
 		m_nThumbnailHorSize = nHorizon;
 	}
 	
-	public int getThumbnailHorSize()
+	public synchronized int getThumbnailHorSize()
 	{
 		return m_nThumbnailHorSize;
 	}
 	
-	public void setThumbnailVerSize(int nVertical)
+	public synchronized void setThumbnailVerSize(int nVertical)
 	{
 		m_nThumbnailVerSize = nVertical;
 	}
 	
-	public int getThumbnailVerSize()
+	public synchronized int getThumbnailVerSize()
 	{
 		return m_nThumbnailVerSize;
 	}
 	
-	public void setAttachDownloadScheme(int nScheme)
+	public synchronized void setAttachDownloadScheme(int nScheme)
 	{
 		m_nAttachDownloadScheme = nScheme;
 	}
 	
-	public int getAttachDownloadScheme()
+	public synchronized int getAttachDownloadScheme()
 	{
 		return m_nAttachDownloadScheme;
 	}
 	
-	public void setAttachAccessInterval(int nInterval)
+	public synchronized void setAttachAccessInterval(int nInterval)
 	{
 		m_nAttachAccessInterval = nInterval;
 	}
 	
-	public int getAttachAccessInterval()
+	public synchronized int getAttachAccessInterval()
 	{
 		return m_nAttachAccessInterval;
 	}
 	
-	public void setAttachPrefetchThreshold(double dThreshold)
+	public synchronized void setAttachPrefetchThreshold(double dThreshold)
 	{
 		m_dAttachPrefetchThreshold = dThreshold;
 	}
 	
-	public double getAttachPrefetchThreshold()
+	public synchronized double getAttachPrefetchThreshold()
 	{
 		return m_dAttachPrefetchThreshold;
 	}
 	
-	public void setUDPPort(int port)
+	public synchronized void setUDPPort(int port)
 	{
 		m_nUDPPort = port;
 	}
 	
-	public int getUDPPort()
+	public synchronized int getUDPPort()
 	{
 		return m_nUDPPort;
 	}
 	
-	public void setSessionNumber(int num)
+	public synchronized void setSessionNumber(int num)
 	{
 		m_nSessionNumber = num;
 	}
 	
-	public int getSessionNumber()
+	public synchronized int getSessionNumber()
 	{
 		return m_nSessionNumber;
 	}
 	
-	public Vector<String> getSessionConfFileList()
+	public synchronized Vector<String> getSessionConfFileList()
 	{
 		return m_sessionConfFileList;
 	}
 	
 	////////////////////////////////////////////
 	//	DB information
-	public void setDBUse(int bUse)
+	public synchronized void setDBUse(int bUse)
 	{
 		m_bDBUse = bUse;
 	}
 	
-	public void setDBUse(boolean bUse)
+	public synchronized void setDBUse(boolean bUse)
 	{
 		if(bUse)
 			m_bDBUse = 1;
@@ -350,7 +348,7 @@ public class CMConfigurationInfo {
 			m_bDBUse = 0;
 	}
 	
-	public boolean isDBUse()
+	public synchronized boolean isDBUse()
 	{
 		boolean bUse = false;
 		
@@ -362,59 +360,59 @@ public class CMConfigurationInfo {
 		return bUse;
 	}
 	
-	public void setDBHost(String host)
+	public synchronized void setDBHost(String host)
 	{
 		m_strDBHost = host;
 	}
 	
-	public String getDBHost()
+	public synchronized String getDBHost()
 	{
 		return m_strDBHost;
 	}
 	
-	public void setDBUser(String user)
+	public synchronized void setDBUser(String user)
 	{
 		m_strDBUser = user;
 	}
 	
-	public String getDBUser()
+	public synchronized String getDBUser()
 	{
 		return m_strDBUser;
 	}
 	
-	public void setDBPass(String pass)
+	public synchronized void setDBPass(String pass)
 	{
 		m_strDBPass = pass;
 	}
 	
-	public String getDBPass()
+	public synchronized String getDBPass()
 	{
 		return m_strDBPass;
 	}
 	
-	public void setDBPort(int port)
+	public synchronized void setDBPort(int port)
 	{
 		m_nDBPort = port;
 	}
 	
-	public int getDBPort()
+	public synchronized int getDBPort()
 	{
 		return m_nDBPort;
 	}
 	
-	public void setDBName(String name)
+	public synchronized void setDBName(String name)
 	{
 		m_strDBName = name;
 	}
 	
-	public String getDBName()
+	public synchronized String getDBName()
 	{
 		return m_strDBName;
 	}
 
 	/////////////////////////////////////////////////////////////////////
 	
-	public void setTransferedFileHome(Path filePath)
+	public synchronized void setTransferedFileHome(Path filePath)
 	{
 		m_transFileHome = filePath;
 		
@@ -424,17 +422,17 @@ public class CMConfigurationInfo {
 		return;
 	}
 	
-	public Path getTransferedFileHome()
+	public synchronized Path getTransferedFileHome()
 	{
 		return m_transFileHome;
 	}
 	
-	public void setFileTransferScheme(int bScheme)
+	public synchronized void setFileTransferScheme(int bScheme)
 	{
 		m_bFileTransferScheme = bScheme;
 	}
 	
-	public boolean isFileTransferScheme()
+	public synchronized boolean isFileTransferScheme()
 	{
 		boolean bScheme = false;
 		
@@ -446,12 +444,12 @@ public class CMConfigurationInfo {
 		return bScheme;		
 	}
 	
-	public void setFileAppendScheme(byte bScheme)
+	public synchronized void setFileAppendScheme(byte bScheme)
 	{
 		m_bFileAppendScheme = bScheme;
 	}
 	
-	public void setFileAppendScheme(boolean bScheme)
+	public synchronized void setFileAppendScheme(boolean bScheme)
 	{
 		if(bScheme)
 			m_bFileAppendScheme = 1;
@@ -461,7 +459,7 @@ public class CMConfigurationInfo {
 		return;
 	}
 	
-	public boolean isFileAppendScheme()
+	public synchronized boolean isFileAppendScheme()
 	{
 		boolean bScheme = false;
 		
@@ -475,12 +473,12 @@ public class CMConfigurationInfo {
 	
 	/////////////////////////////////////////////////////////////////////
 	
-	public void setSimTransDelay(int nDelay)
+	public synchronized void setSimTransDelay(int nDelay)
 	{
 		m_nSimTransDelay = nDelay;
 	}
 	
-	public int getSimTransDelay()
+	public synchronized int getSimTransDelay()
 	{
 		return m_nSimTransDelay;
 	}

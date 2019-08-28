@@ -26,31 +26,31 @@ public class CMFileTransferInfo {
 	
 	////////// set/get methods
 		
-	public void setStartTime(long time)
+	public synchronized void setStartTime(long time)
 	{
 		m_lStartTime = time;
 		return;
 	}
 	
-	public long getStartTime()
+	public synchronized long getStartTime()
 	{
 		return m_lStartTime;
 	}
 	
-	public void setCancelSend(boolean bCancel)
+	public synchronized void setCancelSend(boolean bCancel)
 	{
 		m_bCancelSend = bCancel;
 		return;
 	}
 	
-	public boolean isCancelSend()
+	public synchronized boolean isCancelSend()
 	{
 		return m_bCancelSend;
 	}
 	
 	////////// add/remove/find sending file info
 	
-	public boolean addSendFileInfo(String uName, String fPath, long lSize, int nContentID)
+	public synchronized boolean addSendFileInfo(String uName, String fPath, long lSize, int nContentID)
 	{
 		CMSendFileInfo sInfo = null;
 		String strFileName = null;
@@ -88,7 +88,7 @@ public class CMFileTransferInfo {
 		return true;
 	}
 
-	public boolean addSendFileInfo(CMSendFileInfo sInfo)
+	public synchronized boolean addSendFileInfo(CMSendFileInfo sInfo)
 	{
 		String strFileName = null;
 		CMList<CMSendFileInfo> sInfoList = null;
@@ -120,7 +120,7 @@ public class CMFileTransferInfo {
 		return true;		
 	}
 
-	public CMSendFileInfo findSendFileInfo(String uName, String fName, int nContentID)
+	public synchronized CMSendFileInfo findSendFileInfo(String uName, String fName, int nContentID)
 	{
 		CMSendFileInfo sInfo = null;
 		CMList<CMSendFileInfo> sInfoList = null;
@@ -150,7 +150,7 @@ public class CMFileTransferInfo {
 		return sInfo;
 	}
 
-	public boolean removeSendFileInfo(String uName, String fName, int nContentID)
+	public synchronized boolean removeSendFileInfo(String uName, String fName, int nContentID)
 	{
 		CMList<CMSendFileInfo> sInfoList = null;
 		CMSendFileInfo sInfo = null;
@@ -191,7 +191,7 @@ public class CMFileTransferInfo {
 		
 	}
 	
-	public boolean removeSendFileList(String strReceiver)
+	public synchronized boolean removeSendFileList(String strReceiver)
 	{
 		CMList<CMSendFileInfo> sInfoList = null;
 		sInfoList = m_sendFileHashtable.remove(strReceiver);
@@ -211,7 +211,7 @@ public class CMFileTransferInfo {
 		return true;
 	}
 	
-	public boolean clearSendFileHashtable()
+	public synchronized boolean clearSendFileHashtable()
 	{
 		m_sendFileHashtable.clear();
 		
@@ -221,7 +221,7 @@ public class CMFileTransferInfo {
 		return true;
 	}
 	
-	public CMList<CMSendFileInfo> getSendFileList(String strReceiver)
+	public synchronized CMList<CMSendFileInfo> getSendFileList(String strReceiver)
 	{
 		CMList<CMSendFileInfo> sendFileList = null;
 		sendFileList = m_sendFileHashtable.get(strReceiver);
@@ -229,7 +229,7 @@ public class CMFileTransferInfo {
 		return sendFileList;
 	}
 	
-	public Hashtable<String, CMList<CMSendFileInfo>> getSendFileHashtable()
+	public synchronized Hashtable<String, CMList<CMSendFileInfo>> getSendFileHashtable()
 	{
 		return m_sendFileHashtable;
 	}
@@ -238,7 +238,7 @@ public class CMFileTransferInfo {
 	//////////////////// (used by the file transfer with separate channels and threads)
 
 	// find the CMSendFileInfo of which file is currently being sent to the receiver
-	public CMSendFileInfo findSendFileInfoOngoing(String strReceiver)
+	public synchronized CMSendFileInfo findSendFileInfoOngoing(String strReceiver)
 	{
 		CMSendFileInfo sInfo = null;
 		CMList<CMSendFileInfo> sInfoList = m_sendFileHashtable.get(strReceiver);
@@ -267,8 +267,8 @@ public class CMFileTransferInfo {
 
 	////////// add/remove/find receiving file info
 
-	public boolean addRecvFileInfo(String senderName, String fName, long lSize, int nContentID,
-			long lRecvSize, RandomAccessFile writeFile)
+	public synchronized boolean addRecvFileInfo(String senderName, String fName, 
+			long lSize, int nContentID,	long lRecvSize, RandomAccessFile writeFile)
 	{
 		CMRecvFileInfo rInfo = null;
 		CMList<CMRecvFileInfo> rInfoList = null;
@@ -306,7 +306,7 @@ public class CMFileTransferInfo {
 		return true;
 	}
 	
-	public boolean addRecvFileInfo(CMRecvFileInfo rInfo)
+	public synchronized boolean addRecvFileInfo(CMRecvFileInfo rInfo)
 	{
 		CMList<CMRecvFileInfo> rInfoList = null;
 		boolean bResult = false;
@@ -334,7 +334,7 @@ public class CMFileTransferInfo {
 		return true;		
 	}
 
-	public CMRecvFileInfo findRecvFileInfo(String senderName, String fName, int nContentID)
+	public synchronized CMRecvFileInfo findRecvFileInfo(String senderName, String fName, int nContentID)
 	{	
 		CMRecvFileInfo rInfo = null;
 		CMList<CMRecvFileInfo> rInfoList = null;
@@ -357,7 +357,8 @@ public class CMFileTransferInfo {
 		
 		if(rInfo == null)
 		{
-			System.err.println("CMFileTransferInfo.findRecvFileInfo(), not found!: "+tInfo.toString());
+			System.err.println("CMFileTransferInfo.findRecvFileInfo(), not found!: "
+					+tInfo.toString());
 			return null;
 		}
 				
@@ -365,7 +366,8 @@ public class CMFileTransferInfo {
 
 	}
 
-	public boolean removeRecvFileInfo(String senderName, String fName, int nContentID)
+	public synchronized boolean removeRecvFileInfo(String senderName, String fName, 
+			int nContentID)
 	{
 		CMList<CMRecvFileInfo> rInfoList = null;
 		CMRecvFileInfo rInfo = null;
@@ -406,7 +408,7 @@ public class CMFileTransferInfo {
 		
 	}
 
-	public boolean removeRecvFileList(String strSender)
+	public synchronized boolean removeRecvFileList(String strSender)
 	{
 		CMList<CMRecvFileInfo> rInfoList = null;
 		rInfoList = m_recvFileHashtable.remove(strSender);
@@ -426,7 +428,7 @@ public class CMFileTransferInfo {
 		return true;
 	}
 
-	public boolean clearRecvFileHashtable()
+	public synchronized boolean clearRecvFileHashtable()
 	{
 		m_recvFileHashtable.clear();
 		
@@ -437,7 +439,7 @@ public class CMFileTransferInfo {
 	}
 	
 
-	public CMList<CMRecvFileInfo> getRecvFileList(String strSender)
+	public synchronized CMList<CMRecvFileInfo> getRecvFileList(String strSender)
 	{
 		CMList<CMRecvFileInfo> recvFileList = null;
 		recvFileList = m_recvFileHashtable.get(strSender);
@@ -445,7 +447,7 @@ public class CMFileTransferInfo {
 		return recvFileList;
 	}
 	
-	public Hashtable<String, CMList<CMRecvFileInfo>> getRecvFileHashtable()
+	public synchronized Hashtable<String, CMList<CMRecvFileInfo>> getRecvFileHashtable()
 	{
 		return m_recvFileHashtable;
 	}
@@ -454,7 +456,7 @@ public class CMFileTransferInfo {
 	//////////////////// (used by the file transfer with separate channels and threads)
 	
 	// find the receiving file info that is not yet started by the thread pool 
-	public CMRecvFileInfo findRecvFileInfoNotStarted(String strSender)
+	public synchronized CMRecvFileInfo findRecvFileInfoNotStarted(String strSender)
 	{
 		CMRecvFileInfo rfInfo = null;
 		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(strSender);
@@ -485,7 +487,7 @@ public class CMFileTransferInfo {
 	}
 
 	// check whether there is the receiving file info that is being used 
-	public boolean isRecvOngoing(String strSender)
+	public synchronized boolean isRecvOngoing(String strSender)
 	{
 		CMRecvFileInfo rfInfo = null;
 		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(strSender);
@@ -509,7 +511,7 @@ public class CMFileTransferInfo {
 	}
 	
 	// find the CMRecvFileInfo of which file is currently being received from the sender
-	public CMRecvFileInfo findRecvFileInfoOngoing(String strSender)
+	public synchronized CMRecvFileInfo findRecvFileInfoOngoing(String strSender)
 	{
 		CMRecvFileInfo rInfo = null;
 		CMList<CMRecvFileInfo> rInfoList = m_recvFileHashtable.get(strSender);

@@ -24,22 +24,22 @@ public class CMMqttTopicQoS {
 		m_qos = qos;
 	}
 	
-	public void setTopic(String strTopic)
+	public synchronized void setTopic(String strTopic)
 	{
 		m_strTopic = strTopic;
 	}
 	
-	public String getTopic()
+	public synchronized String getTopic()
 	{
 		return m_strTopic;
 	}
 	
-	public void setQoS(byte qos)
+	public synchronized void setQoS(byte qos)
 	{
 		m_qos = qos;
 	}
 	
-	public byte getQoS()
+	public synchronized byte getQoS()
 	{
 		return m_qos;
 	}

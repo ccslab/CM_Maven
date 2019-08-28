@@ -2,14 +2,9 @@ package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.util.Random;
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
-
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
-import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
-import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
-import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -63,83 +58,83 @@ public class CMMqttSession {
 	
 	//////////////////////// setter/getter
 	
-	public void setMqttWill(CMMqttWill mqttWill)
+	public synchronized void setMqttWill(CMMqttWill mqttWill)
 	{
 		m_mqttWill = mqttWill;
 	}
 	
-	public CMMqttWill getMqttWill()
+	public synchronized CMMqttWill getMqttWill()
 	{
 		return m_mqttWill;
 	}
 	
 	// subscription list
-	public void setSubscriptionList(CMList<CMMqttTopicQoS> subscriptionList)
+	public synchronized void setSubscriptionList(CMList<CMMqttTopicQoS> subscriptionList)
 	{
 		m_subscriptionList = subscriptionList;
 	}
 	
-	public CMList<CMMqttTopicQoS> getSubscriptionList()
+	public synchronized CMList<CMMqttTopicQoS> getSubscriptionList()
 	{
 		return m_subscriptionList;
 	}
 	
-	public void setReqSubscriptionList(CMList<CMMqttTopicQoS> reqSubscriptionList)
+	public synchronized void setReqSubscriptionList(CMList<CMMqttTopicQoS> reqSubscriptionList)
 	{
 		m_reqSubscriptionList = reqSubscriptionList;
 	}
 	
-	public CMList<CMMqttTopicQoS> getReqSubscriptionList()
+	public synchronized CMList<CMMqttTopicQoS> getReqSubscriptionList()
 	{
 		return m_reqSubscriptionList;
 	}
 	
 	// sent-unack-publish list
-	public void setSentUnAckPublishList(CMList<CMMqttEventPUBLISH> pubList)
+	public synchronized void setSentUnAckPublishList(CMList<CMMqttEventPUBLISH> pubList)
 	{
 		m_sentUnAckPublishList = pubList;
 	}
 	
-	public CMList<CMMqttEventPUBLISH> getSentUnAckPublishList()
+	public synchronized CMList<CMMqttEventPUBLISH> getSentUnAckPublishList()
 	{
 		return m_sentUnAckPublishList;
 	}
 	
 	// recv-unack-publish list
-	public void setRecvUnAckPublishList(CMList<CMMqttEventPUBLISH> pubList)
+	public synchronized void setRecvUnAckPublishList(CMList<CMMqttEventPUBLISH> pubList)
 	{
 		m_recvUnAckPublishList = pubList;
 	}
 	
-	public CMList<CMMqttEventPUBLISH> getRecvUnAckPublishList()
+	public synchronized CMList<CMMqttEventPUBLISH> getRecvUnAckPublishList()
 	{
 		return m_recvUnAckPublishList;
 	}
 	
 	// recv-unack-pubrec list
-	public void setRecvUnAckPubrecList(CMList<CMMqttEventPUBREC> recList)
+	public synchronized void setRecvUnAckPubrecList(CMList<CMMqttEventPUBREC> recList)
 	{
 		m_recvUnAckPubrecList = recList;
 	}
 	
-	public CMList<CMMqttEventPUBREC> getRecvUnAckPubrecList()
+	public synchronized CMList<CMMqttEventPUBREC> getRecvUnAckPubrecList()
 	{
 		return m_recvUnAckPubrecList;
 	}
 	
 	// pending-trans-publish list
-	public void setPendingTransPublishList(CMList<CMMqttEventPUBLISH> eventList)
+	public synchronized void setPendingTransPublishList(CMList<CMMqttEventPUBLISH> eventList)
 	{
 		m_pendingTransPublishList = eventList;
 	}
 	
-	public CMList<CMMqttEventPUBLISH> getPendingTransPublishList()
+	public synchronized CMList<CMMqttEventPUBLISH> getPendingTransPublishList()
 	{
 		return m_pendingTransPublishList;
 	}
 	
 	// next assigned packet ID
-	public int getNextAssignedPacketID(int nEventID)
+	public synchronized int getNextAssignedPacketID(int nEventID)
 	{
 		switch(nEventID)
 		{
@@ -244,35 +239,35 @@ public class CMMqttSession {
 	}
 	
 	// sent-unack-subscribe list
-	public void setSentUnAckSubList(CMList<CMMqttEventSUBSCRIBE> eventList)
+	public synchronized void setSentUnAckSubList(CMList<CMMqttEventSUBSCRIBE> eventList)
 	{
 		m_sentUnAckSubList = eventList;
 	}
 	
-	public CMList<CMMqttEventSUBSCRIBE> getSentUnAckSubList()
+	public synchronized CMList<CMMqttEventSUBSCRIBE> getSentUnAckSubList()
 	{
 		return m_sentUnAckSubList;
 	}
 	
 	// sent-unack-unsubscribe list
-	public void setSentUnAckUnsubList(CMList<CMMqttEventUNSUBSCRIBE> eventList)
+	public synchronized void setSentUnAckUnsubList(CMList<CMMqttEventUNSUBSCRIBE> eventList)
 	{
 		m_sentUnAckUnsubList = eventList;
 	}
 	
-	public CMList<CMMqttEventUNSUBSCRIBE> getSentUnAckUnsubList()
+	public synchronized CMList<CMMqttEventUNSUBSCRIBE> getSentUnAckUnsubList()
 	{
 		return m_sentUnAckUnsubList;
 	}
 	
 	//////////////////////// subscription list
 	
-	public boolean addSubscription(CMMqttTopicQoS topicQoS)
+	public synchronized boolean addSubscription(CMMqttTopicQoS topicQoS)
 	{
 		return m_subscriptionList.addElement(topicQoS);
 	}
 	
-	public CMMqttTopicQoS findSubscription(String strTopic)
+	public synchronized CMMqttTopicQoS findSubscription(String strTopic)
 	{
 		for(CMMqttTopicQoS topicQoS : m_subscriptionList.getList())
 		{
@@ -283,7 +278,7 @@ public class CMMqttSession {
 		return null;
 	}
 	
-	public boolean removeSubscription(String strTopic)
+	public synchronized boolean removeSubscription(String strTopic)
 	{
 		CMMqttTopicQoS topicQoS = findSubscription(strTopic);
 		if(topicQoS == null)
@@ -292,7 +287,7 @@ public class CMMqttSession {
 		return m_subscriptionList.removeElement(topicQoS);
 	}
 	
-	public void removeAllSubscription()
+	public synchronized void removeAllSubscription()
 	{
 		m_subscriptionList.removeAllElements();
 		return;
@@ -300,7 +295,7 @@ public class CMMqttSession {
 	
 	//////////////////////// sent-unack-publish list
 	
-	public boolean addSentUnAckPublish(CMMqttEventPUBLISH pubEvent)
+	public synchronized boolean addSentUnAckPublish(CMMqttEventPUBLISH pubEvent)
 	{
 		int nID = pubEvent.getPacketID();
 		CMMqttEventPUBLISH mqttEvent = findSentUnAckPublish(nID);
@@ -315,7 +310,7 @@ public class CMMqttSession {
 		return m_sentUnAckPublishList.addElement(pubEvent);
 	}
 	
-	public CMMqttEventPUBLISH findSentUnAckPublish(int nPacketID)
+	public synchronized CMMqttEventPUBLISH findSentUnAckPublish(int nPacketID)
 	{
 		int nID = -1;
 		for(CMMqttEventPUBLISH unackEvent : m_sentUnAckPublishList.getList())
@@ -328,7 +323,7 @@ public class CMMqttSession {
 		return null;
 	}
 	
-	public boolean removeSentUnAckPublish(int nPacketID)
+	public synchronized boolean removeSentUnAckPublish(int nPacketID)
 	{
 		CMMqttEventPUBLISH unackEvent = findSentUnAckPublish(nPacketID);
 		if(unackEvent == null)
@@ -337,7 +332,7 @@ public class CMMqttSession {
 		return m_sentUnAckPublishList.removeElement(unackEvent);
 	}
 	
-	public void removeAllSentUnAckPublish()
+	public synchronized void removeAllSentUnAckPublish()
 	{
 		m_sentUnAckPublishList.removeAllElements();
 		return;
@@ -345,7 +340,7 @@ public class CMMqttSession {
 	
 	//////////////////////// recv-unack-publish list
 
-	public boolean addRecvUnAckPublish(CMMqttEventPUBLISH pubEvent)
+	public synchronized boolean addRecvUnAckPublish(CMMqttEventPUBLISH pubEvent)
 	{
 		int nID = pubEvent.getPacketID(); 
 		CMMqttEventPUBLISH unackEvent = findRecvUnAckPublish(nID);
@@ -361,7 +356,7 @@ public class CMMqttSession {
 		return m_recvUnAckPublishList.addElement(pubEvent);
 	}
 	
-	public CMMqttEventPUBLISH findRecvUnAckPublish(int nPacketID)
+	public synchronized CMMqttEventPUBLISH findRecvUnAckPublish(int nPacketID)
 	{
 		int nID = -1;
 		for(CMMqttEventPUBLISH unackEvent : m_recvUnAckPublishList.getList())
@@ -374,7 +369,7 @@ public class CMMqttSession {
 		return null;
 	}
 	
-	public boolean removeRecvUnAckPublish(int nPacketID)
+	public synchronized boolean removeRecvUnAckPublish(int nPacketID)
 	{
 		CMMqttEventPUBLISH unackEvent = findRecvUnAckPublish(nPacketID);
 		if(unackEvent == null)
@@ -383,7 +378,7 @@ public class CMMqttSession {
 		return m_recvUnAckPublishList.removeElement(unackEvent);
 	}
 	
-	public void removeAllRecvUnAckPublish()
+	public synchronized void removeAllRecvUnAckPublish()
 	{
 		m_recvUnAckPublishList.removeAllElements();
 		return;
@@ -391,7 +386,7 @@ public class CMMqttSession {
 	
 	//////////////////////// recv-unack-pubrec list
 
-	public boolean addRecvUnAckPubrec(CMMqttEventPUBREC recEvent)
+	public synchronized boolean addRecvUnAckPubrec(CMMqttEventPUBREC recEvent)
 	{
 		int nID = recEvent.getPacketID(); 
 		CMMqttEventPUBREC unackEvent = findRecvUnAckPubrec(nID);
@@ -407,7 +402,7 @@ public class CMMqttSession {
 		return m_recvUnAckPubrecList.addElement(recEvent);
 	}
 	
-	public CMMqttEventPUBREC findRecvUnAckPubrec(int nPacketID)
+	public synchronized CMMqttEventPUBREC findRecvUnAckPubrec(int nPacketID)
 	{
 		int nID = -1;
 		for(CMMqttEventPUBREC unackEvent : m_recvUnAckPubrecList.getList())
@@ -420,7 +415,7 @@ public class CMMqttSession {
 		return null;
 	}
 	
-	public boolean removeRecvUnAckPubrec(int nPacketID)
+	public synchronized boolean removeRecvUnAckPubrec(int nPacketID)
 	{
 		CMMqttEventPUBREC unackEvent = findRecvUnAckPubrec(nPacketID);
 		if(unackEvent == null)
@@ -429,7 +424,7 @@ public class CMMqttSession {
 		return m_recvUnAckPubrecList.removeElement(unackEvent);
 	}
 	
-	public void removeAllRecvUnAckPubrec()
+	public synchronized void removeAllRecvUnAckPubrec()
 	{
 		m_recvUnAckPubrecList.removeAllElements();
 		return;
@@ -438,7 +433,7 @@ public class CMMqttSession {
 
 	//////////////////////// pending-trans-event list
 	
-	public boolean addPendingTransPublish(CMMqttEventPUBLISH pubEvent)
+	public synchronized boolean addPendingTransPublish(CMMqttEventPUBLISH pubEvent)
 	{
 		int nID = pubEvent.getPacketID();
 		CMMqttEventPUBLISH pendingEvent = findPendingTransPublish(nID);
@@ -453,7 +448,7 @@ public class CMMqttSession {
 		return m_pendingTransPublishList.addElement(pubEvent);
 	}
 	
-	public CMMqttEventPUBLISH findPendingTransPublish(int nPacketID)
+	public synchronized CMMqttEventPUBLISH findPendingTransPublish(int nPacketID)
 	{
 		int nID = -1;
 		for(CMMqttEventPUBLISH pendingEvent : m_pendingTransPublishList.getList())
@@ -466,7 +461,7 @@ public class CMMqttSession {
 		return null;
 	}
 	
-	public boolean removePendingTransPublish(int nPacketID)
+	public synchronized boolean removePendingTransPublish(int nPacketID)
 	{
 		CMMqttEventPUBLISH pendingEvent = findPendingTransPublish(nPacketID);
 		if(pendingEvent == null)
@@ -475,7 +470,7 @@ public class CMMqttSession {
 		return m_pendingTransPublishList.removeElement(pendingEvent);
 	}
 	
-	public void removeAllPendingTransPublish()
+	public synchronized void removeAllPendingTransPublish()
 	{
 		m_pendingTransPublishList.removeAllElements();
 		return;
@@ -483,7 +478,7 @@ public class CMMqttSession {
 
 	//////////////////////// sent-unack-subscribe list
 
-	public boolean addSentUnAckSubscribe(CMMqttEventSUBSCRIBE subEvent)
+	public synchronized boolean addSentUnAckSubscribe(CMMqttEventSUBSCRIBE subEvent)
 	{
 		int nID = subEvent.getPacketID();
 		CMMqttEventSUBSCRIBE unackEvent = findSentUnAckSubscribe(nID);
@@ -498,7 +493,7 @@ public class CMMqttSession {
 		return m_sentUnAckSubList.addElement(subEvent);		
 	}
 	
-	public CMMqttEventSUBSCRIBE findSentUnAckSubscribe(int nPacketID)
+	public synchronized CMMqttEventSUBSCRIBE findSentUnAckSubscribe(int nPacketID)
 	{
 		int nID = -1;
 		for(CMMqttEventSUBSCRIBE unackEvent : m_sentUnAckSubList.getList())
@@ -511,7 +506,7 @@ public class CMMqttSession {
 		return null;		
 	}
 	
-	public boolean removeSentUnAckSubscribe(int nPacketID)
+	public synchronized boolean removeSentUnAckSubscribe(int nPacketID)
 	{
 		CMMqttEventSUBSCRIBE unackEvent = findSentUnAckSubscribe(nPacketID);
 		if(unackEvent == null)
@@ -520,7 +515,7 @@ public class CMMqttSession {
 		return m_sentUnAckSubList.removeElement(unackEvent);		
 	}
 	
-	public void removeAllSentUnAckSubscribe()
+	public synchronized void removeAllSentUnAckSubscribe()
 	{
 		m_sentUnAckSubList.removeAllElements();
 		return;
@@ -528,7 +523,7 @@ public class CMMqttSession {
 	
 	//////////////////////// sent-unack-unsubscribe list
 
-	public boolean addSentUnAckUnsubscribe(CMMqttEventUNSUBSCRIBE unsubEvent)
+	public synchronized boolean addSentUnAckUnsubscribe(CMMqttEventUNSUBSCRIBE unsubEvent)
 	{
 		int nID = unsubEvent.getPacketID();
 		CMMqttEventUNSUBSCRIBE unackEvent = findSentUnAckUnsubscribe(nID);
@@ -543,7 +538,7 @@ public class CMMqttSession {
 		return m_sentUnAckUnsubList.addElement(unsubEvent);				
 	}
 	
-	public CMMqttEventUNSUBSCRIBE findSentUnAckUnsubscribe(int nPacketID)
+	public synchronized CMMqttEventUNSUBSCRIBE findSentUnAckUnsubscribe(int nPacketID)
 	{
 		int nID = -1;
 		for(CMMqttEventUNSUBSCRIBE unackEvent : m_sentUnAckUnsubList.getList())
@@ -556,7 +551,7 @@ public class CMMqttSession {
 		return null;				
 	}
 	
-	public boolean removeSentUnAckUnsubscribe(int nPacketID)
+	public synchronized boolean removeSentUnAckUnsubscribe(int nPacketID)
 	{
 		CMMqttEventUNSUBSCRIBE unackEvent = findSentUnAckUnsubscribe(nPacketID);
 		if(unackEvent == null)
@@ -565,7 +560,7 @@ public class CMMqttSession {
 		return m_sentUnAckUnsubList.removeElement(unackEvent);				
 	}
 	
-	public void removeAllSentUnAckUnsubscribe()
+	public synchronized void removeAllSentUnAckUnsubscribe()
 	{
 		m_sentUnAckUnsubList.removeAllElements();
 		return;
