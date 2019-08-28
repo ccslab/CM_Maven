@@ -320,7 +320,7 @@ public class CMEventReceiver extends Thread {
 		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
 				.get(CMInfo.CM_MQTT_MANAGER);
 		boolean bRet = false;
-		bRet = mqttManager.publish(-1, mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
+		bRet = mqttManager.publish(mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
 				mqttWill.getWillQoS());
 		return bRet;
 	}
