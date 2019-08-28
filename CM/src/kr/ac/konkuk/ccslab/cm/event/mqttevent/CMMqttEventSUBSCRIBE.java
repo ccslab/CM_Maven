@@ -33,7 +33,7 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 		m_packetType = CMMqttEvent.SUBSCRIBE;
 		m_flag = 2;
 		// initialize variable header
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 		// initialize payload
 		m_topicQoSList = new CMList<CMMqttTopicQoS>();
 	}

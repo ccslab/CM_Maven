@@ -38,7 +38,7 @@ public class CMMqttEventSUBACK extends CMMqttEventFixedHeader {
 		m_packetType = CMMqttEvent.SUBACK;
 		m_flag = 0;
 		// initialize variable header
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 		// initialize payload
 		m_returnCodeList = new CMList<Byte>();
 	}

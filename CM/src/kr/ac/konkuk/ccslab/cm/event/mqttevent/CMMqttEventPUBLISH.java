@@ -43,7 +43,7 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		
 		// initialize varaible header
 		m_strTopicName = "";
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 		// initialize payload
 		m_strAppMessage = "";
 	}

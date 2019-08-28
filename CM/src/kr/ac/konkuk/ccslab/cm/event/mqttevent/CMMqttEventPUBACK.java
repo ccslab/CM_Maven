@@ -25,7 +25,7 @@ public class CMMqttEventPUBACK extends CMMqttEventFixedHeader {
 		m_packetType = CMMqttEvent.PUBACK;
 		m_flag = 0;
 		// initialize variable header
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 	}
 	
 	public CMMqttEventPUBACK(ByteBuffer msg)

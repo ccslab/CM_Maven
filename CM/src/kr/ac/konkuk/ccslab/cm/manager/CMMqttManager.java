@@ -195,7 +195,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		else
 		{
-			pubEvent.setPacketID(-1);	
+			pubEvent.setPacketID(0);	
 		}
 		// set payload
 		pubEvent.setAppMessage(strMsg);

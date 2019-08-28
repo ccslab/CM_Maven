@@ -33,7 +33,7 @@ public class CMMqttEventUNSUBSCRIBE extends CMMqttEventFixedHeader {
 		m_packetType = CMMqttEvent.UNSUBSCRIBE;
 		m_flag = 2;
 		// initialize variable header
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 		// initialize payload
 		m_topicList = new CMList<String>();
 	}

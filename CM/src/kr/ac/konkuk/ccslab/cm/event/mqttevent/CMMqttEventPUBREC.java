@@ -25,7 +25,7 @@ public class CMMqttEventPUBREC extends CMMqttEventFixedHeader {
 		m_packetType = CMMqttEvent.PUBREC;
 		m_flag = 0;
 		// initialize variable header
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 	}
 	
 	public CMMqttEventPUBREC(ByteBuffer msg)

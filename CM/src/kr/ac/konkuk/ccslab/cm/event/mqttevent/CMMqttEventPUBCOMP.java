@@ -25,7 +25,7 @@ public class CMMqttEventPUBCOMP extends CMMqttEventFixedHeader {
 		m_packetType = CMMqttEvent.PUBCOMP;
 		m_flag = 0;
 		// initialize variable header
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 	}
 	
 	public CMMqttEventPUBCOMP(ByteBuffer msg)

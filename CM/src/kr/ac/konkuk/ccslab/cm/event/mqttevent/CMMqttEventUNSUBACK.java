@@ -26,7 +26,7 @@ public class CMMqttEventUNSUBACK extends CMMqttEventFixedHeader {
 		m_packetType = CMMqttEvent.UNSUBACK;
 		m_flag = 0;
 		// initialize variable header
-		m_nPacketID = -1;
+		m_nPacketID = 0;
 	}
 	
 	public CMMqttEventUNSUBACK(ByteBuffer msg)
