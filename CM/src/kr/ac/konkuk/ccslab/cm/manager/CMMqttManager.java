@@ -240,21 +240,6 @@ public class CMMqttManager extends CMServiceManager {
 			byte qos, boolean bDupFlag, boolean bRetainFlag)
 	{
 		// server -> client
-
-		// make PUBLISH event
-		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
-		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
-		pubEvent.setSender(myself.getName());
-		// set fixed header
-		pubEvent.setDupFlag(bDupFlag);
-		pubEvent.setQoS(qos);
-		pubEvent.setRetainFlag(bRetainFlag);
-		// set variable header
-		pubEvent.setTopicName(strTopic);
-		pubEvent.setPacketID(-1); // if qos > 0, packet ID will be assigned later.
-		// set payload
-		pubEvent.setAppMessage(strMsg);
 		
 		// find subscribers and send the PUBLISH event
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
@@ -263,17 +248,26 @@ public class CMMqttManager extends CMServiceManager {
 		for(String key : keys)
 		{
 			CMMqttSession session = sessionHashtable.get(key);
-			CMList<CMMqttTopicQoS> subList = session.getSubscriptionList();
-			publishFromServerToOneClient(pubEvent, key, subList);
+			if(session == null)
+			{
+				System.err.println("CMMqttManager.publishFromServer(), session of client ("
+						+key+") is null!");
+				continue;
+			}
+			publishFromServerToOneClient(strTopic, strMsg, qos, bDupFlag, bRetainFlag, 
+					key, session);
 		}
 	
 		return true;
 	}
 	
 	// publish event from server to one client
-	public boolean publishFromServerToOneClient(CMMqttEventPUBLISH pubEvent, String strClient, 
-			CMList<CMMqttTopicQoS> subscriptionList)
+	public boolean publishFromServerToOneClient(String strTopic, String strMsg, byte qos, 
+			boolean bDupFlag, boolean bRetainFlag, String strClient, CMMqttSession session)
 	{
+		CMList<CMMqttTopicQoS> subscriptionList = session.getSubscriptionList();
+		boolean bRet = false;
+		
 		if(subscriptionList == null)
 		{
 			System.err.println("CMMqttManager.publishFromServerToOneClient(), subscription list of "
@@ -282,7 +276,6 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		Vector<CMMqttTopicQoS> filterVector = subscriptionList.getList();
-		String strTopic = pubEvent.getTopicName();
 		
 		boolean bFound = false;
 		byte maxQoS = 0;
@@ -303,31 +296,33 @@ public class CMMqttManager extends CMServiceManager {
 			return false;
 		}
 		
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
-		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable(); 
-		CMMqttSession session = sessionHashtable.get(strClient);
-		byte qos = pubEvent.getQoS();
-		int nPacketID = pubEvent.getPacketID();
-		boolean bRet = false;
-
-		// send and clear all pending events of this client (key)
-		/*
-		if(!sendAndClearPendingTransEvents(strClient, session))
-			return false;
-		*/
-		
 		// adapt to the subscribed QoS
 		int sentQoS = qos;
 		if(maxQoS < qos)
 		{
 			sentQoS = maxQoS;
-			pubEvent.setQoS(maxQoS);
 		}
+
+		// make PUBLISH event
+		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
+		// set sender (in CM event header)
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		pubEvent.setSender(myself.getName());
+		// set fixed header
+		pubEvent.setDupFlag(bDupFlag);
+		pubEvent.setQoS((byte)sentQoS);
+		pubEvent.setRetainFlag(bRetainFlag);
+		// set variable header
+		pubEvent.setTopicName(strTopic);
+		pubEvent.setPacketID(0); // if qos > 0, packet ID will be assigned later.
+		// set payload
+		pubEvent.setAppMessage(strMsg);
 		
 		if( sentQoS == 1 || sentQoS == 2 )
 		{
 			// assign a packet ID
-			pubEvent.setPacketID(session.getNextAssignedPacketID(CMMqttEvent.PUBLISH));
+			int nPacketID = session.getNextAssignedPacketID(CMMqttEvent.PUBLISH);
+			pubEvent.setPacketID(nPacketID);
 			
 			// check whether the same packet ID is in use or not
 			if(session.findSentUnAckPublish(nPacketID) != null)

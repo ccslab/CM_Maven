@@ -584,6 +584,7 @@ public class CMMqttSession {
 			strBuf.append(m_mqttWill.toString()+"\n");
 		
 		strBuf.append("Subscription List: "+m_subscriptionList.toString()+"\n");
+		//strBuf.append("sent-unack-publish: "+m_sentUnAckPublishList.toString()+"\n");
 		strBuf.append("}\n");
 		
 		return strBuf.toString();

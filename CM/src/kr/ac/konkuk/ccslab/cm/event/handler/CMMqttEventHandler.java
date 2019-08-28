@@ -999,13 +999,26 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// get retain event list
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = mqttInfo.getMqttRetainHashtable();
+		// get client session
+		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strClient);
+		if(session == null)
+		{
+			System.err.println("CMMqttEventHandler.sendRetainEvents(), session of client ("
+					+strClient+") is null!");
+			return;
+		}
 		// get mqtt manager
 		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
 				.get(CMInfo.CM_MQTT_MANAGER);
 		for(String strTopic : retainHashtable.keySet())
 		{
 			CMMqttEventPUBLISH retainEvent = retainHashtable.get(strTopic);
-			mqttManager.publishFromServerToOneClient(retainEvent, strClient, topicQoSList);
+			String strMsg = retainEvent.getAppMessage();
+			byte qos = retainEvent.getQoS();
+			boolean bDupFlag = retainEvent.isDupFlag();
+			boolean bRetainFlag = retainEvent.isRetainFlag();
+			mqttManager.publishFromServerToOneClient(strTopic, strMsg, qos, bDupFlag, 
+					bRetainFlag, strClient, session);
 		}
 
 		return;
