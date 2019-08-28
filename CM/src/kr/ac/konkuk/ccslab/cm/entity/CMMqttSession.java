@@ -163,78 +163,84 @@ public class CMMqttSession {
 	
 	private int findNextPacketIDForPUBLISH()
 	{
-		int m_nNextPacketID = m_nNextAssignedPacketID;
+		int nNextPacketID = m_nNextAssignedPacketID;
 		boolean bFound = false;
 		CMMqttEventPUBLISH unackPublish = null;
 		CMMqttEventPUBREC unackPubrec = null;
 		
 		do
 		{
-			m_nNextPacketID = (m_nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
-			unackPublish = findSentUnAckPublish(m_nNextPacketID);
+			nNextPacketID = (nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
+			unackPublish = findSentUnAckPublish(nNextPacketID);
 			if(unackPublish == null)
 			{
-				bFound = true;
-				continue;
+				unackPubrec = findRecvUnAckPubrec(nNextPacketID);
+				if(unackPubrec == null)
+				{
+					bFound = false;
+				}
+				else
+				{
+					bFound = true;
+				}
 			}
-			unackPubrec = findRecvUnAckPubrec(m_nNextPacketID);
-			if(unackPubrec == null)
+			else
 			{
 				bFound = true;
-				continue;
 			}
 			
-			bFound = false;
 			
 		}while(bFound);
 		
-		return m_nNextPacketID;
+		return nNextPacketID;
 	}
 	
 	private int findNextPacketIDForSUBSCRIBE()
 	{
-		int m_nNextPacketID = m_nNextAssignedPacketID;
+		int nNextPacketID = m_nNextAssignedPacketID;
 		boolean bFound = false;
 		CMMqttEventSUBSCRIBE unackSubscribe = null;
 		
 		do
 		{
-			m_nNextPacketID = (m_nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
-			unackSubscribe = findSentUnAckSubscribe(m_nNextPacketID);
+			nNextPacketID = (nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
+			unackSubscribe = findSentUnAckSubscribe(nNextPacketID);
 			if(unackSubscribe == null)
 			{
-				bFound = true;
-				continue;
+				bFound = false;
 			}
-			
-			bFound = false;
+			else
+			{
+				bFound = true;
+			}
 			
 		}while(bFound);
 		
-		return m_nNextPacketID;		
+		return nNextPacketID;		
 	}
 	
 	private int findNextPacketIDForUNSUBSCRIBE()
 	{
-		int m_nNextPacketID = m_nNextAssignedPacketID;
+		int nNextPacketID = m_nNextAssignedPacketID;
 		boolean bFound = false;
 		CMMqttEventUNSUBSCRIBE unackUnsubscribe = null;
 		
 		do
 		{
-			m_nNextPacketID = (m_nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
-			unackUnsubscribe = findSentUnAckUnsubscribe(m_nNextPacketID);
+			nNextPacketID = (nNextPacketID + 1) % CMInfo.MQTT_ID_RANGE;
+			unackUnsubscribe = findSentUnAckUnsubscribe(nNextPacketID);
 			if(unackUnsubscribe == null)
 			{
-				bFound = true;
-				continue;
+				bFound = false;
 			}
-			
-			bFound = false;
+			else
+			{
+				bFound = true;
+			}
 			
 		}while(bFound);
 		
-		return m_nNextPacketID;		
+		return nNextPacketID;		
 	}
 	
 	// sent-unack-subscribe list
