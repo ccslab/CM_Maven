@@ -25,6 +25,7 @@ public class CMMqttEventTest {
 		// TODO Auto-generated method stub
 		CMMqttEventTest tester = new CMMqttEventTest();
 		
+		/*
 		tester.testCONNECT();
 		tester.testCONNACK();
 		tester.testPUBLISH();
@@ -32,14 +33,18 @@ public class CMMqttEventTest {
 		tester.testPUBREC();
 		tester.testPUBREL();
 		tester.testPUBCOMP();
+		*/
 		tester.testSUBSCRIBE();
+		/*
 		tester.testSUBACK();
 		tester.testUNSUBSCRIBE();
 		tester.testUNSUBACK();
 		tester.testPINGREQ();
 		tester.testPINGRESP();
 		tester.testDISCONNECT();
+		*/
 		
+		/*
 		boolean bRet = CMMqttManager.isTopicMatch("/test/temp", "/test/temp");
 		System.out.println("isTopicMatch(\"/test/temp\", \"/test/temp\"): "+bRet);
 		bRet = CMMqttManager.isTopicMatch("/test/temp", "/+/temp");
@@ -50,6 +55,7 @@ public class CMMqttEventTest {
 		System.out.println("isTopicMatch(\"/test/temp\", \"/test/\"): "+bRet);
 		bRet = CMMqttManager.isTopicMatch("/test/temp", "/test/temp/konkuk");
 		System.out.println("isTopicMatch(\"/test/temp\", \"/test/temp/konkuk\"): "+bRet);
+		*/
 	}
 
 	private void testCONNECT()
@@ -178,7 +184,7 @@ public class CMMqttEventTest {
 	{
 		System.out.println("=================== test SUBSCRIBE");
 		CMMqttEventSUBSCRIBE mqttSubscribe = new CMMqttEventSUBSCRIBE();
-		mqttSubscribe.setPacketID(0);
+		mqttSubscribe.setPacketID(63439);
 		mqttSubscribe.addTopicQoS("CM/mqtt", (byte)0);
 		mqttSubscribe.addTopicQoS("test/to be deleted", (byte)1);
 		mqttSubscribe.addTopicQoS("CM/iot/temp", (byte)2);

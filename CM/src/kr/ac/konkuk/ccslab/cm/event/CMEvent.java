@@ -439,7 +439,7 @@ public abstract class CMEvent extends CMObject {
 		numBytes[0] = 0;
 		numBytes[1] = 0;
 		
-		numBytes[0] = (byte)((num & 0x0000ff00) >> 8);
+		numBytes[0] = (byte)((num & 0x0000ff00) >>> 8);
 		numBytes[1] = (byte)(num & 0x000000ff);
 		
 		m_bytes.put(numBytes);
@@ -448,23 +448,28 @@ public abstract class CMEvent extends CMObject {
 		{
 			System.out.println("CMEvent.putInt2BytesToByteBuffer(), num("+num
 					+"), numBytes[0]("+numBytes[0]+"), numBytes[1]("+numBytes[1]+")");
+			System.out.println("numBytes[0]: "+Integer.toBinaryString(numBytes[0]));
+			System.out.println("numBytes[1]: "+Integer.toBinaryString(numBytes[1]));
 		}
 	}	
 	
-	// get integer with 2 bytes from ByteBuffer
+	// get (unsigned) integer with 2 bytes from ByteBuffer
 	protected int getInt2BytesFromByteBuffer(ByteBuffer buf)
 	{
 		int num = 0;
 		byte[] numBytes = new byte[2];
 		buf.get(numBytes);
 		
-		num = (num | numBytes[0]) << 8;
-		num = num | numBytes[1];
+		num = (num | ((int)numBytes[0] & 0x000000ff) ) << 8;
+		num = num | ((int)numBytes[1] & 0x000000ff);
 		
 		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMEvent.getInt2BytesFromByteBuffer(), numBytes[0]("
 					+numBytes[0]+"), numBytes[1]("+numBytes[1]+"), num("+num+")");
+			System.out.println("numBytes[0]: "+Integer.toBinaryString(numBytes[0]));
+			System.out.println("numBytes[1]: "+Integer.toBinaryString(numBytes[1]));
+			System.out.println("num: "+Integer.toBinaryString(num));
 		}
 		
 		return num;
