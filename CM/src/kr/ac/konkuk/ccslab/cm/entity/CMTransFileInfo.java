@@ -55,79 +55,79 @@ public class CMTransFileInfo extends Object {
 	
 	// get/set methods
 	
-	public void setSenderName(String strName)
+	public synchronized void setSenderName(String strName)
 	{
 		m_strSenderName = strName;
 		return;
 	}
 	
-	public String getSenderName()
+	public synchronized String getSenderName()
 	{
 		return m_strSenderName;
 	}
 	
-	public void setReceiverName(String strName)
+	public synchronized void setReceiverName(String strName)
 	{
 		m_strReceiverName = strName;
 		return;
 	}
 	
-	public String getReceiverName()
+	public synchronized String getReceiverName()
 	{
 		return m_strReceiverName;
 	}
 
-	public void setFileName(String strName)
+	public synchronized void setFileName(String strName)
 	{
 		m_strFileName = strName;
 		return;
 	}
 	
-	public String getFileName()
+	public synchronized String getFileName()
 	{
 		return m_strFileName;
 	}
 	
-	public void setFilePath(String strPath)
+	public synchronized void setFilePath(String strPath)
 	{
 		m_strFilePath = strPath;
 		return;
 	}
 	
-	public String getFilePath()
+	public synchronized String getFilePath()
 	{
 		return m_strFilePath;
 	}
 	
-	public void setFileSize(long lSize)
+	public synchronized void setFileSize(long lSize)
 	{
 		m_lFileSize = lSize;
 		return;
 	}
 	
-	public long getFileSize()
+	public synchronized long getFileSize()
 	{
 		return m_lFileSize;
 	}
 	
-	public void setContentID(int nID)
+	public synchronized void setContentID(int nID)
 	{
 		m_nContentID = nID;
 		return;
 	}
 	
-	public int getContentID()
+	public synchronized int getContentID()
 	{
 		return m_nContentID;
 	}
 	
-	public void setDefaultChannel(SelectableChannel channel)
+	public synchronized void setDefaultChannel(SelectableChannel channel)
 	{
 		m_defaultChannel = channel;
 		return;
 	}
 	
-	public SelectableChannel getDefaultChannel()
+	public synchronized SelectableChannel getDefaultChannel()
 	{
 		return m_defaultChannel;
 	}
