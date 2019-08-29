@@ -27,6 +27,8 @@ public class CMUser extends CMObject {
 	private int m_nAttachDownloadScheme;	// used at SERVER
 	private CMSNSAttachAccessHistoryList m_historyList;	// used at SERVER
 	private Calendar m_lastLoginDate;		// used at SERVER
+	private long m_lLastEventTransTime;
+	private int m_nKeepAliveTime;
 	
 	public CMUser()
 	{
@@ -44,6 +46,8 @@ public class CMUser extends CMObject {
 		m_nAttachDownloadScheme = -1;
 		m_historyList = new CMSNSAttachAccessHistoryList();
 		m_lastLoginDate = null;
+		m_lLastEventTransTime = -1;
+		m_nKeepAliveTime = -1;
 	}
 	
 	public CMUser(String name, String passwd, String host)
@@ -62,6 +66,8 @@ public class CMUser extends CMObject {
 		m_nAttachDownloadScheme = -1;
 		m_historyList = new CMSNSAttachAccessHistoryList();
 		m_lastLoginDate = null;
+		m_lLastEventTransTime = -1;
+		m_nKeepAliveTime = -1;
 	}
 	
 	// set methods
@@ -148,6 +154,16 @@ public class CMUser extends CMObject {
 		m_lastLoginDate = date;
 	}
 	
+	public synchronized void setLastEventTransTime(long lTime)
+	{
+		m_lLastEventTransTime = lTime;
+	}
+	
+	public synchronized void setKeepAliveTime(int nSecond)
+	{
+		m_nKeepAliveTime = nSecond;
+	}
+	
 	// get methods
 	public synchronized int getID()
 	{
@@ -217,5 +233,15 @@ public class CMUser extends CMObject {
 	public synchronized Calendar getLastLoginDate()
 	{
 		return m_lastLoginDate;
+	}
+	
+	public synchronized long getLastEventTransTime()
+	{
+		return m_lLastEventTransTime;
+	}
+	
+	public synchronized int getKeepAliveTime()
+	{
+		return m_nKeepAliveTime;
 	}
 }

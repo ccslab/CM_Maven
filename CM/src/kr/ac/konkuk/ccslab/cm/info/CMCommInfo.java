@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.nio.channels.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
+import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
@@ -12,8 +14,10 @@ public class CMCommInfo {
 	private ServerSocketChannel m_blockServerSocketChannel; // blocking server socket channel
 	private CMChannelInfo<Integer> m_nonBlockDCInfo;	// nonblocking datagram channel list
 	private CMChannelInfo<Integer> m_blockDCInfo;		// blocking datagram channel list
+	private CMList<CMUnknownChannelInfo> m_unknownChannelInfoList;	// 4 server
+	
 	//private Vector<SocketChannel> m_scList;
-	//private Vector<DatagramChannel> m_dcList;
+	//private Vector<DatagramCha	nnel> m_dcList;
 	//private Vector<MulticastChannel> m_mcList;
 	private Selector m_selector;
 	private CMBlockingEventQueue m_recvQueue;
@@ -39,6 +43,8 @@ public class CMCommInfo {
 		m_blockServerSocketChannel = null;
 		m_nonBlockDCInfo = new CMChannelInfo<Integer>();
 		m_blockDCInfo = new CMChannelInfo<Integer>();
+		m_unknownChannelInfoList = new CMList<CMUnknownChannelInfo>();
+		
 		m_byteReceiver = null;
 		m_byteSender = null;
 		//m_scList = new Vector<SocketChannel>();
@@ -94,6 +100,16 @@ public class CMCommInfo {
 		return m_blockServerSocketChannel;
 	}
 	
+	public synchronized void setUnknownChannelInfoList(CMList<CMUnknownChannelInfo> list)
+	{
+		m_unknownChannelInfoList = list;
+	}
+	
+	public synchronized CMList<CMUnknownChannelInfo> getUnknownChannelInfoList()
+	{
+		return m_unknownChannelInfoList;
+	}
+	
 	public synchronized void setByteReceiver(CMByteReceiver receiver)
 	{
 		m_byteReceiver = receiver;
@@ -113,18 +129,6 @@ public class CMCommInfo {
 	{
 		return m_byteSender;
 	}
-	
-	/*
-	public synchronized void setDatagramID(int id)
-	{
-		m_nDatagramID = id;
-	}
-	
-	public synchronized int getDatagramID()
-	{
-		return m_nDatagramID;
-	}
-	*/
 	
 	public synchronized void setStartTime(long start)
 	{
@@ -191,229 +195,6 @@ public class CMCommInfo {
 		return m_blockDCInfo;
 	}
 		
-	/*
-	public synchronized Vector<SocketChannel> getSocketChannelList()
-	{
-		return m_scList;
-	}
-	
-	public synchronized Vector<DatagramChannel> getDatagramChannelList()
-	{
-		return m_dcList;
-	}
-	
-	public synchronized Vector<MulticastChannel> getMulticastChannelList()
-	{
-		return m_mcList;
-	}
 
-	public synchronized Vector<SelectableChannel> getToBeDeletedChannelList()
-	{
-		return m_toBeDeletedChannelList;
-	}
-	
-	public synchronized Vector<CMDatagramPacket> getDatagramPacketList()
-	{
-		return m_datagramPacketList;
-	}
-	*/
-	
-	/*
-	// sc,dc list management (mc list not included)
-	public synchronized SelectableChannel findChannel(SelectableChannel ch)
-	{
-		if(ch instanceof SocketChannel)
-			return findSocketChannel((SocketChannel)ch);
-		else if(ch instanceof DatagramChannel)
-			return findDatagramChannel((DatagramChannel)ch);
-		
-		System.out.println("CMCommInfo.findChannel(), not found");
-		return null;
-	}
-	
-	public synchronized boolean addChannel(SelectableChannel ch)
-	{
-		if(ch instanceof SocketChannel)
-			return addSocketChannel((SocketChannel)ch);
-		else if(ch instanceof DatagramChannel)
-			return addDatagramChannel((DatagramChannel)ch);
-		
-		System.out.println("CMCommInfo.addChannel(), not found");
-		return false;
-	}
-	
-	public synchronized boolean removeChannel(SelectableChannel ch)
-	{
-		if(ch instanceof SocketChannel)
-			return removeSocketChannel((SocketChannel)ch);
-		else if(ch instanceof DatagramChannel)
-			return removeDatagramChannel((DatagramChannel)ch);
-		
-		System.out.println("CMCommInfo.removeChannel(), not found");
-		return false;
-	}
-	
-	// sc,dc,mc list
-	public synchronized void removeAllChannel()
-	{
-		m_scList.removeAllElements();
-		m_dcList.removeAllElements();
-		m_mcList.removeAllElements();
-	}
-	
-	public synchronized SocketChannel findSocketChannel(SocketChannel ch)
-	{
-		boolean bFound = false;
-		SocketChannel tch = null;
-		Iterator<SocketChannel> iter = m_scList.iterator();
-		while(iter.hasNext() && !bFound){
-			tch = iter.next();
-			//if(tch.equals(ch))
-			if(tch.hashCode() == ch.hashCode())
-			{
-				bFound = true;
-			}
-		}
-		
-		return tch;
-	}
-	
-	public synchronized boolean addSocketChannel(SocketChannel ch)
-	{
-		if( findSocketChannel(ch) != null )
-		{
-			System.out.println("CMCommInfo.addSocketChannel(), the channel already exists.");
-			return false;
-		}
-		
-		m_scList.addElement(ch);
-		return  true;
-	}
-	
-	public synchronized boolean removeSocketChannel(SocketChannel ch)
-	{
-		boolean bFound = false;
-		SocketChannel tch = null;
-		Iterator<SocketChannel> iter = m_scList.iterator();
-		while(iter.hasNext() && !bFound){
-			tch = iter.next();
-			if(tch.equals(ch))
-			{
-				iter.remove();
-				bFound = true;
-			}
-		}
-		
-		return bFound;
-	}
-	
-	public synchronized void removeAllSocketChannels()
-	{
-		m_scList.removeAllElements();
-		return;
-	}
-
-	public synchronized DatagramChannel findDatagramChannel(DatagramChannel ch)
-	{
-		boolean bFound = false;
-		DatagramChannel tch = null;
-		Iterator<DatagramChannel> iter = m_dcList.iterator();
-		while(iter.hasNext() && !bFound){
-			tch = iter.next();
-			if(tch.equals(ch))
-			{
-				bFound = true;
-			}
-		}
-		
-		return tch;
-	}
-	
-	public synchronized boolean addDatagramChannel(DatagramChannel ch)
-	{
-		if( findDatagramChannel(ch) != null )
-		{
-			System.out.println("CMCommInfo.addDatagramChannel(), the channel already exists.");
-			return false;
-		}
-		
-		m_dcList.addElement(ch);
-		return  true;
-	}
-	
-	public synchronized boolean removeDatagramChannel(DatagramChannel ch)
-	{
-		boolean bFound = false;
-		DatagramChannel tch = null;
-		Iterator<DatagramChannel> iter = m_dcList.iterator();
-		while(iter.hasNext() && !bFound){
-			tch = iter.next();
-			if(tch.equals(ch))
-			{
-				iter.remove();
-				bFound = true;
-			}
-		}
-		
-		return bFound;
-	}
-	
-	public synchronized void removeAllDatagramChannels()
-	{
-		m_dcList.removeAllElements();
-		return;
-	}
-
-	public synchronized MulticastChannel findMulticastChannel(MulticastChannel ch)
-	{
-		boolean bFound = false;
-		MulticastChannel tch = null;
-		Iterator<MulticastChannel> iter = m_mcList.iterator();
-		while(iter.hasNext() && !bFound){
-			tch = iter.next();
-			if(tch.equals(ch))
-			{
-				bFound = true;
-			}
-		}
-		
-		return tch;
-	}
-	
-	public synchronized boolean addMulticastChannel(MulticastChannel ch)
-	{
-		if( findMulticastChannel(ch) != null )
-		{
-			System.out.println("CMCommInfo.addMulticastChannel(), the channel already exists.");
-			return false;
-		}
-		
-		m_mcList.addElement(ch);
-		return  true;
-	}
-	
-	public synchronized boolean removeMulticastChannel(MulticastChannel ch)
-	{
-		boolean bFound = false;
-		MulticastChannel tch = null;
-		Iterator<MulticastChannel> iter = m_mcList.iterator();
-		while(iter.hasNext() && !bFound){
-			tch = iter.next();
-			if(tch.equals(ch))
-			{
-				iter.remove();
-				bFound = true;
-			}
-		}
-		
-		return bFound;
-	}
-	
-	public synchronized void removeAllMulticastChannels()
-	{
-		m_mcList.removeAllElements();
-		return;
-	}
-	*/
 
 }
