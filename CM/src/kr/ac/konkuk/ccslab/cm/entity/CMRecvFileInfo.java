@@ -51,45 +51,45 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 	
 	// set/get methods
 	
-	public void setRecvSize(long lSize)
+	public synchronized void setRecvSize(long lSize)
 	{
 		m_lRecvSize = lSize;
 		return;
 	}
 	
-	public long getRecvSize()
+	public synchronized long getRecvSize()
 	{
 		return m_lRecvSize;
 	}
 	
-	public void setWriteFile(RandomAccessFile acf)
+	public synchronized void setWriteFile(RandomAccessFile acf)
 	{
 		m_writeFile = acf;
 	}
 	
-	public RandomAccessFile getWriteFile()
+	public synchronized RandomAccessFile getWriteFile()
 	{
 		return m_writeFile;
 	}
 	
-	public void setRecvChannel(SocketChannel channel)
+	public synchronized void setRecvChannel(SocketChannel channel)
 	{
 		m_recvChannel = channel;
 		return;
 	}
 	
-	public SocketChannel getRecvChannel()
+	public synchronized SocketChannel getRecvChannel()
 	{
 		return m_recvChannel;
 	}
 	
-	public void setRecvTaskResult(Future<CMRecvFileInfo> result)
+	public synchronized void setRecvTaskResult(Future<CMRecvFileInfo> result)
 	{
 		m_recvTaskResult = result;
 		return;
 	}
 	
-	public Future<CMRecvFileInfo> getRecvTaskResult()
+	public synchronized Future<CMRecvFileInfo> getRecvTaskResult()
 	{
 		return m_recvTaskResult;
 	}

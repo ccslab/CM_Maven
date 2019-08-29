@@ -60,68 +60,68 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	
 	// set/get method
 		
-	public void setSentSize(long lSize)
+	public synchronized void setSentSize(long lSize)
 	{
 		m_lSentSize = lSize;
 		return;
 	}
 	
-	public long getSentSize()
+	public synchronized long getSentSize()
 	{
 		return m_lSentSize;
 	}
 
-	public void setSendChannel(SocketChannel channel)
+	public synchronized void setSendChannel(SocketChannel channel)
 	{
 		m_sendChannel = channel;
 		return;
 	}
 	
-	public SocketChannel getSendChannel()
+	public synchronized SocketChannel getSendChannel()
 	{
 		return m_sendChannel;
 	}
 	
-	public void setDefaultChannel(SocketChannel channel)
+	public synchronized void setDefaultChannel(SocketChannel channel)
 	{
 		m_defaultChannel = channel;
 		return;
 	}
 	
-	public SocketChannel getDefaultChannel()
+	public synchronized SocketChannel getDefaultChannel()
 	{
 		return m_defaultChannel;
 	}
 
-	public void setReadFile(RandomAccessFile raf)
+	public synchronized void setReadFile(RandomAccessFile raf)
 	{
 		m_readFile = raf;
 		return;
 	}
 	
-	public RandomAccessFile getReadFile()
+	public synchronized RandomAccessFile getReadFile()
 	{
 		return m_readFile;
 	}
 	
-	public void setSendTaskResult(Future<CMSendFileInfo> result)
+	public synchronized void setSendTaskResult(Future<CMSendFileInfo> result)
 	{
 		m_sendTaskResult = result;
 		return;
 	}
 	
-	public Future<CMSendFileInfo> getSendTaskResult()
+	public synchronized Future<CMSendFileInfo> getSendTaskResult()
 	{
 		return m_sendTaskResult;
 	}
 	
-	public void setStartedToSend(boolean bStarted)
+	public synchronized void setStartedToSend(boolean bStarted)
 	{
 		m_bStarted = bStarted;
 		return;
 	}
 	
-	public boolean isStartedToSend()
+	public synchronized boolean isStartedToSend()
 	{
 		return m_bStarted;
 	}
