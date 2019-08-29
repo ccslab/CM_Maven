@@ -213,6 +213,7 @@ public class CMServerStub extends CMStub {
 		
 		boolean bRet = false;
 		
+		/*
 		if(m_cmInfo.isStarted())
 		{
 			System.err.println("CMServerStub.startCM(), already started!");
@@ -235,11 +236,6 @@ public class CMServerStub extends CMStub {
 			e1.printStackTrace();
 		}
 
-		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-server.conf").toString();
-		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
-		if(!bRet)
-			return false;
-		
 		// create an executor service object
 		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
 		ExecutorService es = threadInfo.getExecutorService();
@@ -251,6 +247,13 @@ public class CMServerStub extends CMStub {
 			System.out.println("CMClientStub.startCM(), executor service created; # available processors("
 					+nAvailableProcessors+").");
 		}
+		*/
+
+		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-server.conf").toString();
+		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
+		if(!bRet)
+			return false;
+		
 
 		bRet = CMInteractionManager.init(m_cmInfo);
 		if(!bRet)

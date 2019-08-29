@@ -236,6 +236,7 @@ public class CMClientStub extends CMStub {
 		
 		boolean bRet = false;
 		
+		/*
 		if(m_cmInfo.isStarted())
 		{
 			System.err.println("CMClientStub.startCM(), already started!");
@@ -270,6 +271,8 @@ public class CMClientStub extends CMStub {
 			System.out.println("CMClientStub.startCM(), executor service created; # available processors("
 					+nAvailableProcessors+").");
 		}
+		*/
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
 
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
@@ -350,9 +353,11 @@ public class CMClientStub extends CMStub {
 		
 		super.terminateCM();
 
+		/*
 		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
 		ExecutorService es = threadInfo.getExecutorService();
 		es.shutdown();	// need to check
+		*/
 
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMClientStub.terminateCM(), succeeded.");

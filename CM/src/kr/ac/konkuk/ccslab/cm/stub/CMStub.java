@@ -2,7 +2,9 @@ package kr.ac.konkuk.ccslab.cm.stub;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -26,6 +28,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -41,10 +44,12 @@ import kr.ac.konkuk.ccslab.cm.thread.CMRemoveChannelTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 /**
@@ -80,6 +85,46 @@ public class CMStub {
 		
 		// add cm event handlers
 		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(m_cmInfo));
+		
+		if(m_cmInfo.isStarted())
+		{
+			System.err.println("CMClientStub.startCM(), already started!");
+			return false;
+		}
+
+		// Korean encoding
+		System.setProperty("file.encoding", "UTF-8");
+		Field charset;
+		try {
+			charset = Charset.class.getDeclaredField("defaultCharset");
+			charset.setAccessible(true);
+			try {
+				charset.set(null, null);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (NoSuchFieldException | SecurityException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		// create an executor service object
+		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		ExecutorService es = threadInfo.getExecutorService();
+		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
+		es = Executors.newFixedThreadPool(nAvailableProcessors);
+		threadInfo.setExecutorService(es);
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMStub.init(), executor service created; # available processors("
+					+nAvailableProcessors+").");
+		}
+		
+		// create an scheduled executor service object
+		ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
+		ses = Executors.newScheduledThreadPool(1);
+		threadInfo.setScheduledExecutorService(ses);
 		
 		return true;
 	}
@@ -171,6 +216,11 @@ public class CMStub {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		// terminate executor service
+		es.shutdownNow();
+		ScheduledExecutorService ses = m_cmInfo.getThreadInfo().getScheduledExecutorService();
+		ses.shutdownNow();
 		
 		m_cmInfo.setStarted(false);
 	}
