@@ -54,6 +54,9 @@ public class CMConfigurator {
 		// added delay value for the simulation of transmission delay
 		confInfo.setSimTransDelay(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SIM_TRANS_DELAY")));
 
+		// keep-alive time
+		confInfo.setKeepAliveTime(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "KEEP_ALIVE_TIME")));
+		
 		if( confInfo.getSystemType().equals("SERVER") )
 		{
 			//confInfo.setMyAddress(CMConfigurator.getConfiguration(fName, "MY_ADDR"));
@@ -61,6 +64,7 @@ public class CMConfigurator {
 			confInfo.setCommArch(CMConfigurator.getConfiguration(strConfFilePath, "COMM_ARCH"));
 			confInfo.setFileTransferScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "FILE_TRANSFER_SCHEME")));
 			confInfo.setLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "LOGIN_SCHEME")));
+			confInfo.setMaxLoginFailure(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MAX_LOGIN_FAILURE")));
 			confInfo.setSessionScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SESSION_SCHEME")));
 			confInfo.setDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DOWNLOAD_SCHEME")));
 			confInfo.setDownloadNum(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DOWNLOAD_NUM")));
@@ -110,6 +114,7 @@ public class CMConfigurator {
 			System.out.println("MY_ADDR: "+confInfo.getMyAddress());
 			System.out.println("FILE_PATH: "+confInfo.getTransferedFileHome());
 			System.out.println("FILE_APPEND_SCHEME: "+confInfo.isFileAppendScheme());
+			System.out.println("KEEP_ALIVE_TIME: "+confInfo.getKeepAliveTime());
 			System.out.println("SIM_TRANS_DELAY: "+confInfo.getSimTransDelay());
 			if( confInfo.getSystemType().equals("SERVER") )
 			{
@@ -118,6 +123,7 @@ public class CMConfigurator {
 				System.out.println("COMM_ARCH: "+confInfo.getCommArch());
 				System.out.println("FILE_TRANSFER_SCHEME: "+confInfo.isFileTransferScheme());
 				System.out.println("LOGIN_SCHEME: "+confInfo.isLoginScheme());
+				System.out.println("MAX_LOGIN_FAILURE: "+confInfo.getMaxLoginFailure());
 				System.out.println("SESSION_SCHEME: "+confInfo.isSessionScheme());
 				System.out.println("DOWNLOAD_SCHEME: "+confInfo.isDownloadScheme());
 				System.out.println("DOWNLOAD_NUM: "+confInfo.getDownloadNum());

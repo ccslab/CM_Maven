@@ -16,6 +16,8 @@ public class CMConfigurationInfo {
 	private String m_strSystemType;
 	private String m_strCommArch;
 	private int m_bLoginScheme;
+	private int m_nMaxLoginFailure;
+	private int m_nKeepAliveTime;
 	private int m_bSessionScheme;
 	private int m_nUDPPort;
 	private int m_nSessionNumber;
@@ -60,6 +62,8 @@ public class CMConfigurationInfo {
 		m_strMulticastAddress = "";
 		m_nSessionNumber = 0;
 		m_bLoginScheme = 0;
+		m_nMaxLoginFailure = 0;
+		m_nKeepAliveTime = 0;
 		m_bSessionScheme = 0;
 		m_bDownloadScheme = 0;
 		m_nDownloadNum = 0;
@@ -197,6 +201,26 @@ public class CMConfigurationInfo {
 			bScheme = true;
 		
 		return bScheme;
+	}
+	
+	public synchronized void setMaxLoginFailure(int nCount)
+	{
+		m_nMaxLoginFailure = nCount;
+	}
+	
+	public synchronized int getMaxLoginFailure()
+	{
+		return m_nMaxLoginFailure;
+	}
+	
+	public synchronized void setKeepAliveTime(int second)
+	{
+		m_nKeepAliveTime = second;
+	}
+	
+	public synchronized int getKeepAliveTime()
+	{
+		return m_nKeepAliveTime;
 	}
 	
 	public synchronized void setSessionScheme(int bScheme)
