@@ -48,7 +48,6 @@ public class CMUnknownChannelInfo {
 	@Override
 	public boolean equals(Object obj)
 	{
-		if(!super.equals(obj)) return false;
 		CMUnknownChannelInfo unch = (CMUnknownChannelInfo) obj;
 		
 		if( m_unknownChannel.equals(unch.getUnknownChannel()) )

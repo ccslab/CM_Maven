@@ -10,12 +10,14 @@ import java.util.concurrent.Executors;
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
@@ -575,6 +577,7 @@ public class CMInteractionManager {
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMSessionEvent seAck = new CMSessionEvent();
 		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
 		
@@ -627,6 +630,33 @@ public class CMInteractionManager {
 			{
 				// load history info for attachment access of this user
 				CMSNSManager.loadAccessHistory(user, cmInfo);
+			}
+			
+			// set last event transmission time
+			user.setLastEventTransTime(System.currentTimeMillis());
+			// set keep-alive time
+			int nKeepAliveTime = se.getKeepAliveTime();
+			if(nKeepAliveTime > 0)
+				user.setKeepAliveTime(nKeepAliveTime);
+			else {
+				user.setKeepAliveTime(confInfo.getKeepAliveTime());
+			}
+			
+			// remove from unknown-channel list
+			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
+			CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
+			boolean bRet = unknownChInfoList.removeElement(new CMUnknownChannelInfo(sc));
+			if(bRet && CMInfo._CM_DEBUG_2)
+			{
+				System.out.println("CMInteractionManager.replyToLogin(), remove "+sc
+						+" from the unknown-channel list.");
+				System.out.println("# unknown-channel list elemetns: "+unknownChInfoList.getSize());
+			}
+			if(!bRet)
+			{
+				System.err.println("CMInteractionManager.replyToLogin(), error to remove "+sc
+						+" from the unknown-channel list!");
+				System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 			}
 
 			// send inhabitants who already logged on the system to the new user
@@ -996,6 +1026,7 @@ public class CMInteractionManager {
 	private static void processADD_NONBLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
 		int nChIndex = se.getChannelNum();
@@ -1023,6 +1054,22 @@ public class CMInteractionManager {
 			seAck.setReturnCode(1);
 		else
 			seAck.setReturnCode(0);
+		
+		// remove channel from the unknown-channel list
+		CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
+		ret = unknownChInfoList.removeElement(new CMUnknownChannelInfo((SocketChannel)msg.m_ch));
+		if(ret && CMInfo._CM_DEBUG_2)
+		{
+			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL() remove "+msg.m_ch
+					+" from the unknown-channel list.");
+			System.out.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
+		}
+		if(!ret)
+		{
+			System.err.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL() error to remove "
+					+msg.m_ch+" from the unknown-channel list!");
+			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
+		}
 		
 		CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
 		
@@ -1134,7 +1181,23 @@ public class CMInteractionManager {
 			seAck.setReturnCode(1);
 		else
 			seAck.setReturnCode(0);
-		
+
+		// remove channel from the unknown-channel list
+		CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
+		ret = unknownChInfoList.removeElement(new CMUnknownChannelInfo((SocketChannel)msg.m_ch));
+		if(ret && CMInfo._CM_DEBUG_2)
+		{
+			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL() remove "+msg.m_ch
+					+" from the unknown-channel list.");
+			System.out.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
+		}
+		if(!ret)
+		{
+			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL() error to remove "
+					+msg.m_ch+" from the unknown-channel list!");
+			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
+		}
+
 		CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
 		
 		se = null;

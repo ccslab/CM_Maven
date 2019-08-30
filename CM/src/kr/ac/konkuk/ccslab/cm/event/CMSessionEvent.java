@@ -79,6 +79,8 @@ public class CMSessionEvent extends CMEvent {
 	private int m_nChannelNum;
 
 	private String m_strCreationTime;
+	
+	private int m_nKeepAliveTime;
 
 	public CMSessionEvent()
 	{
@@ -104,6 +106,7 @@ public class CMSessionEvent extends CMEvent {
 		m_strChannelName = "?";
 		m_nChannelNum = -1;
 		m_strCreationTime = "?";
+		m_nKeepAliveTime = 0;
 		
 		m_sessionList = new Vector<CMSessionInfo>();
 		m_groupList = new Vector<CMGroupInfo>();
@@ -336,6 +339,16 @@ public class CMSessionEvent extends CMEvent {
 		return m_strCreationTime;
 	}
 	
+	public void setKeepAliveTime(int nSecond)
+	{
+		m_nKeepAliveTime = nSecond;
+	}
+	
+	public int getKeepAliveTime()
+	{
+		return m_nKeepAliveTime;
+	}
+	
 	public boolean addSessionInfo(CMSessionInfo si)
 	{
 		if(si == null) return false;
@@ -559,6 +572,7 @@ public class CMSessionEvent extends CMEvent {
 			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
 				+ m_strPasswd.getBytes().length	+ m_strHostAddr.getBytes().length;
 			nByteNum += Integer.BYTES;
+			nByteNum += Integer.BYTES;	// keep-alive time
 			break;
 		case LOGOUT:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
@@ -679,6 +693,7 @@ public class CMSessionEvent extends CMEvent {
 			putStringToByteBuffer(m_strPasswd);
 			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
+			m_bytes.putInt(m_nKeepAliveTime);
 			break;
 		case LOGOUT:
 			putStringToByteBuffer(m_strUserName);
@@ -817,6 +832,7 @@ public class CMSessionEvent extends CMEvent {
 			m_strPasswd = getStringFromByteBuffer(msg);
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_nUDPPort = msg.getInt();
+			m_nKeepAliveTime = msg.getInt();
 			break;
 		case LOGOUT:
 			m_strUserName = getStringFromByteBuffer(msg);
