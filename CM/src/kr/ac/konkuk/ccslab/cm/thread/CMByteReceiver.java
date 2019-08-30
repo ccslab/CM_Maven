@@ -4,20 +4,24 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.net.*;
 
 public class CMByteReceiver extends Thread {
-	private Selector m_selector = null;
-	private CMBlockingEventQueue m_queue = null;
+	private Selector m_selector;
+	private CMBlockingEventQueue m_queue;
+	private CMList<CMUnknownChannelInfo> m_unknownChannelList;
 	
-	public CMByteReceiver(Selector sel, CMBlockingEventQueue queue)
+	public CMByteReceiver(CMInfo cmInfo)
 	{
-		m_selector = sel;
-		m_queue = queue;
+		m_selector = cmInfo.getCommInfo().getSelector();
+		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		m_unknownChannelList = cmInfo.getCommInfo().getUnknownChannelInfoList();
 	}
 	
 	public void run()
@@ -77,7 +81,23 @@ public class CMByteReceiver extends Thread {
 		{
 			System.out.println("CMByteReceiver.processAccept(), "+sc.toString()+" connected. hashcode: "+sc.hashCode());
 			System.out.println("# registered keys in Selector: "+m_selector.keys().size());
-			return;
+		}
+		
+		// create CMUnknownChannelInfo and add it to the list
+		CMUnknownChannelInfo unchInfo = new CMUnknownChannelInfo(sc);
+		boolean bRet = false;
+		bRet = m_unknownChannelList.addElement(unchInfo);
+		
+		if(bRet && CMInfo._CM_DEBUG_2)
+		{
+			System.out.println("CMByteReceiver.processAccept(), "+sc.toString()+" added to unknown-channel list.");
+			System.out.println("# unknown-channel-list members: "+m_unknownChannelList.getSize());
+		}
+		
+		if(!bRet)
+		{
+			System.err.println("CMByteReceiver.processAccept(), error to add "+sc.toString()
+				+" to unknown-channel list!");
 		}
 		
 		return;

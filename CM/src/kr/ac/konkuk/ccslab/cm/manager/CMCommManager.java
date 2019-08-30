@@ -340,9 +340,7 @@ public class CMCommManager {
 	
 	public static CMByteReceiver startReceivingMessage(CMInfo cmInfo)
 	{
-		Selector sel = cmInfo.getCommInfo().getSelector();
-		CMBlockingEventQueue recvQueue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
-		CMByteReceiver byteReceiver = new CMByteReceiver(sel, recvQueue);
+		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
 		byteReceiver.start();
 		cmInfo.getCommInfo().setByteReceiver(byteReceiver);
 		
