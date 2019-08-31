@@ -48,6 +48,10 @@ public class CMSNSContent extends CMObject {
 	@Override
 	public boolean equals(Object o)
 	{
+		if(o == null) return false;
+		if(!this.getClass().equals(o.getClass())) return false;
+		if(this == o) return true;
+
 		CMSNSContent cont = (CMSNSContent)o;
 		if(m_nContentID == cont.getContentID())
 			return true;

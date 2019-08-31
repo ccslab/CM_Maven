@@ -301,6 +301,10 @@ public abstract class CMEvent extends CMObject {
 	@Override
 	public boolean equals(Object obj)
 	{
+		if(obj == null) return false;
+		if(!this.getClass().equals(obj.getClass())) return false;
+		if(this == obj) return true;
+
 		//if(!super.equals(obj)) return false;
 		CMEvent cme = (CMEvent) obj;
 		

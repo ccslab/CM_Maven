@@ -35,6 +35,10 @@ public class CMSNSAttach extends CMObject {
 	@Override
 	public boolean equals(Object o)
 	{
+		if(o == null) return false;
+		if(!this.getClass().equals(o.getClass())) return false;
+		if(this == o) return true;
+
 		CMSNSAttach attach = (CMSNSAttach)o;
 		if(m_nContentID == attach.getContentID())
 			return true;

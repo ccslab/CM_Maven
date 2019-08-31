@@ -36,6 +36,10 @@ public class CMTransFileInfo extends Object {
 	@Override
 	public boolean equals(Object o)
 	{
+		if(o == null) return false;
+		if(!this.getClass().equals(o.getClass())) return false;
+		if(this == o) return true;
+
 		CMTransFileInfo tfInfo = (CMTransFileInfo) o;
 		String strFileName = tfInfo.getFileName();
 		int nContentID = tfInfo.getContentID();
