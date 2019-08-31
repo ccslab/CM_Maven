@@ -646,7 +646,7 @@ public class CMInteractionManager {
 			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
 			CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
 			boolean bRet = unknownChInfoList.removeElement(new CMUnknownChannelInfo(sc));
-			if(bRet && CMInfo._CM_DEBUG_2)
+			if(bRet && CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.replyToLogin(), remove "+sc
 						+" from the unknown-channel list.");
@@ -1058,7 +1058,7 @@ public class CMInteractionManager {
 		// remove channel from the unknown-channel list
 		CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
 		ret = unknownChInfoList.removeElement(new CMUnknownChannelInfo((SocketChannel)msg.m_ch));
-		if(ret && CMInfo._CM_DEBUG_2)
+		if(ret && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL() remove "+msg.m_ch
 					+" from the unknown-channel list.");
@@ -1185,7 +1185,7 @@ public class CMInteractionManager {
 		// remove channel from the unknown-channel list
 		CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
 		ret = unknownChInfoList.removeElement(new CMUnknownChannelInfo((SocketChannel)msg.m_ch));
-		if(ret && CMInfo._CM_DEBUG_2)
+		if(ret && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL() remove "+msg.m_ch
 					+" from the unknown-channel list.");

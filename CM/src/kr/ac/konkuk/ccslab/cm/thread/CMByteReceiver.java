@@ -77,7 +77,7 @@ public class CMByteReceiver extends Thread {
 			e.printStackTrace();
 		}
 		
-		if(CMInfo._CM_DEBUG_2)
+		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMByteReceiver.processAccept(), "+sc.toString()+" connected. hashcode: "+sc.hashCode());
 			System.out.println("# registered keys in Selector: "+m_selector.keys().size());
@@ -88,7 +88,7 @@ public class CMByteReceiver extends Thread {
 		boolean bRet = false;
 		bRet = m_unknownChannelList.addElement(unchInfo);
 		
-		if(bRet && CMInfo._CM_DEBUG_2)
+		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMByteReceiver.processAccept(), "+sc.toString()+" added to unknown-channel list.");
 			System.out.println("# unknown-channel-list members: "+m_unknownChannelList.getSize());
