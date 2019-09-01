@@ -580,6 +580,7 @@ public class CMInteractionManager {
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMSessionEvent seAck = new CMSessionEvent();
 		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
+		boolean bRet = false;
 		
 		if(user == null)
 		{
@@ -645,7 +646,7 @@ public class CMInteractionManager {
 			// remove from unknown-channel list
 			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
 			CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
-			boolean bRet = unknownChInfoList.removeElement(new CMUnknownChannelInfo(sc));
+			bRet = unknownChInfoList.removeElement(new CMUnknownChannelInfo(sc));
 			if(bRet && CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.replyToLogin(), remove "+sc
@@ -672,9 +673,47 @@ public class CMInteractionManager {
 		}
 		else
 		{
+			// remove temporary user information
 			user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
 			user.getBlockSocketChannelInfo().removeAllChannels();
 			interInfo.getLoginUsers().removeMember(user.getName());
+			
+			// update login failure count of this channel
+			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
+			CMUnknownChannelInfo unchInfo = commInfo.getUnknownChannelInfoList()
+					.findElement(new CMUnknownChannelInfo(sc));
+			if(unchInfo == null)
+			{
+				System.err.println("CMInteractionManager.replyToLOGIN(), unknown channel "
+						+"not found for "+sc+" !");
+				return;
+			}
+			int nLoginCount = unchInfo.getNumLoginFailure();
+			unchInfo.setNumLoginFailure(++nLoginCount);
+			// check if the count of login failure exceeds a threshold
+			if(nLoginCount > confInfo.getMaxLoginFailure())
+			{
+				System.err.println("CMInteractionManager.replyToLOGIN(), the unknown "
+						+"channel fails to login "+nLoginCount+" times: "+sc);
+				try {
+					sc.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				bRet = commInfo.getUnknownChannelInfoList().removeElement(unchInfo);
+				if(bRet && CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMInteractionManager.replyToLOGIN(), removed "
+							+"from unknown-channel list: "+sc);
+				}
+				if(!bRet)
+				{
+					System.out.println("CMInteractionManager.replyToLOGIN(), error to "
+							+"remove from unknown-channel list: "+sc);
+				}
+				return;
+			}
 		}
 
 		return;
