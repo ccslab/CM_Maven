@@ -899,6 +899,8 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		boolean bRet = false;
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 			return;
@@ -953,6 +955,23 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.processLOGOUT(), user("+se.getUserName()
 					+"), # login users("+interInfo.getLoginUsers().getMemberNum()+").");
+		}
+		
+		// move the default channel to the unknown-channel list
+		CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
+		SocketChannel sc = (SocketChannel)user.getNonBlockSocketChannelInfo().findChannel(0);
+		bRet = unchInfoList.addElement(new CMUnknownChannelInfo(sc));
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMInteractionManager.processLOGOUT(), add channel to "
+					+"unknown-channel list: "+sc);
+			System.out.println("# unknown-channel list members: "+unchInfoList.getSize());
+		}
+		if(!bRet)
+		{
+			System.err.println("CMInteractionManager.processLOGOUT(), error to add channel "
+					+"to unknown-channel list: "+sc);
+			System.err.println("# unknown-channel list members: "+unchInfoList.getSize());
 		}
 		
 		se = null;
