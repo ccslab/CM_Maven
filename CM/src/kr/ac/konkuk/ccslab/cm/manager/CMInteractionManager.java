@@ -1769,6 +1769,7 @@ public class CMInteractionManager {
 		int nServerPort = -1;
 		int nServerUDPPort = -1;
 		boolean bRet = false;
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		
 		CMMultiServerEvent mse = new CMMultiServerEvent(msg.m_buf);
 
@@ -1781,6 +1782,20 @@ public class CMInteractionManager {
 		CMServer server = new CMServer(strServerName, strServerAddress, nServerPort, nServerUDPPort);
 		server.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);	// add default channel to the new server
 		bRet = interInfo.addAddServer(server);
+		
+		// remove channel from unknown-channel list
+		CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
+		bRet = unchInfoList.removeElement(new CMUnknownChannelInfo((SocketChannel)msg.m_ch));
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMInteractionManager.processREQ_SERVER_REG(), removed "
+					+"from unknown-channel list: "+msg.m_ch);
+		}
+		if(!bRet)
+		{
+			System.err.println("CMInteractionManager.processREQ_SERVER_REG(), error to "
+					+"remove from unknown-channel list: "+msg.m_ch);
+		}
 
 		// send response event
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
@@ -1842,6 +1857,7 @@ public class CMInteractionManager {
 	private static void processREQ_SERVER_DEREG(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		boolean bRet = false;
 
 		// delete a server info
@@ -1864,6 +1880,24 @@ public class CMInteractionManager {
 		if(bRet)
 		{
 			interInfo.removeAddServer(serverName);	// remove the requested server
+			
+			// add channel to the unknown-channel list
+			CMServer addServer = interInfo.findAddServer(serverName);
+			SelectableChannel ch = addServer.getNonBlockSocketChannelInfo().findChannel(0);
+			CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
+			boolean bAdded = unchInfoList.addElement(new CMUnknownChannelInfo((SocketChannel)ch));
+			if(bAdded && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.processREQ_SERVER_DEREG(), added "
+						+"to unknown-channel list: "+ch);
+				System.out.println("# unknown-channel list members: "+unchInfoList.getSize());
+			}
+			if(!bAdded)
+			{
+				System.err.println("CMInteractionManager.processREQ_SERVER_DEREG(), error "
+						+"to add to unknown-channel list: "+ch);
+				System.err.println("# unknown-channel list members: "+unchInfoList.getSize());
+			}
 		
 			// notify a client of the deregistration
 			mseAck = new CMMultiServerEvent();
