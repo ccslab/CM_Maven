@@ -3,10 +3,12 @@ import java.nio.channels.*;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
+import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -15,6 +17,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -140,6 +143,7 @@ public class CMEventReceiver extends Thread {
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMServer tserver = null;
 		//int nChIndex = -1;
 		Integer chKey = null;
@@ -212,6 +216,27 @@ public class CMEventReceiver extends Thread {
 		{
 			// find user with channel
 			String strUser = CMEventManager.findUserWithSocketChannel(ch, interInfo.getLoginUsers());
+			// find unknown channel
+			if(strUser == null)
+			{
+				CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
+				CMUnknownChannelInfo unchInfo = unchInfoList.findElement(new CMUnknownChannelInfo((SocketChannel)ch));
+				if(unchInfo != null)
+				{
+					boolean bRet = unchInfoList.removeElement(unchInfo);
+					if(bRet && CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMEventReceiver.processUnexpectedDisconnection(), removed from "
+								+"unknown-channel list: "+ch);
+					}
+					if(!bRet)
+					{
+						System.err.println("CMEventReceiver.processUnexpectedDisconnection(), error to remove "
+								+"from unknown-channel list: "+ch+" !");
+					}
+				}
+			}
+			
 			if(strUser != null)
 			{
 				CMUser user = interInfo.getLoginUsers().findMember(strUser);
