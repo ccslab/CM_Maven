@@ -778,6 +778,8 @@ public class CMInteractionManager {
 			interInfo.getMyself().setState(CMInfo.CM_LOGIN);
 			// set client's attachment download scheme
 			interInfo.getMyself().setAttachDownloadScheme(se.getAttachDownloadScheme());
+			// set client's keep-alive time
+			interInfo.getMyself().setKeepAliveTime(confInfo.getKeepAliveTime());
 			// if the file trasnfer scheme is set, create a blocking TCP socket channel
 			if(confInfo.isFileTransferScheme())
 			{
@@ -960,18 +962,25 @@ public class CMInteractionManager {
 		// move the default channel to the unknown-channel list
 		CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
 		SocketChannel sc = (SocketChannel)user.getNonBlockSocketChannelInfo().findChannel(0);
-		bRet = unchInfoList.addElement(new CMUnknownChannelInfo(sc));
-		if(bRet && CMInfo._CM_DEBUG)
+		if(sc.isOpen())
 		{
-			System.out.println("CMInteractionManager.processLOGOUT(), add channel to "
-					+"unknown-channel list: "+sc);
-			System.out.println("# unknown-channel list members: "+unchInfoList.getSize());
+			bRet = unchInfoList.addElement(new CMUnknownChannelInfo(sc));
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.processLOGOUT(), add channel to "
+						+"unknown-channel list: "+sc);
+				System.out.println("# unknown-channel list members: "+unchInfoList.getSize());
+			}
+			if(!bRet)
+			{
+				System.err.println("CMInteractionManager.processLOGOUT(), error to add channel "
+						+"to unknown-channel list: "+sc);
+				System.err.println("# unknown-channel list members: "+unchInfoList.getSize());
+			}			
 		}
-		if(!bRet)
+		else if(CMInfo._CM_DEBUG)
 		{
-			System.err.println("CMInteractionManager.processLOGOUT(), error to add channel "
-					+"to unknown-channel list: "+sc);
-			System.err.println("# unknown-channel list members: "+unchInfoList.getSize());
+			System.out.println("CMInteractionManager.processLOGOUT(), the client channel is also closed.");
 		}
 		
 		se = null;

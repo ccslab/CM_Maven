@@ -577,6 +577,7 @@ public class CMClientStub extends CMStub {
 		se.setPassword(strEncPassword);
 		se.setHostAddress(strMyAddr);
 		se.setUDPPort(nMyUDPPort);
+		se.setKeepAliveTime(confInfo.getKeepAliveTime());
 		
 		// set information on the local user
 		CMUser myself = getMyself();
@@ -588,6 +589,9 @@ public class CMClientStub extends CMStub {
 		// send the event
 		bRequestResult = send(se, "SERVER");
 		se = null;
+		
+		// set last event-transmission time of the local user
+		myself.setLastEventTransTime(System.currentTimeMillis());
 		
 		return bRequestResult;
 	}
