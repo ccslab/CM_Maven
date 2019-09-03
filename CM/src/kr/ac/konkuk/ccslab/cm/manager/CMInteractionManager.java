@@ -1879,8 +1879,6 @@ public class CMInteractionManager {
 		
 		if(bRet)
 		{
-			interInfo.removeAddServer(serverName);	// remove the requested server
-			
 			// add channel to the unknown-channel list
 			CMServer addServer = interInfo.findAddServer(serverName);
 			SelectableChannel ch = addServer.getNonBlockSocketChannelInfo().findChannel(0);
@@ -1899,6 +1897,9 @@ public class CMInteractionManager {
 				System.err.println("# unknown-channel list members: "+unchInfoList.getSize());
 			}
 		
+			// remove the requested server from the additional-server list
+			interInfo.removeAddServer(serverName);	
+			
 			// notify a client of the deregistration
 			mseAck = new CMMultiServerEvent();
 			mseAck.setID(CMMultiServerEvent.NOTIFY_SERVER_LEAVE);
