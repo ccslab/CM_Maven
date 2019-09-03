@@ -10,10 +10,6 @@ import kr.ac.konkuk.ccslab.cm.manager.CMServiceManager;
 
 public class CMInfo {
 	//// global variables
-	// flag for debugging output
-	//public static final boolean _CM_DEBUG = false;
-	public static final boolean _CM_DEBUG = true;
-	public static final boolean _CM_DEBUG_2 = true;	// communication level log
 	
 	// general number and lengths setting
 	public static final int MAXSESSION_NUM = 64;
@@ -116,6 +112,10 @@ public class CMInfo {
 	public static final byte FILE_DEFAULT = -1;	// determined by the configuration file
 	public static final byte FILE_OVERWRITE = 0;
 	public static final byte FILE_APPEND = 1;
+	
+	// level of debug messages
+	public static boolean _CM_DEBUG = true;
+	public static boolean _CM_DEBUG_2 = false;	// communication level log
 	
 	// repository
 	private CMConfigurationInfo m_confInfo;

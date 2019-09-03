@@ -47,6 +47,8 @@ public class CMConfigurationInfo {
 	
 	// Simulation parameter for added transmission delay
 	private int m_nSimTransDelay;
+	// log level
+	private int m_nLogLevel;
 	
 	public CMConfigurationInfo()
 	{
@@ -86,6 +88,7 @@ public class CMConfigurationInfo {
 		m_bFileAppendScheme = 0;
 		
 		m_nSimTransDelay = 0;
+		m_nLogLevel = 1;
 	}
 
 	// set/get methods
@@ -505,5 +508,15 @@ public class CMConfigurationInfo {
 	public synchronized int getSimTransDelay()
 	{
 		return m_nSimTransDelay;
+	}
+	
+	public synchronized void setLogLevel(int nLevel)
+	{
+		m_nLogLevel = nLevel;
+	}
+	
+	public synchronized int getLogLevel()
+	{
+		return m_nLogLevel;
 	}
 }

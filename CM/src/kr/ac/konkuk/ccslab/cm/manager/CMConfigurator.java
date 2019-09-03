@@ -54,6 +54,28 @@ public class CMConfigurator {
 		// added delay value for the simulation of transmission delay
 		confInfo.setSimTransDelay(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SIM_TRANS_DELAY")));
 
+		// log level
+		confInfo.setLogLevel(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "LOG_LEVEL")));
+		int nLogLevel = confInfo.getLogLevel();
+		switch(nLogLevel)
+		{
+		case 0:
+			CMInfo._CM_DEBUG = false;
+			CMInfo._CM_DEBUG_2 = false;
+			break;
+		case 1:
+			CMInfo._CM_DEBUG = true;
+			CMInfo._CM_DEBUG_2 = false;
+			break;
+		case 2:
+			CMInfo._CM_DEBUG = true;
+			CMInfo._CM_DEBUG_2 = true;
+			break;
+		default:
+			CMInfo._CM_DEBUG = true;
+			CMInfo._CM_DEBUG_2 = false;
+		}
+		
 		// keep-alive time
 		confInfo.setKeepAliveTime(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "KEEP_ALIVE_TIME")));
 		
@@ -116,6 +138,7 @@ public class CMConfigurator {
 			System.out.println("FILE_APPEND_SCHEME: "+confInfo.isFileAppendScheme());
 			System.out.println("KEEP_ALIVE_TIME: "+confInfo.getKeepAliveTime());
 			System.out.println("SIM_TRANS_DELAY: "+confInfo.getSimTransDelay());
+			System.out.println("LOG_LEVEL: "+confInfo.getLogLevel());
 			if( confInfo.getSystemType().equals("SERVER") )
 			{
 				//System.out.println("MY_ADDR: "+confInfo.getMyAddress());
