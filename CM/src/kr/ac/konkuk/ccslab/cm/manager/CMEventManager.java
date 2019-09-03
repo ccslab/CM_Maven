@@ -873,43 +873,6 @@ public class CMEventManager {
 		return ch;
 	}
 	
-	// find a user who connects with a socket channel in loginUsers.
-	public synchronized static String findUserWithSocketChannel(SelectableChannel ch, CMMember loginUsers)
-	{
-		String strUserName = null;
-		boolean isBlock = false;
-		boolean bFound = false;
-		Integer returnKey = null;
-		
-		if(ch == null)
-		{
-			System.err.println("CMEventManager.findUserWithSocketChannel(), channel is null.");
-			return null;
-		}
-		
-		isBlock = ch.isBlocking();
-		
-		Iterator<CMUser> iter = loginUsers.getAllMembers().iterator();
-		while(iter.hasNext() && !bFound)
-		{
-			CMUser tuser = iter.next();
-			if(isBlock)
-				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
-			else
-				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
-			
-			if(returnKey != null)
-			{
-				strUserName = tuser.getName();
-				bFound = true;
-				if(CMInfo._CM_DEBUG_2)
-					System.out.println("CMEventManager.findUserWithSocketChannel(), user("+strUserName+") found.");
-			}
-		}
-		
-		return strUserName;
-	}
-
 	//////////////////////////////////////
 	// add some sleep in order to simulate transmission delay
 

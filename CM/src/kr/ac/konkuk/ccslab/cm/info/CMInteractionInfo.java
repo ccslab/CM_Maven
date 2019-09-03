@@ -10,8 +10,8 @@ public class CMInteractionInfo {
 	private CMMember m_loginUsers;
 	private Vector<CMSession> m_sessionList;
 	private CMUser m_myself;
-	private CMServer m_defaultServerInfo;		// default server info (for client)
-	private Vector<CMServer> m_addServerList;	// additional server info (for client)
+	private CMServer m_defaultServerInfo;		// default server info
+	private Vector<CMServer> m_addServerList;	// additional server info
 	
 	public CMInteractionInfo()
 	{

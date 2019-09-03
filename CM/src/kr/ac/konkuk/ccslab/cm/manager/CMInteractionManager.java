@@ -285,6 +285,10 @@ public class CMInteractionManager {
 			System.err.println("CMInteractionManager.processEvent(), unmarshalled event is null.");
 			return false;
 		}
+		
+		// update the last event-transmission time of the sender
+		if(msg.m_ch instanceof SocketChannel)
+			updateLastEventTransTime(msg.m_ch, cmInfo);
 
 		if(CMInfo._CM_DEBUG_2)
 		{
@@ -388,8 +392,226 @@ public class CMInteractionManager {
 		return bReturn;
 	}
 	
+	// find a user who connects with a socket channel in loginUsers.
+	public synchronized static CMUser findUserWithSocketChannel(SelectableChannel ch, CMMember loginUsers)
+	{
+		String strUserName = null;
+		boolean isBlock = false;
+		boolean bFound = false;
+		Integer returnKey = null;
+		
+		if(ch == null)
+		{
+			System.err.println("CMInteractionManager.findUserWithSocketChannel(), "
+					+ "channel is null!");
+			return null;
+		}
+		if(loginUsers == null)
+		{
+			System.err.println("CMInteractionManager.findUserWithSocketChannel(), "
+					+ "login member list is null!");
+			return null;
+		}
+		
+		isBlock = ch.isBlocking();
+		
+		Iterator<CMUser> iter = loginUsers.getAllMembers().iterator();
+		CMUser tuser = null;
+		while(iter.hasNext() && !bFound)
+		{
+			tuser = iter.next();
+			if(isBlock)
+				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+			else
+				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+			
+			if(returnKey != null)
+			{
+				strUserName = tuser.getName();
+				bFound = true;
+				if(CMInfo._CM_DEBUG_2)
+					System.out.println("CMInteractionManager.findUserWithSocketChannel(), user("+strUserName+") found.");
+			}
+		}
+		
+		return tuser;
+	}
+	
+	// find an additional server with socket channel
+	public synchronized static CMServer findAddServerWithSocketChannel(SelectableChannel ch, Vector<CMServer> list)
+	{
+		String strServerName = null;
+		boolean isBlock = false;
+		boolean bFound = false;
+		Integer returnKey = null;
+		
+		if(ch == null)
+		{
+			System.err.println("CMIneteractionManager.findAddServerWithSocketChannel(), "
+					+"the channel is null!");
+			return null;
+		}
+		
+		if(list == null)
+		{
+			System.err.println("CMInteractionManager.findAddServerWithSocketChannel(), "
+					+"the add-server list is null!");
+			return null;
+		}
+		
+		isBlock = ch.isBlocking();
+
+		Iterator<CMServer> iter = list.iterator();
+		CMServer tServer = null;
+		while(iter.hasNext() && !bFound)
+		{
+			tServer = iter.next();
+			if(isBlock)
+				returnKey = tServer.getBlockSocketChannelInfo().findChannelKey(ch);
+			else
+				returnKey = tServer.getNonBlockSocketChannelInfo().findChannelKey(ch);
+			
+			if(returnKey != null)
+			{
+				strServerName = tServer.getServerName();
+				bFound = true;
+				if(CMInfo._CM_DEBUG_2)
+					System.out.println("CMInteractionManager.findAddServerWithSocketChannel(), "
+							+ "server("+strServerName+") found.");
+			}
+		}
+		
+		return tServer;
+	}
+	
+	public synchronized static boolean isChannelBelongsToServer(SelectableChannel ch, CMServer server)
+	{
+		boolean bRet = false;
+		boolean isBlock = false;
+		Integer chKey = null;
+		
+		if(ch == null)
+		{
+			System.err.println("CMInteractionManager.isChannelBelongsToServer(), channel is null!");
+			return false;
+		}
+		if(server == null)
+		{
+			System.err.println("CMInteractionManager.isChannelBelongsToServer(), server is null!");
+			return false;
+		}
+		
+		isBlock = ch.isBlocking();
+		if(isBlock)
+			chKey = server.getBlockSocketChannelInfo().findChannelKey(ch);
+		else
+			chKey = server.getNonBlockSocketChannelInfo().findChannelKey(ch);
+		
+		if(chKey != null)
+		{
+			if(CMInfo._CM_DEBUG_2)
+			{
+				System.out.println("CMInteractionManager.isChannelBelongsToServer(): YES, "
+						+ch+", server("+server.getServerName()+")");
+			}
+			return true;
+		}
+		else
+		{
+			if(CMInfo._CM_DEBUG_2)
+			{
+				System.out.println("CMInteractionManager.isChannelBelongsToServer(): NO, "
+						+ch+", server("+server.getServerName()+")");
+			}
+			return false;					
+		}
+		
+	}
+	
 	/////////////////////////////////////////////////////////////////////
 	// private methods
+	
+	private static void updateLastEventTransTime(SelectableChannel ch, CMInfo cmInfo)
+	{
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMServer addServer = null;
+		
+		long lCurTime = System.currentTimeMillis();
+		
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			// find client with ch
+			CMUser user = CMInteractionManager.findUserWithSocketChannel(ch, interInfo.getLoginUsers());
+			if(user != null)
+			{
+				user.setLastEventTransTime(lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateLastEventTransTime(), "
+							+"user("+user.getName()+"), time: "+lCurTime);
+				}
+				return;
+			}
+			
+			// find additional server with ch
+			addServer = CMInteractionManager.findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
+			if(addServer != null)
+			{
+				addServer.setLastEventTransTime(lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateLastEventTransTime(), "
+							+"server("+addServer.getServerName()+"), time: "+lCurTime);
+				}
+				return;
+			}
+			
+			// find unknown channel with ch
+			CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
+			CMUnknownChannelInfo unchInfo = unchInfoList.findElement(new CMUnknownChannelInfo((SocketChannel)ch));
+			if(unchInfo != null)
+			{
+				unchInfo.setLastEventTransTime(lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateLastEventTransTime(), "
+							+"unknown channel, time: "+lCurTime);
+				}
+				return;
+			}
+		}
+		else	// client
+		{
+			// check whether ch belongs to the default server
+			CMServer defServer = interInfo.getDefaultServerInfo();
+			if(CMInteractionManager.isChannelBelongsToServer(ch, defServer))
+			{
+				defServer.setLastEventTransTime(lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateLastEventTransTime(), "
+							+"default server, time: "+lCurTime);
+				}
+				return;
+			}
+			// find additional server with ch
+			addServer = CMInteractionManager.findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
+			if(addServer != null)
+			{
+				addServer.setLastEventTransTime(lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateLastEventTransTime(), "
+							+"server("+addServer.getServerName()+"), time: "+lCurTime);
+				}
+				return;
+			}		
+		}
+		
+	}
+	
 	private static void createSession(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();

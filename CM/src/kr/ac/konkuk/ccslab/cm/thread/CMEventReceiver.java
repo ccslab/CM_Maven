@@ -55,7 +55,7 @@ public class CMEventReceiver extends Thread {
 			{
 				if(CMInfo._CM_DEBUG_2)
 					System.out.println("CMEventReceiver.run(), msg is null.");
-				break;
+				continue;
 			}
 			
 			if(msg.m_buf == null)
@@ -79,6 +79,11 @@ public class CMEventReceiver extends Thread {
 
 			// check whether the main thread is waiting for an event
 			CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
+			if(cme == null)
+			{
+				System.err.println("CMEventReceiver.run(): invalid CM event received!");
+				continue;
+			}
 
 			if(eventSync.isWaiting() && !cme.getSender().isEmpty() && 
 					cme.getSender().equals(eventSync.getWaitedReceiver()) &&
@@ -152,9 +157,9 @@ public class CMEventReceiver extends Thread {
 		else if(confInfo.getSystemType().equals("SERVER"))
 		{
 			// find user with channel
-			String strUser = CMEventManager.findUserWithSocketChannel(ch, interInfo.getLoginUsers());
+			CMUser user = CMInteractionManager.findUserWithSocketChannel(ch, interInfo.getLoginUsers());
 			// find unknown channel
-			if(strUser == null)
+			if(user == null)
 			{
 				CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
 				CMUnknownChannelInfo unchInfo = unchInfoList.findElement(new CMUnknownChannelInfo((SocketChannel)ch));
@@ -174,9 +179,9 @@ public class CMEventReceiver extends Thread {
 				}
 			}
 			
-			if(strUser != null)
+			if(user != null)
 			{
-				processDisconnectionFromClientAtServer(strUser, ch);
+				processDisconnectionFromClientAtServer(user.getName(), ch);
 			}
 			else if(CMConfigurator.isDServer(m_cmInfo))
 			{

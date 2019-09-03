@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 public class CMServer extends CMServerInfo {
 	private CMChannelInfo<Integer> m_nonBlockSocketChannelInfo;
 	private CMChannelInfo<Integer> m_blockSocketChannelInfo;
+	private long m_lLastEventTransTime; // when this server sends the last event
 	
 	private String m_strCurrentSessionName;		// only 4 client
 	private String m_strCurrentGroupName;		// only 4 client
@@ -22,6 +23,7 @@ public class CMServer extends CMServerInfo {
 		super();
 		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
+		m_lLastEventTransTime = 0;
 		
 		m_strCurrentSessionName = "";
 		m_strCurrentGroupName = "";
@@ -37,6 +39,7 @@ public class CMServer extends CMServerInfo {
 		super(sname, saddr, nPort, nUDPPort);
 		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
+		m_lLastEventTransTime = 0;
 		
 		m_strCurrentSessionName = "?";
 		m_strCurrentGroupName = "?";
@@ -57,6 +60,16 @@ public class CMServer extends CMServerInfo {
 	public synchronized CMChannelInfo<Integer> getBlockSocketChannelInfo()
 	{
 		return m_blockSocketChannelInfo;
+	}
+	
+	public synchronized void setLastEventTransTime(long lTime)
+	{
+		m_lLastEventTransTime = lTime;
+	}
+	
+	public synchronized long getLastEventTransTime()
+	{
+		return m_lLastEventTransTime;
 	}
 	
 	public synchronized void setCurrentSessionName(String name)

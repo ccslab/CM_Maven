@@ -43,8 +43,14 @@ public class CMByteSender extends Thread {
 			if(msg.m_ch instanceof SocketChannel)
 			{
 				CMCommManager.sendMessage(msg.m_buf, (SocketChannel)msg.m_ch);
-				// update last event-transmission time of myself (client)
-				m_myself.setLastEventTransTime(System.currentTimeMillis());
+				// update last event-transmission time of myself (client or server)
+				long lCurTime = System.currentTimeMillis();
+				m_myself.setLastEventTransTime(lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMByteSender.run(): update my last event-transmission "
+							+ "time: "+lCurTime);
+				}
 			}
 			else if(msg.m_ch instanceof DatagramChannel)
 			{
