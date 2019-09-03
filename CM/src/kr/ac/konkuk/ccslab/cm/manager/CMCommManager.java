@@ -349,8 +349,7 @@ public class CMCommManager {
 	
 	public static CMByteSender startSendingMessage(CMInfo cmInfo)
 	{
-		CMBlockingEventQueue sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
-		CMByteSender byteSender = new CMByteSender(sendQueue);
+		CMByteSender byteSender = new CMByteSender(cmInfo);
 		byteSender.start();
 		cmInfo.getCommInfo().setByteSender(byteSender);
 		

@@ -5,6 +5,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
@@ -14,10 +15,12 @@ import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 public class CMByteSender extends Thread {
 
 	private CMBlockingEventQueue m_sendQueue = null;
+	private CMUser m_myself = null;
 	
-	public CMByteSender(CMBlockingEventQueue sendQueue)
+	public CMByteSender(CMInfo cmInfo)
 	{
-		m_sendQueue = sendQueue;
+		m_sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
+		m_myself = cmInfo.getInteractionInfo().getMyself();
 	}
 	
 	public void run()
@@ -40,6 +43,8 @@ public class CMByteSender extends Thread {
 			if(msg.m_ch instanceof SocketChannel)
 			{
 				CMCommManager.sendMessage(msg.m_buf, (SocketChannel)msg.m_ch);
+				// update last event-transmission time of myself (client)
+				m_myself.setLastEventTransTime(System.currentTimeMillis());
 			}
 			else if(msg.m_ch instanceof DatagramChannel)
 			{
