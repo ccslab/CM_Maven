@@ -367,7 +367,8 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			}
 			break;
 		case CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION:
-			m_client.printStyledMessage("Unexpected disconnection from the default server!\n", "bold");
+			m_client.printStyledMessage("Unexpected disconnection from "
+					+se.getChannelName()+" with key("+se.getChannelNum()+")!\n", "bold");
 			m_client.setButtonsAccordingToClientState();
 			m_client.setTitle("CM Client");
 			break;

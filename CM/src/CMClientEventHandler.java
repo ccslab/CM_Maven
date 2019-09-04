@@ -300,7 +300,8 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			}
 			break;
 		case CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION:
-			System.err.println("Unexpected disconnection from the default server!");
+			System.err.println("Unexpected disconnection from "+se.getChannelName()
+					+" with key("+se.getChannelNum()+")!");
 			break;
 		default:
 			return;

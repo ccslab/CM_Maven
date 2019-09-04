@@ -152,7 +152,7 @@ public class CMEventReceiver extends Thread {
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
-			processDisconnectionFromDefaultServerAtClient(ch);
+			processDisconnectionFromServerAtClient(ch);
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
 		{
@@ -196,7 +196,7 @@ public class CMEventReceiver extends Thread {
 		return;
 	}
 	
-	private void processDisconnectionFromDefaultServerAtClient(SelectableChannel ch)
+	private void processDisconnectionFromServerAtClient(SelectableChannel ch)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMChannelInfo<Integer> chInfo = null;
@@ -226,43 +226,61 @@ public class CMEventReceiver extends Thread {
 			if(bFound)
 			{
 				if(chKey.intValue() == 0)
+				{
 					chInfo.removeAllChannels();
+					tserver.getBlockSocketChannelInfo().removeAllChannels();
+					fInfo.removeRecvFileList(tserver.getServerName());
+					fInfo.removeSendFileList(tserver.getServerName());					
+				}
 				else if(chKey.intValue() > 0)
+				{
 					chInfo.removeChannel(chKey);
+				}
+
+				CMSessionEvent se = new CMSessionEvent();
+				se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
+				se.setChannelName(tserver.getServerName());
+				se.setChannelNum(chKey);
+				m_cmInfo.getAppEventHandler().processEvent(se);
 			}				
 		}
-		else if(chKey.intValue() == 0)	// default channel
+		else	// default channel
 		{
-			// remove all non-blocking channels
-			chInfo.removeAllChannels();
-			// remove all blocking channels
-			interInfo.getDefaultServerInfo().getBlockSocketChannelInfo().removeAllChannels();
-			
-			// For the clarity, the client must be back to initial state (not yet)
-			// stop all the file-transfer threads
-			//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
-			// remove all the ongoing file-transfer info about the default server
-			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
-			// remove all the ongoing sns related file-transfer info at the client
-			snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
-			// remove all session info
-			interInfo.getSessionList().removeAllElements();
-			// initialize the client state
-			interInfo.getMyself().setState(CMInfo.CM_INIT);
-			
-			System.err.println("CMEventReceiver.processDisconnectionFromDefaultServerAtClient(): "
-					+ "The default server is disconnected!");
-			
+			if(chKey.intValue() == 0)
+			{
+				// remove all non-blocking channels
+				chInfo.removeAllChannels();
+				// remove all blocking channels
+				interInfo.getDefaultServerInfo().getBlockSocketChannelInfo().removeAllChannels();
+				
+				// For the clarity, the client must be back to initial state (not yet)
+				// stop all the file-transfer threads
+				//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
+				// remove all the ongoing file-transfer info about the default server
+				fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
+				fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+				// remove all the ongoing sns related file-transfer info at the client
+				snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
+				// remove all session info
+				interInfo.getSessionList().removeAllElements();
+				// initialize the client state
+				interInfo.getMyself().setState(CMInfo.CM_INIT);
+				
+				System.err.println("CMEventReceiver.processDisconnectionFromDefaultServerAtClient(): "
+						+ "The default server is disconnected!");
+				
+			}
+			else if(chKey.intValue() > 0) // additional channel
+			{
+				chInfo.removeChannel(chKey);
+			}
+
 			// notify to the application
 			CMSessionEvent se = new CMSessionEvent();
 			se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
+			se.setChannelName("SERVER");
+			se.setChannelNum(chKey);
 			m_cmInfo.getAppEventHandler().processEvent(se);
-			se = null;
-		}
-		else if(chKey.intValue() > 0) // additional channel
-		{
-			chInfo.removeChannel(chKey);
 		}
 
 	}
