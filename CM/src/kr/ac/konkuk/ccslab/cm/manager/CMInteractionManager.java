@@ -434,7 +434,10 @@ public class CMInteractionManager {
 			}
 		}
 		
-		return tuser;
+		if(bFound)
+			return tuser;
+		else
+			return null;
 	}
 	
 	// find an additional server with socket channel
