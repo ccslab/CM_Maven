@@ -301,7 +301,9 @@ public class CMEventReceiver extends Thread {
 		else if(chKey.intValue() == 0)
 		{
 			// send MQTT will event
-			sendMqttWill(strUser);
+			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
+					.get(CMInfo.CM_MQTT_MANAGER);			
+			mqttManager.sendMqttWill(strUser);
 			
 			// if the removed channel is default channel (#ch:0), process logout of the user
 			CMSessionEvent tse = new CMSessionEvent();
@@ -390,7 +392,8 @@ public class CMEventReceiver extends Thread {
 		}
 
 	}
-	
+
+	/*
 	// send MQTT will event if the disconnected client has will information
 	private boolean sendMqttWill(String strUser)
 	{
@@ -407,4 +410,5 @@ public class CMEventReceiver extends Thread {
 				mqttWill.getWillQoS());
 		return bRet;
 	}
+	*/
 }

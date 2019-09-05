@@ -844,4 +844,22 @@ public class CMMqttManager extends CMServiceManager {
 		
 		return strBuf.toString();
 	}
+	
+	// send MQTT will event if the disconnected client has will information
+	public boolean sendMqttWill(String strUser)
+	{
+		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUser);
+		if(session == null) return false;
+		CMMqttWill mqttWill = session.getMqttWill();
+		if(mqttWill == null) return false;
+		
+		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
+				.get(CMInfo.CM_MQTT_MANAGER);
+		boolean bRet = false;
+		bRet = mqttManager.publish(mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
+				mqttWill.getWillQoS());
+		return bRet;
+	}
+
 }

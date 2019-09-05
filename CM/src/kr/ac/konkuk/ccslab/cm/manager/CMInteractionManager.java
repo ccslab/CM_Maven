@@ -165,7 +165,7 @@ public class CMInteractionManager {
 		CMUser myself = interInfo.getMyself();
 		if(myself.getState() == CMInfo.CM_INIT)
 		{
-			System.out.println("Not connected to default server yet.");
+			System.err.println("Not connected to default server yet.");
 			return false;
 		}
 		
@@ -269,6 +269,227 @@ public class CMInteractionManager {
 		}
 		
 		return true;
+	}
+	
+	public synchronized static boolean disconnect(SocketChannel sc, CMInfo cmInfo)
+	{
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		if(confInfo.getSystemType().contentEquals("SERVER"))
+			return disconnectAtServer(sc, cmInfo);
+		else
+			return disconnectAtClient(sc, cmInfo);
+	}
+	
+	private static boolean disconnectAtServer(SocketChannel sc, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		boolean bRet = false;
+		
+		if(CMConfigurator.isDServer(cmInfo))
+		{
+			CMServer addServer = findAddServerWithSocketChannel(sc, interInfo.getAddServerList());
+			if(addServer != null)
+			{
+				// The default server disconnects from the additional server
+				return disconnectFromAddServerAtDefaultServer(addServer, cmInfo);
+			}
+		}
+		else
+		{
+			CMServer defServer = interInfo.getDefaultServerInfo();
+			if(isChannelBelongsToServer(sc, defServer))
+			{
+				// The additional server disconnects from the default server
+				return disconnectFromDefaultServerAtAddServer(cmInfo);
+			}
+		}
+		
+		CMUser user = findUserWithSocketChannel(sc, interInfo.getLoginUsers());
+		if(user != null)
+		{
+			// The server disconnects from the client
+			return disconnectFromClientAtServer(user, cmInfo);
+		}
+		
+		CMUnknownChannelInfo unchInfo = commInfo.getUnknownChannelInfoList()
+				.findElement(new CMUnknownChannelInfo(sc));
+		if(unchInfo != null)
+		{
+			// disconnect from the unknown channel
+			try {
+				sc.close();
+				
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMIntearctionManager.disconnectAtServer() "
+							+"intentionally disconnected from unknown channel: "+sc);
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// remove from the unknown channel list
+			bRet = commInfo.getUnknownChannelInfoList().removeElement(unchInfo);
+			
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.disconnectAtServer() "
+						+"removed from unknown-channel list: "+sc);
+			}
+			else {
+				System.err.println("CMInteractionManager.disconnectAtServer() "
+						+"error to remove from unknown-channel list: "+sc);
+			}
+			
+			return bRet;
+		}
+		
+		System.err.println("CMInteractionManager.disconnectAtServer(): "+sc);
+		System.err.println("cannot find a connected client or server information!");
+		return false;
+	}
+	
+	private static boolean disconnectFromAddServerAtDefaultServer(CMServer addServer, CMInfo cmInfo)
+	{
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		String strAddServerName = addServer.getServerName();
+		
+		// notify clients of the deregistration
+		CMMultiServerEvent mse = new CMMultiServerEvent();
+		mse.setID(CMMultiServerEvent.NOTIFY_SERVER_LEAVE);
+		mse.setServerName(addServer.getServerName());
+		CMEventManager.broadcastEvent(mse, cmInfo);
+
+		// remove all socket channels
+		addServer.getNonBlockSocketChannelInfo().removeAllChannels();
+		addServer.getBlockSocketChannelInfo().removeAllChannels();
+		
+		// remove file-transfer info
+		fInfo.removeRecvFileList(addServer.getServerName());
+		fInfo.removeSendFileList(addServer.getServerName());
+		
+		// remove add-server info
+		cmInfo.getInteractionInfo().removeAddServer(addServer.getServerName());
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMIntearctionManager.disconnectFromAddServerAtDefaultServer()"
+					+"intentionally disconnected from additional server ("+strAddServerName+").");
+		}
+		
+		return true;
+	}
+	
+	private static boolean disconnectFromDefaultServerAtAddServer(CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMServer defServer = interInfo.getDefaultServerInfo();
+		defServer.getNonBlockSocketChannelInfo().removeAllChannels();
+		defServer.getBlockSocketChannelInfo().removeAllChannels();
+		
+		fInfo.removeRecvFileList(defServer.getServerName());
+		fInfo.removeSendFileList(defServer.getServerName());
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMIntearctionManager.disconnectFromDefaultServerAtAddServer()"
+					+"intentionally disconnected from the default server.");
+		}
+
+		return true;
+	}
+	
+	private static boolean disconnectFromClientAtServer(CMUser user, CMInfo cmInfo)
+	{
+		String strUser = user.getName();
+		
+		// send MQTT will event
+		CMMqttManager mqttManager = (CMMqttManager) cmInfo.getServiceManagerHashtable()
+				.get(CMInfo.CM_MQTT_MANAGER);
+		mqttManager.sendMqttWill(user.getName());
+
+		// trigger the logout process
+		CMSessionEvent tse = new CMSessionEvent();
+		tse.setID(CMSessionEvent.LOGOUT);
+		tse.setUserName(user.getName());
+		CMMessage msg = new CMMessage();
+		msg.m_buf = CMEventManager.marshallEvent(tse);
+		CMInteractionManager.processEvent(msg, cmInfo);
+		cmInfo.getAppEventHandler().processEvent(tse);
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMIntearctionManager.disconnectFromClientAtServer()"
+					+"intentionally disconnected from client ("+strUser+").");
+		}
+
+		return true;
+	}
+	
+	private static boolean disconnectAtClient(SocketChannel sc, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMServer defServer = interInfo.getDefaultServerInfo();
+		if(isChannelBelongsToServer(sc, defServer))
+		{
+			// ch belongs to the default server
+
+			CMChannelInfo<Integer> chInfo = defServer.getNonBlockSocketChannelInfo();
+			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			
+			// remove all non-blocking channels
+			chInfo.removeAllChannels();
+			// remove all blocking channels
+			defServer.getBlockSocketChannelInfo().removeAllChannels();
+			
+			// For the clarity, the client must be back to initial state (not yet)
+			// stop all the file-transfer threads
+			//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
+			// remove all the ongoing file-transfer info about the default server
+			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
+			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+			// remove all the ongoing sns related file-transfer info at the client
+			snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
+			// remove all session info
+			interInfo.getSessionList().removeAllElements();
+			// initialize the client state
+			interInfo.getMyself().setState(CMInfo.CM_INIT);
+			
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.disconnectAtClient(): "
+						+ "intentionally disconnected from the default server: "+sc);
+			}
+
+			return true;
+		}
+		
+		CMServer addServer = findAddServerWithSocketChannel(sc, interInfo.getAddServerList());
+		if(addServer != null)
+		{
+			// ch belongs to an additional server
+			
+			addServer.getNonBlockSocketChannelInfo().removeAllChannels();
+			addServer.getBlockSocketChannelInfo().removeAllChannels();
+			fInfo.removeRecvFileList(addServer.getServerName());
+			fInfo.removeSendFileList(addServer.getServerName());
+			
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.disconnectAtClient(): "
+						+ "intentionally disconnected from an additional server: "+sc);
+			}
+
+			return true;
+		}
+		
+		System.err.println("CMInteractionManager.disconnectAtClient(): "+sc);
+		System.err.println("cannot find the connected default or additional server information!");
+		return false;
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////////
