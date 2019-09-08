@@ -349,10 +349,10 @@ public class CMWinServer extends JFrame {
 		case 104: 	// configure, simulate and write recent history to CMDB
 			writeRecentAccHistoryToDB();
 			break;
-		case 106:	// send event with wrong # bytes
+		case 105:	// send event with wrong # bytes
 			sendEventWithWrongByteNum();
 			break;
-		case 107:	// send event with wrong type
+		case 106:	// send event with wrong type
 			sendEventWithWrongEventType();
 			break;
 		default:
