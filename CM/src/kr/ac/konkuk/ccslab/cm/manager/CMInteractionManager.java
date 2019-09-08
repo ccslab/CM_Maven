@@ -379,6 +379,12 @@ public class CMInteractionManager {
 					+"intentionally disconnected from additional server ("+strAddServerName+").");
 		}
 		
+		// notify the app event handler
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
+		se.setChannelName(strAddServerName);
+		cmInfo.getAppEventHandler().processEvent(se);
+		
 		return true;
 	}
 	
@@ -398,6 +404,12 @@ public class CMInteractionManager {
 			System.out.println("CMIntearctionManager.disconnectFromDefaultServerAtAddServer()"
 					+"intentionally disconnected from the default server.");
 		}
+
+		// notify the app event handler
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
+		se.setChannelName("SERVER");
+		cmInfo.getAppEventHandler().processEvent(se);
 
 		return true;
 	}
@@ -433,6 +445,12 @@ public class CMInteractionManager {
 			System.out.println("CMIntearctionManager.disconnectFromClientAtServer()"
 					+"intentionally disconnected from client ("+strUser+").");
 		}
+
+		// notify the app event handler
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
+		se.setChannelName(strUser);
+		cmInfo.getAppEventHandler().processEvent(se);
 
 		return true;
 	}
@@ -473,6 +491,12 @@ public class CMInteractionManager {
 						+ "intentionally disconnected from the default server: "+sc);
 			}
 
+			// notify the app event handler
+			CMSessionEvent se = new CMSessionEvent();
+			se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
+			se.setChannelName("SERVER");
+			cmInfo.getAppEventHandler().processEvent(se);
+
 			return true;
 		}
 		
@@ -480,7 +504,7 @@ public class CMInteractionManager {
 		if(addServer != null)
 		{
 			// ch belongs to an additional server
-			
+			String strAddServer = addServer.getServerName();
 			addServer.getNonBlockSocketChannelInfo().removeAllChannels();
 			addServer.getBlockSocketChannelInfo().removeAllChannels();
 			fInfo.removeRecvFileList(addServer.getServerName());
@@ -489,8 +513,15 @@ public class CMInteractionManager {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.disconnectAtClient(): "
-						+ "intentionally disconnected from an additional server: "+sc);
+						+ "intentionally disconnected from an additional server("
+						+strAddServer+"): "+sc);
 			}
+			
+			// notify the app event handler
+			CMSessionEvent se = new CMSessionEvent();
+			se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
+			se.setChannelName(strAddServer);
+			cmInfo.getAppEventHandler().processEvent(se);
 
 			return true;
 		}

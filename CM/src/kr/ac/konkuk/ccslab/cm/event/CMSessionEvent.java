@@ -48,7 +48,9 @@ public class CMSessionEvent extends CMEvent {
 	public static final int FIND_REGISTERED_USER_ACK = 21;	// response to the find-user request (from server to client)
 	
 	// local CM event from CM to notify the application of the unexpected disconnection (from client CM to application)
-	public static final int UNEXPECTED_SERVER_DISCONNECTION = 99;	
+	public static final int UNEXPECTED_SERVER_DISCONNECTION = 99;
+	// local CM event from CM to notify that it intentionally disconnect a channel.
+	public static final int INTENTIONALLY_DISCONNECT = 100;
 
 	private String m_strUserName;
 	private String m_strPasswd;

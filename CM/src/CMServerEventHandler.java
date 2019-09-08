@@ -113,6 +113,10 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		case CMSessionEvent.FIND_REGISTERED_USER:
 			System.out.println("User profile requested for user["+se.getUserName()+"].");
 			break;
+		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
+			System.err.println("Intentionally disconnected all channels from ["
+					+se.getChannelName()+"]!");
+			break;
 		default:
 			return;
 		}

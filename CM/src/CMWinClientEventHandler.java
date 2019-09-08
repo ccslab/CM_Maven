@@ -367,8 +367,14 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			}
 			break;
 		case CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION:
-			m_client.printStyledMessage("Unexpected disconnection from "
-					+se.getChannelName()+" with key("+se.getChannelNum()+")!\n", "bold");
+			m_client.printStyledMessage("Unexpected disconnection from ["
+					+se.getChannelName()+"] with key["+se.getChannelNum()+"]!\n", "bold");
+			m_client.setButtonsAccordingToClientState();
+			m_client.setTitle("CM Client");
+			break;
+		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
+			m_client.printStyledMessage("Intentionally disconnected all channels from ["
+					+se.getChannelName()+"]!\n", "bold");
 			m_client.setButtonsAccordingToClientState();
 			m_client.setTitle("CM Client");
 			break;
