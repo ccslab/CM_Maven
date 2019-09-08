@@ -9,16 +9,19 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
 import java.net.*;
 
 public class CMByteReceiver extends Thread {
+	private CMInfo m_cmInfo;
 	private Selector m_selector;
 	private CMBlockingEventQueue m_queue;
 	private CMList<CMUnknownChannelInfo> m_unknownChannelList;
 	
 	public CMByteReceiver(CMInfo cmInfo)
 	{
+		m_cmInfo = cmInfo;
 		m_selector = cmInfo.getCommInfo().getSelector();
 		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
 		m_unknownChannelList = cmInfo.getCommInfo().getUnknownChannelInfoList();
@@ -159,12 +162,14 @@ public class CMByteReceiver extends Thread {
 			{
 				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
 						+") is greater than the maximum event size("+CMInfo.MAX_EVENT_SIZE+")!");
+				CMInteractionManager.disconnect(sc, m_cmInfo);
 				return;
 			}
 			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
 			{
 				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
 						+") is less than the minimum event size("+CMInfo.MIN_EVENT_SIZE+")!");
+				CMInteractionManager.disconnect(sc, m_cmInfo);
 				return;
 			}
 			//bufEvent = ByteBuffer.allocateDirect(nByteNum);

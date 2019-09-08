@@ -411,6 +411,14 @@ public class CMInteractionManager {
 				.get(CMInfo.CM_MQTT_MANAGER);
 		mqttManager.sendMqttWill(user.getName());
 
+		SocketChannel sc = (SocketChannel)user.getNonBlockSocketChannelInfo().findChannel(0);
+		try {
+			sc.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// trigger the logout process
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.LOGOUT);
@@ -504,6 +512,8 @@ public class CMInteractionManager {
 		if(cmEvent == null)
 		{
 			System.err.println("CMInteractionManager.processEvent(), unmarshalled event is null.");
+			if(msg.m_ch instanceof SocketChannel)
+				CMInteractionManager.disconnect((SocketChannel)msg.m_ch, cmInfo);
 			return false;
 		}
 		
