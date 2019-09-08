@@ -1,5 +1,7 @@
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,17 +12,20 @@ import javax.swing.JTextField;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -288,6 +293,12 @@ public class CMClientApp {
 			case 107: // distribute a file and merge
 				testDistFileProc();
 				break;
+			case 108: // send an event with wrong # bytes
+				testSendEventWithWrongByteNum();
+				break;
+			case 109: // send an event with wrong event type
+				testSendEventWithWrongEventType();
+				break;
 			default:
 				System.err.println("Unknown command.");
 				break;
@@ -350,6 +361,7 @@ public class CMClientApp {
 		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
 		System.out.println("103: test repeated request of SNS content list");
 		System.out.println("104: pull/push multiple files, 105: split file, 106: merge files, 107: distribute and merge file");
+		System.out.println("108: send event with wrong # bytes, 109: send event with wrong type");
 	}
 	
 	public void testConnectionDS()
@@ -2968,6 +2980,33 @@ public class CMClientApp {
 		}
 		
 		return;
+	}
+	
+	public void testSendEventWithWrongByteNum()
+	{
+		System.out.println("========== send a CMDummyEvent with wrong # bytes to default server");
+		
+		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
+		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+		CMServer defServer = interInfo.getDefaultServerInfo();
+		SelectableChannel ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);
+		
+		CMDummyEvent due = new CMDummyEvent();
+		ByteBuffer buf = due.marshall();
+		buf.clear();
+		buf.putInt(-1).clear();
+		CMMessage msg = new CMMessage(buf, ch);
+		sendQueue.push(msg);
+	}
+	
+	public void testSendEventWithWrongEventType()
+	{
+		System.out.println("========== send a CMDummyEvent with wrong event type");
+		
+		CMDummyEvent due = new CMDummyEvent();
+		due.setType(-1);	// set wrong event type
+		m_clientStub.send(due, "SERVER");
 	}
 
 	

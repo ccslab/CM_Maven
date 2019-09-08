@@ -1,5 +1,7 @@
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -18,8 +20,13 @@ import javax.swing.text.StyledDocument;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
+import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -342,6 +349,12 @@ public class CMWinServer extends JFrame {
 		case 104: 	// configure, simulate and write recent history to CMDB
 			writeRecentAccHistoryToDB();
 			break;
+		case 106:	// send event with wrong # bytes
+			sendEventWithWrongByteNum();
+			break;
+		case 107:	// send event with wrong type
+			sendEventWithWrongEventType();
+			break;
 		default:
 			//System.out.println("Unknown command.");
 			printStyledMessage("Unknown command.\n", "bold");
@@ -376,6 +389,7 @@ public class CMWinServer extends JFrame {
 		printMessage("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
 		printMessage("103: start SNS user access simulation and measure prefetch accuracy\n");
 		printMessage("104: start and write recent SNS access history simulation to CM DB\n");
+		printMessage("105: send event with wrong bytes, 106: send event with wrong type\n");
 	}
 	
 	public void startCM()
@@ -1588,6 +1602,43 @@ public class CMWinServer extends JFrame {
 		printMessage(mqttManager.getAllRetainInfo());
 		
 		return;
+	}
+	
+	public void sendEventWithWrongByteNum()
+	{
+		printMessage("========== send a CMDummyEvent with wrong # bytes to a client\n");
+		
+		CMCommInfo commInfo = m_serverStub.getCMInfo().getCommInfo();
+		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+		
+		String strUser = JOptionPane.showInputDialog("client name: ").trim();
+		CMUser user = interInfo.getLoginUsers().findMember(strUser);
+		if(user == null)
+		{
+			printStyledMessage("No user ["+strUser+"] found!", "bold");
+			return;
+		}
+		SelectableChannel ch = user.getNonBlockSocketChannelInfo().findChannel(0);
+		
+		CMDummyEvent due = new CMDummyEvent();
+		ByteBuffer buf = due.marshall();
+		buf.clear();
+		buf.putInt(-1).clear();
+		CMMessage msg = new CMMessage(buf, ch);
+		sendQueue.push(msg);
+
+	}
+	
+	public void sendEventWithWrongEventType()
+	{
+		printMessage("========== send a CMDummyEvent with wrong event type\n");
+		
+		String strUser = JOptionPane.showInputDialog("client name: ").trim();
+
+		CMDummyEvent due = new CMDummyEvent();
+		due.setType(-1);	// set wrong event type
+		m_serverStub.send(due, strUser);
 	}
 
 	public void printMessage(String strText)

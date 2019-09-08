@@ -7,7 +7,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,21 +21,25 @@ import javax.swing.text.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
@@ -815,6 +821,12 @@ public class CMWinClient extends JFrame {
 		case 107: // distribute a file and merge
 			testDistFileProc();
 			break;
+		case 108: // send an event with wrong # bytes
+			testSendEventWithWrongByteNum();
+			break;
+		case 109: // send an event with wrong event type
+			testSendEventWithWrongEventType();
+			break;
 		case 200: // MQTT connect
 			testMqttConnect();
 			break;
@@ -889,6 +901,7 @@ public class CMWinClient extends JFrame {
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
 		printMessage("104: pull/push multiple files, 105: split file, 106: merge files, 107: distribute and merge file\n");
+		printMessage("108: send event with wrong # bytes, 109: send event with wrong type\n");
 	}
 	
 	public void testConnectionDS()
@@ -3717,6 +3730,33 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 		mqttManager.disconnect();
+	}
+	
+	public void testSendEventWithWrongByteNum()
+	{
+		printMessage("========== send a CMDummyEvent with wrong # bytes to default server\n");
+		
+		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
+		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+		CMServer defServer = interInfo.getDefaultServerInfo();
+		SelectableChannel ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);
+		
+		CMDummyEvent due = new CMDummyEvent();
+		ByteBuffer buf = CMEventManager.marshallEvent(due);
+		buf.clear();
+		buf.putInt(-1).clear();
+		CMMessage msg = new CMMessage(buf, ch);
+		sendQueue.push(msg);
+	}
+	
+	public void testSendEventWithWrongEventType()
+	{
+		printMessage("========== send a CMDummyEvent with wrong event type\n");
+		
+		CMDummyEvent due = new CMDummyEvent();
+		due.setType(-1);	// set wrong event type
+		m_clientStub.send(due, "SERVER");
 	}
 		
 	private void requestAttachedFile(String strFileName)
