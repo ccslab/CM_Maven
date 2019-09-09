@@ -361,6 +361,13 @@ public class CMEventReceiver extends Thread {
 			}
 			else if(chKey.intValue() > 0)
 				chInfo.removeChannel(chKey);
+			
+			CMSessionEvent se = new CMSessionEvent();
+			se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
+			se.setChannelName(tserver.getServerName());
+			se.setChannelNum(chKey);
+			m_cmInfo.getAppEventHandler().processEvent(se);
+
 		}
 
 	}
@@ -392,6 +399,12 @@ public class CMEventReceiver extends Thread {
 		{
 			chInfo.removeChannel(chKey);
 		}
+		
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
+		se.setChannelName(interInfo.getDefaultServerInfo().getServerName());
+		se.setChannelNum(chKey);
+		m_cmInfo.getAppEventHandler().processEvent(se);
 
 	}
 
