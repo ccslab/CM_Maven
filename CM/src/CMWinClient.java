@@ -346,6 +346,9 @@ public class CMWinClient extends JFrame {
 		JMenuItem channelInfoMenuItem = new JMenuItem("show current channels");
 		channelInfoMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(channelInfoMenuItem);
+		JMenuItem serverInfoMenuItem = new JMenuItem("show current server information");
+		serverInfoMenuItem.addActionListener(menuListener);
+		infoSubMenu.add(serverInfoMenuItem);
 		JMenuItem groupInfoDesigMenuItem = new JMenuItem("show group information of designated server");
 		groupInfoDesigMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(groupInfoDesigMenuItem);
