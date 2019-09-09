@@ -509,7 +509,8 @@ public class CMInteractionManager {
 			addServer.getBlockSocketChannelInfo().removeAllChannels();
 			fInfo.removeRecvFileList(addServer.getServerName());
 			fInfo.removeSendFileList(addServer.getServerName());
-			
+			addServer.getSessionList().removeAllElements();
+			addServer.setClientState(CMInfo.CM_INIT);
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.disconnectAtClient(): "
