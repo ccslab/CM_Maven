@@ -230,7 +230,9 @@ public class CMEventReceiver extends Thread {
 					chInfo.removeAllChannels();
 					tserver.getBlockSocketChannelInfo().removeAllChannels();
 					fInfo.removeRecvFileList(tserver.getServerName());
-					fInfo.removeSendFileList(tserver.getServerName());					
+					fInfo.removeSendFileList(tserver.getServerName());
+					tserver.getSessionList().removeAllElements();
+					tserver.setClientState(CMInfo.CM_INIT);
 				}
 				else if(chKey.intValue() > 0)
 				{
