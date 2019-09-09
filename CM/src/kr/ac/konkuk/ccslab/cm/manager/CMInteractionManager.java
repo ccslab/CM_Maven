@@ -2568,8 +2568,10 @@ public class CMInteractionManager {
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName());
-
+		boolean bRet = false;
+		
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
 		mseAck.setID(CMMultiServerEvent.ADD_LOGIN_ACK);
 		mseAck.setServerName(mse.getServerName());
@@ -2600,6 +2602,33 @@ public class CMInteractionManager {
 
 		if(bValidUser)
 		{
+			// set last event transmission time
+			user.setLastEventTransTime(System.currentTimeMillis());
+			// set keep-alive time
+			int nKeepAliveTime = mse.getKeepAliveTime();
+			if(nKeepAliveTime > 0)
+				user.setKeepAliveTime(nKeepAliveTime);
+			else {
+				user.setKeepAliveTime(confInfo.getKeepAliveTime());
+			}
+			
+			// remove from unknown-channel list
+			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
+			CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
+			bRet = unknownChInfoList.removeElement(new CMUnknownChannelInfo(sc));
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.replyToADD_LOGIN(), remove "+sc
+						+" from the unknown-channel list.");
+				System.out.println("# unknown-channel list elemetns: "+unknownChInfoList.getSize());
+			}
+			if(!bRet)
+			{
+				System.err.println("CMInteractionManager.replyToADD_LOGIN(), error to remove "+sc
+						+" from the unknown-channel list!");
+				System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
+			}
+			
 			// send inhabitants who already logged on the system
 			distributeAddLoginUsers(mse.getUserName(), cmInfo);
 
@@ -2737,6 +2766,8 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		boolean bRet = false;
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 			return;
@@ -2778,6 +2809,30 @@ public class CMInteractionManager {
 		tmse.setUserName( mse.getUserName() );
 
 		CMEventManager.broadcastEvent(tmse, cmInfo);
+
+		// move the default channel to the unknown-channel list
+		CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
+		SocketChannel sc = (SocketChannel)user.getNonBlockSocketChannelInfo().findChannel(0);
+		if(sc.isOpen())
+		{
+			bRet = unchInfoList.addElement(new CMUnknownChannelInfo(sc));
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.processADD_LOGOUT(), add channel to "
+						+"unknown-channel list: "+sc);
+				System.out.println("# unknown-channel list members: "+unchInfoList.getSize());
+			}
+			if(!bRet)
+			{
+				System.err.println("CMInteractionManager.processADD_LOGOUT(), error to add channel "
+						+"to unknown-channel list: "+sc);
+				System.err.println("# unknown-channel list members: "+unchInfoList.getSize());
+			}			
+		}
+		else if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMInteractionManager.processADD_LOGOUT(), the client channel is also closed.");
+		}
 
 		tmse = null;
 		return;

@@ -63,6 +63,8 @@ public class CMMultiServerEvent extends CMEvent{
 	Vector<CMGroupInfo> m_groupList;
 	String m_strGroupName;
 
+	private int m_nKeepAliveTime;
+
 	public CMMultiServerEvent()
 	{
 		m_nType = CMInfo.CM_MULTI_SERVER_EVENT;
@@ -87,6 +89,7 @@ public class CMMultiServerEvent extends CMEvent{
 		m_strSessionName = "";
 		m_nGroupNum = -1;
 		m_strGroupName = "";
+		m_nKeepAliveTime = 0;
 
 		m_serverList = new Vector<CMServerInfo>();
 		m_sessionList = new Vector<CMSessionInfo>();
@@ -287,6 +290,16 @@ public class CMMultiServerEvent extends CMEvent{
 	public String getGroupName()
 	{
 		return m_strGroupName;
+	}
+	
+	public void setKeepAliveTime(int nSecond)
+	{
+		m_nKeepAliveTime = nSecond;
+	}
+	
+	public int getKeepAliveTime()
+	{
+		return m_nKeepAliveTime;
 	}
 
 	// control vectors of server info, session info, group info
@@ -653,6 +666,7 @@ public class CMMultiServerEvent extends CMEvent{
 				+ m_strUserName.getBytes().length + m_strPassword.getBytes().length
 				+ m_strHostAddress.getBytes().length;
 			nByteNum += Integer.BYTES;
+			nByteNum += Integer.BYTES;	// keep-alive time
 			break;
 		case ADD_LOGIN_ACK:
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
@@ -811,6 +825,7 @@ public class CMMultiServerEvent extends CMEvent{
 			putStringToByteBuffer(m_strPassword);
 			putStringToByteBuffer(m_strHostAddress);
 			m_bytes.putInt(m_nUDPPort);
+			m_bytes.putInt(m_nKeepAliveTime);
 			break;
 		case ADD_LOGIN_ACK:
 			putStringToByteBuffer(m_strServerName);
@@ -987,6 +1002,7 @@ public class CMMultiServerEvent extends CMEvent{
 			m_strPassword = getStringFromByteBuffer(msg);
 			m_strHostAddress = getStringFromByteBuffer(msg);
 			m_nUDPPort = msg.getInt();
+			m_nKeepAliveTime = msg.getInt();
 			break;
 		case ADD_LOGIN_ACK:
 			m_strServerName = getStringFromByteBuffer(msg);
