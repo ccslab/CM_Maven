@@ -2989,8 +2989,23 @@ public class CMClientApp {
 		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
-		CMServer defServer = interInfo.getDefaultServerInfo();
-		SelectableChannel ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);
+
+		String strServer = JOptionPane.showInputDialog("server name: ").trim();
+		SelectableChannel ch = null;
+		if(strServer.contentEquals("SERVER"))
+		{
+			CMServer defServer = interInfo.getDefaultServerInfo();
+			ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);
+		}
+		else {
+			CMServer addServer = interInfo.findAddServer(strServer);
+			if(addServer == null)
+			{
+				System.err.println("No server["+strServer+"] found!");
+				return;
+			}
+			ch = addServer.getNonBlockSocketChannelInfo().findChannel(0);
+		}		
 		
 		CMDummyEvent due = new CMDummyEvent();
 		ByteBuffer buf = due.marshall();
@@ -3004,9 +3019,11 @@ public class CMClientApp {
 	{
 		System.out.println("========== send a CMDummyEvent with wrong event type");
 		
+		String strServer = JOptionPane.showInputDialog("server name: ").trim();
+
 		CMDummyEvent due = new CMDummyEvent();
 		due.setType(-1);	// set wrong event type
-		m_clientStub.send(due, "SERVER");
+		m_clientStub.send(due, strServer);
 	}
 
 	

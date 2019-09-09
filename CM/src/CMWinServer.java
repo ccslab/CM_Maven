@@ -1612,14 +1612,30 @@ public class CMWinServer extends JFrame {
 		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
-		String strUser = JOptionPane.showInputDialog("client name: ").trim();
-		CMUser user = interInfo.getLoginUsers().findMember(strUser);
-		if(user == null)
+		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();
+		SelectableChannel ch = null;
+		CMUser user = interInfo.getLoginUsers().findMember(strTarget);
+		CMServer server = null;
+		if(user != null)
 		{
-			printStyledMessage("No user ["+strUser+"] found!", "bold");
-			return;
+			ch = user.getNonBlockSocketChannelInfo().findChannel(0);
 		}
-		SelectableChannel ch = user.getNonBlockSocketChannelInfo().findChannel(0);
+		else if(strTarget.contentEquals("SERVER"))
+		{
+			ch = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().findChannel(0);
+		}
+		else
+		{
+			server = interInfo.findAddServer(strTarget);
+			if(server != null)
+			{
+				ch = server.getNonBlockSocketChannelInfo().findChannel(0);
+			}
+			else {
+				printStyledMessage("["+strTarget+"] not found!\n", "bold");
+				return;
+			}
+		}
 		
 		CMDummyEvent due = new CMDummyEvent();
 		ByteBuffer buf = due.marshall();
@@ -1634,11 +1650,11 @@ public class CMWinServer extends JFrame {
 	{
 		printMessage("========== send a CMDummyEvent with wrong event type\n");
 		
-		String strUser = JOptionPane.showInputDialog("client name: ").trim();
+		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();
 
 		CMDummyEvent due = new CMDummyEvent();
 		due.setType(-1);	// set wrong event type
-		m_serverStub.send(due, strUser);
+		m_serverStub.send(due, strTarget);
 	}
 
 	public void printMessage(String strText)

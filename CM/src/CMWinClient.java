@@ -3734,13 +3734,28 @@ public class CMWinClient extends JFrame {
 	
 	public void testSendEventWithWrongByteNum()
 	{
-		printMessage("========== send a CMDummyEvent with wrong # bytes to default server\n");
+		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
 		
 		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
-		CMServer defServer = interInfo.getDefaultServerInfo();
-		SelectableChannel ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);
+		
+		String strServer = JOptionPane.showInputDialog("server name: ").trim();
+		SelectableChannel ch = null;
+		if(strServer.contentEquals("SERVER"))
+		{
+			CMServer defServer = interInfo.getDefaultServerInfo();
+			ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);
+		}
+		else {
+			CMServer addServer = interInfo.findAddServer(strServer);
+			if(addServer == null)
+			{
+				printStyledMessage("No server["+strServer+"] found!\n", "bold");
+				return;
+			}
+			ch = addServer.getNonBlockSocketChannelInfo().findChannel(0);
+		}
 		
 		CMDummyEvent due = new CMDummyEvent();
 		ByteBuffer buf = CMEventManager.marshallEvent(due);
@@ -3752,11 +3767,13 @@ public class CMWinClient extends JFrame {
 	
 	public void testSendEventWithWrongEventType()
 	{
-		printMessage("========== send a CMDummyEvent with wrong event type\n");
+		printMessage("========== send a CMDummyEvent with wrong event type to a server\n");
+		
+		String strServer = JOptionPane.showInputDialog("server name: ").trim();
 		
 		CMDummyEvent due = new CMDummyEvent();
 		due.setType(-1);	// set wrong event type
-		m_clientStub.send(due, "SERVER");
+		m_clientStub.send(due, strServer);
 	}
 		
 	private void requestAttachedFile(String strFileName)

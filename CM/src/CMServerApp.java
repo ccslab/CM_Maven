@@ -1,6 +1,7 @@
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
@@ -1326,15 +1327,30 @@ public class CMServerApp {
 		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
-		System.out.print("client name: ");
-		String strUser = m_scan.next().trim();
-		CMUser user = interInfo.getLoginUsers().findMember(strUser);
-		if(user == null)
+		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();
+		SelectableChannel ch = null;
+		CMUser user = interInfo.getLoginUsers().findMember(strTarget);
+		CMServer server = null;
+		if(user != null)
 		{
-			System.err.println("No user ["+strUser+"] found!");
-			return;
+			ch = user.getNonBlockSocketChannelInfo().findChannel(0);
 		}
-		SelectableChannel ch = user.getNonBlockSocketChannelInfo().findChannel(0);
+		else if(strTarget.contentEquals("SERVER"))
+		{
+			ch = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().findChannel(0);
+		}
+		else
+		{
+			server = interInfo.findAddServer(strTarget);
+			if(server != null)
+			{
+				ch = server.getNonBlockSocketChannelInfo().findChannel(0);
+			}
+			else {
+				System.err.println("["+strTarget+"] not found!");
+				return;
+			}
+		}
 		
 		CMDummyEvent due = new CMDummyEvent();
 		ByteBuffer buf = due.marshall();
@@ -1347,12 +1363,12 @@ public class CMServerApp {
 	{
 		System.out.println("========== send a CMDummyEvent with wrong event type");
 		
-		System.out.print("client name: ");
-		String strUser = m_scan.next().trim();
+		System.out.print("target server or client name: ");
+		String strTarget = m_scan.next().trim();
 
 		CMDummyEvent due = new CMDummyEvent();
 		due.setType(-1);	// set wrong event type
-		m_serverStub.send(due, strUser);
+		m_serverStub.send(due, strTarget);
 	}
 	
 	public static void main(String[] args) {
