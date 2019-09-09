@@ -746,7 +746,10 @@ public class CMInteractionManager {
 			}
 		}
 		
-		return tServer;
+		if(bFound)
+			return tServer;
+		else
+			return null;
 	}
 	
 	public synchronized static boolean isChannelBelongsToServer(SelectableChannel ch, CMServer server)
