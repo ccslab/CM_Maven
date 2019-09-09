@@ -144,6 +144,10 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			//System.out.println("User profile requested for user["+se.getUserName()+"].");
 			printMessage("User profile requested for user["+se.getUserName()+"].\n");
 			break;
+		case CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION:
+			m_server.printStyledMessage("Unexpected disconnection from ["
+					+se.getChannelName()+"] with key["+se.getChannelNum()+"]!\n", "bold");
+			break;
 		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
 			m_server.printStyledMessage("Intentionally disconnected all channels from ["
 					+se.getChannelName()+"]!\n", "bold");
