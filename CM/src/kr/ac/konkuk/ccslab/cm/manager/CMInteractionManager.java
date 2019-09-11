@@ -876,7 +876,7 @@ public class CMInteractionManager {
 					if(CMInfo._CM_DEBUG_2)
 					{
 						System.out.println("CMInteractionManager.updateMyLastEventTransTime(), "
-								+"server("+defServer.getServerName()+", time: "+lCurTime);
+								+"server("+defServer.getServerName()+"), time: "+lCurTime);
 					}
 					return;
 				}
@@ -894,7 +894,7 @@ public class CMInteractionManager {
 				if(CMInfo._CM_DEBUG_2)
 				{
 					System.out.println("CMInteractionManager.updateMyLastEventTransTime(), "
-							+"server("+defServer.getServerName()+", time: "+lCurTime);
+							+"server("+defServer.getServerName()+"), time: "+lCurTime);
 				}
 				return;
 			}

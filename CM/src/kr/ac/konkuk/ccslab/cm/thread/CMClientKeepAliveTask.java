@@ -37,14 +37,14 @@ public class CMClientKeepAliveTask implements Runnable {
 		long lCurTime = System.currentTimeMillis();
 		
 		if( (myself.getState() >= CMInfo.CM_LOGIN) && 
-				((lCurTime - lMyLastEventTransTimeToDefServer) > nKeepAliveTime) )
+				((lCurTime - lMyLastEventTransTimeToDefServer)/1000.0 > nKeepAliveTime) )
 		{
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMClientKeepAliveTask.run(): "
 						+ "(current time - last event-transmission time to def server = "
-						+lMyLastEventTransTimeToDefServer+"), (my keep-alive time = "
-						+nKeepAliveTime+")");
+						+((lCurTime - lMyLastEventTransTimeToDefServer)/1000.0)+"), "
+						+ "(my keep-alive time = "+nKeepAliveTime+")");
 			}
 			CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 			reqPingEvent.setSender(myself.getName());
@@ -67,8 +67,16 @@ public class CMClientKeepAliveTask implements Runnable {
 					lMyLastEventTransTimeToAddServer = 0L;
 				}
 				
-				if(lCurTime - lMyLastEventTransTimeToAddServer > nKeepAliveTime)
+				if((lCurTime - lMyLastEventTransTimeToAddServer)/1000.0 > nKeepAliveTime)
 				{
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMClientKeepAliveTask.run(): "
+								+ "(current time - last event-transmission time to server("
+								+addServer.getServerName()+") = "
+								+((lCurTime - lMyLastEventTransTimeToAddServer)/1000.0)+"), "
+								+ "(my keep-alive time = "+nKeepAliveTime+")");
+					}
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
 					CMEventManager.unicastEvent(reqPingEvent, addServer.getServerName(), m_cmInfo);
