@@ -162,14 +162,14 @@ public class CMByteReceiver extends Thread {
 			{
 				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
 						+") is greater than the maximum event size("+CMInfo.MAX_EVENT_SIZE+")!");
-				CMInteractionManager.disconnect(sc, m_cmInfo);
+				CMInteractionManager.disconnectBadNode(sc, m_cmInfo);
 				return;
 			}
 			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
 			{
 				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
 						+") is less than the minimum event size("+CMInfo.MIN_EVENT_SIZE+")!");
-				CMInteractionManager.disconnect(sc, m_cmInfo);
+				CMInteractionManager.disconnectBadNode(sc, m_cmInfo);
 				return;
 			}
 			//bufEvent = ByteBuffer.allocateDirect(nByteNum);

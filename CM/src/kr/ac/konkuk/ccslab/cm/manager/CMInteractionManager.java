@@ -299,16 +299,16 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	public synchronized static boolean disconnect(SocketChannel sc, CMInfo cmInfo)
+	public synchronized static boolean disconnectBadNode(SocketChannel badSC, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		if(confInfo.getSystemType().contentEquals("SERVER"))
-			return disconnectAtServer(sc, cmInfo);
+			return disconnectBadNodeByServer(badSC, cmInfo);
 		else
-			return disconnectAtClient(sc, cmInfo);
+			return disconnectBadNodeByClient(badSC, cmInfo);
 	}
 	
-	private static boolean disconnectAtServer(SocketChannel sc, CMInfo cmInfo)
+	private static boolean disconnectBadNodeByServer(SocketChannel badSC, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
@@ -316,42 +316,42 @@ public class CMInteractionManager {
 		
 		if(CMConfigurator.isDServer(cmInfo))
 		{
-			CMServer addServer = findAddServerWithSocketChannel(sc, interInfo.getAddServerList());
+			CMServer addServer = findAddServerWithSocketChannel(badSC, interInfo.getAddServerList());
 			if(addServer != null)
 			{
 				// The default server disconnects from the additional server
-				return disconnectFromAddServerAtDefaultServer(addServer, cmInfo);
+				return disconnectBadAddServerByDefaultServer(addServer, cmInfo);
 			}
 		}
 		else
 		{
 			CMServer defServer = interInfo.getDefaultServerInfo();
-			if(isChannelBelongsToServer(sc, defServer))
+			if(isChannelBelongsToServer(badSC, defServer))
 			{
 				// The additional server disconnects from the default server
-				return disconnectFromDefaultServerAtAddServer(cmInfo);
+				return disconnectBadDefaultServerByAddServer(cmInfo);
 			}
 		}
 		
-		CMUser user = findUserWithSocketChannel(sc, interInfo.getLoginUsers());
+		CMUser user = findUserWithSocketChannel(badSC, interInfo.getLoginUsers());
 		if(user != null)
 		{
 			// The server disconnects from the client
-			return disconnectFromClientAtServer(user, cmInfo);
+			return disconnectBadClientByServer(user, cmInfo);
 		}
 		
 		CMUnknownChannelInfo unchInfo = commInfo.getUnknownChannelInfoList()
-				.findElement(new CMUnknownChannelInfo(sc));
+				.findElement(new CMUnknownChannelInfo(badSC));
 		if(unchInfo != null)
 		{
 			// disconnect from the unknown channel
 			try {
-				sc.close();
+				badSC.close();
 				
 				if(CMInfo._CM_DEBUG)
 				{
-					System.out.println("CMIntearctionManager.disconnectAtServer() "
-							+"intentionally disconnected from unknown channel: "+sc);
+					System.out.println("CMIntearctionManager.disconnectBadNodeByServer() "
+							+"intentionally disconnected from unknown channel: "+badSC);
 				}
 
 			} catch (IOException e) {
@@ -363,23 +363,23 @@ public class CMInteractionManager {
 			
 			if(bRet && CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMInteractionManager.disconnectAtServer() "
-						+"removed from unknown-channel list: "+sc);
+				System.out.println("CMInteractionManager.disconnectBadNodeByServer() "
+						+"removed from unknown-channel list: "+badSC);
 			}
 			else {
-				System.err.println("CMInteractionManager.disconnectAtServer() "
-						+"error to remove from unknown-channel list: "+sc);
+				System.err.println("CMInteractionManager.disconnectBadNodeByServer() "
+						+"error to remove from unknown-channel list: "+badSC);
 			}
 			
 			return bRet;
 		}
 		
-		System.err.println("CMInteractionManager.disconnectAtServer(): "+sc);
+		System.err.println("CMInteractionManager.disconnectBadNodeByServer(): "+badSC);
 		System.err.println("cannot find a connected client or server information!");
 		return false;
 	}
 	
-	private static boolean disconnectFromAddServerAtDefaultServer(CMServer addServer, CMInfo cmInfo)
+	private static boolean disconnectBadAddServerByDefaultServer(CMServer addServer, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		String strAddServerName = addServer.getServerName();
@@ -403,7 +403,7 @@ public class CMInteractionManager {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMIntearctionManager.disconnectFromAddServerAtDefaultServer()"
+			System.out.println("CMIntearctionManager.disconnectBadAddServerByDefaultServer()"
 					+"intentionally disconnected from additional server ("+strAddServerName+").");
 		}
 		
@@ -416,7 +416,7 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	private static boolean disconnectFromDefaultServerAtAddServer(CMInfo cmInfo)
+	private static boolean disconnectBadDefaultServerByAddServer(CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
@@ -429,7 +429,7 @@ public class CMInteractionManager {
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMIntearctionManager.disconnectFromDefaultServerAtAddServer()"
+			System.out.println("CMIntearctionManager.disconnectBadDefaultServerByAddServer()"
 					+"intentionally disconnected from the default server.");
 		}
 
@@ -442,7 +442,7 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	private static boolean disconnectFromClientAtServer(CMUser user, CMInfo cmInfo)
+	private static boolean disconnectBadClientByServer(CMUser user, CMInfo cmInfo)
 	{
 		String strUser = user.getName();
 		
@@ -470,7 +470,7 @@ public class CMInteractionManager {
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMIntearctionManager.disconnectFromClientAtServer()"
+			System.out.println("CMIntearctionManager.disconnectBadClientByServer()"
 					+"intentionally disconnected from client ("+strUser+").");
 		}
 
@@ -483,12 +483,12 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	private static boolean disconnectAtClient(SocketChannel sc, CMInfo cmInfo)
+	private static boolean disconnectBadNodeByClient(SocketChannel badSC, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMServer defServer = interInfo.getDefaultServerInfo();
-		if(isChannelBelongsToServer(sc, defServer))
+		if(isChannelBelongsToServer(badSC, defServer))
 		{
 			// ch belongs to the default server
 
@@ -515,8 +515,8 @@ public class CMInteractionManager {
 			
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMInteractionManager.disconnectAtClient(): "
-						+ "intentionally disconnected from the default server: "+sc);
+				System.out.println("CMInteractionManager.disconnectBadNodeByClient(): "
+						+ "intentionally disconnected from the default server: "+badSC);
 			}
 
 			// notify the app event handler
@@ -528,7 +528,7 @@ public class CMInteractionManager {
 			return true;
 		}
 		
-		CMServer addServer = findAddServerWithSocketChannel(sc, interInfo.getAddServerList());
+		CMServer addServer = findAddServerWithSocketChannel(badSC, interInfo.getAddServerList());
 		if(addServer != null)
 		{
 			// ch belongs to an additional server
@@ -541,9 +541,9 @@ public class CMInteractionManager {
 			addServer.setClientState(CMInfo.CM_INIT);
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMInteractionManager.disconnectAtClient(): "
+				System.out.println("CMInteractionManager.disconnectBadNodeByClient(): "
 						+ "intentionally disconnected from an additional server("
-						+strAddServer+"): "+sc);
+						+strAddServer+"): "+badSC);
 			}
 			
 			// notify the app event handler
@@ -555,7 +555,7 @@ public class CMInteractionManager {
 			return true;
 		}
 		
-		System.err.println("CMInteractionManager.disconnectAtClient(): "+sc);
+		System.err.println("CMInteractionManager.disconnectBadNodeByClient(): "+badSC);
 		System.err.println("cannot find the connected default or additional server information!");
 		return false;
 	}
@@ -573,7 +573,7 @@ public class CMInteractionManager {
 		{
 			System.err.println("CMInteractionManager.processEvent(), unmarshalled event is null.");
 			if(msg.m_ch instanceof SocketChannel)
-				CMInteractionManager.disconnect((SocketChannel)msg.m_ch, cmInfo);
+				CMInteractionManager.disconnectBadNode((SocketChannel)msg.m_ch, cmInfo);
 			return false;
 		}
 		
