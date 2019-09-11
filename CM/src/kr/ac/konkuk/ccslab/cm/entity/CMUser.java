@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.util.Calendar;
+import java.util.Hashtable;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
@@ -24,10 +25,13 @@ public class CMUser extends CMObject {
 	private int m_nState;
 	private CMChannelInfo<Integer> m_nonBlockSocketChannelInfo;
 	private CMChannelInfo<Integer> m_blockSocketChannelInfo;
-	private int m_nAttachDownloadScheme;	// used at SERVER
-	private CMSNSAttachAccessHistoryList m_historyList;	// used at SERVER
-	private Calendar m_lastLoginDate;		// used at SERVER
+	private int m_nAttachDownloadScheme;	// 4 SERVER
+	private CMSNSAttachAccessHistoryList m_historyList;	// 4 SERVER
+	private Calendar m_lastLoginDate;		// 4 SERVER
+	// 4 server (last event-transmission time of this object(client))
 	private long m_lLastEventTransTime;
+	// 4 myself (client or server) (last event-transmission time per receiver)
+	private Hashtable<String, Long> m_myLastEventTransTimeHashtable;
 	private int m_nKeepAliveTime;
 	
 	public CMUser()
@@ -47,6 +51,7 @@ public class CMUser extends CMObject {
 		m_historyList = new CMSNSAttachAccessHistoryList();
 		m_lastLoginDate = null;
 		m_lLastEventTransTime = -1;
+		m_myLastEventTransTimeHashtable = new Hashtable<String, Long>();
 		m_nKeepAliveTime = -1;
 	}
 	
@@ -67,6 +72,7 @@ public class CMUser extends CMObject {
 		m_historyList = new CMSNSAttachAccessHistoryList();
 		m_lastLoginDate = null;
 		m_lLastEventTransTime = -1;
+		m_myLastEventTransTimeHashtable = new Hashtable<String, Long>();
 		m_nKeepAliveTime = -1;
 	}
 	
@@ -159,6 +165,11 @@ public class CMUser extends CMObject {
 		m_lLastEventTransTime = lTime;
 	}
 	
+	public synchronized void setMyLastEventTransTimeHashtable(Hashtable<String, Long> ht)
+	{
+		m_myLastEventTransTimeHashtable = ht;
+	}
+	
 	public synchronized void setKeepAliveTime(int nSecond)
 	{
 		m_nKeepAliveTime = nSecond;
@@ -238,6 +249,11 @@ public class CMUser extends CMObject {
 	public synchronized long getLastEventTransTime()
 	{
 		return m_lLastEventTransTime;
+	}
+	
+	public synchronized Hashtable<String, Long> getMyLastEventTransTimeHashtable()
+	{
+		return m_myLastEventTransTimeHashtable;
 	}
 	
 	public synchronized int getKeepAliveTime()

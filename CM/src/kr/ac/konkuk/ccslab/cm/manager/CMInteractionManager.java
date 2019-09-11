@@ -6,6 +6,8 @@ import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -31,6 +33,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
+import kr.ac.konkuk.ccslab.cm.thread.CMClientKeepAliveTask;
 
 import java.sql.*;
 
@@ -183,6 +186,31 @@ public class CMInteractionManager {
 		}
 		
 		return true;
+	}
+	
+	public static int getNumLoginServers(CMInfo cmInfo)
+	{
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		
+		if(!confInfo.getSystemType().contentEquals("CLIENT"))
+		{
+			System.err.println("CMInteractionManager.getNumLoginServers(), system type "
+					+ "is not CLIENT!");
+			return -1;
+		}
+		
+		int nNumLogins = 0;
+		if(interInfo.getMyself().getState() >= CMInfo.CM_LOGIN)
+			nNumLogins++;
+		Vector<CMServer> addServerList = interInfo.getAddServerList();
+		for(CMServer addServer : addServerList)
+		{
+			if(addServer.getClientState() >= CMInfo.CM_LOGIN)
+				nNumLogins++;
+		}
+		
+		return nNumLogins;
 	}
 	
 	// connect to an additional server
@@ -797,22 +825,117 @@ public class CMInteractionManager {
 		
 	}
 	
+	// update the last event transmission time when CM sends an event
+	public synchronized static void updateMyLastEventTransTime(SelectableChannel ch, CMInfo cmInfo)
+	{
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMUser myself = interInfo.getMyself();
+		CMServer defServer = interInfo.getDefaultServerInfo();
+		CMServer addServer = null;
+		
+		long lCurTime = System.currentTimeMillis();
+		
+		if(confInfo.getSystemType().contentEquals("SERVER"))
+		{
+			// find client with ch
+			CMUser user = findUserWithSocketChannel(ch, interInfo.getLoginUsers());
+			if(user != null)
+			{
+				myself.getMyLastEventTransTimeHashtable().put(user.getName(), lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateMyLastEventTransTime(),"
+							+"user("+user.getName()+"), time: "+lCurTime);
+				}
+				return;
+			}
+			
+			// find additional server with ch
+			addServer = findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
+			if(addServer != null)
+			{
+				myself.getMyLastEventTransTimeHashtable().put(addServer.getServerName(), lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateMyLastEventTransTime(),"
+							+"server("+addServer.getServerName()+"), time: "+lCurTime);
+				}
+				return;
+			}
+			
+			// if this server is not the default server, it checks whether ch belongs to 
+			// the default server
+			if(!CMConfigurator.isDServer(cmInfo))
+			{
+				if(isChannelBelongsToServer(ch, defServer))
+				{
+					myself.getMyLastEventTransTimeHashtable().put(defServer
+							.getServerName(), lCurTime);
+					if(CMInfo._CM_DEBUG_2)
+					{
+						System.out.println("CMInteractionManager.updateMyLastEventTransTime(), "
+								+"server("+defServer.getServerName()+", time: "+lCurTime);
+					}
+					return;
+				}
+			}
+			
+			// do not need to find unknown channel with ch here
+		}
+		else	// client
+		{
+			// check whether ch belongs to the default server
+			if(isChannelBelongsToServer(ch, defServer))
+			{
+				myself.getMyLastEventTransTimeHashtable().put(defServer.getServerName(), 
+						lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateMyLastEventTransTime(), "
+							+"server("+defServer.getServerName()+", time: "+lCurTime);
+				}
+				return;
+			}
+			
+			// find additional server with ch
+			addServer = findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
+			if(addServer != null)
+			{
+				myself.getMyLastEventTransTimeHashtable().put(addServer.getServerName(), 
+						lCurTime);
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager.updateMyLastEventTransTime(), "
+							+"server("+addServer.getServerName()+"), time: "+lCurTime);
+				}
+				return;
+			}
+		}
+		
+		System.err.println("CMInteractionManager.updateMyLastEventTransTime(), receiver "
+				+"not found with ch !: "+ch);
+	}
+	
 	/////////////////////////////////////////////////////////////////////
 	// private methods
 	
+	// update the last event transmission time when CM receives an event
 	private static void updateLastEventTransTime(SelectableChannel ch, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMServer defServer = interInfo.getDefaultServerInfo();
 		CMServer addServer = null;
 		
 		long lCurTime = System.currentTimeMillis();
 		
-		if(confInfo.getSystemType().equals("SERVER"))
+		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
 			// find client with ch
-			CMUser user = CMInteractionManager.findUserWithSocketChannel(ch, interInfo.getLoginUsers());
+			CMUser user = findUserWithSocketChannel(ch, interInfo.getLoginUsers());
 			if(user != null)
 			{
 				user.setLastEventTransTime(lCurTime);
@@ -825,7 +948,7 @@ public class CMInteractionManager {
 			}
 			
 			// find additional server with ch
-			addServer = CMInteractionManager.findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
+			addServer = findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
 			if(addServer != null)
 			{
 				addServer.setLastEventTransTime(lCurTime);
@@ -850,12 +973,27 @@ public class CMInteractionManager {
 				}
 				return;
 			}
+			
+			// if this server is not the default server, it also check whether ch is for
+			// the default server
+			if(!CMConfigurator.isDServer(cmInfo))
+			{
+				if(isChannelBelongsToServer(ch, defServer))
+				{
+					defServer.setLastEventTransTime(lCurTime);
+					if(CMInfo._CM_DEBUG_2)
+					{
+						System.out.println("CMInteractionManager.updateLastEventTransTime(), "
+								+"server("+defServer.getServerName()+", time: "+lCurTime);
+					}
+					return;
+				}
+			}
 		}
 		else	// client
 		{
 			// check whether ch belongs to the default server
-			CMServer defServer = interInfo.getDefaultServerInfo();
-			if(CMInteractionManager.isChannelBelongsToServer(ch, defServer))
+			if(isChannelBelongsToServer(ch, defServer))
 			{
 				defServer.setLastEventTransTime(lCurTime);
 				if(CMInfo._CM_DEBUG_2)
@@ -866,7 +1004,7 @@ public class CMInteractionManager {
 				return;
 			}
 			// find additional server with ch
-			addServer = CMInteractionManager.findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
+			addServer = findAddServerWithSocketChannel(ch, interInfo.getAddServerList());
 			if(addServer != null)
 			{
 				addServer.setLastEventTransTime(lCurTime);
@@ -878,6 +1016,9 @@ public class CMInteractionManager {
 				return;
 			}		
 		}
+		
+		System.err.println("CMInteractionManager.updateLastEventTransTime(), sender not "
+				+"found with ch !: "+ch);
 		
 	}
 	
@@ -1304,6 +1445,24 @@ public class CMInteractionManager {
 				{
 					System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
 							+ "the channel with the key(0) to the default server.");
+				}
+				
+				// check whether the keep-alive scheduler should start or not
+				int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
+				if(nKeepAlive > 0 && getNumLoginServers(cmInfo) == 1)
+				{
+					CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+					ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
+					CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask(cmInfo);
+					ses.scheduleAtFixedRate(keepAliveTask, nKeepAlive/3, nKeepAlive/3, 
+							TimeUnit.SECONDS);
+					
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMInteractionManager.processLOGIN_ACK(), "
+								+"# logins("+getNumLoginServers(cmInfo)+"), start "
+								+"keep-alive task.");
+					}
 				}
 				
 			}

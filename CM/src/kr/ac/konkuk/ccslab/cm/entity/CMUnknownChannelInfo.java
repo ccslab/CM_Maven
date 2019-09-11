@@ -5,7 +5,7 @@ import java.nio.channels.SocketChannel;
 public class CMUnknownChannelInfo {
 
 	private SocketChannel m_unknownChannel;
-	private long m_lLastEventTransTime;
+	private long m_lLastEventTransTime;	// when this channel sent the last event
 	private int m_nNumLoginFailure;
 	
 	public CMUnknownChannelInfo(SocketChannel ch)

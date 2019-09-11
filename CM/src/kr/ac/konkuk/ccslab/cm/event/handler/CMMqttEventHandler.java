@@ -14,6 +14,8 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventDISCONNECT;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGRESP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
@@ -1150,12 +1152,41 @@ public class CMMqttEventHandler extends CMEventHandler {
 	
 	private boolean processPINGREQ(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventPINGREQ reqPingEvent = (CMMqttEventPINGREQ)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPINGREQ(), received from ("
+					+reqPingEvent.getSender()+")");
+		}
+		
+		CMMqttEventPINGRESP resPingEvent = new CMMqttEventPINGRESP();
+		String strMyName = m_cmInfo.getInteractionInfo().getMyself().getName();
+		resPingEvent.setSender(strMyName);
+		
+		boolean bRet = CMEventManager.unicastEvent(resPingEvent, reqPingEvent.getSender(), m_cmInfo);
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPINGREQ(), sent PINGRESP to ("
+					+reqPingEvent.getSender()+")");
+		}
+		if(!bRet)
+		{
+			System.err.println("CMMqttEventHandler.processPINGREQ(), error to send "
+					+"PINGRESP to ("+reqPingEvent.getSender()+")!");
+		}
+		
+		return bRet;
 	}
 	
 	private boolean processPINGRESP(CMMqttEvent event)
 	{
-		return false;
+		CMMqttEventPINGRESP resPingEvent = (CMMqttEventPINGRESP)event;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMMqttEventHandler.processPINGRESP(), received from ("
+					+resPingEvent.getSender()+")");			
+		}
+		return true;
 	}
 	
 	private boolean processDISCONNECT(CMMqttEvent event)

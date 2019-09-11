@@ -7,7 +7,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 public class CMServer extends CMServerInfo {
 	private CMChannelInfo<Integer> m_nonBlockSocketChannelInfo;
 	private CMChannelInfo<Integer> m_blockSocketChannelInfo;
-	private long m_lLastEventTransTime; // when this server sends the last event
+	private long m_lLastEventTransTime; // when this object(server) sends the last event
 	
 	private String m_strCurrentSessionName;		// only 4 client
 	private String m_strCurrentGroupName;		// only 4 client

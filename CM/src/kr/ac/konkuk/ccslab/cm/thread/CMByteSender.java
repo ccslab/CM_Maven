@@ -11,16 +11,17 @@ import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
 public class CMByteSender extends Thread {
 
 	private CMBlockingEventQueue m_sendQueue = null;
-	private CMUser m_myself = null;
+	private CMInfo m_cmInfo;
 	
 	public CMByteSender(CMInfo cmInfo)
 	{
 		m_sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
-		m_myself = cmInfo.getInteractionInfo().getMyself();
+		m_cmInfo = cmInfo;
 	}
 	
 	public void run()
@@ -44,13 +45,7 @@ public class CMByteSender extends Thread {
 			{
 				CMCommManager.sendMessage(msg.m_buf, (SocketChannel)msg.m_ch);
 				// update last event-transmission time of myself (client or server)
-				long lCurTime = System.currentTimeMillis();
-				m_myself.setLastEventTransTime(lCurTime);
-				if(CMInfo._CM_DEBUG_2)
-				{
-					System.out.println("CMByteSender.run(): update my last event-transmission "
-							+ "time: "+lCurTime);
-				}
+				CMInteractionManager.updateMyLastEventTransTime(msg.m_ch, m_cmInfo);
 			}
 			else if(msg.m_ch instanceof DatagramChannel)
 			{
