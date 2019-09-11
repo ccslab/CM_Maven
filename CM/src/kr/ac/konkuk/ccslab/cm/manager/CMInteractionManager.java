@@ -165,6 +165,8 @@ public class CMInteractionManager {
 	{
 		// check user's state
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMUser myself = interInfo.getMyself();
 		if(myself.getState() == CMInfo.CM_INIT)
 		{
@@ -177,6 +179,14 @@ public class CMInteractionManager {
 		dsInfo.getNonBlockSocketChannelInfo().removeAllChannels();
 		dsInfo.getBlockSocketChannelInfo().removeAllChannels();
 		
+		// remove all the ongoing file-transfer info about the default server
+		fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
+		fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+		// remove all the ongoing sns related file-transfer info at the client
+		snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
+		// remove all session info
+		interInfo.getSessionList().removeAllElements();
+
 		// update user's state
 		myself.setState(CMInfo.CM_INIT);
 		
@@ -268,6 +278,7 @@ public class CMInteractionManager {
 	public static boolean disconnectFromAddServer(String strName, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMServer tserver = interInfo.findAddServer(strName);
 		if( tserver == null )
 		{
@@ -286,6 +297,11 @@ public class CMInteractionManager {
 		// close and delete all channels of the server
 		tserver.getNonBlockSocketChannelInfo().removeAllChannels();
 		tserver.getBlockSocketChannelInfo().removeAllChannels();
+		// remove ongoing file-transfer information
+		fInfo.removeRecvFileList(tserver.getServerName());
+		fInfo.removeSendFileList(tserver.getServerName());
+		// remove session information
+		tserver.getSessionList().removeAllElements();
 
 		// update peer's state
 		tserver.setClientState(CMInfo.CM_INIT);
