@@ -11,6 +11,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -703,6 +705,14 @@ public class CMClientStub extends CMStub {
 			System.out.println("["+myself.getName()+"] successfully sent the logout request to the default server.");
 		else
 			System.err.println("["+myself.getName()+"] failed the logout request!");
+
+		// check and stop the scheduled keep-alive task
+		if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
+		{
+			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
+			future.cancel(true);
+		}
 		
 		se = null;
 		return bRequestResult;
@@ -3120,6 +3130,14 @@ public class CMClientStub extends CMStub {
 		// update the local state of the server
 		if(bResult)
 			tserver.setClientState(CMInfo.CM_CONNECT);
+
+		// check and stop the scheduled keep-alive task
+		if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
+		{
+			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
+			future.cancel(true);
+		}
 
 		tmse = null;
 		return bResult;

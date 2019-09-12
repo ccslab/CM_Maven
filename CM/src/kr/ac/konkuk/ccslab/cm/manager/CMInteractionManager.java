@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
@@ -541,6 +542,14 @@ public class CMInteractionManager {
 			se.setChannelName("SERVER");
 			cmInfo.getAppEventHandler().processEvent(se);
 
+			// check and stop the scheduled keep-alive task
+			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
+			{
+				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
+				future.cancel(true);
+			}
+
 			return true;
 		}
 		
@@ -567,6 +576,14 @@ public class CMInteractionManager {
 			se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
 			se.setChannelName(strAddServer);
 			cmInfo.getAppEventHandler().processEvent(se);
+
+			// check and stop the scheduled keep-alive task
+			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
+			{
+				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
+				future.cancel(true);
+			}
 
 			return true;
 		}
@@ -1470,8 +1487,9 @@ public class CMInteractionManager {
 					CMThreadInfo threadInfo = cmInfo.getThreadInfo();
 					ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
 					CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask(cmInfo);
-					ses.scheduleAtFixedRate(keepAliveTask, nKeepAlive/3, nKeepAlive/3, 
-							TimeUnit.SECONDS);
+					ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask, 
+							nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
+					threadInfo.setScheduledFuture(future);
 					
 					if(CMInfo._CM_DEBUG)
 					{

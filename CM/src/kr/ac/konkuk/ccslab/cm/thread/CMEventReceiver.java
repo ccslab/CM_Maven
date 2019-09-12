@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
@@ -24,6 +26,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -283,6 +286,15 @@ public class CMEventReceiver extends Thread {
 			se.setChannelName("SERVER");
 			se.setChannelNum(chKey);
 			m_cmInfo.getAppEventHandler().processEvent(se);
+			
+			// check and stop the scheduled keep-alive task
+			if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
+			{
+				CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
+				future.cancel(true);
+			}
+
 		}
 
 	}
