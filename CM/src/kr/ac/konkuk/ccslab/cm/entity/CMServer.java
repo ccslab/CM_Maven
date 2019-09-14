@@ -3,11 +3,12 @@ import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
-// server information managed by a client
+// server information managed by a client and the default server
 public class CMServer extends CMServerInfo {
 	private CMChannelInfo<Integer> m_nonBlockSocketChannelInfo;
 	private CMChannelInfo<Integer> m_blockSocketChannelInfo;
 	private long m_lLastEventTransTime; // when this object(server) sends the last event
+	private int m_nKeepAliveTime;		// keep-alive time of this object(server)
 	
 	private String m_strCurrentSessionName;		// only 4 client
 	private String m_strCurrentGroupName;		// only 4 client
@@ -24,6 +25,7 @@ public class CMServer extends CMServerInfo {
 		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_lLastEventTransTime = 0;
+		m_nKeepAliveTime = 0;
 		
 		m_strCurrentSessionName = "";
 		m_strCurrentGroupName = "";
@@ -40,6 +42,7 @@ public class CMServer extends CMServerInfo {
 		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_lLastEventTransTime = 0;
+		m_nKeepAliveTime = 0;
 		
 		m_strCurrentSessionName = "?";
 		m_strCurrentGroupName = "?";
@@ -70,6 +73,16 @@ public class CMServer extends CMServerInfo {
 	public synchronized long getLastEventTransTime()
 	{
 		return m_lLastEventTransTime;
+	}
+	
+	public synchronized void setKeepAliveTime(int nSecond)
+	{
+		m_nKeepAliveTime = nSecond;
+	}
+	
+	public synchronized int getKeepAliveTime()
+	{
+		return m_nKeepAliveTime;
 	}
 	
 	public synchronized void setCurrentSessionName(String name)

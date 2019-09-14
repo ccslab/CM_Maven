@@ -630,6 +630,7 @@ public class CMMultiServerEvent extends CMEvent{
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length 
 					+ m_strServerAddress.getBytes().length;
 			nByteNum += 2*Integer.BYTES;
+			nByteNum += Integer.BYTES;	// keep-alive time of the add-server
 			break;
 		case RES_SERVER_REG:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length;
@@ -782,6 +783,7 @@ public class CMMultiServerEvent extends CMEvent{
 			putStringToByteBuffer(m_strServerAddress);
 			m_bytes.putInt(m_nServerPort);
 			m_bytes.putInt(m_nServerUDPPort);
+			m_bytes.putInt(m_nKeepAliveTime);
 			break;
 		case RES_SERVER_REG:
 			putStringToByteBuffer(m_strServerName);
@@ -965,6 +967,7 @@ public class CMMultiServerEvent extends CMEvent{
 			m_strServerAddress = getStringFromByteBuffer(msg);
 			m_nServerPort = msg.getInt();
 			m_nServerUDPPort = msg.getInt();
+			m_nKeepAliveTime = msg.getInt();
 			break;
 		case RES_SERVER_REG:
 			m_strServerName = getStringFromByteBuffer(msg);

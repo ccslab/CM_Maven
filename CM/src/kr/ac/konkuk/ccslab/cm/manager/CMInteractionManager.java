@@ -1429,6 +1429,7 @@ public class CMInteractionManager {
 		confInfo.setLoginScheme(se.isLoginScheme());
 		confInfo.setSessionScheme(se.isSessionScheme());
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
+		interInfo.getDefaultServerInfo().setServerName(se.getSender());
 		interInfo.getDefaultServerInfo().setServerUDPPort(se.getUDPPort());
 		
 		if(CMInfo._CM_DEBUG)
@@ -2478,6 +2479,7 @@ public class CMInteractionManager {
 		// add a new server info
 		CMServer server = new CMServer(strServerName, strServerAddress, nServerPort, nServerUDPPort);
 		server.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);	// add default channel to the new server
+		server.setKeepAliveTime(mse.getKeepAliveTime());
 		bRet = interInfo.addAddServer(server);
 		
 		// remove channel from unknown-channel list
@@ -2497,6 +2499,7 @@ public class CMInteractionManager {
 		// send response event
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
 		mseAck.setID( CMMultiServerEvent.RES_SERVER_REG );
+		mseAck.setSender(interInfo.getMyself().getName());
 		mseAck.setServerName( strServerName );
 		if(bRet)
 			mseAck.setReturnCode(1);
@@ -2531,6 +2534,9 @@ public class CMInteractionManager {
 	
 	private static void processRES_SERVER_REG(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		interInfo.getDefaultServerInfo().setServerName(mse.getSender());
+		
 		if(mse.getReturnCode() == 1)
 		{
 			if(CMInfo._CM_DEBUG)
