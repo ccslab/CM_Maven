@@ -64,7 +64,11 @@ public class CMInteractionManager {
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		if(strSysType.equals("SERVER"))
 		{
-			myself.setName("SERVER");
+			if(CMConfigurator.isDServer(cmInfo))
+			{
+				myself.setName("SERVER");				
+			}
+			
 			ServerSocketChannel ssc = null;
 			try {
 				ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, 
