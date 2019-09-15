@@ -1616,11 +1616,13 @@ public class CMWinServer extends JFrame {
 		SelectableChannel ch = null;
 		CMUser user = interInfo.getLoginUsers().findMember(strTarget);
 		CMServer server = null;
+		
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		if(user != null)
 		{
 			ch = user.getNonBlockSocketChannelInfo().findChannel(0);
 		}
-		else if(strTarget.contentEquals("SERVER"))
+		else if(strTarget.contentEquals(strDefServer))
 		{
 			ch = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().findChannel(0);
 		}

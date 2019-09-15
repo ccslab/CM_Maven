@@ -918,7 +918,9 @@ public class CMClientApp {
 		}
 		
 		if(strTargetName.isEmpty())
-			strTargetName = "SERVER";
+		{
+			strTargetName = m_clientStub.getDefaultServerName();
+		}
 		
 		long lStartTime = System.currentTimeMillis();
 		rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, 10000);
@@ -1045,7 +1047,7 @@ public class CMClientApp {
 		}
 		
 		if(strTargetName.isEmpty())
-			strTargetName = "SERVER";
+			strTargetName = m_clientStub.getDefaultServerName();
 
 		m_eventHandler.setStartTime(System.currentTimeMillis());
 		bRet = m_clientStub.send(ue, strTargetName);
@@ -1649,7 +1651,7 @@ public class CMClientApp {
 			System.out.print("File owner(enter for \"SERVER\"): ");
 			strFileOwner = br.readLine();
 			if(strFileOwner.isEmpty())
-				strFileOwner = "SERVER";
+				strFileOwner = m_clientStub.getDefaultServerName();
 			System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
 			strFileAppend = br.readLine();
 			
@@ -1687,7 +1689,7 @@ public class CMClientApp {
 			System.out.print("File receiver (enter for \"SERVER\"): ");
 			strReceiver = br.readLine();
 			if(strReceiver.isEmpty())
-				strReceiver = "SERVER";
+				strReceiver = m_clientStub.getDefaultServerName();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1822,13 +1824,13 @@ public class CMClientApp {
 				
 				// send the event to a server
 				if(nForwardType == 0)
-					m_clientStub.send(ue, "SERVER");
+					m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 				else if(nForwardType == 1)
 				{
 					if(ue.getStringID().equals("testForward"))
 						m_clientStub.send(ue, strUserName);
 					else
-						m_clientStub.send(ue, "SERVER");
+						m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 				}
 				else
 				{
@@ -1842,7 +1844,7 @@ public class CMClientApp {
 		ue = new CMUserEvent();
 		ue.setStringID("EndSim");
 		ue.setEventField(CMInfo.CM_INT, "simnum", String.valueOf(nSimNum));
-		m_clientStub.send(ue, "SERVER");
+		m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 		
 		ue = null;
 		return;
@@ -1897,7 +1899,7 @@ public class CMClientApp {
 
 			// send an event to a server
 			if(nForwardType == 0)
-				m_clientStub.send(ue, "SERVER");
+				m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 			else if(nForwardType == 1)
 			{
 				m_clientStub.send(ue, strUserName);
@@ -1917,7 +1919,7 @@ public class CMClientApp {
 		ue.setEventField(CMInfo.CM_INT, "sendnum", String.valueOf(nSendNum));
 		
 		if(nForwardType == 0)
-			m_clientStub.send(ue, "SERVER");
+			m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 		else
 			m_clientStub.send(ue, strUserName);
 		
@@ -2304,7 +2306,7 @@ public class CMClientApp {
 		try {
 			System.out.print("Input server name: ");
 			strServerName = br.readLine();
-			if( strServerName.equals("SERVER") )	// login to a default server
+			if( strServerName.equals(m_clientStub.getDefaultServerName()) )	// login to a default server
 			{
 				System.out.print("User name: ");
 				user = br.readLine();
@@ -2423,7 +2425,7 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
-		if(strServerName.equals("SERVER"))
+		if(strServerName.equals(m_clientStub.getDefaultServerName()))
 		{
 			testPrintGroupInfo();
 			return;
@@ -2748,8 +2750,9 @@ public class CMClientApp {
 			CMFileTransferManager.splitFile(raf, lOffset, lFileSize-lPieceSize*i, strPieceName);
 		}
 		// send the last piece to the default server
-		m_clientStub.send(fe, "SERVER");
-		CMFileTransferManager.pushFile(strPieceName, "SERVER", m_clientStub.getCMInfo());
+		m_clientStub.send(fe, m_clientStub.getDefaultServerName());
+		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName(), 
+				m_clientStub.getCMInfo());
 		
 		try {
 			raf.close();
@@ -2852,7 +2855,7 @@ public class CMClientApp {
 			nChKey = Integer.parseInt(strChKey);
 			System.out.print("Server name(empty for the default server): ");
 			strServerName = br.readLine();
-			if(strServerName.isEmpty()) strServerName = "SERVER";
+			if(strServerName.isEmpty()) strServerName = m_clientStub.getDefaultServerName();
 			if(!isSocketChannel)
 			{
 				System.out.print("receiver port (only for datagram channel): ");
@@ -2992,7 +2995,7 @@ public class CMClientApp {
 
 		String strServer = JOptionPane.showInputDialog("server name: ").trim();
 		SelectableChannel ch = null;
-		if(strServer.contentEquals("SERVER"))
+		if(strServer.contentEquals(m_clientStub.getDefaultServerName()))
 		{
 			CMServer defServer = interInfo.getDefaultServerInfo();
 			ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);

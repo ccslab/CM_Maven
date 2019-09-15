@@ -152,7 +152,12 @@ public class CMInteractionManager {
 		
 		// store server info and channel
 		dServer = interInfo.getDefaultServerInfo();
-		dServer.setServerName("SERVER");	// name of the default server
+		String strDefServerName = dServer.getServerName();
+		if(strDefServerName == null || strDefServerName.isEmpty() 
+				|| strDefServerName.contentEquals("?"))
+		{
+			dServer.setServerName("SERVER");	// name of the default server
+		}
 		dServer.setServerAddress(confInfo.getServerAddress());
 		dServer.setServerPort(confInfo.getServerPort());
 		dServer.getNonBlockSocketChannelInfo().addChannel(0, sc);	// default channel number: 0
@@ -457,7 +462,7 @@ public class CMInteractionManager {
 		// notify the app event handler
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
-		se.setChannelName("SERVER");
+		se.setChannelName(defServer.getServerName());
 		cmInfo.getAppEventHandler().processEvent(se);
 
 		return true;
@@ -543,7 +548,7 @@ public class CMInteractionManager {
 			// notify the app event handler
 			CMSessionEvent se = new CMSessionEvent();
 			se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
-			se.setChannelName("SERVER");
+			se.setChannelName(defServer.getServerName());
 			cmInfo.getAppEventHandler().processEvent(se);
 
 			// check and stop the scheduled keep-alive task
@@ -1451,9 +1456,9 @@ public class CMInteractionManager {
 			// set client's keep-alive time
 			interInfo.getMyself().setKeepAliveTime(confInfo.getKeepAliveTime());
 			// if the file trasnfer scheme is set, create a blocking TCP socket channel
+			serverInfo = interInfo.getDefaultServerInfo();
 			if(confInfo.isFileTransferScheme())
 			{
-				serverInfo = interInfo.getDefaultServerInfo();
 				scInfo = serverInfo.getBlockSocketChannelInfo();
 				try {
 					sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
@@ -1518,7 +1523,7 @@ public class CMInteractionManager {
 				tse.setUserName(interInfo.getMyself().getName());
 				tse.setSessionName("session1");
 				
-				CMEventManager.unicastEvent(tse, "SERVER", cmInfo);
+				CMEventManager.unicastEvent(tse, serverInfo.getServerName(), cmInfo);
 				interInfo.getMyself().setCurrentSession("session1");
 				tse = null;
 			}
@@ -1847,7 +1852,7 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
 					+"server("+strServer+"), channel key("+nChIndex+").");
 			
-			if(strServer.equals("SERVER"))
+			if(strServer.equals(interInfo.getDefaultServerInfo().getServerName()))
 			{
 				serverInfo = interInfo.getDefaultServerInfo();
 			}
@@ -1974,7 +1979,7 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
 					+"server("+strServer+"), channel key("+nChKey+").");
 			
-			if(strServer.equals("SERVER"))
+			if(strServer.equals(interInfo.getDefaultServerInfo().getServerName()))
 			{
 				serverInfo = interInfo.getDefaultServerInfo();
 			}
@@ -2084,7 +2089,7 @@ public class CMInteractionManager {
 		
 		if(se.getReturnCode() == 1)
 		{
-			if(strServer.equals("SERVER"))
+			if(strServer.equals(interInfo.getDefaultServerInfo().getServerName()))
 				serverInfo = interInfo.getDefaultServerInfo();
 			else
 				serverInfo = interInfo.findAddServer(strServer);

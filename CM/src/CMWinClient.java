@@ -1513,7 +1513,7 @@ public class CMWinClient extends JFrame {
 		{
 			strTargetName = targetNameTextField.getText().trim();
 			if(strTargetName.isEmpty())
-				strTargetName = "SERVER";
+				strTargetName = m_clientStub.getDefaultServerName();
 			printMessage("Target name: "+strTargetName+"\n");
 			printMessage("Waiting timeout: "+nTimeout+" ms\n");
 
@@ -1643,7 +1643,7 @@ public class CMWinClient extends JFrame {
 		{
 			strTargetName = targetNameTextField.getText().trim();
 			if(strTargetName.isEmpty())
-				strTargetName = "SERVER";
+				strTargetName = m_clientStub.getDefaultServerName();
 			printMessage("Target name: "+strTargetName+"\n");
 
 			m_eventHandler.setStartTime(System.currentTimeMillis());
@@ -1892,7 +1892,7 @@ public class CMWinClient extends JFrame {
 			
 			strServerName = strServerField.getText();
 			if(strServerName == null || strServerName.equals(""))
-				strServerName = "SERVER"; // default server name
+				strServerName = m_clientStub.getDefaultServerName(); // default server name
 		}
 		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
 		{
@@ -2136,7 +2136,7 @@ public class CMWinClient extends JFrame {
 			
 			strServerName = strServerField.getText();
 			if(strServerName == null || strServerName.equals(""))
-				strServerName = "SERVER"; // default server name
+				strServerName = m_clientStub.getDefaultServerName(); // default server name
 		}
 		else if(nChType == CMInfo.CM_DATAGRAM_CHANNEL)
 		{
@@ -2464,13 +2464,13 @@ public class CMWinClient extends JFrame {
 				
 				// send the event to a server
 				if(nForwardType == 0)
-					m_clientStub.send(ue, "SERVER");
+					m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 				else if(nForwardType == 1)
 				{
 					if(ue.getStringID().equals("testForward"))
 						m_clientStub.send(ue, strUserName);
 					else
-						m_clientStub.send(ue, "SERVER");
+						m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 				}
 				else
 				{
@@ -2484,7 +2484,7 @@ public class CMWinClient extends JFrame {
 		ue = new CMUserEvent();
 		ue.setStringID("EndSim");
 		ue.setEventField(CMInfo.CM_INT, "simnum", String.valueOf(nSimNum));
-		m_clientStub.send(ue, "SERVER");
+		m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 		
 		ue = null;
 		return;
@@ -2536,7 +2536,7 @@ public class CMWinClient extends JFrame {
 
 			// send an event to a server
 			if(nForwardType == 0)
-				m_clientStub.send(ue, "SERVER");
+				m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 			else if(nForwardType == 1)
 			{
 				m_clientStub.send(ue, strUserName);
@@ -2556,7 +2556,7 @@ public class CMWinClient extends JFrame {
 		ue.setEventField(CMInfo.CM_INT, "sendnum", String.valueOf(nSendNum));
 		
 		if(nForwardType == 0)
-			m_clientStub.send(ue, "SERVER");
+			m_clientStub.send(ue, m_clientStub.getDefaultServerName());
 		else
 			m_clientStub.send(ue, strUserName);
 		
@@ -2898,7 +2898,7 @@ public class CMWinClient extends JFrame {
 		strServerName = JOptionPane.showInputDialog("Server Name: ");
 		if(strServerName == null) return;
 
-		if( strServerName.equals("SERVER") )	// login to a default server
+		if( strServerName.equals(m_clientStub.getDefaultServerName()) )	// login to a default server
 		{
 			JTextField userNameField = new JTextField();
 			JPasswordField passwordField = new JPasswordField();
@@ -3003,7 +3003,7 @@ public class CMWinClient extends JFrame {
 		strServerName = JOptionPane.showInputDialog("Input a server name: ");
 		if(strServerName == null) return;
 		
-		if(strServerName.equals("SERVER"))
+		if(strServerName.equals(m_clientStub.getDefaultServerName()))
 		{
 			testPrintGroupInfo();
 			return;
@@ -3315,8 +3315,9 @@ public class CMWinClient extends JFrame {
 			CMFileTransferManager.splitFile(raf, lOffset, lFileSize-lPieceSize*i, strPieceName);
 		}
 		// send the last piece to the default server
-		m_clientStub.send(fe, "SERVER");
-		CMFileTransferManager.pushFile(strPieceName, "SERVER", m_clientStub.getCMInfo());
+		m_clientStub.send(fe, m_clientStub.getDefaultServerName());
+		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName(), 
+				m_clientStub.getCMInfo());
 		
 		try {
 			raf.close();
@@ -3444,7 +3445,7 @@ public class CMWinClient extends JFrame {
 
 		strServerName = serverField.getText();
 		if(strServerName == null || strServerName.equals(""))
-			strServerName = "SERVER"; // default server name
+			strServerName = m_clientStub.getDefaultServerName(); // default server name
 
 		if(socketRadioButton.isSelected())
 		{
@@ -3492,7 +3493,7 @@ public class CMWinClient extends JFrame {
 		if(strTarget == null) 
 			return;
 		else if(strTarget.equals(""))
-			strTarget = "SERVER";
+			strTarget = m_clientStub.getDefaultServerName();
 
 		fSpeed = m_clientStub.measureInputThroughput(strTarget);
 		if(fSpeed == -1)
@@ -3511,7 +3512,7 @@ public class CMWinClient extends JFrame {
 		if(strTarget == null) 
 			return;
 		else if(strTarget.equals(""))
-			strTarget = "SERVER";
+			strTarget = m_clientStub.getDefaultServerName();
 
 		fSpeed = m_clientStub.measureOutputThroughput(strTarget);
 		if(fSpeed == -1)
@@ -3745,7 +3746,7 @@ public class CMWinClient extends JFrame {
 		
 		String strServer = JOptionPane.showInputDialog("server name: ").trim();
 		SelectableChannel ch = null;
-		if(strServer.contentEquals("SERVER"))
+		if(strServer.contentEquals(m_clientStub.getDefaultServerName()))
 		{
 			CMServer defServer = interInfo.getDefaultServerInfo();
 			ch = defServer.getNonBlockSocketChannelInfo().findChannel(0);

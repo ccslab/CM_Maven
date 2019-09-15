@@ -271,7 +271,8 @@ public class CMSessionManager {
 		ie.setHostAddress(interInfo.getMyself().getHost());
 		ie.setUDPPort(interInfo.getMyself().getUDPPort());
 		ie.setCurrentGroup(interInfo.getMyself().getCurrentGroup());
-		CMEventManager.unicastEvent(ie, "SERVER", cmInfo);
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		CMEventManager.unicastEvent(ie, strDefServer, cmInfo);
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMSessionManager.processJOIN_SESSION_ACK() succeeded.");

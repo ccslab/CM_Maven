@@ -206,6 +206,7 @@ public class CMGroupManager {
 	public static void changeGroup(String gName, CMInfo cmInfo) // for client
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMUser myself = interInfo.getMyself();
 		CMSession curSession = interInfo.findSession(myself.getCurrentSession());
 		if(curSession == null)
@@ -236,7 +237,7 @@ public class CMGroupManager {
 		ie.setHandlerSession(myself.getCurrentSession());
 		ie.setHandlerGroup(myself.getCurrentGroup());
 		ie.setUserName(myself.getName());
-		CMEventManager.unicastEvent(ie, "SERVER", cmInfo);
+		CMEventManager.unicastEvent(ie, strDefServer, cmInfo);
 		ie = null;
 		// leave the user from local information of the current group
 		curGroup.getGroupUsers().removeMember(myself.getName());
@@ -254,7 +255,7 @@ public class CMGroupManager {
 		ie.setHostAddress(myself.getHost());
 		ie.setUDPPort(myself.getUDPPort());
 		ie.setCurrentGroup(myself.getCurrentGroup());
-		CMEventManager.unicastEvent(ie, "SERVER", cmInfo);
+		CMEventManager.unicastEvent(ie, strDefServer, cmInfo);
 		
 		return;
 	}

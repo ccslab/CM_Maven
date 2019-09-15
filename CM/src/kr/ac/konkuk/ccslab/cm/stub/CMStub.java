@@ -331,6 +331,31 @@ public class CMStub {
 		return user;
 	}
 	
+	public String getDefaultServerName()
+	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		String strDefServer = null;
+		
+		if(confInfo.getSystemType().contentEquals("SERVER"))
+		{
+			if(CMConfigurator.isDServer(m_cmInfo))
+			{
+				strDefServer = getMyself().getName();
+			}
+			else
+			{
+				strDefServer = interInfo.getDefaultServerInfo().getServerName();
+			}
+		}
+		else
+		{
+			strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		}
+		
+		return strDefServer;
+	}
+	
 	////////////////////////////////////////////////////////////////////////
 	// add/remove channel (DatagramChannel or MulticastChannel)
 	// SocketChannel is available only in the ClientStub module
@@ -886,19 +911,31 @@ public class CMStub {
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		String strDefServer = null;
 		boolean ret = false;
 		
 		// set sender and receiver
 		cme.setSender(getMyself().getName());
 		cme.setReceiver(strTarget);
-		
+
+		if(confInfo.getSystemType().contentEquals("CLIENT") 
+				|| (confInfo.getSystemType().contentEquals("SERVER") 
+						&& !CMConfigurator.isDServer(m_cmInfo)))
+		{
+			strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		}
+		else
+		{
+			strDefServer = getMyself().getName();
+		}
+
 		// if a client in the c/s model, use internal forwarding by a server
 		if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT")
-				&& !strTarget.equals("SERVER") && !interInfo.isAddServer(strTarget))
+				&& !strTarget.equals(strDefServer) && !interInfo.isAddServer(strTarget))
 		{
 			cme.setDistributionSession("CM_ONE_USER");
 			cme.setDistributionGroup(strTarget);
-			ret = CMEventManager.unicastEvent(cme, "SERVER", opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, m_cmInfo);
 			cme.setDistributionSession("");
 			cme.setDistributionGroup("");
 		}
@@ -1315,6 +1352,7 @@ public class CMStub {
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMSession session = null;
 		CMGroup group = null;
 		CMMember member = null;
@@ -1347,7 +1385,7 @@ public class CMStub {
 				cme.setDistributionGroup(groupName);
 			}
 			
-			ret = CMEventManager.unicastEvent(cme, "SERVER", opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, m_cmInfo);
 		}
 		else	// if a server,
 		{
@@ -1602,7 +1640,8 @@ public class CMStub {
 		{
 			cme.setDistributionSession("CM_ALL_SESSION");
 			cme.setDistributionGroup("CM_ALL_GROUP");
-			ret = CMEventManager.unicastEvent(cme, "SERVER", opt, nChNum, m_cmInfo);
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, m_cmInfo);
 			
 			// if there are additional servers connected
 			Iterator<CMServer> iterAddServer = interInfo.getAddServerList().iterator();
@@ -1723,9 +1762,24 @@ public class CMStub {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		boolean ret = false;
+		
+		String strDefServer = null;
+		if(confInfo.getSystemType().contentEquals("SERVER"))
+		{
+			if(CMConfigurator.isDServer(m_cmInfo))
+				strDefServer = getMyself().getName();
+			else
+			{
+				strDefServer = interInfo.getDefaultServerInfo().getServerName();
+			}
+		}
+		else
+		{
+			strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		}
 
 		// if a server name cannot be found, error
-		if(!serverName.equals("SERVER") && !interInfo.isAddServer(serverName))
+		if(!serverName.equals(strDefServer) && !interInfo.isAddServer(serverName))
 		{
 			System.out.println("CMStub::send(), server("+serverName+") not found.");
 			return false;

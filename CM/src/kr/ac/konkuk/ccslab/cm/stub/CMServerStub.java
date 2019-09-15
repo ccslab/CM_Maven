@@ -357,7 +357,8 @@ public class CMServerStub extends CMStub {
 					+").");
 		}
 
-		CMEventManager.unicastEvent(mse, "SERVER", m_cmInfo);
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
 		interInfo.getMyself().setName(server);	// to set my server name
 
 		mse = null;
@@ -423,7 +424,8 @@ public class CMServerStub extends CMStub {
 		mse.setID(CMMultiServerEvent.REQ_SERVER_DEREG);
 		mse.setServerName( myself.getName() );
 
-		CMEventManager.unicastEvent(mse, "SERVER", m_cmInfo);
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
 
 		mse = null;
 		return;

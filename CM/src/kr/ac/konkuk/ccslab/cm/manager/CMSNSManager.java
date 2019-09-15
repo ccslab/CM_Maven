@@ -671,7 +671,9 @@ public class CMSNSManager {
 		seAck.setServerTime( se.getServerTime() );
 
 		// send the ready event
-		CMEventManager.unicastEvent(seAck, "SERVER", cmInfo);
+		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
+		CMEventManager.unicastEvent(seAck, strDefServer, cmInfo);
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1102,6 +1104,7 @@ public class CMSNSManager {
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		
 		if(se.getNumAttachedFiles() > 0 && confInfo.getAttachDownloadScheme() != CMInfo.SNS_ATTACH_NONE)
 		{
@@ -1120,7 +1123,7 @@ public class CMSNSManager {
 			seReq.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
 			seReq.setUserName(interInfo.getMyself().getName());
 			seReq.setContentID(se.getContentID());
-			CMEventManager.unicastEvent(seReq, "SERVER", cmInfo);
+			CMEventManager.unicastEvent(seReq, strDefServer, cmInfo);
 		}
 	}
 	
@@ -1162,7 +1165,9 @@ public class CMSNSManager {
 		sevent.setReturnCode( nReturnCode );	// 1 for ok, 0 for error
 
 		// send a response event
-		CMEventManager.unicastEvent(sevent, "SERVER", cmInfo);
+		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
+		CMEventManager.unicastEvent(sevent, strDefServer, cmInfo);
 
 		sevent = null;
 		return;
@@ -1312,7 +1317,7 @@ public class CMSNSManager {
 			/////////////// request for the attached files			
 			tse = new CMSNSEvent();
 			tse.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
-			tse.setUserName(interInfo.getMyself().getName());	// requester name "SERVER"
+			tse.setUserName(interInfo.getMyself().getName());	// requester is default server
 			tse.setContentID(nSeqNum);
 			CMEventManager.unicastEvent(tse, se.getUserName(), cmInfo);
 			tse = null;
@@ -1962,6 +1967,8 @@ public class CMSNSManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
 		CMSNSAttach attach = null;
 		CMSNSAttachList attachList = null;
 		int nContentID = -1;
@@ -1985,7 +1992,7 @@ public class CMSNSManager {
 			fe.setFileName(strFileNameList.get(i));
 			fe.setReturnCode(0);	// the file is not received
 			fe.setContentID(se.getContentID());
-			CMEventManager.unicastEvent(fe, "SERVER", cmInfo);
+			CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
 			fe = null;
 		}
 		

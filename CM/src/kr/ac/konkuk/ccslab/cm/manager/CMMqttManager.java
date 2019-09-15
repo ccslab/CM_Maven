@@ -105,8 +105,10 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// send CONNECT event
+		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
 		boolean bRet = false;
-		bRet = CMEventManager.unicastEvent(conEvent, "SERVER", m_cmInfo);
+		bRet = CMEventManager.unicastEvent(conEvent, strDefServer, m_cmInfo);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -201,7 +203,8 @@ public class CMMqttManager extends CMServiceManager {
 		pubEvent.setAppMessage(strMsg);
 		
 		// send PUBLISH event
-		String strReceiver = "SERVER";
+		String strReceiver = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
 		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, m_cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -590,7 +593,9 @@ public class CMMqttManager extends CMServiceManager {
 		subEvent.setTopicQoSList(topicQoSList);
 				
 		boolean bRet = false;
-		bRet = CMEventManager.unicastEvent(subEvent, "SERVER", m_cmInfo);
+		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
+		bRet = CMEventManager.unicastEvent(subEvent, strDefServer, m_cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.subscribe(), sent "+subEvent.toString());
@@ -674,7 +679,9 @@ public class CMMqttManager extends CMServiceManager {
 		unsubEvent.setTopicList(topicList);
 		
 		boolean bRet = false;
-		bRet = CMEventManager.unicastEvent(unsubEvent, "SERVER", m_cmInfo);
+		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
+		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer, m_cmInfo);
 
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -737,7 +744,9 @@ public class CMMqttManager extends CMServiceManager {
 		// set fixed header in DISCONNECT constructor
 		
 		boolean bRet = false;
-		bRet = CMEventManager.unicastEvent(disconEvent, "SERVER", m_cmInfo);
+		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+				.getServerName();
+		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer, m_cmInfo);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{

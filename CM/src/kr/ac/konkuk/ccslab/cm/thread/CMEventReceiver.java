@@ -281,9 +281,10 @@ public class CMEventReceiver extends Thread {
 			}
 
 			// notify to the application
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			CMSessionEvent se = new CMSessionEvent();
 			se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
-			se.setChannelName("SERVER");
+			se.setChannelName(strDefServer);
 			se.setChannelNum(chKey);
 			m_cmInfo.getAppEventHandler().processEvent(se);
 			
