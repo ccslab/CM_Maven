@@ -2545,6 +2545,7 @@ public class CMInteractionManager {
 		
 		if(mse.getReturnCode() == 1)
 		{
+			interInfo.getMyself().setState(CMInfo.CM_LOGIN);
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.processRES_SERVER_REG(), server("
