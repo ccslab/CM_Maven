@@ -88,7 +88,7 @@ public class CMStub {
 		
 		if(m_cmInfo.isStarted())
 		{
-			System.err.println("CMClientStub.startCM(), already started!");
+			System.err.println("CMStub.init(), already started!");
 			return false;
 		}
 
@@ -126,6 +126,7 @@ public class CMStub {
 		ses = Executors.newScheduledThreadPool(1);
 		threadInfo.setScheduledExecutorService(ses);
 		
+		m_cmInfo.getInteractionInfo().getMyself().setState(CMInfo.CM_INIT);
 		return true;
 	}
 

@@ -322,22 +322,34 @@ public class CMServerStub extends CMStub {
 	 * </table> 
 	 * 
 	 * @param server - the server name
+	 * @return true if the request is successfully sent to the default server; false otherwise.
 	 * @see CMServerStub#requestServerDereg()
 	 */
-	public void requestServerReg(String server)
+	public boolean requestServerReg(String server)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMUser myself = interInfo.getMyself();
 		
 		if(server == null)
 		{
-			System.out.println("CMServerStub.requestServerReg(), the requesting server name is null.");
-			return;
+			System.err.println("CMServerStub.requestServerReg(), the requesting server name is null.");
+			return false;
 		}
 		if(CMConfigurator.isDServer(m_cmInfo))
 		{
-			System.out.println("CMServerStub.requestServerReg(), This is the default server!");
-			return;
+			System.err.println("CMServerStub.requestServerReg(), This is the default server!");
+			return false;
+		}
+		if(myself.getState() >= CMInfo.CM_LOGIN)
+		{
+			System.err.println("CMServerStub.requestServerReg(), already registered as ("
+					+myself.getName()+")!");
+			return false;
+		}
+		if(myself.getState() < CMInfo.CM_CONNECT)
+		{
+			connectToServer();
 		}
 
 		CMMultiServerEvent mse = new CMMultiServerEvent();
@@ -358,11 +370,12 @@ public class CMServerStub extends CMStub {
 		}
 
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
-		interInfo.getMyself().setName(server);	// to set my server name
+		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
+		if(bRet)
+			myself.setName(server);	// to set my server name
 
 		mse = null;
-		return;
+		return bRet;
 	}
 	
 	/**
@@ -399,9 +412,10 @@ public class CMServerStub extends CMStub {
 	 * </tr>
 	 * </table> 
 	 * 
+	 * @return true is the request is successfully sent to the default server; false otherwise
 	 * @see CMServerStub#requestServerReg(String)
 	 */
-	public void requestServerDereg()
+	public boolean requestServerDereg()
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 
@@ -409,15 +423,14 @@ public class CMServerStub extends CMStub {
 		{
 			System.out.println("CMServerStub.requestServerDereg(), this server is the default "
 					+ "server!");
-			return;
+			return false;
 		}
 
 		CMUser myself = interInfo.getMyself();
-		if( myself.getName().equals("") )
+		if( myself.getState() < CMInfo.CM_LOGIN )
 		{
-			System.out.println("CMServerStub.requestServerDereg(), the requesting server name "
-					+ "is not defined!");
-			return;
+			System.out.println("CMServerStub.requestServerDereg(), not registered yet!");
+			return false;
 		}
 
 		CMMultiServerEvent mse = new CMMultiServerEvent();
@@ -425,10 +438,13 @@ public class CMServerStub extends CMStub {
 		mse.setServerName( myself.getName() );
 
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
-
+		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
+		if(bRet)
+		{
+			myself.setState(CMInfo.CM_CONNECT);
+		}
 		mse = null;
-		return;
+		return bRet;
 	}
 	
 	/**
@@ -443,12 +459,18 @@ public class CMServerStub extends CMStub {
 	public boolean connectToServer()
 	{
 		boolean result = false;
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
 		if( CMConfigurator.isDServer(m_cmInfo) )
 		{
 			System.out.println("CMServerStub.connectToServer(), this is the default server!");
 			return false;
 		}
 		result = CMInteractionManager.connectDefaultServer(m_cmInfo);
+		if(result)
+		{
+			myself.setState(CMInfo.CM_CONNECT);
+		}
+		
 		return result;
 	}
 
@@ -464,12 +486,17 @@ public class CMServerStub extends CMStub {
 	public boolean disconnectFromServer()
 	{
 		boolean result = false;
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
 		if( CMConfigurator.isDServer(m_cmInfo) )
 		{
 			System.out.println("CMServerStub.disconnectFromServer(), this is the default server!");
 			return false;
 		}
 		result = CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+		if(result)
+		{
+			myself.setState(CMInfo.CM_INIT);
+		}
 		return result;
 	}
 	

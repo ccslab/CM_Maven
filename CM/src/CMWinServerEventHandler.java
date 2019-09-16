@@ -543,9 +543,6 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		switch(mse.getID())
 		{
 		case CMMultiServerEvent.REQ_SERVER_REG:
-			//System.out.println("server ("+mse.getServerName()+") requests registration: ip("
-			//		+mse.getServerAddress()+"), port("+mse.getServerPort()+"), udpport("
-			//		+mse.getServerUDPPort()+").");
 			printMessage("server ("+mse.getServerName()+") requests registration: ip("
 					+mse.getServerAddress()+"), port("+mse.getServerPort()+"), udpport("
 					+mse.getServerUDPPort()+").\n");
@@ -553,35 +550,27 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		case CMMultiServerEvent.RES_SERVER_REG:
 			if( mse.getReturnCode() == 1 )
 			{
-				//System.out.println("server["+mse.getServerName()+"] is successfully registered "
-				//		+ "to the default server.");
+				m_server.updateTitle();
 				printMessage("server["+mse.getServerName()+"] is successfully registered "
 						+ "to the default server.\n");
 			}
 			else
 			{
-				//System.out.println("server["+mse.getServerName()+"] is not registered to the "
-				//		+ "default server.");
 				printMessage("server["+mse.getServerName()+"] is not registered to the "
 						+ "default server.\n");
 			}
 			break;
 		case CMMultiServerEvent.REQ_SERVER_DEREG:
-			//System.out.println("server["+mse.getServerName()+"] requests deregistration.");
 			printMessage("server["+mse.getServerName()+"] requests deregistration.\n");
 			break;
 		case CMMultiServerEvent.RES_SERVER_DEREG:
 			if( mse.getReturnCode() == 1 )
 			{
-				//System.out.println("server["+mse.getServerName()+"] is successfully deregistered "
-				//		+ "from the default server.");
 				printMessage("server["+mse.getServerName()+"] is successfully deregistered "
 						+ "from the default server.\n");
 			}
 			else
 			{
-				//System.out.println("server["+mse.getServerName()+"] is not deregistered from the "
-				//		+ "default server.");
 				printMessage("server["+mse.getServerName()+"] is not deregistered from the "
 						+ "default server.\n");
 			}
@@ -592,19 +581,14 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				// user authentication omitted for the login to an additional server
 				CMInteractionManager.replyToADD_LOGIN(mse, true, m_serverStub.getCMInfo());
 			}
-			//System.out.println("["+mse.getUserName()+"] requests login to this server("
-			//					+mse.getServerName()+").");
 			printMessage("["+mse.getUserName()+"] requests login to this server("
 								+mse.getServerName()+").\n");
 			break;
 		case CMMultiServerEvent.ADD_LOGOUT:
-			//System.out.println("["+mse.getUserName()+"] log out this server("+mse.getServerName()
-			//		+").");
 			printMessage("["+mse.getUserName()+"] log out this server("+mse.getServerName()
 					+").\n");
 			break;
 		case CMMultiServerEvent.ADD_REQUEST_SESSION_INFO:
-			//System.out.println("["+mse.getUserName()+"] requests session information.");
 			printMessage("["+mse.getUserName()+"] requests session information.\n");
 			break;
 		}

@@ -392,6 +392,26 @@ public class CMWinServer extends JFrame {
 		printMessage("105: send event with wrong bytes, 106: send event with wrong type\n");
 	}
 	
+	public void updateTitle()
+	{
+		CMUser myself = m_serverStub.getMyself();
+		if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
+		{
+			setTitle("CM Default Server [\""+myself.getName()+"\"]");
+		}
+		else
+		{
+			if(myself.getState() < CMInfo.CM_LOGIN)
+			{
+				setTitle("CM Additional Server [\"?\"]");
+			}
+			else
+			{
+				setTitle("CM Additional Server [\""+myself.getName()+"\"]");
+			}			
+		}
+	}
+	
 	public void startCM()
 	{
 		boolean bRet = false;
@@ -435,16 +455,9 @@ public class CMWinServer extends JFrame {
 			printMessage("Type \"0\" for menu.\n");					
 			// change button to "stop CM"
 			m_startStopButton.setText("Stop Server CM");
+			updateTitle();					
 		}
-		// check if default server or not
-		if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
-		{
-			setTitle("CM Default Server [\"SERVER\"]");
-		}
-		else
-		{
-			setTitle("CM Additional Server [\"?\"]");
-		}					
+
 		m_inTextField.requestFocus();
 
 	}
@@ -454,7 +467,7 @@ public class CMWinServer extends JFrame {
 		m_serverStub.terminateCM();
 		printMessage("Server CM terminates.\n");
 		m_startStopButton.setText("Start Server CM");
-
+		updateTitle();
 	}
 
 	public void printSessionInfo()
@@ -653,26 +666,31 @@ public class CMWinServer extends JFrame {
 	public void requestServerDereg()
 	{
 		printMessage("====== request deregistration from the default server\n");
-		m_serverStub.requestServerDereg();
+		boolean bRet = m_serverStub.requestServerDereg();
 		printMessage("======\n");
+		if(bRet)
+			updateTitle();
+		
 		return;
 	}
 
 	public void connectToDefaultServer()
 	{
 		printMessage("====== connect to the default server\n");
-		m_serverStub.connectToServer();
+		boolean bRet = m_serverStub.connectToServer();
 		printMessage("======\n");
+		if(bRet)
+			updateTitle();
 		return;
 	}
 
 	public void disconnectFromDefaultServer()
 	{
-		//System.out.println("====== disconnect from the default server");
 		printMessage("====== disconnect from the default server\n");
-		m_serverStub.disconnectFromServer();
-		//System.out.println("======");
+		boolean bRet = m_serverStub.disconnectFromServer();
 		printMessage("======\n");
+		if(bRet)
+			updateTitle();
 		return;
 	}
 	

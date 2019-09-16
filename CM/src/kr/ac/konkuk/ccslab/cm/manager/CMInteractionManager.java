@@ -79,6 +79,7 @@ public class CMInteractionManager {
 				e.printStackTrace();
 				return false;
 			}
+			
 		}
 		
 		// open a stream socket channel in the case of a client or a server which is not a default server
