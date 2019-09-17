@@ -277,6 +277,11 @@ public class CMServerStub extends CMStub {
 			ScheduledFuture<?> future = ses.scheduleWithFixedDelay(keepAliveTask, 
 					1, 1, TimeUnit.SECONDS);
 			threadInfo.setScheduledFuture(future);
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMServerStub.startCM(), keep-alive time("+nKeepAliveTime
+						+"), start the server keep-alive task.");
+			}
 		}
 		
 		m_cmInfo.setStarted(true);

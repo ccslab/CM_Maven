@@ -557,7 +557,16 @@ public class CMInteractionManager {
 			{
 				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
-				future.cancel(true);
+				if(future != null)
+				{
+					future.cancel(true);
+					
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMInteractionManager.disconnectBadNode"
+								+ "ByClient(), stop the client keep-alive task.");
+					}					
+				}
 			}
 
 			return true;
@@ -593,6 +602,12 @@ public class CMInteractionManager {
 				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				future.cancel(true);
+				
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMInteractionManager.disconnectBadNodeByClient(),"
+							+"stop the client keep-alive task.");
+				}
 			}
 
 			return true;

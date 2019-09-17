@@ -294,7 +294,15 @@ public class CMEventReceiver extends Thread {
 				CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				if(future != null)
+				{
 					future.cancel(true);
+					
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMEventReceiver.processDisconnectionFromServer"
+								+ "AtClient(), stop the client keep-alive task.");
+					}
+				}
 			}
 
 		}
