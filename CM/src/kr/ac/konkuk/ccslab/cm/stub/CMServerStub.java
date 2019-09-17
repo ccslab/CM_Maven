@@ -9,6 +9,9 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
@@ -26,6 +29,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMSNSManager;
+import kr.ac.konkuk.ccslab.cm.thread.CMServerKeepAliveTask;
 
 /**
  * This class provides APIs, through which a server developer can access the communication services of CM.
@@ -262,6 +266,18 @@ public class CMServerStub extends CMStub {
 		CMEventManager.startReceivingEvent(m_cmInfo);
 		CMCommManager.startReceivingMessage(m_cmInfo);
 		CMCommManager.startSendingMessage(m_cmInfo);
+		
+		int nKeepAliveTime = m_cmInfo.getConfigurationInfo().getKeepAliveTime();
+		if(nKeepAliveTime > 0)
+		{
+			// start keep-alive task
+			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
+			CMServerKeepAliveTask keepAliveTask = new CMServerKeepAliveTask(m_cmInfo);
+			ScheduledFuture<?> future = ses.scheduleWithFixedDelay(keepAliveTask, 
+					1, 1, TimeUnit.SECONDS);
+			threadInfo.setScheduledFuture(future);
+		}
 		
 		m_cmInfo.setStarted(true);
 		

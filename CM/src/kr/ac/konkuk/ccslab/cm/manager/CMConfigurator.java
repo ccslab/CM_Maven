@@ -380,7 +380,7 @@ public class CMConfigurator {
 	}
 
 	// check whether the server info in the CMConfigurationInfo object is the default server or not.
-	public static boolean isDServer(CMInfo cmInfo)
+	public synchronized static boolean isDServer(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		boolean ret = false;

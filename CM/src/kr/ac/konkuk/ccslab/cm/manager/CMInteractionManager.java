@@ -406,7 +406,7 @@ public class CMInteractionManager {
 		return false;
 	}
 	
-	private static boolean disconnectBadAddServerByDefaultServer(CMServer addServer, CMInfo cmInfo)
+	public synchronized static boolean disconnectBadAddServerByDefaultServer(CMServer addServer, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		String strAddServerName = addServer.getServerName();
@@ -469,7 +469,7 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	private static boolean disconnectBadClientByServer(CMUser user, CMInfo cmInfo)
+	public synchronized static boolean disconnectBadClientByServer(CMUser user, CMInfo cmInfo)
 	{
 		String strUser = user.getName();
 		
@@ -1223,6 +1223,8 @@ public class CMInteractionManager {
 				tuser.setPasswd(se.getPassword());
 				tuser.setHost(se.getHostAddress());
 				tuser.setUDPPort(se.getUDPPort());
+				tuser.setLastEventTransTime(System.currentTimeMillis());
+				tuser.setKeepAliveTime(confInfo.getKeepAliveTime());
 				
 				tuser.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);
 				loginUsers.addMember(tuser);

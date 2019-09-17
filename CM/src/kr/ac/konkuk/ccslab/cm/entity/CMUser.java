@@ -52,7 +52,7 @@ public class CMUser extends CMObject {
 		m_lastLoginDate = null;
 		m_lLastEventTransTime = -1;
 		m_myLastEventTransTimeHashtable = new Hashtable<String, Long>();
-		m_nKeepAliveTime = -1;
+		m_nKeepAliveTime = 0;
 	}
 	
 	public CMUser(String name, String passwd, String host)
@@ -73,7 +73,7 @@ public class CMUser extends CMObject {
 		m_lastLoginDate = null;
 		m_lLastEventTransTime = -1;
 		m_myLastEventTransTimeHashtable = new Hashtable<String, Long>();
-		m_nKeepAliveTime = -1;
+		m_nKeepAliveTime = 0;
 	}
 	
 	// set methods

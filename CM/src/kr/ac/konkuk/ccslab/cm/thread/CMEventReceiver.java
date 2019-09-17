@@ -271,7 +271,7 @@ public class CMEventReceiver extends Thread {
 				// initialize the client state
 				interInfo.getMyself().setState(CMInfo.CM_INIT);
 				
-				System.err.println("CMEventReceiver.processDisconnectionFromDefaultServerAtClient(): "
+				System.err.println("CMEventReceiver.processDisconnectionFromServerAtClient(): "
 						+ "The default server is disconnected!");
 				
 			}
@@ -293,7 +293,8 @@ public class CMEventReceiver extends Thread {
 			{
 				CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
-				future.cancel(true);
+				if(future != null)
+					future.cancel(true);
 			}
 
 		}
