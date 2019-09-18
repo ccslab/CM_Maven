@@ -109,8 +109,21 @@ public class CMServerKeepAliveTask implements Runnable {
 				nKeepAliveTime = addServer.getKeepAliveTime();
 				if(lElapsedTime/1000.0 > nKeepAliveTime*1.5)
 				{
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMServerKeepAliveTask.run(): for add-server("
+								+addServer.getServerName()+"), cur time("+lCurTime+"), "
+								+"last event-trans time("+addServer.getLastEventTransTime()
+								+"), keep-alive time("+nKeepAliveTime+").");
+					}
 					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer, 
 							m_cmInfo);
+					if(CMInfo._CM_DEBUG)
+					{
+						System.out.println("CMServerKeepAliveTask.run(): disconnected "
+								+"add-server("+addServer.getServerName()+").");
+						System.out.println("# add-servers: "+addServerVector.size());
+					}
 				}
 			}
 		}
@@ -130,7 +143,7 @@ public class CMServerKeepAliveTask implements Runnable {
 				{
 					if(CMInfo._CM_DEBUG)
 					{
-						System.out.println("CMServerKeepAliveTime.run(): cur time("
+						System.out.println("CMServerKeepAliveTask.run(): cur time("
 								+lCurTime+"), my last event-trans time("
 								+lMyLastEventTransTime+"), elapsed time("+lElapsedTime
 								+"), keep-alive time("+nKeepAliveTime+")");

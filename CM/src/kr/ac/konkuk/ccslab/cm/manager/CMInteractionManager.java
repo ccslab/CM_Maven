@@ -2502,7 +2502,13 @@ public class CMInteractionManager {
 		// add a new server info
 		CMServer server = new CMServer(strServerName, strServerAddress, nServerPort, nServerUDPPort);
 		server.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);	// add default channel to the new server
-		server.setKeepAliveTime(mse.getKeepAliveTime());
+		int nKeepAliveTime = mse.getKeepAliveTime();
+		if(nKeepAliveTime > 0)
+			server.setKeepAliveTime(nKeepAliveTime);
+		else
+			server.setKeepAliveTime(cmInfo.getConfigurationInfo().getKeepAliveTime());
+		
+		server.setLastEventTransTime(System.currentTimeMillis());
 		bRet = interInfo.addAddServer(server);
 		
 		// remove channel from unknown-channel list
