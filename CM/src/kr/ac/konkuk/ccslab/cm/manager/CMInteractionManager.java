@@ -1042,7 +1042,7 @@ public class CMInteractionManager {
 					if(CMInfo._CM_DEBUG_2)
 					{
 						System.out.println("CMInteractionManager.updateLastEventTransTime(), "
-								+"server("+defServer.getServerName()+", time: "+lCurTime);
+								+"server("+defServer.getServerName()+"), time: "+lCurTime);
 					}
 					return;
 				}

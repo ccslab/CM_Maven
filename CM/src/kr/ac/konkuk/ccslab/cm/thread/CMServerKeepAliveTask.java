@@ -114,6 +114,8 @@ public class CMServerKeepAliveTask implements Runnable {
 						System.out.println("CMServerKeepAliveTask.run(): for add-server("
 								+addServer.getServerName()+"), cur time("+lCurTime+"), "
 								+"last event-trans time("+addServer.getLastEventTransTime()
+								+"), ");
+						System.out.println("elapsed time("+(lElapsedTime/1000.0)
 								+"), keep-alive time("+nKeepAliveTime+").");
 					}
 					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer, 
@@ -145,7 +147,8 @@ public class CMServerKeepAliveTask implements Runnable {
 					{
 						System.out.println("CMServerKeepAliveTask.run(): cur time("
 								+lCurTime+"), my last event-trans time("
-								+lMyLastEventTransTime+"), elapsed time("+lElapsedTime
+								+lMyLastEventTransTime+"), ");
+						System.out.println("elapsed time("+(lElapsedTime/1000.0)
 								+"), keep-alive time("+nKeepAliveTime+")");
 					}
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();

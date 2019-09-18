@@ -386,7 +386,7 @@ public class CMServerStub extends CMStub {
 		{
 			System.out.println("CMServerStub.reqServerReg(), server("+server+"), addr("
 					+confInfo.getMyAddress()+"), port("+confInfo.getMyPort()+"), udp port("
-					+confInfo.getUDPPort()+"), keep-alive(+"+confInfo.getKeepAliveTime()
+					+confInfo.getUDPPort()+"), keep-alive("+confInfo.getKeepAliveTime()
 					+").");
 		}
 
