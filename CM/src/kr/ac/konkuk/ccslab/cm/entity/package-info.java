@@ -1,8 +1,7 @@
 /**
+ * This package represents an entity used in CM.
  * 
- */
-/**
- * @author mlim
+ * @author CCSLab, Konkuk University
  *
  */
 package kr.ac.konkuk.ccslab.cm.entity;

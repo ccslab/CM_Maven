@@ -4,7 +4,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 
 /**
  * The CMAppEventHandler interface represents an event handler of a CM application.
- * The application should implements this interface so that it can receive incoming CM events.
+ * <p>The application should implements this interface so that it can receive incoming CM events.
  * 
  * @author CCSLab, Konkuk University
  *

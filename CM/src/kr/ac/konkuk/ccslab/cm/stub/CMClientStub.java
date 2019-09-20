@@ -51,7 +51,7 @@ import kr.ac.konkuk.ccslab.cm.util.CMUtil;
  * services of CM.
  * A client application can use this class in order to request client-specific communication services.
  * 
- * @author mlim
+ * @author CCSLab, Konkuk University
  * @see CMStub 
  * @see CMServerStub
  */

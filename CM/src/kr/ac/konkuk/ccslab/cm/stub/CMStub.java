@@ -58,7 +58,7 @@ import java.nio.file.Path;
  * This class is the super class of the CMClientStub and the CMServerStub classes.
  * Application developers should generate an instance of the two sub-classes instead of the CMStub class.
  * 
- * @author mlim
+ * @author CCSLab, Konkuk University
  * @see CMClientStub
  * @see CMServerStub
  */
@@ -241,13 +241,27 @@ public class CMStub {
 		return m_cmInfo;
 	}
 
-	// service manager
+	///////////////////////// service manager
+	
 	public CMServiceManager addServiceManager(int nType, CMServiceManager manager)
 	{
 		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
 		return managerHashtable.put(nType, manager);
 	}
 
+	/**
+	 * Returns a CMServiceManager reference with the given type.
+	 * 
+	 * @param nType - the type of CMServiceManager.
+	 * <p> Currently available CMServiceManager types: 
+	 * <br> CMInfo.CM_MQTT_MANAGER : CMMqttManager for the publish-subscribe service
+	 * <p>The other CM service managers such as CMFileTransferManager, CMSNSManager, 
+	 * CMDBManager and so on will be available. Now, those services are partly available 
+	 * only through the CM stub modules.
+	 * 
+	 * @return the CMServiceManager reference if found; null otherwise.
+	 * 
+	 */
 	public CMServiceManager findServiceManager(int nType)
 	{
 		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
@@ -267,7 +281,8 @@ public class CMStub {
 		return;
 	}
 	
-	// event handler
+	/////////////////////////// event handler
+	
 	public CMEventHandler addEventHandler(int nEventType, CMEventHandler handler)
 	{
 		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
@@ -332,6 +347,11 @@ public class CMStub {
 		return user;
 	}
 	
+	/**
+	 * Returns the default server name.
+	 * 
+	 * @return the default server name.
+	 */
 	public String getDefaultServerName()
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -730,7 +750,7 @@ public class CMStub {
 		
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
-		// from here
+		
 		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
 		Future<Boolean> future = es.submit(new CMRemoveChannelTask(mcInfo, sockAddress));
 		try {

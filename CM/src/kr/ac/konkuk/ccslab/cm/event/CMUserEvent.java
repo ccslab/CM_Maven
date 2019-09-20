@@ -4,10 +4,21 @@ import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
+/**
+ * The CMUserEvent is a user-defined event that can consist of different types of 
+ * arbitrary fields.
+ *  
+ * @author CCSLab, Konkuk University
+ *
+ */
 public class CMUserEvent extends CMEvent {
-	private String m_strID;	// instead of int ID inherited from CMEvent, use this for this event ID
+	// instead of int ID inherited from CMEvent, use this for this event ID
+	private String m_strID;
 	private Vector<CMUserEventField> m_eventFieldList;
 
+	/**
+	 * Creates an instance of the CMUserEvent.
+	 */
 	public CMUserEvent()
 	{
 		m_nType = CMInfo.CM_USER_EVENT;
@@ -22,23 +33,53 @@ public class CMUserEvent extends CMEvent {
 	}
 
 	// set/get methods
+	
+	/**
+	 * Returns a list of all event fields.
+	 * 
+	 * @return the list of event fields.
+	 */
 	public Vector<CMUserEventField> getAllEventFields()
 	{
 		return m_eventFieldList;
 	}
 	
+	/**
+	 * Sets a string ID of this event.
+	 * 
+	 * @param strID - the string ID.
+	 */
 	public void setStringID(String strID)
 	{
 		if(strID != null)
 			m_strID = strID;
 	}
 	
+	/**
+	 * Returns the string ID of this event.
+	 * 
+	 * @return - the string ID.
+	 * <br> The initial value is "defaultID".
+	 */
 	public String getStringID()
 	{
 		return m_strID;
 	}
 	
-	// CM_INT, CM_LONG, CM_FLOAT, CM_DOUBLE, CM_STR values are set as String.
+	/**
+	 * Sets and adds a new event field to this event.
+	 * 
+	 * @param nDataType - the data type of the field.
+	 * <p> The following 5 types are possible:
+	 * <br> CMInfo.CM_INT : int type
+	 * <br> CMInfo.CM_LONG : long type
+	 * <br> CMInfo.CM_FLOAT : float type
+	 * <br> CMInfo.CM_DOUBLE : double type
+	 * <br> CMInfo.CM_STR : String
+	 * 
+	 * @param strFieldName - the field name.
+	 * @param strFieldValue - the field value.
+	 */
 	public void setEventField(int nDataType, String strFieldName, String strFieldValue)
 	{
 		CMUserEventField uef = null;
@@ -57,7 +98,13 @@ public class CMUserEvent extends CMEvent {
 		return;
 	}
 	
-	// CM_BYTES sets nValueByteNum and valueBytes byte array
+	/**
+	 * Sets and adds bytes data as a new field to this event.
+	 * 
+	 * @param strFieldName - the field name.
+	 * @param nByteNum - the number of bytes.
+	 * @param bytes - the byte array.
+	 */
 	public void setEventBytesField(String strFieldName, int nByteNum, byte[] bytes)
 	{
 		CMUserEventField uef = null;
@@ -79,7 +126,20 @@ public class CMUserEvent extends CMEvent {
 		return;
 	}
 
-	// for CM_INT, CM_LONG, CM_FLOAT, CM_DOUBLE, CM_STR
+	/**
+	 * Returns the field value in this event.
+	 * 
+	 * @param nDataType - the field type.
+	 * <p> The field type is one of followings:
+	 * <br> CMInfo.CM_INT : int type
+	 * <br> CMInfo.CM_LONG : long type
+	 * <br> CMInfo.CM_FLOAT : float type
+	 * <br> CMInfo.CM_DOUBLE : double type
+	 * <br> CMInfo.CM_STR : String
+	 * 
+	 * @param strFieldName - the field name.
+	 * @return - the field value if the field is found; null otherwise.
+	 */
 	public String getEventField(int nDataType, String strFieldName)
 	{
 		CMUserEventField uef = null;
@@ -89,7 +149,12 @@ public class CMUserEvent extends CMEvent {
 		return uef.strFieldValue;
 	}
 	
-	// for CM_BYTES
+	/**
+	 * Returns the byte array of the given field.
+	 * 
+	 * @param strFieldName - the field name
+	 * @return - the byte array if the field is found; null otherwise.
+	 */
 	public byte[] getEventBytesField(String strFieldName)
 	{
 		CMUserEventField uef = null;
@@ -99,6 +164,20 @@ public class CMUserEvent extends CMEvent {
 		return uef.valueBytes;
 	}
 	
+	/**
+	 * Searches for the event field.
+	 * 
+	 * @param nDataType - the field type.
+	 * <p> The field type is one of followings:
+	 * <br> CMInfo.CM_INT : int type
+	 * <br> CMInfo.CM_LONG : long type
+	 * <br> CMInfo.CM_FLOAT : float type
+	 * <br> CMInfo.CM_DOUBLE : double type
+	 * <br> CMInfo.CM_STR : String
+	 * 
+	 * @param strFieldName - the field name.
+	 * @return the event field if found; null otherwise.
+	 */
 	public CMUserEventField findEventField(int nDataType, String strFieldName)
 	{
 		CMUserEventField uef = null;
@@ -119,6 +198,19 @@ public class CMUserEvent extends CMEvent {
 		return uef;
 	}
 	
+	/**
+	 * Removes an event field from this event.
+	 * 
+	 * @param nDataType - the field type.
+	 * <p> The field type is one of followings:
+	 * <br> CMInfo.CM_INT : int type
+	 * <br> CMInfo.CM_LONG : long type
+	 * <br> CMInfo.CM_FLOAT : float type
+	 * <br> CMInfo.CM_DOUBLE : double type
+	 * <br> CMInfo.CM_STR : String
+ 
+	 * @param strFieldName - field name.
+	 */
 	public void removeEventField(int nDataType, String strFieldName)
 	{
 		CMUserEventField uef = null;
@@ -142,6 +234,9 @@ public class CMUserEvent extends CMEvent {
 		return;
 	}
 	
+	/**
+	 * Removes all fields of this event.
+	 */
 	public void removeAllEventFields()
 	{
 		CMUserEventField uef = null;

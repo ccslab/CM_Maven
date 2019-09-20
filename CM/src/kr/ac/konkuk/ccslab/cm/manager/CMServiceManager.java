@@ -4,7 +4,10 @@ import kr.ac.konkuk.ccslab.cm.entity.CMObject;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * The CMServiceManager class represents a CM service object that an application can use.
+ * The CMServiceManager class represents a CM service object.
+ * 
+ * An application or other CM objects can use a CM service with this class. 
+ * 
  * @author CCSLab, Konkuk University
  *
  */

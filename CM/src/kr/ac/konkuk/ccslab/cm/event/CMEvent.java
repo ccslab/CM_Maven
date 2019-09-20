@@ -9,11 +9,15 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  * fields of a CM event such as sender, receiver, which session and group (handler session and group names) 
  * should handle this event and which session and group members (distribution session and group names) 
  * this event should be forwarded to.  
- * <p> CM nodes (a client or a server) communicate with each other by exchanging CM events. 
- * @author mlim
+ * <p> CM nodes (a client or a server) communicate with each other by exchanging CM events.
+ * <br> CM application can send and receive a CM event through event-transmission methods 
+ * of the CM stub module ({@link kr.ac.konkuk.ccslab.cm.stub.CMStub}).
+ * 
+ * @author CCSLab, Konkuk University
+ * 
  * @see {@link CMConcurrencyEvent}, {@link CMConsistencyEvent}, {@link CMDataEvent}, {@link CMDummyEvent}, 
  * {@link CMFileEvent}, {@link CMInterestEvent}, {@link CMMultiServerEvent}, {@link CMSessionEvent}, 
- * {@link CMSNSEvent}, {@link CMUserEvent}
+ * {@link CMSNSEvent}, {@link CMUserEvent}, {@link CMMqttEvent}
  */
 public abstract class CMEvent extends CMObject {
 	

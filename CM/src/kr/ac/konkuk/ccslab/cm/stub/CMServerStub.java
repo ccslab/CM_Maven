@@ -35,7 +35,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMServerKeepAliveTask;
  * This class provides APIs, through which a server developer can access the communication services of CM.
  * A server application can use this class in order to request service-specific communication services.
  * 
- * @author mlim
+ * @author CCSLab, Konkuk University
  * @see CMClientStub
  * @see CMStub
  */
@@ -764,7 +764,11 @@ public class CMServerStub extends CMStub {
 		return sb.toString();
 	}
 	
-	// javadoc comments will be added later..
+	/**
+	 * Returns the list of currently logged-in users in this server.
+	 * 
+	 * @return the list of logged-in users.
+	 */
 	public CMMember getLoginUsers()
 	{
 		CMMember loginUsers = null;
