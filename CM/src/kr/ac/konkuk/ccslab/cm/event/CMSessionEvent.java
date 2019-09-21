@@ -9,46 +9,334 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 /**
  * This class represents CM events that are used for session related tasks.
  * 
- * @author mlim
+ * @author CCSLab, Konkuk University
  * @see CMEvent
  */
 public class CMSessionEvent extends CMEvent {
 
-	public static final int LOGIN = 1;	// login request (from client to server)
-	public static final int LOGOUT = 2;	// logout request (from client to server)
-	public static final int LOGIN_ACK = 3;	// response to the login request (from server to client)
-	public static final int REQUEST_SESSION_INFO = 4;		// request session information (from client to server)
-	public static final int RESPONSE_SESSION_INFO = 5;	// response to the session-information request (from server to client)
-	public static final int JOIN_SESSION = 6;	// request to join a session (from client to server)
-	public static final int JOIN_SESSION_ACK = 7;	// response to the join-session request (from server to client)
-	public static final int LEAVE_SESSION = 8;		// request to leave the current session (from client to server)
-	public static final int LEAVE_SESSION_ACK = 9;	// response to the leave-session request (from server to client)
-	public static final int SESSION_TALK = 10;		// chat in a session
-	public static final int SESSION_ADD_USER = 11;	// notify to add a login user (from server to client)
-	public static final int SESSION_REMOVE_USER = 12;	// notify to remove a logout user (from server to client)
-	public static final int CHANGE_SESSION = 13;		// notify to change a session of a user (from server to client)
-	// request to add a non-blocking socket channel information (from client to server)
+	/**
+	 * The event ID for login request from a client to the default server.
+	 * <p>event direction: client -> default server
+	 * <p>The LOGIN event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#loginCM(String, String)} or 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncLoginCM(String, String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name : {@link CMSessionEvent#getUserName()}</li>
+	 * <li>password : {@link CMSessionEvent#getPassword()}</li>
+	 * <li>host address : {@link CMSessionEvent#getHostAddress()}</li>
+	 * <li>UDP port of the user : {@link CMSessionEvent#getUDPPort()}</li>
+	 * <li>keep-alive time of the user : {@link CMSessionEvent#getKeepAliveTime()}</li>
+	 * </ul>
+	 */
+	public static final int LOGIN = 1;
+	
+	/**
+	 * The event ID for logout request from a client to the default server.
+	 * <p>event direction: client -> default server
+	 * <p>The LOGOUT event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#logoutCM()}.
+	 * <br>The following field is used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * </ul>
+	 */
+	public static final int LOGOUT = 2;
+	
+	/**
+	 * The event ID for response to the login request from the default server to the client.
+	 * <p>event direction: default server -> client
+	 * <p>The default server sends the LOGIN_ACK event to the client as the response to 
+	 * the LOGIN event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>response code: {@link CMSessionEvent#isValidUser()}
+	 * <br>1: valid user, 0: invalid user</li>
+	 * 
+	 * <li>communication architecture: {@link CMSessionEvent#getCommArch()}
+	 * <br>CM_CS: This CM network is client-server model
+	 * <br>CM_PS: This CM network is peer-server model</li>
+	 * 
+	 * <li>file-transfer scheme: {@link CMSessionEvent#isFileTransferScheme()}
+	 * <br>1: to use a separate channel and thread to transfer a file
+	 * <br>0: to use the default socket channel to transfer a file</li>
+	 * 
+	 * <li>login scheme: {@link CMSessionEvent#isLoginScheme()}
+	 * <br>1: The default server authenticates the requesting user
+	 * <br>0: The default server does not authenticates the requesting user</li>
+	 * 
+	 * <li>session scheme: {@link CMSessionEvent#isSessionScheme()}
+	 * <br>1: The login user should select and join a session.
+	 * <br>0: The login user automatically joins a default session.</li>
+	 * 
+	 * <li>download scheme of attached files in SNS content: 
+	 * {@link CMSessionEvent#getAttachDownloadScheme()}
+	 * <br>0: full mode, 1: partial mode, 2: prefetch mode, 3: none</li>
+	 * 
+	 * <li>server UDP port: {@link CMSessionEvent#getUDPPort()}</li>
+	 * </ul>
+	 */
+	public static final int LOGIN_ACK = 3;
+	
+	/**
+	 * The event ID for requesting available session information from the default server.
+	 * <p>event direction: client -> default server
+	 * <p>The REQUEST_SESSION_INFO event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#requestSessionInfo()}.
+	 * <br>The following field is used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}
+	 * </ul>
+	 */
+	public static final int REQUEST_SESSION_INFO = 4;
+	
+	/**
+	 * The event ID for the response to the request of available session information.
+	 * <p>event direction: default server -> client
+	 * <p>The RESPONSE_SESSION_INFO event is the reply of the REQUEST_SESSION_INFO event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>number of sessions: {@link CMSessionEvent#getSessionNum()}</li>
+	 * <li>list of session information: {@link CMSessionEvent#getSessionInfoList()}</li>
+	 * </ul>
+	 */
+	public static final int RESPONSE_SESSION_INFO = 5;
+	
+	/**
+	 * The event ID for the request of joining a session.
+	 * <p>event direction: client -> default server
+	 * <p>The JOIN_SESSION event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#joinSession(String)} and 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncJoinSession(String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name : {@link CMSessionEvent#getUserName()}</li>
+	 * <li>session name : {@link CMSessionEvent#getSessionName()}</li>
+	 * </ul>
+	 */
+	public static final int JOIN_SESSION = 6;
+	
+	/**
+	 * The event ID for the response to the request of joining a session.
+	 * <p>event direction: default session -> client
+	 * <p>The JOIN_SESSION_ACK event is the reply of the JOIN_SESSION event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>number of groups: {@link CMSessionEvent#getGroupNum()}</li>
+	 * <li>list of group information: {@link CMSessionEvent#getGroupInfoList()}</li>
+	 * </ul>
+	 */
+	public static final int JOIN_SESSION_ACK = 7;
+	
+	/**
+	 * The event ID for the request of leaving the current session.
+	 * <p>event direction: client -> default server
+	 * <p>The LEAVE_SESSION event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#leaveSession()}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>session name: {@link CMSessionEvent#getSessionName()}</li>
+	 * </ul>
+	 */
+	public static final int LEAVE_SESSION = 8;
+	
+	/* (NOT USED YET!)
+	 * The event ID for the response to the request of leaving the current session.
+	 * <p>event direction: default server -> client
+	 * <p>The LEAVE_SESSION_ACK is the reply of the LEAVE_SESSION event.
+	 * <br>The following field is used for this event:
+	 * <ul>
+	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
+	 * </ul>
+	 */
+	public static final int LEAVE_SESSION_ACK = 9;
+	
+	/**
+	 * The event ID for a chat message of a client which has logged in 
+	 * to the server but does not join a session.
+	 * <p>event direction: client -> server -> client
+	 * <p>The SESSION_TALK event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#chat(String, String)}.
+	 * <br>The following fields are used for this event: 
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>chat message: {@link CMSessionEvent#getTalk()}</li>
+	 * </ul>
+	 */
+	public static final int SESSION_TALK = 10;
+	
+	/**
+	 * The event ID for the notification of a new logged-in user.
+	 * <p>event direction: default server -> client
+	 * <p>The default server sends the SESSION_ADD_USER event to the existing 
+	 * users to notify them of a new logged-in user.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>host address: {@link CMSessionEvent#getHostAddress()}</li>
+	 * <li>user's current session name: {@link CMSessionEvent#getSessionName()}</li> 
+	 * </ul>
+	 */
+	public static final int SESSION_ADD_USER = 11;
+	
+	/**
+	 * The event ID for the notification of the user logout.
+	 * <p>event direction: default server -> client
+	 * <p>The default server sends the SESSION_REMOVE_USER event to the existing 
+	 * users to notify that a user has logged out from the default server.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * </ul>
+	 */
+	public static final int SESSION_REMOVE_USER = 12;
+	
+	/**
+	 * The event ID for the notification of a user joining(changing) a session.
+	 * <p>event direction: default server -> client
+	 * <p>The default server sends the CHANGE_SESSION event to the existing users 
+	 * to notify that a user has joined a session.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>session name: {@link CMSessionEvent#getSessionName()}</li>
+	 * </ul>
+	 */
+	public static final int CHANGE_SESSION = 13;
+	
+	/**
+	 * The event ID for the request to add a non-blocking socket channel information.
+	 * <p>event direction: client -> server
+	 * <p>The ADD_NONBLOCK_SOCKET_CHANNEL is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#addNonBlockSocketChannel(int, String)} 
+	 * or 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncAddNonBlockSocketChannel(int, String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
+	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
+	 * <br>the index(>0) for the socket channel</li>
+	 * </ul>
+	 */
 	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;	
-	// response to the add-non-blocking-socket-channel request (from server to client)
+	
+	/**
+	 * The event ID for the response to the request of adding a non-blocking socket 
+	 * channel information.
+	 * <p>event direction: server -> client
+	 * <p>The ADD_NONBLOCK_SOCKET_CHANNEL_ACK event is the reply of 
+	 * the ADD_NONBLOCK_SOCKET_CHANNEL event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
+	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
+	 * <br>the index(>0) for the socket channel</li>
+	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
+	 * <br>0: channel addition at the server has completed.
+	 * <br>other value: channel addition at the server has failed.</li>
+	 * </ul>
+	 */
 	public static final int ADD_NONBLOCK_SOCKET_CHANNEL_ACK = 15;
-	// request to add a blocking socket channel information (from client to server)
+	
+	/**
+	 * The event ID for the request to add a blocking socket channel information.
+	 * <p>event direction: client -> server
+	 * <p>The ADD_BLOCK_SOCKET_CHANNEL is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#addBlockSocketChannel(int, String)} 
+	 * or 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncAddBlockSocketChannel(int, String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
+	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
+	 * <br>the index(>=0) for the socket channel</li>
+	 * </ul>
+	 */
 	public static final int ADD_BLOCK_SOCKET_CHANNEL = 22;
-	// response to the add-blocking-socket-channel request (from server to client)
+	
+	/**
+	 * The event ID for the response to the request of adding a blocking socket 
+	 * channel information.
+	 * <p>event direction: server -> client
+	 * <p>The ADD_BLOCK_SOCKET_CHANNEL_ACK event is the reply of 
+	 * the ADD_BLOCK_SOCKET_CHANNEL event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
+	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
+	 * <br>the index(>=0) for the socket channel</li>
+	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
+	 * <br>0: channel addition at the server has completed.
+	 * <br>other value: channel addition at the server has failed.</li>
+	 * </ul>
+	 */
 	public static final int ADD_BLOCK_SOCKET_CHANNEL_ACK = 23;
-	// request to remove a blocking socket channel information (from client to server)
-	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;	
-	// response to the remove-blocking-socket-channel request (from server to client)
+	
+	/**
+	 * The event ID for the request to remove a blocking socket channel information.
+	 * <p>event direction: client -> server
+	 * <p>The REMOVE_BLOCK_SOCKET_CHANNEL is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#removeBlockSocketChannel(int, String)},
+	 * or 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncRemoveBlockSocketChannel(int, String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
+	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
+	 * <br>the index(>=0) for the socket channel</li>
+	 * </ul>
+	 */
+	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;
+	
+	/**
+	 * The event ID for the response to the request of removing a blocking socket 
+	 * channel information.
+	 * <p>event direction: server -> client
+	 * <p>The REMOVE_BLOCK_SOCKET_CHANNEL_ACK event is the reply of 
+	 * the REMOVE_BLOCK_SOCKET_CHANNEL event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
+	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
+	 * <br>the index(>=0) for the socket channel</li>
+	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
+	 * <br>0: the channel has been removed successfully.
+	 * <br>other value: channel removal at the server has failed.</li>
+	 * </ul>
+	 */
 	public static final int REMOVE_BLOCK_SOCKET_CHANNEL_ACK = 25;	
 
-	public static final int REGISTER_USER = 16;			// request to register a user (from client to server)
-	public static final int REGISTER_USER_ACK = 17;		// response to the register-user request (from server to client)
-	public static final int DEREGISTER_USER = 18;		// request to deregister a user (from client to server)
-	public static final int DEREGISTER_USER_ACK = 19;		// response to the deregister-user request (from server to client)
-	public static final int FIND_REGISTERED_USER = 20;	// request to find a user (from client to server)
-	public static final int FIND_REGISTERED_USER_ACK = 21;	// response to the find-user request (from server to client)
+	// request to register a user (from client to server)
+	/**
+	 * (from here)
+	 */
+	public static final int REGISTER_USER = 16;
+	
+	// response to the register-user request (from server to client)
+	public static final int REGISTER_USER_ACK = 17;
+	
+	// request to deregister a user (from client to server)
+	public static final int DEREGISTER_USER = 18;
+	
+	// response to the deregister-user request (from server to client)
+	public static final int DEREGISTER_USER_ACK = 19;
+	
+	// request to find a user (from client to server)
+	public static final int FIND_REGISTERED_USER = 20;
+	
+	// response to the find-user request (from server to client)
+	public static final int FIND_REGISTERED_USER_ACK = 21;
 	
 	// local CM event from CM to notify the application of the unexpected disconnection (from client CM to application)
 	public static final int UNEXPECTED_SERVER_DISCONNECTION = 99;
+
 	// local CM event from CM to notify that it intentionally disconnect a channel.
 	public static final int INTENTIONALLY_DISCONNECT = 100;
 

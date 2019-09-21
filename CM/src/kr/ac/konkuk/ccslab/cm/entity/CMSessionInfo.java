@@ -2,11 +2,11 @@ package kr.ac.konkuk.ccslab.cm.entity;
 
 /**
  * This class represents information of a session.
- * <br> The session information is the session name, the session address and port number, and the current 
+ * <p> The session information is the session name, the session address and port number, and the current 
  * number of session members. The session name is the identifier of the session that is managed by a CM server 
  * that can be accessed by the session address and port number.
  *  
- * @author mlim
+ * @author CCSLab, Konkuk University
  *
  */
 public class CMSessionInfo {
