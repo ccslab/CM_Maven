@@ -217,7 +217,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>0) for the socket channel</li>
+	 * <br>the index(>0) for the socket channel.</li>
 	 * </ul>
 	 */
 	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;	
@@ -233,7 +233,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>0) for the socket channel</li>
+	 * <br>the index(>0) for the socket channel.</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: channel addition at the server has completed.
 	 * <br>other value: channel addition at the server has failed.</li>
@@ -253,7 +253,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel</li>
+	 * <br>the index(>=0) for the socket channel.</li>
 	 * </ul>
 	 */
 	public static final int ADD_BLOCK_SOCKET_CHANNEL = 22;
@@ -269,7 +269,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel</li>
+	 * <br>the index(>=0) for the socket channel.</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: channel addition at the server has completed.
 	 * <br>other value: channel addition at the server has failed.</li>
@@ -289,7 +289,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel</li>
+	 * <br>the index(>=0) for the socket channel.</li>
 	 * </ul>
 	 */
 	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;
@@ -305,7 +305,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel</li>
+	 * <br>the index(>=0) for the socket channel.</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: the channel has been removed successfully.
 	 * <br>other value: channel removal at the server has failed.</li>
@@ -313,31 +313,128 @@ public class CMSessionEvent extends CMEvent {
 	 */
 	public static final int REMOVE_BLOCK_SOCKET_CHANNEL_ACK = 25;	
 
-	// request to register a user (from client to server)
 	/**
-	 * (from here)
+	 * The event ID for the request of registering a new user from the default server.
+	 * <p>event direction: client -> default server
+	 * <p>The REGISTER_USER event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#registerUser(String, String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>password: {@link CMSessionEvent#getPassword()}</li>
+	 * </ul>
 	 */
 	public static final int REGISTER_USER = 16;
 	
-	// response to the register-user request (from server to client)
+	/**
+	 * The event ID for the response to the request of registering a new user.
+	 * <p>event direction: default server -> client
+	 * <p>The REGISTER_USER_ACK event is the reply of the REGISTER_USER event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
+	 * <br>1: registration success.
+	 * <br>0: registration failed.</li>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>registration date and time: {@link CMSessionEvent#getCreationTime()}</li>
+	 * </ul>
+	 */
 	public static final int REGISTER_USER_ACK = 17;
 	
-	// request to deregister a user (from client to server)
+	/**
+	 * The event ID for the request of deregistering a user from the default server.
+	 * <p>event direction: client -> default server
+	 * <p>The DEREGISTER_USER event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#deregisterUser(String, String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>password: {@link CMSessionEvent#getPassword()}</li>
+	 * </ul>
+	 * (from here)
+	 */
 	public static final int DEREGISTER_USER = 18;
 	
-	// response to the deregister-user request (from server to client)
+	/**
+	 * The event ID for the response to the request of deregistering a user from 
+	 * the default server.
+	 * <p>event direction: default server -> client
+	 * <p>The DEREGISTER_USER_ACK event is the reply of the DEREGISTER_USER event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
+	 * <br>0: deregistration failed
+	 * <br>1: deregistration success</li>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * </ul>
+	 */
 	public static final int DEREGISTER_USER_ACK = 19;
 	
-	// request to find a user (from client to server)
+	/**
+	 * The event ID for the request of searching for a registered user from 
+	 * the default server.
+	 * <p>event direction: client -> default server
+	 * <p>The FIND_REGISTERED_USER event is sent when the client calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#findRegisteredUser(String)}.
+	 * <br>The following field is used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}
+	 * </ul>
+	 */
 	public static final int FIND_REGISTERED_USER = 20;
 	
-	// response to the find-user request (from server to client)
+	/**
+	 * The event ID for the response to the request of searching for a registered user.
+	 * <p>event direction: default server -> client
+	 * <p>The FIND_REGISTERED_USER_ACK event is the reply of the FIND_REGISTERED_USER event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
+	 * <br>0: user not found
+	 * <br>1: user found</li>
+	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
+	 * <li>registration date and time: {@link CMSessionEvent#getCreationTime()}</li>
+	 * </ul>
+	 */
 	public static final int FIND_REGISTERED_USER_ACK = 21;
 	
-	// local CM event from CM to notify the application of the unexpected disconnection (from client CM to application)
+	/**
+	 * The event ID for notifying the client of unexpected disconnection from a server.
+	 * <p>event direction: client CM -> client application (local event)
+	 * <p>The client CM delivers the UNEXPECTED_SERVER_DISCONNECTION event to 
+	 * its application when it detects the disconnection from a server CM.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
+	 * <br>name of disconnected server.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()} 
+	 * <br>index of the disconnected non-blocking socket channel.</li>
+	 * </ul> 
+	 */
 	public static final int UNEXPECTED_SERVER_DISCONNECTION = 99;
 
-	// local CM event from CM to notify that it intentionally disconnect a channel.
+	/**
+	 * The event ID for notifying the application of intentional disconnection from 
+	 * a remote node by CM.
+	 * <p>event direction: CM -> application (local event)
+	 * <p>CM delivers the INTENTIONALLY_DISCONNECT event to its application when it 
+	 * disconnects a problematic non-blocking socket channel. 
+	 * A non-blocking socket channel is regarded as problematic if 
+	 * <br>(1) CM receives a malformed CM event.
+	 * <br>(2) the server keep-alive task enables and it detects the expiration of 
+	 * the keep-alive time of the channel. The server CM enables the keep-alive task 
+	 * if the KEEP_ALIVE_TIME field of the configuration file is set to a value 
+	 * greater than 0.
+	 * <p>The following fields are used for this event:
+	 * <ul>
+	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
+	 * <br>name of remote node with the problematic socket channel disconnected by 
+	 * the local CM.</li>
+	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
+	 * <br>index of the problematic non-blocking socket channel disconnected by 
+	 * the local CM.</li>
+	 * </ul> 
+	 */
 	public static final int INTENTIONALLY_DISCONNECT = 100;
 
 	private String m_strUserName;
@@ -409,12 +506,17 @@ public class CMSessionEvent extends CMEvent {
 	}
 	
 	// set/get methods
+	
 	public void setHostAddress(String host)
 	{
 		if(host != null)
 			m_strHostAddr = host;
 	}
 	
+	/**
+	 * (from here)
+	 * @return
+	 */
 	public String getHostAddress()
 	{
 		return m_strHostAddr;
