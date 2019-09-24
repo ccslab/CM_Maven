@@ -514,8 +514,9 @@ public class CMSessionEvent extends CMEvent {
 	}
 	
 	/**
-	 * (from here)
-	 * @return
+	 * Returns the host IP address.
+	 * 
+	 * @return the IP address.
 	 */
 	public String getHostAddress()
 	{
@@ -527,6 +528,11 @@ public class CMSessionEvent extends CMEvent {
 		m_nUDPPort = port;
 	}
 	
+	/**
+	 * Returns UDP port number.
+	 * 
+	 * @return UDP port number.
+	 */
 	public int getUDPPort()
 	{
 		return m_nUDPPort;
@@ -538,6 +544,10 @@ public class CMSessionEvent extends CMEvent {
 			m_strPasswd = passwd;
 	}
 	
+	/**
+	 * Returns the password.
+	 * @return password.
+	 */
 	public String getPassword()
 	{
 		return m_strPasswd;
@@ -549,6 +559,11 @@ public class CMSessionEvent extends CMEvent {
 			m_strUserName = uname;
 	}
 	
+	/**
+	 * Returns the user name.
+	 * 
+	 * @return user name.
+	 */
 	public String getUserName()
 	{
 		return m_strUserName;
@@ -559,6 +574,11 @@ public class CMSessionEvent extends CMEvent {
 		m_bValidUser = bValid;
 	}
 	
+	/**
+	 * Returns if the user authentication has succeeded or not.
+	 * 
+	 * @return 1 if the user is authenticated; 0 otherwise.
+	 */
 	public int isValidUser()
 	{
 		return m_bValidUser;
@@ -570,6 +590,11 @@ public class CMSessionEvent extends CMEvent {
 			m_strSessionName = sname;
 	}
 	
+	/**
+	 * Returns the session name.
+	 * 
+	 * @return session name.
+	 */
 	public String getSessionName()
 	{
 		return m_strSessionName;
@@ -581,6 +606,12 @@ public class CMSessionEvent extends CMEvent {
 			m_strCommArch = commArch;
 	}
 	
+	/**
+	 * Returns the communication architecture of the server.
+	 * 
+	 * @return communication architecture.
+	 * <br>"CM_CS" or "CM_PS".
+	 */
 	public String getCommArch()
 	{
 		return m_strCommArch;
@@ -591,6 +622,11 @@ public class CMSessionEvent extends CMEvent {
 		m_bFileTransferScheme = bFileTransferScheme;
 	}
 	
+	/**
+	 * Returns if the new file-transfer scheme is on or off.
+	 * 
+	 * @return 1 if the new file-transfer scheme is on; 0 otherwise.
+	 */
 	public int isFileTransferScheme()
 	{
 		return m_bFileTransferScheme;
@@ -601,6 +637,11 @@ public class CMSessionEvent extends CMEvent {
 		m_bLoginScheme = bLoginScheme;
 	}
 	
+	/**
+	 * Returns if the server authenticates a user or not.
+	 * 
+	 * @return 1 if the user authentication is used; 0 otherwise.
+	 */
 	public int isLoginScheme()
 	{
 		return m_bLoginScheme;
@@ -611,6 +652,11 @@ public class CMSessionEvent extends CMEvent {
 		m_bSessionScheme = bSessionScheme;
 	}
 	
+	/**
+	 * Returns if the server uses multiple sessions or not.
+	 * 
+	 * @return 1 if multiple sessions are used; 0 otherwise.
+	 */
 	public int isSessionScheme()
 	{
 		return m_bSessionScheme;
@@ -621,6 +667,15 @@ public class CMSessionEvent extends CMEvent {
 		m_nAttachDownloadScheme = nScheme;
 	}
 	
+	/**
+	 * Returns the current download mode of an image file attached to SNS content.
+	 * 
+	 * @return the download mode.
+	 * <br>0: full (original image)
+	 * <br>1: partial (thumbnail image)
+	 * <br>2: prefetch (prefetch original image)
+	 * <br>3: none (text information)
+	 */
 	public int getAttachDownloadScheme()
 	{
 		return m_nAttachDownloadScheme;
@@ -631,6 +686,11 @@ public class CMSessionEvent extends CMEvent {
 		m_nReturnCode = code;
 	}
 	
+	/**
+	 * Returns the return code.
+	 * 
+	 * @return 1 for successful return code; 0 otherwise.
+	 */
 	public int getReturnCode()
 	{
 		return m_nReturnCode;
@@ -642,6 +702,11 @@ public class CMSessionEvent extends CMEvent {
 			m_strTalk = talk;
 	}
 	
+	/**
+	 * Returns the chatting message.
+	 * 
+	 * @return chatting message.
+	 */
 	public String getTalk()
 	{
 		return m_strTalk;
@@ -653,6 +718,11 @@ public class CMSessionEvent extends CMEvent {
 			m_strCurrentGroupName = gname;
 	}
 	
+	/**
+	 * Returns the current group name.
+	 * 
+	 * @return the current group name.
+	 */
 	public String getCurrentGroupName()
 	{
 		return m_strCurrentGroupName;
@@ -664,6 +734,11 @@ public class CMSessionEvent extends CMEvent {
 			m_strCurrentAddress = addr;
 	}
 	
+	/**
+	 * Returns the current address.
+	 * 
+	 * @return the current address.
+	 */
 	public String getCurrentAddress()
 	{
 		return m_strCurrentAddress;
@@ -674,6 +749,11 @@ public class CMSessionEvent extends CMEvent {
 		m_nCurrentPort = port;
 	}
 	
+	/**
+	 * Returns the current port number.
+	 * 
+	 * @return the current port number.
+	 */
 	public int getCurrentPort()
 	{
 		return m_nCurrentPort;
@@ -685,6 +765,11 @@ public class CMSessionEvent extends CMEvent {
 			m_strChannelName = name;
 	}
 	
+	/**
+	 * Returns the channel name.
+	 * 
+	 * @return the channel name.
+	 */
 	public String getChannelName()
 	{
 		return m_strChannelName;
@@ -695,6 +780,11 @@ public class CMSessionEvent extends CMEvent {
 		m_nChannelNum = num;
 	}
 	
+	/**
+	 * Returns the channel index.
+	 * 
+	 * @return the channel index.
+	 */
 	public int getChannelNum()
 	{
 		return m_nChannelNum;
@@ -705,6 +795,11 @@ public class CMSessionEvent extends CMEvent {
 		m_nSessionNum = num;
 	}
 	
+	/**
+	 * Returns the number of sessions.
+	 * 
+	 * @return the number of sessions.
+	 */
 	public int getSessionNum()
 	{
 		return m_nSessionNum;
@@ -715,6 +810,11 @@ public class CMSessionEvent extends CMEvent {
 		m_nGroupNum = num;
 	}
 	
+	/**
+	 * Returns the number of groups.
+	 * 
+	 * @return the number of groups.
+	 */
 	public int getGroupNum()
 	{
 		return m_nGroupNum;
@@ -726,6 +826,11 @@ public class CMSessionEvent extends CMEvent {
 			m_strCreationTime = time;
 	}
 	
+	/**
+	 * Returns the user registration date and time.
+	 * 
+	 * @return the user registration date and time.
+	 */
 	public String getCreationTime()
 	{
 		return m_strCreationTime;
@@ -736,6 +841,11 @@ public class CMSessionEvent extends CMEvent {
 		m_nKeepAliveTime = nSecond;
 	}
 	
+	/**
+	 * Returns the keep-alive time.
+	 * 
+	 * @return the keep-alive time.
+	 */
 	public int getKeepAliveTime()
 	{
 		return m_nKeepAliveTime;
@@ -839,6 +949,11 @@ public class CMSessionEvent extends CMEvent {
 		return tsi;
 	}
 	
+	/**
+	 * Returns the list of CMSessionInfo objects.
+	 * 
+	 * @return the list of CMSessionInfo objects.
+	 */
 	public Vector<CMSessionInfo> getSessionInfoList()
 	{
 		return m_sessionList;
@@ -942,6 +1057,11 @@ public class CMSessionEvent extends CMEvent {
 		return tgi;
 	}
 	
+	/**
+	 * Returns the list of CMGroupInfo objects.
+	 * 
+	 * @return the list of CMGroupInfo objects.
+	 */
 	public Vector<CMGroupInfo> getGroupInfoList()
 	{
 		return m_groupList;
