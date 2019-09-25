@@ -269,6 +269,7 @@ public class CMCommManager {
 			break;
 		case CMInfo.CM_SOCKET_CHANNEL:
 			SocketChannel sc = SocketChannel.open(new InetSocketAddress(address, port));
+			sc.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
 			sc.configureBlocking(true);
 			ch = sc;
 			break;
