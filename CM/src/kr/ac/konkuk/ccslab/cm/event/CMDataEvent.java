@@ -1,14 +1,63 @@
 package kr.ac.konkuk.ccslab.cm.event;
-import java.awt.geom.FlatteningPathIterator;
 import java.nio.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
+/**
+ * This class represents CM events that are used for notifying a new logged-in user or 
+ * existing logged-in users of the information of membership change.
+ * 
+ * @author CCSLab, Konkuk University
+ *
+ */
 public class CMDataEvent extends CMEvent{
+
+	/**
+	 * The event ID for sending an existing logged-in user from a server to a new client.
+	 * <p>event direction: server -> client
+	 * <p>The server CM sends the INHABITANT event to the login-requesting client CM  
+	 * right after the server sent the {@link CMSessionEvent#LOGIN_ACK} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMDataEvent#getUserName()}</li>
+	 * <li>host address: {@link CMDataEvent#getHostAddress()}</li>
+	 * <li>UDP port number: {@link CMDataEvent#getUDPPort()}</li>
+	 * </ul>
+	 */
 	public static final int INHABITANT = 1;
+	
+	/**
+	 * The event ID for sending new group user information from a server to existing 
+	 * group members.
+	 * <p>event direction: server -> client
+	 * <p>The server CM sends the NEW_USER event to the existing group members 
+	 * right after the server processes the {@link CMInterestEvent#USER_ENTER} events.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>new user name: {@link CMDataEvent#getUserName()}</li>
+	 * <li>host address: {@link CMDataEvent#getHostAddress()}</li>
+	 * <li>UDP port number: {@link CMDataEvent#getUDPPort()}</li> 
+	 * </ul>
+	 */
 	public static final int NEW_USER = 2;
+	
+	/**
+	 * The event ID for sending a group-leaving user information from a server to 
+	 * the group members.
+	 * <p>event direction: server -> client
+	 * <p>The server CM sends the REMOVE_USER event to the group members  
+	 * after it processes the {@link CMInterestEvent#USER_LEAVE} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMDataEvent#getUserName()}</li>
+	 * </ul>
+	 */
 	public static final int REMOVE_USER = 3;
+	
+	/*
+	 * current not used!
+	 */
 	public static final int REQUEST_INHABITANT = 4;
 	
 	private String m_strUserName;
@@ -35,12 +84,17 @@ public class CMDataEvent extends CMEvent{
 	}
 	
 	// set/get methods
+	
 	public void setUserName(String name)
 	{
 		if(name != null)
 			m_strUserName = name;
 	}
 	
+	/**
+	 * Returns the user name.
+	 * @return the user name.
+	 */
 	public String getUserName()
 	{
 		return m_strUserName;
@@ -63,6 +117,11 @@ public class CMDataEvent extends CMEvent{
 			m_strHostAddr = host;
 	}
 	
+	/**
+	 * Returns the host IP address.
+	 * 
+	 * @return the host IP address.
+	 */
 	public String getHostAddress()
 	{
 		return m_strHostAddr;
@@ -73,6 +132,10 @@ public class CMDataEvent extends CMEvent{
 		m_nUDPPort = port;
 	}
 	
+	/**
+	 * Returns the UDP port number.
+	 * @return the UDP port number.
+	 */
 	public int getUDPPort()
 	{
 		return m_nUDPPort;

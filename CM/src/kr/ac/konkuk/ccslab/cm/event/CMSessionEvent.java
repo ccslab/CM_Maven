@@ -47,7 +47,7 @@ public class CMSessionEvent extends CMEvent {
 	 * The event ID for response to the login request from the default server to the client.
 	 * <p>event direction: default server -> client
 	 * <p>The default server sends the LOGIN_ACK event to the client as the response to 
-	 * the LOGIN event.
+	 * the {@link CMSessionEvent#LOGIN} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>response code: {@link CMSessionEvent#isValidUser()}
@@ -93,7 +93,8 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of available session information.
 	 * <p>event direction: default server -> client
-	 * <p>The RESPONSE_SESSION_INFO event is the reply of the REQUEST_SESSION_INFO event.
+	 * <p>The RESPONSE_SESSION_INFO event is the reply of 
+	 * the {@link CMSessionEvent#REQUEST_SESSION_INFO} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>number of sessions: {@link CMSessionEvent#getSessionNum()}</li>
@@ -119,7 +120,8 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of joining a session.
 	 * <p>event direction: default session -> client
-	 * <p>The JOIN_SESSION_ACK event is the reply of the JOIN_SESSION event.
+	 * <p>The JOIN_SESSION_ACK event is the reply of 
+	 * the {@link CMSessionEvent#JOIN_SESSION} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>number of groups: {@link CMSessionEvent#getGroupNum()}</li>
@@ -144,7 +146,8 @@ public class CMSessionEvent extends CMEvent {
 	/* (NOT USED YET!)
 	 * The event ID for the response to the request of leaving the current session.
 	 * <p>event direction: default server -> client
-	 * <p>The LEAVE_SESSION_ACK is the reply of the LEAVE_SESSION event.
+	 * <p>The LEAVE_SESSION_ACK is the reply of the {@link CMSessionEvent#LEAVE_SESSION} 
+	 * event.
 	 * <br>The following field is used for this event:
 	 * <ul>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
@@ -227,7 +230,7 @@ public class CMSessionEvent extends CMEvent {
 	 * channel information.
 	 * <p>event direction: server -> client
 	 * <p>The ADD_NONBLOCK_SOCKET_CHANNEL_ACK event is the reply of 
-	 * the ADD_NONBLOCK_SOCKET_CHANNEL event.
+	 * the {@link CMSessionEvent#ADD_NONBLOCK_SOCKET_CHANNEL} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
@@ -263,7 +266,7 @@ public class CMSessionEvent extends CMEvent {
 	 * channel information.
 	 * <p>event direction: server -> client
 	 * <p>The ADD_BLOCK_SOCKET_CHANNEL_ACK event is the reply of 
-	 * the ADD_BLOCK_SOCKET_CHANNEL event.
+	 * the {@link CMSessionEvent#ADD_BLOCK_SOCKET_CHANNEL} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
@@ -299,7 +302,7 @@ public class CMSessionEvent extends CMEvent {
 	 * channel information.
 	 * <p>event direction: server -> client
 	 * <p>The REMOVE_BLOCK_SOCKET_CHANNEL_ACK event is the reply of 
-	 * the REMOVE_BLOCK_SOCKET_CHANNEL event.
+	 * the {@link CMSessionEvent#REMOVE_BLOCK_SOCKET_CHANNEL} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
@@ -329,7 +332,8 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of registering a new user.
 	 * <p>event direction: default server -> client
-	 * <p>The REGISTER_USER_ACK event is the reply of the REGISTER_USER event.
+	 * <p>The REGISTER_USER_ACK event is the reply of 
+	 * the {@link CMSessionEvent#REGISTER_USER} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
@@ -359,7 +363,8 @@ public class CMSessionEvent extends CMEvent {
 	 * The event ID for the response to the request of deregistering a user from 
 	 * the default server.
 	 * <p>event direction: default server -> client
-	 * <p>The DEREGISTER_USER_ACK event is the reply of the DEREGISTER_USER event.
+	 * <p>The DEREGISTER_USER_ACK event is the reply of 
+	 * the {@link CMSessionEvent#DEREGISTER_USER} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
@@ -386,7 +391,8 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of searching for a registered user.
 	 * <p>event direction: default server -> client
-	 * <p>The FIND_REGISTERED_USER_ACK event is the reply of the FIND_REGISTERED_USER event.
+	 * <p>The FIND_REGISTERED_USER_ACK event is the reply of 
+	 * the {@link CMSessionEvent#FIND_REGISTERED_USER} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
