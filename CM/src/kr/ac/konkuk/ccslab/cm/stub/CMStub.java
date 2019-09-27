@@ -2324,16 +2324,19 @@ public class CMStub {
 		
 		synchronized(eventSync)
 		{
-			while(replyEvent == null)
-			{
-				try {
-					eventSync.wait(30000);					
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				replyEvent = (CMFileEvent) eventSync.getReplyEvent();
+			try {
+				eventSync.wait(20000);					
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			replyEvent = (CMFileEvent) eventSync.getReplyEvent();
+			if(replyEvent == null)
+			{
+				System.err.println("CMStub.measureInputThroughput(), timeout expired!");
+				return -1;
+			}
+			
 			lFileSize = replyEvent.getFileSize();
 		}
 		
@@ -2393,16 +2396,19 @@ public class CMStub {
 		
 		synchronized(eventSync)
 		{
-			while(replyEvent == null)
-			{
-				try {
-					eventSync.wait(30000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				replyEvent = (CMFileEvent) eventSync.getReplyEvent();
+			try {
+				eventSync.wait(20000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			replyEvent = (CMFileEvent) eventSync.getReplyEvent();
+			if(replyEvent == null)
+			{
+				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
+				return -1;
+			}
+			
 			lFileSize = replyEvent.getFileSize();
 		}
 				
