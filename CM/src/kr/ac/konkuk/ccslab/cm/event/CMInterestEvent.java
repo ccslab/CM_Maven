@@ -5,11 +5,57 @@ import kr.ac.konkuk.ccslab.cm.entity.CMPoint3f;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
+/**
+ * This class represents CM events that are used when a user changes the group membership 
+ * or interacts with the other group members.
+ * 
+ * @author CCSLab, Konkuk University
+ *
+ */
 public class CMInterestEvent extends CMEvent{
+
+	/**
+	 * The event ID for the request of joining a group in the default server.
+	 * <p>event direction: client -> default server
+	 * <p>A client sends the USER_ENTER event after it processes 
+	 * {@link CMSessionEvent#JOIN_SESSION_ACK}. This event is also sent when 
+	 * the user changes his/her current group.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMInterestEvent#getUserName()}</li>
+	 * <li>IP address of the user host: {@link CMInterestEvent#getHostAddress()}</li>
+	 * <li>UDP port number of the user: {@link CMInterestEvent#getUDPPort()}</li>
+	 * <li>current group name of the user: {@link CMInterestEvent#getCurrentGroup()}</li> 
+	 * </ul>
+	 */
 	public static final int USER_ENTER = 1;
+	
+	/**
+	 * The event ID for leaving a group in the default server.
+	 * <p>event direction: client -> default server
+	 * <p>A client sends the USER_LEAVE event when it leaves the current group 
+	 * so that it can enter a new group.
+	 * <br>The following field is used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMInterestEvent#getUserName()}</li>
+	 * </ul>
+	 */
 	public static final int USER_LEAVE = 2;
+	
 	public static final int USER_MOVE = 3;
 	public static final int USER_COLLIDE = 4;
+	
+	/**
+	 * The event ID for a chatting message in a group.
+	 * <p>event direction: client -> server, client -> client
+	 * <p>The USER_TALK event is sent when a client which is a group member calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#chat(String, String)}.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>user name: {@link CMInterestEvent#getUserName()}</li>
+	 * <li>chatting message: {@link CMInterestEvent#getTalk()}</li>
+	 * </ul>
+	 */
 	public static final int USER_TALK = 5;
 
 	private String m_strUserName;
@@ -19,7 +65,7 @@ public class CMInterestEvent extends CMEvent{
 	private String m_strCurrentGroup;
 	private String m_strTalk;
 	private CMPosition m_pq;
-	private String m_strCollideObj;	
+	private String m_strCollideObj;
 
 	public CMInterestEvent()
 	{
@@ -49,12 +95,17 @@ public class CMInterestEvent extends CMEvent{
 	}
 	
 	// set/get methods
+	
 	public void setUserName(String name)
 	{
 		if(name != null)
 			m_strUserName = name;
 	}
 	
+	/**
+	 * Returns the user name.
+	 * @return the user name.
+	 */
 	public String getUserName()
 	{
 		return m_strUserName;
@@ -77,6 +128,11 @@ public class CMInterestEvent extends CMEvent{
 			m_strHostAddr = host;
 	}
 	
+	/**
+	 * Returns the host IP address.
+	 * 
+	 * @return the host IP address.
+	 */
 	public String getHostAddress()
 	{
 		return m_strHostAddr;
@@ -87,6 +143,11 @@ public class CMInterestEvent extends CMEvent{
 		m_nUDPPort = port;
 	}
 	
+	/**
+	 * Returns the UDP port number.
+	 * 
+	 * @return the UDP port number.
+	 */
 	public int getUDPPort()
 	{
 		return m_nUDPPort;
@@ -98,6 +159,11 @@ public class CMInterestEvent extends CMEvent{
 			m_strCurrentGroup = gName;
 	}
 	
+	/**
+	 * Returns the current group name.
+	 * 
+	 * @return the current group name.
+	 */
 	public String getCurrentGroup()
 	{
 		return m_strCurrentGroup;
@@ -109,6 +175,11 @@ public class CMInterestEvent extends CMEvent{
 			m_strTalk = talk;
 	}
 	
+	/**
+	 * Returns the chatting message.
+	 * 
+	 * @return the chatting message.
+	 */
 	public String getTalk()
 	{
 		return m_strTalk;
