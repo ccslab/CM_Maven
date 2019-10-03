@@ -42,7 +42,8 @@ public class CMClientKeepAliveTask implements Runnable {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMClientKeepAliveTask.run(): current time("+lCurTime
-						+"), last event-transmission time to def server("+lMyLastEventTransTimeToDefServer);
+						+"), last event-transmission time to def server("
+						+lMyLastEventTransTimeToDefServer+")");
 				System.out.println("elpased time("+(lElapsedTime/1000.0)
 						+"), my keep-alive time("+nKeepAliveTime+")");
 			}
