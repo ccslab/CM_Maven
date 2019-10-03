@@ -19,11 +19,13 @@ public class CMSendFileTask implements Runnable {
 
 	CMSendFileInfo m_sendFileInfo;
 	CMBlockingEventQueue m_sendQueue;
+	CMInfo m_cmInfo;
 	
-	public CMSendFileTask(CMSendFileInfo sendFileInfo, CMBlockingEventQueue sendQueue)
+	public CMSendFileTask(CMSendFileInfo sendFileInfo, CMInfo cmInfo)
 	{
 		m_sendFileInfo = sendFileInfo;
-		m_sendQueue = sendQueue;
+		m_cmInfo = cmInfo;
+		m_sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
 	}
 	
 	@Override
@@ -47,6 +49,10 @@ public class CMSendFileTask implements Runnable {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+					m_sendFileInfo.getReceiverName(), 
+					m_sendFileInfo.getFileName(), 
+					m_sendFileInfo.getContentID());
 			return;
 		}
 		
@@ -59,7 +65,12 @@ public class CMSendFileTask implements Runnable {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				closeRandomAccessFile(raf);				
+				closeRandomAccessFile(raf);
+				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+						m_sendFileInfo.getReceiverName(), 
+						m_sendFileInfo.getFileName(), 
+						m_sendFileInfo.getContentID());
+
 				return;
 			}
 		}
@@ -91,6 +102,11 @@ public class CMSendFileTask implements Runnable {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				closeRandomAccessFile(raf);
+				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+						m_sendFileInfo.getReceiverName(), 
+						m_sendFileInfo.getFileName(), 
+						m_sendFileInfo.getContentID());
+
 				return;
 			}
 			
@@ -121,6 +137,16 @@ public class CMSendFileTask implements Runnable {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 					closeRandomAccessFile(raf);
+					try {
+						sendSC.close();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+							m_sendFileInfo.getReceiverName(), 
+							m_sendFileInfo.getFileName(), 
+							m_sendFileInfo.getContentID());
 					return;
 				}
 			} // inner while loop

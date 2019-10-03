@@ -1783,7 +1783,6 @@ public class CMFileTransferManager {
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMThreadInfo threadInfo = cmInfo.getThreadInfo();
 		CMSendFileInfo sInfo = null;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
 		
 		// find the CMSendFileInfo object 
 		sInfo = fInfo.findSendFileInfo(fe.getReceiverName(), fe.getFileName(), fe.getContentID());
@@ -1818,7 +1817,7 @@ public class CMFileTransferManager {
 
 		// start a dedicated sending thread
 		Future<CMSendFileInfo> future = null;
-		CMSendFileTask sendFileTask = new CMSendFileTask(sInfo, commInfo.getSendBlockingEventQueue());
+		CMSendFileTask sendFileTask = new CMSendFileTask(sInfo, cmInfo);
 		future = threadInfo.getExecutorService().submit(sendFileTask, sInfo);
 		sInfo.setSendTaskResult(future);		
 
@@ -1947,7 +1946,7 @@ public class CMFileTransferManager {
 
 		// start a dedicated thread to receive the file
 		Future<CMRecvFileInfo> future = null;
-		CMRecvFileTask recvFileTask = new CMRecvFileTask(rfInfo);
+		CMRecvFileTask recvFileTask = new CMRecvFileTask(rfInfo, cmInfo);
 		future = threadInfo.getExecutorService().submit(recvFileTask, rfInfo);
 		rfInfo.setRecvTaskResult(future);
 		

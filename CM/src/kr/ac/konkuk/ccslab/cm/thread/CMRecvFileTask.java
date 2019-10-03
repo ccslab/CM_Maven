@@ -13,10 +13,12 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 public class CMRecvFileTask implements Runnable {
 
 	CMRecvFileInfo m_recvFileInfo;
+	CMInfo m_cmInfo;
 	
-	public CMRecvFileTask(CMRecvFileInfo recvFileInfo)
+	public CMRecvFileTask(CMRecvFileInfo recvFileInfo, CMInfo cmInfo)
 	{
 		m_recvFileInfo = recvFileInfo;
+		m_cmInfo = cmInfo;
 	}
 	
 	@Override
@@ -40,6 +42,11 @@ public class CMRecvFileTask implements Runnable {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+					m_recvFileInfo.getSenderName(), 
+					m_recvFileInfo.getFileName(), 
+					m_recvFileInfo.getContentID());
+
 			return;
 		}
 		
@@ -52,7 +59,12 @@ public class CMRecvFileTask implements Runnable {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				closeRandomAccessFile(raf);				
+				closeRandomAccessFile(raf);
+				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+						m_recvFileInfo.getSenderName(), 
+						m_recvFileInfo.getFileName(), 
+						m_recvFileInfo.getContentID());
+
 				return;
 			}
 		}
@@ -83,6 +95,17 @@ public class CMRecvFileTask implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				closeRandomAccessFile(raf);
+				try {
+					recvSC.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+						m_recvFileInfo.getSenderName(), 
+						m_recvFileInfo.getFileName(), 
+						m_recvFileInfo.getContentID());
+
 				return;
 			}
 			
@@ -113,6 +136,11 @@ public class CMRecvFileTask implements Runnable {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 					closeRandomAccessFile(raf);
+					m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+							m_recvFileInfo.getSenderName(), 
+							m_recvFileInfo.getFileName(), 
+							m_recvFileInfo.getContentID());
+
 					return;
 				}	
 			} // inner while loop
