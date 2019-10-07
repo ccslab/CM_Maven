@@ -42,7 +42,7 @@ public class CMRecvFileTask implements Runnable {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+			m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
 					m_recvFileInfo.getSenderName(), 
 					m_recvFileInfo.getFileName(), 
 					m_recvFileInfo.getContentID());
@@ -60,7 +60,7 @@ public class CMRecvFileTask implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				closeRandomAccessFile(raf);
-				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+				m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
 						m_recvFileInfo.getSenderName(), 
 						m_recvFileInfo.getFileName(), 
 						m_recvFileInfo.getContentID());
@@ -101,7 +101,7 @@ public class CMRecvFileTask implements Runnable {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+				m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
 						m_recvFileInfo.getSenderName(), 
 						m_recvFileInfo.getFileName(), 
 						m_recvFileInfo.getContentID());
@@ -136,7 +136,7 @@ public class CMRecvFileTask implements Runnable {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 					closeRandomAccessFile(raf);
-					m_cmInfo.getFileTransferInfo().removeSendFileInfo(
+					m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
 							m_recvFileInfo.getSenderName(), 
 							m_recvFileInfo.getFileName(), 
 							m_recvFileInfo.getContentID());
