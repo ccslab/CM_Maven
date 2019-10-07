@@ -400,7 +400,7 @@ public class CMFileTransferInfo {
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferInfo.removeSendFileInfo() done : "+rInfo.toString());
+			System.out.println("CMFileTransferInfo.removeRecvFileInfo() done : "+rInfo.toString());
 			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
 		}
 		
