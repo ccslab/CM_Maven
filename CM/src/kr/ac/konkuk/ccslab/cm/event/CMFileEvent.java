@@ -4,20 +4,118 @@ import java.nio.*;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * This class represents CM events that are used for file-transfer tasks.
+ * This class represents CM events that are used for the file-transfer task.
  * 
- * @author mlim
- * @see CMEvent
+ * @author CCSLab, Konkuk University
  */
 public class CMFileEvent extends CMEvent{
 	
-	// events for the file transfer with the default channel
-	public static final int REQUEST_FILE_TRANSFER = 1;		// receiver -> sender
-	public static final int REPLY_FILE_TRANSFER = 2;		// sender -> receiver
-	public static final int START_FILE_TRANSFER = 3;		// sender -> receiver
-	public static final int START_FILE_TRANSFER_ACK = 4;	// receiver -> sender
-	public static final int CONTINUE_FILE_TRANSFER = 5;		// sender -> receiver
+	/**
+	 * The event ID for requesting a file.
+	 * <p>event direction: receiver (requester) -> sender (file owner)
+	 * <p>This event is sent when the receiver calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String)} or 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String, byte)}, 
+	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
+	 * (cm-server.conf) is set to 0.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>>= 0: the requested file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
+	 * <br>0: overwrite mode
+	 * <br>1: append mode</li>
+	 * </ul>
+	 */
+	public static final int REQUEST_FILE_TRANSFER = 1;
+	
+	/**
+	 * The event ID for the response to the file request.
+	 * <p>event direction: sender -> receiver
+	 * <p>The file owner sends this event as the response to the 
+	 * {@link CMFileEvent#REQUEST_FILE_TRANSFER} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
+	 * <li>return code: {@link CMFileEvent#getReturnCode()}
+	 * <br>0: the request is denied.
+	 * <br>1: the request is accepted.</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>>= 0: the requested file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li> 
+	 * </ul>
+	 */
+	public static final int REPLY_FILE_TRANSFER = 2;
+	
+	/**
+	 * The event ID for notifying the receiver of the start of file-transfer.
+	 * <p>event direction: sender -> receiver
+	 * <p>The file owner sends this event right after it sends the 
+	 * {@link CMFileEvent#REPLY_FILE_TRANSFER} event. The owner also sends this event 
+	 * when it calls the {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}, 
+ 	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
+	 * (cm-server.conf) is set to 0.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
+	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
+	 * <br>0: overwrite mode, 1: append mode</li>
+	 * </ul>
+	 */
+	public static final int START_FILE_TRANSFER = 3;
+	
+	/**
+	 * The event ID for the response to the notification of the start of file-transfer.
+	 * <p>event direction: receiver -> sender
+	 * <p>The file receiver sends this event as the response to the 
+	 * {@link CMFileEvent#START_FILE_TRANSFER} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * <li>received file size: {@link CMFileEvent#getReceivedFileSize()}
+	 * <br>> 0: the receiver has already received some bytes of the file.
+	 * <br>0: the receiver has no byte of the file.</li> 
+	 * </ul>
+	 */
+	public static final int START_FILE_TRANSFER_ACK = 4;
+	
+	/**
+	 * The event ID for transferring each file block.
+	 * <p>event direction: sender -> receiver
+	 * <p>The file owner starts to send this event when it receives the 
+	 * {@link CMFileEvent#START_FILE_TRANSFER_ACK} event. This event is repeatedly sent 
+	 * for each file block until all file blocks are sent to the receiver.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * <li>file block size: {@link CMFileEvent#getBlockSize()}</li>
+	 * <li>file block: {@link CMFileEvent#getFileBlock()}</li>
+	 * </ul>
+	 */
+	public static final int CONTINUE_FILE_TRANSFER = 5;
+	
 	public static final int CONTINUE_FILE_TRANSFER_ACK = 6;	// receiver -> sender (obsolete)
+	
+	/**
+	 * 
+	 * (from here)
+	 */
 	public static final int END_FILE_TRANSFER = 7;			// sender -> receiver
 	public static final int END_FILE_TRANSFER_ACK = 8;		// receiver -> sender
 	public static final int REQUEST_DIST_FILE_PROC = 9;		// c -> s (for distributed file processing)
