@@ -113,12 +113,48 @@ public class CMFileEvent extends CMEvent{
 	public static final int CONTINUE_FILE_TRANSFER_ACK = 6;	// receiver -> sender (obsolete)
 	
 	/**
+	 * The event ID for notifying the receiver of the end of file-transfer.
+	 * <p>event direction: sender -> receiver
+	 * <p>The file owner sends this event after it sends the last 
+	 * {@link CMFileEvent#CONTINUE_FILE_TRANSFER} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
+	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * </ul>
+	 */
+	public static final int END_FILE_TRANSFER = 7;
+	
+	/**
+	 * The event ID for the response to the notification of the end of file-transfer.
+	 * <p>event direction: receiver -> sender
+	 * <p>The file receiver sends this event as the response to the 
+	 * {@link CMFileEvent#END_FILE_TRANSFER} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
+	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
+	 * <li>return code: {@link CMFileEvent#getReturnCode()}
+	 * <br>1: success
+	 * <br>0: failure</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * </ul> 
+	 */
+	public static final int END_FILE_TRANSFER_ACK = 8;
+	
+	public static final int REQUEST_DIST_FILE_PROC = 9;		// c -> s (for distributed file processing)
+	
+	/**
 	 * 
 	 * (from here)
 	 */
-	public static final int END_FILE_TRANSFER = 7;			// sender -> receiver
-	public static final int END_FILE_TRANSFER_ACK = 8;		// receiver -> sender
-	public static final int REQUEST_DIST_FILE_PROC = 9;		// c -> s (for distributed file processing)
 	public static final int CANCEL_FILE_SEND = 10;			// sender -> receiver
 	public static final int CANCEL_FILE_SEND_ACK = 11;		// receiver -> sender
 	
