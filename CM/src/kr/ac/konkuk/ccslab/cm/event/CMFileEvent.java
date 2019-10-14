@@ -152,13 +152,42 @@ public class CMFileEvent extends CMEvent{
 	public static final int REQUEST_DIST_FILE_PROC = 9;		// c -> s (for distributed file processing)
 	
 	/**
-	 * 
-	 * (from here)
+	 * The event ID for the cancellation of pushing (or sending) a file.
+	 * <p>event direction: sender -> receiver
+	 * <p>The file sender sends this event when it calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cancelPushFile(String)}, 
+	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
+	 * (cm-server.conf) is set to 0.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * </ul>
 	 */
-	public static final int CANCEL_FILE_SEND = 10;			// sender -> receiver
+	public static final int CANCEL_FILE_SEND = 10;
+	
+	/**
+	 * The event ID for the response to the cancellation of sending a file.
+	 * <p>event direction: receiver -> sender
+	 * <p>The receiver sends this event as the response to the 
+	 * {@link CMFileEvent#CANCEL_FILE_SEND} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>return code: {@link CMFileEvent#getReturnCode()}
+	 * <br>1: cancellation success
+	 * <br>0: cancellation failure</li>
+	 * </ul>
+	 */
 	public static final int CANCEL_FILE_SEND_ACK = 11;		// receiver -> sender
 	
 	// events for the file transfer with the separate channel and thread
+	
+	/**
+	 * 
+	 * (from here)
+	 */
 	public static final int REQUEST_FILE_TRANSFER_CHAN = 12;		// receiver -> sender
 	public static final int REPLY_FILE_TRANSFER_CHAN = 13;		// sender -> receiver
 	public static final int START_FILE_TRANSFER_CHAN = 14;		// sender -> receiver
