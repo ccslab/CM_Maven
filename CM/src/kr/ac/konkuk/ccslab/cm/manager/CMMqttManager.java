@@ -25,6 +25,11 @@ import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 /**
  * The CMMqttManager class represents a CM service object with which an application can 
  * request Mqtt service.
+ * <br>The protocol of the CMMqttManager class conforms to MQTT version 3.1.1. 
+ * (http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html)
+ * <br>CM wraps all MQTT messages in CM events so that CM nodes can run as a publisher 
+ * or a subscriber.
+ * 
  * @author CCSLab, Konkuk University
  *
  */
@@ -36,16 +41,39 @@ public class CMMqttManager extends CMServiceManager {
 		m_nType = CMInfo.CM_MQTT_MANAGER;
 	}
 	
+	/**
+	 * Connects to the default server for the CM publish-subscribe service.
+	 * <p>A CM client that has logged in to the default server must call the connect() 
+	 * method before it uses the CM publish-subscribe service.
+	 * <br>This method is same as connect(null,null,false,(byte)0, false,false,0) of 
+	 * the {@link CMMqttManager#connect(String, String, boolean, byte, boolean, boolean, int)} 
+	 * method.
+	 * 
+	 * @return true if the connect succeeds; false otherwise.
+	 */
 	public boolean connect()
 	{
 		// client -> server
 		boolean bRet = false;
-		bRet = connect(null, null, false, (byte)0, false, false, 0);
+		bRet = connect(null, null, false, (byte)0, false, false);
 		return bRet;
 	}
 	
+	/**
+	 * Connects to the default server for the CM publish-subscribe service.
+	 * <p>A CM client that has logged in to the default server must call the connect() 
+	 * method before it uses the CM publish-subscribe service.
+	 * 
+	 * @param strWillTopic - will topic
+	 * @param strWillMessage - will message
+	 * @param bWillRetain - will retain
+	 * @param willQoS - will QoS
+	 * @param bWillFlag - will flag
+	 * @param bCleanSession - clean session flag
+	 * @return true if the connect succeeds; false otherwise.
+	 */
 	public boolean connect(String strWillTopic, String strWillMessage, boolean bWillRetain,
-			byte willQoS, boolean bWillFlag, boolean bCleanSession, int nKeepAlive)
+			byte willQoS, boolean bWillFlag, boolean bCleanSession)
 	{
 		// client -> server
 		// check if the client has logged in to the default server.
@@ -76,7 +104,7 @@ public class CMMqttManager extends CMServiceManager {
 		conEvent.setWillQoS(willQoS);
 		conEvent.setWillFlag(bWillFlag);
 		conEvent.setCleanSessionFlag(bCleanSession);
-		conEvent.setKeepAlive(nKeepAlive);
+		conEvent.setKeepAlive(myself.getKeepAliveTime());
 		// set payload
 		conEvent.setClientID(myself.getName());	// = CM user name
 		conEvent.setWillTopic(strWillTopic);
@@ -123,6 +151,13 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * @param strTopic
+	 * @param strMsg
+	 * @return
+	 */
 	public boolean publish(String strTopic, String strMsg)
 	{
 		// client -> server or server -> client
