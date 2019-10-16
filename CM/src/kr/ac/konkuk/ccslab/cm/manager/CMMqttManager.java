@@ -152,11 +152,13 @@ public class CMMqttManager extends CMServiceManager {
 	}
 	
 	/**
+	 * Publishes a message.
+	 * <p>This method is the same as publish(strTopic, strMsg, (byte)0, false, false) of 
+	 * the {@link CMMqttManager#publish(String, String, byte, boolean, boolean)} method.
 	 * 
-	 * (from here)
-	 * @param strTopic
-	 * @param strMsg
-	 * @return
+	 * @param strTopic - topic
+	 * @param strMsg - message
+	 * @return true if the message is successfully published; false otherwise.
 	 */
 	public boolean publish(String strTopic, String strMsg)
 	{
@@ -166,6 +168,16 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
+	/**
+	 * Publishes a message.
+	 * <p>This method is the same as publish(strTopic, strMsg, qos, false, false) of the 
+	 * {@link CMMqttManager#publish(String, String, byte, boolean, boolean)} method.
+	 * 
+	 * @param strTopic - topic
+	 * @param strMsg - message
+	 * @param qos - QoS level
+	 * @return true if the message is successfully published; false otherwise.
+	 */
 	public boolean publish(String strTopic, String strMsg, byte qos)
 	{
 		// client -> server or server -> client
@@ -174,6 +186,16 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
+	/**
+	 * Publishes a message.
+	 * 
+	 * @param strTopic - topic
+	 * @param strMsg - message
+	 * @param qos - QoS level
+	 * @param bDupFlag - DUP flag
+	 * @param bRetainFlag - retain flag
+	 * @return true if the message is successfully published; false otherwise.
+	 */
 	public boolean publish(String strTopic, String strMsg, byte qos, 
 				boolean bDupFlag, boolean bRetainFlag)
 	{
@@ -568,6 +590,13 @@ public class CMMqttManager extends CMServiceManager {
 		return true;
 	}
 	
+	/**
+	 * 
+	 * (from here)
+	 * @param strTopicFilter
+	 * @param qos
+	 * @return
+	 */
 	public boolean subscribe(String strTopicFilter, byte qos)
 	{
 		CMMqttTopicQoS topicQoS = new CMMqttTopicQoS(strTopicFilter, qos);
