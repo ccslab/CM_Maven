@@ -1,7 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
 /**
- * The CMMqttTopicQoS class represents a pair of a topic fileter and a requested QoS, 
+ * The CMMqttTopicQoS class represents a pair of a topic filter and a requested QoS, 
  * and it is used in the topic subscription process of the MQTT protocol.
  * 
  * @author CCSLab, Konkuk University

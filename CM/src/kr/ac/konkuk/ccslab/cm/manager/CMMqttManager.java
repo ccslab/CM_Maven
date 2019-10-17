@@ -159,6 +159,9 @@ public class CMMqttManager extends CMServiceManager {
 	 * @param strTopic - topic
 	 * @param strMsg - message
 	 * @return true if the message is successfully published; false otherwise.
+	 * 
+	 * @see CMMqttManager#publish(String, String, byte)
+	 * @see CMMqttManager#publish(String, String, byte, boolean, boolean)
 	 */
 	public boolean publish(String strTopic, String strMsg)
 	{
@@ -177,6 +180,9 @@ public class CMMqttManager extends CMServiceManager {
 	 * @param strMsg - message
 	 * @param qos - QoS level
 	 * @return true if the message is successfully published; false otherwise.
+	 * 
+	 * @see CMMqttManager#publish(String, String)
+	 * @see CMMqttManager#publish(String, String, byte, boolean, boolean)
 	 */
 	public boolean publish(String strTopic, String strMsg, byte qos)
 	{
@@ -195,6 +201,9 @@ public class CMMqttManager extends CMServiceManager {
 	 * @param bDupFlag - DUP flag
 	 * @param bRetainFlag - retain flag
 	 * @return true if the message is successfully published; false otherwise.
+	 * 
+	 * @see CMMqttManager#publish(String, String)
+	 * @see CMMqttManager#publish(String, String, byte)
 	 */
 	public boolean publish(String strTopic, String strMsg, byte qos, 
 				boolean bDupFlag, boolean bRetainFlag)
@@ -591,11 +600,13 @@ public class CMMqttManager extends CMServiceManager {
 	}
 	
 	/**
+	 * Subscribes a topic filter.
 	 * 
-	 * (from here)
-	 * @param strTopicFilter
-	 * @param qos
-	 * @return
+	 * @param strTopicFilter - topic filter
+	 * @param qos - requested QoS level
+	 * @return true if the topic filter is successfully subscribed; false otherwise.
+	 * 
+	 * @see CMMqttManager#subscribe(CMList)
 	 */
 	public boolean subscribe(String strTopicFilter, byte qos)
 	{
@@ -607,6 +618,14 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
+	/**
+	 * Subscribes a list of topic filters.
+	 * 
+	 * @param topicQoSList - the list of topic filters
+	 * @return true if the topic filters are successfully subscribed; false otherwise.
+	 * 
+	 * @see CMMqttManager#subscribe(String, byte)
+	 */
 	public boolean subscribe(CMList<CMMqttTopicQoS> topicQoSList)
 	{
 		// to check the CM system type
@@ -673,6 +692,12 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
+	/**
+	 * Unsubscribes a topic filter.
+	 * 
+	 * @param strTopic - the topic filter
+	 * @return true if the topic filter is successfully unsubscribed; false otherwise.
+	 */
 	public boolean unsubscribe(String strTopic)
 	{
 		boolean bRet = false;
@@ -682,6 +707,12 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
+	/**
+	 * Unsubscribes a list of topic filters.
+	 * 
+	 * @param topicList - the list of topic filters
+	 * @return true if the topic filters are successfully unsubscribed; false otherwise.
+	 */
 	public boolean unsubscribe(CMList<String> topicList)
 	{
 		// to check the CM system type
@@ -768,6 +799,14 @@ public class CMMqttManager extends CMServiceManager {
 		return false;
 	}
 	
+	/**
+	 * Disconnects the publish-subscribe service.
+	 * <p>This method only stops the publish-subscribe service, and the client can 
+	 * still continue to use the other CM services.
+	 * 
+	 * @return true if the client successfully disconnects the publish-subscribe service; 
+	 * false otherwise.
+	 */
 	public boolean disconnect()
 	{
 		// to check the CM system type
@@ -826,7 +865,12 @@ public class CMMqttManager extends CMServiceManager {
 		return bRet;
 	}
 	
-	// get MQTT session information (4 client)
+	/**
+	 * Returns the string that contains session information of a CM client.
+	 * <p>Only a CM client can call this method.
+	 * 
+	 * @return the session information of the client.
+	 */
 	public String getMySessionInfo()
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -848,7 +892,13 @@ public class CMMqttManager extends CMServiceManager {
 		return session.toString();
 	}
 	
-	// get MQTT session information (4 server)
+	/**
+	 * Returns the string that contains session information of a CM client.
+	 * <p>Only a CM server can call this method.
+	 * 
+	 * @param strUserName - the user (client) name
+	 * @return the session information of the user.
+	 */
 	public String getSessionInfo(String strUserName)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -872,7 +922,12 @@ public class CMMqttManager extends CMServiceManager {
 		return session.toString();
 	}
 	
-	// get all MQTT session information (4 server)
+	/**
+	 * Returns the string that contains session information of all CM clients.
+	 * <p>Only a CM server can call this method.
+	 * 
+	 * @return the all session information.
+	 */
 	public String getAllSessionInfo()
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -895,7 +950,12 @@ public class CMMqttManager extends CMServiceManager {
 		return strBuf.toString();
 	}
 	
-	// get all MQTT retain information (4 server)
+	/**
+	 * Returns all retain information.
+	 * <p>Only a CM server can call this method.
+	 * 
+	 * @return the all retain information.
+	 */
 	public String getAllRetainInfo()
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();

@@ -5,14 +5,30 @@ import java.util.Vector;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
+/**
+ * The CMList<T> class represents a list of CM objects.
+ * 
+ * @author CCSLab, Konkuk University
+ *
+ * @param <T> - T is the class of a list element.
+ */
 public class CMList<T> {
 	private Vector<T> m_list;
 	
+	/**
+	 * Creates an instance of the CMList class.
+	 */
 	public CMList()
 	{
 		m_list = new Vector<T>();
 	}
 	
+	/**
+	 * Adds an element to the list.
+	 * 
+	 * @param element - an element of T type
+	 * @return true if the element is successfully added to the list; false otherwise.
+	 */
 	public synchronized boolean addElement(T element)
 	{
 		if(m_list.contains(element))
@@ -32,6 +48,12 @@ public class CMList<T> {
 		return true;
 	}
 	
+	/**
+	 * Removes an element from the list.
+	 * 
+	 * @param element - an element of T type
+	 * @return true if the element is successfully removed from the list; false otherwise.
+	 */
 	public synchronized boolean removeElement(T element)
 	{
 		boolean bResult = false;
@@ -51,11 +73,20 @@ public class CMList<T> {
 		return bResult;
 	}
 	
+	/**
+	 * Removes all elements from the list.
+	 */
 	public synchronized void removeAllElements()
 	{
 		m_list.removeAllElements();
 	}
 	
+	/**
+	 * Finds an element in the list.
+	 * 
+	 * @param element - an element of type T
+	 * @return true if the element is found; false otherwise.
+	 */
 	public synchronized T findElement(T element)
 	{
 		T tempElement = null;
@@ -74,16 +105,29 @@ public class CMList<T> {
 		return null;
 	}
 	
+	/**
+	 * Returns the size of list.
+	 * @return the size of list.
+	 */
 	public synchronized int getSize()
 	{
 		return m_list.size();
 	}
 	
+	/**
+	 * Tests if this list has no element.
+	 * 
+	 * @return true if this list has no element; false otherwise.
+	 */
 	public synchronized boolean isEmpty()
 	{
 		return m_list.isEmpty();
 	}
 	
+	/**
+	 * Returns the Vector of this list.
+	 * @return the Vector of this list.
+	 */
 	public synchronized Vector<T> getList()
 	{
 		return m_list;
