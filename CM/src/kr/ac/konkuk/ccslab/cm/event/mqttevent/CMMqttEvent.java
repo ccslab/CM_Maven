@@ -7,25 +7,81 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
  * This class represents CM events that belong to the MQTT control packets.
- * @author mlim
+ * @author CCSLab, Konkuk University
  *
  */
 public abstract class CMMqttEvent extends CMEvent {
 
 	// definition of MQTT event IDs
+	
+	/**
+	 * Event ID of the CMMqttEventCONNECT class.
+	 */
 	public static final int CONNECT = 1;
+	
+	/**
+	 * Event ID of the CMMqttEventCONNACK class.
+	 */
 	public static final int CONNACK = 2;
+	
+	/**
+	 * Event ID of the CMMqttEventPUBLISH class.
+	 */
 	public static final int PUBLISH = 3;
+	
+	/**
+	 * Event ID of the CMMqttEventPUBACK class.
+	 */
 	public static final int PUBACK = 4;
+	
+	/**
+	 * Event ID of the CMMqttEventPUBREC class.
+	 */
 	public static final int PUBREC = 5;
+	
+	/**
+	 * Event ID of the CMMqttEventPUBREL class.
+	 */
 	public static final int PUBREL = 6;
+	
+	/**
+	 * Event ID of the CMMqttEventPUBCOMP class.
+	 */
 	public static final int PUBCOMP = 7;
+	
+	/**
+	 * Event ID of the CMMqttEventSUBSCRIBE class.
+	 */
 	public static final int SUBSCRIBE = 8;
+	
+	/**
+	 * Event ID of the CMMqttEventSUBACK class.
+	 */
 	public static final int SUBACK = 9;
+	
+	/**
+	 * Event ID of the CMMqttEventUNSUBSCRIBE class.
+	 */
 	public static final int UNSUBSCRIBE = 10;
+	
+	/**
+	 * Event ID of the CMMqttEventUNSUBACK class.
+	 */
 	public static final int UNSUBACK = 11;
+	
+	/**
+	 * Event ID of the CMMqttEventPINGREQ class.
+	 */
 	public static final int PINGREQ = 12;
+	
+	/**
+	 * Event ID of the CMMqttEventPINGRESP class.
+	 */
 	public static final int PINGRESP = 13;
+	
+	/**
+	 * Event ID of the CMMqttEventDISCONNECT class.
+	 */
 	public static final int DISCONNECT = 14;
 	
 	// abstract methods

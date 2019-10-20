@@ -9,7 +9,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 /**
  * This class represents CM events that belong to the fixed header of 
  * MQTT control packets.
- * @author mlim
+ * @author CCSLab, Konkuk University
  *
  */
 public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
@@ -27,27 +27,49 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 	
 	// setter/getter
 	
+	/**
+	 * Sets the fixed header.
+	 * 
+	 * @param packetType - the packet type
+	 * @param flag - the flag
+	 */
 	public void setFixedHeader(byte packetType, byte flag)
 	{
 		m_packetType = packetType;
 		m_flag = flag;
 	}
 	
+	/**
+	 * Sets the packet type
+	 * @param type - the packet type
+	 */
 	public void setPacketType(byte type)
 	{
 		m_packetType = type;
 	}
 	
+	/**
+	 * Returns the packet type.
+	 * @return the packet type
+	 */
 	public byte getPacketType()
 	{
 		return m_packetType;
 	}
 	
+	/**
+	 * Sets the flag.
+	 * @param flag - the flag
+	 */
 	public void setFlag(byte flag)
 	{
 		m_flag = flag;
 	}
 	
+	/**
+	 * Returns the flag.
+	 * @return the flag
+	 */
 	public byte getFlag()
 	{
 		return m_flag;
@@ -58,6 +80,11 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		m_nRemainingLength = len;
 	}
 	
+	/**
+	 * Returns the remaining length.
+	 * <p>This value is set after a CMMqttEvent is marshalled.
+	 * @return the remaining length.
+	 */
 	public int getRemainingLength()
 	{
 		return m_nRemainingLength;
@@ -195,6 +222,9 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 		return;
 	}
 
+	/**
+	 * Returns the string representation of the CMMqttEventFixedHeader.
+	 */
 	@Override
 	public String toString()
 	{
