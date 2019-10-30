@@ -3,10 +3,11 @@ package kr.ac.konkuk.ccslab.cm.event.mqttevent;
 import java.nio.ByteBuffer;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that belongs to the variable header and payload of 
  * MQTT PUBACK packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718043">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718043</a>
  */
 public class CMMqttEventPUBACK extends CMMqttEventFixedHeader {
 
@@ -17,6 +18,9 @@ public class CMMqttEventPUBACK extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventPUBACK class.
+	 */
 	public CMMqttEventPUBACK()
 	{
 		// initialize CM event ID
