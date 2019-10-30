@@ -10,7 +10,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  * This class represents CM events that belong to the fixed header of 
  * MQTT control packets.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718020">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718020</a>
  */
 public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 

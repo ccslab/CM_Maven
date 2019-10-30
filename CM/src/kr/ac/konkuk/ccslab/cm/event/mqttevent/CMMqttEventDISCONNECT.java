@@ -3,16 +3,20 @@ package kr.ac.konkuk.ccslab.cm.event.mqttevent;
 import java.nio.ByteBuffer;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that belongs to the variable header and payload of 
  * MQTT DISCONNECT packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718090">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718090</a>
  */
 public class CMMqttEventDISCONNECT extends CMMqttEventFixedHeader {
 
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventDISCONNECT.
+	 */
 	public CMMqttEventDISCONNECT()
 	{
 		// initialize CM event ID

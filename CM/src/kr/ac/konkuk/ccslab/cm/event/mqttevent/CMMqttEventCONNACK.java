@@ -3,10 +3,11 @@ package kr.ac.konkuk.ccslab.cm.event.mqttevent;
 import java.nio.ByteBuffer;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that belongs to the variable header and payload of 
  * MQTT CONNACK packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718033">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718033</a>
  */
 public class CMMqttEventCONNACK extends CMMqttEventFixedHeader {
 
@@ -18,6 +19,9 @@ public class CMMqttEventCONNACK extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventCONNACK class.
+	 */
 	public CMMqttEventCONNACK()
 	{
 		// initialize CM event ID
@@ -40,6 +44,12 @@ public class CMMqttEventCONNACK extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (variable header)
 
+	/**
+	 * Sets the variable header of the MQTT CONNACK packet.
+	 * 
+	 * @param bConnAckFlag - session present flag 
+	 * @param returnCode - return code
+	 */
 	public void setVarHeader(boolean bConnAckFlag, byte returnCode)
 	{
 		if(bConnAckFlag) m_connAckFlag = 0x01;
@@ -48,23 +58,43 @@ public class CMMqttEventCONNACK extends CMMqttEventFixedHeader {
 		m_connReturnCode = returnCode;
 	}
 	
+	/**
+	 * Sets the session present flag.
+	 * 
+	 * @param bFlag - session present flag
+	 */
 	public void setConnAckFlag(boolean bFlag)
 	{
 		if(bFlag) m_connAckFlag = 0x01;
 		else m_connAckFlag = 0x00;
 	}
 	
+	/**
+	 * Returns if the session present flag is set or not.
+	 * 
+	 * @return true if the session present flag is set; false otherwise.
+	 */
 	public boolean isConnAckFlag()
 	{
 		if((m_connAckFlag & 0x01) == 0) return false;
 		else return true;
 	}
 	
+	/**
+	 * Sets the return code.
+	 *  
+	 * @param code - the return code.
+	 */
 	public void setReturnCode(byte code)
 	{
 		m_connReturnCode = code;
 	}
 	
+	/**
+	 * Returns the return code.
+	 * 
+	 * @return the return code.
+	 */
 	public byte getReturnCode()
 	{
 		return m_connReturnCode;

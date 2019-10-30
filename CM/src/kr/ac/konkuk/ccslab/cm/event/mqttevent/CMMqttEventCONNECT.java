@@ -5,10 +5,11 @@ import java.nio.ByteBuffer;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that belongs to the variable header and payload of 
  * MQTT CONNECT packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028</a>
  */
 public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
@@ -30,6 +31,9 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventCONNECT class.
+	 */
 	public CMMqttEventCONNECT() {
 		// initialize CM event ID
 		m_nID = CMMqttEvent.CONNECT;
@@ -59,43 +63,85 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	
 	//////////////////////////////////////////////////
 	// setter/getter (variable header)
+	
+	/**
+	 * Sets the variable header of MQTT CONNECT packet.
+	 * 
+	 * @param connectFlag - the connect flags
+	 * @param nKeepAlive - the keep-alive time
+	 */
 	public void setVarHeader(byte connectFlag, int nKeepAlive)
 	{
 		m_connectFlag = connectFlag;
 		m_nKeepAlive = nKeepAlive;
 	}
 	
+	/**
+	 * Sets the protocol name.
+	 * 
+	 * @param strName - the protocol name
+	 */
 	public void setProtocolName(String strName)
 	{
 		if(strName != null)
 			m_strProtocolName = strName;
 	}
 	
+	/**
+	 * Returns the protocol name.
+	 * 
+	 * @return the protocol name.
+	 */
 	public String getProtocolName()
 	{
 		return m_strProtocolName;
 	}
 	
+	/**
+	 * Sets the protocol level.
+	 * 
+	 * @param level - the protocol level.
+	 */
 	public void setProtocolLevel(byte level)
 	{
 		m_protocolLevel = level;
 	}
 	
+	/**
+	 * Returns the protocol level.
+	 * 
+	 * @return the protocol level.
+	 */
 	public byte getProtocolLevel()
 	{
 		return m_protocolLevel;
 	}
 	
+	/**
+	 * Sets the connect flags.
+	 * 
+	 * @param flag - the connect flags
+	 */
 	public void setConnFlag(byte flag)
 	{
 		m_connectFlag = flag;
 	}
 	
+	/**
+	 * Returns the connect flags.
+	 * 
+	 * @return the connect flags.
+	 */
 	public byte getConnFlag()
 	{
 		return m_connectFlag;
 	}
 	
+	/**
+	 * Sets the user name flag.
+	 * 
+	 * @param bUser - the user name flag
+	 */
 	public void setUserNameFlag(boolean bUser)
 	{
 		// print current connect flag
@@ -118,12 +164,22 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns the user name flag.
+	 * 
+	 * @return true if the user name flag is set; false otherwise.
+	 */
 	public boolean isUserNameFlag()
 	{
 		if((m_connectFlag & 0x80) == 0) return false;
 		else return true;
 	}
 	
+	/**
+	 * Sets the password flag.
+	 * 
+	 * @param bPassword the password flag
+	 */
 	public void setPasswordFlag(boolean bPassword)
 	{
 		// print current connect flag
@@ -146,12 +202,22 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns the password flag.
+	 * 
+	 * @return true if the password flag is set; false otherwise.
+	 */
 	public boolean isPasswordFlag()
 	{
 		if((m_connectFlag & 0x40) == 0) return false;
 		else return true;
 	}
 	
+	/**
+	 * Sets the will retain flag.
+	 * 
+	 * @param bWillRetain - the will retain flag
+	 */
 	public void setWillRetainFlag(boolean bWillRetain)
 	{
 		// print current connect flag
@@ -174,12 +240,22 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns the will retain flag.
+	 * 
+	 * @return true if the will retain flag is set; false otherwise.
+	 */
 	public boolean isWillRetainFlag()
 	{
 		if((m_connectFlag & 0x20) == 0) return false;
 		else return true;
 	}
 	
+	/**
+	 * Sets the will QoS.
+	 * 
+	 * @param qos - the will QoS
+	 */
 	public void setWillQoS(byte qos)
 	{
 		// print current connect flag
@@ -200,6 +276,11 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns the will QoS.
+	 * 
+	 * @return the will QoS.
+	 */
 	public byte getWillQoS()
 	{
 		// print current connect flag
@@ -221,6 +302,11 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		return willQoS;
 	}
 	
+	/**
+	 * Sets the will flag.
+	 * 
+	 * @param bWill - the will flag
+	 */
 	public void setWillFlag(boolean bWill)
 	{
 		// print current connect flag
@@ -243,12 +329,22 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns the will flag.
+	 * 
+	 * @return the will flag.
+	 */
 	public boolean isWillFlag()
 	{
 		if((m_connectFlag & 0x04) == 0) return false;
 		else return true;
 	}
 	
+	/**
+	 * Sets the clean session flag.
+	 * 
+	 * @param bCleanSession - the clean session flag
+	 */
 	public void setCleanSessionFlag(boolean bCleanSession)
 	{
 		// print current connect flag
@@ -271,17 +367,32 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns the clean session flag.
+	 * 
+	 * @return the clean session flag.
+	 */
 	public boolean isCleanSessionFlag()
 	{
 		if((m_connectFlag & 0x02) == 0) return false;
 		else return true;
 	}
 	
+	/**
+	 * Sets the keep-alive time.
+	 * 
+	 * @param seconds - the keep-alive time
+	 */
 	public void setKeepAlive(int seconds)
 	{
 		m_nKeepAlive = seconds;
 	}
 	
+	/**
+	 * Returns the keep-alive time.
+	 * 
+	 * @return the keep-alive time.
+	 */
 	public int getKeepAlive()
 	{
 		return m_nKeepAlive;
@@ -350,6 +461,15 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (payload)
 	
+	/**
+	 * Sets the payload of the MQTT CONNECT packet.
+	 * 
+	 * @param strClientID - the client ID
+	 * @param strWillTopic - the will topic
+	 * @param strWillMessage - the will message
+	 * @param strUserName - the user name
+	 * @param strPassword - the password
+	 */
 	public void setPayload(String strClientID, String strWillTopic, String strWillMessage, 
 			String strUserName, String strPassword)
 	{
@@ -365,56 +485,106 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 			m_strPassword = strPassword;
 	}
 	
+	/**
+	 * Sets the client ID.
+	 * 
+	 * @param strClientID - the client ID
+	 */
 	public void setClientID(String strClientID)
 	{
 		if(strClientID != null)
 			m_strClientID = strClientID;
 	}
 	
+	/**
+	 * Returns the client ID.
+	 * 
+	 * @return the client ID.
+	 */
 	public String getClientID()
 	{
 		return m_strClientID;
 	}
 	
+	/**
+	 * Sets the will topic.
+	 * 
+	 * @param strWillTopic - the will topic
+	 */
 	public void setWillTopic(String strWillTopic)
 	{
 		if(strWillTopic != null)
 			m_strWillTopic = strWillTopic;
 	}
 	
+	/**
+	 * Returns the will topic.
+	 * 
+	 * @return the will topic.
+	 */
 	public String getWillTopic()
 	{
 		return m_strWillTopic;
 	}
 	
+	/**
+	 * Sets the will message.
+	 * 
+	 * @param strWillMessage - the will message
+	 */
 	public void setWillMessage(String strWillMessage)
 	{
 		if(strWillMessage != null)
 			m_strWillMessage = strWillMessage;
 	}
 	
+	/**
+	 * Returns the will message.
+	 * 
+	 * @return the will message.
+	 */
 	public String getWillMessage()
 	{
 		return m_strWillMessage;
 	}
 	
+	/**
+	 * Sets the user name.
+	 * 
+	 * @param strUserName - the user name
+	 */
 	public void setUserName(String strUserName)
 	{
 		if(strUserName != null)
 			m_strUserName = strUserName;
 	}
 	
+	/**
+	 * Returns the user name.
+	 * 
+	 * @return the user name.
+	 */
 	public String getUserName()
 	{
 		return m_strUserName;
 	}
 	
+	/**
+	 * Sets the password.
+	 * 
+	 * @param strPassword - the password
+	 */
 	public void setPassword(String strPassword)
 	{
 		if(strPassword != null)
 			m_strPassword = strPassword;
 	}
 	
+	/**
+	 * Returns the password.
+	 * 
+	 * @return the password.
+	 */
 	public String getPassword()
 	{
 		return m_strPassword;
