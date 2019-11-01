@@ -10,5 +10,14 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
  *
  */
 public interface CMAppEventHandler {
+	
+	/**
+	 * Processes the CM event.
+	 * <p>This method is a callback method that is called by CM whenever it receives 
+	 * a CM event from a remote CM node.
+	 * <br>A CM application can catch the CM event by implementing this method.
+	 * 
+	 * @param cme - the received CM event
+	 */
 	void processEvent(CMEvent cme);
 }
