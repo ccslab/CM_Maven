@@ -3,10 +3,11 @@ package kr.ac.konkuk.ccslab.cm.event.mqttevent;
 import java.nio.ByteBuffer;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that is the variable header and payload of 
  * MQTT UNSUBACK packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718077">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718077</a>
  */
 public class CMMqttEventUNSUBACK extends CMMqttEventFixedHeader {
 
@@ -18,6 +19,9 @@ public class CMMqttEventUNSUBACK extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventUNSUBACK class.
+	 */
 	public CMMqttEventUNSUBACK()
 	{
 		// initialize CM event ID
@@ -39,8 +43,8 @@ public class CMMqttEventUNSUBACK extends CMMqttEventFixedHeader {
 	// setter/getter (variable header)
 
 	/**
-	 * sets MQTT packet ID.
-	 * @param nID - packet ID.
+	 * sets MQTT Packet ID.
+	 * @param nID - Packet ID.
 	 */
 	public void setPacketID(int nID)
 	{
@@ -48,8 +52,8 @@ public class CMMqttEventUNSUBACK extends CMMqttEventFixedHeader {
 	}
 	
 	/**
-	 * gets MQTT packet ID.
-	 * @return packet ID.
+	 * gets MQTT Packet ID.
+	 * @return Packet ID.
 	 */
 	@Override
 	public int getPacketID()

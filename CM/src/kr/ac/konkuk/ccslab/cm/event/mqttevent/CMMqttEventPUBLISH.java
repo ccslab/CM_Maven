@@ -5,10 +5,11 @@ import java.nio.ByteBuffer;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that belongs to the variable header and payload of 
  * MQTT PUBLISH packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718037">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718037</a>
  */
 public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 
@@ -30,6 +31,9 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventPUBLISH class.
+	 */
 	public CMMqttEventPUBLISH()
 	{
 		// initialize CM event ID
@@ -57,6 +61,11 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (fixed header)
 	
+	/**
+	 * Sets the DUP flag.
+	 * 
+	 * @param bFlag - the DUP flag
+	 */
 	public void setDupFlag(boolean bFlag)
 	{
 		// print current m_flag
@@ -79,12 +88,22 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns if the DUP flag is set or not.
+	 * 
+	 * @return true if the DUP flag is set; false otherwise.
+	 */
 	public boolean isDupFlag()
 	{
 		if((m_flag & 0x08) == 0) return false;
 		else return true;
 	}
 
+	/**
+	 * Sets the QoS.
+	 * 
+	 * @param qos - QoS
+	 */
 	public void setQoS(byte qos)
 	{
 		// print current m_flag
@@ -105,6 +124,11 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns the QoS.
+	 * 
+	 * @return QoS.
+	 */
 	public byte getQoS()
 	{
 		byte qos = 0;
@@ -112,6 +136,11 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		return qos;
 	}
 	
+	/**
+	 * Sets the RETAIN flag.
+	 * 
+	 * @param bFlag - the RETAIN flag
+	 */
 	public void setRetainFlag(boolean bFlag)
 	{
 		// print current m_flag
@@ -134,6 +163,11 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 		}
 	}
 	
+	/**
+	 * Returns if the RETAIN flag is set or not.
+	 * 
+	 * @return true if the RETAIN flag is set; false otherwise.
+	 */
 	public boolean isRetainFlag()
 	{
 		if((m_flag & 0x01) == 0) return false;
@@ -143,19 +177,29 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (variable header)
 
+	/**
+	 * Sets the Topic Name.
+	 * 
+	 * @param strTopic - the Topic Name
+	 */
 	public void setTopicName(String strTopic)
 	{
 		if(strTopic != null)
 			m_strTopicName = strTopic;
 	}
 	
+	/**
+	 * Returns the Topic Name.
+	 * 
+	 * @return the Topic Name.
+	 */
 	public String getTopicName()
 	{
 		return m_strTopicName;
 	}
 	
 	/**
-	 * sets MQTT packet ID.
+	 * sets MQTT Packet ID.
 	 * @param nID - packet ID.
 	 */
 	public void setPacketID(int nID)
@@ -164,10 +208,9 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	}
 	
 	/**
-	 * gets MQTT packet ID.
+	 * gets MQTT Packet ID.
 	 * @return packet ID.
 	 */
-	@Override
 	public int getPacketID()
 	{
 		return m_nPacketID;
@@ -203,12 +246,22 @@ public class CMMqttEventPUBLISH extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (payload)
 
+	/**
+	 * Sets the Application Message.
+	 * 
+	 * @param strMsg - the Application Message
+	 */
 	public void setAppMessage(String strMsg)
 	{
 		if(strMsg != null)
 			m_strAppMessage = strMsg;
 	}
 	
+	/**
+	 * Returns the Application Message.
+	 * 
+	 * @return the Application Message.
+	 */
 	public String getAppMessage()
 	{
 		return m_strAppMessage;

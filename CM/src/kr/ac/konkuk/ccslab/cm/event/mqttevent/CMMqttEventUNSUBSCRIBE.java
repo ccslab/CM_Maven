@@ -7,10 +7,11 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that is the variable header and payload of 
  * MQTT UNSUBSCRIBE packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718072">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718072</a>
  */
 public class CMMqttEventUNSUBSCRIBE extends CMMqttEventFixedHeader {
 
@@ -25,6 +26,9 @@ public class CMMqttEventUNSUBSCRIBE extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventUNSUBSCRIBE class.
+	 */
 	public CMMqttEventUNSUBSCRIBE()
 	{
 		// initialize CM event ID
@@ -48,8 +52,8 @@ public class CMMqttEventUNSUBSCRIBE extends CMMqttEventFixedHeader {
 	// setter/getter (variable header)
 
 	/**
-	 * sets MQTT packet ID.
-	 * @param nID - packet ID.
+	 * sets MQTT Packet ID.
+	 * @param nID - Packet ID.
 	 */
 	public void setPacketID(int nID)
 	{
@@ -57,8 +61,8 @@ public class CMMqttEventUNSUBSCRIBE extends CMMqttEventFixedHeader {
 	}
 	
 	/**
-	 * gets MQTT packet ID.
-	 * @return packet ID.
+	 * gets MQTT Packet ID.
+	 * @return Packet ID.
 	 */
 	@Override
 	public int getPacketID()
@@ -90,27 +94,52 @@ public class CMMqttEventUNSUBSCRIBE extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (payload)
 	
+	/**
+	 * Sets the list of Topic Filters.
+	 * 
+	 * @param topicList - the list of Topic Filters
+	 */
 	public void setTopicList(CMList<String> topicList)
 	{
 		if(topicList != null)
 			m_topicList = topicList;
 	}
 	
+	/**
+	 * Returns the list of Topic Filters.
+	 * 
+	 * @return the list of Topic Filters.
+	 */
 	public CMList<String> getTopicList()
 	{
 		return m_topicList;
 	}
 	
+	/**
+	 * Adds the Topic Filter to the list.
+	 * 
+	 * @param strTopic - the Topic Filter
+	 * @return true if the Topic Filter is successfully added; false otherwise.
+	 */
 	public boolean addTopic(String strTopic)
 	{
 		return m_topicList.addElement(strTopic);
 	}
 	
+	/**
+	 * Removes the Topic Filter from the list.
+	 * 
+	 * @param strTopic - the Topic Filter
+	 * @return true if the Topic Filter is successfully removed; false otherwise.
+	 */
 	public boolean removeTopic(String strTopic)
 	{
 		return m_topicList.removeElement(strTopic);
 	}
 	
+	/**
+	 * Removes all Topic Filters from the list.
+	 */
 	public void removeAllTopic()
 	{
 		m_topicList.removeAllElements();

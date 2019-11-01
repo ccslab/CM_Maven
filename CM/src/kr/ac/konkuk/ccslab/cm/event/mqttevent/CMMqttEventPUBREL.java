@@ -3,10 +3,11 @@ package kr.ac.konkuk.ccslab.cm.event.mqttevent;
 import java.nio.ByteBuffer;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that is the variable header and payload of 
  * MQTT PUBREL packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718053">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718053</a>
  */
 public class CMMqttEventPUBREL extends CMMqttEventFixedHeader {
 
@@ -17,6 +18,9 @@ public class CMMqttEventPUBREL extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventPUBREL class.
+	 */
 	public CMMqttEventPUBREL()
 	{
 		// initialize CM event ID
@@ -38,8 +42,8 @@ public class CMMqttEventPUBREL extends CMMqttEventFixedHeader {
 	// setter/getter (variable header)
 
 	/**
-	 * sets MQTT packet ID.
-	 * @param nID - packet ID.
+	 * sets MQTT Packet ID.
+	 * @param nID - Packet ID.
 	 */
 	public void setPacketID(int nID)
 	{
@@ -47,8 +51,8 @@ public class CMMqttEventPUBREL extends CMMqttEventFixedHeader {
 	}
 	
 	/**
-	 * gets MQTT packet ID.
-	 * @return packet ID.
+	 * gets MQTT Packet ID.
+	 * @return Packet ID.
 	 */
 	@Override
 	public int getPacketID()

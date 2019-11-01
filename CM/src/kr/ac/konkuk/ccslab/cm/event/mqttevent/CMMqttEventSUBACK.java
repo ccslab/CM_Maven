@@ -6,10 +6,11 @@ import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that is the variable header and payload of 
  * MQTT SUBACK packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718068">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718068</a>
  */
 public class CMMqttEventSUBACK extends CMMqttEventFixedHeader {
 
@@ -30,6 +31,9 @@ public class CMMqttEventSUBACK extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventSUBACK class.
+	 */
 	public CMMqttEventSUBACK()
 	{
 		// initialize CM event ID
@@ -53,8 +57,8 @@ public class CMMqttEventSUBACK extends CMMqttEventFixedHeader {
 	// setter/getter (variable header)
 
 	/**
-	 * sets MQTT packet ID.
-	 * @param nID - packet ID.
+	 * sets MQTT Packet ID.
+	 * @param nID - Packet ID.
 	 */
 	public void setPacketID(int nID)
 	{
@@ -62,8 +66,8 @@ public class CMMqttEventSUBACK extends CMMqttEventFixedHeader {
 	}
 	
 	/**
-	 * gets MQTT packet ID.
-	 * @return packet ID.
+	 * gets MQTT Packet ID.
+	 * @return Packet ID.
 	 */
 	@Override
 	public int getPacketID()
@@ -95,27 +99,52 @@ public class CMMqttEventSUBACK extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (payload)
 
+	/**
+	 * Sets the list of return codes.
+	 * 
+	 * @param returnCodeList - the list of return codes
+	 */
 	public void setReturnCodeList(CMList<Byte> returnCodeList)
 	{
 		if(returnCodeList != null)
 			m_returnCodeList = returnCodeList;
 	}
 	
+	/**
+	 * Returns the list of return codes.
+	 * 
+	 * @return the list of return codes.
+	 */
 	public CMList<Byte> getReturnCodeList()
 	{
 		return m_returnCodeList;
 	}
 	
+	/**
+	 * Adds the return code to the list.
+	 * 
+	 * @param returnCode - the return code
+	 * @return true if the return code is successfully added; false otherwise.
+	 */
 	public boolean addReturnCode(byte returnCode)
 	{
 		return m_returnCodeList.addElement(returnCode);
 	}
 	
+	/**
+	 * Removes the return code from the list.
+	 * 
+	 * @param returnCode - the return code
+	 * @return true if the return code is successfully removed; false otherwise.
+	 */
 	public boolean removeReturnCode(byte returnCode)
 	{
 		return m_returnCodeList.removeElement(returnCode);
 	}
 	
+	/**
+	 * Removes all return codes from the list.
+	 */
 	public void removeAllReturnCode()
 	{
 		m_returnCodeList.removeAllElements();

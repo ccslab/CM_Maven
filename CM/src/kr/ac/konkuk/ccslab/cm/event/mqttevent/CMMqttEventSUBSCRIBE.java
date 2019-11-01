@@ -7,10 +7,11 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMqttTopicQoS;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * This class represents a CM event that the variable header and payload of 
+ * This class represents a CM event that is the variable header and payload of 
  * MQTT SUBSCRIBE packet.
  * @author CCSLab, Konkuk University
- *
+ * @see <a href="http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718063">
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718063</a>
  */
 public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 
@@ -25,6 +26,9 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// constructors
 
+	/**
+	 * Creates an instance of the CMMqttEventSUBSCRIBE class.
+	 */
 	public CMMqttEventSUBSCRIBE()
 	{
 		// initialize CM event ID
@@ -48,8 +52,8 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 	// setter/getter (variable header)
 
 	/**
-	 * sets MQTT packet ID.
-	 * @param nID - packet ID.
+	 * sets MQTT Packet ID.
+	 * @param nID - Packet ID.
 	 */
 	public void setPacketID(int nID)
 	{
@@ -57,8 +61,8 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 	}
 	
 	/**
-	 * gets MQTT packet ID.
-	 * @return packet ID.
+	 * gets MQTT Packet ID.
+	 * @return Packet ID.
 	 */
 	@Override
 	public int getPacketID()
@@ -90,29 +94,55 @@ public class CMMqttEventSUBSCRIBE extends CMMqttEventFixedHeader {
 	//////////////////////////////////////////////////
 	// setter/getter (payload)
 
+	/**
+	 * Sets the list of Topic Filter / QoS pairs.
+	 * 
+	 * @param topicQoSList - the list of Topic Filter / QoS pairs.
+	 */
 	public void setTopicQoSList(CMList<CMMqttTopicQoS> topicQoSList)
 	{
 		if(topicQoSList != null)
 			m_topicQoSList = topicQoSList;
 	}
-	
+
+	/**
+	 * Returns the list of Topic Filter / QoS pairs.
+	 * 
+	 * @return the list of Topic Filter / QoS pairs.
+	 */
 	public CMList<CMMqttTopicQoS> getTopicQoSList()
 	{
 		return m_topicQoSList;
 	}
 	
+	/**
+	 * Adds the Topic Filter / QoS pair to the list.
+	 * 
+	 * @param strTopic - the Topic Filter
+	 * @param qos - the QoS
+	 * @return true if the Topic Filter / QoS pair is successfully added; false otherwise.
+	 */
 	public boolean addTopicQoS(String strTopic, byte qos)
 	{
 		CMMqttTopicQoS topicQoS = new CMMqttTopicQoS(strTopic, qos);
 		return m_topicQoSList.addElement(topicQoS);
 	}
 	
+	/**
+	 * Removes the Topic Filter / QoS pair from the list.
+	 * 
+	 * @param strTopic - the Topic Filter
+	 * @return true if the Topic Filter / QoS pair is successfully removed; false otherwise.
+	 */
 	public boolean removeTopicQoS(String strTopic)
 	{
 		CMMqttTopicQoS topicQoS = new CMMqttTopicQoS(strTopic, (byte)0);
 		return m_topicQoSList.removeElement(topicQoS);
 	}
 	
+	/**
+	 * Removes all Topic Filter / QoS pairs from the list.
+	 */
 	public void removeAllTopicQoS()
 	{
 		m_topicQoSList.removeAllElements();
