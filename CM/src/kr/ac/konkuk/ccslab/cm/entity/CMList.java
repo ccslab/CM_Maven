@@ -6,7 +6,7 @@ import java.util.Vector;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * The CMList<T> class represents a list of CM objects.
+ * The CMList&lt;T&gt; class represents a list of CM objects.
  * 
  * @author CCSLab, Konkuk University
  *

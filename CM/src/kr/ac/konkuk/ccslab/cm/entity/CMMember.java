@@ -260,7 +260,7 @@ public class CMMember extends CMObject{
 	 * 
 	 * <p> The given name is regarded as a member if the list has a member with the same name.
 	 * 
-	 * @param user - a given name.
+	 * @param name - a given name.
 	 * @return true if the name is a member, or false.
 	 */
 	public synchronized boolean isMember(String name)

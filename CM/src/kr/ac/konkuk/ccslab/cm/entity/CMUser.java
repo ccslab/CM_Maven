@@ -194,7 +194,7 @@ public class CMUser extends CMObject {
 	/**
 	 * Returns user name.
 	 * 
-	 * @param name - the user name.
+	 * @return the user name.
 	 */
 	public synchronized String getName()
 	{
@@ -206,7 +206,7 @@ public class CMUser extends CMObject {
 	 * 
 	 * <p> The password is encrypted by CM.
 	 * 
-	 * @param passwd - the login password.
+	 * @return the login password.
 	 */
 	public synchronized String getPasswd()
 	{
@@ -217,7 +217,7 @@ public class CMUser extends CMObject {
 	/**
 	 * Returns IP address of the user host.
 	 * 
-	 * @param host - the IP address.
+	 * @return the IP address.
 	 */
 	public synchronized String getHost()
 	{
@@ -229,7 +229,7 @@ public class CMUser extends CMObject {
 	 * 
 	 * <p> The user uses UDP port number to receives a UDP packet a datagram channel.
 	 * 
-	 * @param port - the UDP port number.
+	 * @return the UDP port number.
 	 */
 	public synchronized int getUDPPort()
 	{

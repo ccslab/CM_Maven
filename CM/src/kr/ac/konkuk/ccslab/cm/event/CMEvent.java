@@ -15,9 +15,6 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  * 
  * @author CCSLab, Konkuk University
  * 
- * @see {@link CMConcurrencyEvent}, {@link CMConsistencyEvent}, {@link CMDataEvent}, {@link CMDummyEvent}, 
- * {@link CMFileEvent}, {@link CMInterestEvent}, {@link CMMultiServerEvent}, {@link CMSessionEvent}, 
- * {@link CMSNSEvent}, {@link CMUserEvent}, {@link CMMqttEvent}
  */
 public abstract class CMEvent extends CMObject {
 	
@@ -70,10 +67,6 @@ public abstract class CMEvent extends CMObject {
 	 * If the instance of the subclass of the CMEvent calls this method, the ByteBuffer object includes both 
 	 * the marshalled event header and body fields.
 	 * 
-	 * @see {@link CMConcurrencyEvent#marshallBody()}, {@link CMConsistencyEvent#marshallBody()}, 
-	 * {@link CMDataEvent#marshallBody()}, {@link CMDummyEvent#marshallBody()}, {@link CMFileEvent#marshallBody()}, 
-	 * {@link CMInterestEvent#marshallBody()}, {@link CMMultiServerEvent#marshallBody()}, 
-	 * {@link CMSessionEvent#marshallBody()}, {@link CMSNSEvent#marshallBody()}, {@link CMUserEvent#marshallBody()}
 	 */
 	public ByteBuffer marshall()
 	{
@@ -101,10 +94,6 @@ public abstract class CMEvent extends CMObject {
 	 * @param msg - the bytes to be unmarshalled
 	 * @return a reference to the CMEvent object.
 	 * 
-	 * @see {@link CMConcurrencyEvent#unmarshallBody()}, {@link CMConsistencyEvent#unmarshallBody()}, 
-	 * {@link CMDataEvent#unmarshallBody()}, {@link CMDummyEvent#unmarshallBody()}, {@link CMFileEvent#unmarshallBody()}, 
-	 * {@link CMInterestEvent#unmarshallBody()}, {@link CMMultiServerEvent#unmarshallBody()}, 
-	 * {@link CMSessionEvent#unmarshallBody()}, {@link CMSNSEvent#unmarshallBody()}, {@link CMUserEvent#unmarshallBody()}
 	 */
 	public CMEvent unmarshall(ByteBuffer msg)
 	{
@@ -209,8 +198,9 @@ public abstract class CMEvent extends CMObject {
 	 * Sets a session to which this event will be forwarded by the server.
 	 * <br> The session name determines to which session the server will forward this event after it receives and processes 
 	 * this event. Normally, session and group for the distribution of the event are determined by CM when the client calls 
-	 * {@link CMStub#send(CMEvent, String)}, {@link CMStub#cast(CMEvent, String, String)}, or 
-	 * {@link CMStub#broadcast(CMEvent)} methods.
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#send(CMEvent, String)}, 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cast(CMEvent, String, String)}, or 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#broadcast(CMEvent)} methods.
 	 * <p> When the event object is initialized, the session for distribution is set to the empty string ("").
 	 * If the session name is empty, the server does not forward this event. 
 	 * If the session is set to a specific name, the distribution target is determined by the group name for 
@@ -222,7 +212,8 @@ public abstract class CMEvent extends CMObject {
 	 * @param sName - the session name for the distribution of this event.
 	 * <br> The sName value can be a session name, "CM_ALL_SESSION", or "CM_ONE_USER".
 	 * 
-	 * @see {@link CMEvent#setDistributionGroup(String)}, {@link CMEvent#getDistributionSession()}
+	 * @see CMEvent#setDistributionGroup(String)
+	 * @see CMEvent#getDistributionSession()
 	 */
 	public void setDistributionSession(String sName)
 	{
@@ -234,8 +225,9 @@ public abstract class CMEvent extends CMObject {
 	 * Sets a group to which this event will be forwarded by the server.
 	 * <br> The group name determines to which group the server will forward this event after it receives and processes 
 	 * this event. Normally, session and group for the distribution of the event are determined by CM when the client calls 
-	 * {@link CMStub#send(CMEvent, String)}, {@link CMStub#cast(CMEvent, String, String)}, or
-	 * {@link CMStub#broadcast(CMEvent)} methods.
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#send(CMEvent, String)}, 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cast(CMEvent, String, String)}, or
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#broadcast(CMEvent)} methods.
 	 * <p> When the event object is initialized, the group for distribution is set to the empty string ("").
 	 * If the group name is empty, the server does not forward this event.
 	 * If the group is set to a specific name, the server forwards this event to the corresponding group members.
@@ -246,7 +238,8 @@ public abstract class CMEvent extends CMObject {
 	 * @param gName - the group name for the distribution of this event.
 	 * <br> The gName value can be a group name, "CM_ALL_GROUP", or a specific user name.
 	 * 
-	 * @see {@link CMEvent#setDistributionGroup(String)}, {@link CMEvent#getDistributionGroup()}
+	 * @see CMEvent#setDistributionGroup(String)
+	 * @see CMEvent#getDistributionGroup()
 	 */
 	public void setDistributionGroup(String gName)
 	{

@@ -16,7 +16,7 @@ public class CMInterestEvent extends CMEvent{
 
 	/**
 	 * The event ID for the request of joining a group in the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>A client sends the USER_ENTER event after it processes 
 	 * {@link CMSessionEvent#JOIN_SESSION_ACK}. This event is also sent when 
 	 * the user changes his/her current group.
@@ -32,7 +32,7 @@ public class CMInterestEvent extends CMEvent{
 	
 	/**
 	 * The event ID for leaving a group in the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>A client sends the USER_LEAVE event when it leaves the current group 
 	 * so that it can enter a new group.
 	 * <br>The following field is used for this event:
@@ -47,7 +47,7 @@ public class CMInterestEvent extends CMEvent{
 	
 	/**
 	 * The event ID for a chatting message in a group.
-	 * <p>event direction: client -> server, client -> client
+	 * <p>event direction: client -&gt; server, client -&gt; client
 	 * <p>The USER_TALK event is sent when a client which is a group member calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#chat(String, String)}.
 	 * <br>The following fields are used for this event:

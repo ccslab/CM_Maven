@@ -46,7 +46,7 @@ public class CMMqttManager extends CMServiceManager {
 	 * <p>A CM client that has logged in to the default server must call the connect() 
 	 * method before it uses the CM publish-subscribe service.
 	 * <br>This method is same as connect(null,null,false,(byte)0, false,false,0) of 
-	 * the {@link CMMqttManager#connect(String, String, boolean, byte, boolean, boolean, int)} 
+	 * the {@link CMMqttManager#connect(String, String, boolean, byte, boolean, boolean)} 
 	 * method.
 	 * 
 	 * @return true if the connect succeeds; false otherwise.

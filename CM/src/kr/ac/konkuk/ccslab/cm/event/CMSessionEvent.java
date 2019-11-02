@@ -16,7 +16,7 @@ public class CMSessionEvent extends CMEvent {
 
 	/**
 	 * The event ID for login request from a client to the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The LOGIN event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#loginCM(String, String)} or 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncLoginCM(String, String)}.
@@ -33,7 +33,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for logout request from a client to the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The LOGOUT event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#logoutCM()}.
 	 * <br>The following field is used for this event:
@@ -45,7 +45,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for response to the login request from the default server to the client.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The default server sends the LOGIN_ACK event to the client as the response to 
 	 * the {@link CMSessionEvent#LOGIN} event.
 	 * <br>The following fields are used for this event:
@@ -80,7 +80,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for requesting available session information from the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The REQUEST_SESSION_INFO event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#requestSessionInfo()}.
 	 * <br>The following field is used for this event:
@@ -92,7 +92,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the response to the request of available session information.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The RESPONSE_SESSION_INFO event is the reply of 
 	 * the {@link CMSessionEvent#REQUEST_SESSION_INFO} event.
 	 * <br>The following fields are used for this event:
@@ -105,7 +105,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the request of joining a session.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The JOIN_SESSION event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#joinSession(String)} and 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncJoinSession(String)}.
@@ -119,7 +119,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the response to the request of joining a session.
-	 * <p>event direction: default session -> client
+	 * <p>event direction: default session -&gt; client
 	 * <p>The JOIN_SESSION_ACK event is the reply of 
 	 * the {@link CMSessionEvent#JOIN_SESSION} event.
 	 * <br>The following fields are used for this event:
@@ -132,7 +132,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the request of leaving the current session.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The LEAVE_SESSION event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#leaveSession()}.
 	 * <br>The following fields are used for this event:
@@ -145,7 +145,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/* (NOT USED YET!)
 	 * The event ID for the response to the request of leaving the current session.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The LEAVE_SESSION_ACK is the reply of the {@link CMSessionEvent#LEAVE_SESSION} 
 	 * event.
 	 * <br>The following field is used for this event:
@@ -158,7 +158,7 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for a chat message of a client which has logged in 
 	 * to the server but does not join a session.
-	 * <p>event direction: client -> server -> client
+	 * <p>event direction: client -&gt; server -&gt; client
 	 * <p>The SESSION_TALK event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#chat(String, String)}.
 	 * <br>The following fields are used for this event: 
@@ -171,7 +171,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the notification of a new logged-in user.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The default server sends the SESSION_ADD_USER event to the existing 
 	 * users to notify them of a new logged-in user.
 	 * <br>The following fields are used for this event:
@@ -185,7 +185,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the notification of the user logout.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The default server sends the SESSION_REMOVE_USER event to the existing 
 	 * users to notify that a user has logged out from the default server.
 	 * <br>The following fields are used for this event:
@@ -197,7 +197,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the notification of a user joining(changing) a session.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The default server sends the CHANGE_SESSION event to the existing users 
 	 * to notify that a user has joined a session.
 	 * <br>The following fields are used for this event:
@@ -210,7 +210,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the request to add a non-blocking socket channel information.
-	 * <p>event direction: client -> server
+	 * <p>event direction: client -&gt; server
 	 * <p>The ADD_NONBLOCK_SOCKET_CHANNEL is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#addNonBlockSocketChannel(int, String)} 
 	 * or 
@@ -220,7 +220,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>0) for the socket channel.</li>
+	 * <br>the index(&gt;0) for the socket channel.</li>
 	 * </ul>
 	 */
 	public static final int ADD_NONBLOCK_SOCKET_CHANNEL = 14;	
@@ -228,7 +228,7 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of adding a non-blocking socket 
 	 * channel information.
-	 * <p>event direction: server -> client
+	 * <p>event direction: server -&gt; client
 	 * <p>The ADD_NONBLOCK_SOCKET_CHANNEL_ACK event is the reply of 
 	 * the {@link CMSessionEvent#ADD_NONBLOCK_SOCKET_CHANNEL} event.
 	 * <br>The following fields are used for this event:
@@ -236,7 +236,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>0) for the socket channel.</li>
+	 * <br>the index(&gt;0) for the socket channel.</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: channel addition at the server has completed.
 	 * <br>other value: channel addition at the server has failed.</li>
@@ -246,7 +246,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the request to add a blocking socket channel information.
-	 * <p>event direction: client -> server
+	 * <p>event direction: client -&gt; server
 	 * <p>The ADD_BLOCK_SOCKET_CHANNEL is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#addBlockSocketChannel(int, String)} 
 	 * or 
@@ -256,7 +256,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel.</li>
+	 * <br>the index(&gt;=0) for the socket channel.</li>
 	 * </ul>
 	 */
 	public static final int ADD_BLOCK_SOCKET_CHANNEL = 22;
@@ -264,7 +264,7 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of adding a blocking socket 
 	 * channel information.
-	 * <p>event direction: server -> client
+	 * <p>event direction: server -&gt; client
 	 * <p>The ADD_BLOCK_SOCKET_CHANNEL_ACK event is the reply of 
 	 * the {@link CMSessionEvent#ADD_BLOCK_SOCKET_CHANNEL} event.
 	 * <br>The following fields are used for this event:
@@ -272,7 +272,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel.</li>
+	 * <br>the index(&gt;=0) for the socket channel.</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: channel addition at the server has completed.
 	 * <br>other value: channel addition at the server has failed.</li>
@@ -282,7 +282,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the request to remove a blocking socket channel information.
-	 * <p>event direction: client -> server
+	 * <p>event direction: client -&gt; server
 	 * <p>The REMOVE_BLOCK_SOCKET_CHANNEL is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#removeBlockSocketChannel(int, String)},
 	 * or 
@@ -292,7 +292,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel.</li>
+	 * <br>the index(&gt;=0) for the socket channel.</li>
 	 * </ul>
 	 */
 	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;
@@ -300,7 +300,7 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of removing a blocking socket 
 	 * channel information.
-	 * <p>event direction: server -> client
+	 * <p>event direction: server -&gt; client
 	 * <p>The REMOVE_BLOCK_SOCKET_CHANNEL_ACK event is the reply of 
 	 * the {@link CMSessionEvent#REMOVE_BLOCK_SOCKET_CHANNEL} event.
 	 * <br>The following fields are used for this event:
@@ -308,7 +308,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
 	 * <br>The name of a server to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
-	 * <br>the index(>=0) for the socket channel.</li>
+	 * <br>the index(&gt;=0) for the socket channel.</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: the channel has been removed successfully.
 	 * <br>other value: channel removal at the server has failed.</li>
@@ -318,7 +318,7 @@ public class CMSessionEvent extends CMEvent {
 
 	/**
 	 * The event ID for the request of registering a new user from the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The REGISTER_USER event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#registerUser(String, String)}.
 	 * <br>The following fields are used for this event:
@@ -331,7 +331,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the response to the request of registering a new user.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The REGISTER_USER_ACK event is the reply of 
 	 * the {@link CMSessionEvent#REGISTER_USER} event.
 	 * <br>The following fields are used for this event:
@@ -347,7 +347,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the request of deregistering a user from the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The DEREGISTER_USER event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#deregisterUser(String, String)}.
 	 * <br>The following fields are used for this event:
@@ -362,7 +362,7 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the response to the request of deregistering a user from 
 	 * the default server.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The DEREGISTER_USER_ACK event is the reply of 
 	 * the {@link CMSessionEvent#DEREGISTER_USER} event.
 	 * <br>The following fields are used for this event:
@@ -378,7 +378,7 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the request of searching for a registered user from 
 	 * the default server.
-	 * <p>event direction: client -> default server
+	 * <p>event direction: client -&gt; default server
 	 * <p>The FIND_REGISTERED_USER event is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#findRegisteredUser(String)}.
 	 * <br>The following field is used for this event:
@@ -390,7 +390,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for the response to the request of searching for a registered user.
-	 * <p>event direction: default server -> client
+	 * <p>event direction: default server -&gt; client
 	 * <p>The FIND_REGISTERED_USER_ACK event is the reply of 
 	 * the {@link CMSessionEvent#FIND_REGISTERED_USER} event.
 	 * <br>The following fields are used for this event:
@@ -406,7 +406,7 @@ public class CMSessionEvent extends CMEvent {
 	
 	/**
 	 * The event ID for notifying the client of unexpected disconnection from a server.
-	 * <p>event direction: client CM -> client application (local event)
+	 * <p>event direction: client CM -&gt; client application (local event)
 	 * <p>The client CM delivers the UNEXPECTED_SERVER_DISCONNECTION event to 
 	 * its application when it detects the disconnection from a server CM.
 	 * <br>The following fields are used for this event:
@@ -422,7 +422,7 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for notifying the application of intentional disconnection from 
 	 * a remote node by CM.
-	 * <p>event direction: CM -> application (local event)
+	 * <p>event direction: CM -&gt; application (local event)
 	 * <p>CM delivers the INTENTIONALLY_DISCONNECT event to its application when it 
 	 * disconnects a problematic non-blocking socket channel. 
 	 * A non-blocking socket channel is regarded as problematic if 

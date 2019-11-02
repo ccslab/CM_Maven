@@ -6,8 +6,8 @@ import kr.ac.konkuk.ccslab.cm.stub.*;
 /**
  * This class represents CM server information that needs to be transferred to a remote CM node.
  * 
- * @author mlim
- * @see {@link CMStub#requestServerInfo()}
+ * @author CCSLab, Konkuk University
+ * @see kr.ac.konkuk.ccslab.cm.stub.CMClientStub#requestServerInfo()
  */
 public class CMServerInfo {
 	protected String m_strServerName;

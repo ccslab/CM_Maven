@@ -15,7 +15,7 @@ public class CMDataEvent extends CMEvent{
 
 	/**
 	 * The event ID for sending an existing group user from a server to a new group user.
-	 * <p>event direction: server -> client
+	 * <p>event direction: server -&gt; client
 	 * <p>The server CM sends the INHABITANT event to the client CM of the new group user   
 	 * after the server processes the {@link CMInterestEvent#USER_ENTER} event.
 	 * <br>The following fields are used for this event:
@@ -30,7 +30,7 @@ public class CMDataEvent extends CMEvent{
 	/**
 	 * The event ID for sending new group user information from a server to existing 
 	 * group members.
-	 * <p>event direction: server -> client
+	 * <p>event direction: server -&gt; client
 	 * <p>The server CM sends the NEW_USER event to the existing group members 
 	 * right after the server sends the {@link CMDataEvent#INHABITANT} events.
 	 * <br>The following fields are used for this event:
@@ -45,7 +45,7 @@ public class CMDataEvent extends CMEvent{
 	/**
 	 * The event ID for sending a group-leaving user information from a server to 
 	 * the group members.
-	 * <p>event direction: server -> client
+	 * <p>event direction: server -&gt; client
 	 * <p>The server CM sends the REMOVE_USER event to the group members  
 	 * after it processes the {@link CMInterestEvent#USER_LEAVE} event.
 	 * <br>The following fields are used for this event:

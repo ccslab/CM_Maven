@@ -12,7 +12,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for requesting a file.
-	 * <p>event direction: receiver (requester) -> sender (file owner)
+	 * <p>event direction: receiver (requester) -&gt; sender (file owner)
 	 * <p>This event is sent when the receiver calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String)} or 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String, byte)}, 
@@ -23,7 +23,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the requested file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
 	 * <br>0: overwrite mode
@@ -34,7 +34,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the file request.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event as the response to the 
 	 * {@link CMFileEvent#REQUEST_FILE_TRANSFER} event.
 	 * <br>The following fields are used for this event:
@@ -44,7 +44,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>0: the request is denied.
 	 * <br>1: the request is accepted.</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the requested file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li> 
 	 * </ul>
 	 */
@@ -52,7 +52,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for notifying the receiver of the start of file-transfer.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event right after it sends the 
 	 * {@link CMFileEvent#REPLY_FILE_TRANSFER} event. The owner also sends this event 
 	 * when it calls the {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}, 
@@ -64,7 +64,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
 	 * <br>0: overwrite mode, 1: append mode</li>
@@ -74,7 +74,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the notification of the start of file-transfer.
-	 * <p>event direction: receiver -> sender
+	 * <p>event direction: receiver -&gt; sender
 	 * <p>The file receiver sends this event as the response to the 
 	 * {@link CMFileEvent#START_FILE_TRANSFER} event.
 	 * <br>The following fields are used for this event:
@@ -82,10 +82,10 @@ public class CMFileEvent extends CMEvent{
 	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * <li>received file size: {@link CMFileEvent#getReceivedFileSize()}
-	 * <br>> 0: the receiver has already received some bytes of the file.
+	 * <br>&gt; 0: the receiver has already received some bytes of the file.
 	 * <br>0: the receiver has no byte of the file.</li> 
 	 * </ul>
 	 */
@@ -93,7 +93,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for transferring each file block.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner starts to send this event when it receives the 
 	 * {@link CMFileEvent#START_FILE_TRANSFER_ACK} event. This event is repeatedly sent 
 	 * for each file block until all file blocks are sent to the receiver.
@@ -102,7 +102,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * <li>file block size: {@link CMFileEvent#getBlockSize()}</li>
 	 * <li>file block: {@link CMFileEvent#getFileBlock()}</li>
@@ -114,7 +114,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for notifying the receiver of the end of file-transfer.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event after it sends the last 
 	 * {@link CMFileEvent#CONTINUE_FILE_TRANSFER} event.
 	 * <br>The following fields are used for this event:
@@ -123,7 +123,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * </ul>
 	 */
@@ -131,7 +131,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the notification of the end of file-transfer.
-	 * <p>event direction: receiver -> sender
+	 * <p>event direction: receiver -&gt; sender
 	 * <p>The file receiver sends this event as the response to the 
 	 * {@link CMFileEvent#END_FILE_TRANSFER} event.
 	 * <br>The following fields are used for this event:
@@ -143,7 +143,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>1: success
 	 * <br>0: failure</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * </ul> 
 	 */
@@ -153,7 +153,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the cancellation of pushing (or sending) a file.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file sender sends this event when it calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cancelPushFile(String)}, 
 	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
@@ -168,7 +168,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the cancellation of sending a file.
-	 * <p>event direction: receiver -> sender
+	 * <p>event direction: receiver -&gt; sender
 	 * <p>The receiver sends this event as the response to the 
 	 * {@link CMFileEvent#CANCEL_FILE_SEND} event.
 	 * <br>The following fields are used for this event:
@@ -186,7 +186,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for requesting a file.
-	 * <p>event direction: receiver (requester) -> sender (file owner)
+	 * <p>event direction: receiver (requester) -&gt; sender (file owner)
 	 * <p>This event is sent when the receiver calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String)} or 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String, byte)}, 
@@ -197,7 +197,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the requested file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
 	 * <br>0: overwrite mode
@@ -208,7 +208,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the file request.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event as the response to the 
 	 * {@link CMFileEvent#REQUEST_FILE_TRANSFER_CHAN} event.
 	 * <br>The following fields are used for this event:
@@ -218,7 +218,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>0: the request is denied.
 	 * <br>1: the request is accepted.</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the requested file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li> 
 	 * </ul>
 	 */
@@ -227,7 +227,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for notifying the receiver of the start of file-transfer.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event right after it sends the 
 	 * {@link CMFileEvent#REPLY_FILE_TRANSFER_CHAN} event. The owner also sends this event 
 	 * when it calls the {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}, 
@@ -239,7 +239,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
 	 * <br>0: overwrite mode, 1: append mode</li>
@@ -249,7 +249,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the notification of the start of file-transfer.
-	 * <p>event direction: receiver -> sender
+	 * <p>event direction: receiver -&gt; sender
 	 * <p>The file receiver sends this event as the response to the 
 	 * {@link CMFileEvent#START_FILE_TRANSFER_CHAN} event.
 	 * <br>The following fields are used for this event:
@@ -257,10 +257,10 @@ public class CMFileEvent extends CMEvent{
 	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * <li>received file size: {@link CMFileEvent#getReceivedFileSize()}
-	 * <br>> 0: the receiver has already received some bytes of the file.
+	 * <br>&gt; 0: the receiver has already received some bytes of the file.
 	 * <br>0: the receiver has no byte of the file.</li> 
 	 * </ul>
 	 */	
@@ -268,7 +268,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for notifying the receiver of the end of file-transfer.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event after it sends the last 
 	 * file block.
 	 * <br>The following fields are used for this event:
@@ -277,7 +277,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * </ul>
 	 */
@@ -285,7 +285,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the notification of the end of file-transfer.
-	 * <p>event direction: receiver -> sender
+	 * <p>event direction: receiver -&gt; sender
 	 * <p>The file receiver sends this event as the response to the 
 	 * {@link CMFileEvent#END_FILE_TRANSFER_CHAN} event.
 	 * <br>The following fields are used for this event:
@@ -297,7 +297,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>1: success
 	 * <br>0: failure</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>>= 0: the file is an attachment of SNS content ID
+	 * <br>&gt;= 0: the file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
 	 * </ul> 
 	 */
@@ -305,7 +305,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the cancellation of pushing (or sending) a file.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file sender sends this event when it calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cancelPushFile(String)}, 
 	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
@@ -320,7 +320,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the cancellation of sending a file.
-	 * <p>event direction: receiver -> sender
+	 * <p>event direction: receiver -&gt; sender
 	 * <p>The receiver sends this event as the response to the 
 	 * {@link CMFileEvent#CANCEL_FILE_SEND_CHAN} event.
 	 * <br>The following fields are used for this event:
@@ -336,7 +336,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the cancellation of receiving a file.
-	 * <p>event direction: receiver -> sender
+	 * <p>event direction: receiver -&gt; sender
 	 * <p>The file receiver sends this event when it calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cancelRequestFile(String)}, 
 	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
@@ -351,7 +351,7 @@ public class CMFileEvent extends CMEvent{
 	
 	/**
 	 * The event ID for the response to the cancellation of receiving a file.
-	 * <p>event direction: sender -> receiver
+	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file sender sends this event as the response to the 
 	 * {@link CMFileEvent#CANCEL_FILE_RECV_CHAN} event.
 	 * <br>The following fields are used for this event:
