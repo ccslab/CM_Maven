@@ -12,6 +12,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
@@ -150,6 +151,15 @@ public class CMServerApp {
 			case 51: 	// test remove channel
 				removeChannel();
 				break;	
+			case 60:	// find session info
+				findMqttSessionInfo();
+				break;
+			case 61:	// print all session info
+				printAllMqttSessionInfo();
+				break;
+			case 62:	// print all retain info
+				printAllMqttRetainInfo();
+				break;
 			case 101:	// configure variables of user access simulation
 				configureUserAccessSimulation();
 				break;
@@ -206,6 +216,8 @@ public class CMServerApp {
 		System.out.print("40: set attachment download scheme\n");
 		System.out.print("---------------------------------- Channel\n");
 		System.out.print("50: add channel, 51: remove channel\n");
+		System.out.print("---------------------------------- MQTT\n");
+		System.out.print("60: find session info, 61: print all session info, 62: print all retain info\n");
 		System.out.print("---------------------------------- Other CM Tests\n");
 		System.out.print("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
 		System.out.print("103: start SNS user access simulation and measure prefetch accuracy\n");
@@ -1317,6 +1329,56 @@ public class CMServerApp {
 		}
 		
 		return;	
+	}
+	
+	public void findMqttSessionInfo()
+	{
+		System.out.println("========== find MQTT session info");
+		String strUser = null;
+		System.out.print("User Name: ");
+		strUser = m_scan.nextLine().trim();
+		if(strUser == null || strUser.isEmpty()) 
+			return;
+		
+		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		System.out.println("MQTT session of \""+strUser+"\" is ");
+		System.out.println(mqttManager.getSessionInfo(strUser));
+		
+		return;
+	}
+	
+	public void printAllMqttSessionInfo()
+	{
+		System.out.println("========== print all MQTT session info");
+		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		System.out.println(mqttManager.getAllSessionInfo());
+		
+		return;
+		
+	}
+	
+	public void printAllMqttRetainInfo()
+	{
+		System.out.println("=========== print all MQTT retain info");
+		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		System.out.println(mqttManager.getAllRetainInfo());
+		
+		return;
 	}
 	
 	public void sendEventWithWrongByteNum()

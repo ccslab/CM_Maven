@@ -15,6 +15,15 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBCOMP;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
+import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
@@ -195,6 +204,9 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			break;
 		case CMInfo.CM_MULTI_SERVER_EVENT:
 			processMultiServerEvent(cme);
+			break;
+		case CMInfo.CM_MQTT_EVENT:
+			processMqttEvent(cme);
 			break;
 		default:
 			return;
@@ -842,6 +854,47 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			break;
 		case CMMultiServerEvent.ADD_LOGIN_ACK:
 			System.out.println("This client successfully logs in to server["+mse.getServerName()+"].");
+			break;
+		}
+		
+		return;
+	}
+	
+	private void processMqttEvent(CMEvent cme)
+	{
+		switch(cme.getID())
+		{
+		case CMMqttEvent.CONNACK:
+			CMMqttEventCONNACK conackEvent = (CMMqttEventCONNACK)cme;
+			System.out.println("received "+conackEvent.toString());
+			break;
+		case CMMqttEvent.PUBLISH:
+			CMMqttEventPUBLISH pubEvent = (CMMqttEventPUBLISH)cme;
+			System.out.println("received "+pubEvent.toString());
+			break;
+		case CMMqttEvent.PUBACK:
+			CMMqttEventPUBACK pubackEvent = (CMMqttEventPUBACK)cme;
+			System.out.println("received "+pubackEvent.toString());
+			break;
+		case CMMqttEvent.PUBREC:
+			CMMqttEventPUBREC pubrecEvent = (CMMqttEventPUBREC)cme;
+			System.out.println("received "+pubrecEvent.toString());
+			break;
+		case CMMqttEvent.PUBREL:
+			CMMqttEventPUBREL pubrelEvent = (CMMqttEventPUBREL)cme;
+			System.out.println("received "+pubrelEvent.toString());
+			break;
+		case CMMqttEvent.PUBCOMP:
+			CMMqttEventPUBCOMP pubcompEvent = (CMMqttEventPUBCOMP)cme;
+			System.out.println("received "+pubcompEvent.toString());
+			break;
+		case CMMqttEvent.SUBACK:
+			CMMqttEventSUBACK subackEvent = (CMMqttEventSUBACK)cme;
+			System.out.println("received "+subackEvent.toString());
+			break;
+		case CMMqttEvent.UNSUBACK:
+			CMMqttEventUNSUBACK unsubackEvent = (CMMqttEventUNSUBACK)cme;
+			System.out.println("received "+unsubackEvent.toString());
 			break;
 		}
 		

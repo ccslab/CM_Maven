@@ -31,6 +31,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
@@ -299,6 +300,24 @@ public class CMClientApp {
 			case 109: // send an event with wrong event type
 				testSendEventWithWrongEventType();
 				break;
+			case 200: // MQTT connect
+				testMqttConnect();
+				break;
+			case 201: // MQTT publish
+				testMqttPublish();
+				break;
+			case 202: // MQTT subscribe
+				testMqttSubscribe();
+				break;
+			case 203: // print MQTT session info
+				testPrintMqttSessionInfo();
+				break;
+			case 204: // MQTT unsubscribe
+				testMqttUnsubscribe();
+				break;
+			case 205: // MQTT disconnect
+				testMqttDisconnect();
+				break;
 			default:
 				System.err.println("Unknown command.");
 				break;
@@ -357,6 +376,9 @@ public class CMClientApp {
 		System.out.println("90: register new user, 91: deregister user, 92: find registered user");
 		System.out.println("93: add new friend, 94: remove friend, 95: show friends, 96: show friend requesters");
 		System.out.println("97: show bi-directional friends");
+		System.out.println("---------------------------------- MQTT");
+		System.out.println("200: connect, 201: publish, 202: subscribe, 203: print session info");
+		System.out.println("204: unsubscribe, 205: disconnect");
 		System.out.println("---------------------------------- Other CM Tests");
 		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
 		System.out.println("103: test repeated request of SNS content list");
@@ -2983,6 +3005,200 @@ public class CMClientApp {
 		}
 		
 		return;
+	}
+	
+	public void testMqttConnect()
+	{
+		System.out.println("========== MQTT connect");
+
+		String strWillTopic = null;
+		String strWillMessage = null;
+		boolean bWillRetain = false;
+		byte willQoS = (byte)0;
+		boolean bWillFlag = false;
+		boolean bCleanSession = false;
+		
+		boolean bDetail = false;
+		System.out.print("Need all parameters? (\"y\" or \"n\", Enter for no): ");
+		String strDetail = m_scan.nextLine().trim();
+		if(strDetail.contentEquals("y"))
+			bDetail = true;
+		
+		if(bDetail)
+		{
+			System.out.print("Will Topic (Enter for empty string): ");
+			strWillTopic = m_scan.nextLine().trim();
+			System.out.print("Will Message Enter for empty string): ");
+			strWillMessage = m_scan.nextLine().trim();
+			System.out.print("Will Retain Flag (\"true\" or \"false\", Enter for false): ");
+			String strWillRetain = m_scan.nextLine().trim();
+			if(strWillRetain.contentEquals("true"))
+				bWillRetain = true;
+			System.out.print("Will QoS (0,1, or 2, Enter for 0): ");
+			String strWillQoS = m_scan.nextLine().trim();
+			if(strWillQoS.contentEquals("1") || strWillQoS.contentEquals("2"))
+				willQoS = Byte.parseByte(strWillQoS);
+			else if(!strWillQoS.contentEquals("0") && !strWillQoS.isEmpty())
+			{
+				System.err.println("Wrong QoS! QoS is set to 0!");
+			}
+			System.out.print("Will Flag (\"true\" or \"false\", Enter for false): ");
+			String strWillFlag = m_scan.nextLine().trim();
+			if(strWillFlag.contentEquals("true"))
+				bWillFlag = true;
+			System.out.print("Clean Session Flag (\"true\" or \"false\", Enter for false): ");
+			String strCleanSession = m_scan.nextLine().trim();
+			if(strCleanSession.contentEquals("true"))
+				bCleanSession = true;			
+		}
+		
+		CMMqttManager mqttManager = (CMMqttManager) m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		
+		if(bDetail)
+		{
+			mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag, 
+					bCleanSession);
+		}
+		else {
+			mqttManager.connect();
+		}
+
+	}
+	
+	public void testMqttPublish()
+	{
+		System.out.println("========== MQTT publish");
+		
+		String strTopic = null;
+		String strMessage = null;
+		byte qos = (byte)0;
+		boolean bDupFlag = false;
+		boolean bRetainFlag = false;
+		
+		boolean bDetail = false;
+		System.out.print("Need all parameters? (\"y\" or \"n\", Enter for no): ");
+		String strDetail = m_scan.nextLine().trim();
+		if(strDetail.contentEquals("y"))
+			bDetail = true;
+
+		System.out.print("Topic Name: ");
+		strTopic = m_scan.nextLine().trim();
+		System.out.print("Application Message: ");
+		strMessage = m_scan.nextLine().trim();
+		
+		if(bDetail)
+		{
+			System.out.print("QoS (0,1, or 2, Enter for 0): ");
+			String strQoS = m_scan.nextLine().trim();
+			if(strQoS.contentEquals("1") || strQoS.contentEquals("2"))
+				qos = Byte.parseByte(strQoS);
+			else if(!strQoS.contentEquals("0") && !strQoS.isEmpty())
+			{
+				System.err.println("Wrong QoS! QoS is set to 0!");
+			}
+			System.out.print("DUP Flag (\"true\" or \"false\", Enter for false): ");
+			String strDupFlag = m_scan.nextLine().trim();
+			if(strDupFlag.contentEquals("true"))
+				bDupFlag = true;
+			System.out.print("Retain Flag (\"true\" or \"false\", Enter for false): ");
+			String strRetainFlag = m_scan.nextLine().trim();
+			if(strRetainFlag.contentEquals("true"))
+				bRetainFlag = true;
+		}
+		
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		
+		if(bDetail)
+		{
+			mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);			
+		}
+		else
+		{
+			mqttManager.publish(strTopic, strMessage);
+		}
+
+	}
+	
+	public void testMqttSubscribe()
+	{
+		System.out.println("========== MQTT subscribe");
+		String strTopicFilter;
+		byte qos = (byte)0;
+		
+		System.out.print("Topic Filter: ");
+		strTopicFilter = m_scan.nextLine().trim();
+		String strQoS = null;
+		strQoS = m_scan.nextLine().trim();
+		if(strQoS.contentEquals("1") || strQoS.contentEquals("2"))
+			qos = Byte.parseByte(strQoS);
+		else if(!strQoS.contentEquals("0") && !strQoS.isEmpty())
+		{
+			System.err.println("Wrong QoS! QoS is set to 0!");
+		}
+		
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		mqttManager.subscribe(strTopicFilter, qos);
+
+	}
+	
+	public void testPrintMqttSessionInfo()
+	{
+		System.out.println("========== print MQTT session info");
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		System.out.println(mqttManager.getMySessionInfo());
+		
+	}
+	
+	public void testMqttUnsubscribe()
+	{
+		System.out.println("========== MQTT unsubscribe");
+		String strTopic = null;
+		System.out.print("Topic to unsubscribe: ");
+		strTopic = m_scan.nextLine().trim();
+		if(strTopic == null || strTopic.isEmpty())
+			return;
+
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		mqttManager.unsubscribe(strTopic);
+
+	}
+	
+	public void testMqttDisconnect()
+	{
+		System.out.println("========== MQTT disconnect");
+		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		if(mqttManager == null)
+		{
+			System.err.println("CMMqttManager is null!");
+			return;
+		}
+		mqttManager.disconnect();
+
 	}
 	
 	public void testSendEventWithWrongByteNum()
