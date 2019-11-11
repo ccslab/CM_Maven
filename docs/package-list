@@ -2,5 +2,7 @@ kr.ac.konkuk.ccslab.cm.entity
 kr.ac.konkuk.ccslab.cm.event
 kr.ac.konkuk.ccslab.cm.event.handler
 kr.ac.konkuk.ccslab.cm.event.mqttevent
+kr.ac.konkuk.ccslab.cm.info
 kr.ac.konkuk.ccslab.cm.manager
+kr.ac.konkuk.ccslab.cm.sns
 kr.ac.konkuk.ccslab.cm.stub
