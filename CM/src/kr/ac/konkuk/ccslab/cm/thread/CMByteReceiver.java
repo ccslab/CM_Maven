@@ -89,8 +89,9 @@ public class CMByteReceiver extends Thread {
 			LOG.log(Level.SEVERE, e.getMessage(), e);
 		}
 		
-		LOG.info(sc+" connected. hashcode: "+sc.hashCode()+"\n"
-			+"# registered keys in Selector: "+m_selector.keys().size());
+		LOG.info(sc+" connected. \n"
+				+"hashcode: "+sc.hashCode()+"\n"
+				+"# registered keys in Selector: "+m_selector.keys().size());
 		
 		// create CMUnknownChannelInfo and add it to the list
 		CMUnknownChannelInfo unchInfo = new CMUnknownChannelInfo(sc);
@@ -99,13 +100,14 @@ public class CMByteReceiver extends Thread {
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMByteReceiver.processAccept(), "+sc.toString()+" added to unknown-channel list.");
+			System.out.println("CMByteReceiver.processAccept(), added to unknown-channel list: "+sc);
+			System.out.println("channel hash code: "+sc.hashCode());
 			System.out.println("# unknown-channel-list members: "+m_unknownChannelList.getSize());
 		}
 		
 		if(!bRet)
 		{
-			LOG.severe("error to add "+sc.toString()+" to unknown-channel list!");
+			LOG.severe("error to add to unknown-channel list!: "+sc);
 		}
 		
 		return;
@@ -138,13 +140,8 @@ public class CMByteReceiver extends Thread {
 		// if a channel is disconnected
 		if( ret == 0 || ret == -1 )
 		{
-			if(CMInfo._CM_DEBUG_2)
-			{
-				System.out.println("---- CMByteReceiver.readEventBytes(), "+sc.toString()
-							+" is disconnected.");
-				System.out.println("is open: "+sc.isOpen());
-				System.out.println("hash code: "+sc.hashCode());
-			}
+			LOG.severe(sc+" is disconnected. \n"
+					+"is open: "+sc.isOpen()+", hash code: "+sc.hashCode());
 			if(sc.isOpen())
 			{
 				try {

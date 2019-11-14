@@ -369,11 +369,12 @@ public class CMConfigurator {
 			}
 			
 			bRet = true;
-		}
-		else
-		{
-			System.err.println("CMConfigurator.changeConfiguration(), file not modified for ("
-					+strField+", "+strValue+")!");
+			
+			if(CMInfo._CM_DEBUG_2)
+			{
+				System.out.println("CMConfigurator.changeConfiguration(), file modified "
+						+ "for (field: "+strField+", value: "+strValue+").");				
+			}
 		}
 
 		return bRet;

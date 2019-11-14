@@ -865,14 +865,14 @@ public class CMSessionEvent extends CMEvent {
 		
 		if( tsi != null )
 		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("CMSessionEvent.addSessionInfo(), already exists: "+si.getSessionName());
+			if(CMInfo._CM_DEBUG_2)
+				System.err.println("CMSessionEvent.addSessionInfo(), already exists: "+si.getSessionName());
 			return false;
 		}
 		
 		m_sessionList.addElement(si);
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMSessionEvent.addSessionInfo(), ok session: "+si.getSessionName());
 
 		return true;
@@ -898,13 +898,13 @@ public class CMSessionEvent extends CMEvent {
 
 		if(!found)
 		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("CMSessionEvent.removeSessionInfo(), not found: "+sname);
+			if(CMInfo._CM_DEBUG_2)
+				System.err.println("CMSessionEvent.removeSessionInfo(), not found: "+sname);
 			
 			return false;
 		}
 
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMSessionEvent.removeSessionInfo(), Ok session: "+sname);
 
 		return true;		
@@ -949,7 +949,7 @@ public class CMSessionEvent extends CMEvent {
 			return null;
 		}
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMSessionEvent.findSessionInfo(), Ok session: "+sname);
 
 		return tsi;
@@ -973,14 +973,14 @@ public class CMSessionEvent extends CMEvent {
 		
 		if( tgi != null )
 		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("CMSessionEvent.addGroupInfo(), already exists: "+gi.getGroupName());
+			if(CMInfo._CM_DEBUG_2)
+				System.err.println("CMSessionEvent.addGroupInfo(), already exists: "+gi.getGroupName());
 			return false;
 		}
 		
 		m_groupList.addElement(gi);
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMSessionEvent.addGroupInfo(), ok group: "+gi.getGroupName());
 
 		return true;
@@ -1006,13 +1006,13 @@ public class CMSessionEvent extends CMEvent {
 
 		if(!found)
 		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("CMSessionEvent.removeGroupInfo(), not found: "+gname);
+			if(CMInfo._CM_DEBUG_2)
+				System.err.println("CMSessionEvent.removeGroupInfo(), not found: "+gname);
 			
 			return false;
 		}
 
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMSessionEvent.removeGroupInfo(), Ok session: "+gname);
 
 		return true;		
@@ -1057,7 +1057,7 @@ public class CMSessionEvent extends CMEvent {
 			return null;
 		}
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMSessionEvent.findGroupInfo(), Ok session: "+gname);
 
 		return tgi;
@@ -1231,7 +1231,7 @@ public class CMSessionEvent extends CMEvent {
 		case RESPONSE_SESSION_INFO:
 			if(m_nSessionNum != m_sessionList.size())
 			{
-				System.out.println("CMSessionEvent.marshallBody(), incorrect number of session info.");
+				System.err.println("CMSessionEvent.marshallBody(), incorrect number of session info.");
 				m_bytes = null;
 				return;
 			}
@@ -1255,7 +1255,7 @@ public class CMSessionEvent extends CMEvent {
 		case JOIN_SESSION_ACK:
 			if(m_nGroupNum != m_groupList.size())
 			{
-				System.out.println("CMSessionEvent.marshallBody(), incorrect number of group info.");
+				System.err.println("CMSessionEvent.marshallBody(), incorrect number of group info.");
 				m_bytes = null;
 				return;
 			}
@@ -1333,7 +1333,7 @@ public class CMSessionEvent extends CMEvent {
 			putStringToByteBuffer(m_strCreationTime);
 			break;
 		default:
-			System.out.println("CMSessionEvent.marshallBody(), unknown event id("+m_nID+").");
+			System.err.println("CMSessionEvent.marshallBody(), unknown event id("+m_nID+").");
 			m_bytes = null;
 			break;
 		}
@@ -1458,7 +1458,7 @@ public class CMSessionEvent extends CMEvent {
 			m_strCreationTime = getStringFromByteBuffer(msg);
 			break;
 		default:
-			System.out.println("CMSessionEvent.unmarshallBody(), unknown event id("+m_nID+").");
+			System.err.println("CMSessionEvent.unmarshallBody(), unknown event id("+m_nID+").");
 			m_bytes = null;
 			break;
 		}

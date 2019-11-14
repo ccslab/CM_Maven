@@ -43,7 +43,7 @@ public class CMFileTransferManager {
 			boolean ret = defaultPath.mkdirs();
 			if(ret)
 			{
-				if(CMInfo._CM_DEBUG)
+				if(CMInfo._CM_DEBUG_2)
 					System.out.println("A default path is created!");
 			}
 			else
@@ -53,7 +53,7 @@ public class CMFileTransferManager {
 			}
 		}
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("A default path for the file transfer: "+strPath);
 						
 		return;

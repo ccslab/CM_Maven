@@ -115,7 +115,7 @@ public class CMStub {
 		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
 		es = Executors.newFixedThreadPool(nAvailableProcessors);
 		threadInfo.setExecutorService(es);
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMStub.init(), executor service created; # available processors("
 					+nAvailableProcessors+").");

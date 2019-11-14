@@ -379,6 +379,7 @@ public class CMInteractionManager {
 				{
 					System.out.println("CMIntearctionManager.disconnectBadNodeByServer() "
 							+"intentionally disconnected from unknown channel: "+badSC);
+					System.out.println("channel hash code: "+badSC.hashCode());
 				}
 
 			} catch (IOException e) {
@@ -392,16 +393,19 @@ public class CMInteractionManager {
 			{
 				System.out.println("CMInteractionManager.disconnectBadNodeByServer() "
 						+"removed from unknown-channel list: "+badSC);
+				System.out.println("channel hash code: "+badSC.hashCode());
 			}
 			else {
 				System.err.println("CMInteractionManager.disconnectBadNodeByServer() "
 						+"error to remove from unknown-channel list: "+badSC);
+				System.err.println("channel hash code: "+badSC.hashCode());
 			}
 			
 			return bRet;
 		}
 		
 		System.err.println("CMInteractionManager.disconnectBadNodeByServer(): "+badSC);
+		System.err.println("channel hash code: "+badSC.hashCode());
 		System.err.println("cannot find a connected client or server information!");
 		return false;
 	}
@@ -544,6 +548,7 @@ public class CMInteractionManager {
 			{
 				System.out.println("CMInteractionManager.disconnectBadNodeByClient(): "
 						+ "intentionally disconnected from the default server: "+badSC);
+				System.out.println("channel hash code: "+badSC.hashCode());
 			}
 
 			// notify the app event handler
@@ -588,6 +593,7 @@ public class CMInteractionManager {
 				System.out.println("CMInteractionManager.disconnectBadNodeByClient(): "
 						+ "intentionally disconnected from an additional server("
 						+strAddServer+"): "+badSC);
+				System.out.println("channel hash code: "+badSC.hashCode());
 			}
 			
 			// notify the app event handler
@@ -614,6 +620,7 @@ public class CMInteractionManager {
 		}
 		
 		System.err.println("CMInteractionManager.disconnectBadNodeByClient(): "+badSC);
+		System.err.println("channel hash code: "+badSC.hashCode());
 		System.err.println("cannot find the connected default or additional server information!");
 		return false;
 	}

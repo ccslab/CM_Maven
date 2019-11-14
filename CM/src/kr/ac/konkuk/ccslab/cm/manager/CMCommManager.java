@@ -112,7 +112,7 @@ public class CMCommManager {
 		}
 		
 		strIPByGetLocalHost = localAddress.getHostAddress();
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("------ detecting IPv4 addresses");
 			System.out.println("local address by InetAddress.getLocalHost(): "+strIPByGetLocalHost);
@@ -130,7 +130,7 @@ public class CMCommManager {
 				if(ni.isPointToPoint())
 					continue;
 				
-				if(CMInfo._CM_DEBUG)
+				if(CMInfo._CM_DEBUG_2)
 				{
 					System.out.println("network interface name: "+ni.getName());
 					System.out.println("  :isLoopback("+ni.isLoopback()+"), isPointToPoint("+ni.isPointToPoint()+
@@ -145,7 +145,7 @@ public class CMCommManager {
 						continue;
 						
 					//InetAddress inetAddress = enumIA.nextElement();
-					if(CMInfo._CM_DEBUG)
+					if(CMInfo._CM_DEBUG_2)
 					{
 						System.out.println("  detected inetAddress: " + inetAddress.getHostAddress());
 						System.out.println("    :isLoopback("+inetAddress.isLoopbackAddress()+"), isLinkLocal("
@@ -162,7 +162,7 @@ public class CMCommManager {
 					if(!inetAddress.isLoopbackAddress())
 					{
 						 strIP = inetAddress.getHostAddress().toString();
-						 if(CMInfo._CM_DEBUG)
+						 if(CMInfo._CM_DEBUG_2)
 							 System.out.println("    :detected as the local IP");
 					}
 				}
@@ -184,9 +184,6 @@ public class CMCommManager {
 				System.out.println("------ detected local IP: "+strIP);
 		}
 		
-		if(CMInfo._CM_DEBUG)
-			System.out.println("------ end of detecting IPv4 address");
-
 		return strIP;
 	}
 	

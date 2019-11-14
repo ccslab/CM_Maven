@@ -99,14 +99,14 @@ public class CMSession extends CMSessionInfo {
 		
 		if(isMember(gname))
 		{
-			System.out.println("CMSession.addGroup(), group("+gname+") already exists in session("
+			System.err.println("CMSession.addGroup(), group("+gname+") already exists in session("
 					+getSessionName()+").");
 			return false;
 		}
 		
 		m_groupList.addElement(group);
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMSession.addGroup(), group("+gname+") added to session("
 					+getSessionName()+").");
 		return true;
@@ -131,13 +131,13 @@ public class CMSession extends CMSessionInfo {
 		
 		if(bFound)
 		{
-			if(CMInfo._CM_DEBUG)
+			if(CMInfo._CM_DEBUG_2)
 				System.out.println("CMSession.removeGroup(), group("+strGroupName+" removed from session("
 						+getSessionName()+").");
 		}
 		else
 		{
-			System.out.println("CMSession.removeGroup(), group("+strGroupName+" not found in session("
+			System.err.println("CMSession.removeGroup(), group("+strGroupName+" not found in session("
 					+getSessionName()+").");
 		}
 		

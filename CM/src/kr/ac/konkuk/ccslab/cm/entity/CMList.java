@@ -33,15 +33,15 @@ public class CMList<T> {
 	{
 		if(m_list.contains(element))
 		{
-			System.err.println("CMList.addElement(): already exists !: "+element.toString());
+			System.err.println("CMList.addElement(): already exists !: "+element);
 			return false;
 		}
 		
 		m_list.addElement(element);
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
-			System.out.println("CMList.addElement() done: "+element.toString());
+			System.out.println("CMList.addElement() done: "+element);
 			System.out.println("# current element: "+m_list.size());
 		}
 		
@@ -61,12 +61,12 @@ public class CMList<T> {
 		bResult = m_list.removeElement(element);
 		if(!bResult)
 		{
-			System.err.println("CMList.removeElement() failed! : "+element.toString());
+			System.err.println("CMList.removeElement() failed! : "+element);
 		}
 
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 		{
-			System.out.println("CMList.removeElement() done: "+element.toString());
+			System.out.println("CMList.removeElement() done: "+element);
 			System.out.println("# current element: "+m_list.size());
 		}
 

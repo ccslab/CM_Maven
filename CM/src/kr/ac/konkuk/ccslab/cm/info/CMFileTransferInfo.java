@@ -159,8 +159,8 @@ public class CMFileTransferInfo {
 		sInfoList = m_sendFileHashtable.get(uName);
 		if(sInfoList == null)
 		{
-			System.err.println("CMFileTransferInfo.removeSendFileInfo(), list not found for receiver("
-					+uName+")");
+			//System.err.println("CMFileTransferInfo.removeSendFileInfo(), list not found for receiver("
+			//		+uName+")");
 			return false;
 		}
 		
@@ -197,8 +197,8 @@ public class CMFileTransferInfo {
 		sInfoList = m_sendFileHashtable.remove(strReceiver);
 		if(sInfoList == null)
 		{
-			System.err.println("CMFileTransferInfo.removeSendFileList(); list not found for receiver("
-					+strReceiver+")!");
+			//System.err.println("CMFileTransferInfo.removeSendFileList(); list not found for receiver("
+			//		+strReceiver+")!");
 			return false;
 		}
 		
@@ -376,8 +376,8 @@ public class CMFileTransferInfo {
 		rInfoList = m_recvFileHashtable.get(senderName);
 		if(rInfoList == null)
 		{
-			System.err.println("CMFileTransferInfo.removeRecvFileInfo(), list not found for sender("
-					+senderName+")");
+			//System.err.println("CMFileTransferInfo.removeRecvFileInfo(), list not found for sender("
+			//		+senderName+")");
 			return false;
 		}
 		
@@ -414,8 +414,8 @@ public class CMFileTransferInfo {
 		rInfoList = m_recvFileHashtable.remove(strSender);
 		if(rInfoList == null)
 		{
-			System.err.println("CMFileTransferInfo.removeRecvFileList(); list not found for sender("
-					+strSender+")!");
+			//System.err.println("CMFileTransferInfo.removeRecvFileList(); list not found for sender("
+			//		+strSender+")!");
 			return false;
 		}
 		

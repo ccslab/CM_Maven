@@ -84,7 +84,7 @@ public class CMInteractionInfo {
 		CMSession cmSession = null;
 		if( isMember(strSessionName) )
 		{
-			System.out.println("CMInteractionInfo.createSession(), session("+strSessionName+") already exists.");
+			System.err.println("CMInteractionInfo.createSession(), session("+strSessionName+") already exists.");
 			return null;
 		}
 		
@@ -100,13 +100,13 @@ public class CMInteractionInfo {
 		
 		if(isMember(sname))
 		{
-			System.out.println("CMInteractionInfo.addSession(), session("+sname+") already exists.");
+			System.err.println("CMInteractionInfo.addSession(), session("+sname+") already exists.");
 			return false;
 		}
 		
 		m_sessionList.addElement(session);
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMIntearctionInfo.addSession(), session("+sname+") added.");
 		return true;
 	}
@@ -130,7 +130,7 @@ public class CMInteractionInfo {
 		
 		if(bFound)
 		{
-			if(CMInfo._CM_DEBUG)
+			if(CMInfo._CM_DEBUG_2)
 				System.out.println("CMInteractionInfo.removeSession(), session("+strSessionName+") removed.");
 		}
 		else
@@ -213,7 +213,7 @@ public class CMInteractionInfo {
 		CMServer cmServer = null;
 		if( isMember(strServerName) )
 		{
-			System.out.println("CMInteractionInfo.createAddserver(), server("+strServerName+") already exists.");
+			System.err.println("CMInteractionInfo.createAddserver(), server("+strServerName+") already exists.");
 			return null;
 		}
 		
@@ -229,13 +229,13 @@ public class CMInteractionInfo {
 		
 		if(isMember(sname))
 		{
-			System.out.println("CMInteractionInfo.addAddServer(), server("+sname+") already exists.");
+			System.err.println("CMInteractionInfo.addAddServer(), server("+sname+") already exists.");
 			return false;
 		}
 		
 		m_addServerList.addElement(server);
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMIntearctionInfo.addAddServer(), server("+sname+") added.");
 		return true;
 	}
@@ -259,12 +259,12 @@ public class CMInteractionInfo {
 		
 		if(bFound)
 		{
-			if(CMInfo._CM_DEBUG)
+			if(CMInfo._CM_DEBUG_2)
 				System.out.println("CMInteractionInfo.removeAddServer(), server("+strServerName+") removed.");
 		}
 		else
 		{
-			System.out.println("CMInteractionInfo.removeAddServer(), server("+strServerName+") not found.");
+			System.err.println("CMInteractionInfo.removeAddServer(), server("+strServerName+") not found.");
 		}
 		
 		return bFound;

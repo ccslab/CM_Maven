@@ -89,8 +89,9 @@ public class CMServerKeepAliveTask implements Runnable {
 				
 				if(CMInfo._CM_DEBUG)
 				{
-					System.out.println("CMServerKeepAliveTask.run(), remove from "
-							+ "unknown-channel list: "+unch);
+					System.out.println("CMServerKeepAliveTask.run(), removed from "
+							+ "unknown-channel list: "+unch.getUnknownChannel());
+					System.out.println("channel hash code: "+unch.getUnknownChannel().hashCode());
 					System.out.println("# unknown-channel list: "+unchVector.size());
 				}
 			}
