@@ -3,11 +3,14 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
@@ -18,6 +21,7 @@ public class CMByteReceiver extends Thread {
 	private Selector m_selector;
 	private CMBlockingEventQueue m_queue;
 	private CMList<CMUnknownChannelInfo> m_unknownChannelList;
+	private static final Logger LOG = Logger.getLogger(CMByteReceiver.class.getName());
 	
 	public CMByteReceiver(CMInfo cmInfo)
 	{
@@ -29,6 +33,10 @@ public class CMByteReceiver extends Thread {
 	
 	public void run()
 	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getLogLevel() == 0)
+			LOG.setLevel(Level.SEVERE);
+		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMByteReceiver starts to receive messages.");
 		while(!Thread.currentThread().isInterrupted())
@@ -69,22 +77,20 @@ public class CMByteReceiver extends Thread {
 			sc = ssc.accept();
 			if(sc == null)
 			{
-				System.err.println("CMByteReceiver.processAccept(), socket channel is null.");
+				//System.err.println("CMByteReceiver.processAccept(), socket channel is null.");
+				LOG.severe("socket channel is null.");
 				return;
 			}
 			sc.configureBlocking(false);
 			sc.register(m_selector, SelectionKey.OP_READ);
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			LOG.log(Level.SEVERE, e.getMessage(), e);
 		}
 		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMByteReceiver.processAccept(), "+sc.toString()+" connected. hashcode: "+sc.hashCode());
-			System.out.println("# registered keys in Selector: "+m_selector.keys().size());
-		}
+		LOG.info(sc+" connected. hashcode: "+sc.hashCode()+"\n"
+			+"# registered keys in Selector: "+m_selector.keys().size());
 		
 		// create CMUnknownChannelInfo and add it to the list
 		CMUnknownChannelInfo unchInfo = new CMUnknownChannelInfo(sc);
@@ -99,8 +105,7 @@ public class CMByteReceiver extends Thread {
 		
 		if(!bRet)
 		{
-			System.err.println("CMByteReceiver.processAccept(), error to add "+sc.toString()
-				+" to unknown-channel list!");
+			LOG.severe("error to add "+sc.toString()+" to unknown-channel list!");
 		}
 		
 		return;
@@ -145,8 +150,8 @@ public class CMByteReceiver extends Thread {
 				try {
 					sc.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					LOG.log(Level.SEVERE, e.getMessage(), e);
 				}
 			}
 
@@ -160,15 +165,15 @@ public class CMByteReceiver extends Thread {
 				System.out.println("#### event byte num: "+nByteNum+" bytes, read byte num: "+ret+" bytes.");
 			if(nByteNum > CMInfo.MAX_EVENT_SIZE)
 			{
-				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
-						+") is greater than the maximum event size("+CMInfo.MAX_EVENT_SIZE+")!");
+				LOG.severe("nByteNum("+nByteNum+") is greater than the maximum event size("
+						+CMInfo.MAX_EVENT_SIZE+")!");
 				CMInteractionManager.disconnectBadNode(sc, m_cmInfo);
 				return;
 			}
 			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
 			{
-				System.err.println("CMByteReceiver.readEventBytes(): nByteNum("+nByteNum
-						+") is less than the minimum event size("+CMInfo.MIN_EVENT_SIZE+")!");
+				LOG.severe("nByteNum("+nByteNum+") is less than the minimum event size("
+						+CMInfo.MIN_EVENT_SIZE+")!");
 				CMInteractionManager.disconnectBadNode(sc, m_cmInfo);
 				return;
 			}
@@ -223,8 +228,8 @@ public class CMByteReceiver extends Thread {
 					System.out.println("CMByteReceiver.readStreamBytes(), read "+ret+" bytes.");
 				nReceivedByteNum += ret;
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
+				LOG.log(Level.SEVERE, e.getMessage(), e);
 				return -1;
 			}
 			
@@ -249,8 +254,8 @@ public class CMByteReceiver extends Thread {
 		try {
 			senderAddr = dc.receive(bufEvent);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			LOG.log(Level.SEVERE, e.getMessage(), e);
 		}
 		
 		bufEvent.flip();				// limit: cur position, position: 0
@@ -260,8 +265,8 @@ public class CMByteReceiver extends Thread {
 		// check the completeness of the received message
 		if(nByteNum != bufEvent.remaining())
 		{
-			System.err.println("CMByteReceiver.readDatagramBytes(), receive incomplete message. "
-					+ "nByteNum("+nByteNum+" bytes), received byte num ("+bufEvent.remaining()+" bytes).");
+			LOG.severe("receive incomplete message. nByteNum("+nByteNum
+					+" bytes), received byte num ("+bufEvent.remaining()+" bytes).");
 			bufEvent = null;
 			return;
 		}
