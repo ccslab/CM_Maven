@@ -227,6 +227,19 @@ public class CMWinServer extends JFrame {
 		
 		serviceMenu.add(channelSubMenu);
 		
+		JMenu pubsubSubMenu = new JMenu("Publish/Subscribe");
+		JMenuItem findSessionMenuItem = new JMenuItem("find session info");
+		findSessionMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(findSessionMenuItem);
+		JMenuItem printAllSessionMenuItem = new JMenuItem("print all session info");
+		printAllSessionMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(printAllSessionMenuItem);
+		JMenuItem printAllRetainInfoMenuItem = new JMenuItem("print all retain info");
+		printAllRetainInfoMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(printAllRetainInfoMenuItem);
+		
+		serviceMenu.add(pubsubSubMenu);		
+		
 		JMenu otherSubMenu = new JMenu("Other CM Tests");
 		JMenuItem configUserAccessSimMenuItem = new JMenuItem("configure SNS user access simulation");
 		configUserAccessSimMenuItem.addActionListener(menuListener);
@@ -1880,6 +1893,15 @@ public class CMWinServer extends JFrame {
 				break;
 			case "start and write recent SNS access history simulation to CM DB":
 				writeRecentAccHistoryToDB();
+				break;
+			case "find session info":
+				findMqttSessionInfo();
+				break;
+			case "print all session info":
+				printAllMqttSessionInfo();
+				break;
+			case "print all retain info":
+				printAllMqttRetainInfo();
 				break;
 			}
 		}

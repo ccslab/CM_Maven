@@ -447,6 +447,28 @@ public class CMWinClient extends JFrame {
 		
 		cmServiceMenu.add(userSubMenu);
 		
+		JMenu pubsubSubMenu = new JMenu("Publish/Subscribe");
+		JMenuItem connectMenuItem = new JMenuItem("connect MQTT service");
+		connectMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(connectMenuItem);
+		JMenuItem pubMenuItem = new JMenuItem("publish");
+		pubMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(pubMenuItem);
+		JMenuItem subMenuItem = new JMenuItem("subscribe");
+		subMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(subMenuItem);
+		JMenuItem sessionInfoMenuItem = new JMenuItem("print session info");
+		sessionInfoMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(sessionInfoMenuItem);
+		JMenuItem unsubMenuItem = new JMenuItem("unsubscribe");
+		unsubMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(unsubMenuItem);
+		JMenuItem disconMenuItem = new JMenuItem("disconnect MQTT service");
+		disconMenuItem.addActionListener(menuListener);
+		pubsubSubMenu.add(disconMenuItem);
+		
+		cmServiceMenu.add(pubsubSubMenu);
+		
 		JMenu otherSubMenu = new JMenu("Other CM Test");
 		JMenuItem forwardMenuItem = new JMenuItem("test forwarding scheme");
 		forwardMenuItem.addActionListener(menuListener);
@@ -4090,7 +4112,24 @@ public class CMWinClient extends JFrame {
 			case "distribute and merge file":
 				testDistFileProc();
 				break;
-				
+			case "connect MQTT service":
+				testMqttConnect();
+				break;
+			case "publish":
+				testMqttPublish();
+				break;
+			case "subscribe":
+				testMqttSubscribe();
+				break;
+			case "print session info":
+				testPrintMqttSessionInfo();
+				break;
+			case "unsubscribe":
+				testMqttUnsubscribe();
+				break;
+			case "disconnect MQTT service":
+				testMqttDisconnect();
+				break;
 			}
 		}
 	}
