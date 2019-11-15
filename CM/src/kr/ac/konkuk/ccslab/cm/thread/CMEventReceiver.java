@@ -173,11 +173,13 @@ public class CMEventReceiver extends Thread {
 					{
 						System.out.println("CMEventReceiver.processUnexpectedDisconnection(), removed from "
 								+"unknown-channel list: "+ch);
+						System.out.println("unknown-channel-list members: : "+unchInfoList.getSize());
 					}
 					if(!bRet)
 					{
 						System.err.println("CMEventReceiver.processUnexpectedDisconnection(), error to remove "
 								+"from unknown-channel list: "+ch+" !");
+						System.err.println("unknown-channel-list members: : "+unchInfoList.getSize());
 					}
 				}
 			}

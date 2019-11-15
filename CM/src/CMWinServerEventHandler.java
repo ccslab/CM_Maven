@@ -602,39 +602,59 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		{
 		case CMMqttEvent.CONNECT:
 			CMMqttEventCONNECT conEvent = (CMMqttEventCONNECT)cme;
-			printMessage("received "+conEvent.toString()+"\n");
+			//printMessage("received "+conEvent+"\n");
+			printMessage("["+conEvent.getUserName()
+				+"] requests to connect MQTT service.\n");
 			break;
 		case CMMqttEvent.PUBLISH:
 			CMMqttEventPUBLISH pubEvent = (CMMqttEventPUBLISH)cme;
-			printMessage("received "+pubEvent.toString()+"\n");
+			//printMessage("received "+pubEvent+"\n");
+			printMessage("["+pubEvent.getSender()+"] requests to publish, ");
+			printMessage("[packet ID: "+pubEvent.getPacketID()
+					+"], [topic: "+pubEvent.getTopicName()+"], [msg: "
+					+pubEvent.getAppMessage()+"], [qos: "+pubEvent.getQoS()+"]\n");
 			break;
 		case CMMqttEvent.PUBACK:
 			CMMqttEventPUBACK pubackEvent = (CMMqttEventPUBACK)cme;
-			printMessage("received "+pubackEvent.toString()+"\n");
+			//printMessage("received "+pubackEvent+"\n");
+			printMessage("["+pubackEvent.getSender()+"] sent CMMqttEvent.PUBACK, "
+					+ "[packet ID: "+pubackEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.PUBREC:
 			CMMqttEventPUBREC pubrecEvent = (CMMqttEventPUBREC)cme;
-			printMessage("received "+pubrecEvent.toString()+"\n");
+			//printMessage("received "+pubrecEvent+"\n");
+			printMessage("["+pubrecEvent.getSender()+"] sent CMMqttEvent.PUBREC, "
+					+ "[packet ID: "+pubrecEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.PUBREL:
 			CMMqttEventPUBREL pubrelEvent = (CMMqttEventPUBREL)cme;
-			printMessage("received "+pubrelEvent.toString()+"\n");
+			//printMessage("received "+pubrelEvent+"\n");
+			printMessage("["+pubrelEvent.getSender()+"] sent CMMqttEventPUBREL, "
+					+ "[packet ID: "+pubrelEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.PUBCOMP:
 			CMMqttEventPUBCOMP pubcompEvent = (CMMqttEventPUBCOMP)cme;
-			printMessage("received "+pubcompEvent.toString()+"\n");
+			//printMessage("received "+pubcompEvent+"\n");
+			printMessage("["+pubcompEvent.getSender()+"] sent CMMqttEvent.PUBCOMP, "
+					+ "[packet ID: "+pubcompEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.SUBSCRIBE:
 			CMMqttEventSUBSCRIBE subEvent = (CMMqttEventSUBSCRIBE)cme;
-			printMessage("received "+subEvent.toString()+"\n");
+			//printMessage("received "+subEvent+"\n");
+			printMessage("["+subEvent.getSender()+"] requests to subscribe, "
+					+ subEvent.getTopicQoSList()+"\n");
 			break;
 		case CMMqttEvent.UNSUBSCRIBE:
 			CMMqttEventUNSUBSCRIBE unsubEvent = (CMMqttEventUNSUBSCRIBE)cme;
-			printMessage("received "+unsubEvent.toString()+"\n");
+			//printMessage("received "+unsubEvent+"\n");
+			printMessage("["+unsubEvent.getSender()+"] requests to unsubscribe, "
+					+ unsubEvent.getTopicList()+"\n");
 			break;
 		case CMMqttEvent.DISCONNECT:
 			CMMqttEventDISCONNECT disconEvent = (CMMqttEventDISCONNECT)cme;
-			printMessage("received "+disconEvent.toString()+"\n");
+			//printMessage("received "+disconEvent+"\n");
+			printMessage("["+disconEvent.getSender()
+				+"] requests to disconnect MQTT service.\n");
 			break;
 		}
 		

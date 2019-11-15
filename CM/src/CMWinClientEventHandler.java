@@ -1080,35 +1080,52 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		{
 		case CMMqttEvent.CONNACK:
 			CMMqttEventCONNACK conackEvent = (CMMqttEventCONNACK)cme;
-			printMessage("received "+conackEvent.toString()+"\n");
+			//printMessage("received "+conackEvent+"\n");
+			printMessage("["+conackEvent.getSender()+"] sent CMMqttEvent.CONNACK, "
+					+ "[return code: "+conackEvent.getReturnCode()+"]\n");
 			break;
 		case CMMqttEvent.PUBLISH:
 			CMMqttEventPUBLISH pubEvent = (CMMqttEventPUBLISH)cme;
-			printMessage("received "+pubEvent.toString()+"\n");
+			//printMessage("received "+pubEvent+"\n");
+			printMessage("["+pubEvent.getSender()+"] sent CMMqttEvent.PUBLISH, "
+					+ "[packet ID: "+pubEvent.getPacketID()+"], [topic: "
+					+pubEvent.getTopicName()+"], [msg: "+pubEvent.getAppMessage()
+					+"], [QoS: "+pubEvent.getQoS()+"]\n");
 			break;
 		case CMMqttEvent.PUBACK:
 			CMMqttEventPUBACK pubackEvent = (CMMqttEventPUBACK)cme;
-			printMessage("received "+pubackEvent.toString()+"\n");
+			//printMessage("received "+pubackEvent+"\n");
+			printMessage("["+pubackEvent.getSender()+"] sent CMMqttEvent.PUBACK, "
+					+ "[packet ID: "+pubackEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.PUBREC:
 			CMMqttEventPUBREC pubrecEvent = (CMMqttEventPUBREC)cme;
-			printMessage("received "+pubrecEvent.toString()+"\n");
+			//printMessage("received "+pubrecEvent+"\n");
+			printMessage("["+pubrecEvent.getSender()+"] sent CMMqttEvent.PUBREC, "
+					+ "[packet ID: "+pubrecEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.PUBREL:
 			CMMqttEventPUBREL pubrelEvent = (CMMqttEventPUBREL)cme;
-			printMessage("received "+pubrelEvent.toString()+"\n");
+			//printMessage("received "+pubrelEvent+"\n");
+			printMessage("["+pubrelEvent.getSender()+"] sent CMMqttEventPUBREL, "
+					+ "[packet ID: "+pubrelEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.PUBCOMP:
 			CMMqttEventPUBCOMP pubcompEvent = (CMMqttEventPUBCOMP)cme;
-			printMessage("received "+pubcompEvent.toString()+"\n");
+			//printMessage("received "+pubcompEvent+"\n");
+			printMessage("["+pubcompEvent.getSender()+"] sent CMMqttEvent.PUBCOMP, "
+					+ "[packet ID: "+pubcompEvent.getPacketID()+"]\n");
 			break;
 		case CMMqttEvent.SUBACK:
 			CMMqttEventSUBACK subackEvent = (CMMqttEventSUBACK)cme;
-			printMessage("received "+subackEvent.toString()+"\n");
+			//printMessage("received "+subackEvent+"\n");
+			printMessage("["+subackEvent.getSender()+"] sent CMMqttEvent.SUBACK, "
+					+subackEvent.getReturnCodeList()+"\n");
 			break;
 		case CMMqttEvent.UNSUBACK:
 			CMMqttEventUNSUBACK unsubackEvent = (CMMqttEventUNSUBACK)cme;
-			printMessage("received "+unsubackEvent.toString()+"\n");
+			//printMessage("received "+unsubackEvent+"\n");
+			printMessage("["+unsubackEvent.getSender()+"] sent CMMqttEvent.UNSUBACK\n");
 			break;
 		}
 		
