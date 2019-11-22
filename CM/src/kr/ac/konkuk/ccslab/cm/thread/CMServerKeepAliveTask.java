@@ -3,6 +3,8 @@ package kr.ac.konkuk.ccslab.cm.thread;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
@@ -10,6 +12,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -18,6 +21,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 public class CMServerKeepAliveTask implements Runnable {
 
 	private CMInfo m_cmInfo;
+	private static final Logger LOG = Logger.getLogger(CMServerKeepAliveTask.class.getName());
 	
 	public CMServerKeepAliveTask(CMInfo cmInfo)
 	{
@@ -27,6 +31,10 @@ public class CMServerKeepAliveTask implements Runnable {
 	@Override
 	public void run()
 	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getLogLevel() == 0)
+			LOG.setLevel(Level.SEVERE);
+
 		long lCurTime = System.currentTimeMillis();
 		long lElapsedTime = 0;
 		int nKeepAliveTime = 0;
@@ -42,20 +50,14 @@ public class CMServerKeepAliveTask implements Runnable {
 			nKeepAliveTime = user.getKeepAliveTime();
 			if(lElapsedTime/1000.0 > nKeepAliveTime*1.5)
 			{
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMServerKeepAliveTime.run(), for user("
-							+user.getName()+"), elapsed time("+(lElapsedTime/1000.0)
-							+"), keep-alive time*1.5("+(nKeepAliveTime*1.5)+").");
-				}
+				LOG.info("for user("+user.getName()+"), elapsed time("
+						+(lElapsedTime/1000.0)+"), keep-alive time*1.5("
+						+(nKeepAliveTime*1.5)+").");
+				
 				CMInteractionManager.disconnectBadClientByServer(user, m_cmInfo);
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMServerKeepAliveTask.run(), disconnect user("
-							+user.getName()+").");
-					System.out.println("CMServerKeepAliveTask.run(), # login users: "
-							+loginUsersVector.size());
-				}
+
+				LOG.info("disconnect user("+user.getName()+"), # login users: "
+						+loginUsersVector.size());
 			}
 		}
 		
@@ -71,12 +73,8 @@ public class CMServerKeepAliveTask implements Runnable {
 			nKeepAliveTime = m_cmInfo.getConfigurationInfo().getKeepAliveTime();
 			if(lElapsedTime/1000.0 > nKeepAliveTime*1.5)
 			{
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMServerKeepAliveTask.run(), for unknown-channel, "
-							+"elapsed time("+(lElapsedTime/1000.0)+"), keep-alive time*1.5("
-							+(nKeepAliveTime*1.5)+").");
-				}
+				LOG.info("for unknown-channel, elapsed time("+(lElapsedTime/1000.0)
+						+"), keep-alive time*1.5("+(nKeepAliveTime*1.5)+")");
 				
 				try {
 					unch.getUnknownChannel().close();
@@ -87,13 +85,9 @@ public class CMServerKeepAliveTask implements Runnable {
 				
 				iter.remove();
 				
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMServerKeepAliveTask.run(), removed from "
-							+ "unknown-channel list: "+unch.getUnknownChannel());
-					System.out.println("channel hash code: "+unch.getUnknownChannel().hashCode());
-					System.out.println("# unknown-channel list: "+unchVector.size());
-				}
+				LOG.info("removed from unknown-channel list: "+unch.getUnknownChannel()+"\n"
+						+"channel hash code: "+unch.getUnknownChannel().hashCode()+"\n"
+						+"# unknown-channel list: "+unchVector.size());
 			}
 		}
 		
@@ -110,23 +104,17 @@ public class CMServerKeepAliveTask implements Runnable {
 				nKeepAliveTime = addServer.getKeepAliveTime();
 				if(lElapsedTime/1000.0 > nKeepAliveTime*1.5)
 				{
-					if(CMInfo._CM_DEBUG)
-					{
-						System.out.println("CMServerKeepAliveTask.run(): for add-server("
-								+addServer.getServerName()+"), cur time("+lCurTime+"), "
-								+"last event-trans time("+addServer.getLastEventTransTime()
-								+"), ");
-						System.out.println("elapsed time("+(lElapsedTime/1000.0)
-								+"), keep-alive time("+nKeepAliveTime+").");
-					}
+					LOG.info("for add-server("+addServer.getServerName()+"), cur time("
+							+lCurTime+"), last event-trans time("
+							+addServer.getLastEventTransTime()+"), \n"
+							+"elapsed time("+(lElapsedTime/1000.0)+"), keep-alive time("
+							+nKeepAliveTime+").");
+
 					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer, 
 							m_cmInfo);
-					if(CMInfo._CM_DEBUG)
-					{
-						System.out.println("CMServerKeepAliveTask.run(): disconnected "
-								+"add-server("+addServer.getServerName()+").");
-						System.out.println("# add-servers: "+addServerVector.size());
-					}
+					
+					LOG.info("disconnected add-server("+addServer.getServerName()+").\n"
+							+"# add-servers: "+addServerVector.size());
 				}
 			}
 		}
@@ -144,14 +132,11 @@ public class CMServerKeepAliveTask implements Runnable {
 				
 				if(lElapsedTime/1000.0 > nKeepAliveTime)
 				{
-					if(CMInfo._CM_DEBUG)
-					{
-						System.out.println("CMServerKeepAliveTask.run(): cur time("
-								+lCurTime+"), my last event-trans time("
-								+lMyLastEventTransTime+"), ");
-						System.out.println("elapsed time("+(lElapsedTime/1000.0)
-								+"), keep-alive time("+nKeepAliveTime+")");
-					}
+					LOG.info("cur time("+lCurTime+"), my last event-trans time("
+							+lMyLastEventTransTime+"), \n"
+							+ "elapsed time("+(lElapsedTime/1000.0)
+							+"), keep-alive time("+nKeepAliveTime+")");
+
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
 					CMEventManager.unicastEvent(reqPingEvent, strDefServer, m_cmInfo);

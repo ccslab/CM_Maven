@@ -2,16 +2,20 @@ package kr.ac.konkuk.ccslab.cm.thread;
 
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 
 public class CMClientKeepAliveTask implements Runnable {
 
 	private CMInfo m_cmInfo;
+	private static final Logger LOG = Logger.getLogger(CMClientKeepAliveTask.class.getName());
 	
 	public CMClientKeepAliveTask(CMInfo cmInfo)
 	{
@@ -21,6 +25,10 @@ public class CMClientKeepAliveTask implements Runnable {
 	@Override
 	public void run()
 	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getLogLevel() == 0)
+			LOG.setLevel(Level.SEVERE);
+
 		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
 		Hashtable<String, Long> myLastEventTransTimeHashtable = myself.getMyLastEventTransTimeHashtable();
 		CMServer defServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo();
@@ -28,7 +36,7 @@ public class CMClientKeepAliveTask implements Runnable {
 				.get(defServer.getServerName());
 		if(lMyLastEventTransTimeToDefServer == null)
 		{
-			System.err.println("CMClientKeepAliveTask.run(), my last event transmission "
+			LOG.severe("CMClientKeepAliveTask.run(), my last event transmission "
 					+"time to the default server is null!");
 			lMyLastEventTransTimeToDefServer = 0L;
 		}
@@ -39,14 +47,11 @@ public class CMClientKeepAliveTask implements Runnable {
 		if( (myself.getState() >= CMInfo.CM_LOGIN) && 
 				(lElapsedTime/1000.0 > nKeepAliveTime) )
 		{
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMClientKeepAliveTask.run(): current time("+lCurTime
-						+"), last event-transmission time to def server("
-						+lMyLastEventTransTimeToDefServer+")");
-				System.out.println("elpased time("+(lElapsedTime/1000.0)
-						+"), my keep-alive time("+nKeepAliveTime+")");
-			}
+			LOG.info("current time("+lCurTime+"), last event-transmission time to def server("
+					+lMyLastEventTransTimeToDefServer+")\n"
+					+"elpased time("+(lElapsedTime/1000.0)+"), my keep-alive time("
+					+nKeepAliveTime+")");
+
 			CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 			reqPingEvent.setSender(myself.getName());
 			CMEventManager.unicastEvent(reqPingEvent, defServer.getServerName(), m_cmInfo);
@@ -62,23 +67,19 @@ public class CMClientKeepAliveTask implements Runnable {
 						.get(addServer.getServerName());
 				if(lMyLastEventTransTimeToAddServer == null)
 				{
-					System.err.println("CMClientKeepAliveTask.run(), my last event "
-							+"transmission time to server("+addServer.getServerName()
-							+") is null!");
+					LOG.severe("my last event transmission time to server("
+							+addServer.getServerName()+") is null!");
 					lMyLastEventTransTimeToAddServer = 0L;
 				}
 				
 				lElapsedTime = lCurTime - lMyLastEventTransTimeToAddServer;
 				if(lElapsedTime/1000.0 > nKeepAliveTime)
 				{
-					if(CMInfo._CM_DEBUG)
-					{
-						System.out.println("CMClientKeepAliveTask.run(): cur time("
-								+lCurTime+"), last event-transmission time to server("
-								+addServer.getServerName()+"), ");
-						System.out.println("elapsed time("+(lElapsedTime/1000.0)+"), "
-								+"(my keep-alive time = "+nKeepAliveTime+")");
-					}
+					LOG.info("cur time("+lCurTime+"), last event-transmission time to server("
+							+addServer.getServerName()+"), \n"
+							+"elapsed time("+(lElapsedTime/1000.0)+"), (my keep-alive time = "
+							+nKeepAliveTime+")");
+
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
 					CMEventManager.unicastEvent(reqPingEvent, addServer.getServerName(), m_cmInfo);
