@@ -49,10 +49,7 @@ public class CMSendFileTask implements Runnable {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			m_cmInfo.getFileTransferInfo().removeSendFileInfo(
-					m_sendFileInfo.getReceiverName(), 
-					m_sendFileInfo.getFileName(), 
-					m_sendFileInfo.getContentID());
+			sendErrorToProcThread();
 			return;
 		}
 		
@@ -66,11 +63,7 @@ public class CMSendFileTask implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				closeRandomAccessFile(raf);
-				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
-						m_sendFileInfo.getReceiverName(), 
-						m_sendFileInfo.getFileName(), 
-						m_sendFileInfo.getContentID());
-
+				sendErrorToProcThread();
 				return;
 			}
 		}
@@ -102,11 +95,7 @@ public class CMSendFileTask implements Runnable {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				closeRandomAccessFile(raf);
-				m_cmInfo.getFileTransferInfo().removeSendFileInfo(
-						m_sendFileInfo.getReceiverName(), 
-						m_sendFileInfo.getFileName(), 
-						m_sendFileInfo.getContentID());
-
+				sendErrorToProcThread();
 				return;
 			}
 			
@@ -143,10 +132,8 @@ public class CMSendFileTask implements Runnable {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					m_cmInfo.getFileTransferInfo().removeSendFileInfo(
-							m_sendFileInfo.getReceiverName(), 
-							m_sendFileInfo.getFileName(), 
-							m_sendFileInfo.getContentID());
+					
+					sendErrorToProcThread();
 					return;
 				}
 			} // inner while loop
@@ -192,6 +179,19 @@ public class CMSendFileTask implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	private void sendErrorToProcThread()
+	{
+		CMFileEvent fe = new CMFileEvent();
+		fe.setID(CMFileEvent.ERR_SEND_FILE_CHAN);
+		fe.setReceiverName(m_sendFileInfo.getReceiverName());
+		fe.setFileName(m_sendFileInfo.getFileName());
+		fe.setContentID(m_sendFileInfo.getContentID());
+		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);
+		
+		CMBlockingEventQueue recvQueue = m_cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		recvQueue.push(new CMMessage(byteBuf, null));
 	}
 
 }

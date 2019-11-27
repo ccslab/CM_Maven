@@ -1083,6 +1083,12 @@ public class CMFileTransferManager {
 		case CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK:
 			processCANCEL_FILE_RECV_CHAN_ACK(fe, cmInfo);
 			break;
+		case CMFileEvent.ERR_RECV_FILE_CHAN:
+			processERR_RECV_FILE_CHAN(fe, cmInfo);
+			break;
+		case CMFileEvent.ERR_SEND_FILE_CHAN:
+			processERR_SEND_FILE_CHAN(fe, cmInfo);
+			break;
 		default:
 			System.err.println("CMFileTransferManager.processEvent(), unknown event id("+fe.getID()+").");
 			fe = null;
@@ -2423,4 +2429,13 @@ public class CMFileTransferManager {
 		return;
 	}
 	
+	private static void processERR_RECV_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)
+	{
+		cancelRequestFile(fe.getSenderName(), cmInfo);
+	}
+	
+	private static void processERR_SEND_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)
+	{
+		cancelPushFile(fe.getReceiverName(), cmInfo);
+	}
 }

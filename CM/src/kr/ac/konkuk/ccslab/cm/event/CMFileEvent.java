@@ -365,6 +365,8 @@ public class CMFileEvent extends CMEvent{
 	 */
 	public static final int CANCEL_FILE_RECV_CHAN_ACK = 21;
 
+	public static final int ERR_SEND_FILE_CHAN = 22;
+	public static final int ERR_RECV_FILE_CHAN = 23;
 	
 	private String m_strReceiverName;	// receiver name
 	private String m_strSenderName;	// sender name
@@ -618,6 +620,16 @@ public class CMFileEvent extends CMEvent{
 				+ m_strReceiverName.getBytes().length;
 			nByteNum += Integer.BYTES;
 			break;
+		case ERR_SEND_FILE_CHAN:
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Integer.BYTES;
+			break;
+		case ERR_RECV_FILE_CHAN:
+			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
+				+ m_strFileName.getBytes().length;
+			nByteNum += Integer.BYTES;
+			break;
 		default:
 			nByteNum = -1;
 			break;
@@ -702,7 +714,17 @@ public class CMFileEvent extends CMEvent{
 			putStringToByteBuffer(m_strSenderName);
 			putStringToByteBuffer(m_strReceiverName);
 			m_bytes.putInt(m_nReturnCode);
-			break;			
+			break;
+		case ERR_SEND_FILE_CHAN:
+			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileName);
+			m_bytes.putInt(m_nContentID);
+			break;
+		case ERR_RECV_FILE_CHAN:
+			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileName);
+			m_bytes.putInt(m_nContentID);
+			break;
 		default:
 			System.out.println("CMFileEvent.marshallBody(), unknown event id("+m_nID+").");
 			m_bytes = null;
@@ -786,7 +808,17 @@ public class CMFileEvent extends CMEvent{
 			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strReceiverName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
-			break;			
+			break;
+		case ERR_SEND_FILE_CHAN:
+			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileName = getStringFromByteBuffer(msg);
+			m_nContentID = msg.getInt();
+			break;
+		case ERR_RECV_FILE_CHAN:
+			m_strSenderName = getStringFromByteBuffer(msg);
+			m_strFileName = getStringFromByteBuffer(msg);
+			m_nContentID = msg.getInt();
+			break;
 		default:
 			System.out.println("CMFileEvent.unmarshallBody(), unknown event id("+m_nID+").");
 			break;

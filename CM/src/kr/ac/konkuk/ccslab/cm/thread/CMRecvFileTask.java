@@ -7,8 +7,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
+import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
+import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 
 public class CMRecvFileTask implements Runnable {
 
@@ -42,11 +46,7 @@ public class CMRecvFileTask implements Runnable {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
-					m_recvFileInfo.getSenderName(), 
-					m_recvFileInfo.getFileName(), 
-					m_recvFileInfo.getContentID());
-
+			sendErrorToProcThread();
 			return;
 		}
 		
@@ -60,11 +60,7 @@ public class CMRecvFileTask implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				closeRandomAccessFile(raf);
-				m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
-						m_recvFileInfo.getSenderName(), 
-						m_recvFileInfo.getFileName(), 
-						m_recvFileInfo.getContentID());
-
+				sendErrorToProcThread();
 				return;
 			}
 		}
@@ -101,11 +97,8 @@ public class CMRecvFileTask implements Runnable {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
-						m_recvFileInfo.getSenderName(), 
-						m_recvFileInfo.getFileName(), 
-						m_recvFileInfo.getContentID());
 
+				sendErrorToProcThread();
 				return;
 			}
 			
@@ -136,11 +129,7 @@ public class CMRecvFileTask implements Runnable {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 					closeRandomAccessFile(raf);
-					m_cmInfo.getFileTransferInfo().removeRecvFileInfo(
-							m_recvFileInfo.getSenderName(), 
-							m_recvFileInfo.getFileName(), 
-							m_recvFileInfo.getContentID());
-
+					sendErrorToProcThread();
 					return;
 				}	
 			} // inner while loop
@@ -161,6 +150,19 @@ public class CMRecvFileTask implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	private void sendErrorToProcThread()
+	{
+		CMFileEvent fe = new CMFileEvent();
+		fe.setID(CMFileEvent.ERR_RECV_FILE_CHAN);
+		fe.setSenderName(m_recvFileInfo.getSenderName());
+		fe.setFileName(m_recvFileInfo.getFileName());
+		fe.setContentID(m_recvFileInfo.getContentID());
+		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);
+		
+		CMBlockingEventQueue recvQueue = m_cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		recvQueue.push(new CMMessage(byteBuf, null));		
 	}
 
 }
