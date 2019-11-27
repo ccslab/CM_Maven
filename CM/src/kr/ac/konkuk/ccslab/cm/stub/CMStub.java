@@ -2334,6 +2334,7 @@ public class CMStub {
 			if(replyEvent == null)
 			{
 				System.err.println("CMStub.measureInputThroughput(), timeout expired!");
+				CMFileTransferManager.cancelRequestFile(strTarget, m_cmInfo);
 				return -1;
 			}
 			
@@ -2406,6 +2407,7 @@ public class CMStub {
 			if(replyEvent == null)
 			{
 				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
+				CMFileTransferManager.cancelPushFile(strTarget, m_cmInfo);
 				return -1;
 			}
 			
