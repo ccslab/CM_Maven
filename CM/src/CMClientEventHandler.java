@@ -521,12 +521,12 @@ public class CMClientEventHandler implements CMAppEventHandler {
 		CMFileEvent fe = (CMFileEvent) cme;
 		switch(fe.getID())
 		{
-		case CMFileEvent.REQUEST_FILE_TRANSFER:
-		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
 			System.out.println("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").");
 			break;
-		case CMFileEvent.REPLY_FILE_TRANSFER:
-		case CMFileEvent.REPLY_FILE_TRANSFER_CHAN:
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
 			if(fe.getReturnCode() == 0)
 				System.out.println("["+fe.getFileName()+"] does not exist in the owner!");
 			break;

@@ -26,7 +26,6 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREC;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
-import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -598,13 +597,13 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		
 		switch(fe.getID())
 		{
-		case CMFileEvent.REQUEST_FILE_TRANSFER:
-		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
 			//System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
 			printMessage("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").\n");
 			break;
-		case CMFileEvent.REPLY_FILE_TRANSFER:
-		case CMFileEvent.REPLY_FILE_TRANSFER_CHAN:
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
 			if(fe.getReturnCode() == 0)
 			{
 				//System.out.println("["+fe.getFileName()+"] does not exist in the owner!");

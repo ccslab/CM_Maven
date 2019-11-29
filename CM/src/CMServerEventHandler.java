@@ -334,8 +334,8 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		CMFileEvent fe = (CMFileEvent) cme;
 		switch(fe.getID())
 		{
-		case CMFileEvent.REQUEST_FILE_TRANSFER:
-		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
 			System.out.println("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").");
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:

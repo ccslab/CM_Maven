@@ -8,19 +8,15 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
-import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
-import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMMqttEventHandler;
-import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -46,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.Charset;
@@ -1166,13 +1161,12 @@ public class CMStub {
 	public CMEvent receive(DatagramChannel dc)
 	{
 		CMEvent event = null;
-		SocketAddress senderAddr = null;	// sender address
 		int nByteNum = 0;
 		ByteBuffer bufEvent = ByteBuffer.allocate(CMInfo.SO_RCVBUF_LEN);
 		bufEvent.clear();	// initialize the ByteBuffer
 		
 		try {
-			senderAddr = dc.receive(bufEvent);
+			dc.receive(bufEvent);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2341,7 +2335,8 @@ public class CMStub {
 			lFileSize = replyEvent.getFileSize();
 		}
 		
-		if(replyEvent.getID() == CMFileEvent.REPLY_FILE_TRANSFER || replyEvent.getID() == CMFileEvent.REPLY_FILE_TRANSFER_CHAN)
+		if(replyEvent.getID() == CMFileEvent.REPLY_PERMIT_PULL_FILE || 
+				replyEvent.getID() == CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN)
 		{
 			return -1;
 		}

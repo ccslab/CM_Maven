@@ -19,7 +19,6 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
@@ -106,7 +105,7 @@ public class CMFileTransferManager {
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
 		CMFileEvent fe = new CMFileEvent();
-		fe.setID(CMFileEvent.REQUEST_FILE_TRANSFER);
+		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE);
 		fe.setReceiverName(myself.getName());	// requester name
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
@@ -124,7 +123,7 @@ public class CMFileTransferManager {
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
 		CMFileEvent fe = new CMFileEvent();
-		fe.setID(CMFileEvent.REQUEST_FILE_TRANSFER_CHAN);
+		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN);
 		fe.setReceiverName(myself.getName());	// requester name
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
@@ -1023,11 +1022,11 @@ public class CMFileTransferManager {
 		
 		switch(fe.getID())
 		{
-		case CMFileEvent.REQUEST_FILE_TRANSFER:
-			processREQUEST_FILE_TRANSFER(fe, cmInfo);
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
+			processREQUEST_PERMIT_PULL_FILE(fe, cmInfo);
 			break;
-		case CMFileEvent.REPLY_FILE_TRANSFER:
-			processREPLY_FILE_TRANSFER(fe, cmInfo);
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
+			processREPLY_PERMIT_PULL_FILE(fe, cmInfo);
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 			processSTART_FILE_TRANSFER(fe, cmInfo);
@@ -1047,11 +1046,11 @@ public class CMFileTransferManager {
 		case CMFileEvent.REQUEST_DIST_FILE_PROC:
 			processREQUEST_DIST_FILE_PROC(fe, cmInfo);
 			break;
-		case CMFileEvent.REQUEST_FILE_TRANSFER_CHAN:
-			processREQUEST_FILE_TRANSFER_CHAN(fe, cmInfo);
+		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
+			processREQUEST_PERMIT_PULL_FILE_CHAN(fe, cmInfo);
 			break;
-		case CMFileEvent.REPLY_FILE_TRANSFER_CHAN:
-			processREPLY_FILE_TRANSFER_CHAN(fe, cmInfo);
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
+			processREPLY_PERMIT_PULL_FILE_CHAN(fe, cmInfo);
 			break;
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
 			processSTART_FILE_TRANSFER_CHAN(fe, cmInfo);
@@ -1100,7 +1099,7 @@ public class CMFileTransferManager {
 		return;
 	}
 	
-	private static void processREQUEST_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
+	private static void processREQUEST_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -1115,7 +1114,7 @@ public class CMFileTransferManager {
 
 		String strFileName = fe.getFileName();
 		CMFileEvent feAck = new CMFileEvent();
-		feAck.setID(CMFileEvent.REPLY_FILE_TRANSFER);
+		feAck.setID(CMFileEvent.REPLY_PERMIT_PULL_FILE);
 		feAck.setFileName(strFileName);
 
 		// get the full path of the requested file
@@ -1157,7 +1156,7 @@ public class CMFileTransferManager {
 		return;
 	}
 	
-	private static void processREPLY_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
+	private static void processREPLY_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMEventInfo eInfo = cmInfo.getEventInfo();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
@@ -1568,7 +1567,7 @@ public class CMFileTransferManager {
 		return;
 	}
 	
-	private static void processREQUEST_FILE_TRANSFER_CHAN(CMFileEvent fe, CMInfo cmInfo)
+	private static void processREQUEST_PERMIT_PULL_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
@@ -1581,7 +1580,7 @@ public class CMFileTransferManager {
 
 		String strFileName = fe.getFileName();
 		CMFileEvent feAck = new CMFileEvent();
-		feAck.setID(CMFileEvent.REPLY_FILE_TRANSFER_CHAN);
+		feAck.setID(CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN);
 		feAck.setFileName(strFileName);
 
 		// get the full path of the requested file
@@ -1604,7 +1603,7 @@ public class CMFileTransferManager {
 		return;
 	}
 	
-	private static void processREPLY_FILE_TRANSFER_CHAN(CMFileEvent fe, CMInfo cmInfo)
+	private static void processREPLY_PERMIT_PULL_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMEventSynchronizer eventSync = cmInfo.getEventInfo().getEventSynchronizer();
 		if(CMInfo._CM_DEBUG)

@@ -30,7 +30,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>1: append mode</li>
 	 * </ul>
 	 */
-	public static final int REQUEST_FILE_TRANSFER = 1;
+	public static final int REQUEST_PERMIT_PULL_FILE = 1;
 	
 	/**
 	 * The event ID for the response to the file request.
@@ -48,7 +48,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>-1: the file is no attachment of SNS content</li> 
 	 * </ul>
 	 */
-	public static final int REPLY_FILE_TRANSFER = 2;
+	public static final int REPLY_PERMIT_PULL_FILE = 2;
 	
 	/**
 	 * The event ID for notifying the receiver of the start of file-transfer.
@@ -204,7 +204,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>1: append mode</li>
 	 * </ul>
 	 */
-	public static final int REQUEST_FILE_TRANSFER_CHAN = 12;
+	public static final int REQUEST_PERMIT_PULL_FILE_CHAN = 12;
 	
 	/**
 	 * The event ID for the response to the file request.
@@ -222,7 +222,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>-1: the file is no attachment of SNS content</li> 
 	 * </ul>
 	 */
-	public static final int REPLY_FILE_TRANSFER_CHAN = 13;
+	public static final int REPLY_PERMIT_PULL_FILE_CHAN = 13;
 	
 	
 	/**
@@ -558,14 +558,14 @@ public class CMFileEvent extends CMEvent{
 		
 		switch(m_nID)
 		{
-		case REQUEST_FILE_TRANSFER:
-		case REQUEST_FILE_TRANSFER_CHAN:
+		case REQUEST_PERMIT_PULL_FILE:
+		case REQUEST_PERMIT_PULL_FILE_CHAN:
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
 				+ m_strFileName.getBytes().length;
 			nByteNum += Integer.BYTES + Byte.BYTES;
 			break;
-		case REPLY_FILE_TRANSFER:
-		case REPLY_FILE_TRANSFER_CHAN:
+		case REPLY_PERMIT_PULL_FILE:
+		case REPLY_PERMIT_PULL_FILE_CHAN:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
 			nByteNum += 2*Integer.BYTES;
 			break;
@@ -642,15 +642,15 @@ public class CMFileEvent extends CMEvent{
 	{
 		switch(m_nID)
 		{
-		case REQUEST_FILE_TRANSFER:
-		case REQUEST_FILE_TRANSFER_CHAN:
+		case REQUEST_PERMIT_PULL_FILE:
+		case REQUEST_PERMIT_PULL_FILE_CHAN:
 			putStringToByteBuffer(m_strReceiverName);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.put(m_byteFileAppendFlag);
 			break;
-		case REPLY_FILE_TRANSFER:
-		case REPLY_FILE_TRANSFER_CHAN:
+		case REPLY_PERMIT_PULL_FILE:
+		case REPLY_PERMIT_PULL_FILE_CHAN:
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
@@ -736,15 +736,15 @@ public class CMFileEvent extends CMEvent{
 	{
 		switch(m_nID)
 		{
-		case REQUEST_FILE_TRANSFER:
-		case REQUEST_FILE_TRANSFER_CHAN:
+		case REQUEST_PERMIT_PULL_FILE:
+		case REQUEST_PERMIT_PULL_FILE_CHAN:
 			m_strReceiverName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_byteFileAppendFlag = msg.get();
 			break;
-		case REPLY_FILE_TRANSFER:
-		case REPLY_FILE_TRANSFER_CHAN:
+		case REPLY_PERMIT_PULL_FILE:
+		case REPLY_PERMIT_PULL_FILE_CHAN:
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
