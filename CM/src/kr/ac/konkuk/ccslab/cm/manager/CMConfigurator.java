@@ -51,6 +51,9 @@ public class CMConfigurator {
 		// default append mode for the file transfer
 		confInfo.setFileAppendScheme(Byte.parseByte(CMConfigurator.getConfiguration(strConfFilePath, "FILE_APPEND_SCHEME")));
 		
+		// default permission mode for file-transfer request
+		confInfo.setPermitFileTransferRequest(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "PERMIT_FILE_TRANSFER")));
+		
 		// added delay value for the simulation of transmission delay
 		confInfo.setSimTransDelay(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SIM_TRANS_DELAY")));
 

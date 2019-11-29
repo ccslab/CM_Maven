@@ -43,7 +43,9 @@ public class CMConfigurationInfo {
 	// File transfer scheme
 	private int m_bFileTransferScheme;
 	// File append scheme
-	private byte m_bFileAppendScheme;	
+	private byte m_bFileAppendScheme;
+	// automatic permission of file-transfer request
+	private int m_bPermitFileTransferRequest;
 	
 	// Simulation parameter for added transmission delay
 	private int m_nSimTransDelay;
@@ -86,6 +88,7 @@ public class CMConfigurationInfo {
 		m_transFileHome = Paths.get(".");
 		m_bFileTransferScheme = 0;
 		m_bFileAppendScheme = 0;
+		m_bPermitFileTransferRequest = 0;
 		
 		m_nSimTransDelay = 0;
 		m_nLogLevel = 1;
@@ -496,6 +499,25 @@ public class CMConfigurationInfo {
 			bScheme = true;
 		
 		return bScheme;
+	}
+	
+	public synchronized void setPermitFileTransferRequest(int bPermit)
+	{
+		m_bPermitFileTransferRequest = bPermit;
+		
+		return;
+	}
+	
+	public synchronized boolean isPermitFileTransferRequest()
+	{
+		boolean bPermit = false;
+		
+		if(m_bPermitFileTransferRequest == 0)
+			bPermit = false;
+		else
+			bPermit = true;
+		
+		return bPermit;
 	}
 	
 	/////////////////////////////////////////////////////////////////////
