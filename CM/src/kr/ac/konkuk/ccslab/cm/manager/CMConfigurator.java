@@ -139,6 +139,7 @@ public class CMConfigurator {
 			System.out.println("MY_ADDR: "+confInfo.getMyAddress());
 			System.out.println("FILE_PATH: "+confInfo.getTransferedFileHome());
 			System.out.println("FILE_APPEND_SCHEME: "+confInfo.isFileAppendScheme());
+			System.out.println("PERMIT_FILE_TRANSFER: "+confInfo.isPermitFileTransferRequest());
 			System.out.println("KEEP_ALIVE_TIME: "+confInfo.getKeepAliveTime());
 			System.out.println("SIM_TRANS_DELAY: "+confInfo.getSimTransDelay());
 			System.out.println("LOG_LEVEL: "+confInfo.getLogLevel());
