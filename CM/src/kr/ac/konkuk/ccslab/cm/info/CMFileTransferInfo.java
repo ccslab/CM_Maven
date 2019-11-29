@@ -1,23 +1,29 @@
 package kr.ac.konkuk.ccslab.cm.info;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 
 import java.io.*;
-import java.nio.file.Path;
 
 public class CMFileTransferInfo {
-	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable; // key is the receiver name
-	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable; // key is the sender name
+	// key is the receiver name
+	private Hashtable<String, CMList<CMSendFileInfo>> m_reqPermitPushFileHashtable;
+	// key is the sender name
+	private Hashtable<String, CMList<CMRecvFileInfo>> m_reqPermitPullFileHashtable;
+	// key is the receiver name
+	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable;
+	// key is the sender name
+	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable;
 	private boolean m_bCancelSend;	// flag for canceling file push with the default channel
 	
 	private long m_lStartTime;	// used for measuring the delay of the file transfer
 	
 	public CMFileTransferInfo()
 	{
+		m_reqPermitPushFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
+		m_reqPermitPullFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
 		m_bCancelSend = false;
@@ -47,6 +53,409 @@ public class CMFileTransferInfo {
 	{
 		return m_bCancelSend;
 	}
+	
+	////////// add/remove/find request-permit-push-file info
+
+	public synchronized boolean addReqPermitPushFileInfo(String strReceiverName, 
+			String strFilePath, long lFileSize, int nContentID)
+	{
+		CMSendFileInfo reqPermitPushInfo = null;
+		String strFileName = null;
+		CMList<CMSendFileInfo> reqPermitPushInfoList = null;
+		boolean bResult = false;
+		
+		strFileName = strFilePath.substring(strFilePath.lastIndexOf(File.separator)+1);
+		reqPermitPushInfo = new CMSendFileInfo();
+		reqPermitPushInfo.setReceiverName(strReceiverName);
+		reqPermitPushInfo.setFileName(strFileName);
+		reqPermitPushInfo.setFilePath(strFilePath);
+		reqPermitPushInfo.setFileSize(lFileSize);
+		reqPermitPushInfo.setContentID(nContentID);
+		
+		reqPermitPushInfoList = m_reqPermitPushFileHashtable.get(strReceiverName);
+		if(reqPermitPushInfoList == null)
+		{
+			reqPermitPushInfoList = new CMList<CMSendFileInfo>();
+			m_reqPermitPushFileHashtable.put(strReceiverName, reqPermitPushInfoList);
+		}
+		
+		bResult = reqPermitPushInfoList.addElement(reqPermitPushInfo);
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.addReqPermitPushFileInfo() failed: "
+					+reqPermitPushInfo);
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.addReqPermitPushFileInfo() done: "
+					+reqPermitPushInfo);
+			System.out.println("# current hashtable elements: "
+					+m_reqPermitPushFileHashtable.size());
+		}
+
+		return true;
+	}
+
+	public synchronized boolean addReqPermitPushFileInfo(CMSendFileInfo reqPermitPushInfo)
+	{
+		String strFileName = null;
+		CMList<CMSendFileInfo> reqPermitPushInfoList = null;
+		boolean bResult = false;
+		
+		strFileName = reqPermitPushInfo.getFilePath().substring(reqPermitPushInfo.
+				getFilePath().lastIndexOf(File.separator)+1);
+		reqPermitPushInfo.setFileName(strFileName);
+		
+		reqPermitPushInfoList = m_reqPermitPushFileHashtable.get(reqPermitPushInfo.
+				getReceiverName());
+		if(reqPermitPushInfoList == null)
+		{
+			reqPermitPushInfoList = new CMList<CMSendFileInfo>();
+			m_reqPermitPushFileHashtable.put(reqPermitPushInfo.getReceiverName(), 
+					reqPermitPushInfoList);
+		}
+		
+		bResult = reqPermitPushInfoList.addElement(reqPermitPushInfo);
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.addReqPermitPushFileInfo() failed: "+
+					reqPermitPushInfo);
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.addReqPermitPushFileInfo() done: "+
+					reqPermitPushInfo);
+			System.out.println("# current hashtable elements: "+
+					m_reqPermitPushFileHashtable.size());
+		}
+
+		return true;
+	}
+	
+	public synchronized CMSendFileInfo findReqPermitPushFileInfo(String strReceiverName, 
+			String strFileName, int nContentID)
+	{
+		CMSendFileInfo reqPermitPushInfo = null;
+		CMList<CMSendFileInfo> reqPermitPushInfoList = null;
+		CMSendFileInfo tInfo = null;
+		
+		reqPermitPushInfoList = m_reqPermitPushFileHashtable.get(strReceiverName);
+		if(reqPermitPushInfoList == null)
+		{
+			System.err.println("CMFileTransferInfo.findReqPermitPushFileInfo(), "
+					+ "list not found for receiver("+strReceiverName+")");
+			return null;
+		}
+		
+		tInfo = new CMSendFileInfo();
+		tInfo.setReceiverName(strReceiverName);
+		tInfo.setFileName(strFileName);
+		tInfo.setContentID(nContentID);
+		
+		reqPermitPushInfo = reqPermitPushInfoList.findElement(tInfo);
+		
+		if(reqPermitPushInfo == null)
+		{
+			System.err.println("CMFileTransferInfo.findReqPermitPushFileInfo(), "
+					+ "not found!: "+tInfo);
+			return null;
+		}
+		
+		return reqPermitPushInfo;
+	}
+
+	public synchronized boolean removeReqPermitPushFileInfo(String strReceiverName, 
+			String strFileName, int nContentID)
+	{
+		CMList<CMSendFileInfo> reqPermitPushInfoList = null;
+		CMSendFileInfo reqPermitPushInfo = null;
+		boolean bResult = false;
+
+		reqPermitPushInfoList = m_reqPermitPushFileHashtable.get(strReceiverName);
+		if(reqPermitPushInfoList == null)
+		{
+			//System.err.println("CMFileTransferInfo.removeReqPermitPushFileInfo(), 
+			//		+list not found for receiver("+strReceiverName+")");
+			return false;
+		}
+		
+		reqPermitPushInfo = new CMSendFileInfo();
+		reqPermitPushInfo.setReceiverName(strReceiverName);
+		reqPermitPushInfo.setFileName(strFileName);
+		reqPermitPushInfo.setContentID(nContentID);
+		bResult = reqPermitPushInfoList.removeElement(reqPermitPushInfo);
+
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.removeReqPermitPushFileInfo() error! : "+
+					reqPermitPushInfo);
+			return false;
+		}
+		
+		if(reqPermitPushInfoList.isEmpty())
+		{
+			m_reqPermitPushFileHashtable.remove(strReceiverName);
+		}
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.removeReqPermitPushFileInfo() done : "+
+					reqPermitPushInfo);
+			System.out.println("# current hashtable elements: "+
+					m_reqPermitPushFileHashtable.size());
+		}
+		
+		return true;
+	}
+
+	public synchronized boolean removeReqPermitPushFileList(String strReceiverName)
+	{
+		CMList<CMSendFileInfo> reqPermitPushInfoList = null;
+		reqPermitPushInfoList = m_reqPermitPushFileHashtable.remove(strReceiverName);
+		if(reqPermitPushInfoList == null)
+		{
+			//System.err.println("CMFileTransferInfo.removeReqPermitPushFileList(); "
+			//		+ "list not found for receiver("+strReceiverName+")!");
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.removeReqPermitPushFileList() done : "
+					+ "receiver("+strReceiverName+").");
+			System.out.println("# current hashtable elements: "+
+					m_reqPermitPushFileHashtable.size());
+		}
+		
+		return true;
+	}
+
+	public synchronized boolean clearReqPermitPushFileHashtable()
+	{
+		m_reqPermitPushFileHashtable.clear();
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.clearReqPermitPushFileHashtable(); "
+					+ "current size("+m_reqPermitPushFileHashtable.size()+").");
+		}
+		return true;
+	}
+	
+	public synchronized CMList<CMSendFileInfo> getReqPermitPushFileList(String strReceiverName)
+	{
+		CMList<CMSendFileInfo> reqPermitPushFileList = null;
+		reqPermitPushFileList = m_reqPermitPushFileHashtable.get(strReceiverName);
+		
+		return reqPermitPushFileList;
+	}
+
+	public synchronized Hashtable<String, CMList<CMSendFileInfo>> getReqPermitPushFileHashtable()
+	{
+		return m_reqPermitPushFileHashtable;
+	}
+
+	
+	////////// add/remove/find request-permit-pull-file info
+	
+	public synchronized boolean addReqPermitPullFileInfo(String strSenderName, 
+			String strFileName, int nContentID)
+	{
+		CMRecvFileInfo reqPermitPullInfo = null;
+		CMList<CMRecvFileInfo> reqPermitPullInfoList = null;
+		boolean bResult = false;
+		
+		reqPermitPullInfo = new CMRecvFileInfo();
+		reqPermitPullInfo.setSenderName(strSenderName);
+		reqPermitPullInfo.setFileName(strFileName);
+		reqPermitPullInfo.setContentID(nContentID);
+		
+		reqPermitPullInfoList = m_reqPermitPullFileHashtable.get(strSenderName);
+		if(reqPermitPullInfoList == null)
+		{
+			reqPermitPullInfoList = new CMList<CMRecvFileInfo>();
+			m_reqPermitPullFileHashtable.put(strSenderName, reqPermitPullInfoList);
+		}
+		
+		bResult = reqPermitPullInfoList.addElement(reqPermitPullInfo);
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.addReqPermitPullFileInfo() failed: "
+					+reqPermitPullInfo);
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.addReqPermitPullFileInfo() done: "
+					+reqPermitPullInfo);
+			System.out.println("# current hashtable elements: "
+					+m_reqPermitPullFileHashtable.size());
+		}
+
+		return true;
+	}
+
+	public synchronized boolean addReqPermitPullFileInfo(CMRecvFileInfo reqPermitPullInfo)
+	{
+		CMList<CMRecvFileInfo> reqPermitPullInfoList = null;
+		boolean bResult = false;
+		
+		reqPermitPullInfoList = m_reqPermitPullFileHashtable.get(reqPermitPullInfo.
+				getSenderName());
+		if(reqPermitPullInfoList == null)
+		{
+			reqPermitPullInfoList = new CMList<CMRecvFileInfo>();
+			m_reqPermitPullFileHashtable.put(reqPermitPullInfo.getSenderName(), 
+					reqPermitPullInfoList);
+		}
+		
+		bResult = reqPermitPullInfoList.addElement(reqPermitPullInfo);
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.addReqPermitPullFileInfo() failed: "+
+					reqPermitPullInfo);
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.addReqPermitPullFileInfo() done: "+
+					reqPermitPullInfo);
+			System.out.println("# current hashtable elements: "+
+					m_reqPermitPullFileHashtable.size());
+		}
+
+		return true;
+	}
+	
+	public synchronized CMRecvFileInfo findReqPermitPullFileInfo(String strSenderName, 
+			String strFileName, int nContentID)
+	{
+		CMRecvFileInfo reqPermitPullInfo = null;
+		CMList<CMRecvFileInfo> reqPermitPullInfoList = null;
+		CMRecvFileInfo tInfo = null;
+		
+		reqPermitPullInfoList = m_reqPermitPullFileHashtable.get(strSenderName);
+		if(reqPermitPullInfoList == null)
+		{
+			System.err.println("CMFileTransferInfo.findReqPermitPullFileInfo(), "
+					+ "list not found for sender("+strSenderName+")");
+			return null;
+		}
+		
+		tInfo = new CMRecvFileInfo();
+		tInfo.setSenderName(strSenderName);
+		tInfo.setFileName(strFileName);
+		tInfo.setContentID(nContentID);
+		
+		reqPermitPullInfo = reqPermitPullInfoList.findElement(tInfo);
+		
+		if(reqPermitPullInfo == null)
+		{
+			System.err.println("CMFileTransferInfo.findReqPermitPullFileInfo(), "
+					+ "not found!: "+tInfo);
+			return null;
+		}
+		
+		return reqPermitPullInfo;
+	}
+
+	public synchronized boolean removeReqPermitPullFileInfo(String strSenderName, 
+			String strFileName, int nContentID)
+	{
+		CMList<CMRecvFileInfo> reqPermitPullInfoList = null;
+		CMRecvFileInfo reqPermitPullInfo = null;
+		boolean bResult = false;
+
+		reqPermitPullInfoList = m_reqPermitPullFileHashtable.get(strSenderName);
+		if(reqPermitPullInfoList == null)
+		{
+			//System.err.println("CMFileTransferInfo.removeReqPermitPullFileInfo(), 
+			//		+list not found for sender("+strSenderName+")");
+			return false;
+		}
+		
+		reqPermitPullInfo = new CMRecvFileInfo();
+		reqPermitPullInfo.setSenderName(strSenderName);
+		reqPermitPullInfo.setFileName(strFileName);
+		reqPermitPullInfo.setContentID(nContentID);
+		bResult = reqPermitPullInfoList.removeElement(reqPermitPullInfo);
+
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.removeReqPermitPullFileInfo() error! : "+
+					reqPermitPullInfo);
+			return false;
+		}
+		
+		if(reqPermitPullInfoList.isEmpty())
+		{
+			m_reqPermitPullFileHashtable.remove(strSenderName);
+		}
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.removeReqPermitPullFileInfo() done : "+
+					reqPermitPullInfo);
+			System.out.println("# current hashtable elements: "+
+					m_reqPermitPullFileHashtable.size());
+		}
+		
+		return true;
+	}
+
+	public synchronized boolean removeReqPermitPullFileList(String strSenderName)
+	{
+		CMList<CMRecvFileInfo> reqPermitPullInfoList = null;
+		reqPermitPullInfoList = m_reqPermitPullFileHashtable.remove(strSenderName);
+		if(reqPermitPullInfoList == null)
+		{
+			//System.err.println("CMFileTransferInfo.removeReqPermitPullFileList(); "
+			//		+ "list not found for sender("+strSenderName+")!");
+			return false;
+		}
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.removeReqPermitPullFileList() done : "
+					+ "sender("+strSenderName+").");
+			System.out.println("# current hashtable elements: "+
+					m_reqPermitPullFileHashtable.size());
+		}
+		
+		return true;
+	}
+
+	public synchronized boolean clearReqPermitPullFileHashtable()
+	{
+		m_reqPermitPullFileHashtable.clear();
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.clearReqPermitPullFileHashtable(); "
+					+ "current size("+m_reqPermitPullFileHashtable.size()+").");
+		}
+		return true;
+	}
+	
+	public synchronized CMList<CMRecvFileInfo> getReqPermitPullFileList(String strSenderName)
+	{
+		CMList<CMRecvFileInfo> reqPermitPullFileList = null;
+		reqPermitPullFileList = m_reqPermitPullFileHashtable.get(strSenderName);
+		
+		return reqPermitPullFileList;
+	}
+
+	public synchronized Hashtable<String, CMList<CMRecvFileInfo>> getReqPermitPullFileHashtable()
+	{
+		return m_reqPermitPullFileHashtable;
+	}
+	
 	
 	////////// add/remove/find sending file info
 	
