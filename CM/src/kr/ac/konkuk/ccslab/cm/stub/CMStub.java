@@ -2165,7 +2165,9 @@ public class CMStub {
 	public boolean pushFile(String strFilePath, String strReceiver)
 	{
 		boolean bReturn = false;
-		bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);		
+		//bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
+		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, 
+				-1, m_cmInfo);
 		return bReturn;
 	}
 	
