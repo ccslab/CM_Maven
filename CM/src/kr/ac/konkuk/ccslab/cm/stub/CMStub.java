@@ -14,6 +14,8 @@ import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
+import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMMqttEventHandler;
@@ -370,6 +372,26 @@ public class CMStub {
 		}
 		
 		return strDefServer;
+	}
+	
+	public boolean replyEvent(CMEvent event, boolean bReply)
+	{
+		int nType = event.getType();
+		int nID = event.getID();
+		boolean bRet = false;
+		
+		if(nType == CMInfo.CM_SESSION_EVENT && nID == CMSessionEvent.LOGIN)
+		{
+			CMSessionEvent se = (CMSessionEvent)event;
+			bRet = CMInteractionManager.replyToLOGIN(se, bReply, m_cmInfo);
+		}
+		else if(nType == CMInfo.CM_MULTI_SERVER_EVENT && nID == CMMultiServerEvent.ADD_LOGIN)
+		{
+			CMMultiServerEvent mse = (CMMultiServerEvent)event;
+			bRet = CMInteractionManager.replyToADD_LOGIN(mse, bReply, m_cmInfo);
+		}
+		
+		return bRet;
 	}
 	
 	////////////////////////////////////////////////////////////////////////

@@ -1272,7 +1272,7 @@ public class CMInteractionManager {
 		return false;
 	}
 
-	public static void replyToLOGIN(CMSessionEvent se, boolean bValidUser, CMInfo cmInfo)
+	public static boolean replyToLOGIN(CMSessionEvent se, boolean bValidUser, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -1285,7 +1285,7 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.replyToLOGIN(), user("+se.getUserName()
 					+") not found.");
-			return;
+			return false;
 		}
 
 		seAck.setID(CMSessionEvent.LOGIN_ACK);
@@ -1317,7 +1317,7 @@ public class CMInteractionManager {
 		
 		seAck.setUDPPort(confInfo.getUDPPort());
 		
-		CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+		bRet = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
 		seAck = null;
 		
 		if(bValidUser)
@@ -1385,7 +1385,7 @@ public class CMInteractionManager {
 			{
 				System.err.println("CMInteractionManager.replyToLOGIN(), unknown channel "
 						+"not found for "+sc+" !");
-				return;
+				return false;
 			}
 			int nLoginCount = unchInfo.getNumLoginFailure();
 			unchInfo.setNumLoginFailure(++nLoginCount);
@@ -1411,11 +1411,11 @@ public class CMInteractionManager {
 					System.out.println("CMInteractionManager.replyToLOGIN(), error to "
 							+"remove from unknown-channel list: "+sc);
 				}
-				return;
+				return bRet;
 			}
 		}
 
-		return;
+		return bRet;
 	}
 	
 	private static void distributeLoginUsers(String targetUser, CMInfo cmInfo)
@@ -2804,7 +2804,7 @@ public class CMInteractionManager {
 		return;
 	}
 	
-	public static void replyToADD_LOGIN(CMMultiServerEvent mse, boolean bValidUser, CMInfo cmInfo)
+	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, boolean bValidUser, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -2838,7 +2838,7 @@ public class CMInteractionManager {
 			mseAck.setUDPPort(-1);
 		}
 		
-		CMEventManager.unicastEvent(mseAck, mse.getUserName(), cmInfo);
+		bRet = CMEventManager.unicastEvent(mseAck, mse.getUserName(), cmInfo);
 
 		if(bValidUser)
 		{
@@ -2890,7 +2890,7 @@ public class CMInteractionManager {
 		}
 		
 		mseAck = null;
-		return;
+		return bRet;
 	}
 	
 	private static void distributeAddLoginUsers(String strUser, CMInfo cmInfo)

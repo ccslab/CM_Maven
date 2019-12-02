@@ -95,7 +95,8 @@ public class CMServerEventHandler implements CMAppEventHandler {
 					System.out.println("["+se.getUserName()+"] authentication fails!");
 				else
 					System.out.println("["+se.getUserName()+"] authentication succeeded.");
-				CMInteractionManager.replyToLOGIN(se, ret, m_serverStub.getCMInfo());
+				//CMInteractionManager.replyToLOGIN(se, ret, m_serverStub.getCMInfo());
+				m_serverStub.replyEvent(se, ret);
 			}
 			break;
 		case CMSessionEvent.LOGOUT:
@@ -524,7 +525,8 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			if( confInfo.isLoginScheme() )
 			{
 				// user authentication omitted for the login to an additional server
-				CMInteractionManager.replyToADD_LOGIN(mse, true, m_serverStub.getCMInfo());
+				//CMInteractionManager.replyToADD_LOGIN(mse, true, m_serverStub.getCMInfo());
+				m_serverStub.replyEvent(mse, true);
 			}
 			System.out.println("["+mse.getUserName()+"] requests login to this server("
 								+mse.getServerName()+").");
