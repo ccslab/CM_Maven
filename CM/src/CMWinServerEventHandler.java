@@ -374,12 +374,29 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 	private void processFileEvent(CMEvent cme)
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
+		CMConfigurationInfo confInfo = null;
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
 			//System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
 			printMessage("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").\n");
+			break;
+		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
+			confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+			if(!confInfo.isPermitFileTransferRequest())
+			{
+				printMessage("The push-file request is not automatically permitted!\n");
+				printMessage("To change to automatically permit the push-file request, \n");
+				printMessage("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
+			}
+			break;
+		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:
+			if(fe.getReturnCode() == 0)
+			{
+				printMessage("["+fe.getReceiverName()+"] rejected the push-file request!\n");
+				printMessage("file name("+fe.getFileName()+"), size("+fe.getFileSize()+").\n");
+			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:

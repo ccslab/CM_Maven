@@ -673,7 +673,7 @@ public class CMInteractionManager {
 			switch(nEventType)
 			{
 			case CMInfo.CM_FILE_EVENT:
-				CMFileTransferManager.processEvent(msg, cmInfo);
+				bReturn = CMFileTransferManager.processEvent(msg, cmInfo);
 				bProcessed = true;
 				break;
 			case CMInfo.CM_SNS_EVENT:

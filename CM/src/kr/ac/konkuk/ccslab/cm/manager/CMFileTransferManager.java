@@ -82,14 +82,6 @@ public class CMFileTransferManager {
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMUser myself = cmInfo.getInteractionInfo().getMyself();
-		
-		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() != CMInfo.CM_LOGIN 
-				&& myself.getState() != CMInfo.CM_SESSION_JOIN)
-		{
-			System.err.println("CMFileTransferManager.requestFile(), Client must log in to the default server.");
-			return false;
-		}
 		
 		if(confInfo.isFileTransferScheme())
 			bReturn = requestFileWithSepChannel(strFileName, strFileOwner, byteFileAppend, nContentID, cmInfo);
@@ -434,13 +426,8 @@ public class CMFileTransferManager {
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMUser myself = cmInfo.getInteractionInfo().getMyself();
-		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() != CMInfo.CM_LOGIN 
-				&& myself.getState() != CMInfo.CM_SESSION_JOIN)
-		{
-			System.err.println("CMFileTransferManager.pushFile(), Client must log in to the default server.");
-			return false;
-		}
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		fInfo.setStartTime(System.currentTimeMillis());
 		
 		if(confInfo.isFileTransferScheme())
 			bReturn = pushFileWithSepChannel(strFilePath, strReceiver, byteFileAppend, nContentID, cmInfo);
@@ -1083,20 +1070,21 @@ public class CMFileTransferManager {
 	//////////////////////////////////////////////////////////////////
 	// process file event
 	
-	public static void processEvent(CMMessage msg, CMInfo cmInfo)
+	public static boolean processEvent(CMMessage msg, CMInfo cmInfo)
 	{
+		boolean bForward = true;
 		CMFileEvent fe = new CMFileEvent(msg.m_buf);
 		
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
-			processREQUEST_PERMIT_PULL_FILE(fe, cmInfo);
+			bForward = processREQUEST_PERMIT_PULL_FILE(fe, cmInfo);
 			break;
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
 			processREPLY_PERMIT_PULL_FILE(fe, cmInfo);
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
-			processREQUEST_PERMIT_PUSH_FILE(fe, cmInfo);
+			bForward = processREQUEST_PERMIT_PUSH_FILE(fe, cmInfo);
 			break;
 		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:
 			processREPLY_PERMIT_PUSH_FILE(fe, cmInfo);
@@ -1164,16 +1152,17 @@ public class CMFileTransferManager {
 		default:
 			System.err.println("CMFileTransferManager.processEvent(), unknown event id("+fe.getID()+").");
 			fe = null;
-			return;
+			return false;
 		}
 		
 		fe.setFileBlock(null);
 		fe = null;
-		return;
+		return bForward;
 	}
 	
-	private static void processREQUEST_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
+	private static boolean processREQUEST_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
+		boolean bForward = true;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
@@ -1199,7 +1188,7 @@ public class CMFileTransferManager {
 			feAck.setReturnCode(0);	// file not found
 			CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
 			feAck = null;
-			return;
+			return false;
 		}
 		
 		feAck.setReturnCode(1);	// file found
@@ -1223,10 +1212,13 @@ public class CMFileTransferManager {
 		feStart.setFileAppendFlag(fe.getFileAppendFlag());
 		CMEventManager.unicastEvent(feStart, fe.getReceiverName(), cmInfo);
 
+		if(!confInfo.isPermitFileTransferRequest())
+			bForward = false;
+		
 		feAck = null;
 		feStart = null;
 		file = null;
-		return;
+		return bForward;
 	}
 	
 	private static void processREPLY_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
@@ -1251,8 +1243,10 @@ public class CMFileTransferManager {
 		return;
 	}
 	
-	private static void processREQUEST_PERMIT_PUSH_FILE(CMFileEvent fe, CMInfo cmInfo)
+	private static boolean processREQUEST_PERMIT_PUSH_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
+		boolean bForward = true;
+		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processREQUEST_PERMIT_PUSH_FILE(), ");
@@ -1267,7 +1261,10 @@ public class CMFileTransferManager {
 		if(bPermit)
 		{
 			replyPermitForPushFile(fe, bPermit, cmInfo);  			
+			bForward = false;
 		}
+		
+		return bForward;
 	}
 	
 	private static void processREPLY_PERMIT_PUSH_FILE(CMFileEvent fe, CMInfo cmInfo)
@@ -1305,8 +1302,11 @@ public class CMFileTransferManager {
 			System.err.println("cannot delete the request info!");
 		}
 		
-		// call pushFile()
-		pushFile(strFilePath, strReceiverName, CMInfo.FILE_DEFAULT, nContentID, cmInfo);
+		if(fe.getReturnCode() == 1)
+		{
+			// call pushFile()
+			pushFile(strFilePath, strReceiverName, CMInfo.FILE_DEFAULT, nContentID, cmInfo);
+		}
 	}
 	
 	private static void processSTART_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
@@ -1660,6 +1660,7 @@ public class CMFileTransferManager {
 		String strFileName = fe.getFileName();
 		long lFileSize = fe.getFileSize();
 		int nContentID = fe.getContentID();
+		long lElapsedTime = System.currentTimeMillis() - fInfo.getStartTime();
 		
 		// find completed send info
 		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strReceiverName, strFileName, nContentID);
@@ -1679,6 +1680,7 @@ public class CMFileTransferManager {
 			System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER_ACK(), receiver("
 					+strReceiverName+"), file("+strFileName+"), size("+lFileSize+"), return code("+fe.getReturnCode()
 					+"), contentID("+nContentID+").");
+			System.out.println("file-transfer time("+lElapsedTime+" ms)");
 		}
 		
 		//////////////////// check the completion of sending attached file of SNS content
@@ -2048,6 +2050,7 @@ public class CMFileTransferManager {
 		String strFileName = fe.getFileName();
 		long lFileSize = fe.getFileSize();
 		int nContentID = fe.getContentID();
+		long lElapsedTime = System.currentTimeMillis() - fInfo.getStartTime();
 		
 		// find completed send info
 		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strReceiverName, strFileName, nContentID);
@@ -2067,6 +2070,7 @@ public class CMFileTransferManager {
 			System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN_ACK(), receiver("
 					+strReceiverName+"), file("+strFileName+"), size("+lFileSize+"), return code("+fe.getReturnCode()
 					+"), contentID("+nContentID+").");
+			System.out.println("file-transfer time("+lElapsedTime+" ms).");
 		}
 		
 		//////////////////// check the completion of sending attached file of SNS content

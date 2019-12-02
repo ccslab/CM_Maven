@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.swing.JOptionPane;
+
 import java.io.*;
 import java.awt.*;
 
@@ -593,6 +595,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	private void processFileEvent(CMEvent cme)
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
+		CMConfigurationInfo confInfo = null;
 		long lDelay = 0;
 		
 		switch(fe.getID())
@@ -610,6 +613,30 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				printMessage("["+fe.getFileName()+"] does not exist in the owner!\n");
 			}
 			break;
+		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
+			StringBuffer strReqBuf = new StringBuffer(); 
+			strReqBuf.append("["+fe.getSenderName()+"] wants to send a file.\n");
+			strReqBuf.append("file name: "+fe.getFileName()+"\n");
+			strReqBuf.append("file size: "+fe.getFileSize()+"\n");
+			printMessage(strReqBuf.toString());
+			int nOption = JOptionPane.showConfirmDialog(null, strReqBuf.toString(), 
+					"Push File", JOptionPane.YES_NO_OPTION);
+			if(nOption == JOptionPane.YES_OPTION)
+			{
+				m_clientStub.replyEvent(fe, true);
+			}
+			else
+			{
+				m_clientStub.replyEvent(fe, false);
+			}				
+			break;
+		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:
+			if(fe.getReturnCode() == 0)
+			{
+				printMessage("["+fe.getReceiverName()+"] rejected the push-file request!\n");
+				printMessage("file name("+fe.getFileName()+"), size("+fe.getFileSize()+").\n");
+			}
+			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
@@ -617,18 +644,16 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
-			//System.out.println("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
-			//		+fe.getFileSize()+" Bytes).");
 			printMessage("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
 					+fe.getFileSize()+" Bytes).\n");
-			lDelay = System.currentTimeMillis() - m_lStartTime;
-			printMessage("file-transfer delay: "+lDelay+" ms.\n");
+			//lDelay = System.currentTimeMillis() - m_lStartTime;
+			//printMessage("file-transfer delay: "+lDelay+" ms.\n");
 
 			if(m_bDistFileProc)
 				processFile(fe.getFileName());
 			if(m_bReqAttachedFile)
 			{
-				CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+				confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
 				String strPath = confInfo.getTransferedFileHome().toString() + File.separator + fe.getFileName();
 				File file = new File(strPath);
 				try {

@@ -390,6 +390,11 @@ public class CMStub {
 			CMMultiServerEvent mse = (CMMultiServerEvent)event;
 			bRet = CMInteractionManager.replyToADD_LOGIN(mse, bReply, m_cmInfo);
 		}
+		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PUSH_FILE)
+		{
+			CMFileEvent fe = (CMFileEvent)event;
+			bRet = CMFileTransferManager.replyPermitForPushFile(fe, bReply, m_cmInfo);
+		}
 		
 		return bRet;
 	}
@@ -2030,6 +2035,15 @@ public class CMStub {
 	public boolean requestFile(String strFileName, String strFileOwner)
 	{
 		boolean bReturn = false;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		
+		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
+		{
+			System.err.println("CMFileTransferManager.requestFile(), Client must log in to the default server.");
+			return false;
+		}
+
 		bReturn = CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);		
 		return bReturn;
 	}
@@ -2133,6 +2147,15 @@ public class CMStub {
 	public boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend)
 	{
 		boolean bReturn = false;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		
+		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
+		{
+			System.err.println("CMFileTransferManager.requestFile(), Client must log in to the default server.");
+			return false;
+		}
+
 		bReturn = CMFileTransferManager.requestFile(strFileName, strFileOwner, byteFileAppend, m_cmInfo);
 		return bReturn;
 	}
@@ -2187,6 +2210,16 @@ public class CMStub {
 	public boolean pushFile(String strFilePath, String strReceiver)
 	{
 		boolean bReturn = false;
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		
+		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
+		{
+			System.err.println("CMFileTransferManager.pushFile(), Client must log in to "
+					+ "the default server.");
+			return false;
+		}
+
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, 
 				-1, m_cmInfo);
