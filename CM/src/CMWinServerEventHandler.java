@@ -95,16 +95,14 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 						m_serverStub.getCMInfo());
 				if(!ret)
 				{
-					//System.out.println("["+se.getUserName()+"] authentication fails!");
 					printMessage("["+se.getUserName()+"] authentication fails!\n");
+					m_serverStub.replyEvent(cme, 0);
 				}
 				else
 				{
-					//System.out.println("["+se.getUserName()+"] authentication succeeded.");
 					printMessage("["+se.getUserName()+"] authentication succeeded.\n");
+					m_serverStub.replyEvent(cme, 1);
 				}
-				//CMInteractionManager.replyToLOGIN(se, ret, m_serverStub.getCMInfo());
-				m_serverStub.replyEvent(cme, ret);
 			}
 			break;
 		case CMSessionEvent.LOGOUT:
@@ -379,17 +377,29 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
-			//System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
 			printMessage("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").\n");
+			printMessage("The pull-file request is not automatically permitted!\n");
+			printMessage("To change to automatically permit the pull-file request, \n");
+			printMessage("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
+			break;
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
+		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
+			if(fe.getReturnCode() == -1)
+			{
+				printMessage("["+fe.getFileName()+"] does not exist in the owner!\n");
+			}
+			else if(fe.getReturnCode() == 0)
+			{
+				printMessage("["+fe.getSenderName()+"] rejects to send file("
+						+fe.getFileName()+").\n");
+			}
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
-			confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
-			if(!confInfo.isPermitFileTransferRequest())
-			{
-				printMessage("The push-file request is not automatically permitted!\n");
-				printMessage("To change to automatically permit the push-file request, \n");
-				printMessage("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
-			}
+			printMessage("["+fe.getSenderName()+"] wants to send a file("+fe.getFileName()+
+					").\n");
+			printMessage("The push-file request is not automatically permitted!\n");
+			printMessage("To change to automatically permit the push-file request, \n");
+			printMessage("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
 			break;
 		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:
 			if(fe.getReturnCode() == 0)
@@ -598,7 +608,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			{
 				// user authentication omitted for the login to an additional server
 				//CMInteractionManager.replyToADD_LOGIN(mse, true, m_serverStub.getCMInfo());
-				m_serverStub.replyEvent(mse, true);
+				m_serverStub.replyEvent(mse, 1);
 			}
 			printMessage("["+mse.getUserName()+"] requests login to this server("
 								+mse.getServerName()+").\n");

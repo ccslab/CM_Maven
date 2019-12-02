@@ -2534,7 +2534,7 @@ public class CMClientApp {
 				CMFileTransferManager.pushFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
 				break;
 			case 2: // pull
-				CMFileTransferManager.requestFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
+				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
 				break;
 			}
 		}

@@ -522,17 +522,36 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	private void processFileEvent(CMEvent cme)
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
-		CMConfigurationInfo confInfo = null;
+		int nOption = -1;
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
-			System.out.println("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").");
+			String strReq = "["+fe.getReceiverName()+"] requests file("+fe.getFileName()+
+			").\n";
+			System.out.print(strReq);
+			nOption = JOptionPane.showConfirmDialog(null, strReq, "Request a file", 
+					JOptionPane.YES_NO_OPTION);
+			if(nOption == JOptionPane.YES_OPTION)
+			{
+				m_clientStub.replyEvent(fe, 1);
+			}
+			else
+			{
+				m_clientStub.replyEvent(fe, 0);
+			}
 			break;
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
-			if(fe.getReturnCode() == 0)
-				System.err.println("["+fe.getFileName()+"] does not exist in the owner!");
+			if(fe.getReturnCode() == -1)
+			{
+				System.err.print("["+fe.getFileName()+"] does not exist in the owner!\n");
+			}
+			else if(fe.getReturnCode() == 0)
+			{
+				System.err.print("["+fe.getSenderName()+"] rejects to send file("
+						+fe.getFileName()+").\n");
+			}
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
 			StringBuffer strReqBuf = new StringBuffer(); 
@@ -540,15 +559,15 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			strReqBuf.append("file name: "+fe.getFileName()+"\n");
 			strReqBuf.append("file size: "+fe.getFileSize()+"\n");
 			System.out.print(strReqBuf.toString());
-			int nOption = JOptionPane.showConfirmDialog(null, strReqBuf.toString(), 
+			nOption = JOptionPane.showConfirmDialog(null, strReqBuf.toString(), 
 					"Push File", JOptionPane.YES_NO_OPTION);
 			if(nOption == JOptionPane.YES_OPTION)
 			{
-				m_clientStub.replyEvent(fe, true);
+				m_clientStub.replyEvent(fe, 1);
 			}
 			else
 			{
-				m_clientStub.replyEvent(fe, false);
+				m_clientStub.replyEvent(fe, 1);
 			}				
 			break;
 		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:

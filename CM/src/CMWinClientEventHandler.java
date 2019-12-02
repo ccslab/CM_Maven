@@ -3,6 +3,8 @@ import java.util.Iterator;
 
 import javax.swing.JOptionPane;
 
+import com.sun.org.apache.xml.internal.serializer.ElemDesc;
+
 import java.io.*;
 import java.awt.*;
 
@@ -597,20 +599,36 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		CMFileEvent fe = (CMFileEvent) cme;
 		CMConfigurationInfo confInfo = null;
 		long lDelay = 0;
+		int nOption = -1;
 		
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
-			//System.out.println("["+fe.getUserName()+"] requests file("+fe.getFileName()+").");
-			printMessage("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").\n");
+			String strReq = "["+fe.getReceiverName()+"] requests file("+fe.getFileName()+
+				").\n";
+			printMessage(strReq);
+			nOption = JOptionPane.showConfirmDialog(null, strReq, "Request a file", 
+					JOptionPane.YES_NO_OPTION);
+			if(nOption == JOptionPane.YES_OPTION)
+			{
+				m_clientStub.replyEvent(fe, 1);
+			}
+			else
+			{
+				m_clientStub.replyEvent(fe, 0);
+			}
 			break;
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
-			if(fe.getReturnCode() == 0)
+			if(fe.getReturnCode() == -1)
 			{
-				//System.out.println("["+fe.getFileName()+"] does not exist in the owner!");
 				printMessage("["+fe.getFileName()+"] does not exist in the owner!\n");
+			}
+			else if(fe.getReturnCode() == 0)
+			{
+				printMessage("["+fe.getSenderName()+"] rejects to send file("
+						+fe.getFileName()+").\n");
 			}
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
@@ -619,15 +637,15 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			strReqBuf.append("file name: "+fe.getFileName()+"\n");
 			strReqBuf.append("file size: "+fe.getFileSize()+"\n");
 			printMessage(strReqBuf.toString());
-			int nOption = JOptionPane.showConfirmDialog(null, strReqBuf.toString(), 
-					"Push File", JOptionPane.YES_NO_OPTION);
+			nOption = JOptionPane.showConfirmDialog(null, strReqBuf.toString(), 
+					"Permit to receive a file", JOptionPane.YES_NO_OPTION);
 			if(nOption == JOptionPane.YES_OPTION)
 			{
-				m_clientStub.replyEvent(fe, true);
+				m_clientStub.replyEvent(fe, 1);
 			}
 			else
 			{
-				m_clientStub.replyEvent(fe, false);
+				m_clientStub.replyEvent(fe, 0);
 			}				
 			break;
 		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:

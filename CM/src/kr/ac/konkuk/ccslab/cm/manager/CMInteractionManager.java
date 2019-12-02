@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -848,7 +846,6 @@ public class CMInteractionManager {
 	
 	public synchronized static boolean isChannelBelongsToServer(SelectableChannel ch, CMServer server)
 	{
-		boolean bRet = false;
 		boolean isBlock = false;
 		Integer chKey = null;
 		
@@ -895,7 +892,6 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMUser myself = interInfo.getMyself();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		CMServer addServer = null;
@@ -1258,7 +1254,7 @@ public class CMInteractionManager {
 				}
 
 				if(!confInfo.isLoginScheme())
-					replyToLOGIN(se, true, cmInfo);				
+					replyToLOGIN(se, 1, cmInfo);				
 			}
 
 			se = null;
@@ -1272,7 +1268,7 @@ public class CMInteractionManager {
 		return false;
 	}
 
-	public static boolean replyToLOGIN(CMSessionEvent se, boolean bValidUser, CMInfo cmInfo)
+	public static boolean replyToLOGIN(CMSessionEvent se, int nValidUser, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -1291,11 +1287,7 @@ public class CMInteractionManager {
 		seAck.setID(CMSessionEvent.LOGIN_ACK);
 		seAck.setSender(interInfo.getMyself().getName());
 		seAck.setReceiver(se.getSender());
-		if(bValidUser)
-			seAck.setValidUser(1);
-		else
-			seAck.setValidUser(0);
-
+		seAck.setValidUser(nValidUser);
 		seAck.setCommArch(confInfo.getCommArch());
 		
 		if(confInfo.isFileTransferScheme())
@@ -1320,7 +1312,7 @@ public class CMInteractionManager {
 		bRet = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
 		seAck = null;
 		
-		if(bValidUser)
+		if(nValidUser == 1)
 		{
 			// set default scheme for attachment download
 			user.setAttachDownloadScheme(confInfo.getAttachDownloadScheme());
@@ -2798,13 +2790,13 @@ public class CMInteractionManager {
 		}
 
 		if( !confInfo.isLoginScheme() )
-			replyToADD_LOGIN(mse, true, cmInfo);
+			replyToADD_LOGIN(mse, 1, cmInfo);
 
 		mse = null;
 		return;
 	}
 	
-	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, boolean bValidUser, CMInfo cmInfo)
+	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, int nValidUser, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -2815,7 +2807,7 @@ public class CMInteractionManager {
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
 		mseAck.setID(CMMultiServerEvent.ADD_LOGIN_ACK);
 		mseAck.setServerName(mse.getServerName());
-		if(bValidUser)
+		if(nValidUser == 1)
 		{
 			mseAck.setValidUser(1);
 			mseAck.setCommArch(confInfo.getCommArch());
@@ -2840,7 +2832,7 @@ public class CMInteractionManager {
 		
 		bRet = CMEventManager.unicastEvent(mseAck, mse.getUserName(), cmInfo);
 
-		if(bValidUser)
+		if(nValidUser == 1)
 		{
 			// set last event transmission time
 			user.setLastEventTransTime(System.currentTimeMillis());

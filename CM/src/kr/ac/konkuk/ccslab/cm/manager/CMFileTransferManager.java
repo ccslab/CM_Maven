@@ -63,32 +63,72 @@ public class CMFileTransferManager {
 		// nothing to do
 	}
 	
-	public static boolean requestFile(String strFileName, String strFileOwner, CMInfo cmInfo)
+	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
+			CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		bReturn = requestFile(strFileName, strFileOwner, CMInfo.FILE_DEFAULT, -1, cmInfo);
+		bReturn = requestPermitForPullFile(strFileName, strFileOwner, CMInfo.FILE_DEFAULT, 
+				-1, cmInfo);
 		return bReturn;
 	}
 	
-	public static boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend, CMInfo cmInfo)
+	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
+			byte byteFileAppend, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		bReturn = requestFile(strFileName, strFileOwner, byteFileAppend, -1, cmInfo);
+		bReturn = requestPermitForPullFile(strFileName, strFileOwner, byteFileAppend, -1, 
+				cmInfo);
 		return bReturn;		
 	}
 	
-	public static boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend, 
-			int nContentID, CMInfo cmInfo)
+	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
+			byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
+		/*
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
 		if(confInfo.isFileTransferScheme())
 			bReturn = requestFileWithSepChannel(strFileName, strFileOwner, byteFileAppend, nContentID, cmInfo);
 		else
 			bReturn = requestFileWithDefChannel(strFileName, strFileOwner, byteFileAppend, nContentID, cmInfo);
+		*/
+		CMUser myself = cmInfo.getInteractionInfo().getMyself();
+		
+		CMFileEvent fe = new CMFileEvent();
+		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE);
+		fe.setReceiverName(myself.getName());	// requester name
+		fe.setFileName(strFileName);
+		fe.setContentID(nContentID);
+		fe.setFileAppendFlag(byteFileAppend);
+		bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
+
 		return bReturn;
 	}
+	
+	public static boolean replyPermitForPullFile(CMFileEvent fe, int nReturnCode, 
+			CMInfo cmInfo)
+	{
+		boolean bRet = false;
+		CMFileEvent feAck = new CMFileEvent();
+		feAck.setID(CMFileEvent.REPLY_PERMIT_PULL_FILE);
+		feAck.setFileName(fe.getFileName());
+		feAck.setContentID(fe.getContentID());
+		feAck.setReturnCode(nReturnCode);
+		bRet = CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
+		
+		if(bRet && nReturnCode == 1)
+		{
+			CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+			String strFilePath = confInfo.getTransferedFileHome().toString() + 
+					File.separator + fe.getFileName();
+			bRet = pushFile(strFilePath, fe.getReceiverName(), fe.getFileAppendFlag(), 
+					cmInfo);
+		}
+		
+		return bRet;
+	}
+	
 	
 	private static boolean requestFileWithDefChannel(String strFileName, String strFileOwner, byte byteFileAppend, 
 			int nContentID, CMInfo cmInfo)
@@ -389,7 +429,8 @@ public class CMFileTransferManager {
 		return bReturn;
 	}
 	
-	public static boolean replyPermitForPushFile(CMFileEvent fe, boolean bPermit, CMInfo cmInfo)
+	public static boolean replyPermitForPushFile(CMFileEvent fe, int nReturnCode, 
+			CMInfo cmInfo)
 	{
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.REPLY_PERMIT_PUSH_FILE);
@@ -398,10 +439,7 @@ public class CMFileTransferManager {
 		feAck.setFileName(fe.getFileName());
 		feAck.setFileSize(fe.getFileSize());
 		feAck.setContentID(fe.getContentID());
-		if(bPermit)
-			feAck.setReturnCode(1);
-		else
-			feAck.setReturnCode(0);
+		feAck.setReturnCode(nReturnCode);
 		
 		boolean bRet = CMEventManager.unicastEvent(feAck, fe.getSenderName(), cmInfo);
 		return bRet;
@@ -1163,61 +1201,35 @@ public class CMFileTransferManager {
 	private static boolean processREQUEST_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
 		boolean bForward = true;
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferManager.processREQUEST_FILE_TRANSFER(), requester("
+			System.out.println("CMFileTransferManager.processREQUEST_PERMIT_PULL_FILE(), requester("
 					+fe.getReceiverName()+"), file("+fe.getFileName()+"), contentID("+fe.getContentID()
 					+").");
 		}
 
-		String strFileName = fe.getFileName();
-		CMFileEvent feAck = new CMFileEvent();
-		feAck.setID(CMFileEvent.REPLY_PERMIT_PULL_FILE);
-		feAck.setFileName(strFileName);
 
 		// get the full path of the requested file
-		String strFullPath = confInfo.getTransferedFileHome().toString() + File.separator + strFileName; 
+		String strFullPath = confInfo.getTransferedFileHome().toString() + 
+				File.separator + fe.getFileName(); 
 		// check the file existence
 		File file = new File(strFullPath);
 		if(!file.exists())
 		{
-			feAck.setReturnCode(0);	// file not found
-			CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
-			feAck = null;
-			return false;
+			replyPermitForPullFile(fe, -1, cmInfo);
+			bForward = false;
+			return bForward;
+		}		
+
+		if(confInfo.isPermitFileTransferRequest() || 
+				fe.getFileName().contentEquals("throughput-test.jpg"))
+		{
+			replyPermitForPullFile(fe, 1, cmInfo);
+			bForward = false;
 		}
 		
-		feAck.setReturnCode(1);	// file found
-		feAck.setContentID(fe.getContentID());
-		CMEventManager.unicastEvent(feAck, fe.getReceiverName(), cmInfo);
-		
-		// get the file size
-		long lFileSize = file.length();
-		
-		// add send file information
-		// receiver name, file path, size
-		fInfo.addSendFileInfo(fe.getReceiverName(), strFullPath, lFileSize, fe.getContentID());
-
-		// start file transfer process
-		CMFileEvent feStart = new CMFileEvent();
-		feStart.setID(CMFileEvent.START_FILE_TRANSFER);
-		feStart.setSenderName(myself.getName());
-		feStart.setFileName(fe.getFileName());
-		feStart.setFileSize(lFileSize);
-		feStart.setContentID(fe.getContentID());
-		feStart.setFileAppendFlag(fe.getFileAppendFlag());
-		CMEventManager.unicastEvent(feStart, fe.getReceiverName(), cmInfo);
-
-		if(!confInfo.isPermitFileTransferRequest())
-			bForward = false;
-		
-		feAck = null;
-		feStart = null;
-		file = null;
 		return bForward;
 	}
 	
@@ -1227,13 +1239,17 @@ public class CMFileTransferManager {
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferManager.processREPLY_FILE_TRANSFER(), file("+fe.getFileName()
+			System.out.println("CMFileTransferManager.processREPLY_PERMIT_PULL_FILE(), file("+fe.getFileName()
 					+"), return code("+fe.getReturnCode()+"), contentID("+fe.getContentID()+").");
 		}
-		
-		if(fe.getReturnCode() == 0 && fe.getFileName().equals("throughput-test.jpg"))
-		{
+		if(fe.getReturnCode() == -1)
 			System.err.println("The requested file does not exists!");
+		else if(fe.getReturnCode() == 0)
+			System.err.println("sender("+fe.getSenderName()+") rejects to send the file!");
+		
+		if((fe.getReturnCode() == 0 || fe.getReturnCode() == -1) 
+				&& fe.getFileName().equals("throughput-test.jpg"))
+		{
 			synchronized(eventSync)
 			{
 				eventSync.setReplyEvent(fe);
@@ -1260,7 +1276,7 @@ public class CMFileTransferManager {
 		boolean bPermit = confInfo.isPermitFileTransferRequest();
 		if(bPermit)
 		{
-			replyPermitForPushFile(fe, bPermit, cmInfo);  			
+			replyPermitForPushFile(fe, 1, cmInfo);  			
 			bForward = false;
 		}
 		

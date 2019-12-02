@@ -374,7 +374,7 @@ public class CMStub {
 		return strDefServer;
 	}
 	
-	public boolean replyEvent(CMEvent event, boolean bReply)
+	public boolean replyEvent(CMEvent event, int nReturnCode)
 	{
 		int nType = event.getType();
 		int nID = event.getID();
@@ -383,17 +383,22 @@ public class CMStub {
 		if(nType == CMInfo.CM_SESSION_EVENT && nID == CMSessionEvent.LOGIN)
 		{
 			CMSessionEvent se = (CMSessionEvent)event;
-			bRet = CMInteractionManager.replyToLOGIN(se, bReply, m_cmInfo);
+			bRet = CMInteractionManager.replyToLOGIN(se, nReturnCode, m_cmInfo);
 		}
 		else if(nType == CMInfo.CM_MULTI_SERVER_EVENT && nID == CMMultiServerEvent.ADD_LOGIN)
 		{
 			CMMultiServerEvent mse = (CMMultiServerEvent)event;
-			bRet = CMInteractionManager.replyToADD_LOGIN(mse, bReply, m_cmInfo);
+			bRet = CMInteractionManager.replyToADD_LOGIN(mse, nReturnCode, m_cmInfo);
 		}
 		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PUSH_FILE)
 		{
 			CMFileEvent fe = (CMFileEvent)event;
-			bRet = CMFileTransferManager.replyPermitForPushFile(fe, bReply, m_cmInfo);
+			bRet = CMFileTransferManager.replyPermitForPushFile(fe, nReturnCode, m_cmInfo);
+		}
+		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PULL_FILE)
+		{
+			CMFileEvent fe = (CMFileEvent)event;
+			bRet = CMFileTransferManager.replyPermitForPullFile(fe, nReturnCode, m_cmInfo);
 		}
 		
 		return bRet;
@@ -2044,7 +2049,8 @@ public class CMStub {
 			return false;
 		}
 
-		bReturn = CMFileTransferManager.requestFile(strFileName, strFileOwner, m_cmInfo);		
+		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, 
+				m_cmInfo);		
 		return bReturn;
 	}
 	
@@ -2156,7 +2162,8 @@ public class CMStub {
 			return false;
 		}
 
-		bReturn = CMFileTransferManager.requestFile(strFileName, strFileOwner, byteFileAppend, m_cmInfo);
+		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, 
+				byteFileAppend, m_cmInfo);
 		return bReturn;
 	}
 	
@@ -2362,7 +2369,8 @@ public class CMStub {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		
 		fInfo.setStartTime(lStartTime);
-		bReturn = CMFileTransferManager.requestFile("throughput-test.jpg", strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
+		bReturn = CMFileTransferManager.requestPermitForPullFile("throughput-test.jpg", 
+				strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		
 		if(!bReturn)
 			return -1;

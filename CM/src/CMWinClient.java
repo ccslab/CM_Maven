@@ -3103,7 +3103,7 @@ public class CMWinClient extends JFrame {
 				CMFileTransferManager.pushFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
 				break;
 			case 1: // pull
-				CMFileTransferManager.requestFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
+				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
 				break;
 			}
 		}
