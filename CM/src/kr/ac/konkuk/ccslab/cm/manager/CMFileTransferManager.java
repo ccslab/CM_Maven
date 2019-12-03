@@ -97,11 +97,25 @@ public class CMFileTransferManager {
 		
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE);
+		fe.setSenderName(strFileOwner);
 		fe.setReceiverName(myself.getName());	// requester name
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
 		fe.setFileAppendFlag(byteFileAppend);
 		bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
+		
+		if(bReturn)
+		{
+			// add reqPermitPullFile Info
+			CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+			CMRecvFileInfo reqPermitPullInfo = new CMRecvFileInfo();
+			reqPermitPullInfo.setSenderName(strFileOwner);
+			reqPermitPullInfo.setReceiverName(myself.getName());
+			reqPermitPullInfo.setFileName(strFileName);
+			reqPermitPullInfo.setContentID(nContentID);
+			
+			bReturn = fInfo.addReqPermitPullFileInfo(reqPermitPullInfo);
+		}
 
 		return bReturn;
 	}
@@ -112,6 +126,8 @@ public class CMFileTransferManager {
 		boolean bRet = false;
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.REPLY_PERMIT_PULL_FILE);
+		feAck.setSenderName(fe.getSenderName());
+		feAck.setReceiverName(fe.getReceiverName());
 		feAck.setFileName(fe.getFileName());
 		feAck.setContentID(fe.getContentID());
 		feAck.setReturnCode(nReturnCode);
@@ -1256,6 +1272,12 @@ public class CMFileTransferManager {
 				eventSync.notify();
 			}
 		}
+		
+		// remove reqPermitPullInfo
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		fInfo.removeReqPermitPullFileInfo(fe.getSenderName(), fe.getFileName(), 
+				fe.getContentID());
+		
 		return;
 	}
 	

@@ -563,13 +563,26 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_PERMIT_PULL_FILE:
 		case REQUEST_PERMIT_PULL_FILE_CHAN:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += Integer.BYTES + Byte.BYTES;
+			// sender name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
+			// receiver name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// content ID
+			nByteNum += Integer.BYTES;
+			// file-append flag
+			nByteNum += Byte.BYTES;
 			break;
 		case REPLY_PERMIT_PULL_FILE:
 		case REPLY_PERMIT_PULL_FILE_CHAN:
+			// sender name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
+			// receiver name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			// file name
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// content ID, return code
 			nByteNum += 2*Integer.BYTES;
 			break;
 		case REQUEST_PERMIT_PUSH_FILE:
@@ -668,6 +681,7 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_PERMIT_PULL_FILE:
 		case REQUEST_PERMIT_PULL_FILE_CHAN:
+			putStringToByteBuffer(m_strSenderName);
 			putStringToByteBuffer(m_strReceiverName);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
@@ -675,6 +689,8 @@ public class CMFileEvent extends CMEvent{
 			break;
 		case REPLY_PERMIT_PULL_FILE:
 		case REPLY_PERMIT_PULL_FILE_CHAN:
+			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strReceiverName);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
@@ -777,6 +793,7 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_PERMIT_PULL_FILE:
 		case REQUEST_PERMIT_PULL_FILE_CHAN:
+			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strReceiverName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
@@ -784,6 +801,8 @@ public class CMFileEvent extends CMEvent{
 			break;
 		case REPLY_PERMIT_PULL_FILE:
 		case REPLY_PERMIT_PULL_FILE_CHAN:
+			m_strSenderName = getStringFromByteBuffer(msg);
+			m_strReceiverName = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
