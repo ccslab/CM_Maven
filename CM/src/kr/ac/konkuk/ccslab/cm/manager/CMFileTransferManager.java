@@ -613,7 +613,14 @@ public class CMFileTransferManager {
 			return false;
 		}
 		long lFileSize = file.length();
-		
+
+		// get file name
+		String strFileName = getFileNameFromPath(strFilePath);
+		// find send file information
+		if(fInfo.findSendFileInfo(strReceiver, strFileName, nContentID) != null)
+		{
+			fInfo.removeSendFileInfo(strReceiver, strFileName, nContentID);
+		}
 		// add send file information
 		// sender name, receiver name, file path, size, content ID
 		CMSendFileInfo sfInfo = new CMSendFileInfo();
@@ -636,9 +643,6 @@ public class CMFileTransferManager {
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
-
-		// get file name
-		String strFileName = getFileNameFromPath(strFilePath);
 		
 		// start file transfer process
 		CMFileEvent fe = new CMFileEvent();
@@ -854,7 +858,14 @@ public class CMFileTransferManager {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
+		sInfo.setSendTaskResult(null);
+		if(sInfo.isStartedToSend()) // if the send task thread has sent more than 1 byte,
+		{
+			// remove the sending file list of the receiver
+			bReturn = fInfo.removeSendFileList(strReceiver);			
+		}
+
 		/////////////////////// management of the closed default blocking socket channel
 		
 		// get the default blocking socket channel
@@ -922,9 +933,6 @@ public class CMFileTransferManager {
 			return false;
 		}
 		
-		// remove the sending file list of the receiver
-		bReturn = fInfo.removeSendFileList(strReceiver);
-
 		// if the system type is client, it recreates the default blocking socket channel to the default server
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{

@@ -14,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
@@ -1976,7 +1977,25 @@ public class CMInteractionManager {
 			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 		}
 
-		CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+		ret = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+		
+		if(ret)
+		{
+			CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+			CMSendFileInfo sfInfo = fInfo.findSendFileInfoNotStarted(strChannelName);
+			if(sfInfo != null)
+			{
+				byte fileAppendFlag;
+				if(sfInfo.getFileName().contentEquals("throughput-test.jpg"))
+					fileAppendFlag = CMInfo.FILE_OVERWRITE;
+				else
+					fileAppendFlag = CMInfo.FILE_DEFAULT;
+				
+				CMFileTransferManager.pushFile(sfInfo.getFilePath(), 
+						sfInfo.getReceiverName(), fileAppendFlag, 
+						sfInfo.getContentID(), cmInfo);
+			}		
+		}
 		
 		se = null;
 		seAck = null;
@@ -1988,10 +2007,10 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMServer serverInfo = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+		String strServer = se.getChannelName();
 		
 		if(se.getReturnCode() == 0)
 		{
-			String strServer = se.getChannelName();
 			int nChKey = se.getChannelNum();
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
 					+"server("+strServer+"), channel key("+nChKey+").");
@@ -2010,6 +2029,20 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
+			CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+			CMSendFileInfo sfInfo = fInfo.findSendFileInfoNotStarted(strServer);
+			if(sfInfo != null)
+			{
+				byte fileAppendFlag;
+				if(sfInfo.getFileName().contentEquals("throughput-test.jpg"))
+					fileAppendFlag = CMInfo.FILE_OVERWRITE;
+				else
+					fileAppendFlag = CMInfo.FILE_DEFAULT;
+
+				CMFileTransferManager.pushFile(sfInfo.getFilePath(), 
+						sfInfo.getReceiverName(), fileAppendFlag, 
+						sfInfo.getContentID(), cmInfo);
+			}
 		}
 				
 		se = null;

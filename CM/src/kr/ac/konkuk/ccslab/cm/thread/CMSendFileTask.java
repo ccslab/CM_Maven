@@ -122,6 +122,8 @@ public class CMSendFileTask implements Runnable {
 					lSentSize += nSendBytes;
 					m_sendFileInfo.setSentSize(lSentSize);
 					nSendBytesSum += nSendBytes;
+					if(nSendBytesSum > 0 && !m_sendFileInfo.isStartedToSend())
+						m_sendFileInfo.setStartedToSend(true);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
