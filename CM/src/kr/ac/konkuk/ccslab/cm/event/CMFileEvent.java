@@ -373,7 +373,8 @@ public class CMFileEvent extends CMEvent{
 	
 	private String m_strReceiverName;	// receiver name
 	private String m_strSenderName;	// sender name
-	private String m_strFileName;
+	private String m_strFileName;	// file name
+	private String m_strFilePath;	// file path
 	private long m_lFileSize;
 	private long m_lReceivedFileSize;
 	private int m_nReturnCode;
@@ -389,6 +390,7 @@ public class CMFileEvent extends CMEvent{
 		m_strReceiverName = "?";
 		m_strSenderName = "?";
 		m_strFileName = "?";
+		m_strFilePath = "?";
 		m_lFileSize = 0;
 		m_lReceivedFileSize = 0;
 		m_nReturnCode = -1;
@@ -449,6 +451,21 @@ public class CMFileEvent extends CMEvent{
 	public String getFileName()
 	{
 		return m_strFileName;
+	}
+	
+	public void setFilePath(String fPath)
+	{
+		if(fPath != null)
+			m_strFilePath = fPath;
+	}
+	
+	/**
+	 * Returns the file path.
+	 * @return file path at the sender node
+	 */
+	public String getFilePath()
+	{
+		return m_strFilePath;
 	}
 	
 	public void setFileSize(long fSize)
@@ -590,8 +607,8 @@ public class CMFileEvent extends CMEvent{
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
 			// receiver name
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// file path
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
 			nByteNum += Long.BYTES;	// file size 
 			nByteNum += Integer.BYTES;	// content ID
 			break;
@@ -600,8 +617,8 @@ public class CMFileEvent extends CMEvent{
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
 			// receiver name
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// file path
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
 			nByteNum += Long.BYTES;	// file size 
 			nByteNum += Integer.BYTES;	// content ID
 			nByteNum += Integer.BYTES;	// return code
@@ -698,14 +715,14 @@ public class CMFileEvent extends CMEvent{
 		case REQUEST_PERMIT_PUSH_FILE:
 			putStringToByteBuffer(m_strSenderName);
 			putStringToByteBuffer(m_strReceiverName);
-			putStringToByteBuffer(m_strFileName);
+			putStringToByteBuffer(m_strFilePath);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
 			putStringToByteBuffer(m_strSenderName);
 			putStringToByteBuffer(m_strReceiverName);
-			putStringToByteBuffer(m_strFileName);
+			putStringToByteBuffer(m_strFilePath);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putInt(m_nReturnCode);
@@ -810,14 +827,14 @@ public class CMFileEvent extends CMEvent{
 		case REQUEST_PERMIT_PUSH_FILE:
 			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strReceiverName = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
+			m_strFilePath = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
 			m_strSenderName = getStringFromByteBuffer(msg);
 			m_strReceiverName = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
+			m_strFilePath = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
 			m_nReturnCode = msg.getInt();

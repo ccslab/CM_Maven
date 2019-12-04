@@ -556,7 +556,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
 			StringBuffer strReqBuf = new StringBuffer(); 
 			strReqBuf.append("["+fe.getSenderName()+"] wants to send a file.\n");
-			strReqBuf.append("file name: "+fe.getFileName()+"\n");
+			strReqBuf.append("file path: "+fe.getFilePath()+"\n");
 			strReqBuf.append("file size: "+fe.getFileSize()+"\n");
 			System.out.print(strReqBuf.toString());
 			nOption = JOptionPane.showConfirmDialog(null, strReqBuf.toString(), 
@@ -574,7 +574,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			if(fe.getReturnCode() == 0)
 			{
 				System.err.print("["+fe.getReceiverName()+"] rejected the push-file request!\n");
-				System.err.print("file name("+fe.getFileName()+"), size("+fe.getFileSize()+").\n");
+				System.err.print("file path("+fe.getFilePath()+"), size("+fe.getFileSize()+").\n");
 			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
