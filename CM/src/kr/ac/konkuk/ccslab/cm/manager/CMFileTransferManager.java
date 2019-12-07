@@ -860,7 +860,8 @@ public class CMFileTransferManager {
 		}
 
 		sInfo.setSendTaskResult(null);
-		if(sInfo.isStartedToSend()) // if the send task thread has sent more than 1 byte,
+		// if the send task thread has sent more than CMInfo.FILE_BLOCK_LEN bytes,
+		if(sInfo.isStartedToSend())
 		{
 			// remove the sending file list of the receiver
 			bReturn = fInfo.removeSendFileList(strReceiver);			
@@ -2484,8 +2485,13 @@ public class CMFileTransferManager {
 				nReturnCode = 1;
 		}
 
-		// remove the sending file list of the receiver
-		fInfo.removeSendFileList(strReceiver);
+		sInfo.setSendTaskResult(null);
+		// if the send task thread has sent more than CMInfo.FILE_BLOCK_LEN bytes,
+		if(sInfo.isStartedToSend())
+		{
+			// remove the sending file list of the receiver
+			fInfo.removeSendFileList(strReceiver);			
+		}
 
 		// send the cancel ack event to the receiver
 		feAck = new CMFileEvent();
