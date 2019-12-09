@@ -538,13 +538,6 @@ public class CMFileTransferManager {
 		}
 		long lFileSize = file.length();
 
-		// get file name
-		String strFileName = getFileNameFromPath(strFilePath);
-		// find send file information
-		if(fInfo.findSendFileInfo(strReceiver, strFileName, nContentID) != null)
-		{
-			fInfo.removeSendFileInfo(strReceiver, strFileName, nContentID);
-		}
 		// add send file information
 		// sender name, receiver name, file path, size, content ID
 		CMSendFileInfo sfInfo = new CMSendFileInfo();
@@ -567,7 +560,10 @@ public class CMFileTransferManager {
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
-		
+
+		// get file name
+		String strFileName = getFileNameFromPath(strFilePath);
+
 		// start file transfer process
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.START_FILE_TRANSFER_CHAN);
@@ -783,13 +779,8 @@ public class CMFileTransferManager {
 			e.printStackTrace();
 		}
 
-		sInfo.setSendTaskResult(null);
-		// if the send task thread has sent more than CMInfo.FILE_BLOCK_LEN bytes,
-		if(sInfo.isStartedToSend())
-		{
-			// remove the sending file list of the receiver
-			bReturn = fInfo.removeSendFileList(strReceiver);			
-		}
+		// remove the sending file list of the receiver
+		bReturn = fInfo.removeSendFileList(strReceiver);			
 
 		/////////////////////// management of the closed default blocking socket channel
 		
@@ -2381,13 +2372,8 @@ public class CMFileTransferManager {
 				nReturnCode = 1;
 		}
 
-		sInfo.setSendTaskResult(null);
-		// if the send task thread has sent more than CMInfo.FILE_BLOCK_LEN bytes,
-		if(sInfo.isStartedToSend())
-		{
-			// remove the sending file list of the receiver
-			fInfo.removeSendFileList(strReceiver);			
-		}
+		// remove the sending file list of the receiver
+		fInfo.removeSendFileList(strReceiver);			
 
 		// send the cancel ack event to the receiver
 		feAck = new CMFileEvent();

@@ -11,8 +11,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	private RandomAccessFile m_readFile;// for reading file blocks of the sent file
 	private Future<CMSendFileInfo> m_sendTaskResult;	// the result of the submitted sending task to the thread pool
 	
-	private boolean m_bStarted;
-
 	public CMSendFileInfo()
 	{
 		super();
@@ -21,8 +19,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_defaultChannel = null;
 		m_readFile = null;
 		m_sendTaskResult = null;
-		
-		m_bStarted = false;
 	}
 	
 	public CMSendFileInfo(String strFile, long lSize)
@@ -33,8 +29,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_defaultChannel = null;
 		m_readFile = null;
 		m_sendTaskResult = null;
-		
-		m_bStarted = false;
 	}
 	
 	@Override
@@ -113,17 +107,6 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public synchronized Future<CMSendFileInfo> getSendTaskResult()
 	{
 		return m_sendTaskResult;
-	}
-	
-	public synchronized void setStartedToSend(boolean bStarted)
-	{
-		m_bStarted = bStarted;
-		return;
-	}
-	
-	public synchronized boolean isStartedToSend()
-	{
-		return m_bStarted;
 	}
 	
 }

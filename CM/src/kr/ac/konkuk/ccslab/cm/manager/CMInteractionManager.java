@@ -1979,24 +1979,6 @@ public class CMInteractionManager {
 
 		ret = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
 		
-		if(ret)
-		{
-			CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-			CMSendFileInfo sfInfo = fInfo.findSendFileInfoNotStarted(strChannelName);
-			if(sfInfo != null)
-			{
-				byte fileAppendFlag;
-				if(sfInfo.getFileName().contentEquals("throughput-test.jpg"))
-					fileAppendFlag = CMInfo.FILE_OVERWRITE;
-				else
-					fileAppendFlag = CMInfo.FILE_DEFAULT;
-				
-				CMFileTransferManager.pushFile(sfInfo.getFilePath(), 
-						sfInfo.getReceiverName(), fileAppendFlag, 
-						sfInfo.getContentID(), cmInfo);
-			}		
-		}
-		
 		se = null;
 		seAck = null;
 		return;
@@ -2029,20 +2011,6 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
-			CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-			CMSendFileInfo sfInfo = fInfo.findSendFileInfoNotStarted(strServer);
-			if(sfInfo != null)
-			{
-				byte fileAppendFlag;
-				if(sfInfo.getFileName().contentEquals("throughput-test.jpg"))
-					fileAppendFlag = CMInfo.FILE_OVERWRITE;
-				else
-					fileAppendFlag = CMInfo.FILE_DEFAULT;
-
-				CMFileTransferManager.pushFile(sfInfo.getFilePath(), 
-						sfInfo.getReceiverName(), fileAppendFlag, 
-						sfInfo.getContentID(), cmInfo);
-			}
 		}
 				
 		se = null;
