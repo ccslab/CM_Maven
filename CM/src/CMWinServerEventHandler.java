@@ -395,7 +395,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			}
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
-			printMessage("["+fe.getSenderName()+"] wants to send a file("+fe.getFileName()+
+			printMessage("["+fe.getSenderName()+"] wants to send a file("+fe.getFilePath()+
 					").\n");
 			printMessage("The push-file request is not automatically permitted!\n");
 			printMessage("To change to automatically permit the push-file request, \n");
@@ -405,7 +405,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			if(fe.getReturnCode() == 0)
 			{
 				printMessage("["+fe.getReceiverName()+"] rejected the push-file request!\n");
-				printMessage("file name("+fe.getFileName()+"), size("+fe.getFileSize()+").\n");
+				printMessage("file path("+fe.getFilePath()+"), size("+fe.getFileSize()+").\n");
 			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:

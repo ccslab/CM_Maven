@@ -85,14 +85,6 @@ public class CMFileTransferManager {
 			byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		/*
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		
-		if(confInfo.isFileTransferScheme())
-			bReturn = requestFileWithSepChannel(strFileName, strFileOwner, byteFileAppend, nContentID, cmInfo);
-		else
-			bReturn = requestFileWithDefChannel(strFileName, strFileOwner, byteFileAppend, nContentID, cmInfo);
-		*/
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
 		CMFileEvent fe = new CMFileEvent();
@@ -104,19 +96,6 @@ public class CMFileTransferManager {
 		fe.setFileAppendFlag(byteFileAppend);
 		bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
 		
-		if(bReturn)
-		{
-			// add reqPermitPullFile Info
-			CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-			CMRecvFileInfo reqPermitPullInfo = new CMRecvFileInfo();
-			reqPermitPullInfo.setSenderName(strFileOwner);
-			reqPermitPullInfo.setReceiverName(myself.getName());
-			reqPermitPullInfo.setFileName(strFileName);
-			reqPermitPullInfo.setContentID(nContentID);
-			
-			bReturn = fInfo.addReqPermitPullFileInfo(reqPermitPullInfo);
-		}
-
 		return bReturn;
 	}
 	
@@ -144,44 +123,7 @@ public class CMFileTransferManager {
 		
 		return bRet;
 	}
-	
-	
-	private static boolean requestFileWithDefChannel(String strFileName, String strFileOwner, byte byteFileAppend, 
-			int nContentID, CMInfo cmInfo)
-	{
-		boolean bReturn = false;
-		CMUser myself = cmInfo.getInteractionInfo().getMyself();
 		
-		CMFileEvent fe = new CMFileEvent();
-		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE);
-		fe.setReceiverName(myself.getName());	// requester name
-		fe.setFileName(strFileName);
-		fe.setContentID(nContentID);
-		fe.setFileAppendFlag(byteFileAppend);
-		bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
-		
-		fe = null;
-		return bReturn;
-	}
-	
-	private static boolean requestFileWithSepChannel(String strFileName, String strFileOwner, byte byteFileAppend, 
-			int nContentID, CMInfo cmInfo)
-	{
-		boolean bReturn = false;
-		CMUser myself = cmInfo.getInteractionInfo().getMyself();
-		
-		CMFileEvent fe = new CMFileEvent();
-		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN);
-		fe.setReceiverName(myself.getName());	// requester name
-		fe.setFileName(strFileName);
-		fe.setContentID(nContentID);
-		fe.setFileAppendFlag(byteFileAppend);
-		bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);
-		
-		fe = null;
-		return bReturn;
-	}
-	
 	public static boolean cancelRequestFile(String strSender, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
@@ -413,34 +355,16 @@ public class CMFileTransferManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strMyName = interInfo.getMyself().getName();
 		
-		// get file name
-		String strFileName = getFileNameFromPath(strFilePath);
-		
 		// make and send a REQUEST_PERMIT_PUSH_FILE event
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_PERMIT_PUSH_FILE);
 		fe.setSenderName(strMyName);
 		fe.setReceiverName(strReceiverName);
-		fe.setFileName(strFileName);
+		fe.setFilePath(strFilePath);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
 		
 		boolean bReturn = CMEventManager.unicastEvent(fe, strReceiverName, cmInfo);
-		
-		if(bReturn)
-		{
-			// add a reqPermitPushInfo
-			CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-			CMSendFileInfo reqPermitPushInfo = new CMSendFileInfo();
-			reqPermitPushInfo.setSenderName(strMyName);
-			reqPermitPushInfo.setReceiverName(strReceiverName);
-			reqPermitPushInfo.setFileName(strFileName);
-			reqPermitPushInfo.setFilePath(strFilePath);
-			reqPermitPushInfo.setFileSize(lFileSize);
-			reqPermitPushInfo.setContentID(nContentID);
-			
-			bReturn = fInfo.addReqPermitPushFileInfo(reqPermitPushInfo);
-		}		
 		
 		return bReturn;
 	}
@@ -452,7 +376,7 @@ public class CMFileTransferManager {
 		feAck.setID(CMFileEvent.REPLY_PERMIT_PUSH_FILE);
 		feAck.setSenderName(fe.getSenderName());
 		feAck.setReceiverName(fe.getReceiverName());
-		feAck.setFileName(fe.getFileName());
+		feAck.setFilePath(fe.getFilePath());
 		feAck.setFileSize(fe.getFileSize());
 		feAck.setContentID(fe.getContentID());
 		feAck.setReturnCode(nReturnCode);
@@ -1282,11 +1206,6 @@ public class CMFileTransferManager {
 			}
 		}
 		
-		// remove reqPermitPullInfo
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		fInfo.removeReqPermitPullFileInfo(fe.getSenderName(), fe.getFileName(), 
-				fe.getContentID());
-		
 		return;
 	}
 	
@@ -1298,7 +1217,7 @@ public class CMFileTransferManager {
 		{
 			System.out.println("CMFileTransferManager.processREQUEST_PERMIT_PUSH_FILE(), ");
 			System.out.println("sender("+fe.getSenderName()+"), receiver("
-					+fe.getReceiverName()+"), file("+fe.getFileName()+"), size("
+					+fe.getReceiverName()+"), file("+fe.getFilePath()+"), size("
 					+fe.getFileSize()+"), contentID("+fe.getContentID()+").");
 		}
 		
@@ -1320,39 +1239,16 @@ public class CMFileTransferManager {
 		{
 			System.out.println("CMFileTransferManager.processREPLY_PERMIT_PUSH_FILE(), ");
 			System.out.println("sender("+fe.getSenderName()+"), receiver("
-					+fe.getReceiverName()+"), file("+fe.getFileName()+"), size("
+					+fe.getReceiverName()+"), file("+fe.getFilePath()+"), size("
 					+fe.getFileSize()+"), contentID("+fe.getContentID()+"), return code("
 					+fe.getReturnCode()+").");
-		}
-
-		// find reqPermitPushInfo
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMSendFileInfo reqPermitPushInfo = fInfo.findReqPermitPushFileInfo(
-				fe.getReceiverName(), fe.getFileName(), fe.getContentID());
-		if(reqPermitPushInfo == null)
-		{
-			System.err.println("CMFileTransferManager.processREPLY_PERMIT_PUSH_FILE(), ");
-			System.err.println("request info not found!");
-			return;
-		}
-		
-		// get pushFile parameters
-		String strFilePath = reqPermitPushInfo.getFilePath();
-		String strFileName = reqPermitPushInfo.getFileName();
-		String strReceiverName = reqPermitPushInfo.getReceiverName();
-		int nContentID = reqPermitPushInfo.getContentID();
-		
-		// remove the request info
-		if(!fInfo.removeReqPermitPushFileInfo(strReceiverName, strFileName, nContentID))
-		{
-			System.err.println("CMFileTransferManager.processREPLY_PERMIT_PUSH_FILE(), ");
-			System.err.println("cannot delete the request info!");
 		}
 		
 		if(fe.getReturnCode() == 1)
 		{
 			// call pushFile()
-			pushFile(strFilePath, strReceiverName, CMInfo.FILE_DEFAULT, nContentID, cmInfo);
+			pushFile(fe.getFilePath(), fe.getReceiverName(), CMInfo.FILE_DEFAULT, 
+					fe.getContentID(), cmInfo);
 		}
 	}
 	
