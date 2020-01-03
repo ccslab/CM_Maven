@@ -10,7 +10,6 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMDBInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -161,7 +160,6 @@ public class CMSNSManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMSNSAttachList attachList = null;
 		CMSNSAttach attach = null;
 		int nContentID = -1;
@@ -173,13 +171,13 @@ public class CMSNSManager {
 		{
 			// find attachment info to be received
 			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
-			attachList = attachHashtable.findSNSAttachList(fe.getSenderName());
+			attachList = attachHashtable.findSNSAttachList(fe.getFileSender());
 			if(attachList == null) return;
 			attach = attachList.findSNSAttach(fe.getContentID());
 			if(attach == null) return;
 			if(!attach.containsFileName(fe.getFileName())) return;
 			// add attached file info in attached_file_table of DB
-			String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + fe.getSenderName();
+			String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + fe.getFileSender();
 			nContentID = attach.getContentID();
 			strFileName = fe.getFileName();
 			
@@ -227,7 +225,7 @@ public class CMSNSManager {
 			se.setContentID(attach.getContentID());
 			se.setDate(attach.getCreationTime());
 			se.setUserName(attach.getRequesterName());
-			CMEventManager.unicastEvent(se, fe.getSenderName(), cmInfo);
+			CMEventManager.unicastEvent(se, fe.getFileSender(), cmInfo);
 			se = null;
 			
 			// remove the completed attachment info
@@ -235,7 +233,7 @@ public class CMSNSManager {
 			attach = null;
 			if(attachList.getSNSAttachList().isEmpty())
 			{
-				attachHashtable.removeSNSAttachList(fe.getSenderName());
+				attachHashtable.removeSNSAttachList(fe.getFileSender());
 				attachList = null;
 			}
 
@@ -268,7 +266,7 @@ public class CMSNSManager {
 	{
 		int nContentID = fe.getContentID();
 		String strFileName = fe.getFileName();
-		String strReceiverName = fe.getReceiverName();
+		String strReceiverName = fe.getFileReceiver();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
@@ -1031,6 +1029,7 @@ public class CMSNSManager {
 		return;
 	}
 	
+	/*
 	private static double getExpRandVar(double lambda)
 	{
 		double u, x;
@@ -1043,6 +1042,7 @@ public class CMSNSManager {
 		x = (-1/lambda)*Math.log(u);
 		return x;
 	}
+	*/
 	
 	// check how much 'strUserName' has interest in 'strWriterName' in terms of access count during specified dates  
 	private static boolean isPrefetchEnabled(String strUserName, String strWriterName, CMInfo cmInfo)
@@ -1988,7 +1988,8 @@ public class CMSNSManager {
 		{
 			CMFileEvent fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_ACK);
-			fe.setReceiverName(se.getUserName());
+			fe.setFileSender(strDefServer);
+			fe.setFileReceiver(se.getUserName());
 			fe.setFileName(strFileNameList.get(i));
 			fe.setReturnCode(0);	// the file is not received
 			fe.setContentID(se.getContentID());
@@ -2037,7 +2038,6 @@ public class CMSNSManager {
 	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
 		String strRequester = se.getUserName();
