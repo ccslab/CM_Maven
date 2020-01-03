@@ -34,9 +34,9 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		if(!super.equals(o)) return false;
 		
 		CMRecvFileInfo rfInfo = (CMRecvFileInfo) o;
-		String strSenderName = rfInfo.getSenderName();
+		String strSenderName = rfInfo.getFileSender();
 		
-		if(strSenderName.equals(m_strSenderName))
+		if(strSenderName.equals(m_strFileSender))
 			return true;
 		return false;
 	}
@@ -45,7 +45,7 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 	public String toString()
 	{
 		String str = super.toString();
-		str += "; CMRecvFileInfo: sender("+m_strSenderName+")";
+		str += "; CMRecvFileInfo: sender("+m_strFileSender+")";
 		return str;
 	}
 	

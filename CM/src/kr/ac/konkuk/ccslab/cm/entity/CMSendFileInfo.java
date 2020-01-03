@@ -37,9 +37,9 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		if(!super.equals(o)) return false;
 		
 		CMSendFileInfo sfInfo = (CMSendFileInfo) o;
-		String strReceiverName = sfInfo.getReceiverName();
+		String strReceiverName = sfInfo.getFileReceiver();
 		
-		if(strReceiverName.equals(m_strReceiverName))
+		if(strReceiverName.equals(m_strFileReceiver))
 			return true;
 		return false;
 	}
@@ -48,7 +48,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public String toString()
 	{
 		String strInfo = super.toString();
-		strInfo += "; CMSendFileInfo: receiver("+m_strReceiverName+")";
+		strInfo += "; CMSendFileInfo: receiver("+m_strFileReceiver+")";
 		return strInfo;
 	}
 	

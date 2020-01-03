@@ -3,8 +3,8 @@ package kr.ac.konkuk.ccslab.cm.entity;
 import java.nio.channels.SelectableChannel;
 
 public class CMTransFileInfo extends Object {
-	protected String m_strSenderName;	// the sender name
-	protected String m_strReceiverName;// the receiver name
+	protected String m_strFileSender;	// the file sender name
+	protected String m_strFileReceiver;// the file receiver name
 	protected String m_strFileName; // the name of the transferred file
 	protected String m_strFilePath;	// the local full path to the sent or received file
 	protected long m_lFileSize;	  // the size of the transferred file
@@ -13,8 +13,8 @@ public class CMTransFileInfo extends Object {
 	
 	public CMTransFileInfo()
 	{
-		m_strSenderName = "?";
-		m_strReceiverName = "?";
+		m_strFileSender = "?";
+		m_strFileReceiver = "?";
 		m_strFileName = "?";
 		m_strFilePath = "?";
 		m_lFileSize = -1;
@@ -24,8 +24,8 @@ public class CMTransFileInfo extends Object {
 	
 	public CMTransFileInfo(String strFile, long lSize, int nID)
 	{
-		m_strSenderName = "?";
-		m_strReceiverName = "?";
+		m_strFileSender = "?";
+		m_strFileReceiver = "?";
 		m_strFileName = strFile;
 		m_strFilePath = "?";
 		m_lFileSize = lSize;
@@ -59,26 +59,26 @@ public class CMTransFileInfo extends Object {
 	
 	// get/set methods
 	
-	public synchronized void setSenderName(String strName)
+	public synchronized void setFileSender(String strName)
 	{
-		m_strSenderName = strName;
+		m_strFileSender = strName;
 		return;
 	}
 	
-	public synchronized String getSenderName()
+	public synchronized String getFileSender()
 	{
-		return m_strSenderName;
+		return m_strFileSender;
 	}
 	
-	public synchronized void setReceiverName(String strName)
+	public synchronized void setFileReceiver(String strName)
 	{
-		m_strReceiverName = strName;
+		m_strFileReceiver = strName;
 		return;
 	}
 	
-	public synchronized String getReceiverName()
+	public synchronized String getFileReceiver()
 	{
-		return m_strReceiverName;
+		return m_strFileReceiver;
 	}
 
 	public synchronized void setFileName(String strName)
