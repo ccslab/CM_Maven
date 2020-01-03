@@ -156,7 +156,8 @@ public class CMRecvFileTask implements Runnable {
 	{
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.ERR_RECV_FILE_CHAN);
-		fe.setSenderName(m_recvFileInfo.getSenderName());
+		fe.setFileSender(m_recvFileInfo.getFileSender());
+		fe.setFileReceiver(m_cmInfo.getInteractionInfo().getMyself().getName());
 		fe.setFileName(m_recvFileInfo.getFileName());
 		fe.setContentID(m_recvFileInfo.getContentID());
 		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);

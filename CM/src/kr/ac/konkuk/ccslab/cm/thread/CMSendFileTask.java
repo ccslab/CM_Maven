@@ -145,7 +145,7 @@ public class CMSendFileTask implements Runnable {
 		{
 			if(lSentSize > lFileSize)
 			{
-				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getReceiverName()+") already has "
+				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getFileReceiver()+") already has "
 						+ "a bigger size file("+m_sendFileInfo.getFileName()+"); sender size("+lFileSize
 						+ "), receiver size("+lSentSize+")");
 			}
@@ -153,9 +153,10 @@ public class CMSendFileTask implements Runnable {
 			// send END_FILE_TRANSFER_CHAN with the default TCP socket channel
 			fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);
-			fe.setSender(m_sendFileInfo.getSenderName());
-			fe.setReceiver(m_sendFileInfo.getReceiverName());
-			fe.setSenderName(m_sendFileInfo.getSenderName());
+			fe.setSender(m_cmInfo.getInteractionInfo().getMyself().getName()); // event sender
+			fe.setReceiver(m_sendFileInfo.getFileReceiver()); // event receiver (not clear)
+			fe.setFileSender(m_sendFileInfo.getFileSender());
+			fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
 			fe.setFileName(m_sendFileInfo.getFileName());
 			fe.setFileSize(m_sendFileInfo.getFileSize());
 			fe.setContentID(m_sendFileInfo.getContentID());
@@ -185,7 +186,8 @@ public class CMSendFileTask implements Runnable {
 	{
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.ERR_SEND_FILE_CHAN);
-		fe.setReceiverName(m_sendFileInfo.getReceiverName());
+		fe.setFileSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+		fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
 		fe.setFileName(m_sendFileInfo.getFileName());
 		fe.setContentID(m_sendFileInfo.getContentID());
 		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);
