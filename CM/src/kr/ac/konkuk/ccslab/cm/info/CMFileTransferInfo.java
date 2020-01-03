@@ -60,7 +60,7 @@ public class CMFileTransferInfo {
 		
 		strFileName = fPath.substring(fPath.lastIndexOf(File.separator)+1);
 		sInfo = new CMSendFileInfo();
-		sInfo.setReceiverName(uName);
+		sInfo.setFileReceiver(uName);
 		sInfo.setFileName(strFileName);
 		sInfo.setFilePath(fPath);
 		sInfo.setFileSize(lSize);
@@ -98,11 +98,11 @@ public class CMFileTransferInfo {
 		strFileName = sInfo.getFilePath().substring(sInfo.getFilePath().lastIndexOf(File.separator)+1);
 		sInfo.setFileName(strFileName);
 		
-		sInfoList = m_sendFileHashtable.get(sInfo.getReceiverName());
+		sInfoList = m_sendFileHashtable.get(sInfo.getFileReceiver());
 		if(sInfoList == null)
 		{
 			sInfoList = new CMList<CMSendFileInfo>();
-			m_sendFileHashtable.put(sInfo.getReceiverName(), sInfoList);
+			m_sendFileHashtable.put(sInfo.getFileReceiver(), sInfoList);
 		}
 		
 		bResult = sInfoList.addElement(sInfo);
@@ -136,7 +136,7 @@ public class CMFileTransferInfo {
 		}
 		
 		tInfo = new CMSendFileInfo();
-		tInfo.setReceiverName(uName);
+		tInfo.setFileReceiver(uName);
 		tInfo.setFileName(fName);
 		tInfo.setContentID(nContentID);
 		
@@ -166,7 +166,7 @@ public class CMFileTransferInfo {
 		}
 		
 		sInfo = new CMSendFileInfo();
-		sInfo.setReceiverName(uName);
+		sInfo.setFileReceiver(uName);
 		sInfo.setFileName(fName);
 		sInfo.setContentID(nContentID);
 		bResult = sInfoList.removeElement(sInfo);
@@ -309,7 +309,7 @@ public class CMFileTransferInfo {
 
 		rInfo = null;
 		rInfo = new CMRecvFileInfo();
-		rInfo.setSenderName(senderName);
+		rInfo.setFileSender(senderName);
 		rInfo.setFileName(fName);
 		rInfo.setFileSize(lSize);
 		rInfo.setContentID(nContentID);
@@ -344,11 +344,11 @@ public class CMFileTransferInfo {
 		CMList<CMRecvFileInfo> rInfoList = null;
 		boolean bResult = false;
 		
-		rInfoList = m_recvFileHashtable.get(rInfo.getSenderName());
+		rInfoList = m_recvFileHashtable.get(rInfo.getFileSender());
 		if(rInfoList == null)
 		{
 			rInfoList = new CMList<CMRecvFileInfo>();
-			m_recvFileHashtable.put(rInfo.getSenderName(), rInfoList);
+			m_recvFileHashtable.put(rInfo.getFileSender(), rInfoList);
 		}
 		
 		bResult = rInfoList.addElement(rInfo);
@@ -382,7 +382,7 @@ public class CMFileTransferInfo {
 		}
 		
 		tInfo = new CMRecvFileInfo();
-		tInfo.setSenderName(senderName);
+		tInfo.setFileSender(senderName);
 		tInfo.setFileName(fName);
 		tInfo.setContentID(nContentID);
 		
@@ -415,7 +415,7 @@ public class CMFileTransferInfo {
 		}
 		
 		rInfo = new CMRecvFileInfo();
-		rInfo.setSenderName(senderName);
+		rInfo.setFileSender(senderName);
 		rInfo.setFileName(fName);
 		rInfo.setContentID(nContentID);
 		bResult = rInfoList.removeElement(rInfo);
