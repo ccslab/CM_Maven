@@ -124,12 +124,12 @@ public class CMFileTransferManager {
 		return bRet;
 	}
 		
-	public static boolean cancelRequestFile(String strSender, CMInfo cmInfo)
+	public static boolean cancelPullFile(String strSender, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		if(confInfo.isFileTransferScheme())
-			bReturn = cancelRequestFileWithSepChannel(strSender, cmInfo);
+			bReturn = cancelPullFileWithSepChannel(strSender, cmInfo);
 		else
 		{
 			System.err.println("CMFileTransferManager.cancelRequestFile(); default file transfer does not support!");
@@ -139,14 +139,14 @@ public class CMFileTransferManager {
 	}
 
 	// cancel the receiving file task with separate channels and threads
-	private static boolean cancelRequestFileWithSepChannel(String strSender, CMInfo cmInfo)
+	private static boolean cancelPullFileWithSepChannel(String strSender, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 
 		if(strSender != null)
 		{
-			bReturn = cancelRequestFileWithSepChannelForOneSender(strSender, cmInfo);
+			bReturn = cancelPullFileWithSepChannelForOneSender(strSender, cmInfo);
 		}
 		else // cancel file transfer to all senders
 		{
@@ -155,7 +155,7 @@ public class CMFileTransferManager {
 			while(iterKeys.hasNext())
 			{
 				String iterSender = iterKeys.next();
-				bReturn = cancelRequestFileWithSepChannelForOneSender(iterSender, cmInfo);
+				bReturn = cancelPullFileWithSepChannelForOneSender(iterSender, cmInfo);
 			}
 			// clear the sending file hash table
 			bReturn = fInfo.clearRecvFileHashtable();
@@ -165,7 +165,7 @@ public class CMFileTransferManager {
 	}
 
 	// cancel the receiving file task from one sender with a separate channel and thread
-	private static boolean cancelRequestFileWithSepChannelForOneSender(String strSender, CMInfo cmInfo)
+	private static boolean cancelPullFileWithSepChannelForOneSender(String strSender, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMList<CMRecvFileInfo> recvList = null;
@@ -2497,7 +2497,7 @@ public class CMFileTransferManager {
 	
 	private static void processERR_RECV_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
-		cancelRequestFile(fe.getFileSender(), cmInfo);
+		cancelPullFile(fe.getFileSender(), cmInfo);
 	}
 	
 	private static void processERR_SEND_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)

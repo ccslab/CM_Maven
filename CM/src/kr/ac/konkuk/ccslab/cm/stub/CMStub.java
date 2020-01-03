@@ -2328,10 +2328,10 @@ public class CMStub {
 	 * @return true if the cancellation is succeeded, or false otherwise.
 	 * @see CMStub#cancelPushFile(String) 
 	 */
-	public boolean cancelRequestFile(String strSender)
+	public boolean cancelPullFile(String strSender)
 	{
 		boolean bReturn = false;
-		bReturn = CMFileTransferManager.cancelRequestFile(strSender, m_cmInfo);
+		bReturn = CMFileTransferManager.cancelPullFile(strSender, m_cmInfo);
 		return bReturn;
 	}
 
@@ -2393,7 +2393,7 @@ public class CMStub {
 			if(replyEvent == null)
 			{
 				System.err.println("CMStub.measureInputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelRequestFile(strTarget, m_cmInfo);
+				CMFileTransferManager.cancelPullFile(strTarget, m_cmInfo);
 				return -1;
 			}
 			

@@ -1741,7 +1741,7 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 
-		bReturn = m_clientStub.cancelRequestFile(strSender);
+		bReturn = m_clientStub.cancelPullFile(strSender);
 		
 		if(bReturn)
 		{

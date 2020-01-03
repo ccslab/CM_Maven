@@ -624,7 +624,7 @@ public class CMWinServer extends JFrame {
 		if(strSender.isEmpty())
 			strSender = null;
 		
-		bReturn = m_serverStub.cancelRequestFile(strSender);
+		bReturn = m_serverStub.cancelPullFile(strSender);
 		
 		if(bReturn)
 		{

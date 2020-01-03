@@ -2392,7 +2392,7 @@ public class CMWinClient extends JFrame {
 		if(strSender.isEmpty())
 			strSender = null;
 		
-		bReturn = m_clientStub.cancelRequestFile(strSender);
+		bReturn = m_clientStub.cancelPullFile(strSender);
 		
 		if(bReturn)
 		{

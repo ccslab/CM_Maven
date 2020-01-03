@@ -440,7 +440,7 @@ public class CMServerApp {
 			e.printStackTrace();
 		}
 
-		bReturn = m_serverStub.cancelRequestFile(strSender);
+		bReturn = m_serverStub.cancelPullFile(strSender);
 		
 		if(bReturn)
 		{
