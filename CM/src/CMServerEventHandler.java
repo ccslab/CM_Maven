@@ -27,7 +27,6 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 
@@ -337,13 +336,12 @@ public class CMServerEventHandler implements CMAppEventHandler {
 	private void processFileEvent(CMEvent cme)
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
-		CMConfigurationInfo confInfo = null;
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
-			System.out.println("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").");
-			System.err.print("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").\n");
+			System.out.println("["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+").");
+			System.err.print("["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+").\n");
 			System.err.print("The pull-file request is not automatically permitted!\n");
 			System.err.print("To change to automatically permit the pull-file request, \n");
 			System.err.print("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
@@ -356,12 +354,12 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			}
 			else if(fe.getReturnCode() == 0)
 			{
-				System.err.print("["+fe.getSenderName()+"] rejects to send file("
+				System.err.print("["+fe.getFileSender()+"] rejects to send file("
 						+fe.getFileName()+").\n");
 			}
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
-			System.out.println("["+fe.getSenderName()+"] wants to send a file("+fe.getFilePath()+
+			System.out.println("["+fe.getFileSender()+"] wants to send a file("+fe.getFilePath()+
 					").");
 			System.err.print("The push-file request is not automatically permitted!\n");
 			System.err.print("To change to automatically permit the push-file request, \n");
@@ -370,35 +368,35 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:
 			if(fe.getReturnCode() == 0)
 			{
-				System.err.print("["+fe.getReceiverName()+"] rejected the push-file request!\n");
+				System.err.print("["+fe.getFileReceiver()+"] rejected the push-file request!\n");
 				System.err.print("file path("+fe.getFilePath()+"), size("+fe.getFileSize()+").\n");
 			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
-			System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
+			System.out.println("["+fe.getFileSender()+"] is about to send file("+fe.getFileName()+").");
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
-			System.out.println("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
+			System.out.println("["+fe.getFileSender()+"] completes to send file("+fe.getFileName()+", "
 					+fe.getFileSize()+" Bytes).");
 			String strFile = fe.getFileName();
 			if(m_bDistFileProc)
 			{
-				processFile(fe.getSenderName(), strFile);
+				processFile(fe.getFileSender(), strFile);
 				m_bDistFileProc = false;
 			}
 			break;
 		case CMFileEvent.REQUEST_DIST_FILE_PROC:
-			System.out.println("["+fe.getReceiverName()+"] requests the distributed file processing.");
+			System.out.println("["+fe.getFileReceiver()+"] requests the distributed file processing.");
 			m_bDistFileProc = true;
 			break;
 		case CMFileEvent.CANCEL_FILE_SEND:
 		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
-			System.out.println("["+fe.getSenderName()+"] cancelled the file transfer.");
+			System.out.println("["+fe.getFileSender()+"] cancelled the file transfer.");
 			break;
 		case CMFileEvent.CANCEL_FILE_RECV_CHAN:
-			System.out.println("["+fe.getReceiverName()+"] cancelled the file request.");
+			System.out.println("["+fe.getFileReceiver()+"] cancelled the file request.");
 			break;
 		}
 		return;

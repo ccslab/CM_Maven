@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
@@ -2735,7 +2734,8 @@ public class CMClientApp {
 		// make a file event (REQUEST_DIST_FILE_PROC)
 		fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_DIST_FILE_PROC);
-		fe.setReceiverName(interInfo.getMyself().getName());
+		//fe.setFileReceiver(interInfo.getMyself().getName());
+		fe.setFileSender(interInfo.getMyself().getName());
 
 		// for pieces except the last piece
 		for( i = 0; i < m_eventHandler.getCurrentServerNum()-1; i++)
@@ -2751,6 +2751,7 @@ public class CMClientApp {
 
 			// send piece to the corresponding additional server
 			String strAddServer = interInfo.getAddServerList().elementAt(i).getServerName();
+			fe.setFileReceiver(strAddServer);
 			
 			m_clientStub.send(fe, strAddServer);
 			
@@ -2772,7 +2773,9 @@ public class CMClientApp {
 			CMFileTransferManager.splitFile(raf, lOffset, lFileSize-lPieceSize*i, strPieceName);
 		}
 		// send the last piece to the default server
+		fe.setFileReceiver(m_clientStub.getDefaultServerName());
 		m_clientStub.send(fe, m_clientStub.getDefaultServerName());
+		
 		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName(), 
 				m_clientStub.getCMInfo());
 		

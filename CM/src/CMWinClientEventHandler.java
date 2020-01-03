@@ -3,8 +3,6 @@ import java.util.Iterator;
 
 import javax.swing.JOptionPane;
 
-import com.sun.org.apache.xml.internal.serializer.ElemDesc;
-
 import java.io.*;
 import java.awt.*;
 
@@ -598,14 +596,13 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
 		CMConfigurationInfo confInfo = null;
-		long lDelay = 0;
 		int nOption = -1;
 		
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
-			String strReq = "["+fe.getReceiverName()+"] requests file("+fe.getFileName()+
+			String strReq = "["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+
 				").\n";
 			printMessage(strReq);
 			nOption = JOptionPane.showConfirmDialog(null, strReq, "Request a file", 
@@ -627,13 +624,13 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			}
 			else if(fe.getReturnCode() == 0)
 			{
-				printMessage("["+fe.getSenderName()+"] rejects to send file("
+				printMessage("["+fe.getFileSender()+"] rejects to send file("
 						+fe.getFileName()+").\n");
 			}
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
 			StringBuffer strReqBuf = new StringBuffer(); 
-			strReqBuf.append("["+fe.getSenderName()+"] wants to send a file.\n");
+			strReqBuf.append("["+fe.getFileSender()+"] wants to send a file.\n");
 			strReqBuf.append("file path: "+fe.getFilePath()+"\n");
 			strReqBuf.append("file size: "+fe.getFileSize()+"\n");
 			printMessage(strReqBuf.toString());
@@ -651,18 +648,18 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:
 			if(fe.getReturnCode() == 0)
 			{
-				printMessage("["+fe.getReceiverName()+"] rejected the push-file request!\n");
+				printMessage("["+fe.getFileReceiver()+"] rejected the push-file request!\n");
 				printMessage("file path("+fe.getFilePath()+"), size("+fe.getFileSize()+").\n");
 			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
-			printMessage("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").\n");
+			printMessage("["+fe.getFileSender()+"] is about to send file("+fe.getFileName()+").\n");
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
-			printMessage("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
+			printMessage("["+fe.getFileSender()+"] completes to send file("+fe.getFileName()+", "
 					+fe.getFileSize()+" Bytes).\n");
 			//lDelay = System.currentTimeMillis() - m_lStartTime;
 			//printMessage("file-transfer delay: "+lDelay+" ms.\n");
@@ -685,10 +682,10 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMFileEvent.CANCEL_FILE_SEND:
 		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
-			printMessage("["+fe.getSenderName()+"] cancelled the file transfer.\n");
+			printMessage("["+fe.getFileSender()+"] cancelled the file transfer.\n");
 			break;
 		case CMFileEvent.CANCEL_FILE_RECV_CHAN:
-			printMessage("["+fe.getReceiverName()+"] cancelled the file request.\n");
+			printMessage("["+fe.getFileReceiver()+"] cancelled the file request.\n");
 			break;
 		}
 		return;

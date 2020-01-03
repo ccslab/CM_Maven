@@ -2,8 +2,6 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.awt.*;
@@ -28,7 +26,6 @@ import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
@@ -1035,20 +1032,13 @@ public class CMWinServer extends JFrame {
 	public void addChannel()
 	{
 		int nChType = -1;
-		int nChKey = -1; // the channel key for the socket channel
-		String strServerName = null;
 		String strChAddress = null; // the channel key for the multicast address is the (address, port) pair
 		int nChPort = -1; // the channel key for the datagram socket channel, or the multicast port number
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
 		boolean isBlock = false;
-		SocketChannel sc = null;
 		DatagramChannel dc = null;
-		boolean isSyncCall = false;
-		long lDelay = -1;
 				
 		printMessage("====== add additional channel\n");
 		
@@ -1279,18 +1269,12 @@ public class CMWinServer extends JFrame {
 	public void removeChannel()
 	{
 		int nChType = -1;
-		int nChKey = -1;
 		int nChPort = -1;
 		String strChAddress = null;
-		String strServerName = null;
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
 		boolean isBlock = false;
-		boolean isSyncCall = false;
-		long lDelay = 0;
 		
 		printMessage("====== remove additional channel\n");
 				

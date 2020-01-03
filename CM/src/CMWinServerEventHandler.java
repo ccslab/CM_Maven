@@ -27,7 +27,6 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 public class CMWinServerEventHandler implements CMAppEventHandler {
@@ -372,12 +371,11 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 	private void processFileEvent(CMEvent cme)
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
-		CMConfigurationInfo confInfo = null;
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
-			printMessage("["+fe.getReceiverName()+"] requests file("+fe.getFileName()+").\n");
+			printMessage("["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+").\n");
 			printMessage("The pull-file request is not automatically permitted!\n");
 			printMessage("To change to automatically permit the pull-file request, \n");
 			printMessage("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
@@ -390,12 +388,12 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			}
 			else if(fe.getReturnCode() == 0)
 			{
-				printMessage("["+fe.getSenderName()+"] rejects to send file("
+				printMessage("["+fe.getFileSender()+"] rejects to send file("
 						+fe.getFileName()+").\n");
 			}
 			break;
 		case CMFileEvent.REQUEST_PERMIT_PUSH_FILE:
-			printMessage("["+fe.getSenderName()+"] wants to send a file("+fe.getFilePath()+
+			printMessage("["+fe.getFileSender()+"] wants to send a file("+fe.getFilePath()+
 					").\n");
 			printMessage("The push-file request is not automatically permitted!\n");
 			printMessage("To change to automatically permit the push-file request, \n");
@@ -404,39 +402,39 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		case CMFileEvent.REPLY_PERMIT_PUSH_FILE:
 			if(fe.getReturnCode() == 0)
 			{
-				printMessage("["+fe.getReceiverName()+"] rejected the push-file request!\n");
+				printMessage("["+fe.getFileReceiver()+"] rejected the push-file request!\n");
 				printMessage("file path("+fe.getFilePath()+"), size("+fe.getFileSize()+").\n");
 			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
-			printMessage("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").\n");
+			printMessage("["+fe.getFileSender()+"] is about to send file("+fe.getFileName()+").\n");
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
 			//System.out.println("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
 			//		+fe.getFileSize()+" Bytes).");
-			printMessage("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
+			printMessage("["+fe.getFileSender()+"] completes to send file("+fe.getFileName()+", "
 					+fe.getFileSize()+" Bytes).\n");
 			String strFile = fe.getFileName();
 			if(m_bDistFileProc)
 			{
-				processFile(fe.getSenderName(), strFile);
+				processFile(fe.getFileSender(), strFile);
 				m_bDistFileProc = false;
 			}
 			break;
 		case CMFileEvent.REQUEST_DIST_FILE_PROC:
 			//System.out.println("["+fe.getUserName()+"] requests the distributed file processing.");
-			printMessage("["+fe.getReceiverName()+"] requests the distributed file processing.\n");
+			printMessage("["+fe.getFileReceiver()+"] requests the distributed file processing.\n");
 			m_bDistFileProc = true;
 			break;
 		case CMFileEvent.CANCEL_FILE_SEND:
 		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
-			printMessage("["+fe.getSenderName()+"] cancelled the file transfer.\n");
+			printMessage("["+fe.getFileSender()+"] cancelled the file transfer.\n");
 			break;
 		case CMFileEvent.CANCEL_FILE_RECV_CHAN:
-			printMessage("["+fe.getReceiverName()+"] cancelled the file request.\n");
+			printMessage("["+fe.getFileReceiver()+"] cancelled the file request.\n");
 			break;
 		}
 		return;
