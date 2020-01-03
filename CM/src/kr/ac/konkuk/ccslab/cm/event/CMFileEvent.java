@@ -20,7 +20,8 @@ public class CMFileEvent extends CMEvent{
 	 * (cm-server.conf) is set to 0.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
@@ -36,9 +37,11 @@ public class CMFileEvent extends CMEvent{
 	 * The event ID for the response to the file request.
 	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event as the response to the 
-	 * {@link CMFileEvent#REQUEST_FILE_TRANSFER} event.
+	 * {@link CMFileEvent#REQUEST_PERMIT_PULL_FILE} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>0: the request is denied.
@@ -50,20 +53,59 @@ public class CMFileEvent extends CMEvent{
 	 */
 	public static final int REPLY_PERMIT_PULL_FILE = 2;
 	
+	/**
+	 * The event ID for requesting a permit to push a file.
+	 * <p>event direction: sender (requester) -&gt; receiver (file owner)
+	 * <p>This event is sent when the sender calls 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}, 
+	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
+	 * (cm-server.conf) is set to 0.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file path: {@link CMFileEvent#getFilePath()}</li>
+	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * </ul>
+	 */
 	public static final int REQUEST_PERMIT_PUSH_FILE = 3;
+	
+	/**
+	 * The event ID for the response to the permit-request of pushing a file.
+	 * <p>event direction: receiver -&gt; sender
+	 * <p>The file receiver sends this event as the response to the 
+	 * {@link CMFileEvent#REQUEST_PERMIT_PUSH_FILE} event.
+	 * <br>The following fields are used for this event:
+	 * <ul>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file path: {@link CMFileEvent#getFilePath()}</li>
+	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
+	 * <li>content ID: {@link CMFileEvent#getContentID()}
+	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
+	 * <br>-1: the file is no attachment of SNS content</li> 
+	 * <li>return code: {@link CMFileEvent#getReturnCode()}
+	 * <br>0: the request is denied.
+	 * <br>1: the request is accepted.</li>
+	 * </ul>
+	 */
 	public static final int REPLY_PERMIT_PUSH_FILE = 4;
 	
 	/**
 	 * The event ID for notifying the receiver of the start of file-transfer.
 	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event right after it sends the 
-	 * {@link CMFileEvent#REPLY_FILE_TRANSFER} event. The owner also sends this event 
-	 * when it calls the {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}, 
+	 * {@link CMFileEvent#REPLY_PERMIT_PULL_FILE} event, or receives 
+	 * the {@link CMFileEvent#REPLY_PERIT_PUSH_FILE} event with the granted permit, 
  	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
 	 * (cm-server.conf) is set to 0.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -82,7 +124,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#START_FILE_TRANSFER} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the file is an attachment of SNS content ID
@@ -102,7 +145,8 @@ public class CMFileEvent extends CMEvent{
 	 * for each file block until all file blocks are sent to the receiver.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the file is an attachment of SNS content ID
@@ -122,7 +166,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#CONTINUE_FILE_TRANSFER} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -139,7 +184,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#END_FILE_TRANSFER} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
@@ -163,8 +209,8 @@ public class CMFileEvent extends CMEvent{
 	 * (cm-server.conf) is set to 0.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * </ul>
 	 */
 	public static final int CANCEL_FILE_SEND = 12;
@@ -176,8 +222,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#CANCEL_FILE_SEND} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>1: cancellation success
 	 * <br>0: cancellation failure</li>
@@ -197,7 +243,8 @@ public class CMFileEvent extends CMEvent{
 	 * (cm-server.conf) is set to 1.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
@@ -213,9 +260,11 @@ public class CMFileEvent extends CMEvent{
 	 * The event ID for the response to the file request.
 	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event as the response to the 
-	 * {@link CMFileEvent#REQUEST_FILE_TRANSFER_CHAN} event.
+	 * {@link CMFileEvent#REQUEST_PERMIT_PULL_FILE_CHAN} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>0: the request is denied.
@@ -232,13 +281,14 @@ public class CMFileEvent extends CMEvent{
 	 * The event ID for notifying the receiver of the start of file-transfer.
 	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event right after it sends the 
-	 * {@link CMFileEvent#REPLY_FILE_TRANSFER_CHAN} event. The owner also sends this event 
-	 * when it calls the {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}, 
+	 * {@link CMFileEvent#REPLY_PERMIT_PULL_FILE_CHAN} event, or receives 
+	 * the {@link CMFileEvent#REPLY_PERMIT_PUSH_FILE} event with the granted permit 
  	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
 	 * (cm-server.conf) is set to 1.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -257,7 +307,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#START_FILE_TRANSFER_CHAN} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the file is an attachment of SNS content ID
@@ -273,10 +324,12 @@ public class CMFileEvent extends CMEvent{
 	 * The event ID for notifying the receiver of the end of file-transfer.
 	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event after it sends the last 
-	 * file block.
+	 * file block, and if the FILE_TRANSFER_SCHEME field of the configuration file 
+	 * of the CM server (cm-server.conf) is set to 1. 
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -293,7 +346,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#END_FILE_TRANSFER_CHAN} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
@@ -315,8 +369,8 @@ public class CMFileEvent extends CMEvent{
 	 * (cm-server.conf) is set to 1.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * </ul>
 	 */
 	public static final int CANCEL_FILE_SEND_CHAN = 20;
@@ -328,8 +382,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#CANCEL_FILE_SEND_CHAN} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>1: cancellation success
 	 * <br>0: cancellation failure</li>
@@ -346,8 +400,8 @@ public class CMFileEvent extends CMEvent{
 	 * (cm-server.conf) is set to 1.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * </ul>
 	 */
 	public static final int CANCEL_FILE_RECV_CHAN = 22;
@@ -359,8 +413,8 @@ public class CMFileEvent extends CMEvent{
 	 * {@link CMFileEvent#CANCEL_FILE_RECV_CHAN} event.
 	 * <br>The following fields are used for this event:
 	 * <ul>
-	 * <li>sender name: {@link CMFileEvent#getSenderName()}</li>
-	 * <li>receiver name: {@link CMFileEvent#getReceiverName()}</li>
+	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>1: cancellation success
 	 * <br>0: cancellation failure</li>
@@ -371,8 +425,8 @@ public class CMFileEvent extends CMEvent{
 	public static final int ERR_SEND_FILE_CHAN = 24;
 	public static final int ERR_RECV_FILE_CHAN = 25;
 	
-	private String m_strReceiverName;	// receiver name
-	private String m_strSenderName;	// sender name
+	private String m_strFileReceiver;	// file receiver
+	private String m_strFileSender;	// file sender
 	private String m_strFileName;	// file name
 	private String m_strFilePath;	// file path
 	private long m_lFileSize;
@@ -387,8 +441,8 @@ public class CMFileEvent extends CMEvent{
 	{
 		m_nType = CMInfo.CM_FILE_EVENT;
 		m_nID = -1;
-		m_strReceiverName = "?";
-		m_strSenderName = "?";
+		m_strFileReceiver = "?";
+		m_strFileSender = "?";
 		m_strFileName = "?";
 		m_strFilePath = "?";
 		m_lFileSize = 0;
@@ -408,34 +462,34 @@ public class CMFileEvent extends CMEvent{
 	
 	// set/get methods
 	
-	public void setReceiverName(String uName)
+	public void setFileReceiver(String uName)
 	{
 		if(uName != null)
-			m_strReceiverName = uName;
+			m_strFileReceiver = uName;
 	}
 	
 	/**
 	 * Returns the receiver name of a file.
 	 * @return receiver name
 	 */
-	public String getReceiverName()
+	public String getFileReceiver()
 	{
-		return m_strReceiverName;
+		return m_strFileReceiver;
 	}
 	
-	public void setSenderName(String sName)
+	public void setFileSender(String sName)
 	{
 		if(sName != null)
-			m_strSenderName = sName;
+			m_strFileSender = sName;
 	}
 	
 	/**
 	 * Returns the sender name of a file.
 	 * @return sender name
 	 */
-	public String getSenderName()
+	public String getFileSender()
 	{
-		return m_strSenderName;
+		return m_strFileSender;
 	}
 	
 	public void setFileName(String fName)
@@ -580,43 +634,43 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_PERMIT_PULL_FILE:
 		case REQUEST_PERMIT_PULL_FILE_CHAN:
-			// sender name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
-			// receiver name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
 			// file name
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
 			// content ID
 			nByteNum += Integer.BYTES;
-			// file-append flag
+			// append mode flag
 			nByteNum += Byte.BYTES;
 			break;
 		case REPLY_PERMIT_PULL_FILE:
 		case REPLY_PERMIT_PULL_FILE_CHAN:
-			// sender name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
-			// receiver name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
 			// file name
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
 			// content ID, return code
 			nByteNum += 2*Integer.BYTES;
 			break;
 		case REQUEST_PERMIT_PUSH_FILE:
-			// sender name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
-			// receiver name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
 			// file path
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
 			nByteNum += Long.BYTES;	// file size 
 			nByteNum += Integer.BYTES;	// content ID
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
-			// sender name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length;
-			// receiver name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
 			// file path
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
 			nByteNum += Long.BYTES;	// file size 
@@ -625,63 +679,121 @@ public class CMFileEvent extends CMEvent{
 			break;
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += Long.BYTES + Integer.BYTES + Byte.BYTES;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// file size
+			nByteNum += Long.BYTES;
+			// content ID
+			nByteNum += Integer.BYTES;
+			// append mode
+			nByteNum += Byte.BYTES;
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += Integer.BYTES + Long.BYTES;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// content ID
+			nByteNum += Integer.BYTES;
+			// received file size
+			nByteNum += Long.BYTES;
 			break;
 		case CONTINUE_FILE_TRANSFER:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += 2*Integer.BYTES + CMInfo.FILE_BLOCK_LEN;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// content ID
+			nByteNum += Integer.BYTES;
+			// file block size
+			nByteNum += Integer.BYTES;
+			// file block
+			nByteNum += CMInfo.FILE_BLOCK_LEN;
 			break;
 		case CONTINUE_FILE_TRANSFER_ACK:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += Long.BYTES + Integer.BYTES;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// received file size
+			nByteNum += Long.BYTES;
+			// content ID
+			nByteNum += Integer.BYTES;
 			break;
 		case END_FILE_TRANSFER:
 		case END_FILE_TRANSFER_CHAN:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += Long.BYTES + Integer.BYTES;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// file size
+			nByteNum += Long.BYTES;
+			// content ID
+			nByteNum += Integer.BYTES;
 			break;
 		case END_FILE_TRANSFER_ACK:
 		case END_FILE_TRANSFER_CHAN_ACK:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += Long.BYTES + 2*Integer.BYTES;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// file size
+			nByteNum += Long.BYTES;
+			// return code
+			nByteNum += Integer.BYTES;
+			// content ID
+			nByteNum += Integer.BYTES;
 			break;
 		case REQUEST_DIST_FILE_PROC:
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// content ID
 			nByteNum += Integer.BYTES;
 			break;
 		case CANCEL_FILE_SEND:
 		case CANCEL_FILE_SEND_CHAN:
 		case CANCEL_FILE_RECV_CHAN:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
-				+ m_strReceiverName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
 			break;
 		case CANCEL_FILE_SEND_ACK:
 		case CANCEL_FILE_SEND_CHAN_ACK:
 		case CANCEL_FILE_RECV_CHAN_ACK:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
-				+ m_strReceiverName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// return code
 			nByteNum += Integer.BYTES;
 			break;
 		case ERR_SEND_FILE_CHAN:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strReceiverName.getBytes().length
-				+ m_strFileName.getBytes().length;
-			nByteNum += Integer.BYTES;
-			break;
 		case ERR_RECV_FILE_CHAN:
-			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strSenderName.getBytes().length
-				+ m_strFileName.getBytes().length;
+			// file sender
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+			// file receiver
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+			// file name
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+			// content ID
 			nByteNum += Integer.BYTES;
 			break;
 		default:
@@ -698,30 +810,30 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_PERMIT_PULL_FILE:
 		case REQUEST_PERMIT_PULL_FILE_CHAN:
-			putStringToByteBuffer(m_strSenderName);
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.put(m_byteFileAppendFlag);
 			break;
 		case REPLY_PERMIT_PULL_FILE:
 		case REPLY_PERMIT_PULL_FILE_CHAN:
-			putStringToByteBuffer(m_strSenderName);
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case REQUEST_PERMIT_PUSH_FILE:
-			putStringToByteBuffer(m_strSenderName);
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFilePath);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
-			putStringToByteBuffer(m_strSenderName);
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFilePath);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
@@ -729,7 +841,8 @@ public class CMFileEvent extends CMEvent{
 			break;
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
-			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
@@ -737,63 +850,66 @@ public class CMFileEvent extends CMEvent{
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putLong(m_lReceivedFileSize);
 			break;
 		case CONTINUE_FILE_TRANSFER:
-			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putInt(m_nBlockSize);
 			m_bytes.put(m_cFileBlock);
 			break;
 		case CONTINUE_FILE_TRANSFER_ACK:
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lReceivedFileSize);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case END_FILE_TRANSFER:
 		case END_FILE_TRANSFER_CHAN:
-			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);			
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case END_FILE_TRANSFER_ACK:
 		case END_FILE_TRANSFER_CHAN_ACK:
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nReturnCode);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case REQUEST_DIST_FILE_PROC:
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case CANCEL_FILE_SEND:
 		case CANCEL_FILE_SEND_CHAN:
 		case CANCEL_FILE_RECV_CHAN:
-			putStringToByteBuffer(m_strSenderName);
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			break;
 		case CANCEL_FILE_SEND_ACK:
 		case CANCEL_FILE_SEND_CHAN_ACK:
 		case CANCEL_FILE_RECV_CHAN_ACK:
-			putStringToByteBuffer(m_strSenderName);
-			putStringToByteBuffer(m_strReceiverName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case ERR_SEND_FILE_CHAN:
-			putStringToByteBuffer(m_strReceiverName);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putInt(m_nContentID);
-			break;
 		case ERR_RECV_FILE_CHAN:
-			putStringToByteBuffer(m_strSenderName);
+			putStringToByteBuffer(m_strFileSender);
+			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			break;
@@ -810,30 +926,30 @@ public class CMFileEvent extends CMEvent{
 		{
 		case REQUEST_PERMIT_PULL_FILE:
 		case REQUEST_PERMIT_PULL_FILE_CHAN:
-			m_strSenderName = getStringFromByteBuffer(msg);
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_byteFileAppendFlag = msg.get();
 			break;
 		case REPLY_PERMIT_PULL_FILE:
 		case REPLY_PERMIT_PULL_FILE_CHAN:
-			m_strSenderName = getStringFromByteBuffer(msg);
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
 			break;
 		case REQUEST_PERMIT_PUSH_FILE:
-			m_strSenderName = getStringFromByteBuffer(msg);
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFilePath = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
-			m_strSenderName = getStringFromByteBuffer(msg);
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFilePath = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
@@ -841,7 +957,8 @@ public class CMFileEvent extends CMEvent{
 			break;
 		case START_FILE_TRANSFER:
 		case START_FILE_TRANSFER_CHAN:
-			m_strSenderName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
@@ -849,63 +966,66 @@ public class CMFileEvent extends CMEvent{
 			break;
 		case START_FILE_TRANSFER_ACK:
 		case START_FILE_TRANSFER_CHAN_ACK:
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_lReceivedFileSize = msg.getLong();
 			break;
 		case CONTINUE_FILE_TRANSFER:
-			m_strSenderName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_nBlockSize = msg.getInt();
 			msg.get(m_cFileBlock);
 			break;
 		case CONTINUE_FILE_TRANSFER_ACK:
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lReceivedFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
 			break;
 		case END_FILE_TRANSFER:
 		case END_FILE_TRANSFER_CHAN:
-			m_strSenderName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
 			break;
 		case END_FILE_TRANSFER_ACK:
 		case END_FILE_TRANSFER_CHAN_ACK:
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nReturnCode = msg.getInt();
 			m_nContentID = msg.getInt();
 			break;
 		case REQUEST_DIST_FILE_PROC:
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			break;
 		case CANCEL_FILE_SEND:
 		case CANCEL_FILE_SEND_CHAN:
 		case CANCEL_FILE_RECV_CHAN:
-			m_strSenderName = getStringFromByteBuffer(msg);
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			break;
 		case CANCEL_FILE_SEND_ACK:
 		case CANCEL_FILE_SEND_CHAN_ACK:
 		case CANCEL_FILE_RECV_CHAN_ACK:
-			m_strSenderName = getStringFromByteBuffer(msg);
-			m_strReceiverName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_nReturnCode = msg.getInt();
 			break;
 		case ERR_SEND_FILE_CHAN:
-			m_strReceiverName = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_nContentID = msg.getInt();
-			break;
 		case ERR_RECV_FILE_CHAN:
-			m_strSenderName = getStringFromByteBuffer(msg);
+			m_strFileSender = getStringFromByteBuffer(msg);
+			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			break;
