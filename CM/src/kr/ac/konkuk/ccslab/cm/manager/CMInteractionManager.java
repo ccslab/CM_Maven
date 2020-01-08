@@ -1506,28 +1506,28 @@ public class CMInteractionManager {
 				{
 					System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
 							+ "the channel with the key(0) to the default server.");
-				}
-				
-				// check whether the keep-alive scheduler should start or not
-				int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
-				if(nKeepAlive > 0 && getNumLoginServers(cmInfo) == 1)
-				{
-					CMThreadInfo threadInfo = cmInfo.getThreadInfo();
-					ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
-					CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask(cmInfo);
-					ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask, 
-							nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
-					threadInfo.setScheduledFuture(future);
-					
-					if(CMInfo._CM_DEBUG)
-					{
-						System.out.println("CMInteractionManager.processLOGIN_ACK(), "
-								+"# logins("+getNumLoginServers(cmInfo)+"), start "
-								+"keep-alive task.");
-					}
-				}
-				
+				}				
 			}
+			
+			// check whether the keep-alive scheduler should start or not
+			int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
+			if(nKeepAlive > 0 && getNumLoginServers(cmInfo) == 1)
+			{
+				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
+				CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask(cmInfo);
+				ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask, 
+						nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
+				threadInfo.setScheduledFuture(future);
+				
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMInteractionManager.processLOGIN_ACK(), "
+							+"# logins("+getNumLoginServers(cmInfo)+"), start "
+							+"keep-alive task.");
+				}
+			}
+
 			// request session information if session scheme is not used.
 			if(!confInfo.isSessionScheme())
 			{
