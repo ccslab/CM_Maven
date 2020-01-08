@@ -12,8 +12,10 @@ import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 //import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 
 public class CMSendFileTask implements Runnable {
 
@@ -41,6 +43,7 @@ public class CMSendFileTask implements Runnable {
 		ByteBuffer buf = ByteBuffer.allocateDirect(CMInfo.FILE_BLOCK_LEN);
 		CMFileEvent fe = null;
 		boolean bInterrupted = false;
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 
 		// open the file
 		try {
@@ -152,14 +155,39 @@ public class CMSendFileTask implements Runnable {
 			
 			// send END_FILE_TRANSFER_CHAN with the default TCP socket channel
 			fe = new CMFileEvent();
-			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);
-			fe.setSender(m_cmInfo.getInteractionInfo().getMyself().getName()); // event sender
-			fe.setReceiver(m_sendFileInfo.getFileReceiver()); // event receiver (not clear)
+			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);			
 			fe.setFileSender(m_sendFileInfo.getFileSender());
 			fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
 			fe.setFileName(m_sendFileInfo.getFileName());
 			fe.setFileSize(m_sendFileInfo.getFileSize());
 			fe.setContentID(m_sendFileInfo.getContentID());
+			
+			if(CMFileTransferManager.isP2PFileTransfer(fe, m_cmInfo))
+			{
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMSendFileTask.run(), isP2PFileTransfer() "
+							+ "returns true.");
+				}
+				// set event sender and receiver
+				fe.setSender(interInfo.getMyself().getName());
+				String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+				fe.setReceiver(strDefServer);
+				// set distribution fields
+				fe.setDistributionSession("CM_ONE_USER");
+				fe.setDistributionGroup(m_sendFileInfo.getFileReceiver());
+			}
+			else
+			{
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMSendFileTask.run(), isP2PFileTransfer() "
+							+ "returns false.");
+				}
+				// set event sender and receiver
+				fe.setSender(interInfo.getMyself().getName()); // event sender
+				fe.setReceiver(m_sendFileInfo.getFileReceiver()); // event receiver
+			}
 			
 			CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
 			m_sendQueue.push(msg);
