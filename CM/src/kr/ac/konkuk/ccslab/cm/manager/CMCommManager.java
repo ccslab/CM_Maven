@@ -10,7 +10,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
-import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
+import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -303,6 +303,207 @@ public class CMCommManager {
 		}
 		
 		return ch;		
+	}
+	
+	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMUser myself = interInfo.getMyself();
+		CMServer serverInfo = null;
+		CMUser targetUser = null;
+		SocketChannel sc = null;
+		String strTargetSSCAddress = null;
+		int nTargetSSCPort = -1;
+		CMChannelInfo<Integer> scInfo = null;
+		boolean bRet = false;
+
+		//if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
+		if(myself.getState() < CMInfo.CM_LOGIN)
+		{
+			System.err.println("CMCommManager.addBlockSocketChannel(), you must log in to the default server!");
+			return null;
+		}
+		
+		serverInfo = CMInteractionManager.findServerAtClient(strTarget, cmInfo);
+		if(serverInfo != null)
+		{
+			scInfo = serverInfo.getBlockSocketChannelInfo();
+			strTargetSSCAddress = serverInfo.getServerAddress();
+			nTargetSSCPort = serverInfo.getServerPort();			
+		}
+		else
+		{
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, cmInfo);
+			if(targetUser == null)
+			{
+				System.err.println("CMCommManager.addBlockSocketChannel(), target user("
+						+strTarget+") not found!");
+				return null;
+			}
+			
+			scInfo = targetUser.getBlockSocketChannelInfo();
+			strTargetSSCAddress = targetUser.getHost();
+			nTargetSSCPort = targetUser.getSSCPort();
+		}
+			
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc != null)
+		{
+			System.err.println("CMCommManager.addBlockSocketChannel(), channel key("
+					+nChKey+") to the target("+strTarget+") already exists!");
+			return null;
+		}
+		
+		/*
+		////////// for Android client where network-related methods must be called in a separate thread
+		////////// rather than the MainActivity thread
+		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+				strTargetSSCAddress, nTargetSSCPort, true, m_cmInfo);
+		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		Future<SelectableChannel> future = es.submit(task);
+		try {
+			sc = (SocketChannel) future.get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//////////
+		*/
+		
+		try {
+			sc = (SocketChannel) openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, strTargetSSCAddress, 
+					nTargetSSCPort, cmInfo);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(sc == null)
+		{
+			System.err.println("CMCommManager.addBlockSocketChannel(), failed!: key("
+					+nChKey+"), target("+strTarget+")");
+			return null;
+		}
+		
+		scInfo.addChannel(nChKey, sc);
+		
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
+		se.setSender(myself.getName());
+		se.setReceiver(strTarget);
+		se.setChannelName(myself.getName());
+		se.setChannelNum(nChKey);
+		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true, cmInfo);
+		se = null;
+
+		if(bRet && CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMCommManager.addBlockSocketChannel(),successfully requested to add the channel "
+					+ "with the key("+nChKey+") to the target("+strTarget+")");
+		}
+				
+		return sc;
+	}
+	
+	public static boolean removeBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMUser myself = interInfo.getMyself();
+		CMServer serverInfo = null;
+		CMUser targetUser = null;
+		CMChannelInfo<Integer> scInfo = null;
+		boolean result = false;
+		SocketChannel sc = null;
+		CMSessionEvent se = null;
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+
+		if(myself.getState() < CMInfo.CM_LOGIN)
+		{
+			System.err.println("CMCommManager.removeBlockSocketChannel(), you must log in to the default server!");
+			return false;
+		}
+		
+		if(strTarget.equals(strDefServer))
+		{
+			serverInfo = interInfo.getDefaultServerInfo();
+			scInfo = serverInfo.getBlockSocketChannelInfo();
+		}
+		else if( (serverInfo = interInfo.findAddServer(strTarget)) != null ) 
+		{
+			scInfo = serverInfo.getBlockSocketChannelInfo();
+		}
+		else
+		{
+			String strCurrentSession = myself.getCurrentSession();
+			String strCurrentGroup = myself.getCurrentGroup();
+			
+			CMSession session = interInfo.findSession(strCurrentSession);
+			if(session == null)
+			{
+				System.err.println("CMCommManager.removeBlockSocketChannel(), session("
+						+strCurrentSession+") not found!");
+				return false;
+			}
+			CMGroup group = session.findGroup(strCurrentGroup);
+			if(group == null)
+			{
+				System.err.println("CMCommManager.removeBlockSocketChannel(), group("
+						+strCurrentGroup+") not found!");
+				return false;
+			}
+			targetUser = group.getGroupUsers().findMember(strTarget);
+			if(targetUser == null)
+			{
+				System.err.println("CMCommManager.removeBlockSocketChannel(), target user("
+						+strTarget+") not found!");
+				return false;
+			}
+			
+			scInfo = targetUser.getBlockSocketChannelInfo();			
+		}
+		
+		sc = (SocketChannel) scInfo.findChannel(nChKey);
+		if(sc == null)
+		{
+			System.err.println("CMCommManager.removeBlockSocketChannel(), "
+					+ "socket channel not found! key("+nChKey+"), target("+strTarget+").");
+			return false;
+		}
+		
+		se = new CMSessionEvent();
+		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
+		se.setChannelNum(nChKey);
+		se.setChannelName(myself.getName());
+		
+		//result = send(se, strTarget);	// send the event with the default nonblocking socket channel
+
+		// If targetUser is not null, (that is, if the target is a client instead of a server,)
+		// the request event should be forwarded by the default server (internal forwarding of CM).
+		se.setSender(myself.getName());
+		se.setReceiver(strTarget);		
+		if(targetUser != null)
+		{
+			// set distribution fields
+			se.setDistributionSession("CM_ONE_USER");
+			se.setDistributionGroup(strTarget);
+			
+			// send the event to the default server
+			result = CMEventManager.unicastEvent(se, strDefServer, cmInfo);
+		}
+		else
+		{
+			// send the event to the target
+			result = CMEventManager.unicastEvent(se, strTarget, cmInfo);
+		}
+		se = null;
+		
+		// The channel will be closed and removed after the client receives the ACK event at the event handler.
+		
+		return result;
 	}
 	
 	public static MembershipKey joinMulticastGroup(DatagramChannel dc, String addr)

@@ -19,6 +19,7 @@ public class CMUser extends CMObject {
 	private String m_strPasswd;
 	private String m_strHost;
 	private int m_nUDPPort;
+	private int m_nSSCPort;	// port number for server socket channel (4 p2p file-transfer)
 	private CMPosition m_pq;
 	private String m_strCurrentSession;
 	private String m_strCurrentGroup;
@@ -45,6 +46,7 @@ public class CMUser extends CMObject {
 		m_strPasswd = "?";
 		m_strHost = "?";
 		m_nUDPPort = -1;
+		m_nSSCPort = -1;
 		m_strCurrentSession = "?";
 		m_strCurrentGroup = "?";
 		m_nState = CMInfo.CM_INIT;
@@ -73,6 +75,7 @@ public class CMUser extends CMObject {
 		m_strPasswd = passwd;
 		m_strHost = host;
 		m_nUDPPort = -1;
+		m_nSSCPort = -1;
 		m_strCurrentSession = "";
 		m_strCurrentGroup = "";
 		m_nState = CMInfo.CM_INIT;
@@ -110,6 +113,11 @@ public class CMUser extends CMObject {
 	public synchronized void setUDPPort(int port)
 	{
 		m_nUDPPort = port;
+	}
+	
+	public synchronized void setSSCPort(int port)
+	{
+		m_nSSCPort = port;
 	}
 	
 	public synchronized void setPosition(CMPosition pq)
@@ -234,6 +242,19 @@ public class CMUser extends CMObject {
 	public synchronized int getUDPPort()
 	{
 		return m_nUDPPort;
+	}
+	
+	/**
+	 * Returns port number for server socket channel(SSC) of the user.
+	 * 
+	 * <p> The user uses this port number to receive a file directly from a sender user 
+	 * (P2P file-transfer).
+	 * 
+	 * @return the SSC port number.
+	 */
+	public synchronized int getSSCPort()
+	{
+		return m_nSSCPort;
 	}
 	
 	public synchronized CMPosition getPosition()

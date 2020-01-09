@@ -2400,8 +2400,7 @@ public class CMStub {
 			lFileSize = replyEvent.getFileSize();
 		}
 		
-		if(replyEvent.getID() == CMFileEvent.REPLY_PERMIT_PULL_FILE || 
-				replyEvent.getID() == CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN)
+		if(replyEvent.getID() == CMFileEvent.REPLY_PERMIT_PULL_FILE)
 		{
 			return -1;
 		}

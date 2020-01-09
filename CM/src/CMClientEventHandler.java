@@ -526,7 +526,6 @@ public class CMClientEventHandler implements CMAppEventHandler {
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
-		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
 			String strReq = "["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+
 			").\n";
 			System.out.print(strReq);
@@ -542,7 +541,6 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			}
 			break;
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
-		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
 			if(fe.getReturnCode() == -1)
 			{
 				System.err.print("["+fe.getFileName()+"] does not exist in the owner!\n");

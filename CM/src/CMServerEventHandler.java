@@ -339,7 +339,6 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
-		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
 			System.out.println("["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+").");
 			System.err.print("["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+").\n");
 			System.err.print("The pull-file request is not automatically permitted!\n");
@@ -347,7 +346,6 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			System.err.print("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
 			break;
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
-		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
 			if(fe.getReturnCode() == -1)
 			{
 				System.err.print("["+fe.getFileName()+"] does not exist in the owner!\n");

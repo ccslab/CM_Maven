@@ -14,7 +14,6 @@ import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
-import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
@@ -27,7 +26,6 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -795,6 +793,93 @@ public class CMInteractionManager {
 			return null;
 	}
 	
+	// find group member with the session name, group name, and member name (called only by the server)
+	public synchronized static CMUser findGroupMemberOfServer(String strSession, String strGroup, String strUser, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMSession session = interInfo.findSession(strSession);
+		if(session == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfServer(), session("
+					+strSession+") not found!");
+			return null;
+		}
+		CMGroup group = session.findGroup(strGroup);
+		if(group == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfServer(), group("
+					+strGroup+") not found!");
+			return null;
+		}
+		CMUser user = group.getGroupUsers().findMember(strUser);
+		if(user == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfServer(, user("
+					+strUser+") not found!");
+			return null;
+		}
+		
+		return user;
+	}
+	
+	// find my group member (called only by the client)
+	public synchronized static CMUser findGroupMemberOfClient(String strUser, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		String strSession = interInfo.getMyself().getCurrentSession();
+		String strGroup = interInfo.getMyself().getCurrentGroup();
+		
+		CMSession session = interInfo.findSession(strSession);
+		if(session == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), session("
+					+strSession+") not found!");
+			return null;
+		}
+		CMGroup group = session.findGroup(strGroup);
+		if(group == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), group("
+					+strGroup+") not found!");
+			return null;
+		}
+		CMUser user = group.getGroupUsers().findMember(strUser);
+		if(user == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), user("
+					+strUser+") not found!");
+			return null;
+		}
+		
+		return user;
+	}
+	
+	// find (default or additional) server info object (called only by the client)
+	public synchronized static CMServer findServerAtClient(String strTarget, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		CMServer serverInfo = null;
+		
+		if(strTarget.equals(strDefServer))
+		{
+			serverInfo = interInfo.getDefaultServerInfo();
+		}
+		else 
+		{
+			serverInfo = interInfo.findAddServer(strTarget);
+		}
+		
+		if(serverInfo == null)
+		{
+			System.err.println("CMInteractionManager.findServerAtClient(), server("
+					+strTarget+") not found!");
+			return null;
+		}
+		
+		return serverInfo;
+	}
+	
 	// find an additional server with socket channel
 	public synchronized static CMServer findAddServerWithSocketChannel(SelectableChannel ch, Vector<CMServer> list)
 	{
@@ -1441,7 +1526,6 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		SocketChannel sc = null;
 		CMServer serverInfo = null;
-		CMChannelInfo<Integer> scInfo = null;
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
 			return;
@@ -1477,6 +1561,7 @@ public class CMInteractionManager {
 			serverInfo = interInfo.getDefaultServerInfo();
 			if(confInfo.isFileTransferScheme())
 			{
+				/*
 				scInfo = serverInfo.getBlockSocketChannelInfo();
 				try {
 					sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
@@ -1501,8 +1586,11 @@ public class CMInteractionManager {
 				tse.setChannelNum(0);
 				CMEventManager.unicastEvent(tse, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
 				se = null;
+				*/
+				
+				sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName(), cmInfo);
 
-				if(CMInfo._CM_DEBUG)
+				if(sc != null && CMInfo._CM_DEBUG)
 				{
 					System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
 							+ "the channel with the key(0) to the default server.");
@@ -1897,19 +1985,61 @@ public class CMInteractionManager {
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
 		int nChKey = se.getChannelNum();
-
-		CMUser user = interInfo.getLoginUsers().findMember(strChannelName);
-		if(user == null)
+		String strMyName = interInfo.getMyself().getName();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMUser user = null;
+		
+		// If this node is not the receiver of this event,
+		if(!se.getReceiver().contentEquals(strMyName))
 		{
-			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
-					+") not found in the login user list.");
-			
+			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
+					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
 			return;
+		}
+
+		if(confInfo.getSystemType().contentEquals("SERVER"))
+		{
+			user = interInfo.getLoginUsers().findMember(strChannelName);
+			if(user == null)
+			{
+				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
+						+"user("+strChannelName+") not found in the login user list!");
+				
+				return;
+			}			
+		}
+		else
+		{
+			String strCurrentSession = interInfo.getMyself().getCurrentSession();
+			String strCurrentGroup = interInfo.getMyself().getCurrentGroup();
+			
+			CMSession session = interInfo.findSession(strCurrentSession);
+			if(session == null)
+			{
+				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
+						+"session("+strCurrentSession+") not found!");
+				return;
+			}
+			CMGroup group = session.findGroup(strCurrentGroup);
+			if(group == null)
+			{
+				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
+						+"group("+strCurrentGroup+") not found!");
+				return;
+			}
+			user = group.getGroupUsers().findMember(strChannelName);
+			if(user == null)
+			{
+				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
+						+"user("+strChannelName+") not found in the current session("
+						+strCurrentSession+") and current group("+strCurrentGroup+")!");
+				return;
+			}
 		}
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setSender(strMyName);
 		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChKey);
@@ -1949,7 +2079,22 @@ public class CMInteractionManager {
 			e.printStackTrace();
 			
 			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+			
+			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+					confInfo.getSystemType().contentEquals("CLIENT"))
+			{
+				// If this node is the client type, the requester is another client 
+				// and this reply event should be forwarded by the default server.
+				// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setDistributionSession("CM_ONE_USER");
+				seAck.setDistributionGroup(user.getName());
+				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
+						.getServerName(), cmInfo);
+			}
+			else
+			{
+				CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);				
+			}
 			seAck = null;
 			se = null;
 			return;
@@ -1977,7 +2122,21 @@ public class CMInteractionManager {
 			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 		}
 
-		ret = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+				confInfo.getSystemType().contentEquals("CLIENT"))
+		{
+			// If this node is the client type, the requester is another client 
+			// and this reply event should be forwarded by the default server.
+			// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setDistributionSession("CM_ONE_USER");
+			seAck.setDistributionGroup(user.getName());
+			ret = CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
+					.getServerName(), cmInfo);
+		}
+		else
+		{
+			ret = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);			
+		}
 		
 		se = null;
 		seAck = null;
@@ -2028,25 +2187,67 @@ public class CMInteractionManager {
 		int nChKey = se.getChannelNum();
 		ByteBuffer recvBuf = null;
 		int nRecvBytes = -1;
+		String strMyName = interInfo.getMyself().getName();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		
+		// If this node is not the receiver of the received event,
+		if(!se.getReceiver().contentEquals(strMyName))
+		{
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL(), "
+					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+			return;
+		}
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(interInfo.getMyself().getName());
+		seAck.setSender(strMyName);
 		seAck.setReceiver(se.getSender());
-		seAck.setChannelName(interInfo.getMyself().getName());
+		seAck.setChannelName(strMyName);
 		seAck.setChannelNum(nChKey);
 		
-		user = interInfo.getLoginUsers().findMember(strChannelName);
-		if( user == null )
+		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
-					+") not found!");
-			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);
-			seAck = null;
-			se = null;
-			return;
+			user = interInfo.getLoginUsers().findMember(strChannelName);
+			if( user == null )
+			{
+				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
+						+") not found!");
+				seAck.setReturnCode(0);			
+				CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);				
+				seAck = null;
+				se = null;
+				return;
+			}			
 		}
+		else
+		{
+			String strCurrentSession = interInfo.getMyself().getCurrentSession();
+			String strCurrentGroup = interInfo.getMyself().getCurrentGroup();
+			
+			CMSession session = interInfo.findSession(strCurrentSession);
+			if(session == null)
+			{
+				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),"
+						+"session("+strCurrentSession+") not found!");
+				return;
+			}
+			CMGroup group = session.findGroup(strCurrentGroup);
+			if(group == null)
+			{
+				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),"
+						+"group("+strCurrentGroup+") not found!");
+				return;
+			}
+			user = group.getGroupUsers().findMember(strChannelName);
+			if(user == null)
+			{
+				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),"
+						+"user("+strChannelName+") not found in the current session("
+						+strCurrentSession+") and current group("+strCurrentGroup+")!");
+				return;
+			}
+		}
+		
 		scInfo = user.getBlockSocketChannelInfo();
 		sc = (SocketChannel) scInfo.findChannel(nChKey);
 		if(sc == null)
@@ -2054,7 +2255,23 @@ public class CMInteractionManager {
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), channel not found! "
 					+"user("+strChannelName+"), channel key("+nChKey+")");
 			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck,  (SocketChannel)msg.m_ch, cmInfo);
+			
+			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+					confInfo.getSystemType().contentEquals("CLIENT"))
+			{
+				// If this node is the client type, the requester is another client 
+				// and this reply event should be forwarded by the default server.
+				// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setDistributionSession("CM_ONE_USER");
+				seAck.setDistributionGroup(user.getName());
+				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
+						.getServerName(), cmInfo);
+			}
+			else
+			{
+				CMEventManager.unicastEvent(seAck,  user.getName(), cmInfo);				
+			}
+
 			seAck = null;
 			se = null;
 			return;
@@ -2062,7 +2279,23 @@ public class CMInteractionManager {
 		
 		// found the blocking channel that will be disconnected
 		seAck.setReturnCode(1);	// ok
-		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);
+		
+		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+				confInfo.getSystemType().contentEquals("CLIENT"))
+		{
+			// If this node is the client type, the requester is another client 
+			// and this reply event should be forwarded by the default server.
+			// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setDistributionSession("CM_ONE_USER");
+			seAck.setDistributionGroup(user.getName());
+			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
+					.getServerName(), cmInfo);
+		}
+		else
+		{
+			CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);			
+		}
+
 		seAck = null;
 		se = null;
 		
@@ -2079,7 +2312,6 @@ public class CMInteractionManager {
 			//e.printStackTrace();
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), disconnection detected "
 					+"by the IOException!");
-			
 		} 
 
 		// close the channel and remove the channel info
@@ -2097,16 +2329,26 @@ public class CMInteractionManager {
 	private static void processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		String strMyName = interInfo.getMyself().getName();
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> scInfo = null;
 		SocketChannel sc = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		int nChKey = se.getChannelNum();
-		String strServer = se.getChannelName();
+		String strTarget = se.getChannelName();
 		boolean result = false;
 		
+		// If this node is not the receiver of the received event,
+		if(!se.getReceiver().contentEquals(strMyName))
+		{
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), "
+					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+			return;
+		}
+
 		if(se.getReturnCode() == 1)
 		{
+			/*
 			if(strServer.equals(interInfo.getDefaultServerInfo().getServerName()))
 				serverInfo = interInfo.getDefaultServerInfo();
 			else
@@ -2119,29 +2361,49 @@ public class CMInteractionManager {
 					
 				return;
 			}
+			*/
+			serverInfo = CMInteractionManager.findServerAtClient(strTarget, cmInfo);
+			if(serverInfo != null)
+			{
+				scInfo = serverInfo.getBlockSocketChannelInfo();
+			}
+			else
+			{
+				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, 
+						cmInfo);
+				if(targetUser == null)
+				{
+					System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
+							+" target("+strTarget+") not found!");
+					return;
+				}
+				scInfo = targetUser.getBlockSocketChannelInfo();
+			}
 				
-			scInfo = serverInfo.getBlockSocketChannelInfo();
+			//scInfo = serverInfo.getBlockSocketChannelInfo();
 			sc = (SocketChannel) scInfo.findChannel(nChKey);
 				
 			if(sc == null)
 			{
 				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"the socket channel not found: channel key("+nChKey+"), server("+strServer+")");
+						+"the socket channel not found: channel key("
+						+nChKey+"), target("+strTarget+")");
 				
 				return;
 			}
-							
+			
 			result = scInfo.removeChannel(nChKey);
 			if(result)
 			{
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-							+"succeeded : channel key("+nChKey+"), server("+strServer+")");
+							+"succeeded : channel key("+nChKey+"), target("+strTarget+")");
 			}
 			else
 			{
 				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"failed to remove the channel : channel key("+nChKey+"), server("+strServer+")");
+						+"failed to remove the channel : channel key("
+						+nChKey+"), target("+strTarget+")");
 			}
 			
 			return;
@@ -2149,7 +2411,8 @@ public class CMInteractionManager {
 		else
 		{
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails to accept "
-					+" the removal request of the channel: key("+nChKey+"), server("+strServer+")");
+					+" the removal request of the channel: key("
+					+nChKey+"), target("+strTarget+")");
 			return;			
 		}
 			

@@ -29,6 +29,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
 	 * <br>0: overwrite mode
 	 * <br>1: append mode</li>
+	 * <li>port number of file receiver (client): {@link CMFileEvent#getSSCPort()}</li>
 	 * </ul>
 	 */
 	public static final int REQUEST_PERMIT_PULL_FILE = 1;
@@ -48,7 +49,7 @@ public class CMFileEvent extends CMEvent{
 	 * <br>1: the request is accepted.</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
-	 * <br>-1: the file is no attachment of SNS content</li> 
+	 * <br>-1: the file is no attachment of SNS content</li>
 	 * </ul>
 	 */
 	public static final int REPLY_PERMIT_PULL_FILE = 2;
@@ -86,7 +87,8 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
-	 * <br>-1: the file is no attachment of SNS content</li> 
+	 * <br>-1: the file is no attachment of SNS content</li>
+	 * <li>port number of file receiver (client): {@link CMFileEvent#getSSCPort()}</li> 
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>0: the request is denied.
 	 * <br>1: the request is accepted.</li>
@@ -232,50 +234,6 @@ public class CMFileEvent extends CMEvent{
 	public static final int CANCEL_FILE_SEND_ACK = 13;		// receiver -> sender
 	
 	// events for the file transfer with the separate channel and thread
-	
-	/**
-	 * The event ID for requesting a file.
-	 * <p>event direction: receiver (requester) -&gt; sender (file owner)
-	 * <p>This event is sent when the receiver calls 
-	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String)} or 
-	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String, byte)}, 
-	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
-	 * (cm-server.conf) is set to 1.
-	 * <br>The following fields are used for this event:
-	 * <ul>
-	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
-	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
-	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
-	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
-	 * <br>-1: the file is no attachment of SNS content</li>
-	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}
-	 * <br>0: overwrite mode
-	 * <br>1: append mode</li>
-	 * </ul>
-	 */
-	public static final int REQUEST_PERMIT_PULL_FILE_CHAN = 14;
-	
-	/**
-	 * The event ID for the response to the file request.
-	 * <p>event direction: sender -&gt; receiver
-	 * <p>The file owner sends this event as the response to the 
-	 * {@link CMFileEvent#REQUEST_PERMIT_PULL_FILE_CHAN} event.
-	 * <br>The following fields are used for this event:
-	 * <ul>
-	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
-	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
-	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
-	 * <li>return code: {@link CMFileEvent#getReturnCode()}
-	 * <br>0: the request is denied.
-	 * <br>1: the request is accepted.</li>
-	 * <li>content ID: {@link CMFileEvent#getContentID()}
-	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
-	 * <br>-1: the file is no attachment of SNS content</li> 
-	 * </ul>
-	 */
-	public static final int REPLY_PERMIT_PULL_FILE_CHAN = 15;
-	
 	
 	/**
 	 * The event ID for notifying the receiver of the start of file-transfer.
@@ -436,6 +394,7 @@ public class CMFileEvent extends CMEvent{
 	private int m_nBlockSize;
 	private int m_nContentID;	// associated content ID (a file as an attachment of SNS content)
 	private byte m_byteFileAppendFlag;	// flag of the file append mode (-1, 0 or 1)
+	private int m_nSSCPort;	// port number of (client) file receiver
 	
 	public CMFileEvent()
 	{
@@ -452,6 +411,7 @@ public class CMFileEvent extends CMEvent{
 		m_cFileBlock = new byte[CMInfo.FILE_BLOCK_LEN];
 		m_nContentID = -1;
 		m_byteFileAppendFlag = -1;
+		m_nSSCPort = -1;
 	}
 	
 	public CMFileEvent(ByteBuffer msg)
@@ -623,6 +583,24 @@ public class CMFileEvent extends CMEvent{
 		return m_byteFileAppendFlag;
 	}
 	
+	public void setSSCPort(int nPort)
+	{
+		m_nSSCPort = nPort;
+	}
+	
+	/**
+	 * Returns the port number of (client) file receiver.
+	 * <p> If the FILE_TRANSFER_SCHEME of the server CM configuration file (cm-server.conf) 
+	 * is 1 and both the file sender and receiver are the client type (P2P file-transfer), 
+	 * the file sender connects to the receiver by opening a blocking socket channel with 
+	 * the IP address and this port number of the receiver. 
+	 * @return port number of file receiver.
+	 */
+	public int getSSCPort()
+	{
+		return m_nSSCPort;
+	}
+	
 	//////////////////////////////////////////////////////////
 	
 	protected int getByteNum()
@@ -633,7 +611,7 @@ public class CMFileEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQUEST_PERMIT_PULL_FILE:
-		case REQUEST_PERMIT_PULL_FILE_CHAN:
+		//case REQUEST_PERMIT_PULL_FILE_CHAN:
 			// file sender
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
 			// file receiver
@@ -644,9 +622,11 @@ public class CMFileEvent extends CMEvent{
 			nByteNum += Integer.BYTES;
 			// append mode flag
 			nByteNum += Byte.BYTES;
+			// port number of server socket channel of file receiver in P2P file-transfer
+			nByteNum += Integer.BYTES;
 			break;
 		case REPLY_PERMIT_PULL_FILE:
-		case REPLY_PERMIT_PULL_FILE_CHAN:
+		//case REPLY_PERMIT_PULL_FILE_CHAN:
 			// file sender
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
 			// file receiver
@@ -675,6 +655,8 @@ public class CMFileEvent extends CMEvent{
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
 			nByteNum += Long.BYTES;	// file size 
 			nByteNum += Integer.BYTES;	// content ID
+			// port number of server socket channel of file receiver in P2P file-transfer
+			nByteNum += Integer.BYTES;
 			nByteNum += Integer.BYTES;	// return code
 			break;
 		case START_FILE_TRANSFER:
@@ -809,15 +791,16 @@ public class CMFileEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQUEST_PERMIT_PULL_FILE:
-		case REQUEST_PERMIT_PULL_FILE_CHAN:
+		//case REQUEST_PERMIT_PULL_FILE_CHAN:
 			putStringToByteBuffer(m_strFileSender);
 			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.put(m_byteFileAppendFlag);
+			m_bytes.putInt(m_nSSCPort);
 			break;
 		case REPLY_PERMIT_PULL_FILE:
-		case REPLY_PERMIT_PULL_FILE_CHAN:
+		//case REPLY_PERMIT_PULL_FILE_CHAN:
 			putStringToByteBuffer(m_strFileSender);
 			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFileName);
@@ -837,6 +820,7 @@ public class CMFileEvent extends CMEvent{
 			putStringToByteBuffer(m_strFilePath);
 			m_bytes.putLong(m_lFileSize);
 			m_bytes.putInt(m_nContentID);
+			m_bytes.putInt(m_nSSCPort);
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case START_FILE_TRANSFER:
@@ -925,15 +909,16 @@ public class CMFileEvent extends CMEvent{
 		switch(m_nID)
 		{
 		case REQUEST_PERMIT_PULL_FILE:
-		case REQUEST_PERMIT_PULL_FILE_CHAN:
+		//case REQUEST_PERMIT_PULL_FILE_CHAN:
 			m_strFileSender = getStringFromByteBuffer(msg);
 			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
 			m_nContentID = msg.getInt();
 			m_byteFileAppendFlag = msg.get();
+			m_nSSCPort = msg.getInt();
 			break;
 		case REPLY_PERMIT_PULL_FILE:
-		case REPLY_PERMIT_PULL_FILE_CHAN:
+		//case REPLY_PERMIT_PULL_FILE_CHAN:
 			m_strFileSender = getStringFromByteBuffer(msg);
 			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFileName = getStringFromByteBuffer(msg);
@@ -953,6 +938,7 @@ public class CMFileEvent extends CMEvent{
 			m_strFilePath = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
 			m_nContentID = msg.getInt();
+			m_nSSCPort = msg.getInt();
 			m_nReturnCode = msg.getInt();
 			break;
 		case START_FILE_TRANSFER:

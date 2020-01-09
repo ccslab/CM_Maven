@@ -374,14 +374,12 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		switch(fe.getID())
 		{
 		case CMFileEvent.REQUEST_PERMIT_PULL_FILE:
-		case CMFileEvent.REQUEST_PERMIT_PULL_FILE_CHAN:
 			printMessage("["+fe.getFileReceiver()+"] requests file("+fe.getFileName()+").\n");
 			printMessage("The pull-file request is not automatically permitted!\n");
 			printMessage("To change to automatically permit the pull-file request, \n");
 			printMessage("set the PERMIT_FILE_TRANSFER field to 1 in the cm-server.conf file\n");
 			break;
 		case CMFileEvent.REPLY_PERMIT_PULL_FILE:
-		case CMFileEvent.REPLY_PERMIT_PULL_FILE_CHAN:
 			if(fe.getReturnCode() == -1)
 			{
 				printMessage("["+fe.getFileName()+"] does not exist in the owner!\n");
