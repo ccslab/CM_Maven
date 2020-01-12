@@ -219,8 +219,8 @@ public class CMEventManager {
 	// nKey: the channel key. For the stream channel, nKey is an integer greater than or equal to 0.
 	// For the datagram channel, nKey is an integer that is a port number of this channel.
 	// nRecvPort: if this value is 0, the default receiver port number is used.
-	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, int nRecvPort, 
-			boolean isBlock, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, 
+			int nKey, int nRecvPort, boolean isBlock, CMInfo cmInfo)
 	{
 		CMMember loginUsers = null;
 		ByteBuffer bufEvent = null;
@@ -237,7 +237,8 @@ public class CMEventManager {
 		// get the sending queue
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-				
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+
 		//// find a destination channel
 		
 		// check if the destination is the default server or additional server
@@ -284,8 +285,16 @@ public class CMEventManager {
 		else
 		{
 			// check if the destination is a user
-			loginUsers = interInfo.getLoginUsers();
-			user = loginUsers.findMember(strReceiver);
+			if(confInfo.getSystemType().contentEquals("SERVER"))
+			{
+				loginUsers = interInfo.getLoginUsers();
+				user = loginUsers.findMember(strReceiver);				
+			}
+			else
+			{
+				user = CMInteractionManager.findGroupMemberOfClient(strReceiver, cmInfo);
+			}
+			
 			if( user == null )
 			{
 				System.err.println("CMEventManager.unicastEvent(), target("+strReceiver+") not found.");

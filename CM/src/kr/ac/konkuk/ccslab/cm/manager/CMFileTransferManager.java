@@ -900,9 +900,6 @@ public class CMFileTransferManager {
 			if(sc == null)
 				return false;
 			
-			bReturn = blockChannelList.addChannel(0, sc);
-			if(!bReturn)
-				return false;
 		}
 		/*
 		else if(!sc.isOpen())
@@ -2561,7 +2558,6 @@ public class CMFileTransferManager {
 		SocketChannel dsc = null;
 		if(confInfo.getSystemType().equals("CLIENT"))	// CLIENT
 		{
-			// from here
 			CMServer serverInfo = CMInteractionManager.findServerAtClient(fe.getFileSender(), cmInfo);
 			if(serverInfo != null)
 			{
@@ -2830,7 +2826,7 @@ public class CMFileTransferManager {
 			// send the event to the file sender
 			CMEventManager.unicastEvent(feAck, fe.getFileSender(), cmInfo);
 		}
-		feAck = null;
+		//feAck = null;
 
 		if(bResult)
 			CMSNSManager.checkCompleteRecvAttachedFiles(fe, cmInfo);
