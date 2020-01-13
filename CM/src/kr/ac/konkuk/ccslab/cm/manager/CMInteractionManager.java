@@ -14,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
@@ -2010,6 +2011,7 @@ public class CMInteractionManager {
 		}
 		else
 		{
+			/*
 			String strCurrentSession = interInfo.getMyself().getCurrentSession();
 			String strCurrentGroup = interInfo.getMyself().getCurrentGroup();
 			
@@ -2028,11 +2030,12 @@ public class CMInteractionManager {
 				return;
 			}
 			user = group.getGroupUsers().findMember(strChannelName);
+			*/
+			user = findGroupMemberOfClient(strChannelName, cmInfo);
 			if(user == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"user("+strChannelName+") not found in the current session("
-						+strCurrentSession+") and current group("+strCurrentGroup+")!");
+						+"user("+strChannelName+") not found!");
 				return;
 			}
 		}
@@ -2146,32 +2149,66 @@ public class CMInteractionManager {
 	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMServer serverInfo = null;
+		String strMyName = interInfo.getMyself().getName();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMServer targetServer = null;
+		CMUser targetUser = null;
+		CMChannelInfo<Integer> scList = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
-		String strServer = se.getChannelName();
+		String strChannel = se.getChannelName();
+		int nChKey = se.getChannelNum();
+		CMSendFileInfo sfInfo = null;
+		
+		// If this node is not the receiver of this event,
+		if(!se.getReceiver().contentEquals(strMyName))
+		{
+			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
+					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+			return;
+		}
+
+		// find the target node (server or client)
+		targetServer = findServer(strChannel, cmInfo);
+		if(targetServer != null)
+		{
+			scList = targetServer.getBlockSocketChannelInfo();
+		}
+		else
+		{
+			targetUser = findGroupMemberOfClient(strChannel, cmInfo);
+			if(targetUser == null)
+			{
+				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
+						+"target("+strChannel+") not found!");
+				return;
+			}
+			scList = targetUser.getBlockSocketChannelInfo();
+		}
 		
 		if(se.getReturnCode() == 0)
 		{
-			int nChKey = se.getChannelNum();
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
-					+"server("+strServer+"), channel key("+nChKey+").");
+					+"server("+strChannel+"), channel key("+nChKey+").");
 			
-			if(strServer.equals(interInfo.getDefaultServerInfo().getServerName()))
-			{
-				serverInfo = interInfo.getDefaultServerInfo();
-			}
-			else
-			{
-				serverInfo = interInfo.findAddServer(strServer);
-			}
-			serverInfo.getBlockSocketChannelInfo().removeChannel(nChKey);
+			scList.removeChannel(nChKey);
+			return;
 		}
-		else
+		
+		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
 		}
-				
+
+		// check whether there is sending file information that is not started to be sent
+		sfInfo = fInfo.findSendFileInfoNotStarted(strChannel);
+		if(sfInfo != null && (fInfo.findSendFileInfoOngoing(strChannel) == null))
+		{
+			// set the dedicated channel to the sending file info
+			sfInfo.setSendChannel((SocketChannel)scList.findChannel(nChKey));
+			// resume the file-transfer by calling sendSTART_FILE_TRANSFER_CHAN() method
+			CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN(sfInfo, cmInfo);
+		}
 		se = null;
 		return;
 	}
