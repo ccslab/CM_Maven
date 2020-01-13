@@ -2506,6 +2506,7 @@ public class CMStub {
 		String strBlockDCMap = null;
 		CMChannelInfo<Integer> nonBlockDCMap = commInfo.getNonBlockDatagramChannelInfo();
 		CMChannelInfo<Integer> blockDCMap = commInfo.getBlockDatagramChannelInfo();
+		ServerSocketChannel ssc = commInfo.getNonBlockServerSocketChannel();
 
 		// non-blocking datagram channel info
 		strNonBlockDCMap = nonBlockDCMap.toString();
@@ -2527,6 +2528,13 @@ public class CMStub {
 		{
 			sb.append("-- blocking datagram channel\n");
 			sb.append(strBlockDCMap);
+		}
+		
+		// add server socket channel info
+		if(ssc != null)
+		{
+			sb.append("==== server socket channel\n");
+			sb.append(commInfo.getNonBlockServerSocketChannel().toString()+"\n");	
 		}
 		
 		return sb.toString();

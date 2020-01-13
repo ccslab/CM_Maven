@@ -691,11 +691,7 @@ public class CMServerStub extends CMStub {
 		String strSuperChInfo = super.getCurrentChannelInfo();
 		if(strSuperChInfo != null)
 			sb.append(strSuperChInfo);
-		
-		// add server socket channel info
-		sb.append("==== server socket channel\n");
-		sb.append(commInfo.getNonBlockServerSocketChannel().toString()+"\n");
-		
+				
 		// add socket channel info of the login users
 		CMMember loginUsers = interInfo.getLoginUsers();
 		if(!loginUsers.isEmpty())

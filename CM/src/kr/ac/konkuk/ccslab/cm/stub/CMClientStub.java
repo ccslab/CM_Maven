@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledFuture;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
@@ -3994,7 +3995,7 @@ public class CMClientStub extends CMStub {
 			}
 		}
 		
-		// add multicast channel info of the current group
+		// add multicast and socket channel info of the current group
 		CMUser myself = interInfo.getMyself();
 		if(myself == null)
 		{
@@ -4005,16 +4006,43 @@ public class CMClientStub extends CMStub {
 		String strCurrentGroup = myself.getCurrentGroup();
 		if(strCurrentSession != null && strCurrentGroup != null)
 		{
+			sb.append("=== session("+strCurrentSession+"), group("+strCurrentGroup+")\n");
+			
 			CMSession curSession = interInfo.findSession(strCurrentSession);
 			if(curSession != null)
 			{
 				CMGroup curGroup = curSession.findGroup(strCurrentGroup);
-				strChInfo = curGroup.getMulticastChannelInfo().toString();
-				if(strChInfo != null)
+				if(curGroup != null)
 				{
-					sb.append("==== multicast channels: session("+strCurrentSession+"), group("
-							+strCurrentGroup+")\n");
-					sb.append(strChInfo);
+					strChInfo = curGroup.getMulticastChannelInfo().toString();
+					if(strChInfo != null)
+					{
+						sb.append("--- multicast channels: \n");
+						sb.append(strChInfo);
+					}
+					
+					// add socket channel of group members
+					CMMember groupMember = curGroup.getGroupUsers();
+					Vector<CMUser> groupVector = groupMember.getAllMembers();
+					Iterator<CMUser> iter = groupVector.iterator();
+					while(iter.hasNext())
+					{
+						CMUser groupUser = iter.next();
+						strChInfo = groupUser.getNonBlockSocketChannelInfo().toString();
+						if(strChInfo != null)
+						{
+							sb.append("--- non-blocking socket channel of group user("
+									+groupUser.getName()+")\n");
+							sb.append(strChInfo);
+						}
+						strChInfo = groupUser.getBlockSocketChannelInfo().toString();
+						if(strChInfo != null)
+						{
+							sb.append("--- blocking socket channel of group user("
+									+groupUser.getName()+")\n");
+							sb.append(strChInfo);
+						}
+					}
 				}
 			}
 		}
