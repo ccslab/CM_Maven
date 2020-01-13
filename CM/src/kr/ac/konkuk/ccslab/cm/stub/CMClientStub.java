@@ -1430,7 +1430,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strServer, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer, m_cmInfo);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.addNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1528,7 +1528,7 @@ public class CMClientStub extends CMStub {
 			return null;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strServer, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer, m_cmInfo);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1660,7 +1660,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strServer, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer, m_cmInfo);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.removeNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1770,7 +1770,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
 		if( serverInfo != null )
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
@@ -1880,7 +1880,7 @@ public class CMClientStub extends CMStub {
 			return null;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
 		if( serverInfo != null )
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
@@ -2072,7 +2072,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();			
@@ -2149,7 +2149,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();			

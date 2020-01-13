@@ -854,8 +854,8 @@ public class CMInteractionManager {
 		return user;
 	}
 	
-	// find (default or additional) server info object (called only by the client)
-	public synchronized static CMServer findServerAtClient(String strTarget, CMInfo cmInfo)
+	// find (default or additional) server info
+	public synchronized static CMServer findServer(String strTarget, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
@@ -2362,7 +2362,7 @@ public class CMInteractionManager {
 				return;
 			}
 			*/
-			serverInfo = CMInteractionManager.findServerAtClient(strTarget, cmInfo);
+			serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
 			if(serverInfo != null)
 			{
 				scInfo = serverInfo.getBlockSocketChannelInfo();

@@ -12,9 +12,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import com.sun.xml.internal.ws.client.SenderException;
-
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
@@ -867,6 +864,35 @@ public class CMFileTransferManager {
 		CMChannelInfo<Integer> nonBlockChannelList = null;
 		SocketChannel sc = null;
 		SocketChannel dsc = null;
+		
+		CMServer targetServer = CMInteractionManager.findServer(strFileReceiver, cmInfo);
+		if(targetServer != null)
+		{
+			blockChannelList = targetServer.getBlockSocketChannelInfo();
+			nonBlockChannelList = targetServer.getNonBlockSocketChannelInfo();
+		}
+		else
+		{
+			CMUser targetUser = null;
+			if(confInfo.getSystemType().contentEquals("CLIENT"))
+			{
+				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, cmInfo);
+			}
+			else
+			{
+				targetUser = interInfo.getLoginUsers().findMember(strFileReceiver);
+			}
+			if(targetUser == null)
+			{
+				System.err.println("CMFileTransferManager.pushFileWithSepChannel(), target("
+						+strFileReceiver+") not found!");
+				return false;
+			}
+			blockChannelList = targetUser.getBlockSocketChannelInfo();
+			nonBlockChannelList = targetUser.getNonBlockSocketChannelInfo();
+		}
+		
+		/*
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, cmInfo);
@@ -900,6 +926,7 @@ public class CMFileTransferManager {
 			blockChannelList = user.getBlockSocketChannelInfo();
 			nonBlockChannelList = user.getNonBlockSocketChannelInfo();
 		}
+		*/
 
 		sc = (SocketChannel) blockChannelList.findChannel(0);	// default key for the blocking channel is 0
 		dsc = (SocketChannel) nonBlockChannelList.findChannel(0);	// key for the default TCP socket channel is 0
@@ -2572,7 +2599,7 @@ public class CMFileTransferManager {
 		SocketChannel dsc = null;
 		if(confInfo.getSystemType().equals("CLIENT"))	// CLIENT
 		{
-			CMServer serverInfo = CMInteractionManager.findServerAtClient(fe.getFileSender(), cmInfo);
+			CMServer serverInfo = CMInteractionManager.findServer(fe.getFileSender(), cmInfo);
 			if(serverInfo != null)
 			{
 				// socket channel to the file receiver (server)
@@ -3339,7 +3366,7 @@ public class CMFileTransferManager {
 			else
 			{
 				// get the file sender (server)
-				CMServer server = CMInteractionManager.findServerAtClient(strFileSender, 
+				CMServer server = CMInteractionManager.findServer(strFileSender, 
 						cmInfo);
 				if(server == null)
 				{
@@ -3646,8 +3673,7 @@ public class CMFileTransferManager {
 			else
 			{
 				// get the file receiver (server)
-				CMServer server = CMInteractionManager.findServerAtClient(strFileReceiver, 
-						cmInfo);
+				CMServer server = CMInteractionManager.findServer(strFileReceiver, cmInfo);
 				if(server == null)
 				{
 					System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN()"

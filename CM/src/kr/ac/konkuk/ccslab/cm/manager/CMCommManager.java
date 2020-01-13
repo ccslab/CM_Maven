@@ -324,7 +324,7 @@ public class CMCommManager {
 			return null;
 		}
 		
-		serverInfo = CMInteractionManager.findServerAtClient(strTarget, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
