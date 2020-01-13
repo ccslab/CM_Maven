@@ -915,10 +915,12 @@ public class CMFileTransferManager {
 			if(confInfo.getSystemType().contentEquals("CLIENT"))
 			{
 				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, cmInfo);
+				nonBlockChannelList = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
 			}
 			else
 			{
 				targetUser = interInfo.getLoginUsers().findMember(strFileReceiver);
+				nonBlockChannelList = targetUser.getNonBlockSocketChannelInfo();
 			}
 			if(targetUser == null)
 			{
@@ -927,7 +929,6 @@ public class CMFileTransferManager {
 				return false;
 			}
 			blockChannelList = targetUser.getBlockSocketChannelInfo();
-			nonBlockChannelList = targetUser.getNonBlockSocketChannelInfo();
 		}
 
 		dsc = (SocketChannel) nonBlockChannelList.findChannel(0);	// key for the default TCP socket channel is 0

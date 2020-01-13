@@ -873,8 +873,7 @@ public class CMInteractionManager {
 		
 		if(serverInfo == null)
 		{
-			System.err.println("CMInteractionManager.findServerAtClient(), server("
-					+strTarget+") not found!");
+			System.err.println("CMInteractionManager.findServer, server("+strTarget+") not found!");
 			return null;
 		}
 		
