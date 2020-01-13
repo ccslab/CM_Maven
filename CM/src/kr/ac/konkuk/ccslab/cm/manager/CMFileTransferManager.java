@@ -779,6 +779,7 @@ public class CMFileTransferManager {
 		sfInfo.setFilePath(strFilePath);
 		sfInfo.setFileSize(lFileSize);
 		sfInfo.setContentID(nContentID);
+		sfInfo.setAppendMode(byteFileAppend);
 		//fInfo.addSendFileInfo(strFileReceiver, strFilePath, lFileSize, nContentID);
 		bReturn = fInfo.addSendFileInfo(sfInfo);
 		if(!bReturn)
@@ -857,6 +858,7 @@ public class CMFileTransferManager {
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		String strMyName = interInfo.getMyself().getName();
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 
 		// check the creation of the default blocking TCP socket channel
@@ -864,34 +866,7 @@ public class CMFileTransferManager {
 		CMChannelInfo<Integer> nonBlockChannelList = null;
 		SocketChannel sc = null;
 		SocketChannel dsc = null;
-		
-		CMServer targetServer = CMInteractionManager.findServer(strFileReceiver, cmInfo);
-		if(targetServer != null)
-		{
-			blockChannelList = targetServer.getBlockSocketChannelInfo();
-			nonBlockChannelList = targetServer.getNonBlockSocketChannelInfo();
-		}
-		else
-		{
-			CMUser targetUser = null;
-			if(confInfo.getSystemType().contentEquals("CLIENT"))
-			{
-				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, cmInfo);
-			}
-			else
-			{
-				targetUser = interInfo.getLoginUsers().findMember(strFileReceiver);
-			}
-			if(targetUser == null)
-			{
-				System.err.println("CMFileTransferManager.pushFileWithSepChannel(), target("
-						+strFileReceiver+") not found!");
-				return false;
-			}
-			blockChannelList = targetUser.getBlockSocketChannelInfo();
-			nonBlockChannelList = targetUser.getNonBlockSocketChannelInfo();
-		}
-		
+
 		/*
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -928,8 +903,79 @@ public class CMFileTransferManager {
 		}
 		*/
 
-		sc = (SocketChannel) blockChannelList.findChannel(0);	// default key for the blocking channel is 0
+		CMServer targetServer = CMInteractionManager.findServer(strFileReceiver, cmInfo);
+		if(targetServer != null)
+		{
+			blockChannelList = targetServer.getBlockSocketChannelInfo();
+			nonBlockChannelList = targetServer.getNonBlockSocketChannelInfo();
+		}
+		else
+		{
+			CMUser targetUser = null;
+			if(confInfo.getSystemType().contentEquals("CLIENT"))
+			{
+				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, cmInfo);
+			}
+			else
+			{
+				targetUser = interInfo.getLoginUsers().findMember(strFileReceiver);
+			}
+			if(targetUser == null)
+			{
+				System.err.println("CMFileTransferManager.pushFileWithSepChannel(), target("
+						+strFileReceiver+") not found!");
+				return false;
+			}
+			blockChannelList = targetUser.getBlockSocketChannelInfo();
+			nonBlockChannelList = targetUser.getNonBlockSocketChannelInfo();
+		}
+
 		dsc = (SocketChannel) nonBlockChannelList.findChannel(0);	// key for the default TCP socket channel is 0
+		if(dsc == null)
+		{
+			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
+					+ "default TCP socket channel not found!");
+			return false;
+		}
+		else if(!dsc.isOpen())
+		{
+			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
+					+ "default TCP socket channel closed!");
+			return false;
+		}
+
+		// get file information (size)
+		File file = new File(strFilePath);
+		if(!file.exists())
+		{
+			System.err.println("CMFileTransferManager.pushFileWithSepChannel(), file("+strFilePath+") does not exists.");
+			return false;
+		}
+		long lFileSize = file.length();
+
+		// add send file information
+		// sender name, receiver name, file path, size, content ID
+		CMSendFileInfo sfInfo = new CMSendFileInfo();
+		sfInfo.setFileSender(strMyName);
+		sfInfo.setFileReceiver(strFileReceiver);
+		sfInfo.setFilePath(strFilePath);
+		sfInfo.setFileSize(lFileSize);
+		sfInfo.setContentID(nContentID);
+		//sfInfo.setSendChannel(sc);
+		sfInfo.setDefaultChannel(dsc);
+		sfInfo.setAppendMode(byteFileAppend);
+		//boolean bResult = fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID);
+		bReturn = fInfo.addSendFileInfo(sfInfo);
+		if(!bReturn)
+		{
+			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
+					+ "error for adding the sending file info: "
+					+"receiver("+strFileReceiver+"), file("+strFilePath+"), size("
+					+lFileSize+"), content ID("+nContentID+")!");
+			return false;
+		}
+
+		sc = (SocketChannel) blockChannelList.findChannel(0);	// default key for the blocking channel is 0
 		
 		if(sc == null)
 		{
@@ -939,9 +985,22 @@ public class CMFileTransferManager {
 			// open and add a new blocking socket channel to the file receiver
 			sc = CMCommManager.addBlockSocketChannel(0, strFileReceiver, cmInfo);
 			if(sc == null)
-				return false;
+			{
+				// remove the sending file info
+				// from here
+				fInfo.removeSendFileInfo(sfInfo);
+				return false;				
+			}
 			
+			// The START_FILE_TRANSFER_CHAN event will be sent after this node receives 
+			// the ADD_BLOCK_SOCKET_CHANNEL_ACK event at CMInteractionManager.process..() method.
+			return true;
 		}
+		else
+		{
+			sfInfo.setSendChannel(sc);			
+		}
+		
 		/*
 		else if(!sc.isOpen())
 		{
@@ -967,53 +1026,24 @@ public class CMFileTransferManager {
 		}
 		*/
 		
-		if(dsc == null)
-		{
-			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
-					+ "default TCP socket channel not found!");
-			return false;
-		}
-		else if(!dsc.isOpen())
-		{
-			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
-					+ "default TCP socket channel closed!");
-			return false;
-		}
-
-
-		// get file information (size)
-		File file = new File(strFilePath);
-		if(!file.exists())
-		{
-			System.err.println("CMFileTransferManager.pushFileWithSepChannel(), file("+strFilePath+") does not exists.");
-			return false;
-		}
-		long lFileSize = file.length();
-
-		// add send file information
-		// sender name, receiver name, file path, size, content ID
-		CMSendFileInfo sfInfo = new CMSendFileInfo();
-		sfInfo.setFileSender(interInfo.getMyself().getName());
-		sfInfo.setFileReceiver(strFileReceiver);
-		sfInfo.setFilePath(strFilePath);
-		sfInfo.setFileSize(lFileSize);
-		sfInfo.setContentID(nContentID);
-		sfInfo.setSendChannel(sc);
-		sfInfo.setDefaultChannel(dsc);
-		//boolean bResult = fInfo.addSendFileInfo(strReceiver, strFilePath, lFileSize, nContentID);
-		bReturn = fInfo.addSendFileInfo(sfInfo);
-		if(!bReturn)
-		{
-			System.err.println("CMFileTransferManager.pushFileWithSepChannel(); "
-					+ "error for adding the sending file info: "
-					+"receiver("+strFileReceiver+"), file("+strFilePath+"), size("
-					+lFileSize+"), content ID("+nContentID+")!");
-			return false;
-		}
-
-		// get my name
+		// send the START_FILE_TRANSFER_CHAN event
+		bReturn = sendSTART_FILE_TRANSFER_CHAN(sfInfo, cmInfo);
+		return bReturn;
+	}
+	
+	public static boolean sendSTART_FILE_TRANSFER_CHAN(CMSendFileInfo sfInfo, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strMyName = interInfo.getMyself().getName();
-
+		String strFilePath = sfInfo.getFilePath();
+		String strFileReceiver = sfInfo.getFileReceiver();
+		long lFileSize = sfInfo.getFileSize();
+		int nContentID = sfInfo.getContentID();
+		byte byteAppendMode = sfInfo.getAppendMode();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		boolean bReturn = false;
+		
+		
 		// get file name
 		String strFileName = getFileNameFromPath(strFilePath);
 
@@ -1025,7 +1055,7 @@ public class CMFileTransferManager {
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
-		fe.setFileAppendFlag(byteFileAppend);
+		fe.setFileAppendFlag(byteAppendMode);
 		
 		if(isP2PFileTransfer(fe, cmInfo))
 		{
@@ -1062,11 +1092,10 @@ public class CMFileTransferManager {
 
 		if(!bReturn)
 		{
-			fInfo.removeSendFileInfo(strFileReceiver, strFileName, nContentID);
+			//fInfo.removeSendFileInfo(strFileReceiver, strFileName, nContentID);
+			fInfo.removeSendFileInfo(sfInfo);
 		}
 		
-		file = null;
-		fe = null;
 		return bReturn;
 	}
 	

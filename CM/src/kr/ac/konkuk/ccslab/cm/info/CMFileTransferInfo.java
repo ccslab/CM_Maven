@@ -192,6 +192,42 @@ public class CMFileTransferInfo {
 		
 	}
 	
+	public synchronized boolean removeSendFileInfo(CMSendFileInfo sfInfo)
+	{
+		CMList<CMSendFileInfo> sInfoList = null;
+		String strFileReceiver = sfInfo.getFileReceiver();
+		boolean bResult = false;
+
+		sInfoList = m_sendFileHashtable.get(strFileReceiver);
+		if(sInfoList == null)
+		{
+			//System.err.println("CMFileTransferInfo.removeSendFileInfo(), list not found for receiver("
+			//		+uName+")");
+			return false;
+		}
+		
+		bResult = sInfoList.removeElement(sfInfo);
+
+		if(!bResult)
+		{
+			System.err.println("CMFileTransferInfo.removeSendFileInfo() error! : "+sfInfo.toString());
+			return false;
+		}
+		
+		if(sInfoList.isEmpty())
+		{
+			m_sendFileHashtable.remove(strFileReceiver);
+		}
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMFileTransferInfo.removeSendFileInfo() done : "+sfInfo.toString());
+			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
+		}
+		
+		return true;		
+	}
+	
 	public synchronized boolean removeSendFileList(String strReceiver)
 	{
 		CMList<CMSendFileInfo> sInfoList = null;

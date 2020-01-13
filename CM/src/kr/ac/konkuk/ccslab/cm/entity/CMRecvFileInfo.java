@@ -45,7 +45,7 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 	public String toString()
 	{
 		String str = super.toString();
-		str += "; CMRecvFileInfo: sender("+m_strFileSender+")";
+		str += "; CMRecvFileInfo: received size("+m_lRecvSize+")";
 		return str;
 	}
 	

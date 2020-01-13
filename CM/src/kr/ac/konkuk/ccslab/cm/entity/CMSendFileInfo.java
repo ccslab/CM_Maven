@@ -10,6 +10,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	private SocketChannel m_defaultChannel; // the default channel for sending the control event
 	private RandomAccessFile m_readFile;// for reading file blocks of the sent file
 	private Future<CMSendFileInfo> m_sendTaskResult;	// the result of the submitted sending task to the thread pool
+	private byte m_byteAppendMode;	// file append mode
 	
 	public CMSendFileInfo()
 	{
@@ -19,6 +20,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_defaultChannel = null;
 		m_readFile = null;
 		m_sendTaskResult = null;
+		m_byteAppendMode = -1;
 	}
 	
 	public CMSendFileInfo(String strFile, long lSize)
@@ -29,6 +31,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		m_defaultChannel = null;
 		m_readFile = null;
 		m_sendTaskResult = null;
+		m_byteAppendMode = -1;
 	}
 	
 	@Override
@@ -48,7 +51,7 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public String toString()
 	{
 		String strInfo = super.toString();
-		strInfo += "; CMSendFileInfo: receiver("+m_strFileReceiver+")";
+		strInfo += "; CMSendFileInfo: sent size("+m_lSentSize+"), append mode("+m_byteAppendMode+")";
 		return strInfo;
 	}
 	
@@ -107,6 +110,16 @@ public class CMSendFileInfo extends CMTransFileInfo {
 	public synchronized Future<CMSendFileInfo> getSendTaskResult()
 	{
 		return m_sendTaskResult;
+	}
+	
+	public synchronized void setAppendMode(byte byteMode)
+	{
+		m_byteAppendMode = byteMode;
+	}
+	
+	public synchronized byte getAppendMode()
+	{
+		return m_byteAppendMode;
 	}
 	
 }
