@@ -770,16 +770,30 @@ public class CMFileTransferManager {
 			return false;
 		}
 		long lFileSize = file.length();
-		
-		// add send file information
-		// receiver name, file path, size
-		fInfo.addSendFileInfo(strFileReceiver, strFilePath, lFileSize, nContentID);
-		
-		// set the cancellation flag
-		fInfo.setCancelSend(false);
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
+
+		// add send file information
+		// receiver name, file path, size
+		CMSendFileInfo sfInfo = new CMSendFileInfo();
+		sfInfo.setFileSender(strMyName);
+		sfInfo.setFileReceiver(strFileReceiver);
+		sfInfo.setFilePath(strFilePath);
+		sfInfo.setFileSize(lFileSize);
+		sfInfo.setContentID(nContentID);
+		//fInfo.addSendFileInfo(strFileReceiver, strFilePath, lFileSize, nContentID);
+		bReturn = fInfo.addSendFileInfo(sfInfo);
+		if(!bReturn)
+		{
+			System.err.println("CMFileTransferManager.pushFileWithDefChannel(); "
+					+ "error for adding the sending file info: "
+					+"receiver("+strFileReceiver+"), file("+strFilePath+"), size("
+					+lFileSize+"), content ID("+nContentID+")!");
+			return false;
+		}
+		// set the cancellation flag
+		fInfo.setCancelSend(false);
 
 		// get file name
 		String strFileName = getFileNameFromPath(strFilePath);
