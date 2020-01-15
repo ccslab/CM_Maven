@@ -129,6 +129,7 @@ public class CMFileTransferManager {
 				Future<SelectableChannel> future = es.submit(task);
 				try {
 					ssc = (ServerSocketChannel) future.get();
+					commInfo.setNonBlockServerSocketChannel(ssc);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -697,6 +698,7 @@ public class CMFileTransferManager {
 				try {
 					ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, 
 							interInfo.getMyself().getHost(), 0, cmInfo);
+					commInfo.setNonBlockServerSocketChannel(ssc);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
