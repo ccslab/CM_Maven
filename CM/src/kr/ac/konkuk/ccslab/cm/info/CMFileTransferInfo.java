@@ -464,13 +464,13 @@ public class CMFileTransferInfo {
 		
 		if(rInfoList.isEmpty())
 		{
-			m_sendFileHashtable.remove(senderName);
+			m_recvFileHashtable.remove(senderName);
 		}
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferInfo.removeRecvFileInfo() done : "+rInfo.toString());
-			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
+			System.out.println("# current hashtable elements: "+m_recvFileHashtable.size());
 		}
 		
 		return true;
