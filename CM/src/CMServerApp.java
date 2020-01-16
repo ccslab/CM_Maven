@@ -1,6 +1,9 @@
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
+import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -8,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
@@ -130,6 +134,9 @@ public class CMServerApp {
 			case 24:	// test cancel sending a file
 				cancelSendFile();
 				break;
+			case 25:	// print sending/receiving file info
+				printSendRecvFileInfo();
+				break;
 			case 30: // request registration to the default server
 				requestServerReg();
 				break;
@@ -209,6 +216,7 @@ public class CMServerApp {
 		System.out.print("---------------------------------- File Transfer\n");
 		System.out.print("20: set file path, 21: request file, 22: push file\n");
 		System.out.print("23: cancel receiving file, 24: cancel sending file\n");
+		System.out.print("25: print sending/receiving file info\n");
 		System.out.print("---------------------------------- Multi-server\n");
 		System.out.print("30: register to default server, 31: deregister from default server\n");
 		System.out.print("32: connect to default server, 33: disconnect from default server\n");
@@ -480,6 +488,29 @@ public class CMServerApp {
 			System.err.println("Request failed to cancel sending a file to ["+strReceiver+"]!");
 		
 		return;
+	}
+	
+	public void printSendRecvFileInfo()
+	{
+		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
+		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
+		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
+		Set<String> sendKeySet = sendHashtable.keySet();
+		Set<String> recvKeySet = recvHashtable.keySet();
+		
+		System.out.print("==== sending file info\n");
+		for(String receiver : sendKeySet)
+		{
+			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiver);
+			System.out.print(sendList+"\n");
+		}
+
+		System.out.print("==== receiving file info\n");
+		for(String sender : recvKeySet)
+		{
+			CMList<CMRecvFileInfo> recvList = recvHashtable.get(sender);
+			System.out.print(recvList+"\n");
+		}
 	}
 	
 	public void requestServerReg()

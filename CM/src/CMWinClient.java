@@ -21,8 +21,11 @@ import javax.swing.text.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
+import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
@@ -36,6 +39,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
@@ -105,11 +109,13 @@ public class CMWinClient extends JFrame {
 		m_startStopButton = new JButton("Start Client CM");
 		//m_startStopButton.setBackground(Color.LIGHT_GRAY);	// not work on Mac
 		m_startStopButton.addActionListener(cmActionListener);
+		m_startStopButton.setEnabled(false);
 		//add(startStopButton, BorderLayout.NORTH);
 		topButtonPanel.add(m_startStopButton);
 		
 		m_loginLogoutButton = new JButton("Login");
 		m_loginLogoutButton.addActionListener(cmActionListener);
+		m_loginLogoutButton.setEnabled(false);
 		topButtonPanel.add(m_loginLogoutButton);
 		
 		/*
@@ -397,6 +403,9 @@ public class CMWinClient extends JFrame {
 		JMenuItem cancelSendMenuItem = new JMenuItem("cancel sending file");
 		cancelSendMenuItem.addActionListener(menuListener);
 		fileTransferSubMenu.add(cancelSendMenuItem);
+		JMenuItem printSendRecvFileInfoMenuItem = new JMenuItem("print sending/receiving file info");
+		printSendRecvFileInfoMenuItem.addActionListener(menuListener);
+		fileTransferSubMenu.add(printSendRecvFileInfoMenuItem);
 		
 		cmServiceMenu.add(fileTransferSubMenu);
 		
@@ -786,6 +795,9 @@ public class CMWinClient extends JFrame {
 		case 74:	// test cancel sending a file
 			cancelSendFile();
 			break;
+		case 75:	// print sending/receiving file info
+			printSendRecvFileInfo();
+			break;
 		case 80: // test SNS content download
 			testDownloadNewSNSContent();
 			break;
@@ -912,6 +924,7 @@ public class CMWinClient extends JFrame {
 		printMessage("---------------------------------- File Transfer\n");
 		printMessage("70: set file path, 71: request file, 72: push file\n");
 		printMessage("73: cancel receiving file, 74: cancel sending file\n");
+		printMessage("75: print sending/receiving file info\n");
 		printMessage("---------------------------------- Social Network Service\n");
 		printMessage("80: request content list, 81: request next content list, 82: request previous content list\n");
 		printMessage("83: request attached file, 84: upload content\n");
@@ -1107,6 +1120,8 @@ public class CMWinClient extends JFrame {
 		}
 		else
 		{
+			m_startStopButton.setEnabled(true);
+			m_loginLogoutButton.setEnabled(true);
 			printStyledMessage("Client CM starts.\n", "bold");
 			printStyledMessage("Type \"0\" for menu.\n", "regular");
 			// change the appearance of buttons in the client window frame
@@ -2428,6 +2443,29 @@ public class CMWinClient extends JFrame {
 			printMessage("Request failed to cancel sending a file to ["+strReceiver+"]!\n");
 		
 		return;
+	}
+	
+	public void printSendRecvFileInfo()
+	{
+		CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
+		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
+		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
+		Set<String> sendKeySet = sendHashtable.keySet();
+		Set<String> recvKeySet = recvHashtable.keySet();
+		
+		printMessage("==== sending file info\n");
+		for(String receiver : sendKeySet)
+		{
+			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiver);
+			printMessage(sendList+"\n");
+		}
+
+		printMessage("==== receiving file info\n");
+		for(String sender : recvKeySet)
+		{
+			CMList<CMRecvFileInfo> recvList = recvHashtable.get(sender);
+			printMessage(recvList+"\n");
+		}
 	}
 	
 	public void testForwarding()
@@ -4054,6 +4092,9 @@ public class CMWinClient extends JFrame {
 				break;
 			case "cancel sending file":
 				cancelSendFile();
+				break;
+			case "print sending/receiving file info":
+				printSendRecvFileInfo();
 				break;
 			case "request content list":
 				testDownloadNewSNSContent();

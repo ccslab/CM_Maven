@@ -11,8 +11,11 @@ import javax.swing.JOptionPane;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
+import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
@@ -26,6 +29,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
@@ -233,6 +237,9 @@ public class CMClientApp {
 			case 74:	// test cancel sending a file
 				cancelSendFile();
 				break;
+			case 75:	// print sending/receiving file info
+				printSendRecvFileInfo();
+				break;
 			case 80: // test SNS content download
 				testDownloadNewSNSContent();
 				break;
@@ -368,6 +375,7 @@ public class CMClientApp {
 		System.out.println("---------------------------------- File Transfer");
 		System.out.println("70: set file path, 71: request file, 72: push file");
 		System.out.println("73: cancel receiving file, 74: cancel sending file");
+		System.out.println("75: print sending/receiving file info");
 		System.out.println("---------------------------------- Social Network Service");
 		System.out.println("80: request content list, 81: request next content list, 82: request previous content list");
 		System.out.println("83: request attached file, 84: upload content");
@@ -1784,6 +1792,29 @@ public class CMClientApp {
 			System.err.println("Request failed to cancel sending a file to ["+strReceiver+"]!");
 		
 		return;
+	}
+	
+	public void printSendRecvFileInfo()
+	{
+		CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
+		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
+		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
+		Set<String> sendKeySet = sendHashtable.keySet();
+		Set<String> recvKeySet = recvHashtable.keySet();
+		
+		System.out.print("==== sending file info\n");
+		for(String receiver : sendKeySet)
+		{
+			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiver);
+			System.out.print(sendList+"\n");
+		}
+
+		System.out.print("==== receiving file info\n");
+		for(String sender : recvKeySet)
+		{
+			CMList<CMRecvFileInfo> recvList = recvHashtable.get(sender);
+			System.out.print(recvList+"\n");
+		}
 	}
 	
 	public void testForwarding()
