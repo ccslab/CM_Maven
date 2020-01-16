@@ -3652,6 +3652,52 @@ public class CMClientStub extends CMStub {
 	}
 	
 	/**
+	 * Gets current group members in the default server.
+	 * 
+	 * <p> A CM client can call this method only if it logs in to the default server.
+	 * @return group members.
+	 */
+	public CMMember getGroupMembers()
+	{
+		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMUser myself = interInfo.getMyself();
+
+		// check if the user is connected to a default server
+		int nState = getMyself().getState();
+		if( nState < CMInfo.CM_LOGIN )
+		{
+			System.err.println("CMClientStub.getGroupMembers(), you should log in to "
+					+ "the default server!");
+			return null;
+		}
+		else if( nState < CMInfo.CM_SESSION_JOIN )
+		{
+			System.err.println("CMClientStub.getGroupMembers(), you should join a session "
+					+ "of the default server!");
+			return null;
+		}
+
+		String strSession = myself.getCurrentSession();
+		String strGroup = myself.getCurrentGroup();
+		CMSession session = interInfo.findSession(strSession);
+		if(session == null)
+		{
+			System.err.println("CMClientStub.getGroupMembers(), session("+strSession
+					+") not found!");
+			return null;
+		}
+		CMGroup group = session.findGroup(strGroup);
+		if(group == null)
+		{
+			System.err.println("CMClientStub.getGroupMembers(), group("+strGroup
+					+") not found in session("+strSession+")!");
+			return null;
+		}
+		
+		return group.getGroupUsers();
+	}
+	
+	/**
 	 * Adds a new friend user.
 	 * 
 	 * <p> A client can add a user as its friend only if the user name has been registered to CM. 

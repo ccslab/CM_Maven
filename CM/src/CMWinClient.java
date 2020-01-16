@@ -22,6 +22,7 @@ import javax.swing.text.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
@@ -292,6 +293,9 @@ public class CMWinClient extends JFrame {
 		JMenuItem changeGroupDefaultMenuItem = new JMenuItem("change group of default server");
 		changeGroupDefaultMenuItem.addActionListener(menuListener);
 		sessionSubMenu.add(changeGroupDefaultMenuItem);
+		JMenuItem printGroupMembersMenuItem = new JMenuItem("print group members");
+		printGroupMembersMenuItem.addActionListener(menuListener);
+		sessionSubMenu.add(printGroupMembersMenuItem);
 		JMenuItem reqSessionInfoDesigMenuItem = new JMenuItem("request session information from designated server");
 		reqSessionInfoDesigMenuItem.addActionListener(menuListener);
 		sessionSubMenu.add(reqSessionInfoDesigMenuItem);
@@ -705,13 +709,16 @@ public class CMWinClient extends JFrame {
 		case 25: // change current group
 			testChangeGroup();
 			break;
-		case 26: // request session information from a designated server
+		case 26: // print group members
+			testPrintGroupMembers();
+			break;
+		case 27: // request session information from a designated server
 			testRequestSessionInfoOfServer();
 			break;
-		case 27: // join a session of a designated server
+		case 28: // join a session of a designated server
 			testJoinSessionOfServer();
 			break;
-		case 28: // leave a session of a designated server
+		case 29: // leave a session of a designated server
 			testLeaveSessionOfServer();
 			break;
 		case 40: // chat
@@ -906,8 +913,9 @@ public class CMWinClient extends JFrame {
 		printMessage("21: synchronously request session information from default server\n");
 		printMessage("22: join session of default server, 23: synchronously join session of default server\n");
 		printMessage("24: leave session of default server, 25: change group of default server\n");
-		printMessage("26: request session information from designated server\n");
-		printMessage("27: join session of designated server, 28: leave session of designated server\n");
+		printMessage("26: print group members\n");
+		printMessage("27: request session information from designated server\n");
+		printMessage("28: join session of designated server, 29: leave session of designated server\n");
 		printMessage("---------------------------------- Event Transmission\n");
 		printMessage("40: chat, 41: multicast chat in current group\n");
 		printMessage("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position\n");
@@ -1834,6 +1842,20 @@ public class CMWinClient extends JFrame {
 		
 		printMessage("======\n");
 		return;
+	}
+	
+	public void testPrintGroupMembers()
+	{
+		printMessage("====== print group members\n");
+		CMMember groupMembers = m_clientStub.getGroupMembers();
+		CMUser myself = m_clientStub.getMyself();
+		printMessage("My name: "+myself.getName()+"\n");
+		if(groupMembers == null || groupMembers.isEmpty())
+		{
+			printStyledMessage("No group member yet!\n", "bold");
+			return;
+		}
+		printMessage(groupMembers.toString()+"\n");
 	}
 
 	// ServerSocketChannel is not supported.
@@ -4002,6 +4024,9 @@ public class CMWinClient extends JFrame {
 				break;
 			case "change group of default server":
 				testChangeGroup();
+				break;
+			case "print group members":
+				testPrintGroupMembers();
 				break;
 			case "request session information from designated server":
 				testRequestSessionInfoOfServer();

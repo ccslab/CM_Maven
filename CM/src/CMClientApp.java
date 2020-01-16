@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
@@ -147,13 +148,16 @@ public class CMClientApp {
 			case 25: // change current group
 				testChangeGroup();
 				break;
-			case 26: // request session information from a designated server
+			case 26: // print group members
+				testPrintGroupMembers();
+				break;
+			case 27: // request session information from a designated server
 				testRequestSessionInfoOfServer();
 				break;
-			case 27: // join a session of a designated server
+			case 28: // join a session of a designated server
 				testJoinSessionOfServer();
 				break;
-			case 28: // leave a session of a designated server
+			case 29: // leave a session of a designated server
 				testLeaveSessionOfServer();
 				break;
 			case 40: // chat
@@ -357,8 +361,9 @@ public class CMClientApp {
 		System.out.println("21: synchronously request session information from default server");
 		System.out.println("22: join session of default server, 23: synchronously join session of default server");
 		System.out.println("24: leave session of default server, 25: change group of default server");
-		System.out.println("26: request session information from designated server");
-		System.out.println("27: join session of designated server, 28: leave session of designated server");
+		System.out.println("26: print group members");
+		System.out.println("27: request session information from designated server");
+		System.out.println("28: join session of designated server, 29: leave session of designated server");
 		System.out.println("---------------------------------- Event Transmission");
 		System.out.println("40: chat, 41: multicast chat in current group");
 		System.out.println("42: test CMDummyEvent, 43: test CMUserEvent, 44: test datagram event, 45: test user position");
@@ -1228,6 +1233,20 @@ public class CMClientApp {
 		
 		System.out.println("======");
 		return;
+	}
+	
+	public void testPrintGroupMembers()
+	{
+		System.out.print("====== print group members\n");
+		CMMember groupMembers = m_clientStub.getGroupMembers();
+		CMUser myself = m_clientStub.getMyself();
+		System.out.print("My name: "+myself.getName()+"\n");
+		if(groupMembers == null || groupMembers.isEmpty())
+		{
+			System.err.println("No group member yet!");
+			return;
+		}
+		System.out.print(groupMembers.toString()+"\n");
 	}
 	
 	// ServerSocketChannel is not supported.
