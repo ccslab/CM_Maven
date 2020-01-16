@@ -2,9 +2,12 @@ package kr.ac.konkuk.ccslab.cm.manager;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
+import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
@@ -15,6 +18,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 
@@ -730,39 +734,56 @@ public class CMGroupManager {
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMDataEvent de = new CMDataEvent(msg.m_buf);
+		String strUser = de.getUserName();
+		String strHandlerSession = de.getHandlerSession();
+		String strHandlerGroup = de.getHandlerGroup();
 		
-		if(de.getUserName().equals(interInfo.getMyself().getName()))
+		if(strUser.equals(interInfo.getMyself().getName()))
 		{
-			System.out.println("CMGroupManager.processREMOVE_USER(), the removed user is myself.");
+			System.out.println("CMGroupManager.processREMOVE_USER(), the removed user("
+					+strUser+") is myself.");
 			de = null;
 			return;
 		}
 		
-		CMSession session = interInfo.findSession(de.getHandlerSession());
+		CMSession session = interInfo.findSession(strHandlerSession);
 		if(session == null)
 		{
-			System.out.println("CMGroupManager.processREMOVE_USER(), session("+de.getHandlerSession()+") not found.");
+			System.out.println("CMGroupManager.processREMOVE_USER(), session("+strHandlerSession+") not found.");
 			de = null;
 			return;
 		}
-		CMGroup group = session.findGroup(de.getHandlerGroup());
+		CMGroup group = session.findGroup(strHandlerGroup);
 		if(group == null)
 		{
-			System.out.println("CMGroupManager.processREMOVE_USER(), session("+de.getHandlerSession()
-					+") found, group("+de.getHandlerGroup()+") NOT found.");
+			System.out.println("CMGroupManager.processREMOVE_USER(), session("+strHandlerSession
+					+") found, group("+strHandlerGroup+") NOT found.");
 			de = null;
 			return;
 		}
 
 		//boolean ret = group.getGroupUsers().removeMember(de.getUserName());
-		boolean ret = group.getGroupUsers().removeMemberObject(de.getUserName());
+		boolean ret = group.getGroupUsers().removeMemberObject(strUser);
 		if(ret)
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMGroupManager.processREMOVE_USER(), session("+de.getHandlerSession()
-						+"), group("+de.getHandlerGroup()+"), user("+de.getUserName()+") removed.");
+				System.out.println("CMGroupManager.processREMOVE_USER(), session("+strHandlerSession
+						+"), group("+strHandlerGroup+"), user("+strUser+") removed.");
 			}
+		}
+		
+		// check whether the p2p file-transfer with the user is ongoing or not
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMList<CMSendFileInfo> sendList = fInfo.getSendFileList(strUser);
+		if(sendList != null)
+		{
+			fInfo.removeSendFileList(strUser);
+		}
+		CMList<CMRecvFileInfo> recvList = fInfo.getRecvFileList(strUser);
+		if(recvList != null)
+		{
+			fInfo.removeRecvFileList(strUser);
 		}
 
 		de = null;
