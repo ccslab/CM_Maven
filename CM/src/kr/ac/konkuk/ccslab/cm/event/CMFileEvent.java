@@ -101,7 +101,7 @@ public class CMFileEvent extends CMEvent{
 	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event right after it sends the 
 	 * {@link CMFileEvent#REPLY_PERMIT_PULL_FILE} event, or receives 
-	 * the {@link CMFileEvent#REPLY_PERIT_PUSH_FILE} event with the granted permit, 
+	 * the {@link CMFileEvent#REPLY_PERMIT_PUSH_FILE} event with the granted permit, 
  	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
 	 * (cm-server.conf) is set to 0.
 	 * <br>The following fields are used for this event:
@@ -239,7 +239,7 @@ public class CMFileEvent extends CMEvent{
 	 * The event ID for notifying the receiver of the start of file-transfer.
 	 * <p>event direction: sender -&gt; receiver
 	 * <p>The file owner sends this event right after it sends the 
-	 * {@link CMFileEvent#REPLY_PERMIT_PULL_FILE_CHAN} event, or receives 
+	 * {@link CMFileEvent#REPLY_PERMIT_PULL_FILE} event, or receives 
 	 * the {@link CMFileEvent#REPLY_PERMIT_PUSH_FILE} event with the granted permit 
  	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
 	 * (cm-server.conf) is set to 1.
@@ -353,7 +353,7 @@ public class CMFileEvent extends CMEvent{
 	 * The event ID for the cancellation of receiving a file.
 	 * <p>event direction: receiver -&gt; sender
 	 * <p>The file receiver sends this event when it calls 
-	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cancelRequestFile(String)}, 
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#cancelPullFile(String)}, 
 	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
 	 * (cm-server.conf) is set to 1.
 	 * <br>The following fields are used for this event:

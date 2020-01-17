@@ -2114,7 +2114,7 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
@@ -2190,7 +2190,7 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
@@ -2260,11 +2260,11 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> sender name </td> <td> String </td> <td> file sender name </td>
-	 *     <td> {@link CMFileEvent#getSenderName()} </td>
+	 *     <td> {@link CMFileEvent#getFileSender()} </td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td> return code </td> <td> int </td> 
@@ -2276,7 +2276,7 @@ public class CMStub {
 	 * 
 	 * @param strReceiver - the receiver name
 	 * @return true if the cancellation is succeeded, or false otherwise.
-	 * @see CMStub#cancelRequestFile(String)
+	 * @see CMStub#cancelPullFile(String)
 	 */
 	public boolean cancelPushFile(String strReceiver)
 	{
@@ -2310,11 +2310,11 @@ public class CMStub {
 	 *   </tr>
 	 *   <tr>
 	 *     <td> sender name </td> <td> String </td> <td> file sender name </td>
-	 *     <td> {@link CMFileEvent#getSenderName()} </td>
+	 *     <td> {@link CMFileEvent#getFileSender()} </td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getReceiverName()} </td>
+	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
 	 *   </tr>
 	 *   <tr>
 	 *     <td> return code </td> <td> int </td> 
