@@ -463,71 +463,21 @@ public class CMClientStub extends CMStub {
 	 * registerUser() method.
 	 * <p> The result of the login request can be caught asynchronously by the client event handler 
 	 * that deals with all the incoming CM events from the server. To check whether the login request is 
-	 * successful or not, the client event handler needs to catch the LOGIN_ACK event that belongs to 
-	 * the {@link CMSessionEvent}. 
+	 * successful or not, the client event handler needs to catch 
+	 * the {@link CMSessionEvent#LOGIN_ACK} event.
 	 * In the LOGIN_ACK event, a result field of the Integer type is set, and the value can be retrieved by 
 	 * the {@link CMSessionEvent#isValidUser()} method. If the value is 1, the login request successfully completes 
 	 * and the requesting client is in the CM_LOGIN state. Otherwise, the login process fails.
 	 * The LOGIN_ACK event also includes other CM information that can be returned by 
 	 * {@link CMSessionEvent#getCommArch()}, {@link CMSessionEvent#isLoginScheme()}, and 
-	 * {@link CMSessionEvent#isSessionScheme()}. The detailed information of the LOGIN_ACK event is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.LOGIN_ACK event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.LOGIN_ACK</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>User validity</td><td>int</td><td>1:valid user, 0:invalid user</td><td>isValidUser()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Communication architecture</td><td>String</td>
-	 * <td>
-	 * Specified communication architecture
-	 * <br>CM_CS: client-server model
-	 * <br>CM_PS: client-server with multicast model
-	 * </td>
-	 * <td>getCommArch()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Login scheme</td><td>int</td><td>1: user authentication used, 0: no user authentication</td><td>isLoginScheme()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Session scheme</td><td>int</td><td>1: multiple sessions used, 0: single session used</td><td>isSessionScheme()</td>
-	 * </tr>
-	 * </table>
+	 * {@link CMSessionEvent#isSessionScheme()}.
 	 * 
 	 * <p> When the server CM accepts the login request from a client, the server CM also notifies other 
-	 * participating clients of the information of the login user with the SESSION_ADD_USER event. 
+	 * participating clients of the information of the login user with the 
+	 * {@link CMSessionEvent#SESSION_ADD_USER} event. 
 	 * A client application can catch this event in the event handler routine if it wants to use such 
 	 * information. The login user information is the user name and the host address that can be retrieved 
 	 * by {@link CMSessionEvent#getUserName()} and {@link CMSessionEvent#getHostAddress()} methods, respectively.
-	 * The detailed information of the SESSION_ADD_USER event is shown below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMsessionEvent.SESSION_ADD_USER event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.SESSION_ADD_USER</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>User name</td><td>String</td><td>Name of the login user</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Host address</td><td>String</td><td>Host address of the login user</td><td>getHostAddress()</td>
-	 * </tr>
-	 * </table>
 	 * 
 	 * @param strUserName - the user name
 	 * @param strPassword - the password
@@ -602,7 +552,7 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> Unlike the asynchronous login method ({@link CMClientStub#loginCM(String, String)}), 
 	 * this method makes the main thread of the client block its execution until it receives and 
-	 * returns the reply event (CMSessionEvent.LOGIN_ACK) from the default server.
+	 * returns the reply event ({@link CMSessionEvent#LOGIN_ACK}) from the default server.
 	 * <br> For the other detailed information of the login process, please refer to 
 	 * the asynchronous login method.
 	 * 
@@ -644,28 +594,11 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> There is no result from the server about the logout request. 
 	 * <p> When the server CM completes the logout request from a client, the server CM also notifies 
-	 * other participating clients of the information of the logout user with the SESSION_REMOVE_USER event 
-	 * of the {@link CMSessionEvent}. 
+	 * other participating clients of the information of the logout user with 
+	 * the {@link CMSessionEvent#SESSION_REMOVE_USER} event.
 	 * A client application can catch this event in the event handler routine if it wants to use 
 	 * such information. The logout user information is just the user name, which can be returned by 
-	 * {@link CMSessionEvent#getUserName()} method. The detailed information of the SESSION_REMOVE_USER event 
-	 * is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.SESSION_REMOVE_USER event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.SESSION_REMOVE_USER</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>user name</td><td>String</td><td>Name of the logout user</td><td>getUserName()</td>
-	 * </tr>
-	 * </table>
+	 * {@link CMSessionEvent#getUserName()} method.
 	 * 
 	 * @return true if successfully sent the logout request, false otherwise.
 	 * @see CMClientStub#loginCM(String, String)
@@ -733,35 +666,14 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> The result of the session request can be caught asynchronously by the client event handler 
 	 * that deals with all the incoming CM events from the server. To receive the available session 
-	 * information, the client event handler needs to catch the RESPONSE_SESSION_INFO event that belongs to 
-	 * the {@link CMSessionEvent}. 
+	 * information, the client event handler needs to catch 
+	 * the {@link CMSessionEvent#RESPONSE_SESSION_INFO} event.
 	 * <br> The RESPONSE_SESSION_INFO event includes the number of available sessions and the vector of 
 	 * the {@link CMSessionInfo}. Such event fields can be returned by 
 	 * the {@link CMSessionEvent#getSessionNum()} and {@link CMSessionEvent#getSessionInfoList()}.
 	 * <br> Each element of the CMSessionInfo object includes information of an available session such as 
 	 * the session name, the session address and port number to which a client can join, and the current 
 	 * number of session members who already joined the session.
-	 * <br> The detailed information of the RESPONSE_SESSION_INFO event is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.RESPONSE_SESSION_INFO event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.RESPONSE_SESSION_INFO</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Number of sessions</td><td>int</td><td>Number of sessions</td><td>getSessionNum()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Vector of sessions</td><td>Vector&lt;CMSessionInfo&gt;</td><td>List of session information</td>
-	 * <td>getSessionInfoList()</td>
-	 * </tr>
-	 * </table>
 	 * 
 	 * @return true if the request is successfully sent to the server; false otherwise.
 	 * @see CMClientStub#syncRequestSessionInfo()
@@ -800,11 +712,11 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> Unlike the asynchronous method ({@link CMClientStub#requestSessionInfo()}), this method makes 
 	 * the main thread of the client block its execution until it receives and returns the reply event 
-	 * (CMSessionEvent.RESPONSE_SESSION_INFO) from the default server.
+	 * ({@link CMSessionEvent#RESPONSE_SESSION_INFO}) from the default server.
 	 * <br> For the other detailed information of the session-information-request process, 
 	 * please refer to the asynchronous version of the request. 
 	 * 
-	 * @return the reply event (CMSessionEvent.RESPONSE_SESSION_INFO) from the default server.
+	 * @return the reply event ({@link CMSessionEvent#RESPONSE_SESSION_INFO}) from the default server.
 	 * @see CMClientStub#requestSessionInfo()
 	 */
 	public CMSessionEvent syncRequestSessionInfo()
@@ -846,30 +758,9 @@ public class CMClientStub extends CMStub {
 	 * the server CM adopts single session or multiple sessions in the CM server configuration file 
 	 * (cm-server.conf).
 	 * <p> When the server CM receives the join-session request, it sends back the client a reply event 
-	 * (CMSessionEvent.JOIN_SESSION_ACK) that contains the group information in the session. If the reply 
+	 * ({@link CMSessionEvent#JOIN_SESSION_ACK}) that contains the group information in the session. If the reply 
 	 * event does not have any group information, it implies that the join-session task fails because 
-	 * every session in CM must has at least one group. The detailed information of the reply event is as follows.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.JOIN_SESSION_ACK event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.JOIN_SESSION_ACK</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Number of groups</td><td>int</td><td>Number of groups in this session</td><td>getGroupNum()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Group list</td><td>Vector&lt;CMGroup&gt;</td><td>Vector of group information.
-	 * Each group information contains a group name, group multicast address, and group multicast port number.</td>
-	 * <td>getGroupInfoList()</td>
-	 * </tr>
-	 * </table>
+	 * every session in CM must has at least one group.
 	 * 
 	 * <p> After the client CM completes to join a session, it automatically proceeds to enter the first 
 	 * group of the session. For example, if the client joins &quot;session1&quot;, it also enters the group, &quot;g1&quot;
@@ -877,34 +768,15 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> When the server CM completes the session joining request from a client, the server CM also 
 	 * notifies other participating clients of the information of the new session user with 
-	 * the CHANGE_SESSION event of the {@link CMSessionEvent}. A client application can catch this event 
+	 * the {@link CMSessionEvent#CHANGE_SESSION} event. A client application can catch this event 
 	 * in the event handler routine if it wants to use such information. The CHANGE_SESSION event includes 
 	 * fields such as the user name and the session name, which can be returned by calling 
 	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
-	 * respectively. The detailed information of the CHANGE_SESSION event is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.CHANGE_SESSION event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.CHANGE_SESSION</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>User name</td><td>String</td><td>Name of a user who joins a session</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Session name</td><td>String</td><td>Name of a session which the user joins</td><td>getSessionName()</td>
-	 * </tr>
-	 * </table>
+	 * respectively.
 	 * 
 	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
-	 * other participating clients of the information of the new group user with the NEW_USER event that 
-	 * belongs to {@link CMDataEvent}.
+	 * other participating clients of the information of the new group user with 
+	 * the {@link CMDataEvent#NEW_USER} event.
 	 * When the client CM receives this event, it stores the information of a new group user so that it 
 	 * can figure out current group members later. A client application also can catch this event in 
 	 * the event handler routine if it wants to use such information. The NEW_USER event includes fields 
@@ -912,40 +784,11 @@ public class CMClientStub extends CMStub {
 	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
 	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
 	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
-	 * and {@link CMDataEvent#getUDPPort()} methods, respectively. The detailed information of the NEW_USER event 
-	 * is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMDataEvent.NEW_USER event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_DATA_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMDataEvent.NEW_USER</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>current session</td><td>String</td><td>current session name of the user</td><td>getHandlerSession()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>current group</td><td>String</td><td>current group name of the user</td><td>getHandlerGroup()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>user name</td><td>String</td><td>name of the new group user</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>host address</td><td>String</td><td>host address of the new group user</td><td>getHostAddress()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>UDP port number</td><td>int</td><td>UDP port number of the new group user</td><td>getUDPPort()</td>
-	 * </tr>
-	 * </table>
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
 	 * 
 	 * <p> When the server CM completes the group joining request from a client, the server CM also notifies 
-	 * the new user of the information of other existing group users with the series of INHABITANT events that 
-	 * belong to {@link CMDataEvent}. 
+	 * the new user of the information of other existing group users with the series of 
+	 * {@link CMDataEvent#INHABITANT} events.
 	 * When the client CM receives this event, it stores the information of an existing group user so that 
 	 * it can figure out current group members later. A client application also can catch this event 
 	 * in the event handler routine if it wants to use such information. The INHABITANT event includes fields 
@@ -953,37 +796,7 @@ public class CMClientStub extends CMStub {
 	 * address of the new group user, and the UDP port number of the new group user. Each event field can be 
 	 * returned by calling the {@link CMDataEvent#getHandlerSession()}, {@link CMDataEvent#getHandlerGroup()}, 
 	 * {@link CMDataEvent#getUserName()}, {@link CMDataEvent#getHostAddress()}, 
-	 * and {@link CMDataEvent#getUDPPort()} methods, respectively. The detailed information of the INHABITANT event is 
-	 * described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMDataEvent.INHABITANT event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_DATA_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMDataEvent.INHABITANT</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>current session</td><td>String</td><td>current session name of the user</td><td>getHandlerSession()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>current group</td><td>String</td><td>current group name of the user</td><td>getHandlerGroup()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>user name</td><td>String</td><td>name of the new group user</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>host address</td><td>String</td><td>host address of the new group user</td><td>getHostAddress()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>UDP port number</td><td>int</td><td>UDP port number of the new group user</td><td>getUDPPort()</td>
-	 * </tr>
-	 * </table>
-	 * 
+	 * and {@link CMDataEvent#getUDPPort()} methods, respectively.
 	 * 
 	 * @param sname - the session name that a client requests to join
 	 * @return true if the request is successful; false otherwise.
@@ -1037,12 +850,12 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> Unlike the asynchronous method ({@link CMClientStub#joinSession(String)}), this method makes 
 	 * the main thread of the client block its execution until it receives and returns the reply event 
-	 * (CMSessionEvent.JOIN_SESSION_ACK) from the default server.
+	 * ({@link CMSessionEvent#JOIN_SESSION_ACK}) from the default server.
 	 * <br> For the other detailed information of the session-join process, please refer to the asynchronous 
 	 * version of the request.  
 	 * 
 	 * @param sname - the session name that a client requests to join
-	 * @return the reply event (CMSessionEvent.JOIN_SESSION_ACK) from the default server, null if the request fails.
+	 * @return the reply event ({@link CMSessionEvent#JOIN_SESSION_ACK}) from the default server, null if the request fails.
 	 * @see CMClientStub#joinSession(String)
 	 */
 	public CMSessionEvent syncJoinSession(String sname)
@@ -1079,36 +892,14 @@ public class CMClientStub extends CMStub {
 	 * <p> There is no result from the server about the session-leave request.
 	 * 
 	 * <p> Before leaving the current session, the server first remove the client from its current group. 
-	 * The server notifies group members of the user leave by sending the REMOVE_USER event of 
-	 * the {@link CMDataEvent}. The REMOVE_USER event includes the user name field, which can be returned 
-	 * by the {@link CMDataEvent#getUserName()} method. The detailed information of the REMOvE_USER event 
-	 * is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMDataEvent.REMOVE_USER event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event field</td><td>CMInfo.CM_DATA_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMDataEvent.REMOVE_USER</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>current session</td><td>String</td><td>current session name of the user</td><td>getHandlerSession()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>current group</td><td>String</td><td>current group name of the user</td><td>getHandlerGroup()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>user name</td><td>String</td><td>name of the leaving group user</td><td>getUserName()</td>
-	 * </tr>
-	 * </table>
+	 * The server notifies group members of the user leave by sending 
+	 * the {@link CMDataEvent#REMOVE_USER} event. The REMOVE_USER event includes the user name field, 
+	 * which can be returned by the {@link CMDataEvent#getUserName()} method.
 	 * 
 	 * <p> When the server CM completes the session leaving request from a client, the server CM also 
-	 * notifies other participating clients of the information of the leaving user with the CHANGE_SESSION 
-	 * event of the {@link CMSessionEvent}. A client application can catch this event in the event handler 
+	 * notifies other participating clients of the information of the leaving user with 
+	 * the {@link CMSessionEvent#CHANGE_SESSION} event. 
+	 * A client application can catch this event in the event handler 
 	 * routine if it wants to use such information. The CHANGE_SESSION event includes 
 	 * fields such as the user name and the session name, which can be returned by calling 
 	 * the {@link CMSessionEvent#getUserName()} and the {@link CMSessionEvent#getSessionName()} methods, 
@@ -1168,7 +959,7 @@ public class CMClientStub extends CMStub {
 	 * Sends location information of the client to the group members.
 	 * 
 	 * <p> The location information consists of the position and orientation. The position is represented 
-	 * by 3D coordinate (x,y,z). The orientation is represented by the quarternion (x,y,z,w) that includes 
+	 * by 3D coordinate (x,y,z). The orientation is represented by the quaternion (x,y,z,w) that includes 
 	 * the rotation axis and the rotation angle.  
 	 * @param pq - the new position and orientation of the client
 	 * @see CMPosition
@@ -1206,66 +997,19 @@ public class CMClientStub extends CMStub {
 	/**
 	 * Sends a chat event.
 	 * <p> A CM application can receive the chat event by catching a pre-defined CM event in the event 
-	 * handler like other events. There are two types of CM chat events. One is the SESSION_TALK event of 
-	 * the {@link CMSessionEvent} class. A client can receive this event if it at least logs in to the default 
-	 * server. The SESSION_TALK event includes fields such as the sender name, the text message, and 
+	 * handler like other events. There are two types of CM chat events. One is 
+	 * the {@link CMSessionEvent#SESSION_TALK} event. A client can receive this event 
+	 * if it at least logs in to the default server. 
+	 * The SESSION_TALK event includes fields such as the sender name, the text message, and 
 	 * the session name of the sender, which can be returned by calling {@link CMSessionEvent#getUserName()}, 
 	 * {@link CMSessionEvent#getTalk()}, and {@link CMSessionEvent#getHandlerSession()} methods, respectively. 
-	 * The detailed information of the SESSION_TALK event is described below.
 	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.SESSION_TALK event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_Event</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.SESSION_TALK</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>user name</td><td>String</td><td>name of the sending user</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>text message</td><td>String</td><td>a chat message</td><td>getTalk()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>session name</td><td>String</td><td>current session of the sending user</td><td>getHandlerSession()</td>
-	 * </tr>
-	 * </table>
-	 * 
-	 * <br>The other event is the USER_TALK event of the {@link CMInterestEvent} class. A client can 
+	 * <br>The other event is the {@link CMInterestEvent#USER_TALK} event. A client can 
 	 * receive this event only if it enters a group. The USER_TALK event includes fields such as the sender 
 	 * name, the text message, the session name of the sender, and the group name of the sender, which can 
 	 * be returned by calling {@link CMInterestEvent#getUserName()}, {@link CMInterestEvent#getTalk()}, 
 	 * {@link CMInterestEvent#getHandlerSession()}, and {@link CMInterestEvent#getHandlerGroup()} methods, 
-	 * respectively. The detailed information of the USER_TAlK event is descrbied below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMInterestEvent.USER_TALK event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_INTEREST_Event</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMInterestEvent.USER_TALK</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>user name</td><td>String</td><td>name of the sending user</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>text message</td><td>String</td><td>a chat message</td><td>getTalk()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>session name</td><td>String</td><td>current session of the sending user</td><td>getHandlerSession()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>group name</td><td>String</td><td>current group of the sending user</td><td>getHandlerGroup()</td>
-	 * </tr>
-	 * </table> 
+	 * respectively. 
 	 * 
 	 * @param strTarget - the receiver name.
 	 * <br>This parameter must start with &quot;/&quot; character and it specifies the range of recipients of the chat 
@@ -1356,10 +1100,10 @@ public class CMClientStub extends CMStub {
 	 * 
 	 * <p> When a client calls this method, the client first leaves the current group and then requests to 
 	 * enter a new group. The CM server notifies previous group members of the left user by sending 
-	 * the REMOVE_USER event of the {@link CMDataEvent}, and the server also 
-	 * notifies new group members of the new user by sending the NEW_USER event of the {@link CMDataEvent}. 
+	 * the {@link CMDataEvent#REMOVE_USER} event, and the server also 
+	 * notifies new group members of the new user by sending the {@link CMDataEvent#NEW_USER} event. 
 	 * The server also notifies the changing user of the existing member information of the new group by 
-	 * sending the INHABITANT event of the {@link CMDataEvent}.
+	 * sending the {@link CMDataEvent#INHABITANT} event.
 	 * 
 	 * @param gName - the name of a group that the client wants to enter.
 	 * @see CMClientStub#joinSession(String)
@@ -1380,31 +1124,9 @@ public class CMClientStub extends CMStub {
 	 * <p> Although this method returns the reference to the valid socket channel at the client, it is unsafe 
 	 * for the client to use the socket before the server also adds the relevant channel information.
 	 * The establishment of a new nonblocking socket channel at both sides (the client and the server) completes 
-	 * only when the client receives the ack event (CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK) from the server 
-	 * and the return code in the event is 1.
-	 * The client event handler can catch the ack event, and the detailed event fields are described below:
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK </td>
-	 *   </tr>
-	 *   <tr bgcolor="lightgrey">
-	 *     <td> Event field </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
-	 *   </tr>
-	 * </table>
+	 * only when the client receives the ack event ({@link CMSessionEvent#ADD_NONBLOCK_SOCKET_CHANNEL_ACK}) 
+	 * from the server and the return code in the event is 1.
+	 * The client event handler can catch the ack event.
 	 * 
 	 * @param nChKey - the channel key that must be greater than 0.
 	 * The key 0 is occupied by the default TCP channel.
@@ -1498,8 +1220,8 @@ public class CMClientStub extends CMStub {
 	 * Adds synchronously a nonblocking (TCP) socket channel to a server.
 	 * <br> Only the client can add an additional stream socket (TCP) channel. In the case of the datagram 
 	 * and multicast channels, both the client and the server can add an additional non-blocking channel 
-	 * with the {@link CMStub#addNonBlockDatagramChannel(int)} and {@link CMStub#addMulticastChannel(String, String, String, int)} 
-	 * methods in the CMStub class.
+	 * with the {@link CMStub#addNonBlockDatagramChannel(int)} and 
+	 * {@link CMStub#addMulticastChannel(String, String, String, int)} methods in the CMStub class.
 	 * 
 	 * @param nChKey - the channel key which must be greater than 0.
 	 * The key 0 is occupied by the default TCP channel.
@@ -1718,31 +1440,10 @@ public class CMClientStub extends CMStub {
 	 * to the blocking channel. It is unsafe for the client use its socket channel before the channel is changed to 
 	 * the blocking mode at the target node.
 	 * The establishment of a new blocking socket channel at both sides (the client and the target) completes 
-	 * only when the client receives the ack event (CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK) from the target 
+	 * only when the client receives the ack event 
+	 * ({@link CMSessionEvent#ADD_BLOCK_SOCKET_CHANNEL_ACK}) from the target 
 	 * and the return code in the event is 1. 
-	 * The client event handler can catch the ack event, and the detailed event fields are described below:
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK </td>
-	 *   </tr>
-	 *   <tr bgcolor="lightgrey">
-	 *     <td> Event field </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
-	 *   </tr>
-	 * </table>
+	 * The client event handler can catch the ack event.
 	 * 
 	 * @param nChKey - the channel key. It should be a positive integer (greater than or equal to 0).
 	 * @param strTarget - the name of a target (server or client) to which the client creates a connection.
@@ -2020,33 +1721,10 @@ public class CMClientStub extends CMStub {
 	 * <p> This method does not immediately remove the requested channel for safe and smooth close procedure 
 	 * between the client and the target node (server or client). Before the removal of the client socket channel, the client first sends 
 	 * a request CM event to the target that then prepares the channel disconnection and sends the ack event 
-	 * (CMSessionEvent.REMOVE_SOCKET_CHANNEL_ACK) back to the client.
+	 * ({@link CMSessionEvent#REMOVE_BLOCK_SOCKET_CHANNEL_ACK}) back to the client.
 	 * <br> The client closes and removes the target channel only if it receives the ack event and the return code 
 	 * is 1. 
 	 * The client event handler can catch the event in order to figure out the result of the removal request.
-	 * The detailed event fields are described below:
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SESSION_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Channel name (server name) </td> <td> {@link CMSessionEvent#getChannelName()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Channel key </td> <td> {@link CMSessionEvent#getChannelNum()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSessionEvent#getReturnCode()} </td>
-	 *   </tr>
-	 * </table>
 	 * 
 	 * @param nChKey - the key of a socket channel that is to be deleted.
 	 * @param strTarget - the name of a target (server or client) to which the target socket channel is connected.
@@ -2117,7 +1795,7 @@ public class CMClientStub extends CMStub {
 	 * <p> This method does not immediately remove the requested channel for safe and smooth close procedure 
 	 * between the client and the target (server or client). Before the removal of the client socket channel, the client first sends 
 	 * a request CM event to the target that then prepares the channel disconnection and sends the ack event 
-	 * (CMSessionEvent.REMOVE_SOCKET_CHANNEL_ACK) back to the client.
+	 * ({@link CMSessionEvent#REMOVE_BLOCK_SOCKET_CHANNEL_ACK}) back to the client.
 	 * <br> The client closes and removes the target channel only if it receives the ack event and the return code 
 	 * is 1. 
 	 * 
@@ -3446,33 +3124,8 @@ public class CMClientStub extends CMStub {
 	 * CM uses the registered user information for the user authentication when a user logs in to the default server.
 	 * 
 	 * <p> Whether the registration request is successful or not is set to a return code of a reply session event, 
-	 * REGISTER_USER_ACK. If the request is successful, the reply event also contains the registration time at the server. 
-	 * The details of the REGISTER_USER_ACK event are described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.REGISTER_USER_ACK event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.REGISTER_USER_ACK</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed
-	 * </td>
-	 * <td>getReturnCode()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Creation time</td><td>String</td><td>Time to register the user at the DB</td><td>getCreationTime()</td>
-	 * </tr>
-	 * </table>
+	 * {@link CMSessionEvent#REGISTER_USER_ACK}. If the request is successful, 
+	 * the reply event also contains the registration time at the server. 
 	 * 
 	 * @param strName - the user name
 	 * @param strPasswd - the password
@@ -3519,29 +3172,7 @@ public class CMClientStub extends CMStub {
 	 * the CM client stub. If a client is connected to the default server, it can call this method. 
 	 * When requested, CM removes the registered user information from the CM DB.
 	 * <br> Whether the deregistration request is successful or not is set to a return code of 
-	 * a reply session event, DEREGISTER_USER_ACK as described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.DEREGISTER_USER_ACK event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.DEREGISTER_USER_ACK</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed
-	 * </td>
-	 * <td>getReturnCode()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
-	 * </tr>
-	 * </table>
+	 * a reply session event, {@link CMSessionEvent#DEREGISTER_USER_ACK}.
 	 * 
 	 * @param strName - the user name
 	 * @param strPasswd - the password
@@ -3590,32 +3221,7 @@ public class CMClientStub extends CMStub {
 	 * If a client is connected to the default server, it can call this method. When requested, 
 	 * CM provides the basic profile of the target user such as a name and registration time.
 	 * <br> Whether the requested user is found or not is set to a return code of a reply session event, 
-	 * FIND_REGISTERED_USER_ACK as described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMSessionEvent.FIND_REGISTERED_USER_ACK event</caption>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SESSION_EVENT</td>
-	 * </tr>
-	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSessionEvent.FIND_REGISTERED_USER_ACK</td>
-	 * </tr>
-	 * <tr bgcolor="lightgrey">
-	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Return code</td><td>int</td>
-	 * <td>Result of the request <br>1: succeeded<br>0: failed
-	 * </td>
-	 * <td>getReturnCode()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>User name</td><td>String</td><td>Requester user name</td><td>getUserName()</td>
-	 * </tr>
-	 * <tr>
-	 * <td>Creation time</td><td>String</td><td>Time to create the user at DB</td><td>getCreationTime()</td>
-	 * </tr>
-	 * </table>
+	 * {@link CMSessionEvent#FIND_REGISTERED_USER_ACK}.
 	 * 
 	 * @param strName - the user name
 	 */

@@ -247,10 +247,14 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the request to add a blocking socket channel information.
 	 * <p>event direction: client -&gt; server
+	 * <br>event direction: client -&gt; client in the p2p file transfer
 	 * <p>The ADD_BLOCK_SOCKET_CHANNEL is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#addBlockSocketChannel(int, String)} 
 	 * or 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncAddBlockSocketChannel(int, String)}.
+	 * <br> A file sender client also can send this event to a file receiver client 
+	 * to make a dedicated channel if the FILE_TRANSFER_SCHEME field is set to 1 in 
+	 * the server CM configuration file (cm-server.conf). 
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
@@ -283,10 +287,16 @@ public class CMSessionEvent extends CMEvent {
 	/**
 	 * The event ID for the request to remove a blocking socket channel information.
 	 * <p>event direction: client -&gt; server
+	 * <br>event direction: client -&gt; client in the p2p file transfer
 	 * <p>The REMOVE_BLOCK_SOCKET_CHANNEL is sent when the client calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#removeBlockSocketChannel(int, String)},
 	 * or 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMClientStub#syncRemoveBlockSocketChannel(int, String)}.
+	 * <br> A file sender or receiver client also can send this event 
+	 * to finish or cancel the file transfer with a dedicated channel if 
+	 * the FILE_TRANSFER_SCHEME field is set to 1 in the server CM configuration file 
+	 * (cm-server.conf). 
+	 * 
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 

@@ -374,6 +374,31 @@ public class CMStub {
 		return strDefServer;
 	}
 	
+	/**
+	 * Replies a request from a remote CM node.
+	 * 
+	 * <p> Some CM events require that a requested application instead of CM needs to 
+	 * determine an answer. In this case, the application can call this method to reply 
+	 * the request with its answer.
+	 * <br> Currently, following CM events can be used to ask an application its answer.
+	 * 
+	 * <ul>
+	 * <li>{@link CMSessionEvent#LOGIN} : A client requests user authentication from 
+	 * the default server.</li>
+	 * <li>{@link CMMultiServerEvent#ADD_LOGIN} : A client request user authentication 
+	 * from an additional server.</li>
+	 * <li>{@link CMFileEvent#REQUEST_PERMIT_PULL_FILE} : A file receiver node requests 
+	 * to receive a file from a file owner node.</li>
+	 * <li>{@link CMFileEvent#REQUEST_PERMIT_PUSH_FILE} : A file sender node requests 
+	 * to send a file to a file receiver node.</li>
+	 * </ul>
+	 * 
+	 * @param event - the request event
+	 * @param nReturnCode - the reply to the request.
+	 * <br>1 : accepts the request.
+	 * <br>0 : rejects the request.
+	 * @return true if the reply is successfully sent to the requester; false otherwise.
+	 */
 	public boolean replyEvent(CMEvent event, int nReturnCode)
 	{
 		int nType = event.getType();
@@ -2057,82 +2082,44 @@ public class CMStub {
 	/**
 	 * Requests to transfer a file from a owner (pull mode).
 	 * 
-	 * <p> If a client requests a file, the file owner can be a server. If a server requests a file, 
-	 * the file owner can be a client.
-	 * <p> If a client requests a file to the default server and the server has the requested file 
-	 * in its file path, the client successfully receives the file and locates it in its file path. 
-	 * If the requested file does not exist in the requested server, the server sends a pre-defined 
-	 * file event as the reply to the request and finishes the file transfer protocol. 
-	 * <br> By catching the reply file event, REPLY_FILE_TRANSFER, the client can figure out 
-	 * whether the requested file exists or not in the server. The following codes are the part of 
-	 * the client event handler which handles the REPLY_FILE_TRANSFER event. If the return code of the event is 1, 
-	 * the requested file exists. If the return code is 0, the requested file does not exist in the requested server.
-	 * The detailed event fields of the REPLY_FILE_TRANSFER event are described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMFileEvent.REPLY_FILE_TRANSFER event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMFileEvent.REPLY_FILE_TRANSFER </td>
-	 *   </tr>
-	 *   <tr bgcolor="lightgrey">
-	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> return code </td> <td> int </td> 
-	 *     <td> 1: ok <br> 0: the requested file does not exist
-	 *     </td>
-	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> attaching SNS content ID </td> <td> int </td> 
-	 *     <td> If this file is an attachment of an SNS content, the content ID (&gt;= 0) is set. The default value is 
-	 *     -1 (if this file is not an attachment). 
-	 *     <td> {@link CMFileEvent#getContentID()} </td>
-	 *   </tr>
-	 * </table>
-	 * 
-	 * <p> When the requested file is completely transferred, the sender CM sends the END_FILE_TRANSFER event 
-	 * to the requester. The requester can catch this event in the event handler if it needs to be notified 
-	 * when the entire file is transferred. The detailed information of the END_FILE_TRANSFER event is described below.
-	 *
-	 * <table border=1>
-	 * <caption>CMFileEvent.END_FILE_TRANSFER event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMFileEvent.END_FILE_TRANSFER </td>
-	 *   </tr>
-	 *   <tr bgcolor="lightgrey">
-	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> return code </td> <td> int </td> 
-	 *     <td> 1: transfer succeeded <br> 0: transfer failed
-	 *     </td>
-	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> attaching SNS content ID </td> <td> int </td> 
-	 *     <td> If this file is an attachment of an SNS content, the content ID (&gt;= 0) is set. The default value is 
-	 *     -1 (if this file is not an attachment). 
-	 *     <td> {@link CMFileEvent#getContentID()} </td>
-	 *   </tr>
-	 * </table>
-	 * 
+	 * <p> A client or a server can request a file from an owner node. The owner can also 
+	 * be a client or server.
+	 * <br> If the requester calls this method, the file owner receives the request event 
+	 * ({@link CMFileEvent#REQUEST_PERMIT_PULL_FILE}). The file owner then accepts or rejects 
+	 * to send the requested file automatically or manually. If the PERMIT_FILE_TRANSFER 
+	 * field of the owner's CM configuration file (cm-server.conf or cm-client.conf) is 
+	 * set to 1, the owner automatically accepts the request and proceeds the next step 
+	 * to send the file. If the PERMIT_FILE_TRANSFER field is set to 0, the owner 
+	 * application should notify CM of the answer of the request by calling 
+	 * {@link CMStub#replyEvent(CMEvent, int)}. The second parameter of this method 
+	 * indicates the answer. If the parameter value is 1, the request is accepted. If 
+	 * the parameter is 0, the request is rejected. If the requested file does not exist 
+	 * in the owner, the reply parameter is set to -1.
+	 * <br> The requester application can catch the reply event 
+	 * ({@link CMFileEvent#REPLY_PERMIT_PULL_FILE}} to check whether the request is 
+	 * accepted or not.
+	 * <p> CM uses two strategies in the file-transfer service. If the FILE_TRANSFER_SCHEME 
+	 * field of the server configuration file (cm-server.conf) is set to 0, CM uses the 
+	 * default communication channel between a sender and a receiver to transfer a file. 
+	 * If both the sender and the receiver are clients in the client-server model, then 
+	 * the server relays all the events required to transfer a file.
+	 * <br> If the FILE_TRANSFER_SCHEME field is set to 1, CM uses a separate and dedicated 
+	 * communication channel and thread to transfer a file. The dedicated channel is 
+	 * directly connected between the sender and the receiver before the file-transfer task. 
+	 * If a receiver node is located in a different private network, a sender cannot make 
+	 * a dedicated channel and cannot transfer a file.
+	 * <br> According to the file-transfer method, CM nodes exchanges different CM events. 
+	 * An easy way to figure out to which file-transfer method a CM event belongs is to 
+	 * check whether the event name ends with "CHAN" or "CHAN_ACK". If so, such an event belongs 
+	 * to the file-transfer using a dedicated channel; otherwise, the event belongs to 
+	 * the file-transfer using the default channel. 
+	 *  
+	 * <p> When the requested file is completely transferred, the sender CM sends 
+	 * {@link CMFileEvent#END_FILE_TRANSFER} or {@link CMFileEvent#END_FILE_TRANSFER_CHAN} 
+	 * events to the requester according to the file-transfer method. 
+	 * The requester can catch the completion event in the event handler if it needs to be 
+	 * notified when the entire file is transferred.
+	 *  
 	 * @param strFileName - the requested file name
 	 * @param strFileOwner - the file owner name
 	 * @param byteFileAppend - the file reception mode
@@ -2170,49 +2157,51 @@ public class CMStub {
 	/**
 	 * Sends a file to a receiver (push mode).
 	 * 
-	 * <p> Unlike the pull mode, in the push mode, a CM application can send a file to another remote CM application.
+	 * <p> Unlike the pull mode, in the push mode, a CM client or server can send a file 
+	 * to another remote CM client or server if the push-file request is accepted.
+	 * <br> If the requester calls this method, the file receiver receives the request 
+	 * event ({@link CMFileEvent#REQUEST_PERMIT_PUSH_FILE}). The file receiver then 
+	 * accepts or rejects to receive the file automatically or manually. If 
+	 * the PERMIT_FILE_TRANSFER field of the receiver's CM configuration file 
+	 * (cm-server.conf or cm-client.conf) is set to 1, the receiver automatically accepts 
+	 * the request and proceeds the next step to receive the file. 
+	 * If the PERMIT_FILE_TRANSFER field is set to 0, the receiver application should 
+	 * notify CM of the answer of the request by calling 
+	 * {@link CMStub#replyEvent(CMEvent, int)}. The second parameter of this method 
+	 * indicates the answer. If the parameter value is 1, the request is accepted. If 
+	 * the parameter is 0, the request is rejected.
+	 * <br> The requester application can catch the reply event 
+	 * ({@link CMFileEvent#REPLY_PERMIT_PUSH_FILE}) to check whether the request is 
+	 * accepted or not.
 	 * 
-	 * <p> When the file is entirely transferred to the receiver, the receiver CM sends the END_FILE_TRANSFER_ACK event 
-	 * to the sender. The sender can catch this event in the event handler if it needs to be notified when the entire file 
-	 * is transferred. The detailed information of the END_FILE_TRANSFER_ACK event is the same as that of 
-	 * the END_FILE_TRANSFER event as follows.
+	 * <p> CM uses two strategies in the file-transfer service. If the FILE_TRANSFER_SCHEME 
+	 * field of the server configuration file (cm-server.conf) is set to 0, CM uses the 
+	 * default communication channel between a sender and a receiver to transfer a file. 
+	 * If both the sender and the receiver are clients in the client-server model, then 
+	 * the server relays all the events required to transfer a file.
+	 * <br> If the FILE_TRANSFER_SCHEME field is set to 1, CM uses a separate and dedicated 
+	 * communication channel and thread to transfer a file. The dedicated channel is 
+	 * directly connected between the sender and the receiver before the file-transfer task. 
+	 * If a receiver node is located in a different private network, a sender cannot make 
+	 * a dedicated channel and cannot transfer a file.
+	 * <br> According to the file-transfer method, CM nodes exchanges different CM events. 
+	 * An easy way to figure out to which file-transfer method a CM event belongs is to 
+	 * check whether the event name ends with "CHAN" or "CHAN_ACK". If so, such an event belongs 
+	 * to the file-transfer using a dedicated channel; otherwise, the event belongs to 
+	 * the file-transfer using the default channel.
 	 * 
-	 * <table border=1>
-	 * <caption>CMFileEvent.END_FILE_TRANSFER_ACK event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMFileEvent.END_FILE_TRANSFER_ACK </td>
-	 *   </tr>
-	 *   <tr bgcolor="lightgrey">
-	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> file name </td> <td> String </td> <td> file name </td> <td> {@link CMFileEvent#getFileName()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> return code </td> <td> int </td> 
-	 *     <td> 1: the entire file successfully received <br> 0: reception error at the receiver
-	 *     </td>
-	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> attaching SNS content ID </td> <td> int </td> 
-	 *     <td> If this file is an attachment of an SNS content, the content ID (&gt;= 0) is set. The default value is 
-	 *     -1 (if this file is not an attachment). 
-	 *     <td> {@link CMFileEvent#getContentID()} </td>
-	 *   </tr>
-	 * </table>
+	 * <p> When the receiver receives the file completely from the requester (sender), 
+	 * the receiver CM sends {@link CMFileEvent#END_FILE_TRANSFER_ACK} or 
+	 * {@link CMFileEvent#END_FILE_TRANSFER_CHAN_ACK} events to the requester 
+	 * according to the file-transfer method. 
+	 * The requester can catch the completion event in the event handler if it needs to be 
+	 * notified when the receiver receives the entire file blocks.
 	 *  
 	 * @param strFilePath - the path name of a file to be sent
 	 * @param strReceiver - the receiver name
 	 * @return true if the file push is successfully notified to the receiver, or false otherwise.
 	 * @see CMStub#requestFile(String, String)
+	 * @see CMStub#requestFile(String, String, byte)
 	 */
 	public boolean pushFile(String strFilePath, String strReceiver)
 	{
@@ -2240,39 +2229,8 @@ public class CMStub {
 	 * The file pushing task can be cancelled regardless of the file transfer scheme that is determined 
 	 * by the FILE_TRANSFER_SCHEME field of the server CM configuration file. The cancellation is also 
 	 * notified to the receiver. The result of the receiver's cancellation is sent to the sender 
-	 * as the CANCEL_FILE_SEND_ACK or the CANCEL_FILE_SEND_CHAN_ACK event. The former event is sent 
-	 * if the file transfer service uses the default channel (,that is, if the FILE_TRANSFER_SCHEME field 
-	 * is 0 in the server CM configuration file), and the latter event is sent if the file transfer service 
-	 * uses the separate channel (, that is, if the FILE_TRANSFER_SCHEME field is 1 in the server CM 
-	 * configuration file). The detailed information of these events is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMFileEvent.CANCEL_FILE_SEND_CHAN_ACK event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> 
-	 *     <td> CMFileEvent.CANCEL_FILE_SEND_ACK <br> CMFileEvent.CANCEL_FILE_SEND_CHAN_ACK </td>
-	 *   </tr>
-	 *   <tr bgcolor="lightgrey">
-	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> sender name </td> <td> String </td> <td> file sender name </td>
-	 *     <td> {@link CMFileEvent#getFileSender()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> return code </td> <td> int </td> 
-	 *     <td> 1: successfully cancelled at the receiver <br> 0: cancellation error at the receiver
-	 *     </td>
-	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
-	 *   </tr>
-	 * </table> 
+	 * as {@link CMFileEvent#CANCEL_FILE_SEND_ACK} or 
+	 * {@link CMFileEvent#CANCEL_FILE_SEND_CHAN_ACK} event.
 	 * 
 	 * @param strReceiver - the receiver name
 	 * @return true if the cancellation is succeeded, or false otherwise.
@@ -2290,39 +2248,10 @@ public class CMStub {
 	 * 
 	 * <p> A receiver can cancel all of its receiving tasks from the sender by calling this method. 
 	 * Unlike the cancellation of the file pushing task, the file pulling task can be cancelled 
-	 * only if the file transfer scheme is on using the separate channel (, that is, 
+	 * only if the file transfer scheme uses the separate channel (, that is, 
 	 * if the FILE_TRANSFER_SCHEME field is 1 in the server CM configuration file). 
 	 * The cancellation is also notified to the sender. The result of the sender's cancellation 
-	 * is sent to the receiver as the CANCEL_FILE_RECV_CHAN_ACK event. The detailed information of 
-	 * this events is described below.
-	 * 
-	 * <table border=1>
-	 * <caption>CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK event</caption>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_FILE_EVENT </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> 
-	 *     <td> CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK </td>
-	 *   </tr>
-	 *   <tr bgcolor="lightgrey">
-	 *     <td> Event field </td> <td> Field data type </td> <td> Field definition </td> <td> Get method </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> sender name </td> <td> String </td> <td> file sender name </td>
-	 *     <td> {@link CMFileEvent#getFileSender()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> receiver name </td> <td> String </td> <td> file receiver name </td> 
-	 *     <td> {@link CMFileEvent#getFileReceiver()} </td>
-	 *   </tr>
-	 *   <tr>
-	 *     <td> return code </td> <td> int </td> 
-	 *     <td> 1: successfully cancelled at the sender <br> 0: cancellation error at the sender
-	 *     </td>
-	 *     <td> {@link CMFileEvent#getReturnCode()} </td>
-	 *   </tr>
-	 * </table>  
+	 * is sent to the receiver as {@link CMFileEvent#CANCEL_FILE_RECV_CHAN_ACK} event.
 	 * 
 	 * @param strSender - the sender name
 	 * @return true if the cancellation is succeeded, or false otherwise.

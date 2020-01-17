@@ -15,9 +15,7 @@ public class CMFileEvent extends CMEvent{
 	 * <p>event direction: receiver (requester) -&gt; sender (file owner)
 	 * <p>This event is sent when the receiver calls 
 	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String)} or 
-	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String, byte)}, 
-	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
-	 * (cm-server.conf) is set to 0.
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#requestFile(String, String, byte)}.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
@@ -45,6 +43,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
+	 * <br>-1: the requested file does not exist.
 	 * <br>0: the request is denied.
 	 * <br>1: the request is accepted.</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -58,9 +57,7 @@ public class CMFileEvent extends CMEvent{
 	 * The event ID for requesting a permit to push a file.
 	 * <p>event direction: sender (requester) -&gt; receiver (file owner)
 	 * <p>This event is sent when the sender calls 
-	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}, 
-	 * and if the FILE_TRANSFER_SCHEME field of the configuration file of the CM server 
-	 * (cm-server.conf) is set to 0.
+	 * {@link kr.ac.konkuk.ccslab.cm.stub.CMStub#pushFile(String, String)}.
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
