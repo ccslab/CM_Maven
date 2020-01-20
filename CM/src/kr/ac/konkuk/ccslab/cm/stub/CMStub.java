@@ -2096,7 +2096,7 @@ public class CMStub {
 	 * the parameter is 0, the request is rejected. If the requested file does not exist 
 	 * in the owner, the reply parameter is set to -1.
 	 * <br> The requester application can catch the reply event 
-	 * ({@link CMFileEvent#REPLY_PERMIT_PULL_FILE}} to check whether the request is 
+	 * ({@link CMFileEvent#REPLY_PERMIT_PULL_FILE}) to check whether the request is 
 	 * accepted or not.
 	 * <p> CM uses two strategies in the file-transfer service. If the FILE_TRANSFER_SCHEME 
 	 * field of the server configuration file (cm-server.conf) is set to 0, CM uses the 
