@@ -201,9 +201,11 @@ public class CMWinServer extends JFrame {
 		fileTransferSubMenu.add(setPathMenuItem);
 		JMenuItem reqFileMenuItem = new JMenuItem("request file");
 		reqFileMenuItem.addActionListener(menuListener);
+		reqFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.ALT_MASK));
 		fileTransferSubMenu.add(reqFileMenuItem);
 		JMenuItem pushFileMenuItem = new JMenuItem("push file");
 		pushFileMenuItem.addActionListener(menuListener);
+		pushFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, ActionEvent.ALT_MASK));
 		fileTransferSubMenu.add(pushFileMenuItem);
 		JMenuItem cancelRecvMenuItem = new JMenuItem("cancel receiving file");
 		cancelRecvMenuItem.addActionListener(menuListener);
@@ -582,7 +584,7 @@ public class CMWinServer extends JFrame {
 			"File Append Mode: ", fAppendBox
 		};
 		int option = JOptionPane.showConfirmDialog(null, message, "File Request Input", JOptionPane.OK_CANCEL_OPTION);
-		if(option == JOptionPane.CANCEL_OPTION)
+		if(option == JOptionPane.CANCEL_OPTION || option != JOptionPane.OK_OPTION)
 		{
 			printMessage("canceled!\n");
 			return;
@@ -644,7 +646,7 @@ public class CMWinServer extends JFrame {
 				"File Append Mode: ", fAppendBox 
 				};
 		int option = JOptionPane.showConfirmDialog(null, message, "File Push", JOptionPane.OK_CANCEL_OPTION);
-		if(option == JOptionPane.CANCEL_OPTION)
+		if(option == JOptionPane.CANCEL_OPTION || option != JOptionPane.OK_OPTION)
 		{
 			printMessage("canceled.\n");
 			return;
