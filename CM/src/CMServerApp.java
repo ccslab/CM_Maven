@@ -410,6 +410,7 @@ public class CMServerApp {
 		boolean bReturn = false;
 		String strFilePath = null;
 		String strReceiver = null;
+		String strFileAppend = null;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("====== push a file");
 		
@@ -418,12 +419,21 @@ public class CMServerApp {
 			strFilePath = br.readLine();
 			System.out.print("File receiver (user name): ");
 			strReceiver = br.readLine();
+			System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
+			strFileAppend = br.readLine();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		bReturn = m_serverStub.pushFile(strFilePath, strReceiver);
+		if(strFileAppend.isEmpty())
+			bReturn = m_serverStub.pushFile(strFilePath, strReceiver);
+		else if(strFileAppend.equals("y"))
+			bReturn = m_serverStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_APPEND);
+		else if(strFileAppend.equals("n"))
+			bReturn = m_serverStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_OVERWRITE);
+		else
+			System.err.println("wrong input for the file append mode!");
 		
 		if(!bReturn)
 			System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
