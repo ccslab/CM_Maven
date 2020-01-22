@@ -2299,10 +2299,9 @@ public class CMStub {
 	 * measures the incoming network throughput from a CM node.
 	 * 
 	 * <p> A CM application can measure the incoming/outgoing network throughput from/to another CM application 
-	 * that is directly connected to the application. For example, a client can measure the network throughput 
-	 * from/to the server. 
+	 * (server or client).
 	 * The incoming network throughput of a CM node A from B measures how many bytes A can receive from B in a second. 
-	 * The outgoing network through of a CM node A to B measures how many bytes A can send to B.
+	 * The outgoing network throughput of a CM node A to B measures how many bytes A can send to B.
 	 * 
 	 * @param strTarget - the target CM node
 	 * <br> The target CM node should be directly connected to the calling node.
@@ -2315,8 +2314,6 @@ public class CMStub {
 		boolean bReturn = false;
 		float fSpeed = -1;
 		long lFileSize = -1;	// the size of a file to measure the transmission delay
-		long lStartTime = System.currentTimeMillis();
-		long lEndTime = -1;
 		long lTransDelay = -1;
 		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
@@ -2324,7 +2321,6 @@ public class CMStub {
 		CMFileEvent replyEvent = null;
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		
-		fInfo.setStartTime(lStartTime);
 		bReturn = CMFileTransferManager.requestPermitForPullFile("throughput-test.jpg", 
 				strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		
@@ -2361,14 +2357,13 @@ public class CMStub {
 			return -1;
 		}
 				
-		lEndTime = System.currentTimeMillis();
-		lTransDelay = lEndTime - lStartTime;	// millisecond
+		lTransDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();	// millisecond
 		fSpeed = ((float)lFileSize / 1000000) / ((float)lTransDelay / 1000);	// MBps
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMStub.measureInputThroughput(); received file size("+lFileSize+"), delay("
-					+lTransDelay+" ms), speed("+fSpeed+" MBps)");
+			System.out.println("CMStub.measureInputThroughput(); received file size("
+					+lFileSize+"), delay("+lTransDelay+" ms), speed("+fSpeed+" MBps)");
 		}
 
 		return fSpeed;
@@ -2388,8 +2383,6 @@ public class CMStub {
 		boolean bReturn = false;
 		float fSpeed = -1;
 		long lFileSize = -1;	// the size of a file to measure the transmission delay
-		long lStartTime = System.currentTimeMillis();
-		long lEndTime = -1;
 		long lTransDelay = -1;
 		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
 		CMEventInfo eInfo = m_cmInfo.getEventInfo();
@@ -2398,7 +2391,6 @@ public class CMStub {
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + "throughput-test.jpg";
 		
-		fInfo.setStartTime(lStartTime);
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strTarget, 
 				CMInfo.FILE_OVERWRITE, -1, m_cmInfo);
@@ -2431,8 +2423,7 @@ public class CMStub {
 			lFileSize = replyEvent.getFileSize();
 		}
 				
-		lEndTime = System.currentTimeMillis();
-		lTransDelay = lEndTime - lStartTime;	// millisecond
+		lTransDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();	// millisecond
 		fSpeed = ((float)lFileSize / 1000000) / ((float)lTransDelay / 1000);	// MBps
 		
 		if(CMInfo._CM_DEBUG)

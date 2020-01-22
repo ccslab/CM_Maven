@@ -2148,6 +2148,7 @@ public class CMInteractionManager {
 	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		String strMyName = interInfo.getMyself().getName();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMServer targetServer = null;
@@ -2197,6 +2198,7 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
+			System.out.println("delay: "+(System.currentTimeMillis()-commInfo.getStartTime()));
 		}
 
 		// check whether there is sending file information that is not started to be sent

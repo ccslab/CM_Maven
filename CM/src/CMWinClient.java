@@ -1878,7 +1878,7 @@ public class CMWinClient extends JFrame {
 		SocketChannel sc = null;
 		DatagramChannel dc = null;
 		boolean isSyncCall = false;
-		long lDelay = -1;
+		//long lDelay = -1;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -2012,14 +2012,14 @@ public class CMWinClient extends JFrame {
 			{
 				if(isSyncCall)
 				{
-					m_eventHandler.setStartTime(System.currentTimeMillis());
+					//m_eventHandler.setStartTime(System.currentTimeMillis());
 					sc = m_clientStub.syncAddBlockSocketChannel(nChKey, strServerName);
-					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					//lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(sc != null)
 					{
 						printMessage("Successfully added a blocking socket channel both "
 								+ "at the client and the server: key("+nChKey+"), server("+strServerName+")\n");
-						printMessage("return delay: "+lDelay+" ms.\n");
+						//printMessage("return delay: "+lDelay+" ms.\n");
 					}
 					else
 						printMessage("Failed to add a blocking socket channel both at "
@@ -2027,15 +2027,15 @@ public class CMWinClient extends JFrame {
 				}
 				else
 				{
-					m_eventHandler.setStartTime(System.currentTimeMillis());
+					//m_eventHandler.setStartTime(System.currentTimeMillis());
 					result = m_clientStub.addBlockSocketChannel(nChKey, strServerName);
-					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					//lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(result)
 					{
 						printMessage("Successfully added a blocking socket channel at the client and "
 								+"requested to add the channel info to the server: key("+nChKey+"), server("
 								+strServerName+")\n");
-						printMessage("return delay: "+lDelay+" ms.\n");
+						//printMessage("return delay: "+lDelay+" ms.\n");
 					}
 					else
 						printMessage("Failed to add a blocking socket channel at the client or "
@@ -2124,7 +2124,7 @@ public class CMWinClient extends JFrame {
 		boolean result = false;
 		boolean isBlock = false;
 		boolean isSyncCall = false;
-		long lDelay = 0;
+		//long lDelay = 0;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -2255,14 +2255,14 @@ public class CMWinClient extends JFrame {
 			{
 				if(isSyncCall)
 				{
-					m_eventHandler.setStartTime(System.currentTimeMillis());
+					//m_eventHandler.setStartTime(System.currentTimeMillis());
 					result = m_clientStub.syncRemoveBlockSocketChannel(nChKey, strServerName);
-					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					//lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(result)
 					{
 						printMessage("Successfully removed a blocking socket channel both "
 								+ "at the client and the server: key("+nChKey+"), server ("+strServerName+")\n");
-						printMessage("return delay: "+lDelay+" ms.\n");
+						//printMessage("return delay: "+lDelay+" ms.\n");
 					}
 					else
 						printMessage("Failed to remove a blocking socket channel both at the client "
@@ -2270,14 +2270,14 @@ public class CMWinClient extends JFrame {
 				}
 				else
 				{
-					m_eventHandler.setStartTime(System.currentTimeMillis());
+					//m_eventHandler.setStartTime(System.currentTimeMillis());
 					result = m_clientStub.removeBlockSocketChannel(nChKey, strServerName);
-					lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
+					//lDelay = System.currentTimeMillis() - m_eventHandler.getStartTime();
 					if(result)
 					{
 						printMessage("Successfully removed a blocking socket channel at the client and " 
 								+ "requested to remove it at the server: key("+nChKey+"), server("+strServerName+")\n");
-						printMessage("return delay: "+lDelay+" ms.\n");
+						//printMessage("return delay: "+lDelay+" ms.\n");
 					}
 					else
 						printMessage("Failed to remove a blocking socket channel at the client or "

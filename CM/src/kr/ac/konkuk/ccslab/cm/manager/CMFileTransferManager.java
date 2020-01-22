@@ -94,8 +94,11 @@ public class CMFileTransferManager {
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		boolean bReturn = false;
 		CMUser myself = cmInfo.getInteractionInfo().getMyself();
+		
+		fInfo.setStartRequestTime(System.currentTimeMillis());
 		
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE);
@@ -627,6 +630,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPushFile(String strFilePath, 
 			String strFileReceiver, byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		boolean bReturn = false;
 		
 		// get file information (size)
@@ -638,6 +642,8 @@ public class CMFileTransferManager {
 			return false;
 		}
 		long lFileSize = file.length();
+		
+		fInfo.setStartRequestTime(System.currentTimeMillis());
 		
 		// get sender (my) name
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
@@ -800,7 +806,8 @@ public class CMFileTransferManager {
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		fInfo.setStartTime(System.currentTimeMillis());
+		
+		fInfo.setStartSendTime(System.currentTimeMillis());
 		
 		if(confInfo.isFileTransferScheme())
 			bReturn = pushFileWithSepChannel(strFilePath, strReceiver, byteFileAppend, nContentID, cmInfo);
@@ -1858,6 +1865,7 @@ public class CMFileTransferManager {
 		boolean bForward = true;
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		String strMyName = interInfo.getMyself().getName();
 		
 		if(CMInfo._CM_DEBUG)
@@ -1880,6 +1888,8 @@ public class CMFileTransferManager {
 			return false;
 		}
 
+		fInfo.setStartRequestTime(System.currentTimeMillis());
+		
 		// get the full path of the requested file
 		String strFullPath = confInfo.getTransferedFileHome().toString() + 
 				File.separator + fe.getFileName(); 
@@ -1953,6 +1963,7 @@ public class CMFileTransferManager {
 	{
 		boolean bForward = true;
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		String strMyName = interInfo.getMyself().getName();
 		
 		if(CMInfo._CM_DEBUG)
@@ -1974,6 +1985,8 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
+		
+		fInfo.setStartRequestTime(System.currentTimeMillis());
 		
 		// check PERMIT_FILE_TRANSFER field
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
@@ -2015,7 +2028,7 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
-		
+				
 		if(fe.getReturnCode() == 1)
 		{
 			if(confInfo.isFileTransferScheme() && isP2PFileTransfer(fe, cmInfo))
@@ -2068,6 +2081,8 @@ public class CMFileTransferManager {
 			return false;
 		}
 
+		fInfo.setStartRecvTime(System.currentTimeMillis());
+		
 		// set file size
 		long lFileSize = fe.getFileSize();
 		
@@ -2508,6 +2523,13 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
+		
+		fInfo.setEndRecvTime(System.currentTimeMillis());
+		long lElapsedTime = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("Elapsed receiving time ("+lElapsedTime+" ms).");
+		}
 
 		// find info from recv file list
 		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
@@ -2593,7 +2615,6 @@ public class CMFileTransferManager {
 		String strFileName = fe.getFileName();
 		long lFileSize = fe.getFileSize();
 		int nContentID = fe.getContentID();
-		long lElapsedTime = System.currentTimeMillis() - fInfo.getStartTime();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strMyName = interInfo.getMyself().getName();
 		boolean bForward = true;
@@ -2604,7 +2625,6 @@ public class CMFileTransferManager {
 					+ "file sender("+fe.getFileSender()+"), file receiver("
 					+strFileReceiver+"), file("+strFileName+"), size("+lFileSize+"), return code("+fe.getReturnCode()
 					+"), contentID("+nContentID+").");
-			System.out.println("file-transfer time("+lElapsedTime+" ms)");
 		}
 		
 		// check whether this CM node is the target node of this event or not		
@@ -2616,6 +2636,13 @@ public class CMFileTransferManager {
 						+fe.getFileSender()+").");
 			}
 			return false;
+		}
+
+		fInfo.setEndSendTime(System.currentTimeMillis());
+		long lElapsedTime = fInfo.getEndSendTime() - fInfo.getStartSendTime();
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("Elapsed sending time("+lElapsedTime+" ms).");			
 		}
 
 		// find completed send info
@@ -2694,6 +2721,8 @@ public class CMFileTransferManager {
 			return false;
 		}
 		
+		fInfo.setStartRecvTime(System.currentTimeMillis());
+
 		// set file size
 		long lFileSize = fe.getFileSize();
 		
@@ -2921,6 +2950,13 @@ public class CMFileTransferManager {
 			return false;
 		}
 
+		fInfo.setEndRecvTime(System.currentTimeMillis());
+		long lElapsedTime = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("Elapsed receiving time ("+lElapsedTime+" ms).");
+		}
+
 		// find info from recv file list
 		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
 		if(recvInfo == null)
@@ -3053,8 +3089,7 @@ public class CMFileTransferManager {
 		String strFileName = fe.getFileName();
 		long lFileSize = fe.getFileSize();
 		int nContentID = fe.getContentID();
-		long lElapsedTime = System.currentTimeMillis() - fInfo.getStartTime();
-		
+
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN_ACK(), "
@@ -3062,7 +3097,6 @@ public class CMFileTransferManager {
 					+strFileReceiver+"), file("+strFileName+"), size("
 					+lFileSize+"), return code("+fe.getReturnCode()
 					+"), contentID("+nContentID+").");
-			System.out.println("file-transfer time("+lElapsedTime+" ms)");
 		}
 		
 		// check whether this CM node is the target node of this event or not		
@@ -3074,6 +3108,13 @@ public class CMFileTransferManager {
 						+fe.getFileSender()+").");
 			}
 			return false;
+		}
+
+		fInfo.setEndSendTime(System.currentTimeMillis());
+		long lElapsedTime = fInfo.getEndSendTime() - fInfo.getStartSendTime();
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("Elapsed sending time("+lElapsedTime+" ms).");			
 		}
 
 		// find completed send info

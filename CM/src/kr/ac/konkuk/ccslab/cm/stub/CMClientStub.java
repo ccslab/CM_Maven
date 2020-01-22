@@ -25,6 +25,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -1458,6 +1459,7 @@ public class CMClientStub extends CMStub {
 	public boolean addBlockSocketChannel(int nChKey, String strTarget)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
 		SocketChannel sc = null;
@@ -1471,6 +1473,8 @@ public class CMClientStub extends CMStub {
 			System.err.println("CMClientStub.addBlockSocketChannel(), you must log in to the default server!");
 			return false;
 		}
+		
+		commInfo.setStartTime(System.currentTimeMillis());
 		
 		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
 		if( serverInfo != null )
@@ -1565,6 +1569,7 @@ public class CMClientStub extends CMStub {
 	public SocketChannel syncAddBlockSocketChannel(int nChKey, String strTarget)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
 		SocketChannel sc = null;
@@ -1575,12 +1580,14 @@ public class CMClientStub extends CMStub {
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
-
+		
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
 		{
 			System.err.println("CMClientStub.syncAddBlockSocketChannel(), you must log in to the default server!");
 			return null;
 		}
+		
+		commInfo.setStartTime(System.currentTimeMillis());
 		
 		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
 		if( serverInfo != null )

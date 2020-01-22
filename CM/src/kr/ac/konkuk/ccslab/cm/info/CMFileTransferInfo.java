@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.info;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
+import sun.util.logging.resources.logging;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 
@@ -14,27 +15,79 @@ public class CMFileTransferInfo {
 	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable;
 	private boolean m_bCancelSend;	// flag for canceling file push with the default channel
 	
-	private long m_lStartTime;	// used for measuring the delay of the file transfer
+	// starting time (to send/receive request pushing/pulling a file)
+	private long m_lStartRequestTime;
+	// starting time of sending a file after the permit granted
+	private long m_lStartSendTime;
+	// ending time of sending a file (receiving completion ack event)
+	private long m_lEndSendTime;
+	// starting time of receiving a file after the permit granted
+	private long m_lStartRecvTime;
+	// ending time of receiving a file (receiving completion event)
+	private long m_lEndRecvTime;
 	
 	public CMFileTransferInfo()
 	{
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
 		m_bCancelSend = false;
-		m_lStartTime = -1;
+		m_lStartRequestTime = 0;
+		m_lStartSendTime = 0;
+		m_lEndSendTime = 0;
+		m_lStartRecvTime = 0;
+		m_lEndRecvTime = 0;
 	}
 	
 	////////// set/get methods
 		
-	public synchronized void setStartTime(long time)
+	public synchronized void setStartRequestTime(long time)
 	{
-		m_lStartTime = time;
-		return;
+		m_lStartRequestTime = time;
 	}
 	
-	public synchronized long getStartTime()
+	public synchronized long getStartRequestTime()
 	{
-		return m_lStartTime;
+		return m_lStartRequestTime;
+	}
+	
+	public synchronized void setStartSendTime(long time)
+	{
+		m_lStartSendTime = time;
+	}
+	
+	public synchronized long getStartSendTime()
+	{
+		return m_lStartSendTime;
+	}
+	
+	public synchronized void setEndSendTime(long time)
+	{
+		m_lEndSendTime = time;
+	}
+	
+	public synchronized long getEndSendTime()
+	{
+		return m_lEndSendTime;
+	}
+	
+	public synchronized void setStartRecvTime(long time)
+	{
+		m_lStartRecvTime = time;
+	}
+	
+	public synchronized long getStartRecvTime()
+	{
+		return m_lStartRecvTime;
+	}
+	
+	public synchronized void setEndRecvTime(long time)
+	{
+		m_lEndRecvTime = time;
+	}
+	
+	public synchronized long getEndRecvTime()
+	{
+		return m_lEndRecvTime;
 	}
 	
 	public synchronized void setCancelSend(boolean bCancel)

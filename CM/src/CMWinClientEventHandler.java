@@ -29,6 +29,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
@@ -296,8 +297,8 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			}
 			break;
 		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK:
-			lDelay = System.currentTimeMillis() - m_lStartTime;
-			printMessage("ADD_BLOCK_SOCKET_CHANNEL_ACK delay: "+lDelay+" ms.\n");
+			//lDelay = System.currentTimeMillis() - m_lStartTime;
+			//printMessage("ADD_BLOCK_SOCKET_CHANNEL_ACK delay: "+lDelay+" ms.\n");
 			if(se.getReturnCode() == 0)
 			{
 				printMessage("Adding a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
@@ -310,8 +311,8 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			}
 			break;
 		case CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
-			lDelay = System.currentTimeMillis() - m_lStartTime;
-			printMessage("REMOVE_BLOCK_SOCKET_CHANNEL_ACK delay: "+lDelay+" ms.\n");
+			//lDelay = System.currentTimeMillis() - m_lStartTime;
+			//printMessage("REMOVE_BLOCK_SOCKET_CHANNEL_ACK delay: "+lDelay+" ms.\n");
 			if(se.getReturnCode() == 0)
 			{
 				printMessage("Removing a blocking socket channel ("+se.getChannelName()+","+se.getChannelNum()
@@ -596,7 +597,10 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
 		CMConfigurationInfo confInfo = null;
+		CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
 		int nOption = -1;
+		long lTotalDelay = 0;
+		long lTransferDelay = 0;
 		
 		switch(fe.getID())
 		{
@@ -652,15 +656,22 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
-			//System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
-			printMessage("["+fe.getFileSender()+"] is about to send file("+fe.getFileName()+").\n");
+			printMessage("["+fe.getFileSender()+"] starts to send file("+fe.getFileName()+").\n");
+			break;
+		case CMFileEvent.START_FILE_TRANSFER_ACK:
+		case CMFileEvent.START_FILE_TRANSFER_CHAN_ACK:
+			printMessage("["+fe.getFileReceiver()+"] starts to receive file("
+					+fe.getFileName()+").\n");
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
-			printMessage("["+fe.getFileSender()+"] completes to send file("+fe.getFileName()+", "
-					+fe.getFileSize()+" Bytes).\n");
-			//lDelay = System.currentTimeMillis() - m_lStartTime;
-			//printMessage("file-transfer delay: "+lDelay+" ms.\n");
+			printMessage("["+fe.getFileSender()+"] completes to send file("
+					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+			
+			lTotalDelay = fInfo.getEndRecvTime() - fInfo.getStartRequestTime();
+			lTransferDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
+			printMessage("total delay("+lTotalDelay+" ms), ");
+			printMessage("file-receiving delay("+lTransferDelay+" ms).\n");
 
 			if(m_bDistFileProc)
 				processFile(fe.getFileName());
@@ -677,6 +688,15 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				}
 				m_bReqAttachedFile = false;
 			}
+			break;
+		case CMFileEvent.END_FILE_TRANSFER_ACK:
+		case CMFileEvent.END_FILE_TRANSFER_CHAN_ACK:
+			printMessage("["+fe.getFileReceiver()+"] compeletes to receive file("
+					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+			lTotalDelay = fInfo.getEndSendTime() - fInfo.getStartRequestTime();
+			lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
+			printMessage("total delay("+lTotalDelay+" ms), ");
+			printMessage("file-sending delay("+lTransferDelay+" ms).\n");
 			break;
 		case CMFileEvent.CANCEL_FILE_SEND:
 		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
