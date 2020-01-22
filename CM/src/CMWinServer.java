@@ -568,7 +568,7 @@ public class CMWinServer extends JFrame {
 		boolean bReturn = false;
 		String strFileName = null;
 		String strFileOwner = null;
-		String strFileAppendMode = null;
+		byte byteFileAppendMode = -1;
 
 		printMessage("====== request a file\n");
 		JTextField fileNameField = new JTextField();
@@ -582,22 +582,43 @@ public class CMWinServer extends JFrame {
 			"File Append Mode: ", fAppendBox
 		};
 		int option = JOptionPane.showConfirmDialog(null, message, "File Request Input", JOptionPane.OK_CANCEL_OPTION);
-		if (option == JOptionPane.OK_OPTION) 
+		if(option == JOptionPane.CANCEL_OPTION)
 		{
-			strFileName = fileNameField.getText();
-			strFileOwner = fileOwnerField.getText();
-			strFileAppendMode = (String) fAppendBox.getSelectedItem();
-			
-			if(strFileAppendMode.equals("Default"))
-				bReturn = m_serverStub.requestFile(strFileName, strFileOwner);
-			else if(strFileAppendMode.equals("Overwrite"))
-				bReturn = m_serverStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
-			else
-				bReturn = m_serverStub.requestFile(strFileName, strFileOwner, CMInfo.FILE_APPEND);
-			
-			if(!bReturn)
-				printMessage("Request file error! file("+strFileName+"), owner("+strFileOwner+").\n");
+			printMessage("canceled!\n");
+			return;
 		}
+		
+		strFileName = fileNameField.getText().trim();
+		if(strFileName.isEmpty())
+		{
+			printMessage("File name is empty!\n");
+			return;
+		}
+		
+		strFileOwner = fileOwnerField.getText().trim();
+		if(strFileOwner.isEmpty())
+		{
+			printMessage("File owner is empty!\n");
+			return;
+		}
+		
+		switch(fAppendBox.getSelectedIndex())
+		{
+		case 0:
+			byteFileAppendMode = CMInfo.FILE_DEFAULT;
+			break;
+		case 1:
+			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
+			break;
+		case 2:
+			byteFileAppendMode = CMInfo.FILE_APPEND;
+			break;
+		}
+		
+		bReturn = m_serverStub.requestFile(strFileName, strFileOwner, byteFileAppendMode);
+				
+		if(!bReturn)
+			printMessage("Request file error! file("+strFileName+"), owner("+strFileOwner+").\n");
 		
 		printMessage("======\n");
 	}
@@ -607,9 +628,48 @@ public class CMWinServer extends JFrame {
 		String strFilePath = null;
 		File[] files;
 		String strReceiver = null;
+		byte byteFileAppendMode = -1;
+		boolean bReturn = false;
 
+		/*
 		strReceiver = JOptionPane.showInputDialog("Receiver Name: ");
 		if(strReceiver == null) return;
+		*/
+		JTextField freceiverField = new JTextField();
+		String[] fAppendMode = {"Default", "Overwrite", "Append"};		
+		JComboBox<String> fAppendBox = new JComboBox<String>(fAppendMode);
+
+		Object[] message = { 
+				"File Receiver: ", freceiverField,
+				"File Append Mode: ", fAppendBox 
+				};
+		int option = JOptionPane.showConfirmDialog(null, message, "File Push", JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.CANCEL_OPTION)
+		{
+			printMessage("canceled.\n");
+			return;
+		}
+
+		strReceiver = freceiverField.getText().trim();
+		if(strReceiver.isEmpty())
+		{
+			printMessage("File receiver is empty!\n");
+			return;
+		}
+		
+		switch(fAppendBox.getSelectedIndex())
+		{
+		case 0:
+			byteFileAppendMode = CMInfo.FILE_DEFAULT;
+			break;
+		case 1:
+			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
+			break;
+		case 2:
+			byteFileAppendMode = CMInfo.FILE_APPEND;
+			break;
+		}
+		
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
 		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
@@ -622,8 +682,12 @@ public class CMWinServer extends JFrame {
 		for(int i=0; i < files.length; i++)
 		{
 			strFilePath = files[i].getPath();
-			//CMFileTransferManager.pushFile(strFilePath, strReceiver, m_serverStub.getCMInfo());
-			m_serverStub.pushFile(strFilePath, strReceiver);
+			bReturn = m_serverStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
+			if(!bReturn)
+			{
+				printMessage("push file error! file("+strFilePath+"), receiver("
+						+strReceiver+").\n");
+			}
 		}
 	
 		printMessage("======\n");
