@@ -1978,7 +1978,8 @@ public class CMFileTransferManager {
 		// check PERMIT_FILE_TRANSFER field
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		boolean bPermit = confInfo.isPermitFileTransferRequest();
-		if(bPermit || fe.getFileName().contentEquals("throughput-test.jpg"))
+		String strFileName = getFileNameFromPath(fe.getFilePath());
+		if(bPermit || strFileName.contentEquals("throughput-test.jpg"))
 		{
 			replyPermitForPushFile(fe, 1, cmInfo);  			
 			bForward = false;
