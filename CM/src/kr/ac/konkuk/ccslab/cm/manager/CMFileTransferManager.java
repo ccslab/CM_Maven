@@ -2028,6 +2028,10 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
+		
+		String strFileName = getFileNameFromPath(fe.getFilePath());
+		if(strFileName.contentEquals("throughput-test.jpg"))
+			bForward = false;
 				
 		if(fe.getReturnCode() == 1)
 		{
@@ -2082,6 +2086,9 @@ public class CMFileTransferManager {
 		}
 
 		fInfo.setStartRecvTime(System.currentTimeMillis());
+
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
 		
 		// set file size
 		long lFileSize = fe.getFileSize();
@@ -2252,6 +2259,9 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
+		
+		if(recvFileEvent.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
 		
 		// find the CMSendFileInfo object 
 		sInfo = fInfo.findSendFileInfo(recvFileEvent.getFileReceiver(), recvFileEvent.getFileName(), 
@@ -2469,6 +2479,9 @@ public class CMFileTransferManager {
 			*/
 			return false;
 		}
+		
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
 
 		// find info in the recv file list
 		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
@@ -2523,6 +2536,9 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
+		
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
 		
 		fInfo.setEndRecvTime(System.currentTimeMillis());
 		long lElapsedTime = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
@@ -2638,6 +2654,9 @@ public class CMFileTransferManager {
 			return false;
 		}
 
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
+
 		fInfo.setEndSendTime(System.currentTimeMillis());
 		long lElapsedTime = fInfo.getEndSendTime() - fInfo.getStartSendTime();
 		if(CMInfo._CM_DEBUG)
@@ -2722,6 +2741,9 @@ public class CMFileTransferManager {
 		}
 		
 		fInfo.setStartRecvTime(System.currentTimeMillis());
+
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
 
 		// set file size
 		long lFileSize = fe.getFileSize();
@@ -2896,6 +2918,9 @@ public class CMFileTransferManager {
 			return false;
 		}		
 		
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
+
 		// find the CMSendFileInfo object 
 		sInfo = fInfo.findSendFileInfo(fe.getFileReceiver(), fe.getFileName(), fe.getContentID());
 		if(sInfo == null)
@@ -2949,6 +2974,9 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
+		
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
 
 		fInfo.setEndRecvTime(System.currentTimeMillis());
 		long lElapsedTime = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
@@ -3109,6 +3137,9 @@ public class CMFileTransferManager {
 			}
 			return false;
 		}
+
+		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+			bForward = false;
 
 		fInfo.setEndSendTime(System.currentTimeMillis());
 		long lElapsedTime = fInfo.getEndSendTime() - fInfo.getStartSendTime();

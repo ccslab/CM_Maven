@@ -24,6 +24,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBREL;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
@@ -370,6 +371,10 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 
 	private void processFileEvent(CMEvent cme)
 	{
+		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
+		long lTotalDelay = 0;
+		long lTransferDelay = 0;
+
 		CMFileEvent fe = (CMFileEvent) cme;
 		switch(fe.getID())
 		{
@@ -406,21 +411,38 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
-			//System.out.println("["+fe.getSenderName()+"] is about to send file("+fe.getFileName()+").");
-			printMessage("["+fe.getFileSender()+"] is about to send file("+fe.getFileName()+").\n");
+			printMessage("["+fe.getFileSender()+"] starts to send file("+fe.getFileName()+").\n");
+			break;
+		case CMFileEvent.START_FILE_TRANSFER_ACK:
+		case CMFileEvent.START_FILE_TRANSFER_CHAN_ACK:
+			printMessage("["+fe.getFileReceiver()+"] starts to receive file("
+					+fe.getFileName()+").\n");
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
-			//System.out.println("["+fe.getSenderName()+"] completes to send file("+fe.getFileName()+", "
-			//		+fe.getFileSize()+" Bytes).");
-			printMessage("["+fe.getFileSender()+"] completes to send file("+fe.getFileName()+", "
-					+fe.getFileSize()+" Bytes).\n");
+			printMessage("["+fe.getFileSender()+"] completes to send file("
+					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+			
+			lTotalDelay = fInfo.getEndRecvTime() - fInfo.getStartRequestTime();
+			lTransferDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
+			printMessage("total delay("+lTotalDelay+" ms), ");
+			printMessage("file-receiving delay("+lTransferDelay+" ms).\n");
+
 			String strFile = fe.getFileName();
 			if(m_bDistFileProc)
 			{
 				processFile(fe.getFileSender(), strFile);
 				m_bDistFileProc = false;
 			}
+			break;
+		case CMFileEvent.END_FILE_TRANSFER_ACK:
+		case CMFileEvent.END_FILE_TRANSFER_CHAN_ACK:
+			printMessage("["+fe.getFileReceiver()+"] compeletes to receive file("
+					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+			lTotalDelay = fInfo.getEndSendTime() - fInfo.getStartRequestTime();
+			lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
+			printMessage("total delay("+lTotalDelay+" ms), ");
+			printMessage("file-sending delay("+lTransferDelay+" ms).\n");
 			break;
 		case CMFileEvent.REQUEST_DIST_FILE_PROC:
 			//System.out.println("["+fe.getUserName()+"] requests the distributed file processing.");
