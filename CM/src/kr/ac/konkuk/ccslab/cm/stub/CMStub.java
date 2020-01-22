@@ -2058,24 +2058,16 @@ public class CMStub {
 	 * 
 	 * @param strFileName - the requested file name
 	 * @param strFileOwner - the file owner name
-	 * @return true if the file transfer is successfully requested, or false otherwise.
+	 * @return true if the permit for receiving a file is successfully requested to 
+	 * the file owner, or false otherwise.
 	 * @see CMStub#requestFile(String, String, byte)
 	 * @see CMStub#pushFile(String, String)
+	 * @see CMStub#pushFile(String, String, byte)
 	 */
 	public boolean requestFile(String strFileName, String strFileOwner)
 	{
 		boolean bReturn = false;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
-		
-		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
-		{
-			System.err.println("CMFileTransferManager.requestFile(), Client must log in to the default server.");
-			return false;
-		}
-
-		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, 
-				m_cmInfo);		
+		bReturn = requestFile(strFileName, strFileOwner, CMInfo.FILE_DEFAULT);
 		return bReturn;
 	}
 	
@@ -2133,9 +2125,11 @@ public class CMStub {
 	 * where the receiver always receives the entire file even if it already has the same file. 
 	 * The CMInfo.FILE_APPEND is the append mode where the receiver skips existing file blocks 
 	 * and receives only remaining blocks.
-	 * @return true if the file transfer is successfully requested, or false otherwise.
+	 * @return true if the permit for receiving a file is successfully requested to 
+	 * the file owner, or false otherwise.
 	 * @see CMStub#requestFile(String, String)
 	 * @see CMStub#pushFile(String, String)
+	 * @see CMStub#pushFile(String, String, byte)
 	 */
 	public boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend)
 	{
@@ -2151,6 +2145,27 @@ public class CMStub {
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, 
 				byteFileAppend, m_cmInfo);
+		return bReturn;
+	}
+	
+	/**
+	 * Sends a file to a receiver (push mode).
+	 * 
+	 * <p> This method is the same as calling pushFile(strFilePath, strFileReceiver, 
+	 * CMInfo.FILE_DEFAULT) of the {@link CMStub#pushFile(String, String, byte)}.
+	 * 
+	 * @param strFilePath - the path name of a file to be sent
+	 * @param strFileReceiver - the file receiver name
+	 * @return true if the permit for pushing a file is successfully requested to 
+	 * the receiver, or false otherwise.
+	 * @see CMStub#pushFile(String, String, byte)
+	 * @see CMStub#requestFile(String, String)
+	 * @see CMStub#requestFile(String, String, byte)
+	 */
+	public boolean pushFile(String strFilePath, String strFileReceiver)
+	{
+		boolean bReturn = false;
+		bReturn = pushFile(strFilePath, strFileReceiver, CMInfo.FILE_DEFAULT);		
 		return bReturn;
 	}
 	
@@ -2198,12 +2213,24 @@ public class CMStub {
 	 * notified when the receiver receives the entire file blocks.
 	 *  
 	 * @param strFilePath - the path name of a file to be sent
-	 * @param strReceiver - the receiver name
-	 * @return true if the file push is successfully notified to the receiver, or false otherwise.
+	 * @param strReceiver - the file receiver name
+	 * @param byteFileAppend - the file reception mode
+	 * <br> The file reception mode specifies the behavior of the receiver if it already has the entire 
+	 * or part of the requested file. CM provides three file reception modes which are default, overwrite, 
+	 * and append mode. The byteFileAppend parameter can be one of these three modes which are CMInfo.FILE_DEFAULT(-1), 
+	 * CMInfo.FILE_OVERWRITE(0), and CMInfo.FILE_APPEND(1). If the byteFileAppend parameter is CMInfo.FILE_DEFAULT, 
+	 * the file reception mode is determined by the FILE_APPEND_SCHEME field of the CM configuration file. 
+	 * If the byteFileAppend parameter is set to one of the other two values, the reception mode of this requested file 
+	 * does not follow the CM configuration file, but this parameter value. The CMInfo.FILE_OVERWRITE is the overwrite mode 
+	 * where the receiver always receives the entire file even if it already has the same file. 
+	 * The CMInfo.FILE_APPEND is the append mode where the receiver skips existing file blocks 
+	 * and receives only remaining blocks.
+	 * @return true if the permit for pushing a file is successfully requested to the receiver, or false otherwise.
+	 * @see CMStub#pushFile(String, String)
 	 * @see CMStub#requestFile(String, String)
 	 * @see CMStub#requestFile(String, String, byte)
 	 */
-	public boolean pushFile(String strFilePath, String strReceiver)
+	public boolean pushFile(String strFilePath, String strReceiver, byte byteFileAppend)
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
@@ -2218,7 +2245,7 @@ public class CMStub {
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, 
-				-1, m_cmInfo);
+				byteFileAppend, m_cmInfo);
 		return bReturn;
 	}
 	
@@ -2372,7 +2399,9 @@ public class CMStub {
 		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + "throughput-test.jpg";
 		
 		fInfo.setStartTime(lStartTime);
-		bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
+		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
+		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strTarget, 
+				CMInfo.FILE_OVERWRITE, -1, m_cmInfo);
 		
 		if(!bReturn)
 			return -1;

@@ -64,6 +64,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file path: {@link CMFileEvent#getFilePath()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
+	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
@@ -82,6 +83,7 @@ public class CMFileEvent extends CMEvent{
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
 	 * <li>file path: {@link CMFileEvent#getFilePath()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
+	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
 	 * <br>-1: the file is no attachment of SNS content</li>
@@ -640,7 +642,8 @@ public class CMFileEvent extends CMEvent{
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
 			// file path
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
-			nByteNum += Long.BYTES;	// file size 
+			nByteNum += Long.BYTES;	// file size
+			nByteNum += Byte.BYTES;	// append mode flag
 			nByteNum += Integer.BYTES;	// content ID
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
@@ -650,7 +653,8 @@ public class CMFileEvent extends CMEvent{
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
 			// file path
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
-			nByteNum += Long.BYTES;	// file size 
+			nByteNum += Long.BYTES;	// file size
+			nByteNum += Byte.BYTES;	// append mode flag
 			nByteNum += Integer.BYTES;	// content ID
 			// port number of server socket channel of file receiver in P2P file-transfer
 			nByteNum += Integer.BYTES;
@@ -809,6 +813,7 @@ public class CMFileEvent extends CMEvent{
 			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFilePath);
 			m_bytes.putLong(m_lFileSize);
+			m_bytes.put(m_byteFileAppendFlag);
 			m_bytes.putInt(m_nContentID);
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
@@ -816,6 +821,7 @@ public class CMFileEvent extends CMEvent{
 			putStringToByteBuffer(m_strFileReceiver);
 			putStringToByteBuffer(m_strFilePath);
 			m_bytes.putLong(m_lFileSize);
+			m_bytes.put(m_byteFileAppendFlag);
 			m_bytes.putInt(m_nContentID);
 			m_bytes.putInt(m_nSSCPort);
 			m_bytes.putInt(m_nReturnCode);
@@ -927,6 +933,7 @@ public class CMFileEvent extends CMEvent{
 			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFilePath = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
+			m_byteFileAppendFlag = msg.get();
 			m_nContentID = msg.getInt();
 			break;
 		case REPLY_PERMIT_PUSH_FILE:
@@ -934,6 +941,7 @@ public class CMFileEvent extends CMEvent{
 			m_strFileReceiver = getStringFromByteBuffer(msg);
 			m_strFilePath = getStringFromByteBuffer(msg);
 			m_lFileSize = msg.getLong();
+			m_byteFileAppendFlag = msg.get();
 			m_nContentID = msg.getInt();
 			m_nSSCPort = msg.getInt();
 			m_nReturnCode = msg.getInt();
