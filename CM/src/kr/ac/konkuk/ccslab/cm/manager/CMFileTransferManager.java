@@ -1742,26 +1742,26 @@ public class CMFileTransferManager {
 		String strName = null;
 		int index;
 		String sep = File.separator;
-		/*
-		index = strPath.lastIndexOf("/");
+
+		index = strPath.lastIndexOf(sep);
 		if(index == -1)
 		{
-			index = strPath.lastIndexOf(sep);
+			index = strPath.lastIndexOf("/");
 			if(index == -1)
-				strName = strPath;
-			else
-				strName = strPath.substring(index+1);
+			{
+				index = strPath.lastIndexOf("\\");
+				if(index == -1)
+					return null;
+			}
 		}
-		else
-		{
-			strName = strPath.substring(index+1);
-		}
-		*/
-		index = strPath.lastIndexOf(sep);
+		strName = strPath.substring(index+1);
+		/*
 		if(index == -1)
 			strName = strPath;
 		else
 			strName = strPath.substring(index+1);
+		*/
+		
 		
 		return strName;
 	}
