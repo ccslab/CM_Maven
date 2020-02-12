@@ -1917,6 +1917,8 @@ public class CMFileTransferManager {
 		CMEventInfo eInfo = cmInfo.getEventInfo();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		String strMyName = interInfo.getMyself().getName();
 		boolean bForward = true;
 		
@@ -1940,15 +1942,33 @@ public class CMFileTransferManager {
 			bForward = false;
 			return bForward;
 		}
-		
-		if(fe.getReturnCode() == -1)
-			System.err.println("The requested file does not exists!");
-		else if(fe.getReturnCode() == 0)
-			System.err.println("sender("+fe.getFileSender()+") rejects to send the file!");
-		
-		if((fe.getReturnCode() == 0 || fe.getReturnCode() == -1) 
-				&& fe.getFileName().equals("throughput-test.jpg"))
+				
+		if(fe.getReturnCode() != 1)
 		{
+			// print error message
+			if(fe.getReturnCode() == -1)
+				System.err.println("The requested file does not exists!");
+			else if(fe.getReturnCode() == 0)
+				System.err.println("sender("+fe.getFileSender()+") rejects to send the file!");
+
+			// close the server socket channel for c2c file transfer
+			if(confInfo.isFileTransferScheme() && isP2PFileTransfer(fe, cmInfo))
+			{
+				ServerSocketChannel ssc = commInfo.getNonBlockServerSocketChannel();
+				if(ssc != null && ssc.isOpen())
+				{
+					try {
+						ssc.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					commInfo.setNonBlockServerSocketChannel(null);
+				}
+			}
+			
+			// notify an waiting thread
+			if(fe.getFileName().equals("throughput-test.jpg"))
 			synchronized(eventSync)
 			{
 				eventSync.setReplyEvent(fe);
