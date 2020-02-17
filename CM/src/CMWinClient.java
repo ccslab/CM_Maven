@@ -505,6 +505,12 @@ public class CMWinClient extends JFrame {
 		JMenuItem distMergeMenuItem = new JMenuItem("distribute and merge file");
 		distMergeMenuItem.addActionListener(menuListener);
 		otherSubMenu.add(distMergeMenuItem);
+		JMenuItem cscFtpMenuItem = new JMenuItem("test csc file transfer");
+		cscFtpMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(cscFtpMenuItem);
+		JMenuItem c2cFtpMenuItem = new JMenuItem("test c2c file transfer");
+		c2cFtpMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(c2cFtpMenuItem);
 		
 		cmServiceMenu.add(otherSubMenu);
 
@@ -872,6 +878,12 @@ public class CMWinClient extends JFrame {
 		case 109: // send an event with wrong event type
 			testSendEventWithWrongEventType();
 			break;
+		case 110: // test and measure delay of c-s-c file transfer
+			testCSCFileTransfer();
+			break;
+		case 111: // test and measure delay of c2c file transfer
+			testC2CFileTransfer();
+			break;
 		case 200: // MQTT connect
 			testMqttConnect();
 			break;
@@ -949,6 +961,7 @@ public class CMWinClient extends JFrame {
 		printMessage("103: test repeated request of SNS content list\n");
 		printMessage("104: pull/push multiple files, 105: split file, 106: merge files, 107: distribute and merge file\n");
 		printMessage("108: send event with wrong # bytes, 109: send event with wrong type\n");
+		printMessage("110: test csc file transfer, 111: test c2c file transfer\n");
 	}
 	
 	public void testConnectionDS()
@@ -3913,6 +3926,113 @@ public class CMWinClient extends JFrame {
 		due.setType(-1);	// set wrong event type
 		m_clientStub.send(due, strServer);
 	}
+	
+	public void testCSCFileTransfer()
+	{
+		printMessage("========== test and measure delay of c-s-c file transfer\n");
+		printMessage("Before the measurement, check the CM configuration files:\n");
+		printMessage("(cm-server.conf) PERMIT_FILE_TRANSFER 1\n");
+		printMessage("(cm-client.conf of file receiver) PERMIT_FILE_TRANSFER 1\n");
+		printMessage("(cm-server.conf) FILE_TRANSFER_SCHEME 0 for non-blocking channel\n");
+		printMessage("(cm-server.conf) FILE_TRANSFER_SCHEME 1 for blocking channel\n");
+		printMessage("The overwrite mode will be used in the file-transfer task.\n");
+		
+		// user inputs for the csc-ftp experiment
+		String strFileReceiver = null;
+		int nNumSessions = 0;
+		
+		JTextField fileReceiverField = new JTextField();
+		JTextField numSessionField = new JTextField();
+
+		Object[] message = { 
+				"File receiver client: ", fileReceiverField,
+				"Number of file transfer sessions: ", numSessionField 
+				};
+		int option = JOptionPane.showConfirmDialog(null, message, "C-S-C File Push", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.CANCEL_OPTION || option != JOptionPane.OK_OPTION)
+		{
+			printMessage("canceled.\n");
+			return;
+		}
+		
+		strFileReceiver = fileReceiverField.getText().trim();
+		try {
+			nNumSessions = Integer.parseInt(numSessionField.getText().trim());
+		}catch(NumberFormatException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		// select files
+		File[] files = null;
+		String strFilePath = null;
+		boolean bReturn = false;
+		
+		JFileChooser fc = new JFileChooser();
+		fc.setMultiSelectionEnabled(true);
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		File curDir = new File(confInfo.getTransferedFileHome().toString());
+		fc.setCurrentDirectory(curDir);
+		int fcRet = fc.showOpenDialog(this);
+		if(fcRet != JFileChooser.APPROVE_OPTION) return;
+		files = fc.getSelectedFiles();
+		if(files.length < 1) return;
+		
+		// send start_csc_ftp_session to the server
+		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		String strMyName = interInfo.getMyself().getName();
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		CMUserEvent userEvent = new CMUserEvent();
+		userEvent.setStringID("start_csc_ftp_session");
+		userEvent.setEventField(CMInfo.CM_STR, "strFileSender", strMyName);
+		userEvent.setEventField(CMInfo.CM_STR, "strFileReceiver", strFileReceiver);
+		userEvent.setEventField(CMInfo.CM_INT, "nNumFilesPerSession", 
+				Integer.toString(files.length));
+		bReturn = m_clientStub.send(userEvent, strDefServer);
+		
+		if(!bReturn)
+		{
+			printMessage("error sending start_csc_ftp_session event!\n");
+			return;
+		}
+		
+		// store information in the event handler
+		m_eventHandler.setFileSender(strMyName);
+		m_eventHandler.setFileReceiver(strFileReceiver);
+		m_eventHandler.setSendFileArray(files);
+		m_eventHandler.setTotalNumFTPSessions(nNumSessions);
+		m_eventHandler.setCurNumFTPSessions(0);
+		m_eventHandler.setStartTime(System.currentTimeMillis());
+
+		// send files to the default server
+		for(int i=0; i < files.length; i++)
+		{
+			strFilePath = files[i].getPath();
+			bReturn = m_clientStub.pushFile(strFilePath, strDefServer, CMInfo.FILE_OVERWRITE);
+			if(!bReturn)
+			{
+				printMessage("push file error! file("+strFilePath+"), receiver("
+						+strDefServer+")\n");
+			}
+		}
+
+		return;
+	}
+	
+	public void testC2CFileTransfer()
+	{
+		printMessage("========== test and measure delay of c2c file transfer\n");
+		printMessage("Before the measurement, check the CM configuration files:\n");
+		printMessage("(cm-server.conf) PERMIT_FILE_TRANSFER 1\n");
+		printMessage("(cm-client.conf of file receiver) PERMIT_FILE_TRANSFER 1\n");
+		printMessage("(cm-server.conf) FILE_TRANSFER_SCHEME 0 for indirect c2cftp\n");
+		printMessage("(cm-server.conf) FILE_TRANSFER_SCHEME 1 for direct c2cftp\n");
+		printMessage("The overwrite mode will be used in the file-transfer task.\n");
+
+		printMessage("not yet implemented\n");
+		// not yet
+	}
 		
 	private void requestAttachedFile(String strFileName)
 	{		
@@ -4258,6 +4378,12 @@ public class CMWinClient extends JFrame {
 				break;
 			case "disconnect MQTT service":
 				testMqttDisconnect();
+				break;
+			case "test csc file transfer":
+				testCSCFileTransfer();
+				break;
+			case "test c2c file transfer":
+				testC2CFileTransfer();
 				break;
 			}
 		}

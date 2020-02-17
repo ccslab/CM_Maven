@@ -36,12 +36,25 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 	private int m_nCheckCount;	// for internal forwarding simulation
 	private boolean m_bDistFileProc;	// for distributed file processing
 
+	// information for csc_ftp
+	private boolean m_bStartCSCFTPSession;
+	private String m_strFileSender;
+	private String m_strFileReceiver;
+	private int m_nTotalNumFilesPerSession;
+	private int m_nCurNumFilesPerSession;
+	
 	public CMWinServerEventHandler(CMServerStub serverStub, CMWinServer server)
 	{
 		m_server = server;
 		m_serverStub = serverStub;
 		m_nCheckCount = 0;
 		m_bDistFileProc = false;
+		
+		m_bStartCSCFTPSession = false;
+		m_strFileSender = null;
+		m_strFileReceiver = null;
+		m_nTotalNumFilesPerSession = 0;
+		m_nCurNumFilesPerSession = 0;
 	}
 	
 	@Override
@@ -340,6 +353,10 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			else
 				printMessage("Failed to send the reply event!\n");			
 		}
+		else if(ue.getStringID().contentEquals("start_csc_ftp_session"))
+		{
+			processUserEvent_start_csc_ftp_session(ue);
+		}
 		else
 		{
 			printMessage("CMUserEvent received from ["+ue.getSender()+"], strID("+ue.getStringID()+")\n");
@@ -368,12 +385,41 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		}
 		return;
 	}
+	
+	private void processUserEvent_start_csc_ftp_session(CMUserEvent ue)
+	{
+		// store relevant information for a csc-ftp session
+		m_bStartCSCFTPSession = true;
+		m_strFileSender = ue.getEventField(CMInfo.CM_STR, "strFileSender");
+		m_strFileReceiver = ue.getEventField(CMInfo.CM_STR, "strFileReceiver");
+		String strNumFiles = ue.getEventField(CMInfo.CM_INT, "nNumFilesPerSession");
+		try {
+			m_nTotalNumFilesPerSession = Integer.parseInt(strNumFiles);
+		}catch(NumberFormatException e) {
+			System.err.println("string : "+strNumFiles);
+			e.printStackTrace();
+		}
+		m_nCurNumFilesPerSession = 0;
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMWinServerEventHandler.processUserEvent_start_csc_ftp_session(): ");
+			System.out.println("m_bStartCSCFTPSession: "+m_bStartCSCFTPSession);
+			System.out.println("strFileSender: "+m_strFileSender);
+			System.out.println("strFileReceiver: "+m_strFileReceiver);
+			System.out.println("nNumFilesPerSession: "+m_nTotalNumFilesPerSession);
+			System.out.println("m_nCurNumFilesPerSession: "+m_nCurNumFilesPerSession);
+		}
+
+		return;
+	}
 
 	private void processFileEvent(CMEvent cme)
 	{
 		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
 		long lTotalDelay = 0;
 		long lTransferDelay = 0;
+		boolean bRet = false;
 
 		CMFileEvent fe = (CMFileEvent) cme;
 		switch(fe.getID())
@@ -434,6 +480,19 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				processFile(fe.getFileSender(), strFile);
 				m_bDistFileProc = false;
 			}
+			
+			if(m_bStartCSCFTPSession)
+			{
+				String strFilePath = m_serverStub.getTransferedFileHome()
+						+File.separator+fe.getFileSender()
+						+File.separator+fe.getFileName();
+				bRet = m_serverStub.pushFile(strFilePath, m_strFileReceiver);
+				if(!bRet)
+				{
+					printMessage("error to send file("+strFilePath+") to ("
+							+m_strFileReceiver+")!\n");
+				}
+			}
 			break;
 		case CMFileEvent.END_FILE_TRANSFER_ACK:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN_ACK:
@@ -443,6 +502,11 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
 			printMessage("total delay("+lTotalDelay+" ms), ");
 			printMessage("file-sending delay("+lTransferDelay+" ms).\n");
+			
+			if(m_bStartCSCFTPSession && fe.getFileReceiver().contentEquals(m_strFileReceiver))
+			{
+				checkCompleteCSCFTPSession(fe);
+			}
 			break;
 		case CMFileEvent.REQUEST_DIST_FILE_PROC:
 			//System.out.println("["+fe.getUserName()+"] requests the distributed file processing.");
@@ -457,6 +521,39 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			printMessage("["+fe.getFileReceiver()+"] cancelled the file request.\n");
 			break;
 		}
+		return;
+	}
+	
+	private void checkCompleteCSCFTPSession(CMFileEvent fe)
+	{
+		boolean bRet = false;
+		m_nCurNumFilesPerSession++;
+		if(m_nCurNumFilesPerSession == m_nTotalNumFilesPerSession)
+		{
+			// send end_csc_ftp_session
+			CMUserEvent ue = new CMUserEvent();
+			ue.setStringID("end_csc_ftp_session");
+			ue.setEventField(CMInfo.CM_STR, "strFileSender", m_strFileSender);
+			ue.setEventField(CMInfo.CM_STR, "strFileReceiver", m_strFileReceiver);
+			ue.setEventField(CMInfo.CM_INT, "nNumFilesPerSession", 
+					Integer.toString(m_nTotalNumFilesPerSession));
+			bRet = m_serverStub.send(ue, m_strFileSender);
+			
+			if(!bRet)
+			{
+				printMessage("error sending end_csc_ftp_session event to ("
+						+m_strFileSender+")!\n");
+				return;
+
+			}
+			// initialize the relevant member variables
+			m_bStartCSCFTPSession = false;
+			m_strFileSender = null;
+			m_strFileReceiver = null;
+			m_nTotalNumFilesPerSession = 0;
+			m_nCurNumFilesPerSession = 0;
+		}
+		
 		return;
 	}
 	

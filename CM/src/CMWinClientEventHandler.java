@@ -44,7 +44,9 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	private CMWinClient m_client;
 	private CMClientStub m_clientStub;
 	private long m_lDelaySum;	// for forwarding simulation
-	private long m_lStartTime;	// for delay of SNS content downloading, distributed file processing, server response
+	// for delay of SNS content downloading, distributed file processing, server response,
+	// csc-ftp, c2c-ftp
+	private long m_lStartTime;
 	private int m_nEstDelaySum;	// for SNS downloading simulation
 	private int m_nSimNum;		// for simulation of multiple sns content downloading
 	private FileOutputStream m_fos;	// for storing downloading delay of multiple SNS content
@@ -57,6 +59,18 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	private boolean m_bReqAttachedFile;	// for storing the fact that the client requests an attachment
 	private int m_nMinNumWaitedEvents;  // for checking the completion of asynchronous castrecv service
 	private int m_nRecvReplyEvents;		// for checking the completion of asynchronous castrecv service
+	
+	// information for csc-ftp and c2c-ftp experiments
+	private String m_strFileSender;
+	private String m_strFileReceiver;
+	private File[] m_arraySendFiles;
+	private int m_nTotalNumFTPSessions;
+	private int m_nCurNumFTPSessions;
+	// information for c2c-ftp experiments
+	private boolean m_bStartC2CFTPSession;
+	private int m_nTotalNumFilesPerSession;
+	private int m_nCurNumFilesPerSession;
+	
 	
 	public CMWinClientEventHandler(CMClientStub clientStub, CMWinClient client)
 	{
@@ -77,6 +91,15 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		m_bReqAttachedFile = false;
 		m_nMinNumWaitedEvents = 0;
 		m_nRecvReplyEvents = 0;
+		
+		m_strFileSender = null;
+		m_strFileReceiver = null;
+		m_arraySendFiles = null;
+		m_nTotalNumFTPSessions = 0;
+		m_nCurNumFTPSessions = 0;
+		m_bStartC2CFTPSession = false;
+		m_nTotalNumFilesPerSession = 0;
+		m_nCurNumFilesPerSession = 0;
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////
@@ -201,6 +224,87 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	{
 		return m_nRecvReplyEvents;
 	}
+	
+	public void setFileSender(String strFileSender)
+	{
+		m_strFileSender = strFileSender;
+	}
+	
+	public String getFileSender()
+	{
+		return m_strFileSender;
+	}
+	
+	public void setFileReceiver(String strFileReceiver)
+	{
+		m_strFileReceiver = strFileReceiver;
+	}
+	
+	public String getFileReceiver()
+	{
+		return m_strFileReceiver;
+	}
+	
+	public void setSendFileArray(File[] arraySendFiles)
+	{
+		m_arraySendFiles = arraySendFiles;
+	}
+	
+	public File[] getSendFileArray()
+	{
+		return m_arraySendFiles;
+	}
+	
+	public void setTotalNumFTPSessions(int nNum)
+	{
+		m_nTotalNumFTPSessions = nNum;
+	}
+	
+	public int getTotalNumFTPSessions()
+	{
+		return m_nTotalNumFTPSessions;
+	}
+	
+	public void setCurNumFTPSessions(int nNum)
+	{
+		m_nCurNumFTPSessions = nNum;
+	}
+	
+	public int getCurNumFTPSessions()
+	{
+		return m_nCurNumFTPSessions;
+	}
+	
+	public void setIsStartC2CFTPSession(boolean bStart)
+	{
+		m_bStartC2CFTPSession = bStart;
+	}
+	
+	public boolean isStartC2CFTPSession()
+	{
+		return m_bStartC2CFTPSession;
+	}
+	
+	public void setTotalNumFilesPerSession(int nNum)
+	{
+		m_nTotalNumFilesPerSession = nNum;
+	}
+	
+	public int getTotalNumFilesPerSession()
+	{
+		return m_nTotalNumFilesPerSession;
+	}
+	
+	public void setCurNumFilesPerSession(int nNum)
+	{
+		m_nCurNumFilesPerSession = nNum;
+	}
+	
+	public int getCurNumFilesPerSession()
+	{
+		return m_nCurNumFilesPerSession;
+	}
+		
 	//////////////////////////////////////////////////////////////////////////////
 	
 	@Override
@@ -564,6 +668,10 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			}
 			
 		}
+		else if(ue.getStringID().contentEquals("end_csc_ftp_session"))
+		{
+			processUserEvent_end_csc_ftp_session(ue);
+		}
 		else
 		{
 			printMessage("CMUserEvent received from ["+ue.getSender()+"], strID("+ue.getStringID()+")\n");
@@ -590,6 +698,67 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				}
 			}
 		}
+		return;
+	}
+	
+	private void processUserEvent_end_csc_ftp_session(CMUserEvent ue)
+	{
+		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		String strMyName = interInfo.getMyself().getName();
+		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
+		boolean bReturn = false;
+		
+		m_nCurNumFTPSessions++;
+		
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMWinClientEventHandler.processUserEvent_end_csc_ftp_session(): ");
+			System.err.println("# completed ftp session: "+m_nCurNumFTPSessions);
+		}
+		
+		if(m_nCurNumFTPSessions < m_nTotalNumFTPSessions)
+		{
+			CMUserEvent ue_start = new CMUserEvent();
+			ue_start.setStringID("start_csc_ftp_session");
+			ue_start.setEventField(CMInfo.CM_STR, "strFileSender", strMyName);
+			ue_start.setEventField(CMInfo.CM_STR, "strFileReceiver", m_strFileReceiver);
+			ue_start.setEventField(CMInfo.CM_INT, "nNumFilesPerSession", 
+					Integer.toString(m_arraySendFiles.length));
+			bReturn = m_clientStub.send(ue_start, strDefServer);
+
+			if(!bReturn)
+			{
+				printMessage("error sending start_csc_ftp_session event!\n");
+				return;
+			}
+			
+			for(int i=0; i < m_arraySendFiles.length; i++)
+			{
+				String strFilePath = m_arraySendFiles[i].getPath();
+				bReturn = m_clientStub.pushFile(strFilePath, strDefServer, CMInfo.FILE_OVERWRITE);
+				if(!bReturn)
+				{
+					printMessage("push file error! file("+strFilePath+"), receiver("
+							+strDefServer+")\n");
+				}
+			}
+
+		}
+		else if(m_nCurNumFTPSessions == m_nTotalNumFTPSessions)
+		{
+			// calculate average push-file delay of multiple sessions
+			long lTotalDelay = System.currentTimeMillis() - m_lStartTime;
+			long lAvgDelay =  lTotalDelay / m_nTotalNumFTPSessions;
+			printMessage("Total file-push delay: "+lTotalDelay+" ms, # file-push sessions: "
+					+m_nTotalNumFTPSessions+"\n");
+			printMessage("Average file-push delay: "+lAvgDelay+" ms.\n");
+			
+			// initialize the relevant member variables
+			m_arraySendFiles = null;
+			m_nTotalNumFTPSessions = 0;
+			m_nCurNumFTPSessions = 0;			
+		}
+		
 		return;
 	}
 	
