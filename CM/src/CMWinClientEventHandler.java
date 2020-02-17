@@ -866,6 +866,11 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
 			printMessage("total delay("+lTotalDelay+" ms), ");
 			printMessage("file-sending delay("+lTransferDelay+" ms).\n");
+
+			if(m_bStartC2CFTPSession && fe.getFileReceiver().contentEquals(m_strFileReceiver))
+			{
+				checkCompleteC2CFTPSession(fe);
+			}
 			break;
 		case CMFileEvent.CANCEL_FILE_SEND:
 		case CMFileEvent.CANCEL_FILE_SEND_CHAN:
@@ -875,6 +880,70 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			printMessage("["+fe.getFileReceiver()+"] cancelled the file request.\n");
 			break;
 		}
+		return;
+	}
+	
+	private void checkCompleteC2CFTPSession(CMFileEvent fe)
+	{
+		boolean bReturn = false;
+		
+		m_nCurNumFilesPerSession++;
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMWinClientEventHandler.checkCompleteC2CFTPSession(), ");
+			System.err.println("# current files: "+m_nCurNumFilesPerSession);
+			System.err.println("# total files per session: "+m_nTotalNumFilesPerSession);
+		}
+		if(m_nCurNumFilesPerSession == m_nTotalNumFilesPerSession)
+		{
+			// initialize ftp session information
+			m_nCurNumFilesPerSession = 0;
+			
+			m_nCurNumFTPSessions++;
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMWinClientEventHandler.checkCompleteC2CFTPSession(), ");
+				System.err.println("# completed ftp session: "+m_nCurNumFTPSessions);
+			}
+			if(m_nCurNumFTPSessions < m_nTotalNumFTPSessions)
+			{
+				for(int i=0; i < m_arraySendFiles.length; i++)
+				{
+					String strFilePath = m_arraySendFiles[i].getPath();
+					bReturn = m_clientStub.pushFile(strFilePath, m_strFileReceiver, 
+							CMInfo.FILE_OVERWRITE);
+					if(!bReturn)
+					{
+						printMessage("push file error! file("+strFilePath+"), receiver("
+								+m_strFileReceiver+")\n");
+					}
+				}
+			}
+			else if(m_nCurNumFTPSessions == m_nTotalNumFTPSessions)
+			{
+				// calculate average push-file delay of multiple sessions
+				long lTotalDelay = System.currentTimeMillis() - m_lStartTime;
+				long lAvgDelay =  lTotalDelay / m_nTotalNumFTPSessions;
+				printMessage("Total file-push delay: "+lTotalDelay+" ms, # file-push sessions: "
+						+m_nTotalNumFTPSessions+"\n");
+				printMessage("Average file-push delay: "+lAvgDelay+" ms.\n");
+				
+				// initialize the relevant member variables
+				m_bStartC2CFTPSession = false;
+				m_strFileSender = null;
+				m_strFileReceiver = null;
+				m_arraySendFiles = null;
+				m_nTotalNumFTPSessions = 0;
+				m_nCurNumFTPSessions = 0;
+				m_nTotalNumFilesPerSession = 0;
+			}
+			else
+			{
+				System.err.println("# completed ftp sessions ("+m_nCurNumFTPSessions
+						+") > # total ftp sessions ("+m_nTotalNumFTPSessions+")!");
+			}
+		}
+		
 		return;
 	}
 	

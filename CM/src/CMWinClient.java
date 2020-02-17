@@ -4030,8 +4030,74 @@ public class CMWinClient extends JFrame {
 		printMessage("(cm-server.conf) FILE_TRANSFER_SCHEME 1 for direct c2cftp\n");
 		printMessage("The overwrite mode will be used in the file-transfer task.\n");
 
-		printMessage("not yet implemented\n");
-		// not yet
+		// user inputs for the c2c-ftp experiment
+		String strFileReceiver = null;
+		int nNumSessions = 0;		
+		JTextField fileReceiverField = new JTextField();
+		JTextField numSessionField = new JTextField();
+
+		Object[] message = { 
+				"File receiver client: ", fileReceiverField,
+				"Number of file transfer sessions: ", numSessionField 
+				};
+		int option = JOptionPane.showConfirmDialog(null, message, "C2C File Push", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.CANCEL_OPTION || option != JOptionPane.OK_OPTION)
+		{
+			printMessage("canceled.\n");
+			return;
+		}
+		
+		strFileReceiver = fileReceiverField.getText().trim();
+		try {
+			nNumSessions = Integer.parseInt(numSessionField.getText().trim());
+		}catch(NumberFormatException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		// select files
+		File[] files = null;
+		String strFilePath = null;
+		boolean bReturn = false;
+		
+		JFileChooser fc = new JFileChooser();
+		fc.setMultiSelectionEnabled(true);
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		File curDir = new File(confInfo.getTransferedFileHome().toString());
+		fc.setCurrentDirectory(curDir);
+		int fcRet = fc.showOpenDialog(this);
+		if(fcRet != JFileChooser.APPROVE_OPTION) return;
+		files = fc.getSelectedFiles();
+		if(files.length < 1) return;
+		
+		// store information in the event handler
+		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		String strMyName = interInfo.getMyself().getName();
+		
+		m_eventHandler.setFileSender(strMyName);
+		m_eventHandler.setFileReceiver(strFileReceiver);
+		m_eventHandler.setSendFileArray(files);
+		m_eventHandler.setTotalNumFTPSessions(nNumSessions);
+		m_eventHandler.setCurNumFTPSessions(0);
+		m_eventHandler.setStartTime(System.currentTimeMillis());
+		m_eventHandler.setIsStartC2CFTPSession(true);
+		m_eventHandler.setTotalNumFilesPerSession(files.length);
+		m_eventHandler.setCurNumFilesPerSession(0);
+
+		// send files to the receiver
+		for(int i=0; i < files.length; i++)
+		{
+			strFilePath = files[i].getPath();
+			bReturn = m_clientStub.pushFile(strFilePath, strFileReceiver, CMInfo.FILE_OVERWRITE);
+			if(!bReturn)
+			{
+				printMessage("push file error! file("+strFilePath+"), receiver("
+						+strFileReceiver+")\n");
+			}
+		}
+
+		return;
 	}
 		
 	private void requestAttachedFile(String strFileName)
