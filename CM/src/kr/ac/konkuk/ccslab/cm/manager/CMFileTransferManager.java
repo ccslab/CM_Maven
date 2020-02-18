@@ -860,7 +860,7 @@ public class CMFileTransferManager {
 
 		// get file name
 		String strFileName = getFileNameFromPath(strFilePath);
-		System.out.println("file name: "+strFileName);
+		//System.out.println("file name: "+strFileName);
 		
 		// start file transfer process
 		CMFileEvent fe = new CMFileEvent();
