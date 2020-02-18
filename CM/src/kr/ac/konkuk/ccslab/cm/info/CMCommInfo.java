@@ -14,7 +14,7 @@ public class CMCommInfo {
 	private ServerSocketChannel m_blockServerSocketChannel; // blocking server socket channel
 	private CMChannelInfo<Integer> m_nonBlockDCInfo;	// nonblocking datagram channel list
 	private CMChannelInfo<Integer> m_blockDCInfo;		// blocking datagram channel list
-	private CMList<CMUnknownChannelInfo> m_unknownChannelInfoList;	// 4 server
+	private CMList<CMUnknownChannelInfo> m_unknownChannelInfoList;	// 4 server and client
 	
 	//private Vector<SocketChannel> m_scList;
 	//private Vector<DatagramCha	nnel> m_dcList;

@@ -437,12 +437,18 @@ public class CMInteractionManager {
 		}
 		
 		// notify the app event handler
-		CMSessionEvent se = new CMSessionEvent();
-		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
-		se.setChannelName(strAddServerName);
-		cmInfo.getAppEventHandler().processEvent(se);
+		notifyAppEventHandlerOfIntentionalDisconnection(strAddServerName, cmInfo);
 		
 		return true;
+	}
+	
+	private static void notifyAppEventHandlerOfIntentionalDisconnection(String strChannelName, 
+			CMInfo cmInfo)
+	{
+		CMSessionEvent se = new CMSessionEvent();
+		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
+		se.setChannelName(strChannelName);
+		cmInfo.getAppEventHandler().processEvent(se);
 	}
 	
 	private static boolean disconnectBadDefaultServerByAddServer(CMInfo cmInfo)
@@ -463,10 +469,7 @@ public class CMInteractionManager {
 		}
 
 		// notify the app event handler
-		CMSessionEvent se = new CMSessionEvent();
-		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
-		se.setChannelName(defServer.getServerName());
-		cmInfo.getAppEventHandler().processEvent(se);
+		notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), cmInfo);
 
 		return true;
 	}
@@ -504,10 +507,7 @@ public class CMInteractionManager {
 		}
 
 		// notify the app event handler
-		CMSessionEvent se = new CMSessionEvent();
-		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
-		se.setChannelName(strUser);
-		cmInfo.getAppEventHandler().processEvent(se);
+		notifyAppEventHandlerOfIntentionalDisconnection(strUser, cmInfo);
 
 		return true;
 	}
@@ -516,7 +516,10 @@ public class CMInteractionManager {
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMServer defServer = interInfo.getDefaultServerInfo();
+		boolean bRet = false;
+		
 		if(isChannelBelongsToServer(badSC, defServer))
 		{
 			// ch belongs to the default server
@@ -550,10 +553,7 @@ public class CMInteractionManager {
 			}
 
 			// notify the app event handler
-			CMSessionEvent se = new CMSessionEvent();
-			se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
-			se.setChannelName(defServer.getServerName());
-			cmInfo.getAppEventHandler().processEvent(se);
+			notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), cmInfo);
 
 			// check and stop the scheduled keep-alive task
 			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
@@ -595,10 +595,7 @@ public class CMInteractionManager {
 			}
 			
 			// notify the app event handler
-			CMSessionEvent se = new CMSessionEvent();
-			se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
-			se.setChannelName(strAddServer);
-			cmInfo.getAppEventHandler().processEvent(se);
+			notifyAppEventHandlerOfIntentionalDisconnection(strAddServer, cmInfo);
 
 			// check and stop the scheduled keep-alive task
 			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
@@ -615,6 +612,59 @@ public class CMInteractionManager {
 			}
 
 			return true;
+		}
+		
+		// check unknown-channel list
+		CMUnknownChannelInfo unchInfo = commInfo.getUnknownChannelInfoList()
+				.findElement(new CMUnknownChannelInfo(badSC));
+		if(unchInfo != null)
+		{
+			// disconnect from the unknown channel
+			try {
+				badSC.close();
+				
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMIntearctionManager.disconnectBadNodeByClient() "
+							+"intentionally disconnected from unknown channel: "+badSC);
+					System.out.println("channel hash code: "+badSC.hashCode());
+				}
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// remove from the unknown channel list
+			bRet = commInfo.getUnknownChannelInfoList().removeElement(unchInfo);
+			
+			if(bRet && CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.disconnectBadNodeByClient() "
+						+"removed from unknown-channel list: "+badSC);
+				System.out.println("channel hash code: "+badSC.hashCode());
+			}
+			else {
+				System.err.println("CMInteractionManager.disconnectBadNodeByClient() "
+						+"error to remove from unknown-channel list: "+badSC);
+				System.err.println("channel hash code: "+badSC.hashCode());
+			}
+			
+			return bRet;
+		}
+		
+		// check group member of this client
+		CMUser groupUser = findGroupMemberOfClientWithSocketChannel(badSC, cmInfo);
+		if(groupUser != null)
+		{
+			String strGroupUserName = groupUser.getName();
+			// remove all socket channels
+			groupUser.getNonBlockSocketChannelInfo().removeAllChannels();
+			groupUser.getBlockSocketChannelInfo().removeAllChannels();
+
+			// remove file-transfer info
+
+			// notify the app event handler
+			notifyAppEventHandlerOfIntentionalDisconnection(strGroupUserName, cmInfo);
 		}
 		
 		System.err.println("CMInteractionManager.disconnectBadNodeByClient(): "+badSC);
@@ -853,6 +903,63 @@ public class CMInteractionManager {
 		}
 		
 		return user;
+	}
+	
+	// find my group member with channel (called only by the client)
+	public synchronized static CMUser findGroupMemberOfClientWithSocketChannel(SelectableChannel ch, CMInfo cmInfo)
+	{
+		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		String strSession = interInfo.getMyself().getCurrentSession();
+		String strGroup = interInfo.getMyself().getCurrentGroup();
+		
+		String strUserName = null;
+		boolean isBlock = false;
+		boolean bFound = false;
+		Integer returnKey = null;
+		
+		CMSession session = interInfo.findSession(strSession);
+		if(session == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), session("
+					+strSession+") not found!");
+			return null;
+		}
+		CMGroup group = session.findGroup(strGroup);
+		if(group == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), group("
+					+strGroup+") not found!");
+			return null;
+		}
+
+		isBlock = ch.isBlocking();
+		Iterator<CMUser> iter = group.getGroupUsers().getAllMembers().iterator();
+		CMUser tuser = null;
+		while(iter.hasNext() && !bFound)
+		{
+			tuser = iter.next();
+			if(isBlock)
+				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+			else
+				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+			
+			if(returnKey != null)
+			{
+				strUserName = tuser.getName();
+				bFound = true;
+				if(CMInfo._CM_DEBUG_2)
+				{
+					System.out.println("CMInteractionManager."
+							+ "findGroupMemberOfClientWithSocketChannel(), user("
+							+strUserName+") found.");
+				}
+			}
+		}
+		
+		if(bFound)
+			return tuser;
+		else
+			return null;
 	}
 	
 	// find (default or additional) server info
