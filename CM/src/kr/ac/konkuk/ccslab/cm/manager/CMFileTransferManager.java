@@ -3099,6 +3099,7 @@ public class CMFileTransferManager {
 		{
 			sendSTART_FILE_TRANSFER_CHAN_ACK(nextRecvInfo, cmInfo);
 		}
+		/*
 		else
 		{
 			// if P2P file-transfer, the blocking channel to the file sender (client) 
@@ -3123,7 +3124,7 @@ public class CMFileTransferManager {
 				}
 			}
 		}
-		
+		*/
 		return bForward;
 	}
 	
