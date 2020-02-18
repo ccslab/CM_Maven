@@ -486,7 +486,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				String strFilePath = m_serverStub.getTransferedFileHome()
 						+File.separator+fe.getFileSender()
 						+File.separator+fe.getFileName();
-				bRet = m_serverStub.pushFile(strFilePath, m_strFileReceiver);
+				bRet = m_serverStub.pushFile(strFilePath, m_strFileReceiver, CMInfo.FILE_OVERWRITE);
 				if(!bRet)
 				{
 					printMessage("error to send file("+strFilePath+") to ("
