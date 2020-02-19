@@ -978,7 +978,7 @@ public class CMInteractionManager {
 			serverInfo = interInfo.findAddServer(strTarget);
 		}
 		
-		if(serverInfo == null)
+		if(serverInfo == null && CMInfo._CM_DEBUG)
 		{
 			System.err.println("CMInteractionManager.findServer, server("+strTarget+") not found!");
 			return null;
