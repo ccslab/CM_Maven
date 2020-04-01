@@ -19,6 +19,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
+import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
@@ -125,7 +126,11 @@ public class CMEventReceiver extends Thread {
 				if(bForwardToApp)
 				{
 					// deliver msg to stub module
-					m_cmInfo.getAppEventHandler().processEvent(cme);
+					CMAppEventHandler appEventHandler = m_cmInfo.getAppEventHandler();
+					if(appEventHandler == null)
+						System.err.println("CMEventReceiver.run(), CMAppEventHandler is null!");
+					else
+						appEventHandler.processEvent(cme);
 					
 					if(cme.getType() == CMInfo.CM_USER_EVENT)
 					{
