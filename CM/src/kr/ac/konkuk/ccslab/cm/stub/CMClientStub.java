@@ -648,11 +648,13 @@ public class CMClientStub extends CMStub {
 		{
 			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
 			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
-			future.cancel(true);
-			
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMClientStub.logoutCM(), stop the client keep-alive task.");
+			if(future != null){
+				future.cancel(true);
+				
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMClientStub.logoutCM(), stop the client keep-alive task.");
+				}				
 			}
 		}
 		
