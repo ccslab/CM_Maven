@@ -195,6 +195,13 @@ public class CMWinServer extends JFrame {
 		
 		serviceMenu.add(infoSubMenu);
 		
+		JMenu eventTransmissionSubMenu = new JMenu("Event Transmission");
+		JMenuItem sendDummyEventMenuItem = new JMenuItem("send CMDummyEvent");
+		sendDummyEventMenuItem.addActionListener(menuListener);
+		eventTransmissionSubMenu.add(sendDummyEventMenuItem);
+		
+		serviceMenu.add(eventTransmissionSubMenu);
+		
 		JMenu fileTransferSubMenu = new JMenu("File Transfer");
 		JMenuItem setPathMenuItem = new JMenuItem("set file path");
 		setPathMenuItem.addActionListener(menuListener);
@@ -314,6 +321,9 @@ public class CMWinServer extends JFrame {
 		case 8: // change a field value in the configuration file
 			changeConfiguration();
 			break;
+		case 10:	// send CMDummyEvent
+			sendCMDummyEvent();
+			break;
 		case 20: // set file path
 			setFilePath();
 			break;
@@ -398,6 +408,8 @@ public class CMWinServer extends JFrame {
 		printMessage("3: test input network throughput, 4: test output network throughput\n");
 		printMessage("5: show current channels, 6: show login users\n");
 		printMessage("7: show all configurations, 8: change configuration\n");
+		printMessage("---------------------------------- Event Transmission\n");
+		printMessage("10: send CMDummyEvent\n");
 		printMessage("---------------------------------- File Transfer\n");
 		printMessage("20: set file path, 21: request file, 22: push file\n");
 		printMessage("23: cancel receiving file, 24: cancel sending file\n");
@@ -495,6 +507,60 @@ public class CMWinServer extends JFrame {
 		printMessage("Server CM terminates.\n");
 		m_startStopButton.setText("Start Server CM");
 		updateTitle();
+	}
+	
+	public void sendCMDummyEvent()
+	{
+		String strMessage = null;
+		String strTarget = null;
+		String strSession = null;
+		String strGroup = null;
+		CMDummyEvent de = null;
+		printMessage("====== test event transmission\n");
+
+		JTextField messageField = new JTextField();
+		JTextField targetField = new JTextField();
+		JTextField sessionField = new JTextField();
+		JTextField groupField = new JTextField();
+		
+		Object[] msg = {
+			"Dummy message: ", messageField,
+			"Target name (for send()): ", targetField,
+			"Target session (for cast() or broadcast()): ", sessionField,
+			"Target group (for cast() or broadcast()): ", groupField
+		};
+		int option = JOptionPane.showConfirmDialog(null, msg, "CMDummyEvent Transmission", 
+				JOptionPane.OK_CANCEL_OPTION);
+		if(option == JOptionPane.OK_OPTION)
+		{
+			strMessage = messageField.getText().trim();
+			strTarget = targetField.getText().trim();
+			strSession = sessionField.getText().trim();
+			strGroup = groupField.getText().trim();
+			
+			if(strMessage.isEmpty())
+			{
+				printStyledMessage("No input message\n", "bold");
+				return;
+			}
+			
+			de = new CMDummyEvent();
+			de.setDummyInfo(strMessage);
+			de.setHandlerSession(strSession);
+			de.setHandlerGroup(strGroup);
+			
+			if(!strTarget.isEmpty())
+			{
+				m_serverStub.send(de, strTarget);
+			}
+			else
+			{
+				if(strSession.isEmpty()) strSession = null;
+				if(strGroup.isEmpty()) strGroup = null;
+				m_serverStub.cast(de, strSession, strGroup);
+			}
+		}
+			
 	}
 
 	public void printSessionInfo()
@@ -1945,6 +2011,9 @@ public class CMWinServer extends JFrame {
 				break;
 			case "test output network throughput":
 				measureOutputThroughput();
+				break;
+			case "send CMDummyEvent":
+				sendCMDummyEvent();
 				break;
 			case "set file path":
 				setFilePath();
