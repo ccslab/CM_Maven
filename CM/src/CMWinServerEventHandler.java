@@ -203,7 +203,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		//System.out.println("session("+due.getHandlerSession()+"), group("+due.getHandlerGroup()+")");
 		printMessage("session("+due.getHandlerSession()+"), group("+due.getHandlerGroup()+")\n");
 		//System.out.println("dummy msg: "+due.getDummyInfo());
-		printMessage("dummy msg: "+due.getDummyInfo()+"\n");
+		printMessage("["+due.getSender()+"] sent a dummy msg: "+due.getDummyInfo()+"\n");
 		return;
 	}
 	
