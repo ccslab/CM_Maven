@@ -50,8 +50,17 @@ public class CMDBManager {
 		String user = confInfo.getDBUser();
 		String pass = confInfo.getDBPass();
 		
+		if(dbInfo.getConnection() != null && dbInfo.getStatement() != null)
+		{
+			if(CMInfo._CM_DEBUG) {
+				System.out.println("CMDBManager.connectDB(), MySQL is already connected.");
+			}
+			return true;
+		}
+		
 		try {
 			connect = DriverManager.getConnection(url, user, pass);
+			dbInfo.setConnection(connect);
 			// statements allow to issue SQL queries to the database
 			st = connect.createStatement();
 			dbInfo.setStatement(st);
@@ -79,10 +88,12 @@ public class CMDBManager {
 			if(connect != null)
 			{
 				connect.close();
+				dbInfo.setConnection(null);
 			}
 			if(st != null)
 			{
 				st.close();
+				dbInfo.setStatement(null);
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -131,7 +142,13 @@ public class CMDBManager {
 	}
 	
 	// send data manipulation query (INSERT, UPDATE, DELETE, etc..)
+	// and close the DB
 	public static int sendUpdateQuery(String strQuery, CMInfo cmInfo)
+	{
+		return sendUpdateQuery(strQuery, cmInfo, true);
+	}
+	
+	public static int sendUpdateQuery(String strQuery, CMInfo cmInfo, boolean bCloseDB)
 	{
 		CMDBInfo dbInfo = cmInfo.getDBInfo();
 		int ret = -1;
@@ -146,7 +163,9 @@ public class CMDBManager {
 			e.printStackTrace();
 		}
 		
-		closeDB(cmInfo);
+		if(bCloseDB) {
+			closeDB(cmInfo);			
+		}
 		
 		return ret;
 	}
@@ -303,7 +322,9 @@ public class CMDBManager {
 		String strQuery = "insert into sns_content_table (creationTime, userName, textMessage, "
 				+ "numAttachedFiles, replyOf, levelOfDisclosure) values (NOW(), '"+userName+"', '"
 				+text+"', "+nNumAttachedFiles+", "+nReplyOf+", "+nLevelOfDisclosure+");";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		// does not close DB after insertion because last_insert_id() need to be called 
+		// before the close !!
+		ret = sendUpdateQuery(strQuery, cmInfo, false);
 		if(ret == -1)
 		{
 			System.out.println("CMDBManager.queryInsertSNSContent(), error for user("+userName+").");
