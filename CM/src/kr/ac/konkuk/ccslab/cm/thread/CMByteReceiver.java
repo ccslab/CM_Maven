@@ -256,8 +256,16 @@ public class CMByteReceiver extends Thread {
 		}
 		
 		bufEvent.flip();				// limit: cur position, position: 0
+		
+		if(bufEvent.remaining() < Integer.BYTES) {
+			LOG.severe("=== received only "+bufEvent.remaining()+" bytes!");
+			bufEvent = null;
+			return;
+		}
+		
 		nByteNum = bufEvent.getInt();	// get the # bytes of the message
 		bufEvent.rewind();				// position: 0
+		bufEvent = bufEvent.slice();	// capacity reduces to limit
 		
 		// check the completeness of the received message
 		if(nByteNum != bufEvent.remaining())
