@@ -23,6 +23,28 @@ public class CMConfigurator {
 			return false;
 		}
 		
+		// log level
+		confInfo.setLogLevel(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "LOG_LEVEL")));
+		int nLogLevel = confInfo.getLogLevel();
+		switch(nLogLevel)
+		{
+		case 0:
+			CMInfo._CM_DEBUG = false;
+			CMInfo._CM_DEBUG_2 = false;
+			break;
+		case 1:
+			CMInfo._CM_DEBUG = true;
+			CMInfo._CM_DEBUG_2 = false;
+			break;
+		case 2:
+			CMInfo._CM_DEBUG = true;
+			CMInfo._CM_DEBUG_2 = true;
+			break;
+		default:
+			CMInfo._CM_DEBUG = true;
+			CMInfo._CM_DEBUG_2 = false;
+		}
+		
 		confInfo.setSystemType(CMConfigurator.getConfiguration(strConfFilePath, "SYS_TYPE"));
 		confInfo.setServerAddress(CMConfigurator.getConfiguration(strConfFilePath, "SERVER_ADDR"));
 		confInfo.setServerPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SERVER_PORT")));
@@ -56,28 +78,6 @@ public class CMConfigurator {
 		
 		// added delay value for the simulation of transmission delay
 		confInfo.setSimTransDelay(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SIM_TRANS_DELAY")));
-
-		// log level
-		confInfo.setLogLevel(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "LOG_LEVEL")));
-		int nLogLevel = confInfo.getLogLevel();
-		switch(nLogLevel)
-		{
-		case 0:
-			CMInfo._CM_DEBUG = false;
-			CMInfo._CM_DEBUG_2 = false;
-			break;
-		case 1:
-			CMInfo._CM_DEBUG = true;
-			CMInfo._CM_DEBUG_2 = false;
-			break;
-		case 2:
-			CMInfo._CM_DEBUG = true;
-			CMInfo._CM_DEBUG_2 = true;
-			break;
-		default:
-			CMInfo._CM_DEBUG = true;
-			CMInfo._CM_DEBUG_2 = false;
-		}
 		
 		// keep-alive time
 		confInfo.setKeepAliveTime(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "KEEP_ALIVE_TIME")));
