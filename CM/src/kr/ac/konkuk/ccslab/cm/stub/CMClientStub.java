@@ -206,15 +206,13 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean setServerInfo(String strAddress, int nPort)
 	{
-		boolean bRet = false;
+		boolean bRet1 = false;
+		boolean bRet2 = false;
 		
-		bRet = setServerAddress(strAddress);
-		if(!bRet) return false;
-		
-		bRet = setServerPort(nPort);
-		if(!bRet) return false;
-		
-		return bRet;
+		bRet1 = setServerAddress(strAddress);
+		bRet2 = setServerPort(nPort);
+				
+		return bRet1 && bRet2;
 	}
 
 
