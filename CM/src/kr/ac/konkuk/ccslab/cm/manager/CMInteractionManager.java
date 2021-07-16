@@ -71,7 +71,7 @@ public class CMInteractionManager {
 			ServerSocketChannel ssc = null;
 			try {
 				ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, 
-						confInfo.getMyAddress(), confInfo.getMyPort(), cmInfo);
+						confInfo.getMyCurrentAddress(), confInfo.getMyPort(), cmInfo);
 				commInfo.setNonBlockServerSocketChannel(ssc);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -96,7 +96,7 @@ public class CMInteractionManager {
 		DatagramChannel dc = null;
 		try {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
-					confInfo.getMyAddress(), confInfo.getUDPPort(), cmInfo);
+					confInfo.getMyCurrentAddress(), confInfo.getUDPPort(), cmInfo);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1312,7 +1312,7 @@ public class CMInteractionManager {
 				strSessionConfFileName = CMConfigurator.getConfiguration(strConfPath, "SESSION_FILE"+i);
 
 					session.setSessionName(strSessionName);
-				session.setAddress(confInfo.getMyAddress());
+				session.setAddress(confInfo.getMyCurrentAddress());
 				session.setPort(confInfo.getMyPort());
 				session.setSessionConfFileName(strSessionConfFileName);
 				interInfo.addSession(session);

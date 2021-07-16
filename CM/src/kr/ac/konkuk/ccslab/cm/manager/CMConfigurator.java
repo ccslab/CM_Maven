@@ -15,6 +15,7 @@ public class CMConfigurator {
 	public static boolean init(String strConfFilePath, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		List<String> myAddressList = null;
 		
 		File confFile = new File(strConfFilePath);
 		if(!confFile.exists())
@@ -51,19 +52,15 @@ public class CMConfigurator {
 		confInfo.setUDPPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "UDP_PORT")));
 		confInfo.setMulticastAddress(CMConfigurator.getConfiguration(strConfFilePath, "MULTICAST_ADDR"));
 		confInfo.setMulticastPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MULTICAST_PORT")));
-		//confInfo.setMyAddress(InetAddress.getLocalHost().getHostAddress());
-		if(confInfo.getServerAddress().equals("localhost"))
-		{
-			confInfo.setMyAddress("localhost");
+		
+		// set my current address
+		myAddressList = CMCommManager.getLocalIPList();
+		if(myAddressList == null) {
+			System.err.println("CMConfigurator.init(): No local address !");
+			return false;
 		}
-		else if(confInfo.getServerAddress().equals("127.0.0.1"))
-		{
-			confInfo.setMyAddress("127.0.0.1");
-		}
-		else
-		{
-			confInfo.setMyAddress(CMCommManager.getLocalIP());
-		}
+		confInfo.setMyAddressList(myAddressList);
+		confInfo.setMyCurrentAddress(myAddressList.get(0));	// the first element by default
 				
 		// default download directory
 		String strFilePath = CMConfigurator.getConfiguration(strConfFilePath, "FILE_PATH");
@@ -136,7 +133,13 @@ public class CMConfigurator {
 			System.out.println("UDP_PORT: "+confInfo.getUDPPort());
 			System.out.println("MULTICAST_ADDR: "+confInfo.getMulticastAddress());
 			System.out.println("MULTICAST_PORT: "+confInfo.getMulticastPort());
-			System.out.println("MY_ADDR: "+confInfo.getMyAddress());
+			if(confInfo.getMyAddressList() != null) {
+				System.out.print("MY_ADDR_LIST: ");
+				for(String strAddr : confInfo.getMyAddressList())
+					System.out.print(strAddr+" ");
+				System.out.println();
+			}
+			System.out.println("MY_CUR_ADDR: "+confInfo.getMyCurrentAddress());
 			System.out.println("FILE_PATH: "+confInfo.getTransferedFileHome());
 			System.out.println("FILE_APPEND_SCHEME: "+confInfo.isFileAppendScheme());
 			System.out.println("PERMIT_FILE_TRANSFER: "+confInfo.isPermitFileTransferRequest());
@@ -391,16 +394,51 @@ public class CMConfigurator {
 		boolean ret = false;
 		String strServerAddress = confInfo.getServerAddress();
 		int nServerPort = confInfo.getServerPort();
-		String strMyAddress = confInfo.getMyAddress();
+		String strMyCurrentAddress = confInfo.getMyCurrentAddress();
 		int nMyPort = confInfo.getMyPort();
 		
-		// if server info is initialized and two server info is the same
+		// if server info is not initialized
+		if( strServerAddress == null || strServerAddress.isEmpty() ) {
+			System.err.println("Server address is null or empty!");
+			return false;
+		}
+		if( nServerPort == -1 ) {
+			System.err.println("Server port number is "+nServerPort+"!");
+			return false;
+		}
 
-		if( strServerAddress.compareTo("") != 0 && nServerPort != -1	
-				&& strServerAddress.equals(strMyAddress) && nServerPort == nMyPort )
-			ret = true;
+		// if my address info is not initialized
+		if( strMyCurrentAddress == null || strMyCurrentAddress.isEmpty() ) {
+			System.err.println("My current address is null or empty!");
+			return false;
+		}
+		if( nMyPort == -1 ) {
+			System.err.println("My port number is "+nMyPort+"!");
+			return false;
+		}
 		
-		return ret;
+		// server port number and my port number are different
+		if( nServerPort != nMyPort ) {
+			if(CMInfo._CM_DEBUG)
+				System.out.println("CMConfigurator.isDServer(): server port("
+						+nServerPort+") and my port("+nMyPort+") are different!");
+			return false;
+		}
+		
+		// server address and my current address are different
+		if( !strMyCurrentAddress.equals(strServerAddress) ) {
+			if( !strServerAddress.equals("localhost") ) {
+				if(CMInfo._CM_DEBUG)
+					System.out.println("CMConfigurator.isDServer(): server addr("
+							+strServerAddress+") and my current address("
+							+strMyCurrentAddress+") are different!");
+				return false;
+			}
+		}
+								
+		// Here, server address info and my address info are the same
+		
+		return true;
 	}
 	
 }

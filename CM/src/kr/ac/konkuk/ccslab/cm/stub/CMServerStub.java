@@ -377,7 +377,7 @@ public class CMServerStub extends CMStub {
 
 		mse.setID(CMMultiServerEvent.REQ_SERVER_REG);
 		mse.setServerName(server);
-		mse.setServerAddress( confInfo.getMyAddress() );
+		mse.setServerAddress( confInfo.getMyCurrentAddress() );
 		mse.setServerPort( confInfo.getMyPort() );
 		mse.setServerUDPPort( confInfo.getUDPPort() );
 		mse.setKeepAliveTime(confInfo.getKeepAliveTime());
@@ -385,7 +385,7 @@ public class CMServerStub extends CMStub {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMServerStub.reqServerReg(), server("+server+"), addr("
-					+confInfo.getMyAddress()+"), port("+confInfo.getMyPort()+"), udp port("
+					+confInfo.getMyCurrentAddress()+"), port("+confInfo.getMyPort()+"), udp port("
 					+confInfo.getUDPPort()+"), keep-alive("+confInfo.getKeepAliveTime()
 					+").");
 		}

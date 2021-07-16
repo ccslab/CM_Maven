@@ -514,7 +514,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		String strMyAddr = confInfo.getMyAddress();		// client IP address
+		String strMyAddr = confInfo.getMyCurrentAddress();		// client IP address
 		int nMyUDPPort = confInfo.getUDPPort();			// client UDP port
 		
 		// encrypt the plain password text
@@ -2794,7 +2794,7 @@ public class CMClientStub extends CMStub {
 		}
 
 		// get my ip address and port
-		myAddress = confInfo.getMyAddress();
+		myAddress = confInfo.getMyCurrentAddress();
 		myUDPPort = confInfo.getUDPPort();
 		
 		// encrypt password

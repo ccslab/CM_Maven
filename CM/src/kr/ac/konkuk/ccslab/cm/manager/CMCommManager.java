@@ -4,9 +4,11 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
+import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -99,11 +101,13 @@ public class CMCommManager {
 			System.out.println("CMCommManager.terminate(), close and remove all channels.");
 	}
 	
-	public static String getLocalIP()
+	public static List<String> getLocalIPList()
 	{
-		String strIP = null;
 		String strIPByGetLocalHost = null;
 		InetAddress localAddress = null;
+		List<InetAddress> myInetAddressList = new ArrayList<InetAddress>();
+		List<String> myInetAddressStrList = null;
+		
 		try {
 			localAddress = InetAddress.getLocalHost();
 		} catch (UnknownHostException e1) {
@@ -144,6 +148,9 @@ public class CMCommManager {
 					if( !(inetAddress instanceof Inet4Address) )
 						continue;
 						
+					// add to myInetAddressList
+					myInetAddressList.add(inetAddress);
+					
 					//InetAddress inetAddress = enumIA.nextElement();
 					if(CMInfo._CM_DEBUG_2)
 					{
@@ -159,12 +166,12 @@ public class CMCommManager {
 					
 					//if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress() && 
 					//inetAddress.isSiteLocalAddress())
-					if(!inetAddress.isLoopbackAddress())
-					{
-						 strIP = inetAddress.getHostAddress().toString();
-						 if(CMInfo._CM_DEBUG_2)
-							 System.out.println("    :detected as the local IP");
-					}
+//					if(!inetAddress.isLoopbackAddress())
+//					{
+//						 strIP = inetAddress.getHostAddress().toString();
+//						 if(CMInfo._CM_DEBUG_2)
+//							 System.out.println("    :detected as the local IP");
+//					}
 				}
 			}
 
@@ -172,19 +179,40 @@ public class CMCommManager {
 			e.printStackTrace();
 		}
 		
-		if(strIP == null)
+		if(myInetAddressList.isEmpty())
 		{
-			System.err.println("CMCommManager.getLocalIP(), cannot find local IP! use the result of "
-					+ "InetAddress.getLocalHost().");
-			strIP = strIPByGetLocalHost;
+			System.err.println("CMCommManager.getLocalIP(), Inet4Address not found!");
+			return null;
 		}
-		else
-		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("------ detected local IP: "+strIP);
-		}
+
+		// sort the InetAddress list
+		// public address > site local address > loopback address
+		myInetAddressStrList = myInetAddressList.stream()
+				.sorted(
+					(addr1, addr2) -> {
+						int score1 = 0;
+						int score2 = 0;
+						score1 += addr1.isLoopbackAddress() ? 3 : 0;
+						score1 += addr1.isSiteLocalAddress() ? 2 : 0;
+						score1 += addr1.isLinkLocalAddress() ? 1 : 0;
+						score2 += addr2.isLoopbackAddress() ? 3 : 0;
+						score2 += addr2.isSiteLocalAddress() ? 2 : 0;
+						score2 += addr2.isLinkLocalAddress() ? 1 : 0;
+						return score1-score2;
+					}
+				)
+				.map(addr -> addr.getHostAddress().toString())
+				.collect(Collectors.toList());
 		
-		return strIP;
+		if(CMInfo._CM_DEBUG_2) {
+			System.out.print("------ detected local IP list: ");
+			for(String strAddr : myInetAddressStrList)
+				System.out.print(strAddr+" ");
+			System.out.println();
+		}
+
+		
+		return myInetAddressStrList;
 	}
 	
 	public static SelectableChannel openNonBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException

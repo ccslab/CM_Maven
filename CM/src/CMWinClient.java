@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.List;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -13,8 +14,6 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.Random;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -43,6 +42,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
@@ -1110,19 +1110,30 @@ public class CMWinClient extends JFrame {
 	{
 		boolean bRet = false;
 		
-		// get current server info from the server configuration file
-		String strCurServerAddress = null;
-		int nCurServerPort = -1;
+		// get local address
+		List<String> localAddressList = CMCommManager.getLocalIPList();
+		if(localAddressList == null) {
+			System.err.println("Local address not found!");
+			return;
+		}
+		String strCurrentLocalAddress = localAddressList.get(0).toString();
 		
-		strCurServerAddress = m_clientStub.getServerAddress();
-		nCurServerPort = m_clientStub.getServerPort();
+		// get the saved server info from the client configuration file
+		String strSavedServerAddress = null;
+		int nSavedServerPort = -1;
+		
+		strSavedServerAddress = m_clientStub.getServerAddress();
+		nSavedServerPort = m_clientStub.getServerPort();
 		
 		// ask the user if he/she would like to change the server info
-		JTextField serverAddressTextField = new JTextField(strCurServerAddress);
-		JTextField serverPortTextField = new JTextField(String.valueOf(nCurServerPort));
+		JTextField currentLocalAddressTextField = new JTextField(strCurrentLocalAddress);
+		currentLocalAddressTextField.setEnabled(false);
+		JTextField serverAddressTextField = new JTextField(strSavedServerAddress);
+		JTextField serverPortTextField = new JTextField(String.valueOf(nSavedServerPort));
 		Object msg[] = {
-				"Server Address: ", serverAddressTextField,
-				"Server Port: ", serverPortTextField
+				"My Current Address:", currentLocalAddressTextField,
+				"Server Address:", serverAddressTextField,
+				"Server Port:", serverPortTextField
 		};
 		int option = JOptionPane.showConfirmDialog(null, msg, "Server Information", JOptionPane.OK_CANCEL_OPTION);
 
@@ -1131,7 +1142,7 @@ public class CMWinClient extends JFrame {
 		{
 			String strNewServerAddress = serverAddressTextField.getText();
 			int nNewServerPort = Integer.parseInt(serverPortTextField.getText());
-			if(!strNewServerAddress.equals(strCurServerAddress) || nNewServerPort != nCurServerPort)
+			if(!strNewServerAddress.equals(strSavedServerAddress) || nNewServerPort != nSavedServerPort)
 				m_clientStub.setServerInfo(strNewServerAddress, nNewServerPort);
 		}
 		

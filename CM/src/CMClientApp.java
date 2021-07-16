@@ -33,6 +33,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
@@ -515,31 +516,40 @@ public class CMClientApp {
 	
 	public void testStartCM()
 	{
-		// get current server info from the server configuration file
-		String strCurServerAddress = null;
-		int nCurServerPort = -1;
+		// get local address
+		List<String> localAddressList = CMCommManager.getLocalIPList();
+		if(localAddressList == null) {
+			System.err.println("Local address not found!");
+			return;
+		}
+		String strCurrentLocalAddress = localAddressList.get(0).toString();
+		
+		// get the saved server info from the server configuration file
+		String strSavedServerAddress = null;
+		int nSavedServerPort = -1;
 		String strNewServerAddress = null;
 		String strNewServerPort = null;
 		
-		strCurServerAddress = m_clientStub.getServerAddress();
-		nCurServerPort = m_clientStub.getServerPort();
+		strSavedServerAddress = m_clientStub.getServerAddress();
+		nSavedServerPort = m_clientStub.getServerPort();
 		
 		// ask the user if he/she would like to change the server info
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("========== start CM");
-		System.out.println("current server address: "+strCurServerAddress);
-		System.out.println("current server port: "+nCurServerPort);
+		System.out.println("my current address: "+strCurrentLocalAddress);
+		System.out.println("saved server address: "+strSavedServerAddress);
+		System.out.println("saved server port: "+nSavedServerPort);
 		
 		try {
-			System.out.print("new server address (enter for current value): ");
+			System.out.print("new server address (enter for saved value): ");
 			strNewServerAddress = br.readLine().trim();
-			System.out.print("new server port (enter for current value): ");
+			System.out.print("new server port (enter for saved value): ");
 			strNewServerPort = br.readLine().trim();
 
 			// update the server info if the user would like to do
-			if(!strNewServerAddress.isEmpty() && !strNewServerAddress.equals(strCurServerAddress))
+			if(!strNewServerAddress.isEmpty() && !strNewServerAddress.equals(strSavedServerAddress))
 				m_clientStub.setServerAddress(strNewServerAddress);
-			if(!strNewServerPort.isEmpty() && Integer.parseInt(strNewServerPort) != nCurServerPort)
+			if(!strNewServerPort.isEmpty() && Integer.parseInt(strNewServerPort) != nSavedServerPort)
 				m_clientStub.setServerPort(Integer.parseInt(strNewServerPort));
 			
 		} catch (IOException e) {

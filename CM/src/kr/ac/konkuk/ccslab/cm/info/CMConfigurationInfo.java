@@ -12,7 +12,8 @@ public class CMConfigurationInfo {
 	private int m_nMyPort;
 	private String m_strMulticastAddress;
 	private String m_strServerAddress;
-	private String m_strMyAddress;
+	private List<String> m_myAddressList;
+	private String m_strMyCurrentAddress;
 	private String m_strSystemType;
 	private String m_strCommArch;
 	private int m_bLoginScheme;
@@ -62,7 +63,8 @@ public class CMConfigurationInfo {
 		m_nUDPPort = -1;
 		m_nMulticastPort = -1;
 		m_strServerAddress = "";
-		m_strMyAddress = null;
+		m_myAddressList = null;
+		m_strMyCurrentAddress = "";
 		m_strMulticastAddress = "";
 		m_nSessionNumber = 0;
 		m_bLoginScheme = 0;
@@ -125,14 +127,24 @@ public class CMConfigurationInfo {
 		return m_nServerPort;
 	}
 	
-	public synchronized void setMyAddress(String addr)
+	public synchronized void setMyAddressList(List<String> addrList)
 	{
-		m_strMyAddress = addr;
+		m_myAddressList = addrList;
 	}
 	
-	public synchronized String getMyAddress()
+	public synchronized List<String> getMyAddressList()
 	{
-		return m_strMyAddress;
+		return m_myAddressList;
+	}
+	
+	public synchronized void setMyCurrentAddress(String addr)
+	{
+		m_strMyCurrentAddress = addr;
+	}
+	
+	public synchronized String getMyCurrentAddress()
+	{
+		return m_strMyCurrentAddress;
 	}
 	
 	public synchronized void setMyPort(int port)

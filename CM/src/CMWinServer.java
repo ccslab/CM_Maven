@@ -4,10 +4,13 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Image;
 import java.awt.event.*;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -456,26 +459,33 @@ public class CMWinServer extends JFrame {
 		
 		// get current server info from the server configuration file
 		String strSavedServerAddress = null;
-		String strCurServerAddress = null;
+		List<String> localAddressList = null;
 		int nSavedServerPort = -1;
 		
+		localAddressList = CMCommManager.getLocalIPList();
+		if(localAddressList == null) {
+			System.err.println("Local address not found!");
+			return;
+		}
 		strSavedServerAddress = m_serverStub.getServerAddress();
-		strCurServerAddress = CMCommManager.getLocalIP();
 		nSavedServerPort = m_serverStub.getServerPort();
 		
 		// ask the user if he/she would like to change the server info
-		JTextField serverAddressTextField = new JTextField(strCurServerAddress);
+		JTextField myCurrentAddressTextField = new JTextField(localAddressList.get(0).toString());
+		myCurrentAddressTextField.setEnabled(false);
+		JTextField serverAddressTextField = new JTextField(strSavedServerAddress);		
 		JTextField serverPortTextField = new JTextField(String.valueOf(nSavedServerPort));
 		Object msg[] = {
-				"Server Address: ", serverAddressTextField,
-				"Server Port: ", serverPortTextField
+				"My Current Address:", myCurrentAddressTextField,
+				"Server Address:", serverAddressTextField, 
+				"Server Port:", serverPortTextField
 		};
 		int option = JOptionPane.showConfirmDialog(null, msg, "Server Information", JOptionPane.OK_CANCEL_OPTION);
 
 		// update the server info if the user would like to do
 		if (option == JOptionPane.OK_OPTION) 
 		{
-			String strNewServerAddress = serverAddressTextField.getText();
+			String strNewServerAddress = serverAddressTextField.getText().toString();
 			int nNewServerPort = Integer.parseInt(serverPortTextField.getText());
 			if(!strNewServerAddress.equals(strSavedServerAddress) || nNewServerPort != nSavedServerPort)
 				m_serverStub.setServerInfo(strNewServerAddress, nNewServerPort);
