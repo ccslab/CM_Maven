@@ -3712,6 +3712,14 @@ public class CMWinClient extends JFrame {
 			printMessage(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
 		}
 		
+		printMessage("------- conf info not in the "+confPath.toString()+"\n");
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		printMessage("Local address list: ");
+		for(String addr : confInfo.getMyAddressList()) {
+			printMessage(addr+" ");
+		}
+		printMessage("\nCurrent my address: "+confInfo.getMyCurrentAddress()+"\n");
+		
 	}
 	
 	public void testChangeConfiguration()

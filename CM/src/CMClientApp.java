@@ -3053,6 +3053,14 @@ public class CMClientApp {
 			System.out.print(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
 		}
 		
+		System.out.print("------- conf info not in the "+confPath.toString()+"\n");
+		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		System.out.print("Local address list: ");
+		for(String addr : confInfo.getMyAddressList()) {
+			System.out.print(addr+" ");
+		}
+		System.out.print("\nCurrent my address: "+confInfo.getMyCurrentAddress()+"\n");
+		
 	}
 	
 	public void testChangeConfiguration()
