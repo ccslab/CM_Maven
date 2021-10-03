@@ -524,6 +524,11 @@ public class CMClientApp {
 		}
 		String strCurrentLocalAddress = localAddressList.get(0).toString();
 		
+		// set config home
+		m_clientStub.setConfigurationHome(Paths.get("src/test/resources"));
+		// set file-path home
+		m_clientStub.setTransferedFileHome(m_clientStub.getConfigurationHome().resolve("client-file-path"));
+
 		// get the saved server info from the server configuration file
 		String strSavedServerAddress = null;
 		int nSavedServerPort = -1;

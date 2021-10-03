@@ -1,4 +1,8 @@
+# CM
 client-file-path/
+# Eclipse
 bin/
 .classpath
 .project
+# Maven
+/target/

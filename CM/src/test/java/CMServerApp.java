@@ -242,6 +242,11 @@ public class CMServerApp {
 		String strNewServerAddress = null;
 		String strNewServerPort = null;
 		int nNewServerPort = -1;
+		
+		// set config home
+		m_serverStub.setConfigurationHome(Paths.get("src/test/resources"));
+		// set file-path home
+		m_serverStub.setTransferedFileHome(m_serverStub.getConfigurationHome().resolve("server-file-path"));
 
 		localAddressList = CMCommManager.getLocalIPList();
 		if(localAddressList == null) {

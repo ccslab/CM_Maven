@@ -462,6 +462,11 @@ public class CMWinServer extends JFrame {
 		List<String> localAddressList = null;
 		int nSavedServerPort = -1;
 		
+		// set config home
+		m_serverStub.setConfigurationHome(Paths.get("src/test/resources"));
+		// set file-path home
+		m_serverStub.setTransferedFileHome(m_serverStub.getConfigurationHome().resolve("server-file-path"));
+
 		localAddressList = CMCommManager.getLocalIPList();
 		if(localAddressList == null) {
 			System.err.println("Local address not found!");

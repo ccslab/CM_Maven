@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -41,9 +42,10 @@ public class CMSessionManager {
 		while(iter.hasNext())
 		{
 			CMSession session = iter.next();
+			Path sessionConfPath = confInfo.getConfFileHome().resolve(session.getSessionConfFileName());
 			int nGroupNum = -1;
 			try {
-				nGroupNum = Integer.parseInt(CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_NUM"));
+				nGroupNum = Integer.parseInt(CMConfigurator.getConfiguration(sessionConfPath.toString(), "GROUP_NUM"));
 			} catch (NumberFormatException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -68,9 +70,9 @@ public class CMSessionManager {
 					String strGroupAddr = null;
 					int nGroupPort = -1;
 
-					strGroupName = CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_NAME"+i);
-					strGroupAddr = CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_ADDR"+i);
-					nGroupPort = Integer.parseInt(CMConfigurator.getConfiguration(session.getSessionConfFileName(), "GROUP_PORT"+i));
+					strGroupName = CMConfigurator.getConfiguration(sessionConfPath.toString(), "GROUP_NAME"+i);
+					strGroupAddr = CMConfigurator.getConfiguration(sessionConfPath.toString(), "GROUP_ADDR"+i);
+					nGroupPort = Integer.parseInt(CMConfigurator.getConfiguration(sessionConfPath.toString(), "GROUP_PORT"+i));
 
 					group.setGroupName(strGroupName);
 					group.setGroupAddress(strGroupAddr);
