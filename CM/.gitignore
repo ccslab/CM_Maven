@@ -4,5 +4,6 @@ client-file-path/
 bin/
 .classpath
 .project
+.settings/
 # Maven
 /target/
