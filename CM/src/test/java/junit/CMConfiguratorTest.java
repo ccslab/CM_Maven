@@ -11,6 +11,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 
 /**
@@ -19,14 +21,14 @@ import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
  */
 public class CMConfiguratorTest {
 
-	private CMConfigurator conf;
+	private CMInfo cmInfo;
 	
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		System.out.println("called setUpBeforeClass().");
+		System.out.println("-- called setUpBeforeClass().");
 	}
 
 	/**
@@ -34,7 +36,7 @@ public class CMConfiguratorTest {
 	 */
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		System.out.println("called tearDownAfterClass().");
+		System.out.println("-- called tearDownAfterClass().");
 	}
 
 	/**
@@ -42,8 +44,8 @@ public class CMConfiguratorTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		System.out.println("called setUp().");
-		conf = new CMConfigurator();
+		System.out.println("-- called setUp().");
+		cmInfo = new CMInfo();
 	}
 
 	/**
@@ -51,20 +53,15 @@ public class CMConfiguratorTest {
 	 */
 	@After
 	public void tearDown() throws Exception {
-		System.out.println("called tearDown().");
+		System.out.println("-- called tearDown().");
 	}
 
 	@Test
-	public void test() {
-		//fail("Not yet implemented");
-		System.out.println("called test().");
-		String testStr = "testStr";
-		assertEquals(testStr, "testStr");		
-	}
-	
-	@Test
 	public void testInit() {
-		assertEquals("test", "test");
+		System.out.println("-- called testInit().");
+		String confFilePath = "src/test/resources/cm-server.conf";
+		boolean ret = CMConfigurator.init(confFilePath, cmInfo);
+		assertTrue(ret);
 	}
 
 }
