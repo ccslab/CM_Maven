@@ -117,6 +117,9 @@ public class CMInfo {
 	public static boolean _CM_DEBUG = true;
 	public static boolean _CM_DEBUG_2 = false;	// communication level log
 	
+	// internal file name used for throughput test
+	public static String THROUGHPUT_TEST_FILE = "throughput-test.jpg";
+	
 	// repository
 	private CMConfigurationInfo m_confInfo;
 	private CMSNSInfo m_snsInfo;

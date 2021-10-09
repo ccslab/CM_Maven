@@ -1903,7 +1903,7 @@ public class CMFileTransferManager {
 		}		
 
 		if(confInfo.isPermitFileTransferRequest() || 
-				fe.getFileName().contentEquals("throughput-test.jpg"))
+				fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 		{
 			replyPermitForPullFile(fe, 1, cmInfo);
 			bForward = false;
@@ -1968,7 +1968,7 @@ public class CMFileTransferManager {
 			}
 			
 			// notify an waiting thread
-			if(fe.getFileName().equals("throughput-test.jpg"))
+			if(fe.getFileName().equals(CMInfo.THROUGHPUT_TEST_FILE))
 			synchronized(eventSync)
 			{
 				eventSync.setReplyEvent(fe);
@@ -2012,7 +2012,7 @@ public class CMFileTransferManager {
 		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
 		boolean bPermit = confInfo.isPermitFileTransferRequest();
 		String strFileName = getFileNameFromPath(fe.getFilePath());
-		if(bPermit || strFileName.contentEquals("throughput-test.jpg"))
+		if(bPermit || strFileName.contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 		{
 			replyPermitForPushFile(fe, 1, cmInfo);  			
 			bForward = false;
@@ -2050,7 +2050,7 @@ public class CMFileTransferManager {
 		}
 		
 		String strFileName = getFileNameFromPath(fe.getFilePath());
-		if(strFileName.contentEquals("throughput-test.jpg"))
+		if(strFileName.contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 				
 		if(fe.getReturnCode() == 1)
@@ -2107,7 +2107,7 @@ public class CMFileTransferManager {
 
 		fInfo.setStartRecvTime(System.currentTimeMillis());
 
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 		
 		// set file size
@@ -2280,7 +2280,7 @@ public class CMFileTransferManager {
 			return false;
 		}
 		
-		if(recvFileEvent.getFileName().contentEquals("throughput-test.jpg"))
+		if(recvFileEvent.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 		
 		// find the CMSendFileInfo object 
@@ -2500,7 +2500,7 @@ public class CMFileTransferManager {
 			return false;
 		}
 		
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		// find info in the recv file list
@@ -2557,7 +2557,7 @@ public class CMFileTransferManager {
 			return false;
 		}
 		
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 		
 		fInfo.setEndRecvTime(System.currentTimeMillis());
@@ -2674,7 +2674,7 @@ public class CMFileTransferManager {
 			return false;
 		}
 
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		fInfo.setEndSendTime(System.currentTimeMillis());
@@ -2762,7 +2762,7 @@ public class CMFileTransferManager {
 		
 		fInfo.setStartRecvTime(System.currentTimeMillis());
 
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		// set file size
@@ -2938,7 +2938,7 @@ public class CMFileTransferManager {
 			return false;
 		}		
 		
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		// find the CMSendFileInfo object 
@@ -2995,7 +2995,7 @@ public class CMFileTransferManager {
 			return false;
 		}
 		
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		fInfo.setEndRecvTime(System.currentTimeMillis());
@@ -3159,7 +3159,7 @@ public class CMFileTransferManager {
 			return false;
 		}
 
-		if(fe.getFileName().contentEquals("throughput-test.jpg"))
+		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		fInfo.setEndSendTime(System.currentTimeMillis());

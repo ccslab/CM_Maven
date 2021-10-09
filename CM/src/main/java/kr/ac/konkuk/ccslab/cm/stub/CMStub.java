@@ -2321,7 +2321,7 @@ public class CMStub {
 		CMFileEvent replyEvent = null;
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		
-		bReturn = CMFileTransferManager.requestPermitForPullFile("throughput-test.jpg", 
+		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE, 
 				strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		
 		if(!bReturn)
@@ -2389,7 +2389,7 @@ public class CMStub {
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMFileEvent replyEvent = null;
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + "throughput-test.jpg";
+		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + CMInfo.THROUGHPUT_TEST_FILE;
 		
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strTarget, 
