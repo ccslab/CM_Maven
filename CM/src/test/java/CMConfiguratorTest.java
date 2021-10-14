@@ -59,7 +59,7 @@ public class CMConfiguratorTest {
 	@Test
 	public void testInit() {
 		System.out.println("-- called testInit().");
-		String confFilePath = "src/main/resources/cm-server.conf";
+		String confFilePath = "cm-server.conf";
 		boolean ret = CMConfigurator.init(confFilePath, cmInfo);
 		assertTrue(ret);
 	}
