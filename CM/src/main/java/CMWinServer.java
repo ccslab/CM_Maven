@@ -463,7 +463,7 @@ public class CMWinServer extends JFrame {
 		int nSavedServerPort = -1;
 		
 		// set config home
-		m_serverStub.setConfigurationHome(Paths.get("src/main/resources"));
+		m_serverStub.setConfigurationHome(Paths.get("."));
 		// set file-path home
 		m_serverStub.setTransferedFileHome(m_serverStub.getConfigurationHome().resolve("server-file-path"));
 

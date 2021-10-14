@@ -1119,7 +1119,7 @@ public class CMWinClient extends JFrame {
 		String strCurrentLocalAddress = localAddressList.get(0).toString();
 		
 		// set config home
-		m_clientStub.setConfigurationHome(Paths.get("src/main/resources"));
+		m_clientStub.setConfigurationHome(Paths.get("."));
 		// set file-path home
 		m_clientStub.setTransferedFileHome(m_clientStub.getConfigurationHome().resolve("client-file-path"));
 

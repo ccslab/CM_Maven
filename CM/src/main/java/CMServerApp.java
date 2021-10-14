@@ -244,7 +244,7 @@ public class CMServerApp {
 		int nNewServerPort = -1;
 		
 		// set config home
-		m_serverStub.setConfigurationHome(Paths.get("src/main/resources"));
+		m_serverStub.setConfigurationHome(Paths.get("."));
 		// set file-path home
 		m_serverStub.setTransferedFileHome(m_serverStub.getConfigurationHome().resolve("server-file-path"));
 
