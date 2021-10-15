@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>kr.ac.konkuk.ccslab</groupId>
 	<artifactId>CM</artifactId>
-	<version>1.9.96</version>
+	<version>1.9.97</version>
 	<name>Communication Framework</name>
 
 	<build>
