@@ -1,5 +1,6 @@
 # CM
 client-file-path/
+server-file-path/
 # Eclipse
 bin/
 .classpath
@@ -7,3 +8,5 @@ bin/
 .settings/
 # Maven
 /target/
+# OS
+.DS_Store
