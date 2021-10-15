@@ -4,6 +4,10 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -62,7 +66,18 @@ public class CMFileTransferManager {
 		
 		if(CMInfo._CM_DEBUG_2)
 			System.out.println("A default path for the file transfer: "+strPath);
-						
+
+		// copy the throughput-test file from resource folder to the transfered file home.
+		InputStream is = CMFileTransferManager.class.getClassLoader()
+				.getResourceAsStream("throughput-test.jpg");
+		Path target = Paths.get(strPath, "throughput-test.jpg");
+		try {
+			Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		return;
 	}
 	
