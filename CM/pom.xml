@@ -17,6 +17,15 @@
         </configuration>
       </plugin>
       <plugin>
+  	  	<artifactId>maven-jar-plugin</artifactId>
+		<executions>
+			<execution>
+				<id>default-jar</id>
+				<phase>none</phase>
+			</execution>
+		</executions>
+	  </plugin>
+      <plugin>
         <!-- NOTE: We don't need a groupId specification because the group is
              org.apache.maven.plugins ...which is assumed by default.
          -->
@@ -32,6 +41,44 @@
 		          	<descriptor>src/assembly/cm-lib.xml</descriptor>
 		          </descriptors>
 		        </configuration>        	
+        	</execution>
+        	<execution>
+        		<id>cm-win-server</id>
+        		<phase>package</phase>
+        		<goals><goal>single</goal></goals>
+        		<configuration>
+	        		<archive>
+		                <manifest>
+		                    <mainClass>
+		                        CMWinServer
+		                    </mainClass>
+		                </manifest>
+	                </archive>
+	                <descriptorRefs>
+	                	<descriptorRef>jar-with-dependencies</descriptorRef>
+	                </descriptorRefs>
+	                <finalName>cm-win-server</finalName>
+	                <appendAssemblyId>false</appendAssemblyId>
+        		</configuration>
+        	</execution>
+        	<execution>
+        		<id>cm-win-client</id>
+        		<phase>package</phase>
+        		<goals><goal>single</goal></goals>
+        		<configuration>
+	        		<archive>
+		                <manifest>
+		                    <mainClass>
+		                        CMWinClient
+		                    </mainClass>
+		                </manifest>
+	                </archive>
+	                <descriptorRefs>
+	                	<descriptorRef>jar-with-dependencies</descriptorRef>
+	                </descriptorRefs>
+	                <finalName>cm-win-client</finalName>
+	                <appendAssemblyId>false</appendAssemblyId>
+        		</configuration>
         	</execution>
         </executions>
       </plugin>
