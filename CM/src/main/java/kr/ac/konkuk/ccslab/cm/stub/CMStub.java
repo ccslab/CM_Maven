@@ -89,22 +89,22 @@ public class CMStub {
 			return false;
 		}
 
-		// Korean encoding
-		System.setProperty("file.encoding", "UTF-8");
-		Field charset;
-		try {
-			charset = Charset.class.getDeclaredField("defaultCharset");
-			charset.setAccessible(true);
-			try {
-				charset.set(null, null);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (NoSuchFieldException | SecurityException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+//		// Korean encoding
+//		System.setProperty("file.encoding", "UTF-8");
+//		Field charset;
+//		try {
+//			charset = Charset.class.getDeclaredField("defaultCharset");
+//			charset.setAccessible(true);
+//			try {
+//				charset.set(null, null);
+//			} catch (IllegalArgumentException | IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		} catch (NoSuchFieldException | SecurityException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
 
 		// create an executor service object
 		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
