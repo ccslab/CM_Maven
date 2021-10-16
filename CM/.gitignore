@@ -10,3 +10,4 @@ bin/
 /target/
 # OS
 .DS_Store
+../.DS_Store
