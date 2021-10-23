@@ -11,3 +11,8 @@ bin/
 # OS
 .DS_Store
 ../.DS_Store
+# Intellij
+.idea/
+*.iml
+*.iws
+
