@@ -17,7 +17,7 @@ public class CMCommInfo {
 	private CMList<CMUnknownChannelInfo> m_unknownChannelInfoList;	// 4 server and client
 	
 	//private Vector<SocketChannel> m_scList;
-	//private Vector<DatagramCha	nnel> m_dcList;
+	//private Vector<DatagramChannel> m_dcList;
 	//private Vector<MulticastChannel> m_mcList;
 	private Selector m_selector;
 	private CMBlockingEventQueue m_recvQueue;
