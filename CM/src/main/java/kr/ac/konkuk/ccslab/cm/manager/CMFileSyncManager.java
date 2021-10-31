@@ -31,7 +31,8 @@ public class CMFileSyncManager extends CMServiceManager {
 
     public boolean startFileSync() {
 
-        System.out.println("CMFileSyncManager::startFileSync() called..");
+        if(CMInfo._CM_DEBUG)
+            System.out.println("CMFileSyncManager::startFileSync() called..");
         CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
 
         if(fsInfo.isSyncInProgress()) {
@@ -67,7 +68,9 @@ public class CMFileSyncManager extends CMServiceManager {
 
     public List<Path> createPathList(Path syncHome) {
 
-        System.out.println("CMFileSyncManager::createPathList() called..");
+        if(CMInfo._CM_DEBUG)
+            System.out.println("CMFileSyncManager::createPathList() called..");
+
         List<Path> pathList;
         try {
             // filter only regular files -> change to absolute path -> sorted -> change to a list
@@ -82,13 +85,23 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         if( pathList.isEmpty() )
-            System.out.println("The sync-home is empty.");
-        else {
-            for(Path p : pathList)
+            System.err.println("The sync-home is empty.");
+
+        if(CMInfo._CM_DEBUG) {
+            for (Path p : pathList)
                 System.out.println(p);
         }
 
         return pathList;
     }
 
+    private boolean sendFileList() {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("CMFileSyncManager::sendFileList() called..");
+
+        // create START_FILE_LIST event.
+
+        // from here
+        return true;
+    }
 }
