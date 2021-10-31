@@ -7,6 +7,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CMFileSyncManager extends CMServiceManager {
 
@@ -29,6 +31,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     public boolean startFileSync() {
 
+        System.out.println("CMFileSyncManager::startFileSync() called..");
         CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
 
         if(fsInfo.isSyncInProgress()) {
@@ -51,12 +54,41 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
 
-        // create a file list in the sync-file-home
-
+        // create a path list in the sync-file-home.
+        List<Path> pathList = createPathList(syncHome);
+        // store the path list in the CMFileSyncInfo.
+        fsInfo.setPathList(pathList);
+        // send the file list to the server
 
         // from here
 
         return true;
+    }
+
+    private List<Path> createPathList(Path syncHome) {
+
+        System.out.println("CMFileSyncManager::createPathList() called..");
+        List<Path> pathList;
+        try {
+            // filter only regular files -> change to absolute path -> sorted -> change to a list
+            pathList = Files.walk(syncHome)
+                    .filter(Files::isRegularFile)
+                    .map(path -> path.toAbsolutePath().normalize())
+                    .sorted()
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        if( pathList.isEmpty() )
+            System.out.println("The sync-home is empty.");
+        else {
+            for(Path p : pathList)
+                System.out.println(p);
+        }
+
+        return pathList;
     }
 
 }
