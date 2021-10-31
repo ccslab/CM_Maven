@@ -65,7 +65,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    private List<Path> createPathList(Path syncHome) {
+    public List<Path> createPathList(Path syncHome) {
 
         System.out.println("CMFileSyncManager::createPathList() called..");
         List<Path> pathList;
