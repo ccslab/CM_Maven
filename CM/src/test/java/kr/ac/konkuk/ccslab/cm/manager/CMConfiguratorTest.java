@@ -1,3 +1,5 @@
+package kr.ac.konkuk.ccslab.cm.manager;
+
 import static org.junit.Assert.*;
 
 import org.junit.After;
@@ -6,7 +8,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 
