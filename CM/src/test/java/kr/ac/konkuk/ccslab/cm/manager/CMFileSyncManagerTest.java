@@ -41,4 +41,11 @@ public class CMFileSyncManagerTest {
         System.out.println("server sync home for ccslab: "+serverSyncHome.toString());
         assertNotNull(serverSyncHome);
     }
+
+    @Test
+    public void startFileSync() {
+        System.out.println("===== called startFileSync()");
+        CMConfigurator.init("cm-client.conf", cmInfo);
+        assertTrue(fileSyncManager.startFileSync());
+    }
 }
