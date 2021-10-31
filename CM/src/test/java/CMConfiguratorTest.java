@@ -1,8 +1,3 @@
-/**
- * 
- */
-
-
 import static org.junit.Assert.*;
 
 import org.junit.After;
@@ -27,24 +22,24 @@ public class CMConfiguratorTest {
 	 * @throws java.lang.Exception
 	 */
 	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		System.out.println("-- called setUpBeforeClass().");
+	public static void setUpBeforeClass() {
+		System.out.println("===== called setUpBeforeClass().");
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-		System.out.println("-- called tearDownAfterClass().");
+	public static void tearDownAfterClass() {
+		System.out.println("===== called tearDownAfterClass().");
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
 	@Before
-	public void setUp() throws Exception {
-		System.out.println("-- called setUp().");
+	public void setUp() {
+		System.out.println("===== called setUp().");
 		cmInfo = new CMInfo();
 	}
 
@@ -52,13 +47,13 @@ public class CMConfiguratorTest {
 	 * @throws java.lang.Exception
 	 */
 	@After
-	public void tearDown() throws Exception {
-		System.out.println("-- called tearDown().");
+	public void tearDown() {
+		System.out.println("===== called tearDown().");
 	}
 
 	@Test
 	public void testInit() {
-		System.out.println("-- called testInit().");
+		System.out.println("===== called testInit().");
 		String confFilePath = "cm-server.conf";
 		boolean ret = CMConfigurator.init(confFilePath, cmInfo);
 		assertTrue(ret);

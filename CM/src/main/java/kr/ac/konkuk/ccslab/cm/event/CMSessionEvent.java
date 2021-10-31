@@ -365,7 +365,6 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>user name: {@link CMSessionEvent#getUserName()}</li>
 	 * <li>password: {@link CMSessionEvent#getPassword()}</li>
 	 * </ul>
-	 * (from here)
 	 */
 	public static final int DEREGISTER_USER = 18;
 	

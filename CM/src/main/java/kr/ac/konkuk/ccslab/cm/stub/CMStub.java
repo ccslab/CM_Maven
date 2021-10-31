@@ -27,13 +27,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMServiceManager;
+import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
@@ -79,6 +73,7 @@ public class CMStub {
 		
 		// add cm service managers
 		managerHashtable.put(CMInfo.CM_MQTT_MANAGER, new CMMqttManager(m_cmInfo));
+		managerHashtable.put(CMInfo.CM_FILE_SYNC_MANAGER, new CMFileSyncManager(m_cmInfo));
 		
 		// add cm event handlers
 		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(m_cmInfo));

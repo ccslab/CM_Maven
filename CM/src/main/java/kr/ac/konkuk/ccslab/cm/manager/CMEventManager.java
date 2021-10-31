@@ -155,7 +155,6 @@ public class CMEventManager {
 				System.err.println("CMEventManager.unmarshallEvent(), unknown MQTT event ID: "+nEventID);
 				return null;
 			}
-			// from here
 		default:
 			System.err.println("CMEventManager.unmarshallEvent(), unknown event type: "+nEventType);
 			return null;
