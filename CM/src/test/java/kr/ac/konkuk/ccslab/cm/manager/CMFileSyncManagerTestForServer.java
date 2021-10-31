@@ -8,43 +8,25 @@ import java.nio.file.Path;
 
 import static org.junit.Assert.*;
 
-public class CMFileSyncManagerTest {
-
+public class CMFileSyncManagerTestForServer {
     CMInfo cmInfo;
     CMFileSyncManager fileSyncManager;
 
     @Before
     public void setUp() {
+        System.out.println("===== called setUp()");
         cmInfo = new CMInfo();
+        CMConfigurator.init("cm-server.conf", cmInfo);
         fileSyncManager = new CMFileSyncManager(cmInfo);
-    }
-
-    @Test
-    public void getClientSyncHome() {
-
-        System.out.println("====== called getClientSyncHome()");
-        CMConfigurator.init("cm-client.conf", cmInfo);
-
-        Path clientSyncHome = fileSyncManager.getClientSyncHome();
-        System.out.println("client sync home: "+clientSyncHome.toString());
-        assertNotNull(clientSyncHome);
     }
 
     @Test
     public void getServerSyncHome() {
 
         System.out.println("====== called getServerSyncHome()");
-        CMConfigurator.init("cm-server.conf", cmInfo);
-
         Path serverSyncHome = fileSyncManager.getServerSyncHome("ccslab");
         System.out.println("server sync home for ccslab: "+serverSyncHome.toString());
         assertNotNull(serverSyncHome);
     }
 
-    @Test
-    public void startFileSync() {
-        System.out.println("===== called startFileSync()");
-        CMConfigurator.init("cm-client.conf", cmInfo);
-        assertTrue(fileSyncManager.startFileSync());
-    }
 }
