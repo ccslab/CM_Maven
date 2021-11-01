@@ -55,63 +55,139 @@ public class CMFileSyncEvent extends CMEvent {
         return userName;
     }
 
-    public void setUserName(String userName) {
+    public CMFileSyncEvent setUserName(String userName) {
         this.userName = userName;
+        return this;
     }
 
     public int getNumTotalFiles() {
         return numTotalFiles;
     }
 
-    public void setNumTotalFiles(int numTotalFiles) {
+    public CMFileSyncEvent setNumTotalFiles(int numTotalFiles) {
         this.numTotalFiles = numTotalFiles;
+        return this;
     }
 
     public int getReturnCode() {
         return returnCode;
     }
 
-    public void setReturnCode(int returnCode) {
+    public CMFileSyncEvent setReturnCode(int returnCode) {
         this.returnCode = returnCode;
+        return this;
     }
 
     public int getNumFilesCompleted() {
         return numFilesCompleted;
     }
 
-    public void setNumFilesCompleted(int numFilesCompleted) {
+    public CMFileSyncEvent setNumFilesCompleted(int numFilesCompleted) {
         this.numFilesCompleted = numFilesCompleted;
+        return this;
     }
 
     public int getNumFiles() {
         return numFiles;
     }
 
-    public void setNumFiles(int numFiles) {
+    public CMFileSyncEvent setNumFiles(int numFiles) {
         this.numFiles = numFiles;
+        return this;
     }
 
     public List<CMFileSyncEntry> getFileEntryList() {
         return fileEntryList;
     }
 
-    public void setFileEntryList(List<CMFileSyncEntry> fileEntryList) {
+    public CMFileSyncEvent setFileEntryList(List<CMFileSyncEntry> fileEntryList) {
         this.fileEntryList = fileEntryList;
+        return this;
     }
 
     @Override
     protected int getByteNum() {
-        int byteNum = 0;
+        int byteNum;
         byteNum = super.getByteNum();
 
-        // from here
+        switch(m_nID) {
+            case START_FILE_LIST:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // numTotalFiles
+                byteNum += Integer.BYTES;
+                break;
+            case START_FILE_LIST_ACK:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // numTotalFiles
+                byteNum += Integer.BYTES;
+                // returnCode
+                byteNum += Integer.BYTES;
+                break;
+            case FILE_ENTRIES:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // numFilesCompleted
+                byteNum += Integer.BYTES;
+                // numFiles
+                byteNum += Integer.BYTES;
+                // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
+                for(CMFileSyncEntry entry : fileEntryList) {
+                    // Path pathRelativeToHome
+                    byteNum += CMInfo.STRING_LEN_BYTES_LEN +
+                            entry.getPathRelativeToHome().toString().getBytes().length;
+                    // long size
+                    byteNum += Long.BYTES;
+                    // FileTime lastModifiedTime -> long type of milliseconds
+                    byteNum += Long.BYTES;
+                }
+                break;
+            case FILE_ENTRIES_ACK:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // numFilesCompleted
+                byteNum += Integer.BYTES;
+                // numFiles
+                byteNum += Integer.BYTES;
+                // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
+                for(CMFileSyncEntry entry : fileEntryList) {
+                    // Path pathRelativeToHome
+                    byteNum += CMInfo.STRING_LEN_BYTES_LEN +
+                            entry.getPathRelativeToHome().toString().getBytes().length;
+                    // long size
+                    byteNum += Long.BYTES;
+                    // FileTime lastModifiedTime -> long type of milliseconds
+                    byteNum += Long.BYTES;
+                }
+                // returnCode
+                byteNum += Integer.BYTES;
+                break;
+            case END_FILE_LIST:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // numFilesCompleted
+                byteNum += Integer.BYTES;
+                break;
+            case END_FILE_LIST_ACK:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // numFilesCompleted
+                byteNum += Integer.BYTES;
+                // returnCode
+                byteNum += Integer.BYTES;
+                break;
+            default:
+                byteNum = -1;
+                break;
+        }
 
         return byteNum;
     }
 
     @Override
     protected void marshallBody() {
-
+        // from here
     }
 
     @Override
