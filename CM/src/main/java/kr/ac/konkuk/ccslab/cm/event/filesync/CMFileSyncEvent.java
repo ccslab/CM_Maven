@@ -132,6 +132,8 @@ public class CMFileSyncEvent extends CMEvent {
                 byteNum += Integer.BYTES;
                 // numFiles
                 byteNum += Integer.BYTES;
+                // number of elements of fileEntryList
+                byteNum += Integer.BYTES;
                 // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
                 for(CMFileSyncEntry entry : fileEntryList) {
                     // Path pathRelativeToHome
@@ -149,6 +151,8 @@ public class CMFileSyncEvent extends CMEvent {
                 // numFilesCompleted
                 byteNum += Integer.BYTES;
                 // numFiles
+                byteNum += Integer.BYTES;
+                // number of elements of fileEntryList
                 byteNum += Integer.BYTES;
                 // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
                 for(CMFileSyncEntry entry : fileEntryList) {
@@ -187,11 +191,91 @@ public class CMFileSyncEvent extends CMEvent {
 
     @Override
     protected void marshallBody() {
-        // from here
+
+        switch(m_nID) {
+            case START_FILE_LIST:
+                // userName
+                putStringToByteBuffer(userName);
+                // numTotalFiles
+                m_bytes.putInt(numTotalFiles);
+                break;
+            case START_FILE_LIST_ACK:
+                // userName
+                putStringToByteBuffer(userName);
+                // numTotalFiles
+                m_bytes.putInt(numTotalFiles);
+                // returnCode
+                m_bytes.putInt(returnCode);
+                break;
+            case FILE_ENTRIES:
+                // userName
+                putStringToByteBuffer(userName);
+                // numFilesCompleted
+                m_bytes.putInt(numFilesCompleted);
+                // numFiles
+                m_bytes.putInt(numFiles);
+                // number of elements of fileEntryList
+                m_bytes.putInt(fileEntryList.size());
+                // fileEntryList
+                for(CMFileSyncEntry entry : fileEntryList) {
+                    // Path relativePathToHome
+                    putStringToByteBuffer(entry.getPathRelativeToHome().toString());
+                    // long size
+                    m_bytes.putLong(entry.getSize());
+                    // FileTime lastModifiedTime (changed to long milliseconds)
+                    m_bytes.putLong(entry.getLastModifiedTime().toMillis());
+                }
+                break;
+            case FILE_ENTRIES_ACK:
+                // userName
+                putStringToByteBuffer(userName);
+                // numFilesCompleted
+                m_bytes.putInt(numFilesCompleted);
+                // numFiles
+                m_bytes.putInt(numFiles);
+                // number of elements of fileEntryList
+                m_bytes.putInt(fileEntryList.size());
+                // fileEntryList
+                for(CMFileSyncEntry entry : fileEntryList) {
+                    // Path relativePathToHome
+                    putStringToByteBuffer(entry.getPathRelativeToHome().toString());
+                    // long size
+                    m_bytes.putLong(entry.getSize());
+                    // FileTime lastModifiedTime (changed to long milliseconds)
+                    m_bytes.putLong(entry.getLastModifiedTime().toMillis());
+                }
+                // returnCode
+                m_bytes.putInt(returnCode);
+                break;
+            case END_FILE_LIST:
+                // userName
+                putStringToByteBuffer(userName);
+                // numFilesCompleted
+                m_bytes.putInt(numFilesCompleted);
+                break;
+            case END_FILE_LIST_ACK:
+                // userName
+                putStringToByteBuffer(userName);
+                // numFilesCompleted
+                m_bytes.putInt(numFilesCompleted);
+                // returnCode
+                m_bytes.putInt(returnCode);
+                break;
+            default:
+                System.err.println("CMFileSyncEvent.marshallBody(), unknown event Id("+m_nID+").");
+                m_bytes = null;
+                break;
+        }
+
     }
 
     @Override
     protected void unmarshallBody(ByteBuffer msg) {
 
+        switch(m_nID) {
+
+            // from here
+
+        }
     }
 }
