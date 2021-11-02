@@ -5,6 +5,10 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -272,10 +276,96 @@ public class CMFileSyncEvent extends CMEvent {
     @Override
     protected void unmarshallBody(ByteBuffer msg) {
 
+        int numFileEntries;
+
         switch(m_nID) {
-
-            // from here
-
+            case START_FILE_LIST:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // numTotalFiles
+                numTotalFiles = msg.getInt();
+                break;
+            case START_FILE_LIST_ACK:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // numTotalFiles
+                numTotalFiles = msg.getInt();
+                // returnCode
+                returnCode = msg.getInt();
+                break;
+            case FILE_ENTRIES:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // numFilesCompleted
+                numFilesCompleted = msg.getInt();
+                // numFiles
+                numFiles = msg.getInt();
+                // fileEntryList
+                numFileEntries = msg.getInt();
+                if(numFileEntries > 0){
+                    // create a new entry list
+                    fileEntryList = new ArrayList<>();
+                    for (int i = 0; i < numFileEntries; i++) {
+                        CMFileSyncEntry entry = new CMFileSyncEntry();
+                        // Path relativePathToHome
+                        Path relativePath = Paths.get(getStringFromByteBuffer(msg));
+                        entry.setPathRelativeToHome(relativePath);
+                        // long size
+                        entry.setSize(msg.getLong());
+                        // FileTime lastModifiedTime
+                        FileTime lastModifiedTime = FileTime.fromMillis(msg.getLong());
+                        entry.setLastModifiedTime(lastModifiedTime);
+                        // add to the entry list
+                        fileEntryList.add(entry);
+                    }
+                }
+                break;
+            case FILE_ENTRIES_ACK:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // numFilesCompleted
+                numFilesCompleted = msg.getInt();
+                // numFiles
+                numFiles = msg.getInt();
+                // fileEntryList
+                numFileEntries = msg.getInt();
+                if(numFileEntries > 0){
+                    // create a new entry list
+                    fileEntryList = new ArrayList<>();
+                    for (int i = 0; i < numFileEntries; i++) {
+                        CMFileSyncEntry entry = new CMFileSyncEntry();
+                        // Path relativePathToHome
+                        Path relativePath = Paths.get(getStringFromByteBuffer(msg));
+                        entry.setPathRelativeToHome(relativePath);
+                        // long size
+                        entry.setSize(msg.getLong());
+                        // FileTime lastModifiedTime
+                        FileTime lastModifiedTime = FileTime.fromMillis(msg.getLong());
+                        entry.setLastModifiedTime(lastModifiedTime);
+                        // add to the entry list
+                        fileEntryList.add(entry);
+                    }
+                }
+                // returnCode
+                returnCode = msg.getInt();
+                break;
+            case END_FILE_LIST:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // numFilesCompleted
+                numFilesCompleted = msg.getInt();
+                break;
+            case END_FILE_LIST_ACK:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // numFilesCompleted
+                numFilesCompleted = msg.getInt();
+                // returnCode
+                returnCode = msg.getInt();
+                break;
+            default:
+                System.err.println("CMFileSyncEvent.unmarshallBody(), unknown event Id("+m_nID+").");
+                break;
         }
     }
 }
