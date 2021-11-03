@@ -368,4 +368,24 @@ public class CMFileSyncEvent extends CMEvent {
                 break;
         }
     }
+
+    @Override
+    public String toString() {
+        return "CMFileSyncEvent{" +
+                "m_strSender='" + m_strSender + '\'' +
+                ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_strHandlerSession='" + m_strHandlerSession + '\'' +
+                ", m_strHandlerGroup='" + m_strHandlerGroup + '\'' +
+                ", m_strDistributionSession='" + m_strDistributionSession + '\'' +
+                ", m_strDistributionGroup='" + m_strDistributionGroup + '\'' +
+                ", m_nID=" + m_nID +
+                ", m_nByteNum=" + m_nByteNum +
+                ", userName='" + userName + '\'' +
+                ", numTotalFiles=" + numTotalFiles +
+                ", returnCode=" + returnCode +
+                ", numFilesCompleted=" + numFilesCompleted +
+                ", numFiles=" + numFiles +
+                ", fileEntryList=" + fileEntryList +
+                '}';
+    }
 }

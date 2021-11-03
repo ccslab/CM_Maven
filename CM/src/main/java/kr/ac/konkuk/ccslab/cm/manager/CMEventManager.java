@@ -24,6 +24,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
@@ -155,6 +156,9 @@ public class CMEventManager {
 				System.err.println("CMEventManager.unmarshallEvent(), unknown MQTT event ID: "+nEventID);
 				return null;
 			}
+			case CMInfo.CM_FILE_SYNC_EVENT:
+				CMFileSyncEvent fsEvent = new CMFileSyncEvent(buf);
+				return fsEvent;
 		default:
 			System.err.println("CMEventManager.unmarshallEvent(), unknown event type: "+nEventType);
 			return null;
