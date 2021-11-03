@@ -42,11 +42,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
+import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
 public class CMWinClient extends JFrame {
@@ -200,12 +196,12 @@ public class CMWinClient extends JFrame {
 		StyleConstants.setUnderline(linkStyle, true);
 	}
 	
-	public CMClientStub getClientStub()
+	private CMClientStub getClientStub()
 	{
 		return m_clientStub;
 	}
 	
-	public CMWinClientEventHandler getClientEventHandler()
+	private CMWinClientEventHandler getClientEventHandler()
 	{
 		return m_eventHandler;
 	}
@@ -482,6 +478,12 @@ public class CMWinClient extends JFrame {
 		pubsubSubMenu.add(disconMenuItem);
 		
 		cmServiceMenu.add(pubsubSubMenu);
+
+		JMenu fileSyncMenu = new JMenu("File Sync");
+		JMenuItem startFileSyncMenuItem = new JMenuItem("start file-sync");
+		fileSyncMenu.add(startMenuItem);
+
+		cmServiceMenu.add(fileSyncMenu);
 		
 		JMenu otherSubMenu = new JMenu("Other CM Test");
 		JMenuItem forwardMenuItem = new JMenuItem("test forwarding scheme");
@@ -521,7 +523,7 @@ public class CMWinClient extends JFrame {
 	}
 	
 	// initialize button titles
-	public void initializeButtons()
+	private void initializeButtons()
 	{
 		m_startStopButton.setText("Start Client CM");
 		m_loginLogoutButton.setText("Login");
@@ -650,7 +652,7 @@ public class CMWinClient extends JFrame {
 		printMessage("\n");
 	}
 
-	public void processInput(String strInput)
+	private void processInput(String strInput)
 	{
 		int nCommand = -1;
 		try {
@@ -902,13 +904,16 @@ public class CMWinClient extends JFrame {
 		case 205: // MQTT disconnect
 			testMqttDisconnect();
 			break;
+		case 300:	// start file-sync
+			testStartFileSync();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
 		}
 	}
-	
-	public void printAllMenus()
+
+	private void printAllMenus()
 	{
 		printMessage("---------------------------------- Help\n");
 		printMessage("0: show all menus\n");
@@ -956,6 +961,8 @@ public class CMWinClient extends JFrame {
 		printMessage("---------------------------------- MQTT\n");
 		printMessage("200: connect, 201: publish, 202: subscribe, 203: print session info\n");
 		printMessage("204: unsubscribe, 205: disconnect \n");
+		printMessage("---------------------------------- File Sync\n");
+		printMessage("300: start file-sync\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -964,7 +971,7 @@ public class CMWinClient extends JFrame {
 		printMessage("110: test csc file transfer, 111: test c2c file transfer\n");
 	}
 	
-	public void testConnectionDS()
+	private void testConnectionDS()
 	{
 		printMessage("====== connect to default server\n");
 		boolean ret = m_clientStub.connectToServer();
@@ -979,7 +986,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 	
-	public void testDisconnectionDS()
+	private void testDisconnectionDS()
 	{
 		printMessage("====== disconnect from default server\n");
 		boolean ret = m_clientStub.disconnectFromServer();
@@ -997,7 +1004,7 @@ public class CMWinClient extends JFrame {
 		setTitle("CM Client");
 	}
 	
-	public void testLoginDS()
+	private void testLoginDS()
 	{
 		String strUserName = null;
 		String strPassword = null;
@@ -1034,7 +1041,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 	
-	public void testSyncLoginDS()
+	private void testSyncLoginDS()
 	{
 		String strUserName = null;
 		String strPassword = null;
@@ -1090,7 +1097,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");		
 	}
 
-	public void testLogoutDS()
+	private void testLogoutDS()
 	{
 		boolean bRequestResult = false;
 		printMessage("====== logout from default server\n");
@@ -1106,7 +1113,7 @@ public class CMWinClient extends JFrame {
 		setTitle("CM Client");
 	}
 
-	public void testStartCM()
+	private void testStartCM()
 	{
 		boolean bRet = false;
 		
@@ -1167,7 +1174,7 @@ public class CMWinClient extends JFrame {
 		}
 	}
 	
-	public void testTerminateCM()
+	private void testTerminateCM()
 	{
 		//m_clientStub.disconnectFromServer();
 		m_clientStub.terminateCM();
@@ -1177,7 +1184,7 @@ public class CMWinClient extends JFrame {
 		setTitle("CM Client");
 	}
 
-	public void testSessionInfoDS()
+	private void testSessionInfoDS()
 	{
 		boolean bRequestResult = false;
 		printMessage("====== request session info from default server\n");
@@ -1194,7 +1201,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 	
-	public void testSyncSessionInfoDS()
+	private void testSyncSessionInfoDS()
 	{
 		CMSessionEvent se = null;
 		printMessage("====== synchronous request session info from default server\n");
@@ -1226,7 +1233,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");		
 	}
 
-	public void testJoinSession()
+	private void testJoinSession()
 	{
 		String strSessionName = null;
 		boolean bRequestResult = false;
@@ -1248,7 +1255,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 	
-	public void testSyncJoinSession()
+	private void testSyncJoinSession()
 	{
 		CMSessionEvent se = null;
 		String strSessionName = null;
@@ -1275,7 +1282,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");		
 	}
 
-	public void testLeaveSession()
+	private void testLeaveSession()
 	{
 		boolean bRequestResult = false;
 		printMessage("====== leave the current session\n");
@@ -1288,7 +1295,7 @@ public class CMWinClient extends JFrame {
 		setButtonsAccordingToClientState();
 	}
 
-	public void testUserPosition()
+	private void testUserPosition()
 	{
 		CMPosition position = new CMPosition();
 
@@ -1325,7 +1332,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testChat()
+	private void testChat()
 	{
 		String strTarget = null;
 		String strMessage = null;
@@ -1349,7 +1356,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testDummyEvent()
+	private void testDummyEvent()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMUser myself = interInfo.getMyself();
@@ -1377,7 +1384,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testDatagram()
+	private void testDatagram()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
@@ -1455,7 +1462,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testUserEvent()
+	private void testUserEvent()
 	{
 		String strReceiver = null;
 		int nValueByteNum = -1;
@@ -1560,7 +1567,7 @@ public class CMWinClient extends JFrame {
 	}
 	
 	// test sendrecv
-	public void testSendRecv()
+	private void testSendRecv()
 	{
 		CMUserEvent ue = new CMUserEvent();
 		CMUserEvent rue = null;
@@ -1610,7 +1617,7 @@ public class CMWinClient extends JFrame {
 	}
 	
 	// test castrecv
-	public void testCastRecv()
+	private void testCastRecv()
 	{
 		CMUserEvent ue = new CMUserEvent();
 		CMEvent[] rueArray = null;
@@ -1690,7 +1697,7 @@ public class CMWinClient extends JFrame {
 	}
 	
 	// test asynchronous sendrecv
-	public void testAsyncSendRecv()
+	private void testAsyncSendRecv()
 	{
 		CMUserEvent ue = new CMUserEvent();
 		boolean bRet = false;
@@ -1732,7 +1739,7 @@ public class CMWinClient extends JFrame {
 	}
 	
 	// test asynchronous castrecv
-	public void testAsyncCastRecv()
+	private void testAsyncCastRecv()
 	{
 		CMUserEvent ue = new CMUserEvent();
 		boolean bRet = false;
@@ -1804,7 +1811,7 @@ public class CMWinClient extends JFrame {
 	}
 
 	// print group information provided by the default server
-	public void testPrintGroupInfo()
+	private void testPrintGroupInfo()
 	{
 		// check local state
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
@@ -1832,7 +1839,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testCurrentUserStatus()
+	private void testCurrentUserStatus()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMUser myself = interInfo.getMyself();
@@ -1861,7 +1868,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testChangeGroup()
+	private void testChangeGroup()
 	{
 		String strGroupName = null;
 		printMessage("====== change group\n");
@@ -1874,7 +1881,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testPrintGroupMembers()
+	private void testPrintGroupMembers()
 	{
 		printMessage("====== print group members\n");
 		CMMember groupMembers = m_clientStub.getGroupMembers();
@@ -1892,7 +1899,7 @@ public class CMWinClient extends JFrame {
 	// A server cannot add SocketChannel.
 	// For the SocketChannel, available server name must be given as well.
 	// For the MulticastChannel, session name and group name known by this client/server must be given. 
-	public void testAddChannel()
+	private void testAddChannel()
 	{
 		int nChType = -1;
 		int nChKey = -1; // the channel key for the socket channel
@@ -2140,7 +2147,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testRemoveChannel()
+	private void testRemoveChannel()
 	{
 		int nChType = -1;
 		int nChKey = -1;
@@ -2367,7 +2374,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testSetFilePath()
+	private void testSetFilePath()
 	{
 		printMessage("====== set file path\n");
 		String strPath = null;
@@ -2380,7 +2387,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testRequestFile()
+	private void testRequestFile()
 	{
 		boolean bReturn = false;
 		String strFileName = null;
@@ -2438,7 +2445,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testPushFile()
+	private void testPushFile()
 	{
 		String strFilePath = null;
 		File[] files = null;
@@ -2508,7 +2515,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void cancelRecvFile()
+	private void cancelRecvFile()
 	{
 		String strSender = null;
 		boolean bReturn = false;
@@ -2532,7 +2539,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void cancelSendFile()
+	private void cancelSendFile()
 	{
 		String strReceiver = null;
 		boolean bReturn = false;
@@ -2579,7 +2586,7 @@ public class CMWinClient extends JFrame {
 		}
 	}
 	
-	public void testForwarding()
+	private void testForwarding()
 	{
 		int nForwardType = 0;
 		float fForwardRate = 0;
@@ -2661,7 +2668,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testForwardingDelay()
+	private void testForwardingDelay()
 	{
 		int nForwardType = 0;
 		int nSendNum = 0;
@@ -2737,7 +2744,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testDownloadNewSNSContent()
+	private void testDownloadNewSNSContent()
 	{
 		printMessage("====== request downloading of SNS content (offset 0)\n");
 
@@ -2775,7 +2782,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testRequestAttachedFileOfSNSContent()
+	private void testRequestAttachedFileOfSNSContent()
 	{
 		printMessage("====== request an attached file of SNS content\n");
 		String strFileName = null;
@@ -2795,7 +2802,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testRepeatedSNSContentDownload()
+	private void testRepeatedSNSContentDownload()
 	{
 		//System.out.println("====== Repeated downloading of SNS content");
 		printMessage("====== Repeated downloading of SNS content\n");
@@ -2821,7 +2828,7 @@ public class CMWinClient extends JFrame {
 
 	// download the next SNS content list
 	// if this method is called without any previous download request, it requests the most recent list
-	public void testDownloadNextSNSContent()
+	private void testDownloadNextSNSContent()
 	{
 		printMessage("===== Request the next SNS content list\n");
 		// start time of downloading contents
@@ -2833,7 +2840,7 @@ public class CMWinClient extends JFrame {
 	
 	// download the previous SNS content list
 	// if this method is called without any previous download request, it requests the most recent list
-	public void testDownloadPreviousSNSContent()
+	private void testDownloadPreviousSNSContent()
 	{
 		printMessage("===== Request the previous SNS content list\n");
 		// start time of downloading contents
@@ -2843,7 +2850,7 @@ public class CMWinClient extends JFrame {
 		return;		
 	}
 
-	public void testSNSContentUpload()
+	private void testSNSContentUpload()
 	{
 		String strMessage = null;
 		ArrayList<String> filePathList = null;
@@ -2911,7 +2918,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testRegisterUser()
+	private void testRegisterUser()
 	{
 		String strName = null;
 		String strPasswd = null;
@@ -2944,7 +2951,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testDeregisterUser()
+	private void testDeregisterUser()
 	{
 		String strName = null;
 		String strPasswd = null;
@@ -2968,7 +2975,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testFindRegisteredUser()
+	private void testFindRegisteredUser()
 	{
 		String strName = null;
 		
@@ -2982,7 +2989,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testAddNewFriend()
+	private void testAddNewFriend()
 	{
 		String strFriendName = null;
 		
@@ -2995,7 +3002,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testRemoveFriend()
+	private void testRemoveFriend()
 	{
 		String strFriendName = null;
 		
@@ -3007,34 +3014,34 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testRequestFriendsList()
+	private void testRequestFriendsList()
 	{
 		printMessage("====== request current friends list\n");
 		m_clientStub.requestFriendsList();
 		return;
 	}
 
-	public void testRequestFriendRequestersList()
+	private void testRequestFriendRequestersList()
 	{
 		printMessage("====== request friend requesters list\n");
 		m_clientStub.requestFriendRequestersList();
 		return;
 	}
 
-	public void testRequestBiFriendsList()
+	private void testRequestBiFriendsList()
 	{
 		printMessage("====== request bi-directional friends list\n");
 		m_clientStub.requestBiFriendsList();
 		return;
 	}
 
-	public void testRequestServerInfo()
+	private void testRequestServerInfo()
 	{
 		printMessage("====== request additional server information\n");
 		m_clientStub.requestServerInfo();
 	}
 
-	public void testConnectToServer()
+	private void testConnectToServer()
 	{
 		printMessage("====== connect to a designated server\n");
 		String strServerName = null;
@@ -3046,7 +3053,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testDisconnectFromServer()
+	private void testDisconnectFromServer()
 	{
 		printMessage("===== disconnect from a designated server\n");
 		
@@ -3059,7 +3066,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testLoginServer()
+	private void testLoginServer()
 	{
 		String strServerName = null;
 		String user = null;
@@ -3099,7 +3106,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testLogoutServer()
+	private void testLogoutServer()
 	{
 		String strServerName = null;
 		
@@ -3111,7 +3118,7 @@ public class CMWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	public void testRequestSessionInfoOfServer()
+	private void testRequestSessionInfoOfServer()
 	{
 		String strServerName = null;
 		printMessage("====== request session informatino of a designated server\n");
@@ -3125,7 +3132,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testJoinSessionOfServer()
+	private void testJoinSessionOfServer()
 	{
 		String strServerName = null;
 		String strSessionName = null;
@@ -3149,7 +3156,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testLeaveSessionOfServer()
+	private void testLeaveSessionOfServer()
 	{
 		String strServerName = null;
 		
@@ -3163,7 +3170,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testPrintGroupInfoOfServer()
+	private void testPrintGroupInfoOfServer()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMUser myself = interInfo.getMyself();
@@ -3203,7 +3210,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testSendMultipleFiles()
+	private void testSendMultipleFiles()
 	{
 		String[] strFiles = null;
 		String strFileList = null;
@@ -3260,7 +3267,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testSplitFile()
+	private void testSplitFile()
 	{
 		String strSrcFile = null;
 		String strSplitFile = null;
@@ -3325,7 +3332,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testMergeFiles()
+	private void testMergeFiles()
 	{
 		String[] strFiles = null;
 		//String strFileList = null;
@@ -3367,7 +3374,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testDistFileProc()
+	private void testDistFileProc()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		String strFile = null;
@@ -3512,7 +3519,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testMulticastChat()
+	private void testMulticastChat()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
@@ -3554,7 +3561,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testBlockingChannel()
+	private void testBlockingChannel()
 	{
 		int nChKey = -1;
 		int nRecvPort = -1;
@@ -3657,7 +3664,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
-	public void testMeasureInputThroughput()
+	private void testMeasureInputThroughput()
 	{
 		String strTarget = null;
 		float fSpeed = -1; // MBps
@@ -3676,7 +3683,7 @@ public class CMWinClient extends JFrame {
 			printMessage(String.format("Input network throughput from [%s] : %.2f MBps%n", strTarget, fSpeed));
 	}
 	
-	public void testMeasureOutputThroughput()
+	private void testMeasureOutputThroughput()
 	{
 		String strTarget = null;
 		float fSpeed = -1; // MBps
@@ -3695,14 +3702,14 @@ public class CMWinClient extends JFrame {
 			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, fSpeed));
 	}
 	
-	public void testPrintCurrentChannelInfo()
+	private void testPrintCurrentChannelInfo()
 	{
 		printMessage("========== print current channel info\n");
 		String strChannels = m_clientStub.getCurrentChannelInfo();
 		printMessage(strChannels);
 	}
 	
-	public void testPrintConfigurations()
+	private void testPrintConfigurations()
 	{
 		String[] strConfigurations;
 		printMessage("========== print all current configurations\n");
@@ -3727,7 +3734,7 @@ public class CMWinClient extends JFrame {
 		
 	}
 	
-	public void testChangeConfiguration()
+	private void testChangeConfiguration()
 	{
 		boolean bRet = false;
 		String strField = null;
@@ -3764,7 +3771,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testMqttConnect()
+	private void testMqttConnect()
 	{
 		printMessage("========== MQTT connect\n");
 		JTextField willTopicTextField = new JTextField();
@@ -3804,7 +3811,7 @@ public class CMWinClient extends JFrame {
 		
 	}
 	
-	public void testMqttPublish()
+	private void testMqttPublish()
 	{
 		printMessage("========== MQTT publish\n");
 		JTextField topicTextField = new JTextField();
@@ -3840,7 +3847,7 @@ public class CMWinClient extends JFrame {
 		mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);
 	}
 	
-	public void testMqttSubscribe()
+	private void testMqttSubscribe()
 	{
 		printMessage("========== MQTT subscribe\n");
 		JTextField topicFilterTextField = new JTextField();
@@ -3866,7 +3873,7 @@ public class CMWinClient extends JFrame {
 		mqttManager.subscribe(strTopicFilter, qos);
 	}
 	
-	public void testPrintMqttSessionInfo()
+	private void testPrintMqttSessionInfo()
 	{
 		printMessage("========== print MQTT session info\n");
 		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
@@ -3878,7 +3885,7 @@ public class CMWinClient extends JFrame {
 		printMessage(mqttManager.getMySessionInfo()+"\n");
 	}
 	
-	public void testMqttUnsubscribe()
+	private void testMqttUnsubscribe()
 	{
 		printMessage("========== MQTT unsubscribe\n");
 		String strTopic = null;
@@ -3895,7 +3902,7 @@ public class CMWinClient extends JFrame {
 		mqttManager.unsubscribe(strTopic);
 	}
 	
-	public void testMqttDisconnect()
+	private void testMqttDisconnect()
 	{
 		printMessage("========== MQTT disconnect\n");
 		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
@@ -3906,8 +3913,21 @@ public class CMWinClient extends JFrame {
 		}
 		mqttManager.disconnect();
 	}
-	
-	public void testSendEventWithWrongByteNum()
+
+	private void testStartFileSync() {
+		printMessage("========== start file-sync\n");
+		CMFileSyncManager fileSyncManager = (CMFileSyncManager) m_clientStub
+				.findServiceManager(CMInfo.CM_FILE_SYNC_MANAGER);
+		if(fileSyncManager == null)
+		{
+			printStyledMessage("CMFileSyncManager is null!\n", "bold");
+			return;
+		}
+
+		fileSyncManager.startFileSync();
+	}
+
+	private void testSendEventWithWrongByteNum()
 	{
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
 		
@@ -3940,7 +3960,7 @@ public class CMWinClient extends JFrame {
 		sendQueue.push(msg);
 	}
 	
-	public void testSendEventWithWrongEventType()
+	private void testSendEventWithWrongEventType()
 	{
 		printMessage("========== send a CMDummyEvent with wrong event type to a server\n");
 		
@@ -3951,7 +3971,7 @@ public class CMWinClient extends JFrame {
 		m_clientStub.send(due, strServer);
 	}
 	
-	public void testCSCFileTransfer()
+	private void testCSCFileTransfer()
 	{
 		printMessage("========== test and measure delay of c-s-c file transfer\n");
 		printMessage("Before the measurement, check the CM configuration files:\n");
@@ -4044,7 +4064,7 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 	
-	public void testC2CFileTransfer()
+	private void testC2CFileTransfer()
 	{
 		printMessage("========== test and measure delay of c2c file transfer\n");
 		printMessage("Before the measurement, check the CM configuration files:\n");
@@ -4474,6 +4494,9 @@ public class CMWinClient extends JFrame {
 				break;
 			case "test c2c file transfer":
 				testC2CFileTransfer();
+				break;
+			case "start file-sync":
+				testStartFileSync();
 				break;
 			}
 		}

@@ -256,6 +256,15 @@ public class CMStub {
 	 */
 	public CMServiceManager findServiceManager(int nType)
 	{
+		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		if(confInfo.getSystemType().equals("CLIENT")) {
+			int clientState = m_cmInfo.getInteractionInfo().getMyself().getState();
+			if(clientState != CMInfo.CM_LOGIN && clientState != CMInfo.CM_SESSION_JOIN) {
+				System.err.println("CMStub.findServiceManager(), you should log in to the server!");
+				return null;
+			}
+		}
+
 		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
 		return managerHashtable.get(nType);
 	}
