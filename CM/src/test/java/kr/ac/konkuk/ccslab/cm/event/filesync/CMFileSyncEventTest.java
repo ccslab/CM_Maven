@@ -295,4 +295,46 @@ public class CMFileSyncEventTest {
         System.out.println("returnCode = " + returnCode);
         assertEquals(returnCode, 1);
     }
+
+    @Test
+    public void testMarshallUnmarshall_END_FILE_LIST() {
+        System.out.println("===== called testMarshallUnmarshall_END_FILE_LIST()");
+        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
+        fsEvent.setID(CMFileSyncEvent.END_FILE_LIST);
+        fsEvent.setUserName("ccslab");
+        fsEvent.setNumFilesCompleted(20);
+
+        ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
+        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        assertNotNull(unmarshallEvent);
+        String userName = unmarshallEvent.getUserName();
+        System.out.println("userName = " + userName);
+        assertEquals(userName, "ccslab");
+        int numFilesCompleted = unmarshallEvent.getNumFilesCompleted();
+        System.out.println("numFilesCompleted = " + numFilesCompleted);
+        assertEquals(numFilesCompleted, 20);
+    }
+
+    @Test
+    public void testMarshallUnmarshall_END_FILE_LIST_ACK() {
+        System.out.println("===== called testMarshallUnmarshall_END_FILE_LIST_ACK()");
+        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
+        fsEvent.setID(CMFileSyncEvent.END_FILE_LIST_ACK);
+        fsEvent.setUserName("ccslab");
+        fsEvent.setNumFilesCompleted(8);
+        fsEvent.setReturnCode(1);
+
+        ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
+        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        assertNotNull(unmarshallEvent);
+        String userName = unmarshallEvent.getUserName();
+        System.out.println("userName = " + userName);
+        assertEquals(userName, "ccslab");
+        int numFilesCompleted = unmarshallEvent.getNumFilesCompleted();
+        System.out.println("numFilesCompleted = " + numFilesCompleted);
+        assertEquals(numFilesCompleted, 8);
+        int returnCode = unmarshallEvent.getReturnCode();
+        System.out.println("returnCode = " + returnCode);
+        assertEquals(returnCode, 1);
+    }
 }
