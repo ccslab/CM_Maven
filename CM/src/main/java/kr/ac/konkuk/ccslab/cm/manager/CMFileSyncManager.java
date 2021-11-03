@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -60,6 +61,11 @@ public class CMFileSyncManager extends CMServiceManager {
         // store the path list in the CMFileSyncInfo.
         fsInfo.setPathList(pathList);
         // send the file list to the server
+        boolean sendResult = sendFileList();
+        if(!sendResult) {
+            System.err.println("CMFileSyncManager.startFileSync(), error to send the file list.");
+            return false;
+        }
 
         // from here
 
@@ -85,7 +91,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         if( pathList.isEmpty() )
-            System.err.println("The sync-home is empty.");
+            System.err.println("CMFileSyncManager::createPathList(), The sync-home is empty.");
 
         if(CMInfo._CM_DEBUG) {
             for (Path p : pathList)
@@ -99,9 +105,35 @@ public class CMFileSyncManager extends CMServiceManager {
         if(CMInfo._CM_DEBUG)
             System.out.println("CMFileSyncManager::sendFileList() called..");
 
-        // create START_FILE_LIST event.
+        String userName;
+        String serverName;
+        List<Path> pathList;
 
-        // from here
+        // create START_FILE_LIST event.
+        CMFileSyncEvent fse = new CMFileSyncEvent();
+        fse.setID(CMFileSyncEvent.START_FILE_LIST);
+        // get my name
+        userName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        fse.setSender(userName);
+        // get default server name
+        serverName = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        fse.setReceiver(serverName);
+
+        fse.setUserName(userName);
+        // get path list
+        pathList = m_cmInfo.getFileSyncInfo().getPathList();
+        if(pathList == null)
+            fse.setNumTotalFiles(0);
+        else
+            fse.setNumTotalFiles(pathList.size());
+
+        // send the event
+        boolean sendResult = CMEventManager.unicastEvent(fse, serverName, m_cmInfo);
+        if(!sendResult) {
+            System.err.println("CMFileSyncManager.sendFileList(), send error!");
+            System.err.println(fse);
+            return false;
+        }
         return true;
     }
 }
