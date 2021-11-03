@@ -139,14 +139,16 @@ public class CMFileSyncEvent extends CMEvent {
                 // number of elements of fileEntryList
                 byteNum += Integer.BYTES;
                 // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
-                for(CMFileSyncEntry entry : fileEntryList) {
-                    // Path pathRelativeToHome
-                    byteNum += CMInfo.STRING_LEN_BYTES_LEN +
-                            entry.getPathRelativeToHome().toString().getBytes().length;
-                    // long size
-                    byteNum += Long.BYTES;
-                    // FileTime lastModifiedTime -> long type of milliseconds
-                    byteNum += Long.BYTES;
+                if(fileEntryList != null) {
+                    for (CMFileSyncEntry entry : fileEntryList) {
+                        // Path pathRelativeToHome
+                        byteNum += CMInfo.STRING_LEN_BYTES_LEN +
+                                entry.getPathRelativeToHome().toString().getBytes().length;
+                        // long size
+                        byteNum += Long.BYTES;
+                        // FileTime lastModifiedTime -> long type of milliseconds
+                        byteNum += Long.BYTES;
+                    }
                 }
                 break;
             case FILE_ENTRIES_ACK:
@@ -159,14 +161,16 @@ public class CMFileSyncEvent extends CMEvent {
                 // number of elements of fileEntryList
                 byteNum += Integer.BYTES;
                 // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
-                for(CMFileSyncEntry entry : fileEntryList) {
-                    // Path pathRelativeToHome
-                    byteNum += CMInfo.STRING_LEN_BYTES_LEN +
-                            entry.getPathRelativeToHome().toString().getBytes().length;
-                    // long size
-                    byteNum += Long.BYTES;
-                    // FileTime lastModifiedTime -> long type of milliseconds
-                    byteNum += Long.BYTES;
+                if(fileEntryList != null) {
+                    for (CMFileSyncEntry entry : fileEntryList) {
+                        // Path pathRelativeToHome
+                        byteNum += CMInfo.STRING_LEN_BYTES_LEN +
+                                entry.getPathRelativeToHome().toString().getBytes().length;
+                        // long size
+                        byteNum += Long.BYTES;
+                        // FileTime lastModifiedTime -> long type of milliseconds
+                        byteNum += Long.BYTES;
+                    }
                 }
                 // returnCode
                 byteNum += Integer.BYTES;
@@ -218,17 +222,21 @@ public class CMFileSyncEvent extends CMEvent {
                 m_bytes.putInt(numFilesCompleted);
                 // numFiles
                 m_bytes.putInt(numFiles);
-                // number of elements of fileEntryList
-                m_bytes.putInt(fileEntryList.size());
-                // fileEntryList
-                for(CMFileSyncEntry entry : fileEntryList) {
-                    // Path relativePathToHome
-                    putStringToByteBuffer(entry.getPathRelativeToHome().toString());
-                    // long size
-                    m_bytes.putLong(entry.getSize());
-                    // FileTime lastModifiedTime (changed to long milliseconds)
-                    m_bytes.putLong(entry.getLastModifiedTime().toMillis());
+                if(fileEntryList != null) {
+                    // number of elements of fileEntryList
+                    m_bytes.putInt(fileEntryList.size());
+                    // fileEntryList
+                    for (CMFileSyncEntry entry : fileEntryList) {
+                        // Path relativePathToHome
+                        putStringToByteBuffer(entry.getPathRelativeToHome().toString());
+                        // long size
+                        m_bytes.putLong(entry.getSize());
+                        // FileTime lastModifiedTime (changed to long milliseconds)
+                        m_bytes.putLong(entry.getLastModifiedTime().toMillis());
+                    }
                 }
+                else
+                    m_bytes.putInt(0);
                 break;
             case FILE_ENTRIES_ACK:
                 // userName
@@ -237,17 +245,21 @@ public class CMFileSyncEvent extends CMEvent {
                 m_bytes.putInt(numFilesCompleted);
                 // numFiles
                 m_bytes.putInt(numFiles);
-                // number of elements of fileEntryList
-                m_bytes.putInt(fileEntryList.size());
-                // fileEntryList
-                for(CMFileSyncEntry entry : fileEntryList) {
-                    // Path relativePathToHome
-                    putStringToByteBuffer(entry.getPathRelativeToHome().toString());
-                    // long size
-                    m_bytes.putLong(entry.getSize());
-                    // FileTime lastModifiedTime (changed to long milliseconds)
-                    m_bytes.putLong(entry.getLastModifiedTime().toMillis());
+                if(fileEntryList != null) {
+                    // number of elements of fileEntryList
+                    m_bytes.putInt(fileEntryList.size());
+                    // fileEntryList
+                    for (CMFileSyncEntry entry : fileEntryList) {
+                        // Path relativePathToHome
+                        putStringToByteBuffer(entry.getPathRelativeToHome().toString());
+                        // long size
+                        m_bytes.putLong(entry.getSize());
+                        // FileTime lastModifiedTime (changed to long milliseconds)
+                        m_bytes.putLong(entry.getLastModifiedTime().toMillis());
+                    }
                 }
+                else
+                    m_bytes.putInt(0);
                 // returnCode
                 m_bytes.putInt(returnCode);
                 break;
