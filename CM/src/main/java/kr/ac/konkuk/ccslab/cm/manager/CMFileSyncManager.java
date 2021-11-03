@@ -30,10 +30,12 @@ public class CMFileSyncManager extends CMServiceManager {
                 .resolve(CMFileSyncInfo.SYNC_HOME).toAbsolutePath().normalize();
     }
 
+    // currently called by client
     public boolean startFileSync() {
 
         if(CMInfo._CM_DEBUG)
             System.out.println("CMFileSyncManager::startFileSync() called..");
+
         CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
 
         if(fsInfo.isSyncInProgress()) {
@@ -67,8 +69,6 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
-        // from here
-
         return true;
     }
 
@@ -101,6 +101,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return pathList;
     }
 
+    // currently called by client
     private boolean sendFileList() {
         if(CMInfo._CM_DEBUG)
             System.out.println("CMFileSyncManager::sendFileList() called..");
