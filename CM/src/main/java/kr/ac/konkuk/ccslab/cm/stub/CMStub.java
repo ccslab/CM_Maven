@@ -18,6 +18,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
+import kr.ac.konkuk.ccslab.cm.event.handler.CMFileSyncEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMMqttEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
@@ -77,6 +78,7 @@ public class CMStub {
 		
 		// add cm event handlers
 		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(m_cmInfo));
+		handlerHashtable.put(CMInfo.CM_FILE_SYNC_EVENT, new CMFileSyncEventHandler(m_cmInfo));
 		
 		if(m_cmInfo.isStarted())
 		{

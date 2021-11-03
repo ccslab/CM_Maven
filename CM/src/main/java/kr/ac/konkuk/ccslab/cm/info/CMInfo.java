@@ -64,6 +64,7 @@ public class CMInfo {
 	
 	//public static final int CM_EVENT_HANDLER = 401;
 	public static final int CM_MQTT_EVENT_HANDLER = 402;
+	public static final int CM_FILE_SYNC_EVENT_HANDLER = 403;
 	
 	//public static final int CM_COMM_SOCKET = 401;
 	//public static final int CM_SERVER_SOCKET = 402;
