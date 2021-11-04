@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 public class CMFileSyncEventHandler extends CMEventHandler {
 
@@ -117,9 +118,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
         newfse.setSender( fse.getReceiver() );  // user name
         newfse.setReceiver( fse.getSender() );  // server name
+        newfse.setUserName( fse.getUserName() );    // user name
         newfse.setNumFilesCompleted(0); // initialized to 0
         // get numFiles and fileEntryList
         newfse = setNumFilesAndEntryList(newfse, 0);
+
         // from here
         return false;
     }
@@ -131,20 +134,32 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("CMFileSyncEventHandler.setNumFilesAndEntryList() called..");
             System.out.println("curByteNum before adding entries = " + curByteNum);
         }
-        // add file entry element until the maximum event size
+        // set variables before the while loop
         String userName = newfse.getSender();
         List<Path> pathList = m_cmInfo.getFileSyncInfo().getPathList();
         List<Path> subList = new ArrayList<>();
         int index = startListIndex;
         int numFiles = 0;
+        CMFileSyncManager fsManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        Path clientSyncHome = fsManager.getClientSyncHome();
+        int startPathIndex = clientSyncHome.getNameCount();
+        // create sub-list that will be added as the file-entry-list to the event
         while( curByteNum < CMInfo.MAX_EVENT_SIZE && index < pathList.size() ) {
             Path path = pathList.get(index);
+            if(CMInfo._CM_DEBUG)
+                System.out.println("absolute path = " + path);
+            // change the absolute path to the relative path
+            Path relativePath = path.subpath(startPathIndex, path.getNameCount());
+            if(CMInfo._CM_DEBUG)
+                System.out.println("relative path = " + relativePath);
+
             curByteNum += CMInfo.STRING_LEN_BYTES_LEN
-                    + path.toString().getBytes().length
+                    + relativePath.toString().getBytes().length
                     + Long.BYTES
                     + Long.BYTES;
             if( curByteNum < CMInfo.MAX_EVENT_SIZE ) {
-                subList.add(path);
+                subList.add(path);  // add the absolute path because it will be used to get meta-data.
                 numFiles++;
                 index++;
             }
@@ -156,8 +171,25 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set numFiles
         newfse.setNumFiles(numFiles);
         // make an entry list from the subList
+        List<CMFileSyncEntry> fileEntryList = subList.stream()
+                .map(path -> { CMFileSyncEntry fileEntry = new CMFileSyncEntry();
+                    try {
+                        fileEntry.setPathRelativeToHome( path.subpath(startPathIndex, path.getNameCount()) )
+                                .setSize(Files.size(path))
+                                .setLastModifiedTime( Files.getLastModifiedTime(path) );
+                        if(CMInfo._CM_DEBUG)
+                            System.out.println("fileEntry = " + fileEntry);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                    return fileEntry;
+                }).collect(Collectors.toList());
 
-        // from here
+        if(fileEntryList.isEmpty())
+            System.err.println("fileEntryList is empty.");
+        else
+            newfse.setFileEntryList(fileEntryList);
 
         return newfse;
     }

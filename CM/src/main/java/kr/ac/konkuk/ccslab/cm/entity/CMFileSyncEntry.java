@@ -14,28 +14,40 @@ public class CMFileSyncEntry implements Comparable<CMFileSyncEntry> {
         return pathRelativeToHome;
     }
 
-    public void setPathRelativeToHome(Path pathRelativeToHome) {
+    public CMFileSyncEntry setPathRelativeToHome(Path pathRelativeToHome) {
         this.pathRelativeToHome = pathRelativeToHome;
+        return this;
     }
 
     public long getSize() {
         return size;
     }
 
-    public void setSize(long size) {
+    public CMFileSyncEntry setSize(long size) {
         this.size = size;
+        return this;
     }
 
     public FileTime getLastModifiedTime() {
         return lastModifiedTime;
     }
 
-    public void setLastModifiedTime(FileTime lastModifiedTime) {
+    public CMFileSyncEntry setLastModifiedTime(FileTime lastModifiedTime) {
         this.lastModifiedTime = lastModifiedTime;
+        return this;
     }
 
     @Override
     public int compareTo(CMFileSyncEntry o) {
         return pathRelativeToHome.compareTo(o.getPathRelativeToHome());
+    }
+
+    @Override
+    public String toString() {
+        return "CMFileSyncEntry{" +
+                "pathRelativeToHome=" + pathRelativeToHome +
+                ", size=" + size +
+                ", lastModifiedTime=" + lastModifiedTime +
+                '}';
     }
 }
