@@ -110,7 +110,7 @@ public class CMFileSyncEvent extends CMEvent {
     }
 
     @Override
-    protected int getByteNum() {
+    public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
 

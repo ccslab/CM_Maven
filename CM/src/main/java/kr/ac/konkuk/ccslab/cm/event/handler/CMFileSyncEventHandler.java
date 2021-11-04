@@ -11,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -92,8 +93,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // create the ack event
         CMFileSyncEvent ackFse = new CMFileSyncEvent();
         ackFse.setID(CMFileSyncEvent.START_FILE_LIST_ACK);
-        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
-        ackFse.setSender( serverName );
+        ackFse.setSender( fse.getReceiver() );  // server name
         ackFse.setReceiver( userName );
         ackFse.setUserName( userName );
         ackFse.setNumTotalFiles( fse.getNumTotalFiles() );
@@ -112,8 +112,54 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("event = "+fse);
         }
 
+        // create a FILE_ENTRIES event
+        CMFileSyncEvent newfse = new CMFileSyncEvent();
+        newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
+        newfse.setSender( fse.getReceiver() );  // user name
+        newfse.setReceiver( fse.getSender() );  // server name
+        newfse.setNumFilesCompleted(0); // initialized to 0
+        // get numFiles and fileEntryList
+        newfse = setNumFilesAndEntryList(newfse, 0);
         // from here
         return false;
+    }
+
+    private CMFileSyncEvent setNumFilesAndEntryList(CMFileSyncEvent newfse, int startListIndex) {
+        // get current number of bytes except the entry list
+        int curByteNum = newfse.getByteNum();
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.setNumFilesAndEntryList() called..");
+            System.out.println("curByteNum before adding entries = " + curByteNum);
+        }
+        // add file entry element until the maximum event size
+        String userName = newfse.getSender();
+        List<Path> pathList = m_cmInfo.getFileSyncInfo().getPathList();
+        List<Path> subList = new ArrayList<>();
+        int index = startListIndex;
+        int numFiles = 0;
+        while( curByteNum < CMInfo.MAX_EVENT_SIZE && index < pathList.size() ) {
+            Path path = pathList.get(index);
+            curByteNum += CMInfo.STRING_LEN_BYTES_LEN
+                    + path.toString().getBytes().length
+                    + Long.BYTES
+                    + Long.BYTES;
+            if( curByteNum < CMInfo.MAX_EVENT_SIZE ) {
+                subList.add(path);
+                numFiles++;
+                index++;
+            }
+            else {
+                break;
+            }
+        }
+
+        // set numFiles
+        newfse.setNumFiles(numFiles);
+        // make an entry list from the subList
+
+        // from here
+
+        return newfse;
     }
 
     private boolean processFILE_ENTRIES(CMFileSyncEvent fse) {
