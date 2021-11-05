@@ -8,11 +8,13 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 public class CMFileSyncEventHandler extends CMEventHandler {
@@ -300,6 +302,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
     }
 
+    // called at the server
     private boolean processEND_FILE_LIST(CMFileSyncEvent fse) {
 
         if(CMInfo._CM_DEBUG) {
@@ -307,11 +310,53 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("fse = " + fse);
         }
 
-        // from here
-        return false;
+        int returnCode;
+
+        // check the elements of file entry list
+        String userName = fse.getUserName();
+        int numFilesCompleted = fse.getNumFilesCompleted();
+        List<CMFileSyncEntry> fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable()
+                .get( userName );
+        if( fileEntryList.size() == numFilesCompleted ) {
+            returnCode = 1;
+        }
+        else {
+            returnCode = 0;
+        }
+
+        // create an END_FILE_LIST_ACK event
+        CMFileSyncEvent fseAck = new CMFileSyncEvent();
+        fseAck.setID(CMFileSyncEvent.END_FILE_LIST_ACK);
+        fseAck.setSender( fse.getReceiver() );  // server
+        fseAck.setReceiver( fse.getSender() );  // client
+        fseAck.setUserName(userName);
+        fseAck.setNumFilesCompleted( numFilesCompleted );
+        fseAck.setReturnCode( returnCode );
+
+        // send the ack event
+        boolean result = CMEventManager.unicastEvent(fseAck, userName, m_cmInfo);
+        if(!result) {
+            System.err.println("send END_FILE_LIST_ACK error!");
+            return false;
+        }
+
+        // start CMFileSyncGeneratorTask
+        CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName, m_cmInfo);
+        ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+        es.submit(fileSyncGenerator);
+
+        return true;
     }
 
+    // called at the client
     private boolean processEND_FILE_LIST_ACK(CMFileSyncEvent fse) {
-        return false;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processEND_FILE_LIST_ACK() called..");
+        }
+
+        int returnCode = fse.getReturnCode();
+        System.out.println("returnCode = " + returnCode);
+
+        return true;
     }
 }
