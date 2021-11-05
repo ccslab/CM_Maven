@@ -109,7 +109,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         newfse.setReceiver( server );  // server name
         newfse.setUserName( fse.getUserName() );    // user name
         newfse.setNumFilesCompleted(0); // initialized to 0
-        // get numFiles and fileEntryList
+        // set numFiles and fileEntryList
         setNumFilesAndEntryList(newfse, 0);
 
         return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
