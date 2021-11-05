@@ -113,18 +113,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("event = "+fse);
         }
 
+        String server = fse.getSender();
+
         // create a FILE_ENTRIES event
         CMFileSyncEvent newfse = new CMFileSyncEvent();
         newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
         newfse.setSender( fse.getReceiver() );  // user name
-        newfse.setReceiver( fse.getSender() );  // server name
+        newfse.setReceiver( server );  // server name
         newfse.setUserName( fse.getUserName() );    // user name
         newfse.setNumFilesCompleted(0); // initialized to 0
         // get numFiles and fileEntryList
         newfse = setNumFilesAndEntryList(newfse, 0);
 
-        // from here
-        return false;
+        return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
     }
 
     private CMFileSyncEvent setNumFilesAndEntryList(CMFileSyncEvent newfse, int startListIndex) {
@@ -195,6 +196,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     }
 
     private boolean processFILE_ENTRIES(CMFileSyncEvent fse) {
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processFILE_ENTRIES() called..");
+            System.out.println("event = "+fse);
+        }
+
+        // from here
+
         return false;
     }
 
