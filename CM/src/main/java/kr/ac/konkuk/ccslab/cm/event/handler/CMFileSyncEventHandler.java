@@ -4,6 +4,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
@@ -11,9 +12,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CMFileSyncEventHandler extends CMEventHandler {
@@ -77,18 +76,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 e.printStackTrace();
                 return false;
             }
-        }
-
-        // check the file-entry-list hashtable
-        List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
-        if( entryList == null ) {
-            // create a new list
-            entryList = new Vector<>();
-            m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, entryList);
-        }
-        else {
-            // emtpry the list
-            entryList.clear();
         }
 
         // create the ack event
@@ -195,6 +182,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return newfse;
     }
 
+    // processed at the server
     private boolean processFILE_ENTRIES(CMFileSyncEvent fse) {
 
         if(CMInfo._CM_DEBUG) {
@@ -202,12 +190,43 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("event = "+fse);
         }
 
-        // from here
+        String userName = fse.getUserName();
+        int returnCode;
+        int numFilesCompleted;
+        // set the entry list of the event to the entry hashtable
+        m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse.getFileEntryList());
+        List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+        if(entryList == null) {
+            numFilesCompleted = fse.getNumFilesCompleted();
+            returnCode = 0;
+        }
+        else {
+            numFilesCompleted = fse.getNumFilesCompleted() + fse.getNumFiles();
+            returnCode = 1;
+        }
+        System.out.println("numFilesCompleted = " + numFilesCompleted);
+        System.out.println("returnCode = " + returnCode);
 
-        return false;
+        // create FILE_ENTRIES_ACK event
+        CMFileSyncEvent fseAck = new CMFileSyncEvent();
+        fseAck.setID(CMFileSyncEvent.FILE_ENTRIES_ACK);
+        fseAck.setSender( fse.getReceiver() );  // server
+        fseAck.setReceiver( fse.getSender() );  // client
+        fseAck.setUserName( fse.getUserName() );
+        fseAck.setNumFilesCompleted( numFilesCompleted );   // updated
+        fseAck.setNumFiles( fse.getNumFiles() );
+
+        // send the ack event
+        return CMEventManager.unicastEvent(fseAck, userName, m_cmInfo);
     }
 
     private boolean processFILE_ENTRIES_ACK(CMFileSyncEvent fse) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processFILE_ENTRIES_ACK() called..");
+            System.out.println("event = "+fse);
+        }
+
+        // from here
         return false;
     }
 
