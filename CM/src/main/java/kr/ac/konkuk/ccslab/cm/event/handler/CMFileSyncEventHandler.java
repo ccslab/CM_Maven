@@ -110,7 +110,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         newfse.setUserName( fse.getUserName() );    // user name
         newfse.setNumFilesCompleted(0); // initialized to 0
         // get numFiles and fileEntryList
-        newfse = setNumFilesAndEntryList(newfse, 0);
+        setNumFilesAndEntryList(newfse, 0);
 
         return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
     }
@@ -225,6 +225,40 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("CMFileSyncEventHandler.processFILE_ENTRIES_ACK() called..");
             System.out.println("event = "+fse);
         }
+
+        // check the return code
+        int returnCode = fse.getReturnCode();
+        if( returnCode == 0 ) {
+            System.err.println("return code = "+returnCode);
+        }
+
+        // check if there are remaining file entry elements to be sent
+        int numFilesCompleted = fse.getNumFilesCompleted();
+        int pathListSize = m_cmInfo.getFileSyncInfo().getPathList().size();
+        boolean result;
+        if( numFilesCompleted < pathListSize ) {
+            // send the next elements
+            result = sendNextFileEntries(fse);
+        }
+        else if( numFilesCompleted == pathListSize ) {
+            // send the END_FILE_LIST event
+            result = sendEND_FILE_LIST(fse);
+        }
+        else {
+            System.err.println("numFilesCompleted = " + numFilesCompleted);
+            System.err.println("pathListSize = " + pathListSize);
+            return false;
+        }
+
+        return result;
+    }
+
+    private boolean sendEND_FILE_LIST(CMFileSyncEvent fse) {
+        // not yet
+        return false;
+    }
+
+    private boolean sendNextFileEntries(CMFileSyncEvent fse) {
 
         // from here
         return false;
