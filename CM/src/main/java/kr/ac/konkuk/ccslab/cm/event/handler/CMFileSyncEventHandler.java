@@ -92,7 +92,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return CMEventManager.unicastEvent(ackFse, userName, m_cmInfo);
     }
 
-    // processed at the client
+    // called at the client
     private boolean processSTART_FILE_LIST_ACK(CMFileSyncEvent fse) {
 
         if(CMInfo._CM_DEBUG) {
@@ -115,15 +115,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
     }
 
+    // called at the client
     private CMFileSyncEvent setNumFilesAndEntryList(CMFileSyncEvent newfse, int startListIndex) {
         // get current number of bytes except the entry list
         int curByteNum = newfse.getByteNum();
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncEventHandler.setNumFilesAndEntryList() called..");
+            System.out.println("startListIndex = " + startListIndex);
             System.out.println("curByteNum before adding entries = " + curByteNum);
         }
         // set variables before the while loop
-        String userName = newfse.getSender();
         List<Path> pathList = m_cmInfo.getFileSyncInfo().getPathList();
         List<Path> subList = new ArrayList<>();
         int index = startListIndex;
@@ -182,7 +183,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return newfse;
     }
 
-    // processed at the server
+    // called at the server
     private boolean processFILE_ENTRIES(CMFileSyncEvent fse) {
 
         if(CMInfo._CM_DEBUG) {
@@ -220,6 +221,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return CMEventManager.unicastEvent(fseAck, userName, m_cmInfo);
     }
 
+    // called at the client
     private boolean processFILE_ENTRIES_ACK(CMFileSyncEvent fse) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncEventHandler.processFILE_ENTRIES_ACK() called..");
@@ -253,18 +255,59 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return result;
     }
 
+    // called at the client
     private boolean sendEND_FILE_LIST(CMFileSyncEvent fse) {
-        // not yet
-        return false;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.sendEND_FILE_LIST() called..");
+        }
+
+        // crate an END_FILE_LIST event
+        CMFileSyncEvent newfse = new CMFileSyncEvent();
+        newfse.setID(CMFileSyncEvent.END_FILE_LIST);
+        newfse.setSender( fse.getReceiver() );  // client
+        String server = fse.getSender();
+        newfse.setReceiver( server );  // server
+        newfse.setUserName( fse.getUserName() );
+        newfse.setNumFilesCompleted( fse.getNumFilesCompleted() );
+
+        // send the event to the server
+        return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
     }
 
+    // called at the client
     private boolean sendNextFileEntries(CMFileSyncEvent fse) {
 
-        // from here
-        return false;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.sendNextFileEntries() called..");
+        }
+
+        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        // create FILE_ENTRIES event
+        CMFileSyncEvent newfse = new CMFileSyncEvent();
+        newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
+        newfse.setSender( fse.getReceiver() );  // client
+        String server = fse.getSender();
+        newfse.setReceiver( server );  // server
+        newfse.setUserName( fse.getUserName() );    // client
+        newfse.setNumFilesCompleted( fse.getNumFilesCompleted() );
+
+        // set numFiles and fileEntryList
+        int startListIndex = fse.getNumFilesCompleted();
+        setNumFilesAndEntryList(newfse, startListIndex);
+
+        // send FILE_ENTRIES event
+        return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
     }
 
     private boolean processEND_FILE_LIST(CMFileSyncEvent fse) {
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processEND_FILE_LIST() called..");
+            System.out.println("fse = " + fse);
+        }
+
+        // from here
         return false;
     }
 
