@@ -344,6 +344,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName, m_cmInfo);
         ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
         es.submit(fileSyncGenerator);
+        // set the generator in the CMFileSyncInfo
+        m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().put(userName, fileSyncGenerator);
 
         return true;
     }

@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.nio.file.Path;
 import java.util.Hashtable;
@@ -12,11 +13,13 @@ public class CMFileSyncInfo {
     private boolean syncInProgress;
     private List<Path> pathList;        // 4 client
     private Hashtable<String, List<CMFileSyncEntry>> fileEntryListHashtable;    // 4 server
+    private Hashtable<String, CMFileSyncGenerator> syncGeneratorHashtable;      // 4 server
 
     public CMFileSyncInfo() {
         syncInProgress = false;
         pathList = null;
         fileEntryListHashtable = new Hashtable<>();
+        syncGeneratorHashtable = new Hashtable<>();
     }
 
     public boolean isSyncInProgress() {
@@ -39,7 +42,7 @@ public class CMFileSyncInfo {
         return fileEntryListHashtable;
     }
 
-    public void setFileEntryListHashtable(Hashtable<String, List<CMFileSyncEntry>> fileEntryListHashtable) {
-        this.fileEntryListHashtable = fileEntryListHashtable;
+    public Hashtable<String, CMFileSyncGenerator> getSyncGeneratorHashtable() {
+        return syncGeneratorHashtable;
     }
 }
