@@ -94,9 +94,9 @@ public class CMFileSyncGenerator implements Runnable {
             return true;
         }
 
-        int numRequestsCompleted;
+        int numRequestsCompleted = 0;
         boolean sendResult;
-        for(numRequestsCompleted = 0; numRequestsCompleted < newFileList.size(); numRequestsCompleted++) {
+        while(numRequestsCompleted < newFileList.size()) {
             // create a request event
             CMFileSyncEvent fse = new CMFileSyncEvent();
             fse.setID(CMFileSyncEvent.REQUEST_NEW_FILES);

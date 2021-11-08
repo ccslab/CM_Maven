@@ -152,13 +152,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // create sub-list that will be added as the file-entry-list to the event
         while (curByteNum < CMInfo.MAX_EVENT_SIZE && index < pathList.size()) {
             Path path = pathList.get(index);
-            if (CMInfo._CM_DEBUG)
-                System.out.println("absolute path = " + path);
             // change the absolute path to the relative path
             Path relativePath = path.subpath(startPathIndex, path.getNameCount());
-            if (CMInfo._CM_DEBUG)
-                System.out.println("relative path = " + relativePath);
-
             curByteNum += CMInfo.STRING_LEN_BYTES_LEN
                     + relativePath.toString().getBytes().length
                     + Long.BYTES
@@ -169,6 +164,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 index++;
             } else {
                 break;
+            }
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("absolute path = " + path);
+                System.out.println("relative path = " + relativePath);
             }
         }
 
@@ -208,17 +207,29 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         String userName = fse.getUserName();
-        int returnCode;
+        int returnCode = 1;
         int numFilesCompleted;
-        // set the entry list of the event to the entry hashtable
-        m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse.getFileEntryList());
+        // set or add the entry list of the event to the entry hashtable
         List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
         if (entryList == null) {
-            numFilesCompleted = fse.getNumFilesCompleted();
-            returnCode = 0;
+            // set the new entry list to the hashtable
+            m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse.getFileEntryList());
+            // set the number of completed files
+            numFilesCompleted = fse.getNumFiles();
         } else {
-            numFilesCompleted = fse.getNumFilesCompleted() + fse.getNumFiles();
-            returnCode = 1;
+            // add the new entry list to the existing list
+            boolean addResult = entryList.addAll(fse.getFileEntryList());
+            if(!addResult) {
+                System.err.println("entry list add error!");
+                System.err.println("existing list = "+entryList);
+                System.err.println("new list = "+fse.getFileEntryList());
+                returnCode = 0;
+                numFilesCompleted = fse.getNumFiles();
+            }
+            else {
+                // update the number of completed files
+                numFilesCompleted = fse.getNumFilesCompleted() + fse.getNumFiles();
+            }
         }
         System.out.println("numFilesCompleted = " + numFilesCompleted);
         System.out.println("returnCode = " + returnCode);
@@ -247,6 +258,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int returnCode = fse.getReturnCode();
         if (returnCode == 0) {
             System.err.println("return code = " + returnCode);
+            return false;
         }
 
         // check if there are remaining file entry elements to be sent
