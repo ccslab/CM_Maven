@@ -15,12 +15,14 @@ public class CMFileSyncGenerator implements Runnable {
     private CMInfo cmInfo;
     private List<CMFileSyncEntry> fileEntryList;
     private List<Path> basisFileList;
+    private List<Path> newFileList;
 
     public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
         this.userName = userName;
         this.cmInfo = cmInfo;
         fileEntryList = null;
         basisFileList = null;
+        newFileList = null;
     }
 
     @Override
@@ -58,12 +60,43 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // create a new file-entry-list that will be added to the server
+        newFileList = createNewFileList();
+        if(newFileList == null) {
+            System.err.println("CMFileSyncGenerator.run(), newFileList is null!");
+            return;
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("newFileList = " + newFileList);
+        }
+
         // from here
 
         // request the files in the new file-entry-list from the client
 
         // update the files at the server by synchronizing with those at the client
 
+    }
+
+    private List<Path> createNewFileList() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncGenerator.createNewFileList() called..");
+        }
+        // get the start path index
+        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        Path serverSyncHome = syncManager.getServerSyncHome(userName);
+        int startPathIndex = serverSyncHome.getNameCount();
+        // get the relative path list from the basis file list
+        List<Path> relativeBasisFileList = basisFileList.stream()
+                .map(path -> path.subpath(startPathIndex, path.getNameCount()))
+                .collect(Collectors.toList());
+        // create a new file list that will be added to the server
+        List<Path> newFileList = fileEntryList.stream()
+                .map(CMFileSyncEntry::getPathRelativeToHome)
+                .filter(path -> !relativeBasisFileList.contains(path))
+                .collect(Collectors.toList());
+
+        return newFileList;
     }
 
     private void deleteFilesAndUpdateBasisFileList() {
