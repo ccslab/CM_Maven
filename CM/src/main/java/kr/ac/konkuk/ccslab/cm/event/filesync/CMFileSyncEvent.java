@@ -352,7 +352,7 @@ public class CMFileSyncEvent extends CMEvent {
     protected void unmarshallBody(ByteBuffer msg) {
 
         int numFileEntries;
-        int numRequestedFiles;
+        int numElementsOfRequestedFileList;
 
         switch(m_nID) {
             case START_FILE_LIST:
@@ -445,11 +445,11 @@ public class CMFileSyncEvent extends CMEvent {
                 // numRequestedFiles
                 numRequestedFiles = msg.getInt();
                 // number of elements of requestedFileList
-                numRequestedFiles = msg.getInt();
-                if(numRequestedFiles > 0) {
+                numElementsOfRequestedFileList = msg.getInt();
+                if(numElementsOfRequestedFileList > 0) {
                     // create a new requestedFileList
                     requestedFileList = new ArrayList<>();
-                    for(int i = 0; i < numRequestedFiles; i++) {
+                    for(int i = 0; i < numElementsOfRequestedFileList; i++) {
                         Path path = Paths.get(getStringFromByteBuffer(msg));
                         requestedFileList.add(path);
                     }

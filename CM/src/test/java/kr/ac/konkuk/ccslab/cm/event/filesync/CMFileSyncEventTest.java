@@ -337,4 +337,50 @@ public class CMFileSyncEventTest {
         System.out.println("returnCode = " + returnCode);
         assertEquals(returnCode, 1);
     }
+
+    @Test
+    public void testMarshallUnmarshall_REQUEST_NEW_FILES() {
+        System.out.println("===== called testMarshallUnmarshall_REQUEST_NEW_FILES()");
+        CMFileSyncEvent fse = new CMFileSyncEvent();
+        fse.setID(CMFileSyncEvent.REQUEST_NEW_FILES);
+        fse.setRequesterName("ccslab");
+        fse.setNumRequestedFiles(5);
+        // requested list is null
+        fse.setRequestedFileList(null);
+
+        // the case that the requested file list is null
+        ByteBuffer byteBuffer = CMEventManager.marshallEvent(fse);
+        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        assertNotNull(unmarshallEvent);
+        String requesterName = unmarshallEvent.getRequesterName();
+        System.out.println("requesterName = " + requesterName);
+        assertEquals(requesterName, "ccslab");
+        int numRequestedFiles = unmarshallEvent.getNumRequestedFiles();
+        System.out.println("numRequestedFiles = " + numRequestedFiles);
+        assertEquals(numRequestedFiles, 5);
+        List<Path> unmarshallRequestedFileList = unmarshallEvent.getRequestedFileList();
+        System.out.println("unmarshallRequestedFileList = " + unmarshallRequestedFileList);
+        assertNull(unmarshallEvent.getRequestedFileList());
+
+        // the case that the requested file list exists
+        List<Path> requestedFileList = new ArrayList<>();
+        requestedFileList.add(Paths.get("testFile1.txt"));
+        requestedFileList.add(Paths.get("subdir/testFile2.txt"));
+        fse.setRequestedFileList(requestedFileList);
+
+        byteBuffer = CMEventManager.marshallEvent(fse);
+        unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        assertNotNull(unmarshallEvent);
+        requesterName = unmarshallEvent.getRequesterName();
+        System.out.println("requesterName = " + requesterName);
+        assertEquals(requesterName, "ccslab");
+        numRequestedFiles = unmarshallEvent.getNumRequestedFiles();
+        System.out.println("numRequestedFiles = " + numRequestedFiles);
+        assertEquals(numRequestedFiles, 5);
+        unmarshallRequestedFileList = unmarshallEvent.getRequestedFileList();
+        System.out.println("unmarshallRequestedFileList = " + unmarshallRequestedFileList);
+        assertEquals(unmarshallRequestedFileList.get(0), Paths.get("testFile1.txt"));
+        assertEquals(unmarshallRequestedFileList.get(1), Paths.get("subdir/testFile2.txt"));
+
+    }
 }
