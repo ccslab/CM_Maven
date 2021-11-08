@@ -4,9 +4,11 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CMFileSyncGenerator implements Runnable {
     private String userName;
@@ -49,11 +51,14 @@ public class CMFileSyncGenerator implements Runnable {
 
         //// compare the client file-entry-list and the basis file-entry-list
 
-        // create and delete a file-entry-list that exists only at the server
-
-        // from here
+        // delete files that exists only at the server and update the basisFileList
+        deleteFilesAndUpdateBasisFileList();
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("basisFileList after the deletion = " + basisFileList);
+        }
 
         // create a new file-entry-list that will be added to the server
+        // from here
 
         // request the files in the new file-entry-list from the client
 
@@ -61,8 +66,52 @@ public class CMFileSyncGenerator implements Runnable {
 
     }
 
-    private List<Path> createBasisFileList() {
+    private void deleteFilesAndUpdateBasisFileList() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncGenerator.deleteFilesOnlyAtServer() called..");
+        }
+        // get the client file-entry-list
+        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+        if(fileEntryList == null) {
+            System.err.println("CMFileSyncGenerator.createDeletedFileList(), fileEntryList of user("+userName
+                    +") is null!");
+            return;
+        }
+        // get the client path list from the file-entry-list
+        List<Path> entryPathList = fileEntryList.stream()
+                .map(CMFileSyncEntry::getPathRelativeToHome)
+                .collect(Collectors.toList());
+        // get the CMFileSyncManager object
+        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        //// create target file list that exists only at the server and that will be deleted
+        // get the server sync home and the start index
+        Path serverSyncHome = syncManager.getServerSyncHome(userName);
+        int startPathIndex = serverSyncHome.getNameCount();
+        // create the deleted file list
+        basisFileList.stream()
+                .filter(path -> !entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
+                .forEach(path -> {
+                    try {
+                        if(CMInfo._CM_DEBUG)
+                            System.out.println("path = " + path);
+                        Files.delete(path);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
 
+        // update the basis file list
+        basisFileList = basisFileList.stream()
+                .filter(path -> entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
+                .collect(Collectors.toList());
+
+    }
+
+    private List<Path> createBasisFileList() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncGenerator.createBasisFileList() called..");
+        }
         // get the file sync manager
         CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
                 .get(CMInfo.CM_FILE_SYNC_MANAGER);
