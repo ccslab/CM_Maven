@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 
@@ -69,12 +70,39 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("newFileList = " + newFileList);
         }
 
-        // from here
-
         // request the files in the new file-entry-list from the client
+        boolean requestResult = requestTransferOfNewFiles();
+        // from here
 
         // update the files at the server by synchronizing with those at the client
 
+    }
+
+    private boolean requestTransferOfNewFiles() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncGenerator.requestTransferOfNewFiles() called..");
+        }
+
+        if(newFileList == null) {
+            System.err.println("newFileList is null!");
+            return false;   // null is an error
+        }
+        if(newFileList.isEmpty()) {
+            System.out.println("newFileList is empty.");
+            return true;
+        }
+
+        int numRequestsCompleted;
+        for(numRequestsCompleted = 0; numRequestsCompleted < newFileList.size(); numRequestsCompleted++) {
+
+            // create a request event
+            CMFileSyncEvent fse = new CMFileSyncEvent();
+            fse.setID(CMFileSyncEvent.REQUEST_NEW_FILES);
+            // from here
+
+        }
+
+        return true;
     }
 
     private List<Path> createNewFileList() {

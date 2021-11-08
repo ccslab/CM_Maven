@@ -14,12 +14,14 @@ public class CMFileSyncInfo {
     private List<Path> pathList;        // 4 client
     private Hashtable<String, List<CMFileSyncEntry>> fileEntryListHashtable;    // 4 server
     private Hashtable<String, CMFileSyncGenerator> syncGeneratorHashtable;      // 4 server
+    private Hashtable<String, Integer> numNewFilesCompletedHashtable;               // 4 server
 
     public CMFileSyncInfo() {
         syncInProgress = false;
         pathList = null;
         fileEntryListHashtable = new Hashtable<>();
         syncGeneratorHashtable = new Hashtable<>();
+        numNewFilesCompletedHashtable = new Hashtable<>();
     }
 
     public boolean isSyncInProgress() {
@@ -44,5 +46,9 @@ public class CMFileSyncInfo {
 
     public Hashtable<String, CMFileSyncGenerator> getSyncGeneratorHashtable() {
         return syncGeneratorHashtable;
+    }
+
+    public Hashtable<String, Integer> getNumNewFilesCompletedHashtable() {
+        return numNewFilesCompletedHashtable;
     }
 }

@@ -30,6 +30,8 @@ public class CMFileSyncEvent extends CMEvent {
     public static final int END_FILE_LIST = 5;
     // Fields: userName, numFilesCompleted, returnCode
     public static final int END_FILE_LIST_ACK = 6;
+    // Fields: String requesterName, int numRequestedFiles, List<Path> requestedFileList
+    public static final int REQUEST_NEW_FILES = 7;
 
     private String userName;    // user name
     private int numTotalFiles;  // number of total files
@@ -37,17 +39,23 @@ public class CMFileSyncEvent extends CMEvent {
     private int numFilesCompleted;  // number of files completed
     private int numFiles;       // number of current files
     private List<CMFileSyncEntry> fileEntryList;    // list of CMFileSyncEntry
+    private String requesterName;   // requester name
+    private int numRequestedFiles;  // number of requested files
+    private List<Path> requestedFileList;   // list of requested files
 
     public CMFileSyncEvent() {
         m_nType = CMInfo.CM_FILE_SYNC_EVENT;
         m_nID = -1;
 
         userName = null;
-        numTotalFiles = -1;
+        numTotalFiles = 0;
         returnCode = -1;
-        numFilesCompleted = -1;
-        numFiles = -1;
+        numFilesCompleted = 0;
+        numFiles = 0;
         fileEntryList = null;
+        requesterName = null;
+        numRequestedFiles = 0;
+        requestedFileList = null;
     }
 
     public CMFileSyncEvent(ByteBuffer msg) {
@@ -107,6 +115,30 @@ public class CMFileSyncEvent extends CMEvent {
     public CMFileSyncEvent setFileEntryList(List<CMFileSyncEntry> fileEntryList) {
         this.fileEntryList = fileEntryList;
         return this;
+    }
+
+    public String getRequesterName() {
+        return requesterName;
+    }
+
+    public void setRequesterName(String requesterName) {
+        this.requesterName = requesterName;
+    }
+
+    public int getNumRequestedFiles() {
+        return numRequestedFiles;
+    }
+
+    public void setNumRequestedFiles(int numRequestedFiles) {
+        this.numRequestedFiles = numRequestedFiles;
+    }
+
+    public List<Path> getRequestedFileList() {
+        return requestedFileList;
+    }
+
+    public void setRequestedFileList(List<Path> requestedFileList) {
+        this.requestedFileList = requestedFileList;
     }
 
     @Override
@@ -188,6 +220,21 @@ public class CMFileSyncEvent extends CMEvent {
                 byteNum += Integer.BYTES;
                 // returnCode
                 byteNum += Integer.BYTES;
+                break;
+            case REQUEST_NEW_FILES:
+                // requesterName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + requesterName.getBytes().length;
+                // numRequestedFiles
+                byteNum += Integer.BYTES;
+                // number of elements of requestedFileList
+                byteNum += Integer.BYTES;
+                // requestedFileList
+                if(requestedFileList != null) {
+                    for(Path path : requestedFileList) {
+                        byteNum += CMInfo.STRING_LEN_BYTES_LEN +
+                                path.toString().getBytes().length;
+                    }
+                }
                 break;
             default:
                 byteNum = -1;
@@ -277,6 +324,22 @@ public class CMFileSyncEvent extends CMEvent {
                 // returnCode
                 m_bytes.putInt(returnCode);
                 break;
+            case REQUEST_NEW_FILES:
+                // requesterName
+                putStringToByteBuffer(requesterName);
+                // numRequestedFiles
+                m_bytes.putInt(numRequestedFiles);
+                if(requestedFileList != null) {
+                    // number of elements of requestedFileList
+                    m_bytes.putInt(requestedFileList.size());
+                    // requestedFileList
+                    for(Path path : requestedFileList) {
+                        putStringToByteBuffer(path.toString());
+                    }
+                }
+                else
+                    m_bytes.putInt(0);  // number of elements of requestedFileList
+                break;
             default:
                 System.err.println("CMFileSyncEvent.marshallBody(), unknown event Id("+m_nID+").");
                 m_bytes = null;
@@ -289,6 +352,7 @@ public class CMFileSyncEvent extends CMEvent {
     protected void unmarshallBody(ByteBuffer msg) {
 
         int numFileEntries;
+        int numRequestedFiles;
 
         switch(m_nID) {
             case START_FILE_LIST:
@@ -375,6 +439,22 @@ public class CMFileSyncEvent extends CMEvent {
                 // returnCode
                 returnCode = msg.getInt();
                 break;
+            case REQUEST_NEW_FILES:
+                // requesterName
+                requesterName = getStringFromByteBuffer(msg);
+                // numRequestedFiles
+                numRequestedFiles = msg.getInt();
+                // number of elements of requestedFileList
+                numRequestedFiles = msg.getInt();
+                if(numRequestedFiles > 0) {
+                    // create a new requestedFileList
+                    requestedFileList = new ArrayList<>();
+                    for(int i = 0; i < numRequestedFiles; i++) {
+                        Path path = Paths.get(getStringFromByteBuffer(msg));
+                        requestedFileList.add(path);
+                    }
+                }
+                break;
             default:
                 System.err.println("CMFileSyncEvent.unmarshallBody(), unknown event Id("+m_nID+").");
                 break;
@@ -384,20 +464,15 @@ public class CMFileSyncEvent extends CMEvent {
     @Override
     public String toString() {
         return "CMFileSyncEvent{" +
-                "m_strSender='" + m_strSender + '\'' +
-                ", m_strReceiver='" + m_strReceiver + '\'' +
-                ", m_strHandlerSession='" + m_strHandlerSession + '\'' +
-                ", m_strHandlerGroup='" + m_strHandlerGroup + '\'' +
-                ", m_strDistributionSession='" + m_strDistributionSession + '\'' +
-                ", m_strDistributionGroup='" + m_strDistributionGroup + '\'' +
-                ", m_nID=" + m_nID +
-                ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                "userName='" + userName + '\'' +
                 ", numTotalFiles=" + numTotalFiles +
                 ", returnCode=" + returnCode +
                 ", numFilesCompleted=" + numFilesCompleted +
                 ", numFiles=" + numFiles +
                 ", fileEntryList=" + fileEntryList +
+                ", requesterName='" + requesterName + '\'' +
+                ", numRequestedFiles=" + numRequestedFiles +
+                ", requestedFileList=" + requestedFileList +
                 '}';
     }
 }
