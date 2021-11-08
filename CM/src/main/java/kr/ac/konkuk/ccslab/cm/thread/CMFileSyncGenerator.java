@@ -3,11 +3,13 @@ package kr.ac.konkuk.ccslab.cm.thread;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -93,13 +95,47 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         int numRequestsCompleted;
+        boolean sendResult;
         for(numRequestsCompleted = 0; numRequestsCompleted < newFileList.size(); numRequestsCompleted++) {
-
             // create a request event
             CMFileSyncEvent fse = new CMFileSyncEvent();
             fse.setID(CMFileSyncEvent.REQUEST_NEW_FILES);
-            // from here
+            fse.setSender(cmInfo.getInteractionInfo().getMyself().getName());   // server
+            fse.setReceiver(userName);
+            fse.setRequesterName(userName);
+            //// set numRequestedFiles and requestedFileList
+            // get the size of the remaining event fields
+            int curByteNum = fse.getByteNum();
+            List<Path> requestedFileList = new ArrayList<>();
+            int numRequestedFiles = 0;
+            while(numRequestsCompleted < newFileList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                Path path = newFileList.get(numRequestsCompleted);
+                curByteNum += CMInfo.STRING_LEN_BYTES_LEN
+                        + path.toString().getBytes().length;
+                if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                    // increment the numRequestedFiles
+                    numRequestedFiles++;
+                    // add path to the requestedFileList
+                    requestedFileList.add(path);
+                    // increment the numRequestsCompleted
+                    numRequestsCompleted++;
+                }
+                else
+                    break;
+            }
+            // set numRequestedFiles and requestedFileList to the event
+            fse.setNumRequestedFiles(numRequestedFiles);
+            fse.setRequestedFileList(requestedFileList);
+            // send the request event
+            sendResult = CMEventManager.unicastEvent(fse, userName, cmInfo);
+            if(!sendResult) {
+                System.err.println("CMFileSyncGenerator.requestTransferOfNewFiles(), send error!");
+                return false;
+            }
 
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("sent REQUEST_NEW_FILES event = " + fse);
+            }
         }
 
         return true;
@@ -119,12 +155,10 @@ public class CMFileSyncGenerator implements Runnable {
                 .map(path -> path.subpath(startPathIndex, path.getNameCount()))
                 .collect(Collectors.toList());
         // create a new file list that will be added to the server
-        List<Path> newFileList = fileEntryList.stream()
+        return fileEntryList.stream()
                 .map(CMFileSyncEntry::getPathRelativeToHome)
                 .filter(path -> !relativeBasisFileList.contains(path))
                 .collect(Collectors.toList());
-
-        return newFileList;
     }
 
     private void deleteFilesAndUpdateBasisFileList() {
