@@ -28,6 +28,10 @@ public class CMFileSyncGenerator implements Runnable {
         newFileList = null;
     }
 
+    public List<Path> getNewFileList() {
+        return newFileList;
+    }
+
     @Override
     public void run() {
         if(CMInfo._CM_DEBUG) {

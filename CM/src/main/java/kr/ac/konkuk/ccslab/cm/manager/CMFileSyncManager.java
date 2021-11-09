@@ -5,6 +5,7 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -145,7 +146,36 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("CMFileSyncManager.checkNewTransferForSync() called..");
             System.out.println("file event = " + fe);
         }
-
-        // from here
+        // get the file name
+        String fileName = fe.getFileName();
+        // get the new file list
+        String fileSender = fe.getFileSender();
+        List<Path> newFileList = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable()
+                .get(fileSender).getNewFileList();
+        if(newFileList == null) {
+            System.err.println("newFileList is null!");
+            return;
+        }
+        // search for the fileName in the newFileList
+        Path foundPath = null;
+        for(Path path : newFileList) {
+            if(path.endsWith(fileName)) {
+                foundPath = path;
+                break;
+            }
+        }
+        if(foundPath != null) {
+            // get the file-transfer home
+            Path transferFileHome = m_cmInfo.getConfigurationInfo().getTransferedFileHome().resolve(fileSender);
+            // get the server sync home
+            Path serverSyncHome = getServerSyncHome(fileSender);
+            // move the transferred file to the sync home
+            try {
+                Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(fileName));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
 }
