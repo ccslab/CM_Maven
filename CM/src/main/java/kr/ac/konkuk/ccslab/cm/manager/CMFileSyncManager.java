@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
+import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
@@ -136,5 +137,15 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         return true;
+    }
+
+    // currently called by server
+    public void checkNewTransferForSync(CMFileEvent fe) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.checkNewTransferForSync() called..");
+            System.out.println("file event = " + fe);
+        }
+
+        // from here
     }
 }

@@ -2656,6 +2656,11 @@ public class CMFileTransferManager {
 		
 		CMSNSManager.checkCompleteRecvAttachedFiles(fe, cmInfo);
 
+		// check if the transfer is for sync a new file
+		CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+				.get(CMInfo.CM_FILE_SYNC_MANAGER);
+		syncManager.checkNewTransferForSync(fe);
+
 		return bForward;
 	}
 	
@@ -3107,6 +3112,11 @@ public class CMFileTransferManager {
 
 		if(bResult)
 			CMSNSManager.checkCompleteRecvAttachedFiles(fe, cmInfo);
+
+		// check if the transfer is for sync a new file
+		CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+				.get(CMInfo.CM_FILE_SYNC_MANAGER);
+		syncManager.checkNewTransferForSync(fe);
 
 		// check whether there is a remaining receiving file info or not
 		CMRecvFileInfo nextRecvInfo = fInfo.findRecvFileInfoNotStarted(fe.getFileSender());
