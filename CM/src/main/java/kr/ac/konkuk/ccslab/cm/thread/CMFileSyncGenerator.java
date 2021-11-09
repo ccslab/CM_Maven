@@ -100,9 +100,10 @@ public class CMFileSyncGenerator implements Runnable {
             // create a request event
             CMFileSyncEvent fse = new CMFileSyncEvent();
             fse.setID(CMFileSyncEvent.REQUEST_NEW_FILES);
-            fse.setSender(cmInfo.getInteractionInfo().getMyself().getName());   // server
+            String serverName = cmInfo.getInteractionInfo().getMyself().getName();
+            fse.setSender(serverName);   // server
             fse.setReceiver(userName);
-            fse.setRequesterName(userName);
+            fse.setRequesterName(serverName); // server
             //// set numRequestedFiles and requestedFileList
             // get the size of the remaining event fields
             int curByteNum = fse.getByteNum();

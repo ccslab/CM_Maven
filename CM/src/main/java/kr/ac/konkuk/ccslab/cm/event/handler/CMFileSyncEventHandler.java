@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.io.IOException;
@@ -65,9 +66,38 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("CMFileSyncEventHandler.processREQUEST_NEW_FILES() called..");
             System.out.println("event = " + fse);
         }
+        //// to use the CMFileTransferManager service to push new files to the server
 
-        // from here
-        return true;
+        // get CMFileSyncManager
+        CMFileSyncManager syncManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        // get the client sync home
+        Path clientSyncHome = syncManager.getClientSyncHome();
+        // get the requester name
+        String requesterName = fse.getRequesterName();  // server name
+        // check if the requested file list is null or empty
+        List<Path> requestedFileList = fse.getRequestedFileList();
+        if(requestedFileList == null) {
+            System.err.println("requestedFileList is null!");
+            return false;
+        }
+        else if(requestedFileList.isEmpty()) {
+            System.err.println("requestedFileList is empty!");
+            return false;
+        }
+        // use file-push service of the CMFileTransferManager for each element of the requested file list
+        boolean sendResult = true;
+        for(Path path : requestedFileList) {
+            Path syncPath = clientSyncHome.resolve(path);   // adjust the path with the sync home
+            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, m_cmInfo) )
+                sendResult = false;
+        }
+
+        // The next sync task will be conducted at the CMFileTransferManager,
+        // when the transmission of each requested file completes
+        // by moving the transferred file to the server sync home.
+
+        return sendResult;
     }
 
     // called at the server
