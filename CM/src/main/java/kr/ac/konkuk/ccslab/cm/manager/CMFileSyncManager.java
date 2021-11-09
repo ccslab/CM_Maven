@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -174,6 +175,30 @@ public class CMFileSyncManager extends CMServiceManager {
                 Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(fileName));
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+            // get the client file entry
+            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable()
+                    .get(fileSender);
+            if(entryList == null) {
+                System.err.println("The entry list of user("+fileSender+") is null!");
+                return;
+            }
+            // search for the corresponding client entry
+            boolean searchResult = false;
+            for(CMFileSyncEntry entry : entryList) {
+                if(entry.getPathRelativeToHome().toString().equals(fileName)) {
+                    // set the last-modified-time of the corresponding client file entry
+                    try {
+                        Files.setLastModifiedTime(serverSyncHome.resolve(fileName), entry.getLastModifiedTime());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                    searchResult = true;
+                }
+            }
+            if(!searchResult) {
+                System.err.println("No file entry found for ("+fileName+")!");
             }
         }
     }
