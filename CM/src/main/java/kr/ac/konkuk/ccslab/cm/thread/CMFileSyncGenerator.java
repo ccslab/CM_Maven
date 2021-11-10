@@ -22,7 +22,7 @@ public class CMFileSyncGenerator implements Runnable {
     private List<Path> basisFileList;
     private List<Path> newFileList;
     private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayHashtable;
-    private Hashtable<Integer, Integer> basisFileIndexHashtable;
+    private Hashtable<Integer, Integer> basisFileIndexHashtable;    // key: client entry index, value: basis index
 
 
     public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
@@ -98,8 +98,59 @@ public class CMFileSyncGenerator implements Runnable {
     }
 
     private boolean compareBasisAndClientFileList() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncGenerator.compareBasisAndClientFileList() called..");
+        }
 
-        // from here
+        if(basisFileList == null) {
+            System.err.println("basisFileList is null!");
+            return false;
+        }
+        if(basisFileList.isEmpty()) {
+            System.out.println("basisFileList is empty.");
+            return true;
+        }
+
+        // get CMFileSyncManager object
+        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        // get the server sync home
+        Path serverSyncHome = syncManager.getServerSyncHome(userName);
+
+        // check and create a basis-file-index hashtable
+        if(basisFileIndexHashtable == null) {
+            basisFileIndexHashtable = new Hashtable<>();
+        }
+
+        for(int basisFileIndex = 0; basisFileIndex < basisFileList.size(); basisFileIndex++) {
+            Path basisFile = basisFileList.get(basisFileIndex);
+            // get relative path
+            Path relativeBasisFile = basisFile.subpath(serverSyncHome.getNameCount(),
+                    basisFile.getNameCount());
+            // search for the client file entry
+            CMFileSyncEntry clientFileEntry = null;
+            int clientFileEntryIndex = -1;
+            for(int i = 0; i < fileEntryList.size(); i++) {
+                CMFileSyncEntry entry = fileEntryList.get(i);
+                if(relativeBasisFile.equals(entry.getPathRelativeToHome())) {
+                    clientFileEntry = entry;
+                    clientFileEntryIndex = i;
+                    break;
+                }
+            }
+            if(clientFileEntry == null) {
+                System.err.println("client file entry not found for basisFile("+relativeBasisFile+")!");
+                continue;   // proceed to the next basis file
+            }
+
+            // add the index pair to the table
+            basisFileIndexHashtable.put(clientFileEntryIndex, basisFileIndex);
+
+            // compare clientFileEntry and basisFile
+            // from here
+
+        }
+
         return true;
     }
 
