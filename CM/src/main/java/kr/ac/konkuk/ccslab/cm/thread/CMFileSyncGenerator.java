@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,6 +21,9 @@ public class CMFileSyncGenerator implements Runnable {
     private List<CMFileSyncEntry> fileEntryList;
     private List<Path> basisFileList;
     private List<Path> newFileList;
+    private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayHashtable;
+    private Hashtable<Integer, Integer> basisFileIndexHashtable;
+
 
     public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
         this.userName = userName;
@@ -26,6 +31,8 @@ public class CMFileSyncGenerator implements Runnable {
         fileEntryList = null;
         basisFileList = null;
         newFileList = null;
+        blockChecksumArrayHashtable = null;
+        basisFileIndexHashtable = null;
     }
 
     public List<Path> getNewFileList() {
@@ -78,10 +85,22 @@ public class CMFileSyncGenerator implements Runnable {
 
         // request the files in the new file-entry-list from the client
         boolean requestResult = requestTransferOfNewFiles();
-        // from here
+        if(!requestResult) {
+            System.err.println("request new files error!");
+            return;
+        }
 
         // update the files at the server by synchronizing with those at the client
+        requestResult = compareBasisAndClientFileList();
+        if(!requestResult) {
+            System.err.println("compare-basis-and-client-file-list error!");
+        }
+    }
 
+    private boolean compareBasisAndClientFileList() {
+
+        // from here
+        return true;
     }
 
     private boolean requestTransferOfNewFiles() {
