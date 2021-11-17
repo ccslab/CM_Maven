@@ -238,27 +238,32 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         String userName = fse.getUserName();
         int returnCode = 1;
-        int numFilesCompleted;
-        // set or add the entry list of the event to the entry hashtable
-        List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
-        if (entryList == null) {
-            // set the new entry list to the hashtable
-            m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse.getFileEntryList());
-            // set the number of completed files
-            numFilesCompleted = fse.getNumFiles();
-        } else {
-            // add the new entry list to the existing list
-            boolean addResult = entryList.addAll(fse.getFileEntryList());
-            if(!addResult) {
-                System.err.println("entry list add error!");
-                System.err.println("existing list = "+entryList);
-                System.err.println("new list = "+fse.getFileEntryList());
-                returnCode = 0;
-                numFilesCompleted = fse.getNumFiles();
-            }
-            else {
-                // update the number of completed files
-                numFilesCompleted = fse.getNumFilesCompleted() + fse.getNumFiles();
+        int numFilesCompleted = 0;
+        int numFiles = fse.getNumFiles();
+
+        // if 0, the entry list is null in the event
+        if(numFiles > 0) {
+            // set or add the entry list of the event to the entry hashtable
+            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+            if (entryList == null) {
+                // set the new entry list to the hashtable
+                m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse.getFileEntryList());
+                // set the number of completed files
+                numFilesCompleted = numFiles;
+            } else {
+                // add the new entry list to the existing list
+                boolean addResult = entryList.addAll(fse.getFileEntryList());
+                if(!addResult) {
+                    System.err.println("entry list add error!");
+                    System.err.println("existing list = "+entryList);
+                    System.err.println("new list = "+fse.getFileEntryList());
+                    returnCode = 0;
+                    numFilesCompleted = numFiles;
+                }
+                else {
+                    // update the number of completed files
+                    numFilesCompleted = fse.getNumFilesCompleted() + numFiles;
+                }
             }
         }
         System.out.println("numFilesCompleted = " + numFilesCompleted);
@@ -271,7 +276,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         fseAck.setReceiver(fse.getSender());  // client
         fseAck.setUserName(fse.getUserName());
         fseAck.setNumFilesCompleted(numFilesCompleted);   // updated
-        fseAck.setNumFiles(fse.getNumFiles());
+        fseAck.setNumFiles(numFiles);
 
         // send the ack event
         return CMEventManager.unicastEvent(fseAck, userName, m_cmInfo);
@@ -370,7 +375,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int numFilesCompleted = fse.getNumFilesCompleted();
         List<CMFileSyncEntry> fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable()
                 .get(userName);
-        if (fileEntryList.size() == numFilesCompleted) {
+        int numFileEntries;
+        // the fileEntryList can be null if the client has no file-entry.
+        if(fileEntryList == null)
+            numFileEntries = 0;
+        else
+            numFileEntries = fileEntryList.size();
+
+        if (numFileEntries == numFilesCompleted) {
             returnCode = 1;
         } else {
             returnCode = 0;
