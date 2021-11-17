@@ -33,6 +33,13 @@ public class CMFileSyncEvent extends CMEvent {
     // Fields: String requesterName, int numRequestedFiles, List<Path> requestedFileList
     public static final int REQUEST_NEW_FILES = 7;
 
+    // Fields: userName, completedPath
+    public static final int COMPLETE_NEW_FILE = 14;
+    // Fields: userName, completedPath
+    public static final int COMPLETE_UPDATE_FILE = 15;
+    // Fields: userName, numFilesCompleted
+    public static final int COMPLETE_FILE_SYNC = 16;
+
     private String userName;    // user name
     private int numTotalFiles;  // number of total files
     private int returnCode;     // return code
@@ -42,6 +49,7 @@ public class CMFileSyncEvent extends CMEvent {
     private String requesterName;   // requester name
     private int numRequestedFiles;  // number of requested files
     private List<Path> requestedFileList;   // list of requested files
+    private Path completedPath;     // completed path
 
     public CMFileSyncEvent() {
         m_nType = CMInfo.CM_FILE_SYNC_EVENT;
@@ -56,6 +64,7 @@ public class CMFileSyncEvent extends CMEvent {
         requesterName = null;
         numRequestedFiles = 0;
         requestedFileList = null;
+        completedPath = null;
     }
 
     public CMFileSyncEvent(ByteBuffer msg) {
@@ -139,6 +148,14 @@ public class CMFileSyncEvent extends CMEvent {
 
     public void setRequestedFileList(List<Path> requestedFileList) {
         this.requestedFileList = requestedFileList;
+    }
+
+    public Path getCompletedPath() {
+        return completedPath;
+    }
+
+    public void setCompletedPath(Path completedPath) {
+        this.completedPath = completedPath;
     }
 
     @Override
@@ -235,6 +252,19 @@ public class CMFileSyncEvent extends CMEvent {
                                 path.toString().getBytes().length;
                     }
                 }
+                break;
+            case COMPLETE_NEW_FILE:
+            case COMPLETE_UPDATE_FILE:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // completedPath
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + completedPath.toString().getBytes().length;
+                break;
+            case COMPLETE_FILE_SYNC:
+                // userName
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
+                // numFilesCompleted
+                byteNum += Integer.BYTES;
                 break;
             default:
                 byteNum = -1;
@@ -339,6 +369,19 @@ public class CMFileSyncEvent extends CMEvent {
                 }
                 else
                     m_bytes.putInt(0);  // number of elements of requestedFileList
+                break;
+            case COMPLETE_NEW_FILE:
+            case COMPLETE_UPDATE_FILE:
+                // userName
+                putStringToByteBuffer(userName);
+                // completedPath
+                putStringToByteBuffer(completedPath.toString());
+                break;
+            case COMPLETE_FILE_SYNC:
+                // userName
+                putStringToByteBuffer(userName);
+                // numFilesCompleted
+                m_bytes.putInt(numFilesCompleted);
                 break;
             default:
                 System.err.println("CMFileSyncEvent.marshallBody(), unknown event Id("+m_nID+").");
@@ -455,6 +498,19 @@ public class CMFileSyncEvent extends CMEvent {
                     }
                 }
                 break;
+            case COMPLETE_NEW_FILE:
+            case COMPLETE_UPDATE_FILE:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // completedPath
+                completedPath = Paths.get(getStringFromByteBuffer(msg));
+                break;
+            case COMPLETE_FILE_SYNC:
+                // userName
+                userName = getStringFromByteBuffer(msg);
+                // numFilesCompleted
+                numFilesCompleted = msg.getInt();
+                break;
             default:
                 System.err.println("CMFileSyncEvent.unmarshallBody(), unknown event Id("+m_nID+").");
                 break;
@@ -463,16 +519,80 @@ public class CMFileSyncEvent extends CMEvent {
 
     @Override
     public String toString() {
-        return "CMFileSyncEvent{" +
-                "userName='" + userName + '\'' +
-                ", numTotalFiles=" + numTotalFiles +
-                ", returnCode=" + returnCode +
-                ", numFilesCompleted=" + numFilesCompleted +
-                ", numFiles=" + numFiles +
-                ", fileEntryList=" + fileEntryList +
-                ", requesterName='" + requesterName + '\'' +
-                ", numRequestedFiles=" + numRequestedFiles +
-                ", requestedFileList=" + requestedFileList +
-                '}';
+
+        switch(m_nID) {
+            case START_FILE_LIST:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(START_FILE_LIST)" +
+                        ", userName='" + userName + '\'' +
+                        ", numTotalFiles=" + numTotalFiles +
+                        '}';
+            case START_FILE_LIST_ACK:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(START_FILE_LIST_ACK)" +
+                        ", userName='" + userName + '\'' +
+                        ", numTotalFiles=" + numTotalFiles +
+                        ", returnCode=" + returnCode +
+                        '}';
+            case FILE_ENTRIES:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(FILE_ENTRIES)" +
+                        ", userName='" + userName + '\'' +
+                        ", numFilesCompleted=" + numFilesCompleted +
+                        ", numFiles=" + numFiles +
+                        ", fileEntryList=" + fileEntryList +
+                        '}';
+            case FILE_ENTRIES_ACK:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(FILE_ENTRIES_ACK)" +
+                        ", userName='" + userName + '\'' +
+                        ", numFilesCompleted=" + numFilesCompleted +
+                        ", numFiles=" + numFiles +
+                        ", fileEntryList=" + fileEntryList +
+                        ", returnCode=" + returnCode +
+                        '}';
+            case END_FILE_LIST:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(END_FILE_LIST)" +
+                        ", userName='" + userName + '\'' +
+                        ", numFilesCompleted=" + numFilesCompleted +
+                        '}';
+            case END_FILE_LIST_ACK:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(END_FILE_LIST_ACK)" +
+                        ", userName='" + userName + '\'' +
+                        ", numFilesCompleted=" + numFilesCompleted +
+                        ", returnCode=" + returnCode +
+                        '}';
+            case REQUEST_NEW_FILES:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(REQUEST_NEW_FILES)" +
+                        ", requesterName='" + requesterName + '\'' +
+                        ", numRequestedFiles=" + numRequestedFiles +
+                        ", requestedFileList=" + requestedFileList +
+                        '}';
+            case COMPLETE_NEW_FILE:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(COMPLETE_NEW_FILE)" +
+                        ", userName='" + userName + '\'' +
+                        ", completedPath='" + completedPath + '\'' +
+                        '}';
+            case COMPLETE_UPDATE_FILE:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(COMPLETE_UPDATE_FILE)" +
+                        ", userName='" + userName + '\'' +
+                        ", completedPath='" + completedPath + '\'' +
+                        '}';
+            case COMPLETE_FILE_SYNC:
+                return "CMFileSyncEvent {" +
+                        ", m_nID=" + m_nID + "(COMPLETE_FILE_SYNC)" +
+                        ", userName='" + userName + '\'' +
+                        ", numFilesCompleted=" + numFilesCompleted +
+                        '}';
+            default:
+                return "CMFileSyncEvent {" +
+                        "m_nID="+ m_nID + "(unknown)" +
+                        '}';
+        }
     }
 }
