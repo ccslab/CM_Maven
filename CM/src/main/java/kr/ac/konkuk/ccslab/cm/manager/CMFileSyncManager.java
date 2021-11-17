@@ -239,4 +239,34 @@ public class CMFileSyncManager extends CMServiceManager {
         return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
     }
 
+    public boolean completeUpdateFile(String userName, Path path) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.completeUpdateFile() called..");
+            System.out.println("userName = " + userName);
+            System.out.println("path = " + path);
+        }
+        // get CMFileSyncGenerator
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        if(syncGenerator == null) {
+            System.err.println("syncGenerator is null!");
+            return false;
+        }
+        // set the isUpdateFileCompletedHashtable element
+        syncGenerator.getIsUpdateFileCompletedHashtable().put(path, true);
+        // update numUpdateFilesCompleted
+        int numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
+        numUpdateFilesCompleted++;
+        syncGenerator.setNumUpdateFilesCompleted(numUpdateFilesCompleted);
+
+        // create a COMPLETE_UPDATE_FILE event
+        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        CMFileSyncEvent fse = new CMFileSyncEvent();
+        fse.setID(CMFileSyncEvent.COMPLETE_UPDATE_FILE);
+        fse.setSender(serverName);
+        fse.setReceiver(userName);
+        fse.setUserName(userName);
+        fse.setCompletedPath(path);
+
+        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+    }
 }
