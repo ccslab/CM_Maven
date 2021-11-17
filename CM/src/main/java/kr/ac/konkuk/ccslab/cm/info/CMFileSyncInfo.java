@@ -30,6 +30,9 @@ public class CMFileSyncInfo {
 
     public void setSyncInProgress(boolean syncInProgress) {
         this.syncInProgress = syncInProgress;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncInfo.setSyncInProgress( "+syncInProgress+" ) called ..");
+        }
     }
 
     public List<Path> getPathList() {
