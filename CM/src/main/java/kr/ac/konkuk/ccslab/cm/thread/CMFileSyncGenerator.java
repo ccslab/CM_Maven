@@ -23,7 +23,10 @@ public class CMFileSyncGenerator implements Runnable {
     private List<Path> newFileList;
     private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayHashtable;
     private Hashtable<Integer, Integer> basisFileIndexHashtable;    // key: client entry index, value: basis index
-
+    private Hashtable<Path, Boolean> isNewFileCompletedHashtable;
+    private Hashtable<Path, Boolean> isUpdateFileCompletedHashtable;
+    private int numNewFilesCompleted;
+    private int numUpdateFilesCompleted;
 
     public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
         this.userName = userName;
@@ -33,10 +36,62 @@ public class CMFileSyncGenerator implements Runnable {
         newFileList = null;
         blockChecksumArrayHashtable = null;
         basisFileIndexHashtable = null;
+        isNewFileCompletedHashtable = null;
+        isUpdateFileCompletedHashtable = null;
+        numNewFilesCompleted = 0;
+        numUpdateFilesCompleted = 0;
     }
 
     public List<Path> getNewFileList() {
         return newFileList;
+    }
+
+    public List<CMFileSyncEntry> getFileEntryList() {
+        return fileEntryList;
+    }
+
+    public List<Path> getBasisFileList() {
+        return basisFileList;
+    }
+
+    public Hashtable<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumArrayHashtable() {
+        return blockChecksumArrayHashtable;
+    }
+
+    public Hashtable<Integer, Integer> getBasisFileIndexHashtable() {
+        return basisFileIndexHashtable;
+    }
+
+    public Hashtable<Path, Boolean> getIsNewFileCompletedHashtable() {
+        return isNewFileCompletedHashtable;
+    }
+
+    public void setIsNewFileCompletedHashtable(Hashtable<Path, Boolean> isNewFileCompletedHashtable) {
+        this.isNewFileCompletedHashtable = isNewFileCompletedHashtable;
+    }
+
+    public Hashtable<Path, Boolean> getIsUpdateFileCompletedHashtable() {
+        return isUpdateFileCompletedHashtable;
+    }
+
+    public void setIsUpdateFileCompletedHashtable(Hashtable<Path, Boolean> isUpdateFileCompletedHashtable) {
+        this.isUpdateFileCompletedHashtable = isUpdateFileCompletedHashtable;
+    }
+
+    public int getNumNewFilesCompleted() {
+        return numNewFilesCompleted;
+    }
+
+    public void setNumNewFilesCompleted(int numNewFilesCompleted) {
+        this.numNewFilesCompleted = numNewFilesCompleted;
+    }
+
+    public int getNumUpdateFilesCompleted() {
+        return numUpdateFilesCompleted;
+    }
+
+    public void setNumUpdateFilesCompleted(int numUpdateFilesCompleted) {
+        this.numUpdateFilesCompleted = numUpdateFilesCompleted;
     }
 
     @Override
