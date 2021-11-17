@@ -11,7 +11,10 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CMFileSyncManager extends CMServiceManager {
@@ -268,5 +271,95 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setCompletedPath(path);
 
         return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+    }
+
+    private boolean isCompleteFileSync(String userName) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.isCompleteFileSync() called..");
+            System.out.println("userName = " + userName);
+        }
+
+        List<Path> newFileList = null;
+        List<Path> basisFileList = null;
+        List<CMFileSyncEntry> fileEntryList = null;
+        int numNewFilesCompleted = 0;
+        int numUpdateFilesCompleted = 0;
+        int numFilesCompleted = 0;
+        int numNewFilesNotCompleted = 0;
+        int numUpdateFilesNotCompleted = 0;
+        Hashtable<Path, Boolean> isNewFileCompletedTable = null;
+        Hashtable<Path, Boolean> isUpdateFileCompletedTable = null;
+
+        // get CMFileSyncGenerator object
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        if(syncGenerator == null) {
+            System.err.println("syncGenerator is null!");
+            return false;
+        }
+
+        // compare the number of new files completed to the size of the new-file list
+        newFileList = syncGenerator.getNewFileList();
+        numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
+        if(newFileList != null && numNewFilesCompleted < newFileList.size()) {
+            System.err.println("numNewFilesCompleted = "+numNewFilesCompleted);
+            System.err.println("size of newFileList = "+newFileList.size());
+            return false;
+        }
+        // compare the number of updated files to the size of the basis-file list
+        basisFileList = syncGenerator.getBasisFileList();
+        numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
+        if(basisFileList != null && numUpdateFilesCompleted < basisFileList.size()) {
+            System.err.println("numUpdateFilesCompleted = "+numUpdateFilesCompleted);
+            System.err.println("size of basisFileList = "+basisFileList.size());
+            return false;
+        }
+        // compare the number of files of which sync is completed to the size of client file-entry list
+        fileEntryList = syncGenerator.getFileEntryList();
+        numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
+        if(fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
+            System.err.println("numFilesCompleted = "+numFilesCompleted);
+            System.err.println("size of client file-entry list = "+fileEntryList.size());
+            return false;
+        }
+        // check each element of the isNewFileCompletedHashtable
+        isNewFileCompletedTable = syncGenerator.getIsNewFileCompletedHashtable();
+        numNewFilesNotCompleted = 0;
+        if(isNewFileCompletedTable != null) {
+            for (Map.Entry<Path, Boolean> entry : isNewFileCompletedTable.entrySet()) {
+                Path k = entry.getKey();
+                Boolean v = entry.getValue();
+                if (!v) {
+                    numNewFilesNotCompleted++;
+                    System.err.println("new file path='" + k + '\'' + ", value=" + v);
+                }
+            }
+        }
+        if(numNewFilesNotCompleted > 0) {
+            System.err.println("numNewFilesNotCompleted = " + numNewFilesNotCompleted);
+            return false;
+        }
+        // check each element of the isUpdateFileCompletedHashtable
+        isUpdateFileCompletedTable = syncGenerator.getIsUpdateFileCompletedHashtable();
+        numUpdateFilesNotCompleted = 0;
+        if(isUpdateFileCompletedTable != null) {
+            for(Map.Entry<Path, Boolean> entry : isUpdateFileCompletedTable.entrySet()) {
+                Path k = entry.getKey();
+                Boolean v = entry.getValue();
+                if(!v) {
+                    numUpdateFilesNotCompleted++;
+                    System.err.println("update file path='"+k+'\''+", value="+v);
+                }
+            }
+        }
+        if(numUpdateFilesNotCompleted > 0) {
+            System.err.println("numUpdateFilesNotCompleted = " + numUpdateFilesNotCompleted);
+            return false;
+        }
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("The sync of all files is completed.");
+        }
+
+        return true;
     }
 }
