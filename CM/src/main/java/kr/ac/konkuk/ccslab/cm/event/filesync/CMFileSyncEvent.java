@@ -523,20 +523,20 @@ public class CMFileSyncEvent extends CMEvent {
         switch(m_nID) {
             case START_FILE_LIST:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(START_FILE_LIST)" +
+                        "m_nID=" + m_nID + "(START_FILE_LIST)" +
                         ", userName='" + userName + '\'' +
                         ", numTotalFiles=" + numTotalFiles +
                         '}';
             case START_FILE_LIST_ACK:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(START_FILE_LIST_ACK)" +
+                        "m_nID=" + m_nID + "(START_FILE_LIST_ACK)" +
                         ", userName='" + userName + '\'' +
                         ", numTotalFiles=" + numTotalFiles +
                         ", returnCode=" + returnCode +
                         '}';
             case FILE_ENTRIES:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(FILE_ENTRIES)" +
+                        "m_nID=" + m_nID + "(FILE_ENTRIES)" +
                         ", userName='" + userName + '\'' +
                         ", numFilesCompleted=" + numFilesCompleted +
                         ", numFiles=" + numFiles +
@@ -544,7 +544,7 @@ public class CMFileSyncEvent extends CMEvent {
                         '}';
             case FILE_ENTRIES_ACK:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(FILE_ENTRIES_ACK)" +
+                        "m_nID=" + m_nID + "(FILE_ENTRIES_ACK)" +
                         ", userName='" + userName + '\'' +
                         ", numFilesCompleted=" + numFilesCompleted +
                         ", numFiles=" + numFiles +
@@ -553,39 +553,39 @@ public class CMFileSyncEvent extends CMEvent {
                         '}';
             case END_FILE_LIST:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(END_FILE_LIST)" +
+                        "m_nID=" + m_nID + "(END_FILE_LIST)" +
                         ", userName='" + userName + '\'' +
                         ", numFilesCompleted=" + numFilesCompleted +
                         '}';
             case END_FILE_LIST_ACK:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(END_FILE_LIST_ACK)" +
+                        "m_nID=" + m_nID + "(END_FILE_LIST_ACK)" +
                         ", userName='" + userName + '\'' +
                         ", numFilesCompleted=" + numFilesCompleted +
                         ", returnCode=" + returnCode +
                         '}';
             case REQUEST_NEW_FILES:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(REQUEST_NEW_FILES)" +
+                        "m_nID=" + m_nID + "(REQUEST_NEW_FILES)" +
                         ", requesterName='" + requesterName + '\'' +
                         ", numRequestedFiles=" + numRequestedFiles +
                         ", requestedFileList=" + requestedFileList +
                         '}';
             case COMPLETE_NEW_FILE:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(COMPLETE_NEW_FILE)" +
+                        "m_nID=" + m_nID + "(COMPLETE_NEW_FILE)" +
                         ", userName='" + userName + '\'' +
                         ", completedPath='" + completedPath + '\'' +
                         '}';
             case COMPLETE_UPDATE_FILE:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(COMPLETE_UPDATE_FILE)" +
+                        "m_nID=" + m_nID + "(COMPLETE_UPDATE_FILE)" +
                         ", userName='" + userName + '\'' +
                         ", completedPath='" + completedPath + '\'' +
                         '}';
             case COMPLETE_FILE_SYNC:
                 return "CMFileSyncEvent {" +
-                        ", m_nID=" + m_nID + "(COMPLETE_FILE_SYNC)" +
+                        "m_nID=" + m_nID + "(COMPLETE_FILE_SYNC)" +
                         ", userName='" + userName + '\'' +
                         ", numFilesCompleted=" + numFilesCompleted +
                         '}';
