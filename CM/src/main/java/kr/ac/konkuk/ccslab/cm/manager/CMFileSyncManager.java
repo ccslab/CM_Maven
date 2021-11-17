@@ -199,8 +199,44 @@ public class CMFileSyncManager extends CMServiceManager {
             }
             if(!searchResult) {
                 System.err.println("No file entry found for ("+fileName+")!");
+                return;
             }
+
+            // complete the new-file-transfer
+            completeNewFileTransfer(fileSender, foundPath);
         }
+    }
+
+    public boolean completeNewFileTransfer(String userName, Path path) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.completeNewFileTransfer() called..");
+            System.out.println("userName = " + userName);
+            System.out.println("path = " + path);
+        }
+        // get CMFileSyncGenerator
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        if(syncGenerator == null) {
+            System.err.println("syncGenerator is null!");
+            return false;
+        }
+        // set the isNewFileCompletedHashtable element
+        syncGenerator.getIsNewFileCompletedHashtable().put(path, true);
+        // update numNewFilesCompleted
+        int numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
+        numNewFilesCompleted++;
+        syncGenerator.setNumNewFilesCompleted(numNewFilesCompleted);
+
+        // create a COMPLETE_NEW_FILE event
+        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        CMFileSyncEvent fse = new CMFileSyncEvent();
+        fse.setID(CMFileSyncEvent.COMPLETE_NEW_FILE);
+        fse.setSender(serverName);
+        fse.setReceiver(userName);
+        fse.setUserName(userName);
+        fse.setCompletedPath(path);
+
+        // send the event
+        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
     }
 
 }

@@ -127,6 +127,8 @@ public class CMFileSyncGenerator implements Runnable {
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFileList after the deletion = " + basisFileList);
         }
+        // create an isUpdateFileCompletedHashtable object
+        if(!basisFileList.isEmpty()) isUpdateFileCompletedHashtable = new Hashtable<>();
 
         // create a new file-entry-list that will be added to the server
         newFileList = createNewFileList();
@@ -137,6 +139,8 @@ public class CMFileSyncGenerator implements Runnable {
         if(CMInfo._CM_DEBUG) {
             System.out.println("newFileList = " + newFileList);
         }
+        // create an isNewFileCompletedHashtable object
+        if(!newFileList.isEmpty()) isNewFileCompletedHashtable = new Hashtable<>();
 
         // request the files in the new file-entry-list from the client
         boolean requestResult = requestTransferOfNewFiles();
