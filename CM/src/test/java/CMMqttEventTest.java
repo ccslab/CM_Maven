@@ -22,7 +22,6 @@ import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 public class CMMqttEventTest {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		CMMqttEventTest tester = new CMMqttEventTest();
 		
 		/*

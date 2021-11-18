@@ -59,7 +59,6 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 	
 	@Override
 	public void processEvent(CMEvent cme) {
-		// TODO Auto-generated method stub
 		switch(cme.getType())
 		{
 		case CMInfo.CM_SESSION_EVENT:
@@ -584,7 +583,6 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			fis = new FileInputStream(strFullSrcFilePath);
 			fos = new FileOutputStream(strModifiedFile);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -612,7 +610,6 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				fis.close();
 				fos.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

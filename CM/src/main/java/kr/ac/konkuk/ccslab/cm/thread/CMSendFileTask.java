@@ -50,7 +50,6 @@ public class CMSendFileTask implements Runnable {
 			raf = new RandomAccessFile(m_sendFileInfo.getFilePath(), "rw");
 			fc = raf.getChannel();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			sendErrorToProcThread();
 			return;
@@ -63,7 +62,6 @@ public class CMSendFileTask implements Runnable {
 				//raf.seek(lRecvSize);
 				fc.position(lSentSize);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				closeRandomAccessFile(raf);
 				sendErrorToProcThread();
@@ -95,7 +93,6 @@ public class CMSendFileTask implements Runnable {
 			try {
 				nReadBytes = fc.read(buf);
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 				closeRandomAccessFile(raf);
 				sendErrorToProcThread();
@@ -126,13 +123,11 @@ public class CMSendFileTask implements Runnable {
 					m_sendFileInfo.setSentSize(lSentSize);
 					nSendBytesSum += nSendBytes;
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					closeRandomAccessFile(raf);
 					try {
 						sendSC.close();
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 					
@@ -205,7 +200,6 @@ public class CMSendFileTask implements Runnable {
 		try {
 			raf.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

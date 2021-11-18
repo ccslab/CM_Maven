@@ -34,7 +34,6 @@ public class CMCommManager {
 			try {
 				ssc.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -45,7 +44,6 @@ public class CMCommManager {
 			try {
 				ssc.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -111,7 +109,6 @@ public class CMCommManager {
 		try {
 			localAddress = InetAddress.getLocalHost();
 		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
@@ -392,10 +389,8 @@ public class CMCommManager {
 		try {
 			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -406,7 +401,6 @@ public class CMCommManager {
 			sc = (SocketChannel) openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, strTargetSSCAddress, 
 					nTargetSSCPort, cmInfo);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -544,21 +538,18 @@ public class CMCommManager {
 			//ni = NetworkInterface.getByName("eth3");
 			ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
 		} catch (SocketException | UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		try {
 			group = InetAddress.getByName(addr);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		try {
 			key = dc.join(group, ni);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -597,7 +588,6 @@ public class CMCommManager {
 			try {
 				nRet = sc.write(buf);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return nTotalSentByteNum;
 			}
@@ -636,7 +626,6 @@ public class CMCommManager {
 			try {
 				nRet = dc.send(buf, new InetSocketAddress(addr, port));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return nTotalSentByteNum;
 			}

@@ -205,7 +205,6 @@ public class CMConfigurator {
 		try {
 			fis = new FileInputStream(strConfFilePath);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -229,7 +228,6 @@ public class CMConfigurator {
 		try {
 			fis.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		scan.close();
@@ -250,7 +248,6 @@ public class CMConfigurator {
 		try {
 			fis = new FileInputStream(strConfFilePath);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -270,7 +267,6 @@ public class CMConfigurator {
 		try {
 			fis.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		scan.close();
@@ -287,7 +283,6 @@ public class CMConfigurator {
 		try {
 			fis = new FileInputStream(strConfFilePath);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -307,7 +302,6 @@ public class CMConfigurator {
 		try {
 			fis.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		scan.close();
@@ -328,7 +322,6 @@ public class CMConfigurator {
 		try {
 			fileBufReader = new BufferedReader(new FileReader(strConfFilePath));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -356,7 +349,6 @@ public class CMConfigurator {
 			
 			fileBufReader.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -370,7 +362,6 @@ public class CMConfigurator {
 			try {
 				Files.write(filePath, fileBytes);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}

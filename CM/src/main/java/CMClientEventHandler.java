@@ -180,7 +180,6 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	
 	@Override
 	public void processEvent(CMEvent cme) {
-		// TODO Auto-generated method stub
 		//System.out.println("Client app receives CM event!!");
 		switch(cme.getType())
 		{
@@ -841,7 +840,6 @@ public class CMClientEventHandler implements CMAppEventHandler {
 				try {
 					m_fos.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

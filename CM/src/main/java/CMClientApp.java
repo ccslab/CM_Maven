@@ -81,7 +81,6 @@ public class CMClientApp {
 			try {
 				strInput = br.readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				continue;
 			}
@@ -338,7 +337,6 @@ public class CMClientApp {
 		try {
 			br.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_scan.close();
@@ -437,7 +435,6 @@ public class CMClientApp {
 			else
 				strPassword = new String(console.readPassword("password: "));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -473,7 +470,6 @@ public class CMClientApp {
 			else
 				strPassword = new String(console.readPassword("password: "));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -558,7 +554,6 @@ public class CMClientApp {
 				m_clientStub.setServerPort(Integer.parseInt(strNewServerPort));
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -627,7 +622,6 @@ public class CMClientApp {
 		try {
 			strSessionName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		bRequestResult = m_clientStub.joinSession(strSessionName);
@@ -648,7 +642,6 @@ public class CMClientApp {
 		try {
 			strSessionName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -689,7 +682,6 @@ public class CMClientApp {
 		try {
 			strLine = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		strLine.trim();
@@ -703,7 +695,6 @@ public class CMClientApp {
 		try {
 			strLine = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		strLine.trim();
@@ -730,14 +721,12 @@ public class CMClientApp {
 			strTarget = br.readLine();
 			strTarget = strTarget.trim();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.print("message: ");
 		try {
 			strMessage = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -764,7 +753,6 @@ public class CMClientApp {
 		try {
 			strInput = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -808,7 +796,6 @@ public class CMClientApp {
 			System.out.print("receiver port(enter for default port): ");
 			strRecvPort = br.readLine();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
@@ -883,7 +870,6 @@ public class CMClientApp {
 			try {
 				strInput = br.readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				ue.removeAllEventFields();
 				ue = null;
@@ -923,7 +909,6 @@ public class CMClientApp {
 		try {
 			strReceiver = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -961,7 +946,6 @@ public class CMClientApp {
 		try {
 			strTargetName = br.readLine().trim();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -1019,7 +1003,6 @@ public class CMClientApp {
 			System.out.print("Minimum number of reply events(empty for 0): ");
 			strMinNumReplyEvents = br.readLine().trim();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -1090,7 +1073,6 @@ public class CMClientApp {
 		try {
 			strTargetName = br.readLine().trim();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -1138,7 +1120,6 @@ public class CMClientApp {
 			System.out.print("Minimum number of reply events(empty for 0): ");
 			strMinNumReplyEvents = br.readLine().trim();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -1241,7 +1222,6 @@ public class CMClientApp {
 			System.out.print("input target group name: ");
 			strGroupName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_clientStub.changeGroup(strGroupName);
@@ -1691,7 +1671,6 @@ public class CMClientApp {
 		try {
 			strPath = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1719,7 +1698,6 @@ public class CMClientApp {
 			strFileAppend = br.readLine();
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1758,7 +1736,6 @@ public class CMClientApp {
 			strFileAppend = br.readLine();
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1790,7 +1767,6 @@ public class CMClientApp {
 			if(strSender.isEmpty())
 				strSender = null;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -1821,7 +1797,6 @@ public class CMClientApp {
 			if(strReceiver.isEmpty())
 				strReceiver = null;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1891,11 +1866,9 @@ public class CMClientApp {
 			System.out.print("Simulation num: ");
 			nSimNum = Integer.parseInt(br.readLine());
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -1970,11 +1943,9 @@ public class CMClientApp {
 			System.out.print("Send num: ");
 			nSendNum = Integer.parseInt(br.readLine());
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2045,12 +2016,10 @@ public class CMClientApp {
 					+ "CM_MY_FRIEND for my friends, CM_BI_FRIEND for bi-friends, or specify a name): ");
 			strWriterName = br.readLine();
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			System.err.println("Input data is not a number!");
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2085,11 +2054,9 @@ public class CMClientApp {
 			System.out.print("Attached file name: ");
 			strFileName = br.readLine();
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2109,7 +2076,6 @@ public class CMClientApp {
 			fos = new FileOutputStream("SNSContentDownload.txt");
 			pw = new PrintWriter(fos);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_eventHandler.setFileOutputStream(fos);
@@ -2178,7 +2144,6 @@ public class CMClientApp {
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2227,7 +2192,6 @@ public class CMClientApp {
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -2262,7 +2226,6 @@ public class CMClientApp {
 				strPasswd = new String(console.readPassword("Input password: "));
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2280,7 +2243,6 @@ public class CMClientApp {
 			System.out.print("Input user name: ");
 			strName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_clientStub.findRegisteredUser(strName);
@@ -2298,7 +2260,6 @@ public class CMClientApp {
 			System.out.print("Input a friend name: ");
 			strFriendName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2316,7 +2277,6 @@ public class CMClientApp {
 			System.out.print("Input a friend name: ");
 			strFriendName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2361,7 +2321,6 @@ public class CMClientApp {
 		try {
 			strServerName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2378,7 +2337,6 @@ public class CMClientApp {
 		try {
 			strServerName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -2427,7 +2385,6 @@ public class CMClientApp {
 				m_clientStub.loginCM(strServerName, user, password);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2444,7 +2401,6 @@ public class CMClientApp {
 		try {
 			strServerName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2461,7 +2417,6 @@ public class CMClientApp {
 		try {
 			strServerName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_clientStub.requestSessionInfo(strServerName);
@@ -2481,7 +2436,6 @@ public class CMClientApp {
 			System.out.print("Input session name: ");
 			strSessionName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_clientStub.joinSession(strServerName, strSessionName);
@@ -2498,7 +2452,6 @@ public class CMClientApp {
 		try {
 			strServerName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_clientStub.leaveSession(strServerName);
@@ -2518,7 +2471,6 @@ public class CMClientApp {
 		try {
 			strServerName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2584,11 +2536,9 @@ public class CMClientApp {
 			strFileList = br.readLine();
 			
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2662,7 +2612,6 @@ public class CMClientApp {
 			fe.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2691,11 +2640,9 @@ public class CMClientApp {
 			System.out.print("Input merged file name: ");
 			strMergeFileName = br.readLine();
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2759,7 +2706,6 @@ public class CMClientApp {
 			System.out.print("Input a source file path: ");
 			strFile = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -2802,7 +2748,6 @@ public class CMClientApp {
 		try {
 			raf = new RandomAccessFile(strFile, "r");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -2858,7 +2803,6 @@ public class CMClientApp {
 		try {
 			raf.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -2902,7 +2846,6 @@ public class CMClientApp {
 		try {
 			strMessage = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2964,7 +2907,6 @@ public class CMClientApp {
 				nRecvPort = Integer.parseInt(strRecvPort);				
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (NumberFormatException ne) {
@@ -3334,7 +3276,6 @@ public class CMClientApp {
 
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		CMClientApp client = new CMClientApp();
 		CMClientStub cmStub = client.getClientStub();
 		cmStub.setAppEventHandler(client.getClientEventHandler());

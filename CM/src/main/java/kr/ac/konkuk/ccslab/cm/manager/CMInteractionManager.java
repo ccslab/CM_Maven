@@ -74,7 +74,6 @@ public class CMInteractionManager {
 						confInfo.getMyCurrentAddress(), confInfo.getMyPort(), cmInfo);
 				commInfo.setNonBlockServerSocketChannel(ssc);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}
@@ -98,7 +97,6 @@ public class CMInteractionManager {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
 					confInfo.getMyCurrentAddress(), confInfo.getUDPPort(), cmInfo);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -145,7 +143,6 @@ public class CMInteractionManager {
 			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 					confInfo.getServerAddress(), confInfo.getServerPort(), cmInfo);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -258,7 +255,6 @@ public class CMInteractionManager {
 			sc = CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, tserver.getServerAddress(), 
 										tserver.getServerPort(), cmInfo);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -382,7 +378,6 @@ public class CMInteractionManager {
 				}
 
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			// remove from the unknown channel list
@@ -488,7 +483,6 @@ public class CMInteractionManager {
 		try {
 			sc.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -632,7 +626,6 @@ public class CMInteractionManager {
 				}
 
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			// remove from the unknown channel list
@@ -1592,7 +1585,6 @@ public class CMInteractionManager {
 				try {
 					sc.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				bRet = commInfo.getUnknownChannelInfoList().removeElement(unchInfo);
@@ -1684,7 +1676,6 @@ public class CMInteractionManager {
 					sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 							serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					return;
 				}
@@ -2179,7 +2170,6 @@ public class CMInteractionManager {
 				try {
 					Selector.class.wait();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -2194,7 +2184,6 @@ public class CMInteractionManager {
 		try {
 			msg.m_ch.configureBlocking(true);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			
 			seAck.setReturnCode(0);
@@ -2463,7 +2452,6 @@ public class CMInteractionManager {
 				System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), the number "
 						+"of received bytes: "+nRecvBytes+" Bytes.");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), disconnection detected "
 					+"by the IOException!");
@@ -2473,7 +2461,6 @@ public class CMInteractionManager {
 		try {
 			sc.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		scInfo.removeChannel(nChKey);
@@ -2613,7 +2600,6 @@ public class CMInteractionManager {
 					}
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
 				CMDBManager.closeDB(cmInfo);
@@ -2695,7 +2681,6 @@ public class CMInteractionManager {
 					}
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
 				CMDBManager.closeDB(cmInfo);
@@ -2775,7 +2760,6 @@ public class CMInteractionManager {
 					strCreationTime = rs.getString("creationTime");
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
 				CMDBManager.closeDB(cmInfo);

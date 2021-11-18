@@ -52,6 +52,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.REQUEST_NEW_FILES:
                 processResult = processREQUEST_NEW_FILES(fse);
                 break;
+            case CMFileSyncEvent.COMPLETE_NEW_FILE:
+                processResult = processCOMPLETE_NEW_FILE(fse);
+                break;
+            case CMFileSyncEvent.COMPLETE_UPDATE_FILE:
+                processResult = processCOMPLETE_UPDATE_FILE(fse);
+                break;
+            case CMFileSyncEvent.COMPLETE_FILE_SYNC:
+                processResult = processCOMPLETE_FILE_SYNC(fse);
+                break;
             default:
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -423,6 +432,24 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int returnCode = fse.getReturnCode();
         System.out.println("returnCode = " + returnCode);
 
+        return true;
+    }
+
+    // called by the client
+    private boolean processCOMPLETE_NEW_FILE(CMFileSyncEvent fse) {
+        // from here
+        return true;
+    }
+
+    // called by the client
+    private boolean processCOMPLETE_UPDATE_FILE(CMFileSyncEvent fse) {
+        // TODO: need to be implemented
+        return true;
+    }
+
+    // called by the client
+    private boolean processCOMPLETE_FILE_SYNC(CMFileSyncEvent fse) {
+        // TODO: need to be implemented
         return true;
     }
 }

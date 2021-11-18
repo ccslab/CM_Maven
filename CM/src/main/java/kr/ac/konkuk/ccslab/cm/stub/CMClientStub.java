@@ -250,11 +250,9 @@ public class CMClientStub extends CMStub {
 			try {
 				charset.set(null, null);
 			} catch (IllegalArgumentException | IllegalAccessException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} catch (NoSuchFieldException | SecurityException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
@@ -290,10 +288,8 @@ public class CMClientStub extends CMStub {
 		try {
 			bRet = future.get();
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (ExecutionException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
@@ -313,10 +309,8 @@ public class CMClientStub extends CMStub {
 		try {
 			bRet = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -401,10 +395,8 @@ public class CMClientStub extends CMStub {
 		try {
 			bRet = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//////////
@@ -443,10 +435,8 @@ public class CMClientStub extends CMStub {
 		try {
 			bRet = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//////////
@@ -579,7 +569,6 @@ public class CMClientStub extends CMStub {
 			try {
 				eventSync.wait(30000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			loginAckEvent = (CMSessionEvent) eventSync.getReplyEvent();
@@ -739,7 +728,6 @@ public class CMClientStub extends CMStub {
 			try {
 				eventSync.wait(30000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
@@ -878,7 +866,6 @@ public class CMClientStub extends CMStub {
 			try {
 				eventSync.wait(30000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
@@ -1180,10 +1167,8 @@ public class CMClientStub extends CMStub {
 		try {
 			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -1278,10 +1263,8 @@ public class CMClientStub extends CMStub {
 		try {
 			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (ExecutionException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
@@ -1316,7 +1299,6 @@ public class CMClientStub extends CMStub {
 			try {
 				eventSync.wait(30000);  // timeout 30s
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
@@ -1346,10 +1328,8 @@ public class CMClientStub extends CMStub {
 			try {
 				futureRemoveChannel.get();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			//scInfo.removeChannel(nChKey);
@@ -1401,10 +1381,8 @@ public class CMClientStub extends CMStub {
 		try {
 			result = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1515,10 +1493,8 @@ public class CMClientStub extends CMStub {
 		try {
 			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//////////
@@ -1629,10 +1605,8 @@ public class CMClientStub extends CMStub {
 		try {
 			sc = (SocketChannel) future.get();
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (ExecutionException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
@@ -1673,7 +1647,6 @@ public class CMClientStub extends CMStub {
 			try {
 				eventSync.wait(30000);  // timeout 30s
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
@@ -1706,10 +1679,8 @@ public class CMClientStub extends CMStub {
 			try {
 				futureRemoveChannel.get();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -1880,7 +1851,6 @@ public class CMClientStub extends CMStub {
 			try {
 				eventSync.wait(30000);  // timeout 30s
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
@@ -2661,10 +2631,8 @@ public class CMClientStub extends CMStub {
 		try {
 			bRet = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//////////
@@ -2713,10 +2681,8 @@ public class CMClientStub extends CMStub {
 		try {
 			bRet = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//////////

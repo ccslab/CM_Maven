@@ -108,8 +108,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 	
 	@Override
 	protected int getFixedHeaderByteNum() {
-		// TODO Auto-generated method stub
-		
+
 		int nByteNum = 1;	// packet type (4 bits) + flags (4 bits)
 		m_nRemainingLength = getVarHeaderByteNum() + getPayloadByteNum();
 		// according to MQTT v3.1.1, page 18, Table 2.4
@@ -134,8 +133,7 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 
 	@Override
 	protected void marshallFixedHeader() {
-		// TODO Auto-generated method stub
-		
+
 		// encoding byte 1: packet type(4 bits) + flag (4 bits)
 		byte byteTypeFlag = 0;
 		byteTypeFlag = (byte)((byteTypeFlag | m_packetType) << 4);
@@ -179,7 +177,6 @@ public abstract class CMMqttEventFixedHeader extends CMMqttEvent {
 
 	@Override
 	protected void unmarshallFixedHeader(ByteBuffer buf) {
-		// TODO Auto-generated method stub
 
 		// decoding byte 1: packet type (4 bits) + flag (4 bits)
 		byte byteTypeFlag = buf.get();

@@ -852,7 +852,6 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				try {
 					Desktop.getDesktop().open(file);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				m_bReqAttachedFile = false;
@@ -1291,7 +1290,6 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				try {
 					m_fos.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1439,7 +1437,6 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			doc.insertString(doc.getLength(), strText, null);
 			m_outTextPane.setCaretPosition(m_outTextPane.getDocument().getLength());
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		*/

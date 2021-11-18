@@ -1047,7 +1047,6 @@ public class CMWinServer extends JFrame {
 					pw.println("Normal SD: "+dNormalSD);
 				}
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1065,7 +1064,6 @@ public class CMWinServer extends JFrame {
 			try {
 				fo.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1086,7 +1084,6 @@ public class CMWinServer extends JFrame {
 					pw.println("Normal SD: "+dNormalSD);
 				}
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1105,7 +1102,6 @@ public class CMWinServer extends JFrame {
 			try {
 				fo.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -1134,7 +1130,6 @@ public class CMWinServer extends JFrame {
 				pw.println("Access pattern: "+nAccPattern);
 				pw.println("Normal mean: "+dNormalMean);
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1152,7 +1147,6 @@ public class CMWinServer extends JFrame {
 			try {
 				fo.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1874,7 +1868,6 @@ public class CMWinServer extends JFrame {
 			m_outTextPane.setCaretPosition(m_outTextPane.getDocument().getLength());
 
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1889,7 +1882,6 @@ public class CMWinServer extends JFrame {
 			m_outTextPane.setCaretPosition(m_outTextPane.getDocument().getLength());
 
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

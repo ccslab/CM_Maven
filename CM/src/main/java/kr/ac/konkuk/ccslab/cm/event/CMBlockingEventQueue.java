@@ -19,7 +19,6 @@ public class CMBlockingEventQueue {
 				try {
 					monitor.wait();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					//e.printStackTrace();
 					return null;
 				}

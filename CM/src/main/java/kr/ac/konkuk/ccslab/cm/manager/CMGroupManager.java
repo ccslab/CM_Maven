@@ -57,7 +57,6 @@ public class CMGroupManager {
 						return;
 					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					return;
 				}
@@ -103,7 +102,6 @@ public class CMGroupManager {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, 
 					group.getGroupAddress(), group.getGroupPort(), cmInfo);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}

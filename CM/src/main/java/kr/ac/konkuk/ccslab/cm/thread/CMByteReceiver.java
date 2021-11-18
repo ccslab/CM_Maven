@@ -47,7 +47,6 @@ public class CMByteReceiver extends Thread {
 					//m_selector.select();
 					m_selector.select(1);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				Iterator<SelectionKey> iter = m_selector.selectedKeys().iterator();

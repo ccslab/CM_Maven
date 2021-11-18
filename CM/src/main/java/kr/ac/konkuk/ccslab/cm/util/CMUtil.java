@@ -43,7 +43,6 @@ public class CMUtil {
 			return hexString.toString();
 			
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -76,7 +75,6 @@ public class CMUtil {
 				ret = true;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			ret = false;
 		}
@@ -92,7 +90,6 @@ public class CMUtil {
 		try {
 			sourceImage = ImageIO.read(new File(inPath));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -130,7 +127,6 @@ public class CMUtil {
 		try {
 			ImageIO.write(bi,  strFileExt, new File(outPath));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}

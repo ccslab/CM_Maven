@@ -72,7 +72,6 @@ public class CMServerApp {
 			try {
 				strInput = br.readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				continue;
 			}
@@ -194,7 +193,6 @@ public class CMServerApp {
 		try {
 			br.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -287,7 +285,6 @@ public class CMServerApp {
 				m_serverStub.setServerPort(Integer.parseInt(strNewServerPort));
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -334,7 +331,6 @@ public class CMServerApp {
 		try {
 			strSessionName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -371,7 +367,6 @@ public class CMServerApp {
 		try {
 			strPath = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -396,7 +391,6 @@ public class CMServerApp {
 			System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
 			strFileAppend = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -432,7 +426,6 @@ public class CMServerApp {
 			System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
 			strFileAppend = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -464,7 +457,6 @@ public class CMServerApp {
 			if(strSender.isEmpty())
 				strSender = null;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -496,7 +488,6 @@ public class CMServerApp {
 			if(strReceiver.isEmpty())
 				strReceiver = null;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -542,7 +533,6 @@ public class CMServerApp {
 		try {
 			strServerName = br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_serverStub.requestServerReg(strServerName);
@@ -590,11 +580,9 @@ public class CMServerApp {
 			System.out.print("Enter scheme number: ");
 			nScheme = Integer.parseInt(br.readLine());
 		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -678,7 +666,6 @@ public class CMServerApp {
 				}
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -737,7 +724,6 @@ public class CMServerApp {
 					pw.println("Normal SD: "+dNormalSD);
 				}
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -755,7 +741,6 @@ public class CMServerApp {
 			try {
 				fo.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -776,7 +761,6 @@ public class CMServerApp {
 					pw.println("Normal SD: "+dNormalSD);
 				}
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -795,7 +779,6 @@ public class CMServerApp {
 			try {
 				fo.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -824,7 +807,6 @@ public class CMServerApp {
 				pw.println("Access pattern: "+nAccPattern);
 				pw.println("Normal mean: "+dNormalMean);
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -842,7 +824,6 @@ public class CMServerApp {
 			try {
 				fo.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1496,7 +1477,6 @@ public class CMServerApp {
 	}
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		CMServerApp server = new CMServerApp();
 		CMServerStub cmStub = server.getServerStub();
 		cmStub.setAppEventHandler(server.getServerEventHandler());

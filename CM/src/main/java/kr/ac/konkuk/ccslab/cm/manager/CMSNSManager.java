@@ -1258,7 +1258,6 @@ public class CMSNSManager {
 						}
 					}
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} finally {
 					CMDBManager.closeDB(cmInfo);
@@ -1368,7 +1367,6 @@ public class CMSNSManager {
 							+") is not a registered user.");
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
 				CMDBManager.closeDB(cmInfo);
@@ -1470,7 +1468,6 @@ public class CMSNSManager {
 					nTotalNumFriends++;
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}
@@ -1595,7 +1592,6 @@ public class CMSNSManager {
 					nNumCandidates++;
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}
@@ -1609,7 +1605,6 @@ public class CMSNSManager {
 					myFriendList.add(rs.getString("friendName"));
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}
@@ -1747,7 +1742,6 @@ public class CMSNSManager {
 					nNumCandidates++;
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}
@@ -1761,7 +1755,6 @@ public class CMSNSManager {
 					myFriendList.add(rs.getString("friendName"));
 				}
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}

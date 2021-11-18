@@ -79,7 +79,6 @@ public class CMServerKeepAliveTask implements Runnable {
 				try {
 					unch.getUnknownChannel().close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				

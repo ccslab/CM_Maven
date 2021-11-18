@@ -95,11 +95,9 @@ public class CMStub {
 //			try {
 //				charset.set(null, null);
 //			} catch (IllegalArgumentException | IllegalAccessException e) {
-//				// TODO Auto-generated catch block
 //				e.printStackTrace();
 //			}
 //		} catch (NoSuchFieldException | SecurityException e1) {
-//			// TODO Auto-generated catch block
 //			e1.printStackTrace();
 //		}
 
@@ -154,10 +152,8 @@ public class CMStub {
 		try {
 			future.get();
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (ExecutionException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
@@ -192,10 +188,8 @@ public class CMStub {
 		try {
 			future.get();
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (ExecutionException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
@@ -208,7 +202,6 @@ public class CMStub {
 		try {
 			sel.select(1);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -475,10 +468,8 @@ public class CMStub {
 		try {
 			dc = (DatagramChannel) future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -533,10 +524,8 @@ public class CMStub {
 		try {
 			result = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -586,10 +575,8 @@ public class CMStub {
 		try {
 			dc = (DatagramChannel) future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -644,10 +631,8 @@ public class CMStub {
 		try {
 			result = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -737,10 +722,8 @@ public class CMStub {
 		try {
 			mc = (DatagramChannel) future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -814,10 +797,8 @@ public class CMStub {
 		try {
 			result = future.get();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -1112,7 +1093,6 @@ public class CMStub {
 				if(CMInfo._CM_DEBUG_2)
 					System.out.println("CMStub.receive(), read "+ret+" bytes.");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return null;
 			}			
@@ -1133,7 +1113,6 @@ public class CMStub {
 				try {
 					sc.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -1174,7 +1153,6 @@ public class CMStub {
 					if(CMInfo._CM_DEBUG_2)
 						System.out.println("CMStub.receive(), read "+ret+" bytes.");
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					return null;
 				}			
@@ -1231,7 +1209,6 @@ public class CMStub {
 		try {
 			dc.receive(bufEvent);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1299,7 +1276,6 @@ public class CMStub {
 			try {
 				eventSync.wait(nTimeout);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return null;
 			}
@@ -1580,7 +1556,6 @@ public class CMStub {
 			try {
 				eventSync.wait(nTimeout);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return null;
 			}
@@ -2344,7 +2319,6 @@ public class CMStub {
 			try {
 				eventSync.wait(20000);					
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			replyEvent = (CMFileEvent) eventSync.getReplyEvent();
@@ -2415,7 +2389,6 @@ public class CMStub {
 			try {
 				eventSync.wait(20000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			replyEvent = (CMFileEvent) eventSync.getReplyEvent();

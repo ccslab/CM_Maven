@@ -74,7 +74,6 @@ public class CMFileTransferManager {
 		try {
 			Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -133,7 +132,6 @@ public class CMFileTransferManager {
 					ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(
 							CMInfo.CM_SERVER_CHANNEL, myself.getHost(), 0, cmInfo);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					return false;
 				}
@@ -149,10 +147,8 @@ public class CMFileTransferManager {
 					ssc = (ServerSocketChannel) future.get();
 					commInfo.setNonBlockServerSocketChannel(ssc);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				//////////
@@ -162,7 +158,6 @@ public class CMFileTransferManager {
 			try {
 				isa = (InetSocketAddress)ssc.getLocalAddress();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}
@@ -425,13 +420,10 @@ public class CMFileTransferManager {
 					+"), file size("+rInfo.getFileSize()+ "), recv size("
 					+rInfo.getRecvSize()+")");
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -515,7 +507,6 @@ public class CMFileTransferManager {
 			try {
 				defaultBlockSC.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -585,7 +576,6 @@ public class CMFileTransferManager {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}
@@ -739,7 +729,6 @@ public class CMFileTransferManager {
 							interInfo.getMyself().getHost(), 0, cmInfo);
 					commInfo.setNonBlockServerSocketChannel(ssc);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					return false;
 				} 
@@ -749,7 +738,6 @@ public class CMFileTransferManager {
 			try {
 				isa = (InetSocketAddress)ssc.getLocalAddress();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}
@@ -1095,7 +1083,6 @@ public class CMFileTransferManager {
 			try {
 				sc.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			blockChannelList.removeChannel(0);
@@ -1273,7 +1260,6 @@ public class CMFileTransferManager {
 					try {
 						sInfo.getReadFile().close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -1337,7 +1323,6 @@ public class CMFileTransferManager {
 						try {
 							sInfo.getReadFile().close();
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
@@ -1436,13 +1421,10 @@ public class CMFileTransferManager {
 							+ "receiver("+strFileReceiver+"), file("+sInfo.getFileName()+"), file size("+sInfo.getFileSize()
 							+ "), sent size("+sInfo.getSentSize()+")");
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (TimeoutException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				
@@ -1533,7 +1515,6 @@ public class CMFileTransferManager {
 			try {
 				defaultBlockSC.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -1600,7 +1581,6 @@ public class CMFileTransferManager {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}
@@ -1652,7 +1632,6 @@ public class CMFileTransferManager {
 		try {
 			bos = new BufferedOutputStream(new FileOutputStream(strSplitFile));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1678,7 +1657,6 @@ public class CMFileTransferManager {
 			
 			bos.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -1748,7 +1726,6 @@ public class CMFileTransferManager {
 					bos.close();
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -1975,7 +1952,6 @@ public class CMFileTransferManager {
 					try {
 						ssc.close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					commInfo.setNonBlockServerSocketChannel(null);
@@ -2187,12 +2163,10 @@ public class CMFileTransferManager {
 					try {
 						writeFile.seek(lRecvSize);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 						try {
 							writeFile.close();
 						} catch (IOException e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 						return bForward;
@@ -2201,7 +2175,6 @@ public class CMFileTransferManager {
 			}
 
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return bForward;
 		}
@@ -2331,12 +2304,10 @@ public class CMFileTransferManager {
 				try {
 					readFile.seek(lRecvSize);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					try {
 						readFile.close();
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 					return bForward;
@@ -2344,7 +2315,6 @@ public class CMFileTransferManager {
 			}
 			sInfo.setReadFile(readFile);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return bForward;
 		}
@@ -2365,7 +2335,6 @@ public class CMFileTransferManager {
 			try {
 				nReadBytes = sInfo.getReadFile().read(fileBlock);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				continue;
 			}
@@ -2418,7 +2387,6 @@ public class CMFileTransferManager {
 		try {
 			sInfo.getReadFile().close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2531,7 +2499,6 @@ public class CMFileTransferManager {
 		try {
 			recvInfo.getWriteFile().write(fe.getFileBlock(), 0, fe.getBlockSize());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return bForward;
 		}
@@ -2596,7 +2563,6 @@ public class CMFileTransferManager {
 		try {
 			recvInfo.getWriteFile().close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -3042,10 +3008,8 @@ public class CMFileTransferManager {
 			try {
 				recvInfo.getRecvTaskResult().get();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -3142,7 +3106,6 @@ public class CMFileTransferManager {
 					try {
 						ssc.close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					commInfo.setNonBlockServerSocketChannel(null);
@@ -3370,7 +3333,6 @@ public class CMFileTransferManager {
 				try {
 					rInfo.getWriteFile().close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -3526,15 +3488,12 @@ public class CMFileTransferManager {
 							+ "sender("+strFileSender+"), file("+rInfo.getFileName()+"), file size("+rInfo.getFileSize()
 							+ "), recv size("+rInfo.getRecvSize()+")");
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					bException = true;
 				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					bException = true;
 				} catch (TimeoutException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					bException = true;
 				} finally {
@@ -3621,7 +3580,6 @@ public class CMFileTransferManager {
 					try {
 						ssc.close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					commInfo.setNonBlockServerSocketChannel(null);
@@ -3702,7 +3660,6 @@ public class CMFileTransferManager {
 			try {
 				defaultBlockSC.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -3724,7 +3681,6 @@ public class CMFileTransferManager {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return bForward;
 			}
@@ -3860,15 +3816,12 @@ public class CMFileTransferManager {
 					+ "receiver("+strFileReceiver+"), file("+sInfo.getFileName()+"), file size("+sInfo.getFileSize()
 					+ "), sent size("+sInfo.getSentSize()+")");
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			bException = true;
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			bException = true;
 		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			bException = true;
 		} finally {
@@ -4010,7 +3963,6 @@ public class CMFileTransferManager {
 			try {
 				defaultBlockSC.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -4031,7 +3983,6 @@ public class CMFileTransferManager {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
 						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return bForward;
 			}

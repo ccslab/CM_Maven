@@ -35,7 +35,6 @@ public class CMOpenChannelTask implements Callable<SelectableChannel> {
 			else
 				sc = CMCommManager.openNonBlockChannel(m_nChType, m_strAddress, m_nPort, m_cmInfo);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return sc;

@@ -47,7 +47,6 @@ public class CMSessionManager {
 			try {
 				nGroupNum = Integer.parseInt(CMConfigurator.getConfiguration(sessionConfPath.toString(), "GROUP_NUM"));
 			} catch (NumberFormatException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return;
 			}

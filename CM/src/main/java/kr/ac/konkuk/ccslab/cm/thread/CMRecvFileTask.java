@@ -44,7 +44,6 @@ public class CMRecvFileTask implements Runnable {
 			raf = new RandomAccessFile(m_recvFileInfo.getFilePath(), "rw");
 			fc = raf.getChannel();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			sendErrorToProcThread();
 			return;
@@ -57,7 +56,6 @@ public class CMRecvFileTask implements Runnable {
 				//raf.seek(lRecvSize);
 				fc.position(lRecvSize);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				closeRandomAccessFile(raf);
 				sendErrorToProcThread();
@@ -88,13 +86,11 @@ public class CMRecvFileTask implements Runnable {
 			try {
 				nRecvBytes = recvSC.read(buf);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				closeRandomAccessFile(raf);
 				try {
 					recvSC.close();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 
@@ -126,7 +122,6 @@ public class CMRecvFileTask implements Runnable {
 					m_recvFileInfo.setRecvSize(lRecvSize);
 					nWrittenBytesSum += nWrittenBytes;
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					closeRandomAccessFile(raf);
 					sendErrorToProcThread();
@@ -147,7 +142,6 @@ public class CMRecvFileTask implements Runnable {
 		try {
 			raf.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

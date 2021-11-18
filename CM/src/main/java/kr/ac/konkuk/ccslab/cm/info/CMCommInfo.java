@@ -62,7 +62,6 @@ public class CMCommInfo {
 		try {
 			m_selector = Selector.open();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_recvQueue = new CMBlockingEventQueue();

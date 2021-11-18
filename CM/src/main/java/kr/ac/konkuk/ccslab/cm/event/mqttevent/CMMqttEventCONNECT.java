@@ -411,7 +411,6 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
 	@Override
 	protected int getVarHeaderByteNum() {
-		// TODO Auto-generated method stub
 		int nByteNum = 0;
 		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strProtocolName.getBytes().length;	// protocol name
 		nByteNum += 1+1+2;	// protocol level, flag, keep alive
@@ -426,7 +425,6 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
 	@Override
 	protected void marshallVarHeader() {
-		// TODO Auto-generated method stub
 		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.marshallVarHeader(): ");
@@ -442,7 +440,6 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
 	@Override
 	protected void unmarshallVarHeader(ByteBuffer buf) {
-		// TODO Auto-generated method stub
 		m_strProtocolName = getStringFromByteBuffer(buf);
 		m_protocolLevel = buf.get();
 		m_connectFlag = buf.get();
@@ -595,7 +592,6 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
 	@Override
 	protected int getPayloadByteNum() {
-		// TODO Auto-generated method stub
 		int nByteNum = 0;
 		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strClientID.getBytes().length;	// client id
 		nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strWillTopic.getBytes().length;	// will topic
@@ -613,8 +609,7 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
 	@Override
 	protected void marshallPayload() {
-		// TODO Auto-generated method stub
-		
+
 		if(CMInfo._CM_DEBUG_2)
 		{
 			System.out.println("CMMqttEventCONNECT.marshallPayload(): ");
@@ -632,7 +627,6 @@ public class CMMqttEventCONNECT extends CMMqttEventFixedHeader {
 
 	@Override
 	protected void unmarshallPayload(ByteBuffer buf) {
-		// TODO Auto-generated method stub
 		m_strClientID = getStringFromByteBuffer(buf);	// client id
 		m_strWillTopic = getStringFromByteBuffer(buf);	// will topic
 		m_strWillMessage = getStringFromByteBuffer(buf);	// will message

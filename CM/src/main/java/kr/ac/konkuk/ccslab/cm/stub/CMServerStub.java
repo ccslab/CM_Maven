@@ -230,11 +230,9 @@ public class CMServerStub extends CMStub {
 			try {
 				charset.set(null, null);
 			} catch (IllegalArgumentException | IllegalAccessException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} catch (NoSuchFieldException | SecurityException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 

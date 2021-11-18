@@ -74,7 +74,6 @@ public class CMChannelInfo<K> {
 			try {
 				ch.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -105,7 +104,6 @@ public class CMChannelInfo<K> {
 				try {
 					ch.close();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -137,7 +135,6 @@ public class CMChannelInfo<K> {
 					try {
 						ch.close();
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				}

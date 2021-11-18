@@ -148,7 +148,6 @@ public abstract class CMMqttEvent extends CMEvent {
 	@Override
 	protected void marshallBody() 
 	{
-		// TODO Auto-generated method stub
 		marshallFixedHeader();
 		marshallVarHeader();
 		marshallPayload();
@@ -159,7 +158,6 @@ public abstract class CMMqttEvent extends CMEvent {
 	@Override
 	protected void unmarshallBody(ByteBuffer buf) 
 	{
-		// TODO Auto-generated method stub
 		unmarshallFixedHeader(buf);
 		unmarshallVarHeader(buf);
 		unmarshallPayload(buf);

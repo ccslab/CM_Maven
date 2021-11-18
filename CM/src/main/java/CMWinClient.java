@@ -589,7 +589,6 @@ public class CMWinClient extends JFrame {
 			m_outTextPane.setCaretPosition(m_outTextPane.getDocument().getLength());
 
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -604,7 +603,6 @@ public class CMWinClient extends JFrame {
 			m_outTextPane.setCaretPosition(m_outTextPane.getDocument().getLength());
 
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -2814,7 +2812,6 @@ public class CMWinClient extends JFrame {
 			fos = new FileOutputStream("SNSContentDownload.txt");
 			pw = new PrintWriter(fos);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		m_eventHandler.setFileOutputStream(fos);
@@ -3324,7 +3321,6 @@ public class CMWinClient extends JFrame {
 			fe.printStackTrace();
 			return;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -3446,7 +3442,6 @@ public class CMWinClient extends JFrame {
 		try {
 			raf = new RandomAccessFile(strFile, "r");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -3503,7 +3498,6 @@ public class CMWinClient extends JFrame {
 		try {
 			raf.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -4506,7 +4500,6 @@ public class CMWinClient extends JFrame {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			// TODO Auto-generated method stub
 			if(e.getSource() instanceof JLabel)
 			{
 				JLabel pathLabel = (JLabel)e.getSource();
@@ -4525,7 +4518,6 @@ public class CMWinClient extends JFrame {
 						requestAttachedFile(strFileName);
 					}
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -4533,19 +4525,18 @@ public class CMWinClient extends JFrame {
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			// TODO Auto-generated method stub
+			// TODO: currently not needed
 			
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			// TODO Auto-generated method stub
+			// TODO: currently not needed
 			
 		}
 
 		@Override
 		public void mouseEntered(MouseEvent e) {
-			// TODO Auto-generated method stub
 			if(e.getSource() instanceof JLabel)
 			{
 				Cursor cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
@@ -4556,7 +4547,6 @@ public class CMWinClient extends JFrame {
 
 		@Override
 		public void mouseExited(MouseEvent e) {
-			// TODO Auto-generated method stub
 			if(e.getSource() instanceof JLabel)
 			{
 				Cursor cursor = Cursor.getDefaultCursor();
@@ -4567,7 +4557,6 @@ public class CMWinClient extends JFrame {
 	}
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		CMWinClient client = new CMWinClient();
 		CMClientStub cmStub = client.getClientStub();
 		cmStub.setAppEventHandler(client.getClientEventHandler());

@@ -27,7 +27,6 @@ public class CMDBManager {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -65,7 +64,6 @@ public class CMDBManager {
 			st = connect.createStatement();
 			dbInfo.setStatement(st);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -96,7 +94,6 @@ public class CMDBManager {
 				dbInfo.setStatement(null);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -131,7 +128,6 @@ public class CMDBManager {
 			// resultSet gets the result of the SQL query
 			rs = dbInfo.getStatement().executeQuery(strQuery);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -159,7 +155,6 @@ public class CMDBManager {
 		try {
 			ret = dbInfo.getStatement().executeUpdate(strQuery);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -202,7 +197,6 @@ public class CMDBManager {
 			if(rs != null && rs.next())
 				bValidUser = true;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			CMDBManager.closeDB(cmInfo);
@@ -280,7 +274,6 @@ public class CMDBManager {
 				System.out.println("CMDBManager.queryDeleteUser(), user("+name+") not found.");
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			CMDBManager.closeDB(cmInfo);
@@ -464,7 +457,6 @@ public class CMDBManager {
 
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			CMDBManager.closeDB(cmInfo);
@@ -545,7 +537,6 @@ public class CMDBManager {
 						nNumAttachedFiles, nReplyOf, nLevelOfDisclosure);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("---------------");
@@ -681,7 +672,6 @@ public class CMDBManager {
 				System.out.println("seqNum: "+id+", contentID: "+nContentID+", path:"+strFilePath+", name:"+strFileName);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("---------------");
@@ -725,7 +715,6 @@ public class CMDBManager {
 				return -1;
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			CMDBManager.closeDB(cmInfo);
@@ -797,7 +786,6 @@ public class CMDBManager {
 				myFriendList.add(rs.getString("friendName"));
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			CMDBManager.closeDB(cmInfo);
@@ -955,7 +943,6 @@ public class CMDBManager {
 				try {
 					date.setTime(dateFormat.parse(strDate));
 				} catch (ParseException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				String strHistoryWriterName = rs.getString("writerName");
@@ -971,7 +958,6 @@ public class CMDBManager {
 				}
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			CMDBManager.closeDB(cmInfo);
