@@ -276,7 +276,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called by the server
-    private boolean isCompleteFileSync(String userName) {
+    public boolean isCompleteFileSync(String userName) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncManager.isCompleteFileSync() called..");
             System.out.println("userName = " + userName);
@@ -367,6 +367,20 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called by the server
+    public boolean completeFileSync(String userName) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.completeFileSync() called..");
+            System.out.println("userName = " + userName);
+        }
+        // send the file-sync completion event
+        boolean result = true;
+        result = sendCompleteFileSync(userName);
+        if(!result) return false;
+        result = deleteFileSyncInfo(userName);
+        return true;
+    }
+
+    // called by the server
     private boolean sendCompleteFileSync(String userName) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncManager.sendCompleteFileSync() called..");
@@ -393,5 +407,17 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // send the event
         return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+    }
+
+    // called by the server
+    private boolean deleteFileSyncInfo(String userName) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.deleteFileSyncInfo() called..");
+            System.out.println("userName = " + userName);
+        }
+
+        // TODO: from here
+
+        return true;
     }
 }

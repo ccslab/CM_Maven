@@ -102,20 +102,12 @@ public class CMFileSyncGenerator implements Runnable {
 
         // get client file-entry-list
         fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
-        if(fileEntryList == null) {
-            System.err.println("CMFileSyncGenerator.run(), fileEntryList is null!");
-            return;
-        }
         if(CMInfo._CM_DEBUG) {
             System.out.println("fileEntryList = " + fileEntryList);
         }
 
         // create a basis file-entry-list at the server
-        basisFileList = createBasisFileList();
-        if(basisFileList == null) {
-            System.err.println("CMFileSyncGenerator.run(), basisFileList is null!");
-            return;
-        }
+        basisFileList = createBasisFileList();  // always return a list object
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFileList = " + basisFileList);
         }
@@ -153,6 +145,13 @@ public class CMFileSyncGenerator implements Runnable {
         requestResult = compareBasisAndClientFileList();
         if(!requestResult) {
             System.err.println("compare-basis-and-client-file-list error!");
+        }
+
+        // check if the file-sync task is completed. (both client and server sync home are empty)
+        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        if(syncManager.isCompleteFileSync(userName)) {
+            syncManager.completeFileSync(userName);
         }
     }
 
@@ -206,7 +205,7 @@ public class CMFileSyncGenerator implements Runnable {
             basisFileIndexHashtable.put(clientFileEntryIndex, basisFileIndex);
 
             // compare clientFileEntry and basisFile
-            // from here
+            // TODO: from here
 
         }
 
