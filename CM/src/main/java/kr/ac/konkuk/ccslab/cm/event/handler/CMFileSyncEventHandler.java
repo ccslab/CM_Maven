@@ -463,8 +463,36 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called by the client
     private boolean processCOMPLETE_FILE_SYNC(CMFileSyncEvent fse) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processCOMPLETE_FILE_SYNC() called..");
+            System.out.println("fse = " + fse);
+        }
 
-        // TODO: from here
+        // compare event field (number of completed files) to the size of local sync-completion table
+        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
+        int numFilesCompleted = fse.getNumFilesCompleted();
+        int tableSize = isFileSyncCompletedHashtable.size();
+        if(numFilesCompleted != tableSize) {
+            System.err.println("numFilesCompleted="+numFilesCompleted+", table size="+tableSize);
+            return false;
+        }
+        // check each element of file-sync completion table
+        int numNotCompletedFiles = 0;
+        for(Map.Entry<Path, Boolean> entry : isFileSyncCompletedHashtable.entrySet()) {
+            Path k = entry.getKey();
+            Boolean v = entry.getValue();
+            if(!v) {
+                System.err.println("path not completed = "+k);
+                numNotCompletedFiles++;
+            }
+        }
+        if(numNotCompletedFiles > 0) {
+            System.err.println("# of files not yet synchronized = "+numNotCompletedFiles);
+            return false;
+        }
+        // change the file-sync state to stop
+        syncInfo.setSyncInProgress(false);
         return true;
     }
 }
