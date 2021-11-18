@@ -427,17 +427,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     private boolean processEND_FILE_LIST_ACK(CMFileSyncEvent fse) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncEventHandler.processEND_FILE_LIST_ACK() called..");
+            System.out.println("fse = " + fse);
         }
-
-        int returnCode = fse.getReturnCode();
-        System.out.println("returnCode = " + returnCode);
 
         return true;
     }
 
     // called by the client
     private boolean processCOMPLETE_NEW_FILE(CMFileSyncEvent fse) {
-        // from here
+        // TODO: from here
         return true;
     }
 
