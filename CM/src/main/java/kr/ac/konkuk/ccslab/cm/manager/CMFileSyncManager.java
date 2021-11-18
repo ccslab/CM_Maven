@@ -210,6 +210,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
     }
 
+    // called by the server
     public boolean completeNewFileTransfer(String userName, Path path) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncManager.completeNewFileTransfer() called..");
@@ -242,6 +243,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
     }
 
+    // called by the server
     public boolean completeUpdateFile(String userName, Path path) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncManager.completeUpdateFile() called..");
@@ -273,6 +275,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
     }
 
+    // called by the server
     private boolean isCompleteFileSync(String userName) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncManager.isCompleteFileSync() called..");
@@ -361,5 +364,34 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return true;
+    }
+
+    // called by the server
+    private boolean sendCompleteFileSync(String userName) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.sendCompleteFileSync() called..");
+            System.out.println("userName = " + userName);
+        }
+
+        // get the CMFileSyncGenerator reference
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        if(syncGenerator == null) {
+            System.err.println("syncGenerator is null!");
+            return false;
+        }
+
+        // create a COMPLETE_FILE_SYNC event
+        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        int numFilesCompleted = syncGenerator.getNumNewFilesCompleted() + syncGenerator.getNumUpdateFilesCompleted();
+
+        CMFileSyncEvent fse = new CMFileSyncEvent();
+        fse.setID(CMFileSyncEvent.COMPLETE_FILE_SYNC);
+        fse.setSender(serverName);
+        fse.setReceiver(userName);
+        fse.setUserName(userName);
+        fse.setNumFilesCompleted(numFilesCompleted);
+
+        // send the event
+        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
     }
 }
