@@ -12,16 +12,17 @@ public class CMFileSyncInfo {
     public static final String SYNC_HOME = "FileSyncHome";
     private boolean syncInProgress;
     private List<Path> pathList;        // 4 client
+    private Hashtable<Path, Boolean> isFileSyncCompletedHashtable;  // 4 client
+
     private Hashtable<String, List<CMFileSyncEntry>> fileEntryListHashtable;    // 4 server
     private Hashtable<String, CMFileSyncGenerator> syncGeneratorHashtable;      // 4 server
-    private Hashtable<String, Integer> numNewFilesCompletedHashtable;               // 4 server
 
     public CMFileSyncInfo() {
         syncInProgress = false;
         pathList = null;
+        isFileSyncCompletedHashtable = new Hashtable<>();
         fileEntryListHashtable = new Hashtable<>();
         syncGeneratorHashtable = new Hashtable<>();
-        numNewFilesCompletedHashtable = new Hashtable<>();
     }
 
     public boolean isSyncInProgress() {
@@ -43,15 +44,15 @@ public class CMFileSyncInfo {
         this.pathList = pathList;
     }
 
+    public Hashtable<Path, Boolean> getIsFileSyncCompletedHashtable() {
+        return isFileSyncCompletedHashtable;
+    }
+
     public Hashtable<String, List<CMFileSyncEntry>> getFileEntryListHashtable() {
         return fileEntryListHashtable;
     }
 
     public Hashtable<String, CMFileSyncGenerator> getSyncGeneratorHashtable() {
         return syncGeneratorHashtable;
-    }
-
-    public Hashtable<String, Integer> getNumNewFilesCompletedHashtable() {
-        return numNewFilesCompletedHashtable;
     }
 }
