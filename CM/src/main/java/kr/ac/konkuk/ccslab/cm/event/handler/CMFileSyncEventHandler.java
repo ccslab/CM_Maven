@@ -435,19 +435,36 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called by the client
     private boolean processCOMPLETE_NEW_FILE(CMFileSyncEvent fse) {
-        // TODO: from here
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processCOMPLETE_NEW_FILE() called..");
+            System.out.println("fse = " + fse);
+        }
+        // update info for the new-file completion at the client
+        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
+        isFileSyncCompletedHashtable.put(fse.getCompletedPath(), true);
+
         return true;
     }
 
     // called by the client
     private boolean processCOMPLETE_UPDATE_FILE(CMFileSyncEvent fse) {
-        // TODO: need to be implemented
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processCOMPLETE_UPDATE_FILE() called..");
+            System.out.println("fse = " + fse);
+        }
+        // update info for the file-update completion at the client
+        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
+        isFileSyncCompletedHashtable.put(fse.getCompletedPath(), true);
+
         return true;
     }
 
     // called by the client
     private boolean processCOMPLETE_FILE_SYNC(CMFileSyncEvent fse) {
-        // TODO: need to be implemented
+
+        // TODO: from here
         return true;
     }
 }
