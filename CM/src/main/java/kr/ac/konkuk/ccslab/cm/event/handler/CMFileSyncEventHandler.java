@@ -491,6 +491,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.err.println("# of files not yet synchronized = "+numNotCompletedFiles);
             return false;
         }
+
+        // delete(initialize) info for client in CMFileSyncInfo
+        CMFileSyncManager syncManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        syncManager.deleteFileSyncInfo();
+
         // change the file-sync state to stop
         syncInfo.setSyncInProgress(false);
         return true;

@@ -422,4 +422,17 @@ public class CMFileSyncManager extends CMServiceManager {
         // remove element in syncGeneratorHashtable
         syncInfo.getSyncGeneratorHashtable().remove(userName);
     }
+
+    // called by the client
+    public void deleteFileSyncInfo() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.deleteFileSyncInfo() called..");
+        }
+        // get CMFileSyncInfo reference
+        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        // initialize the pathList
+        syncInfo.setPathList(null);
+        // clear the isFileSyncCompletedHashtable
+        syncInfo.getIsFileSyncCompletedHashtable().clear();
+    }
 }
