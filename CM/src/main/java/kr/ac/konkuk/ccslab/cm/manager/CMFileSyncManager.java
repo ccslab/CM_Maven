@@ -376,7 +376,7 @@ public class CMFileSyncManager extends CMServiceManager {
         boolean result = true;
         result = sendCompleteFileSync(userName);
         if(!result) return false;
-        result = deleteFileSyncInfo(userName);
+        deleteFileSyncInfo(userName);
         return true;
     }
 
@@ -410,14 +410,16 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called by the server
-    private boolean deleteFileSyncInfo(String userName) {
+    private void deleteFileSyncInfo(String userName) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncManager.deleteFileSyncInfo() called..");
             System.out.println("userName = " + userName);
         }
-
-        // TODO: from here
-
-        return true;
+        // get CMFileSyncInfo reference
+        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        // remove element in fileEntryListHashtable
+        syncInfo.getFileEntryListHashtable().remove(userName);
+        // remove element in syncGeneratorHashtable
+        syncInfo.getSyncGeneratorHashtable().remove(userName);
     }
 }
