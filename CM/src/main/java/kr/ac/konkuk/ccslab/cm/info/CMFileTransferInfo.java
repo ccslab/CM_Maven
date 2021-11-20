@@ -2,7 +2,6 @@ package kr.ac.konkuk.ccslab.cm.info;
 import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
-import sun.util.logging.resources.logging;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 
