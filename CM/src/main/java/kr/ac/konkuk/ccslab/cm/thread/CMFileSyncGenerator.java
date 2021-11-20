@@ -278,6 +278,10 @@ public class CMFileSyncGenerator implements Runnable {
         if(CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncGenerator.createNewFileList() called..");
         }
+        // check fileEntryList
+        if(fileEntryList == null) {
+            return new ArrayList<>();
+        }
         // get the start path index
         CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
                 .get(CMInfo.CM_FILE_SYNC_MANAGER);
