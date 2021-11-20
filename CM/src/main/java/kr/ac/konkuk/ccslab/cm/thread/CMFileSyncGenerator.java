@@ -305,39 +305,50 @@ public class CMFileSyncGenerator implements Runnable {
         // get the client file-entry-list
         List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
         if(fileEntryList == null) {
-            System.err.println("CMFileSyncGenerator.createDeletedFileList(), fileEntryList of user("+userName
-                    +") is null!");
-            return;
+            System.out.println("fileEntryList of user("+userName+") is null!");
+            // remove all files in the basisFileList
+            basisFileList
+                    .forEach(path -> {
+                        try {
+                            if(CMInfo._CM_DEBUG)
+                                System.out.println("path = " + path);
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+            // clear the basisFileList
+            basisFileList.clear();
         }
-        // get the client path list from the file-entry-list
-        List<Path> entryPathList = fileEntryList.stream()
-                .map(CMFileSyncEntry::getPathRelativeToHome)
-                .collect(Collectors.toList());
-        // get the CMFileSyncManager object
-        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
-        //// create target file list that exists only at the server and that will be deleted
-        // get the server sync home and the start index
-        Path serverSyncHome = syncManager.getServerSyncHome(userName);
-        int startPathIndex = serverSyncHome.getNameCount();
-        // create the deleted file list
-        basisFileList.stream()
-                .filter(path -> !entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
-                .forEach(path -> {
-                    try {
-                        if(CMInfo._CM_DEBUG)
-                            System.out.println("path = " + path);
-                        Files.delete(path);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-
-        // update the basis file list
-        basisFileList = basisFileList.stream()
-                .filter(path -> entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
-                .collect(Collectors.toList());
-
+        else {
+            // get the client path list from the file-entry-list
+            List<Path> entryPathList = fileEntryList.stream()
+                    .map(CMFileSyncEntry::getPathRelativeToHome)
+                    .collect(Collectors.toList());
+            // get the CMFileSyncManager object
+            CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+                    .get(CMInfo.CM_FILE_SYNC_MANAGER);
+            //// create target file list that exists only at the server and that will be deleted
+            // get the server sync home and the start index
+            Path serverSyncHome = syncManager.getServerSyncHome(userName);
+            int startPathIndex = serverSyncHome.getNameCount();
+            // create the deleted file list
+            basisFileList.stream()
+                    .filter(path -> !entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
+                    .forEach(path -> {
+                        try {
+                            if(CMInfo._CM_DEBUG)
+                                System.out.println("path = " + path);
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+            // update the basis file list
+            basisFileList = basisFileList.stream()
+                    .filter(path -> entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
+                    .collect(Collectors.toList());
+        }
     }
 
     private List<Path> createBasisFileList() {
