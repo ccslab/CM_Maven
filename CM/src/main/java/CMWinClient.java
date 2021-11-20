@@ -3918,7 +3918,10 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 
-		fileSyncManager.startFileSync();
+		if(fileSyncManager.startFileSync())
+			printMessage("File sync starts.\n");
+		else
+			printStyledMessage("File sync error!\n", "bold");
 	}
 
 	private void testSendEventWithWrongByteNum()
