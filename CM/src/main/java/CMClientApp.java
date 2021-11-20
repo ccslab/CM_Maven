@@ -33,10 +33,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
+import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
@@ -328,6 +325,9 @@ public class CMClientApp {
 			case 205: // MQTT disconnect
 				testMqttDisconnect();
 				break;
+			case 300:	// start file-sync
+				testStartFileSync();
+				break;
 			default:
 				System.err.println("Unknown command.");
 				break;
@@ -390,6 +390,8 @@ public class CMClientApp {
 		System.out.println("---------------------------------- MQTT");
 		System.out.println("200: connect, 201: publish, 202: subscribe, 203: print session info");
 		System.out.println("204: unsubscribe, 205: disconnect");
+		System.out.println("---------------------------------- File Sync");
+		System.out.println("300: start file-sync");
 		System.out.println("---------------------------------- Other CM Tests");
 		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
 		System.out.println("103: test repeated request of SNS content list");
@@ -3229,7 +3231,23 @@ public class CMClientApp {
 		mqttManager.disconnect();
 
 	}
-	
+
+	private void testStartFileSync() {
+		System.out.println("========== start file-sync");
+		CMFileSyncManager fileSyncManager = (CMFileSyncManager) m_clientStub
+				.findServiceManager(CMInfo.CM_FILE_SYNC_MANAGER);
+		if(fileSyncManager == null)
+		{
+			System.err.println("CMFileSyncManager is null!");
+			return;
+		}
+
+		if(fileSyncManager.startFileSync())
+			System.out.println("File sync starts.");
+		else
+			System.err.println("File sync error!");
+	}
+
 	public void testSendEventWithWrongByteNum()
 	{
 		System.out.println("========== send a CMDummyEvent with wrong # bytes to default server");

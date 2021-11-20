@@ -17,6 +17,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
@@ -210,11 +211,26 @@ public class CMClientEventHandler implements CMAppEventHandler {
 		case CMInfo.CM_MQTT_EVENT:
 			processMqttEvent(cme);
 			break;
+		case CMInfo.CM_FILE_SYNC_EVENT:
+			processFileSyncEvent(cme);
+			break;
 		default:
 			return;
 		}
 	}
-	
+
+	private void processFileSyncEvent(CMEvent cme) {
+		CMFileSyncEvent fse = (CMFileSyncEvent) cme;
+		switch(fse.getID())
+		{
+			case CMFileSyncEvent.COMPLETE_FILE_SYNC:
+				System.out.println("The file sync completes.");
+				break;
+			default:
+				return;
+		}
+	}
+
 	private void processSessionEvent(CMEvent cme)
 	{
 		CMSessionEvent se = (CMSessionEvent)cme;
