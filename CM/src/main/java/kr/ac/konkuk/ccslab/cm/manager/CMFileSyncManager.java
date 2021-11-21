@@ -206,7 +206,14 @@ public class CMFileSyncManager extends CMServiceManager {
             }
 
             // complete the new-file-transfer
-            completeNewFileTransfer(fileSender, foundPath);
+            boolean result = completeNewFileTransfer(fileSender, foundPath);
+            if(result) {
+                // check if the file-sync is complete or not
+                if(isCompleteFileSync(fileSender)) {
+                    // complete the file-sync task
+                    completeFileSync(fileSender);
+                }
+            }
         }
     }
 
