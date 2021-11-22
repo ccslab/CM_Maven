@@ -3,6 +3,7 @@ package kr.ac.konkuk.ccslab.cm.thread;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
@@ -274,10 +275,32 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.calculateBlockSize() called..");
             System.out.println("fileSize = " + fileSize);
         }
-
-
-        // TODO: from here
-        return 0;
+        int blength;
+        if(fileSize < CMFileSyncInfo.BLOCK_SIZE * CMFileSyncInfo.BLOCK_SIZE) {
+            blength = CMFileSyncInfo.BLOCK_SIZE;
+        }
+        else {
+            int c, cnt;
+            long l;
+            for(c = 1, l = fileSize, cnt = 0; (l >>= 2) > 0; c <<= 1, cnt++){}
+            System.out.println("c="+c+", l="+l+", cnt="+cnt);
+            if(c < 0 || c >= CMFileSyncInfo.MAX_BLOCK_SIZE)
+                blength = CMFileSyncInfo.MAX_BLOCK_SIZE;
+            else {
+                blength = 0;
+                do {
+                    blength |= c;
+                    if(fileSize < (long)blength*blength)
+                        blength &= ~c;
+                    c >>= 1;
+                } while(c >= 8);    // round to multiple of 8
+                blength = Math.max(blength, CMFileSyncInfo.BLOCK_SIZE);
+            }
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("calculated block size = " + blength);
+        }
+        return blength;
     }
 
     private boolean requestTransferOfNewFiles() {
