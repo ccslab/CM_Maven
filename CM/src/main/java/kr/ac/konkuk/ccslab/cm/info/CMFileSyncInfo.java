@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
@@ -10,9 +11,14 @@ import java.util.List;
 public class CMFileSyncInfo {
 
     public static final String SYNC_HOME = "FileSyncHome";
+    public static final int BLOCK_SIZE = 700;   // Bytes, from rsync
+    public static final int MAX_BLOCK_SIZE = 1 << 17;   // 2^17 = 131,072 (from rsync version > 30)
+
     private boolean syncInProgress;
     private List<Path> pathList;        // 4 client
     private Hashtable<Path, Boolean> isFileSyncCompletedHashtable;  // 4 client
+    private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumHashtable;   // 4 client
+    private Hashtable<Integer, Hashtable<Short, Integer>> fileIndexToHashToBlockIndexHashtable; // 4 client
 
     private Hashtable<String, List<CMFileSyncEntry>> fileEntryListHashtable;    // 4 server
     private Hashtable<String, CMFileSyncGenerator> syncGeneratorHashtable;      // 4 server
@@ -21,6 +27,9 @@ public class CMFileSyncInfo {
         syncInProgress = false;
         pathList = null;
         isFileSyncCompletedHashtable = new Hashtable<>();
+        blockChecksumHashtable = new Hashtable<>();
+        fileIndexToHashToBlockIndexHashtable = new Hashtable<>();
+
         fileEntryListHashtable = new Hashtable<>();
         syncGeneratorHashtable = new Hashtable<>();
     }

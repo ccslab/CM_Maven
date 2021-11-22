@@ -8,8 +8,10 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -23,6 +25,10 @@ public class CMFileSyncGenerator implements Runnable {
     private List<Path> newFileList;
     private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayHashtable;
     private Hashtable<Integer, Integer> basisFileIndexHashtable;    // key: client entry index, value: basis index
+    private Hashtable<Integer, Integer> blockSizeOfBasisFileTable;
+    private Hashtable<Integer, SeekableByteChannel> basisFileChannelForReadTable;   // for read basis file
+    private Hashtable<Integer, SeekableByteChannel> basisFileChannelForWriteTable;  // for write basis file
+
     private Hashtable<Path, Boolean> isNewFileCompletedHashtable;
     private Hashtable<Path, Boolean> isUpdateFileCompletedHashtable;
     private int numNewFilesCompleted;
@@ -36,6 +42,10 @@ public class CMFileSyncGenerator implements Runnable {
         newFileList = null;
         blockChecksumArrayHashtable = null;
         basisFileIndexHashtable = null;
+        blockSizeOfBasisFileTable = null;
+        basisFileChannelForReadTable = null;
+        basisFileChannelForWriteTable = null;
+
         isNewFileCompletedHashtable = null;
         isUpdateFileCompletedHashtable = null;
         numNewFilesCompleted = 0;
@@ -60,6 +70,10 @@ public class CMFileSyncGenerator implements Runnable {
 
     public Hashtable<Integer, Integer> getBasisFileIndexHashtable() {
         return basisFileIndexHashtable;
+    }
+
+    public Hashtable<Integer, Integer> getBlockSizeOfBasisFileTable() {
+        return blockSizeOfBasisFileTable;
     }
 
     public Hashtable<Path, Boolean> getIsNewFileCompletedHashtable() {
@@ -205,11 +219,40 @@ public class CMFileSyncGenerator implements Runnable {
             basisFileIndexHashtable.put(clientFileEntryIndex, basisFileIndex);
 
             // compare clientFileEntry and basisFile
+            long sizeOfBasisFile;
+            FileTime lastModifiedTimeOfBasisFile;
+            try {
+                sizeOfBasisFile = Files.size(basisFile);
+                lastModifiedTimeOfBasisFile = Files.getLastModifiedTime(basisFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
+            if(clientFileEntry.getSize() == sizeOfBasisFile &&
+                    clientFileEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
+                // already synchronized
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("basisFile("+basisFile+") skips synchronization.");
+                    System.out.println("sizeOfBasisFile = " + sizeOfBasisFile);
+                    System.out.println("lastModifiedTimeOfBasisFile = " + lastModifiedTimeOfBasisFile);
+                }
+                continue;
+            }
+
+            // get block checksum
+            CMFileSyncBlockChecksum[] chksumArray = createBlockChecksum(basisFileIndex, basisFile);
+
             // TODO: from here
 
         }
 
         return true;
+    }
+
+    private CMFileSyncBlockChecksum[] createBlockChecksum(int basisFileIndex, Path basisFile) {
+
+        // TODO: from here
+        return null;
     }
 
     private boolean requestTransferOfNewFiles() {
