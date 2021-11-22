@@ -40,7 +40,7 @@ public class CMFileSyncManager extends CMServiceManager {
     public boolean startFileSync() {
 
         if(CMInfo._CM_DEBUG)
-            System.out.println("CMFileSyncManager::startFileSync() called..");
+            System.out.println("=== CMFileSyncManager.startFileSync() called..");
 
         CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
 
@@ -81,7 +81,7 @@ public class CMFileSyncManager extends CMServiceManager {
     public List<Path> createPathList(Path syncHome) {
 
         if(CMInfo._CM_DEBUG)
-            System.out.println("CMFileSyncManager::createPathList() called..");
+            System.out.println("=== CMFileSyncManager.createPathList() called..");
 
         List<Path> pathList;
         try {
@@ -97,7 +97,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         if( pathList.isEmpty() )
-            System.err.println("CMFileSyncManager::createPathList(), The sync-home is empty.");
+            System.err.println("CMFileSyncManager.createPathList(), The sync-home is empty.");
 
         if(CMInfo._CM_DEBUG) {
             for (Path p : pathList)
@@ -110,7 +110,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // currently called by client
     private boolean sendFileList() {
         if(CMInfo._CM_DEBUG)
-            System.out.println("CMFileSyncManager::sendFileList() called..");
+            System.out.println("=== CMFileSyncManager.sendFileList() called..");
 
         String userName;
         String serverName;
@@ -147,7 +147,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // currently called by server
     public void checkNewTransferForSync(CMFileEvent fe) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.checkNewTransferForSync() called..");
+            System.out.println("=== CMFileSyncManager.checkNewTransferForSync() called..");
             System.out.println("file event = " + fe);
         }
         // get the file name
@@ -220,7 +220,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the server
     public boolean completeNewFileTransfer(String userName, Path path) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.completeNewFileTransfer() called..");
+            System.out.println("=== CMFileSyncManager.completeNewFileTransfer() called..");
             System.out.println("userName = " + userName);
             System.out.println("path = " + path);
         }
@@ -253,7 +253,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the server
     public boolean completeUpdateFile(String userName, Path path) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.completeUpdateFile() called..");
+            System.out.println("=== CMFileSyncManager.completeUpdateFile() called..");
             System.out.println("userName = " + userName);
             System.out.println("path = " + path);
         }
@@ -285,7 +285,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the server
     public boolean isCompleteFileSync(String userName) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.isCompleteFileSync() called..");
+            System.out.println("=== CMFileSyncManager.isCompleteFileSync() called..");
             System.out.println("userName = " + userName);
         }
 
@@ -376,7 +376,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the server
     public boolean completeFileSync(String userName) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.completeFileSync() called..");
+            System.out.println("=== CMFileSyncManager.completeFileSync() called..");
             System.out.println("userName = " + userName);
         }
         // send the file-sync completion event
@@ -390,7 +390,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the server
     private boolean sendCompleteFileSync(String userName) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.sendCompleteFileSync() called..");
+            System.out.println("=== CMFileSyncManager.sendCompleteFileSync() called..");
             System.out.println("userName = " + userName);
         }
 
@@ -419,7 +419,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the server
     private void deleteFileSyncInfo(String userName) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.deleteFileSyncInfo() called..");
+            System.out.println("=== CMFileSyncManager.deleteFileSyncInfo() called..");
             System.out.println("userName = " + userName);
         }
         // get CMFileSyncInfo reference
@@ -433,7 +433,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the client
     public void deleteFileSyncInfo() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncManager.deleteFileSyncInfo() called..");
+            System.out.println("=== CMFileSyncManager.deleteFileSyncInfo() called..");
         }
         // get CMFileSyncInfo reference
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();

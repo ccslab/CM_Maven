@@ -111,7 +111,7 @@ public class CMFileSyncGenerator implements Runnable {
     @Override
     public void run() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncGenerator.run() called..");
+            System.out.println("=== CMFileSyncGenerator.run() called..");
         }
 
         // get client file-entry-list
@@ -171,7 +171,7 @@ public class CMFileSyncGenerator implements Runnable {
 
     private boolean compareBasisAndClientFileList() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncGenerator.compareBasisAndClientFileList() called..");
+            System.out.println("=== CMFileSyncGenerator.compareBasisAndClientFileList() called..");
         }
 
         if(basisFileList == null) {
@@ -250,14 +250,39 @@ public class CMFileSyncGenerator implements Runnable {
     }
 
     private CMFileSyncBlockChecksum[] createBlockChecksum(int basisFileIndex, Path basisFile) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncGenerator.createBlockChecksum() called..");
+            System.out.println("basisFileIndex = " + basisFileIndex);
+            System.out.println("basisFile = " + basisFile);
+        }
+        long fileSize;
+        int blockSize;
+        try {
+            fileSize = Files.size(basisFile);
+            blockSize = calculateBlockSize(fileSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
 
         // TODO: from here
         return null;
     }
 
+    private int calculateBlockSize(long fileSize) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncGenerator.calculateBlockSize() called..");
+            System.out.println("fileSize = " + fileSize);
+        }
+
+
+        // TODO: from here
+        return 0;
+    }
+
     private boolean requestTransferOfNewFiles() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncGenerator.requestTransferOfNewFiles() called..");
+            System.out.println("=== CMFileSyncGenerator.requestTransferOfNewFiles() called..");
         }
 
         if(newFileList == null) {
@@ -319,7 +344,7 @@ public class CMFileSyncGenerator implements Runnable {
 
     private List<Path> createNewFileList() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncGenerator.createNewFileList() called..");
+            System.out.println("=== CMFileSyncGenerator.createNewFileList() called..");
         }
         // check fileEntryList
         if(fileEntryList == null) {
@@ -343,7 +368,7 @@ public class CMFileSyncGenerator implements Runnable {
 
     private void deleteFilesAndUpdateBasisFileList() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncGenerator.deleteFilesOnlyAtServer() called..");
+            System.out.println("=== CMFileSyncGenerator.deleteFilesOnlyAtServer() called..");
         }
         // get the client file-entry-list
         List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
@@ -396,7 +421,7 @@ public class CMFileSyncGenerator implements Runnable {
 
     private List<Path> createBasisFileList() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncGenerator.createBasisFileList() called..");
+            System.out.println("=== CMFileSyncGenerator.createBasisFileList() called..");
         }
         // get the file sync manager
         CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
