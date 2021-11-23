@@ -16,6 +16,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CMFileSyncGenerator implements Runnable {
@@ -256,6 +257,8 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("basisFileIndex = " + basisFileIndex);
             System.out.println("basisFile = " + basisFile);
         }
+
+        // calculate the block size based on the file size
         long fileSize;
         int blockSize;
         try {
@@ -265,6 +268,27 @@ public class CMFileSyncGenerator implements Runnable {
             e.printStackTrace();
             return null;
         }
+
+        // store the block size in the table
+        if(blockSizeOfBasisFileTable == null)
+            blockSizeOfBasisFileTable = new Hashtable<>();
+        blockSizeOfBasisFileTable.put(basisFileIndex, blockSize);
+
+        // set the number of blocks
+        int numBlocks = (int) (fileSize / blockSize);
+        if(fileSize % blockSize > 0) numBlocks++;
+        if(CMInfo._CM_DEBUG)
+            System.out.println("numBlocks = " + numBlocks);
+
+        // create a block-checksum array
+        CMFileSyncBlockChecksum[] checksumArray = new CMFileSyncBlockChecksum[numBlocks];
+        // get the file-sync manager
+        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
+                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        Objects.requireNonNull(syncManager);
+
+        // create block-checksum object in the array, and set the weak and strong checksum
+        System.err.println("To be implemented..");
 
         // TODO: from here
         return null;
