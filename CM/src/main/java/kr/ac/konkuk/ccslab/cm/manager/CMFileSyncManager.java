@@ -9,11 +9,13 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -441,5 +443,29 @@ public class CMFileSyncManager extends CMServiceManager {
         syncInfo.setPathList(null);
         // clear the isFileSyncCompletedHashtable
         syncInfo.getIsFileSyncCompletedHashtable().clear();
+    }
+
+    // called by the server
+    public int calculateWeakChecksum(ByteBuffer buffer) {
+        Objects.requireNonNull(buffer);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.calculateWeakChecksum() called..");
+            System.out.println("ByteBuffer remaining size = "+buffer.remaining());
+        }
+        int[] abs = calculateWeakChecksumElements(buffer);
+        return abs[2];
+    }
+
+    // called by the client
+    public int[] calculateWeakChecksumElements(ByteBuffer buffer) {
+        Objects.requireNonNull(buffer);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.calculateWeakChecksumElements() called..");
+            System.out.println("ByteBuffer remaining size = "+buffer.remaining());
+        }
+        int[] abs;
+
+        // TODO: from here
+        return null;
     }
 }

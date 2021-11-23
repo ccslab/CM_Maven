@@ -9,9 +9,11 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -287,10 +289,44 @@ public class CMFileSyncGenerator implements Runnable {
                 .get(CMInfo.CM_FILE_SYNC_MANAGER);
         Objects.requireNonNull(syncManager);
 
-        // create block-checksum object in the array, and set the weak and strong checksum
-        System.err.println("To be implemented..");
+        // get SeekableByteChannel from the basis file
+        SeekableByteChannel channel;
+        ByteBuffer buffer = ByteBuffer.allocate(blockSize);
+        try {
+            channel = Files.newByteChannel(basisFile, StandardOpenOption.READ);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
 
-        // TODO: from here
+        // create block-checksum object in the array, and set the weak and strong checksum
+        int bytesRead = 0;
+        int weakChecksum = 0;
+        for(int i = 0; i < checksumArray.length; i++) {
+            // create a block-checksum object that is set to the i-th element
+            checksumArray[i] = new CMFileSyncBlockChecksum();
+            // initialize the ByteBuffer
+            buffer.clear();
+            // read the i-th block from the channel to the buffer
+            try {
+                bytesRead = channel.read(buffer);
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("block("+i+"), bytesRead = " + bytesRead);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+            // set current block index (i) in the array element
+            checksumArray[i].setBlockIndex(i);
+            // calculate and set weak checksum in the array element
+            buffer.flip();
+            weakChecksum = syncManager.calculateWeakChecksum(buffer);
+            checksumArray[i].setWeakChecksum(weakChecksum);
+
+            // TODO: from here
+        }
+
         return null;
     }
 
