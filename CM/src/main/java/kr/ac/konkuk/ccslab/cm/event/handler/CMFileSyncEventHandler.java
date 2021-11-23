@@ -72,7 +72,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private boolean processREQUEST_NEW_FILES(CMFileSyncEvent fse) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processREQUEST_NEW_FILES() called..");
+            System.out.println("=== CMFileSyncEventHandler.processREQUEST_NEW_FILES() called..");
             System.out.println("event = " + fse);
         }
         //// to use the CMFileTransferManager service to push new files to the server
@@ -113,7 +113,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     private boolean processSTART_FILE_LIST(CMFileSyncEvent fse) {
 
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processSTART_FILE_LIST() called..");
+            System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_LIST() called..");
             System.out.println("event = " + fse);
         }
 
@@ -151,7 +151,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     private boolean processSTART_FILE_LIST_ACK(CMFileSyncEvent fse) {
 
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processSTART_FILE_LIST_ACK() called..");
+            System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_LIST_ACK() called..");
             System.out.println("event = " + fse);
         }
 
@@ -175,7 +175,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // get current number of bytes except the entry list
         int curByteNum = newfse.getByteNum();
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.setNumFilesAndEntryList() called..");
+            System.out.println("=== CMFileSyncEventHandler.setNumFilesAndEntryList() called..");
             System.out.println("startListIndex = " + startListIndex);
             System.out.println("curByteNum before adding entries = " + curByteNum);
         }
@@ -241,7 +241,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     private boolean processFILE_ENTRIES(CMFileSyncEvent fse) {
 
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processFILE_ENTRIES() called..");
+            System.out.println("=== CMFileSyncEventHandler.processFILE_ENTRIES() called..");
             System.out.println("event = " + fse);
         }
 
@@ -294,7 +294,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private boolean processFILE_ENTRIES_ACK(CMFileSyncEvent fse) {
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processFILE_ENTRIES_ACK() called..");
+            System.out.println("=== CMFileSyncEventHandler.processFILE_ENTRIES_ACK() called..");
             System.out.println("event = " + fse);
         }
 
@@ -328,7 +328,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     private boolean sendEND_FILE_LIST(CMFileSyncEvent fse) {
 
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.sendEND_FILE_LIST() called..");
+            System.out.println("=== CMFileSyncEventHandler.sendEND_FILE_LIST() called..");
         }
 
         // crate an END_FILE_LIST event
@@ -348,7 +348,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     private boolean sendNextFileEntries(CMFileSyncEvent fse) {
 
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.sendNextFileEntries() called..");
+            System.out.println("=== CMFileSyncEventHandler.sendNextFileEntries() called..");
         }
 
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
@@ -373,7 +373,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     private boolean processEND_FILE_LIST(CMFileSyncEvent fse) {
 
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processEND_FILE_LIST() called..");
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_LIST() called..");
             System.out.println("fse = " + fse);
         }
 
@@ -426,7 +426,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private boolean processEND_FILE_LIST_ACK(CMFileSyncEvent fse) {
         if (CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processEND_FILE_LIST_ACK() called..");
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_LIST_ACK() called..");
             System.out.println("fse = " + fse);
         }
 
@@ -436,7 +436,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called by the client
     private boolean processCOMPLETE_NEW_FILE(CMFileSyncEvent fse) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processCOMPLETE_NEW_FILE() called..");
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_NEW_FILE() called..");
             System.out.println("fse = " + fse);
         }
         // update info for the new-file completion at the client
@@ -450,7 +450,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called by the client
     private boolean processCOMPLETE_UPDATE_FILE(CMFileSyncEvent fse) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processCOMPLETE_UPDATE_FILE() called..");
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_UPDATE_FILE() called..");
             System.out.println("fse = " + fse);
         }
         // update info for the file-update completion at the client
@@ -464,7 +464,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called by the client
     private boolean processCOMPLETE_FILE_SYNC(CMFileSyncEvent fse) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncEventHandler.processCOMPLETE_FILE_SYNC() called..");
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_FILE_SYNC() called..");
             System.out.println("fse = " + fse);
         }
 
