@@ -270,6 +270,7 @@ public class CMFileSyncGenerator implements Runnable {
         return null;
     }
 
+    // refer to the rsync code to calculate block size according to file size
     private int calculateBlockSize(long fileSize) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.calculateBlockSize() called..");
