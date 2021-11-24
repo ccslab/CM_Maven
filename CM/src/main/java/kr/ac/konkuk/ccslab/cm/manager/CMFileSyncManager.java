@@ -457,15 +457,47 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called by the client
+    // reference: http://tutorials.jenkov.com/rsync/checksums.html
     public int[] calculateWeakChecksumElements(ByteBuffer buffer) {
         Objects.requireNonNull(buffer);
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateWeakChecksumElements() called..");
             System.out.println("ByteBuffer remaining size = "+buffer.remaining());
         }
-        int[] abs;
 
-        // TODO: from here
-        return null;
+        int A = 0;
+        int B = 0;
+        int S = 0;
+        int[] abs = new int[3]; // abs[0] = A, abs[1] = B, abs[2] = S
+        int M = (int) Math.pow(2.0, 16.0);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("initial A = " + A + ", B = " + B + ", S = " + S);
+            System.out.println("M = " + M);
+            System.out.print("abs = ");
+            for(int e : abs) System.out.print(e+" ");
+            System.out.println();
+        }
+
+        // repeat to update A and B for each block data
+        while( buffer.hasRemaining() ) {
+            A += buffer.get();
+            B += A;
+        }
+        // get mod M value of A and B
+        A = A % M;
+        B = B % M;
+        abs[0] = A;
+        abs[1] = B;
+        // get checksum (S) based on A and B
+        S = A + M * B;
+        abs[2] = S;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("A = " + A + ", B = " + B + ", S = " + S);
+            System.out.print("abs = ");
+            for(int e : abs) System.out.print(e+" ");
+            System.out.println();
+        }
+
+        return abs;
     }
 }
