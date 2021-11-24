@@ -187,6 +187,8 @@ public class CMFileSyncGenerator implements Runnable {
             return true;
         }
 
+        boolean sendResult;
+
         // get CMFileSyncManager object
         CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
                 .get(CMInfo.CM_FILE_SYNC_MANAGER);
@@ -226,6 +228,9 @@ public class CMFileSyncGenerator implements Runnable {
 
             // add the index pair to the table
             basisFileIndexHashtable.put(clientFileEntryIndex, basisFileIndex);
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("clientFileEntryIndex = " + clientFileEntryIndex);
+            }
 
             // compare clientFileEntry and basisFile
             long sizeOfBasisFile;
@@ -257,10 +262,32 @@ public class CMFileSyncGenerator implements Runnable {
             if(CMInfo._CM_DEBUG) {
                 System.out.println("checksum array size = "+checksumArray.length);
             }
-            // TODO: from here
 
+            // add block-checksum array to the table
+            if(blockChecksumArrayHashtable == null) {
+                blockChecksumArrayHashtable = new Hashtable<>();
+            }
+            // key: client entry index, value: block-checksum array
+            blockChecksumArrayHashtable.put(clientFileEntryIndex, checksumArray);
+
+            // send the client entry index and block-checksum array to the client
+            sendResult = sendBlockChecksum(clientFileEntryIndex, checksumArray);
+            if(!sendResult) {
+                System.err.println("send block-checksum error!");
+                return false;
+            }
         }
 
+        return true;
+    }
+
+    private boolean sendBlockChecksum(int clientFileEntryIndex, CMFileSyncBlockChecksum[] checksumArray) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncGenerator.sendBlockChecksum() called..");
+            System.err.println("TO be implemented..");
+        }
+
+        // TODO: from here
         return true;
     }
 
