@@ -200,6 +200,11 @@ public class CMFileSyncGenerator implements Runnable {
 
         for(int basisFileIndex = 0; basisFileIndex < basisFileList.size(); basisFileIndex++) {
             Path basisFile = basisFileList.get(basisFileIndex);
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("-----------------------------------");
+                System.out.println("basisFileIndex = " + basisFileIndex);
+                System.out.println("basisFile = " + basisFile);
+            }
             // get relative path
             Path relativeBasisFile = basisFile.subpath(serverSyncHome.getNameCount(),
                     basisFile.getNameCount());
@@ -244,8 +249,14 @@ public class CMFileSyncGenerator implements Runnable {
             }
 
             // get block checksum
-            CMFileSyncBlockChecksum[] chksumArray = createBlockChecksum(basisFileIndex, basisFile);
-
+            CMFileSyncBlockChecksum[] checksumArray = createBlockChecksum(basisFileIndex, basisFile);
+            if(checksumArray == null) {
+                System.err.println("checksum array is null!");
+                continue;
+            }
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("checksum array size = "+checksumArray.length);
+            }
             // TODO: from here
 
         }
@@ -312,6 +323,7 @@ public class CMFileSyncGenerator implements Runnable {
             try {
                 bytesRead = channel.read(buffer);
                 if(CMInfo._CM_DEBUG) {
+                    System.out.println("--------------");
                     System.out.println("block("+i+"), bytesRead = " + bytesRead);
                 }
             } catch (IOException e) {
@@ -328,6 +340,13 @@ public class CMFileSyncGenerator implements Runnable {
             buffer.rewind();    // buffer position needs to be rewound after the calculation of weak checksum
             strongChecksum = syncManager.calculateStrongChecksum(buffer);
             checksumArray[i].setStrongChecksum(strongChecksum);
+        }
+
+        // close the channel
+        try {
+            channel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return checksumArray;

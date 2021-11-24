@@ -476,7 +476,7 @@ public class CMFileSyncManager extends CMServiceManager {
         if(CMInfo._CM_DEBUG) {
             System.out.println("initial A = " + A + ", B = " + B + ", S = " + S);
             System.out.println("M = " + M);
-            System.out.print("abs = ");
+            System.out.print("initial abs = ");
             for(int e : abs) System.out.print(e+" ");
             System.out.println();
         }
