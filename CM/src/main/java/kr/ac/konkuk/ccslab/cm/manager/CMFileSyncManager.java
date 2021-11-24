@@ -8,10 +8,13 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -499,5 +502,29 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return abs;
+    }
+
+    public byte[] calculateStrongChecksum(ByteBuffer buffer) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.calculateStrongChecksum() called..");
+            System.out.println("ByteBuffer remaining size = "+buffer.remaining());
+        }
+        // get MD5
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+        md.update( buffer.array() );
+        byte[] digest = md.digest();
+
+        if(CMInfo._CM_DEBUG) {
+            String checksum = DatatypeConverter.printHexBinary(digest).toUpperCase();
+            System.out.println("checksum = " + checksum);
+        }
+
+        return null;
     }
 }

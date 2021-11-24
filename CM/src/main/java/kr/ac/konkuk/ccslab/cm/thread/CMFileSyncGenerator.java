@@ -302,6 +302,7 @@ public class CMFileSyncGenerator implements Runnable {
         // create block-checksum object in the array, and set the weak and strong checksum
         int bytesRead = 0;
         int weakChecksum = 0;
+        byte[] strongChecksum = null;
         for(int i = 0; i < checksumArray.length; i++) {
             // create a block-checksum object that is set to the i-th element
             checksumArray[i] = new CMFileSyncBlockChecksum();
@@ -323,11 +324,13 @@ public class CMFileSyncGenerator implements Runnable {
             buffer.flip();
             weakChecksum = syncManager.calculateWeakChecksum(buffer);
             checksumArray[i].setWeakChecksum(weakChecksum);
-
-            // TODO: from here
+            // calculate and set strong checksum in the array element
+            buffer.rewind();    // buffer position needs to be rewound after the calculation of weak checksum
+            strongChecksum = syncManager.calculateStrongChecksum(buffer);
+            checksumArray[i].setStrongChecksum(strongChecksum);
         }
 
-        return null;
+        return checksumArray;
     }
 
     // refer to the rsync code to calculate block size according to file size
