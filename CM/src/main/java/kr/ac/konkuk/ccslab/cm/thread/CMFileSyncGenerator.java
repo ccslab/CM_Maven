@@ -3,6 +3,7 @@ package kr.ac.konkuk.ccslab.cm.thread;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventRequestNewFiles;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -431,8 +432,7 @@ public class CMFileSyncGenerator implements Runnable {
         boolean sendResult;
         while(numRequestsCompleted < newFileList.size()) {
             // create a request event
-            CMFileSyncEvent fse = new CMFileSyncEvent();
-            fse.setID(CMFileSyncEvent.REQUEST_NEW_FILES);
+            CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
             String serverName = cmInfo.getInteractionInfo().getMyself().getName();
             fse.setSender(serverName);   // server
             fse.setReceiver(userName);

@@ -21,14 +21,13 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_START_FILE_LIST() {
         System.out.println("===== called testMarshallUnmarshall_START_FILE_LIST()");
-        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
-        fsEvent.setID(CMFileSyncEvent.START_FILE_LIST);
-        fsEvent.setUserName("ccslab");
-        fsEvent.setNumTotalFiles(50);
-        System.out.println("fsEvent = " + fsEvent);
+        CMFileSyncEventStartFileList sfle = new CMFileSyncEventStartFileList();
+        sfle.setUserName("ccslab");
+        sfle.setNumTotalFiles(50);
+        System.out.println("sfle = " + sfle);
 
-        ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        ByteBuffer byteBuffer = CMEventManager.marshallEvent(sfle);
+        CMFileSyncEventStartFileList unmarshallEvent = (CMFileSyncEventStartFileList) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -41,15 +40,15 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_START_FILE_LIST_ACK() {
         System.out.println("===== called testMarshallUnmarshall_START_FILE_LIST_ACK()");
-        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
-        fsEvent.setID(CMFileSyncEvent.START_FILE_LIST_ACK);
+        CMFileSyncEventStartFileListAck fsEvent = new CMFileSyncEventStartFileListAck();
         fsEvent.setUserName("ccslab");
         fsEvent.setNumTotalFiles(50);
         fsEvent.setReturnCode(1);
         System.out.println("fsEvent = " + fsEvent);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventStartFileListAck unmarshallEvent =
+                (CMFileSyncEventStartFileListAck) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -64,15 +63,15 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_FILE_ENTRIES() {
         System.out.println("===== called testMarshallUnmarshall_FILE_ENTRIES()");
-        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
-        fsEvent.setID(CMFileSyncEvent.FILE_ENTRIES);
+        CMFileSyncEventFileEntries fsEvent = new CMFileSyncEventFileEntries();
         fsEvent.setUserName("ccslab");
         fsEvent.setNumFilesCompleted(5);
         fsEvent.setNumFiles(11);
         System.out.println("fsEvent = " + fsEvent);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventFileEntries unmarshallEvent =
+                (CMFileSyncEventFileEntries) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
         String userName = unmarshallEvent.getUserName();
@@ -90,7 +89,7 @@ public class CMFileSyncEventTest {
         fsEvent.setFileEntryList(entryList);
         System.out.println("fsEvent = " + fsEvent);
         byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        unmarshallEvent = (CMFileSyncEventFileEntries) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
         List<CMFileSyncEntry> unmarshallEntryList = unmarshallEvent.getFileEntryList();
@@ -113,7 +112,7 @@ public class CMFileSyncEventTest {
         System.out.println("fsEvent = " + fsEvent);
 
         byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        unmarshallEvent = (CMFileSyncEventFileEntries) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
         unmarshallEntryList = unmarshallEvent.getFileEntryList();
@@ -135,7 +134,7 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_FILE_ENTRIES_ACK() {
         System.out.println("===== called testMarshallUnmarshall_FILE_ENTRIES_ACK()");
-        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
+        CMFileSyncEventFileEntriesAck fsEvent = new CMFileSyncEventFileEntriesAck();
         fsEvent.setID(CMFileSyncEvent.FILE_ENTRIES_ACK);
         fsEvent.setUserName("ccslab");
         fsEvent.setNumFilesCompleted(5);
@@ -160,7 +159,8 @@ public class CMFileSyncEventTest {
         System.out.println("fsEvent = " + fsEvent);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventFileEntriesAck unmarshallEvent =
+                (CMFileSyncEventFileEntriesAck) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -194,14 +194,14 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_END_FILE_LIST() {
         System.out.println("===== called testMarshallUnmarshall_END_FILE_LIST()");
-        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
-        fsEvent.setID(CMFileSyncEvent.END_FILE_LIST);
+        CMFileSyncEventEndFileList fsEvent = new CMFileSyncEventEndFileList();
         fsEvent.setUserName("ccslab");
         fsEvent.setNumFilesCompleted(20);
         System.out.println("fsEvent = " + fsEvent);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventEndFileList unmarshallEvent =
+                (CMFileSyncEventEndFileList) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -214,15 +214,15 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_END_FILE_LIST_ACK() {
         System.out.println("===== called testMarshallUnmarshall_END_FILE_LIST_ACK()");
-        CMFileSyncEvent fsEvent = new CMFileSyncEvent();
-        fsEvent.setID(CMFileSyncEvent.END_FILE_LIST_ACK);
+        CMFileSyncEventEndFileListAck fsEvent = new CMFileSyncEventEndFileListAck();
         fsEvent.setUserName("ccslab");
         fsEvent.setNumFilesCompleted(8);
         fsEvent.setReturnCode(1);
         System.out.println("fsEvent = " + fsEvent);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventEndFileListAck unmarshallEvent =
+                (CMFileSyncEventEndFileListAck) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -237,8 +237,7 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_REQUEST_NEW_FILES() {
         System.out.println("===== called testMarshallUnmarshall_REQUEST_NEW_FILES()");
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.REQUEST_NEW_FILES);
+        CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
         fse.setRequesterName("ccslab");
         fse.setNumRequestedFiles(5);
         // requested list is null
@@ -247,7 +246,8 @@ public class CMFileSyncEventTest {
 
         // the case that the requested file list is null
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fse);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventRequestNewFiles unmarshallEvent =
+                (CMFileSyncEventRequestNewFiles) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -266,7 +266,7 @@ public class CMFileSyncEventTest {
         System.out.println("fse = " + fse);
 
         byteBuffer = CMEventManager.marshallEvent(fse);
-        unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        unmarshallEvent = (CMFileSyncEventRequestNewFiles) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -282,14 +282,14 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarsahllUnmarshall_COMPLETE_NEW_FILE() {
         System.out.println("===== called testMarshallUnmarshall_COMPLETE_NEW_FILE()");
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.COMPLETE_NEW_FILE);
+        CMFileSyncEventCompleteNewFile fse = new CMFileSyncEventCompleteNewFile();
         fse.setUserName("ccslab");
         fse.setCompletedPath(Paths.get("test1.txt"));
         System.out.println("fse = " + fse);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fse);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventCompleteNewFile unmarshallEvent =
+                (CMFileSyncEventCompleteNewFile) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -302,14 +302,14 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarsahllUnmarshall_COMPLETE_UPDATE_FILE() {
         System.out.println("===== called testMarshallUnmarshall_COMPLETE_UPDATE_FILE()");
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.COMPLETE_UPDATE_FILE);
+        CMFileSyncEventCompleteUpdateFile fse = new CMFileSyncEventCompleteUpdateFile();
         fse.setUserName("ccslab");
         fse.setCompletedPath(Paths.get("test1.txt"));
         System.out.println("fse = " + fse);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fse);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventCompleteUpdateFile unmarshallEvent =
+                (CMFileSyncEventCompleteUpdateFile) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
@@ -322,14 +322,14 @@ public class CMFileSyncEventTest {
     @Test
     public void testMarshallUnmarshall_COMPLETE_FILE_SYNC() {
         System.out.println("===== called testMarshallUnmarshall_COMPLETE_UPDATE_FILE()");
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.COMPLETE_FILE_SYNC);
+        CMFileSyncEventCompleteFileSync fse = new CMFileSyncEventCompleteFileSync();
         fse.setUserName("ccslab");
         fse.setNumFilesCompleted(25);
         System.out.println("fse = " + fse);
 
         ByteBuffer byteBuffer = CMEventManager.marshallEvent(fse);
-        CMFileSyncEvent unmarshallEvent = (CMFileSyncEvent) CMEventManager.unmarshallEvent(byteBuffer);
+        CMFileSyncEventCompleteFileSync unmarshallEvent =
+                (CMFileSyncEventCompleteFileSync) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 

@@ -24,7 +24,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
-import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
+import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNECT;
@@ -76,92 +76,128 @@ public class CMEventManager {
 		
 		switch(nEventType)
 		{
-		case CMInfo.CM_SESSION_EVENT:
-			CMSessionEvent se = new CMSessionEvent(buf);
-			return se;
-		case CMInfo.CM_INTEREST_EVENT:
-			CMInterestEvent ie = new CMInterestEvent(buf);
-			return ie;
-		case CMInfo.CM_DATA_EVENT:
-			CMDataEvent de = new CMDataEvent(buf);
-			return de;
-		case CMInfo.CM_CONSISTENCY_EVENT:
-			CMConsistencyEvent cce = new CMConsistencyEvent(buf);
-			return cce;
-		case CMInfo.CM_CONCURRENCY_EVENT:
-			CMConcurrencyEvent cue = new CMConcurrencyEvent(buf);
-			return cue;
-		case CMInfo.CM_FILE_EVENT:
-			CMFileEvent fe = new CMFileEvent(buf);
-			return fe;
-		case CMInfo.CM_MULTI_SERVER_EVENT:
-			CMMultiServerEvent mse = new CMMultiServerEvent(buf);
-			return mse;
-		case CMInfo.CM_SNS_EVENT:
-			CMSNSEvent sse = new CMSNSEvent(buf);
-			return sse;
-		case CMInfo.CM_DUMMY_EVENT:
-			CMDummyEvent due = new CMDummyEvent(buf);
-			return due;
-		case CMInfo.CM_USER_EVENT:
-			CMUserEvent ue = new CMUserEvent(buf);
-			return ue;
-		case CMInfo.CM_MQTT_EVENT:
-			int nEventID = getEventID(buf);
-			switch(nEventID)
-			{
-			case CMMqttEvent.CONNECT:
-				CMMqttEventCONNECT conEvent = new CMMqttEventCONNECT(buf);
-				return conEvent;
-			case CMMqttEvent.CONNACK:
-				CMMqttEventCONNACK connackEvent = new CMMqttEventCONNACK(buf);
-				return connackEvent;
-			case CMMqttEvent.PUBLISH:
-				CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH(buf);
-				return pubEvent;
-			case CMMqttEvent.PUBACK:
-				CMMqttEventPUBACK pubackEvent = new CMMqttEventPUBACK(buf);
-				return pubackEvent;
-			case CMMqttEvent.PUBREC:
-				CMMqttEventPUBREC pubrecEvent = new CMMqttEventPUBREC(buf);
-				return pubrecEvent;
-			case CMMqttEvent.PUBREL:
-				CMMqttEventPUBREL pubrelEvent = new CMMqttEventPUBREL(buf);
-				return pubrelEvent;
-			case CMMqttEvent.PUBCOMP:
-				CMMqttEventPUBCOMP pubcompEvent = new CMMqttEventPUBCOMP(buf);
-				return pubcompEvent;
-			case CMMqttEvent.SUBSCRIBE:
-				CMMqttEventSUBSCRIBE subEvent = new CMMqttEventSUBSCRIBE(buf);
-				return subEvent;
-			case CMMqttEvent.SUBACK:
-				CMMqttEventSUBACK subackEvent = new CMMqttEventSUBACK(buf);
-				return subackEvent;
-			case CMMqttEvent.UNSUBSCRIBE:
-				CMMqttEventUNSUBSCRIBE unsubEvent = new CMMqttEventUNSUBSCRIBE(buf);
-				return unsubEvent;
-			case CMMqttEvent.UNSUBACK:
-				CMMqttEventUNSUBACK unsubackEvent = new CMMqttEventUNSUBACK(buf);
-				return unsubackEvent;
-			case CMMqttEvent.PINGREQ:
-				CMMqttEventPINGREQ pingreqEvent = new CMMqttEventPINGREQ(buf);
-				return pingreqEvent;
-			case CMMqttEvent.PINGRESP:
-				CMMqttEventPINGRESP pingrespEvent = new CMMqttEventPINGRESP(buf);
-				return pingrespEvent;
-			case CMMqttEvent.DISCONNECT:
-				CMMqttEventDISCONNECT disconEvent = new CMMqttEventDISCONNECT(buf);
-				return disconEvent;
-			default:
-				System.err.println("CMEventManager.unmarshallEvent(), unknown MQTT event ID: "+nEventID);
-				return null;
-			}
+			case CMInfo.CM_SESSION_EVENT:
+				CMSessionEvent se = new CMSessionEvent(buf);
+				return se;
+			case CMInfo.CM_INTEREST_EVENT:
+				CMInterestEvent ie = new CMInterestEvent(buf);
+				return ie;
+			case CMInfo.CM_DATA_EVENT:
+				CMDataEvent de = new CMDataEvent(buf);
+				return de;
+			case CMInfo.CM_CONSISTENCY_EVENT:
+				CMConsistencyEvent cce = new CMConsistencyEvent(buf);
+				return cce;
+			case CMInfo.CM_CONCURRENCY_EVENT:
+				CMConcurrencyEvent cue = new CMConcurrencyEvent(buf);
+				return cue;
+			case CMInfo.CM_FILE_EVENT:
+				CMFileEvent fe = new CMFileEvent(buf);
+				return fe;
+			case CMInfo.CM_MULTI_SERVER_EVENT:
+				CMMultiServerEvent mse = new CMMultiServerEvent(buf);
+				return mse;
+			case CMInfo.CM_SNS_EVENT:
+				CMSNSEvent sse = new CMSNSEvent(buf);
+				return sse;
+			case CMInfo.CM_DUMMY_EVENT:
+				CMDummyEvent due = new CMDummyEvent(buf);
+				return due;
+			case CMInfo.CM_USER_EVENT:
+				CMUserEvent ue = new CMUserEvent(buf);
+				return ue;
+			case CMInfo.CM_MQTT_EVENT:
+				int nEventID = getEventID(buf);
+				switch(nEventID)
+				{
+					case CMMqttEvent.CONNECT:
+						CMMqttEventCONNECT conEvent = new CMMqttEventCONNECT(buf);
+						return conEvent;
+					case CMMqttEvent.CONNACK:
+						CMMqttEventCONNACK connackEvent = new CMMqttEventCONNACK(buf);
+						return connackEvent;
+					case CMMqttEvent.PUBLISH:
+						CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH(buf);
+						return pubEvent;
+					case CMMqttEvent.PUBACK:
+						CMMqttEventPUBACK pubackEvent = new CMMqttEventPUBACK(buf);
+						return pubackEvent;
+					case CMMqttEvent.PUBREC:
+						CMMqttEventPUBREC pubrecEvent = new CMMqttEventPUBREC(buf);
+						return pubrecEvent;
+					case CMMqttEvent.PUBREL:
+						CMMqttEventPUBREL pubrelEvent = new CMMqttEventPUBREL(buf);
+						return pubrelEvent;
+					case CMMqttEvent.PUBCOMP:
+						CMMqttEventPUBCOMP pubcompEvent = new CMMqttEventPUBCOMP(buf);
+						return pubcompEvent;
+					case CMMqttEvent.SUBSCRIBE:
+						CMMqttEventSUBSCRIBE subEvent = new CMMqttEventSUBSCRIBE(buf);
+						return subEvent;
+					case CMMqttEvent.SUBACK:
+						CMMqttEventSUBACK subackEvent = new CMMqttEventSUBACK(buf);
+						return subackEvent;
+					case CMMqttEvent.UNSUBSCRIBE:
+						CMMqttEventUNSUBSCRIBE unsubEvent = new CMMqttEventUNSUBSCRIBE(buf);
+						return unsubEvent;
+					case CMMqttEvent.UNSUBACK:
+						CMMqttEventUNSUBACK unsubackEvent = new CMMqttEventUNSUBACK(buf);
+						return unsubackEvent;
+					case CMMqttEvent.PINGREQ:
+						CMMqttEventPINGREQ pingreqEvent = new CMMqttEventPINGREQ(buf);
+						return pingreqEvent;
+					case CMMqttEvent.PINGRESP:
+						CMMqttEventPINGRESP pingrespEvent = new CMMqttEventPINGRESP(buf);
+						return pingrespEvent;
+					case CMMqttEvent.DISCONNECT:
+						CMMqttEventDISCONNECT disconEvent = new CMMqttEventDISCONNECT(buf);
+						return disconEvent;
+					default:
+						System.err.println("CMEventManager.unmarshallEvent(), unknown MQTT event ID: "+nEventID);
+						return null;
+				}
 			case CMInfo.CM_FILE_SYNC_EVENT:
-				CMFileSyncEvent fsEvent = new CMFileSyncEvent(buf);
-				return fsEvent;
-		default:
-			System.err.println("CMEventManager.unmarshallEvent(), unknown event type: "+nEventType);
-			return null;
+				int eventID = getEventID(buf);
+				switch(eventID) {
+					case CMFileSyncEvent.START_FILE_LIST:
+						CMFileSyncEventStartFileList startFileList = new CMFileSyncEventStartFileList(buf);
+						return startFileList;
+					case CMFileSyncEvent.START_FILE_LIST_ACK:
+						CMFileSyncEventStartFileListAck startFileListAck = new CMFileSyncEventStartFileListAck(buf);
+						return startFileListAck;
+					case CMFileSyncEvent.FILE_ENTRIES:
+						CMFileSyncEventFileEntries fileEntries = new CMFileSyncEventFileEntries(buf);
+						return fileEntries;
+					case CMFileSyncEvent.FILE_ENTRIES_ACK:
+						CMFileSyncEventFileEntriesAck fileEntriesAck = new CMFileSyncEventFileEntriesAck(buf);
+						return fileEntriesAck;
+					case CMFileSyncEvent.END_FILE_LIST:
+						CMFileSyncEventEndFileList endFileList = new CMFileSyncEventEndFileList(buf);
+						return endFileList;
+					case CMFileSyncEvent.END_FILE_LIST_ACK:
+						CMFileSyncEventEndFileListAck endFileListAck = new CMFileSyncEventEndFileListAck(buf);
+						return endFileListAck;
+					case CMFileSyncEvent.REQUEST_NEW_FILES:
+						CMFileSyncEventRequestNewFiles reqNewFiles = new CMFileSyncEventRequestNewFiles(buf);
+						return reqNewFiles;
+					case CMFileSyncEvent.COMPLETE_NEW_FILE:
+						CMFileSyncEventCompleteNewFile completeNewFile = new CMFileSyncEventCompleteNewFile(buf);
+						return completeNewFile;
+					case CMFileSyncEvent.COMPLETE_UPDATE_FILE:
+						CMFileSyncEventCompleteUpdateFile completeUpdateFile =
+								new CMFileSyncEventCompleteUpdateFile(buf);
+						return completeUpdateFile;
+					case CMFileSyncEvent.COMPLETE_FILE_SYNC:
+						CMFileSyncEventCompleteFileSync completeFileSync = new CMFileSyncEventCompleteFileSync(buf);
+						return completeFileSync;
+					default:
+						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
+								+eventID);
+						return null;
+				}
+			default:
+				System.err.println("CMEventManager.unmarshallEvent(), unknown event type: "+nEventType);
+				return null;
 		}
 	}
 	

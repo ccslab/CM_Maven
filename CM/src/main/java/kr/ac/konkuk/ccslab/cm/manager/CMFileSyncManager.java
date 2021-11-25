@@ -2,7 +2,7 @@ package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
-import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
+import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -122,8 +122,7 @@ public class CMFileSyncManager extends CMServiceManager {
         List<Path> pathList;
 
         // create START_FILE_LIST event.
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.START_FILE_LIST);
+        CMFileSyncEventStartFileList fse = new CMFileSyncEventStartFileList();
         // get my name
         userName = m_cmInfo.getInteractionInfo().getMyself().getName();
         fse.setSender(userName);
@@ -244,8 +243,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // create a COMPLETE_NEW_FILE event
         String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.COMPLETE_NEW_FILE);
+        CMFileSyncEventCompleteNewFile fse = new CMFileSyncEventCompleteNewFile();
         fse.setSender(serverName);
         fse.setReceiver(userName);
         fse.setUserName(userName);
@@ -277,8 +275,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // create a COMPLETE_UPDATE_FILE event
         String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.COMPLETE_UPDATE_FILE);
+        CMFileSyncEventCompleteUpdateFile fse = new CMFileSyncEventCompleteUpdateFile();
         fse.setSender(serverName);
         fse.setReceiver(userName);
         fse.setUserName(userName);
@@ -410,8 +407,7 @@ public class CMFileSyncManager extends CMServiceManager {
         String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
         int numFilesCompleted = syncGenerator.getNumNewFilesCompleted() + syncGenerator.getNumUpdateFilesCompleted();
 
-        CMFileSyncEvent fse = new CMFileSyncEvent();
-        fse.setID(CMFileSyncEvent.COMPLETE_FILE_SYNC);
+        CMFileSyncEventCompleteFileSync fse = new CMFileSyncEventCompleteFileSync();
         fse.setSender(serverName);
         fse.setReceiver(userName);
         fse.setUserName(userName);

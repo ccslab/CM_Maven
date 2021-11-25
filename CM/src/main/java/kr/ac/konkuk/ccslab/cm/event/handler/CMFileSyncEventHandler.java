@@ -2,7 +2,7 @@ package kr.ac.konkuk.ccslab.cm.event.handler;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
-import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
+import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -31,39 +31,20 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncEvent fse = (CMFileSyncEvent) event;
         int eventId = fse.getID();
         switch (eventId) {
-            case CMFileSyncEvent.START_FILE_LIST:
-                processResult = processSTART_FILE_LIST(fse);
-                break;
-            case CMFileSyncEvent.START_FILE_LIST_ACK:
-                processResult = processSTART_FILE_LIST_ACK(fse);
-                break;
-            case CMFileSyncEvent.FILE_ENTRIES:
-                processResult = processFILE_ENTRIES(fse);
-                break;
-            case CMFileSyncEvent.FILE_ENTRIES_ACK:
-                processResult = processFILE_ENTRIES_ACK(fse);
-                break;
-            case CMFileSyncEvent.END_FILE_LIST:
-                processResult = processEND_FILE_LIST(fse);
-                break;
-            case CMFileSyncEvent.END_FILE_LIST_ACK:
-                processResult = processEND_FILE_LIST_ACK(fse);
-                break;
-            case CMFileSyncEvent.REQUEST_NEW_FILES:
-                processResult = processREQUEST_NEW_FILES(fse);
-                break;
-            case CMFileSyncEvent.COMPLETE_NEW_FILE:
-                processResult = processCOMPLETE_NEW_FILE(fse);
-                break;
-            case CMFileSyncEvent.COMPLETE_UPDATE_FILE:
-                processResult = processCOMPLETE_UPDATE_FILE(fse);
-                break;
-            case CMFileSyncEvent.COMPLETE_FILE_SYNC:
-                processResult = processCOMPLETE_FILE_SYNC(fse);
-                break;
-            default:
+            case CMFileSyncEvent.START_FILE_LIST -> processResult = processSTART_FILE_LIST(fse);
+            case CMFileSyncEvent.START_FILE_LIST_ACK -> processResult = processSTART_FILE_LIST_ACK(fse);
+            case CMFileSyncEvent.FILE_ENTRIES -> processResult = processFILE_ENTRIES(fse);
+            case CMFileSyncEvent.FILE_ENTRIES_ACK -> processResult = processFILE_ENTRIES_ACK(fse);
+            case CMFileSyncEvent.END_FILE_LIST -> processResult = processEND_FILE_LIST(fse);
+            case CMFileSyncEvent.END_FILE_LIST_ACK -> processResult = processEND_FILE_LIST_ACK(fse);
+            case CMFileSyncEvent.REQUEST_NEW_FILES -> processResult = processREQUEST_NEW_FILES(fse);
+            case CMFileSyncEvent.COMPLETE_NEW_FILE -> processResult = processCOMPLETE_NEW_FILE(fse);
+            case CMFileSyncEvent.COMPLETE_UPDATE_FILE -> processResult = processCOMPLETE_UPDATE_FILE(fse);
+            case CMFileSyncEvent.COMPLETE_FILE_SYNC -> processResult = processCOMPLETE_FILE_SYNC(fse);
+            default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
+            }
         }
 
         return processResult;
@@ -71,9 +52,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processREQUEST_NEW_FILES(CMFileSyncEvent fse) {
+        CMFileSyncEventRequestNewFiles fse_rnf = (CMFileSyncEventRequestNewFiles) fse;
+
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processREQUEST_NEW_FILES() called..");
-            System.out.println("event = " + fse);
+            System.out.println("event = " + fse_rnf);
         }
         //// to use the CMFileTransferManager service to push new files to the server
 
@@ -83,9 +66,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // get the client sync home
         Path clientSyncHome = syncManager.getClientSyncHome();
         // get the requester name
-        String requesterName = fse.getRequesterName();  // server name
+        String requesterName = fse_rnf.getRequesterName();  // server name
         // check if the requested file list is null or empty
-        List<Path> requestedFileList = fse.getRequestedFileList();
+        List<Path> requestedFileList = fse_rnf.getRequestedFileList();
         if(requestedFileList == null) {
             System.err.println("requestedFileList is null!");
             return false;
@@ -112,12 +95,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the server
     private boolean processSTART_FILE_LIST(CMFileSyncEvent fse) {
 
+        CMFileSyncEventStartFileList fse_sfl = (CMFileSyncEventStartFileList) fse;
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_LIST() called..");
-            System.out.println("event = " + fse);
+            System.out.println("event = " + fse_sfl);
         }
 
-        String userName = fse.getUserName();
+        String userName = fse_sfl.getUserName();
         // get the file-sync manager
         CMFileSyncManager fsManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
                 .get(CMInfo.CM_FILE_SYNC_MANAGER);
@@ -134,12 +118,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // create the ack event
-        CMFileSyncEvent ackFse = new CMFileSyncEvent();
-        ackFse.setID(CMFileSyncEvent.START_FILE_LIST_ACK);
-        ackFse.setSender(fse.getReceiver());  // server name
+        CMFileSyncEventStartFileListAck ackFse = new CMFileSyncEventStartFileListAck();
+        ackFse.setSender(fse_sfl.getReceiver());  // server name
         ackFse.setReceiver(userName);
         ackFse.setUserName(userName);
-        ackFse.setNumTotalFiles(fse.getNumTotalFiles());
+        ackFse.setNumTotalFiles(fse_sfl.getNumTotalFiles());
         ackFse.setReturnCode(1);    // always success
 
         // send the ack event to the client
@@ -149,20 +132,20 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processSTART_FILE_LIST_ACK(CMFileSyncEvent fse) {
-
+        CMFileSyncEventStartFileListAck fse_sfla = (CMFileSyncEventStartFileListAck) fse;
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_LIST_ACK() called..");
-            System.out.println("event = " + fse);
+            System.out.println("event = " + fse_sfla);
         }
 
-        String server = fse.getSender();
+        String server = fse_sfla.getSender();
 
         // create a FILE_ENTRIES event
-        CMFileSyncEvent newfse = new CMFileSyncEvent();
+        CMFileSyncEventFileEntries newfse = new CMFileSyncEventFileEntries();
         newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
-        newfse.setSender(fse.getReceiver());  // user name
+        newfse.setSender(fse_sfla.getReceiver());  // user name
         newfse.setReceiver(server);  // server name
-        newfse.setUserName(fse.getUserName());    // user name
+        newfse.setUserName(fse_sfla.getUserName());    // user name
         newfse.setNumFilesCompleted(0); // initialized to 0
         // set numFiles and fileEntryList
         setNumFilesAndEntryList(newfse, 0);
@@ -171,7 +154,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     }
 
     // called at the client
-    private CMFileSyncEvent setNumFilesAndEntryList(CMFileSyncEvent newfse, int startListIndex) {
+    private CMFileSyncEvent setNumFilesAndEntryList(CMFileSyncEventFileEntries newfse, int startListIndex) {
         // get current number of bytes except the entry list
         int curByteNum = newfse.getByteNum();
         if (CMInfo._CM_DEBUG) {
@@ -239,16 +222,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the server
     private boolean processFILE_ENTRIES(CMFileSyncEvent fse) {
-
+        CMFileSyncEventFileEntries fse_fe = (CMFileSyncEventFileEntries) fse;
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processFILE_ENTRIES() called..");
-            System.out.println("event = " + fse);
+            System.out.println("event = " + fse_fe);
         }
 
-        String userName = fse.getUserName();
+        String userName = fse_fe.getUserName();
         int returnCode = 1;
         int numFilesCompleted = 0;
-        int numFiles = fse.getNumFiles();
+        int numFiles = fse_fe.getNumFiles();
 
         // if 0, the entry list is null in the event
         if(numFiles > 0) {
@@ -256,22 +239,22 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
             if (entryList == null) {
                 // set the new entry list to the hashtable
-                m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse.getFileEntryList());
+                m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse_fe.getFileEntryList());
                 // set the number of completed files
                 numFilesCompleted = numFiles;
             } else {
                 // add the new entry list to the existing list
-                boolean addResult = entryList.addAll(fse.getFileEntryList());
+                boolean addResult = entryList.addAll(fse_fe.getFileEntryList());
                 if(!addResult) {
                     System.err.println("entry list add error!");
                     System.err.println("existing list = "+entryList);
-                    System.err.println("new list = "+fse.getFileEntryList());
+                    System.err.println("new list = "+fse_fe.getFileEntryList());
                     returnCode = 0;
                     numFilesCompleted = numFiles;
                 }
                 else {
                     // update the number of completed files
-                    numFilesCompleted = fse.getNumFilesCompleted() + numFiles;
+                    numFilesCompleted = fse_fe.getNumFilesCompleted() + numFiles;
                 }
             }
         }
@@ -279,11 +262,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         System.out.println("returnCode = " + returnCode);
 
         // create FILE_ENTRIES_ACK event
-        CMFileSyncEvent fseAck = new CMFileSyncEvent();
-        fseAck.setID(CMFileSyncEvent.FILE_ENTRIES_ACK);
-        fseAck.setSender(fse.getReceiver());  // server
-        fseAck.setReceiver(fse.getSender());  // client
-        fseAck.setUserName(fse.getUserName());
+        CMFileSyncEventFileEntriesAck fseAck = new CMFileSyncEventFileEntriesAck();
+        fseAck.setSender(fse_fe.getReceiver());  // server
+        fseAck.setReceiver(fse_fe.getSender());  // client
+        fseAck.setUserName(fse_fe.getUserName());
         fseAck.setNumFilesCompleted(numFilesCompleted);   // updated
         fseAck.setNumFiles(numFiles);
 
@@ -293,28 +275,29 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processFILE_ENTRIES_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventFileEntriesAck fse_fea = (CMFileSyncEventFileEntriesAck) fse;
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processFILE_ENTRIES_ACK() called..");
-            System.out.println("event = " + fse);
+            System.out.println("event = " + fse_fea);
         }
 
         // check the return code
-        int returnCode = fse.getReturnCode();
+        int returnCode = fse_fea.getReturnCode();
         if (returnCode == 0) {
             System.err.println("return code = " + returnCode);
             return false;
         }
 
         // check if there are remaining file entry elements to be sent
-        int numFilesCompleted = fse.getNumFilesCompleted();
+        int numFilesCompleted = fse_fea.getNumFilesCompleted();
         int pathListSize = m_cmInfo.getFileSyncInfo().getPathList().size();
         boolean result;
         if (numFilesCompleted < pathListSize) {
             // send the next elements
-            result = sendNextFileEntries(fse);
+            result = sendNextFileEntries(fse_fea);
         } else if (numFilesCompleted == pathListSize) {
             // send the END_FILE_LIST event
-            result = sendEND_FILE_LIST(fse);
+            result = sendEND_FILE_LIST(fse_fea);
         } else {
             System.err.println("numFilesCompleted = " + numFilesCompleted);
             System.err.println("pathListSize = " + pathListSize);
@@ -325,15 +308,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     }
 
     // called at the client
-    private boolean sendEND_FILE_LIST(CMFileSyncEvent fse) {
+    private boolean sendEND_FILE_LIST(CMFileSyncEventFileEntriesAck fse) {
 
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.sendEND_FILE_LIST() called..");
         }
 
         // crate an END_FILE_LIST event
-        CMFileSyncEvent newfse = new CMFileSyncEvent();
-        newfse.setID(CMFileSyncEvent.END_FILE_LIST);
+        CMFileSyncEventEndFileList newfse = new CMFileSyncEventEndFileList();
         newfse.setSender(fse.getReceiver());  // client
         String server = fse.getSender();
         newfse.setReceiver(server);  // server
@@ -345,7 +327,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     }
 
     // called at the client
-    private boolean sendNextFileEntries(CMFileSyncEvent fse) {
+    private boolean sendNextFileEntries(CMFileSyncEventFileEntriesAck fse) {
 
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.sendNextFileEntries() called..");
@@ -353,7 +335,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
         // create FILE_ENTRIES event
-        CMFileSyncEvent newfse = new CMFileSyncEvent();
+        CMFileSyncEventFileEntries newfse = new CMFileSyncEventFileEntries();
         newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
         newfse.setSender(fse.getReceiver());  // client
         String server = fse.getSender();
@@ -371,17 +353,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the server
     private boolean processEND_FILE_LIST(CMFileSyncEvent fse) {
+        CMFileSyncEventEndFileList fse_efl = (CMFileSyncEventEndFileList) fse;
 
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processEND_FILE_LIST() called..");
-            System.out.println("fse = " + fse);
+            System.out.println("fse = " + fse_efl);
         }
 
         int returnCode;
 
         // check the elements of file entry list
-        String userName = fse.getUserName();
-        int numFilesCompleted = fse.getNumFilesCompleted();
+        String userName = fse_efl.getUserName();
+        int numFilesCompleted = fse_efl.getNumFilesCompleted();
         List<CMFileSyncEntry> fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable()
                 .get(userName);
         int numFileEntries;
@@ -398,10 +381,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // create an END_FILE_LIST_ACK event
-        CMFileSyncEvent fseAck = new CMFileSyncEvent();
-        fseAck.setID(CMFileSyncEvent.END_FILE_LIST_ACK);
-        fseAck.setSender(fse.getReceiver());  // server
-        fseAck.setReceiver(fse.getSender());  // client
+        CMFileSyncEventEndFileListAck fseAck = new CMFileSyncEventEndFileListAck();
+        fseAck.setSender(fse_efl.getReceiver());  // server
+        fseAck.setReceiver(fse_efl.getSender());  // client
         fseAck.setUserName(userName);
         fseAck.setNumFilesCompleted(numFilesCompleted);
         fseAck.setReturnCode(returnCode);
@@ -425,9 +407,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processEND_FILE_LIST_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventEndFileListAck fse_efla = (CMFileSyncEventEndFileListAck) fse;
+
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processEND_FILE_LIST_ACK() called..");
-            System.out.println("fse = " + fse);
+            System.out.println("fse = " + fse_efla);
         }
 
         return true;
@@ -435,43 +419,49 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called by the client
     private boolean processCOMPLETE_NEW_FILE(CMFileSyncEvent fse) {
+        CMFileSyncEventCompleteNewFile fse_cnf = (CMFileSyncEventCompleteNewFile) fse;
+
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_NEW_FILE() called..");
-            System.out.println("fse = " + fse);
+            System.out.println("fse = " + fse_cnf);
         }
         // update info for the new-file completion at the client
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
         Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
-        isFileSyncCompletedHashtable.put(fse.getCompletedPath(), true);
+        isFileSyncCompletedHashtable.put(fse_cnf.getCompletedPath(), true);
 
         return true;
     }
 
     // called by the client
     private boolean processCOMPLETE_UPDATE_FILE(CMFileSyncEvent fse) {
+        CMFileSyncEventCompleteUpdateFile fse_cuf = (CMFileSyncEventCompleteUpdateFile) fse;
+
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_UPDATE_FILE() called..");
-            System.out.println("fse = " + fse);
+            System.out.println("fse = " + fse_cuf);
         }
         // update info for the file-update completion at the client
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
         Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
-        isFileSyncCompletedHashtable.put(fse.getCompletedPath(), true);
+        isFileSyncCompletedHashtable.put(fse_cuf.getCompletedPath(), true);
 
         return true;
     }
 
     // called by the client
     private boolean processCOMPLETE_FILE_SYNC(CMFileSyncEvent fse) {
+        CMFileSyncEventCompleteFileSync fse_cfs = (CMFileSyncEventCompleteFileSync) fse;
+
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_FILE_SYNC() called..");
-            System.out.println("fse = " + fse);
+            System.out.println("fse = " + fse_cfs);
         }
 
         // compare event field (number of completed files) to the size of local sync-completion table
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
         Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
-        int numFilesCompleted = fse.getNumFilesCompleted();
+        int numFilesCompleted = fse_cfs.getNumFilesCompleted();
         int tableSize = isFileSyncCompletedHashtable.size();
         if(numFilesCompleted != tableSize) {
             System.err.println("numFilesCompleted="+numFilesCompleted+", table size="+tableSize);
