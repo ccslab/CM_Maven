@@ -1,9 +1,15 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
 public class CMFileSyncBlockChecksum {
-    private int blockIndex = 0;     // 0-base block index
-    private int weakChecksum = 0;   // rolling checksum (32bit)
-    private byte[] strongChecksum = null;  // MD5 (128bit)
+    private int blockIndex;     // 0-base block index
+    private int weakChecksum;   // rolling checksum (32bit)
+    private byte[] strongChecksum;  // MD5 (128bit)
+
+    public CMFileSyncBlockChecksum() {
+        blockIndex = 0;
+        weakChecksum = -1;
+        strongChecksum = null;
+    }
 
     public int getBlockIndex() {
         return blockIndex;
