@@ -284,7 +284,7 @@ public class CMFileSyncGenerator implements Runnable {
 
     private boolean sendBlockChecksum(int clientFileEntryIndex, CMFileSyncBlockChecksum[] checksumArray) {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncGenerator.sendBlockChecksum() called..");
+            System.out.println("=== CMFileSyncGenerator.sendBlockChecksum() called..");
             System.err.println("TO be implemented..");
         }
 

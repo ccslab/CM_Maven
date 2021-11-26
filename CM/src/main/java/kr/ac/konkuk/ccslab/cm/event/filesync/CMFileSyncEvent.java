@@ -25,6 +25,20 @@ public abstract class CMFileSyncEvent extends CMEvent {
     // Fields: String requesterName, int numRequestedFiles, List<Path> requestedFileList
     public static final int REQUEST_NEW_FILES = 7;
 
+    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize
+    public static final int START_FILE_BLOCK_CHECKSUM = 8;
+    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize, int returnCode
+    public static final int START_FILE_BLOCK_CHECKSUM_ACK = 9;
+    // Fields: int fileEntryIndex, int totalNumBlocks, int startBlocksIndex, int numCurrentBlocks
+    // Fields: CMFileSyncBlockChecksum[] checksumArray
+    public static final int FILE_BLOCK_CHECKSUM = 10;
+    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize
+    public static final int END_FILE_BLOCK_CHECKSUM = 11;
+    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize, int fileChecksum
+    public static final int END_FILE_BLOCK_CHECKSUM_ACK = 12;
+    // Fields: int fileEntryIndex, int numNonMatchBytes, byte[] nonMatchBytes, int matchBlockIndex
+    public static final int UPDATE_EXISTING_FILE = 13;
+
     // Fields: userName, completedPath
     public static final int COMPLETE_NEW_FILE = 14;
     // Fields: userName, completedPath
