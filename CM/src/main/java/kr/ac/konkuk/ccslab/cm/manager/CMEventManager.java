@@ -180,6 +180,27 @@ public class CMEventManager {
 					case CMFileSyncEvent.REQUEST_NEW_FILES:
 						CMFileSyncEventRequestNewFiles reqNewFiles = new CMFileSyncEventRequestNewFiles(buf);
 						return reqNewFiles;
+					case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM:
+						CMFileSyncEventStartFileBlockChecksum startChecksum =
+								new CMFileSyncEventStartFileBlockChecksum(buf);
+						return startChecksum;
+					case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM_ACK:
+						CMFileSyncEventStartFileBlockChecksumAck startChecksumAck =
+								new CMFileSyncEventStartFileBlockChecksumAck(buf);
+						return startChecksumAck;
+					case CMFileSyncEvent.FILE_BLOCK_CHECKSUM:
+						CMFileSyncEventFileBlockChecksum checksum = new CMFileSyncEventFileBlockChecksum(buf);
+						return checksum;
+					case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM:
+						CMFileSyncEventEndFileBlockChecksum endChecksum = new CMFileSyncEventEndFileBlockChecksum(buf);
+						return endChecksum;
+					case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM_ACK:
+						CMFileSyncEventEndFileBlockChecksumAck endChecksumAck =
+								new CMFileSyncEventEndFileBlockChecksumAck(buf);
+						return endChecksumAck;
+					case CMFileSyncEvent.UPDATE_EXISTING_FILE:
+						CMFileSyncEventUpdateExistingFile updateFile = new CMFileSyncEventUpdateExistingFile(buf);
+						return updateFile;
 					case CMFileSyncEvent.COMPLETE_NEW_FILE:
 						CMFileSyncEventCompleteNewFile completeNewFile = new CMFileSyncEventCompleteNewFile(buf);
 						return completeNewFile;
