@@ -111,6 +111,8 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
                     msg.get(strongChecksum);
                     blockChecksum.setStrongChecksum(strongChecksum);
                 }
+                // add the new element to checksumArray
+                checksumArray[i] = blockChecksum;
             }
         }
     }
