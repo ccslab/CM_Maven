@@ -1,5 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
+import java.util.Arrays;
+
 public class CMFileSyncBlockChecksum {
     private int blockIndex;     // 0-base block index
     private int weakChecksum;   // rolling checksum (32bit)
@@ -33,5 +35,23 @@ public class CMFileSyncBlockChecksum {
 
     public void setStrongChecksum(byte[] strongChecksum) {
         this.strongChecksum = strongChecksum;
+    }
+
+    @Override
+    public String toString() {
+        return "CMFileSyncBlockChecksum{" +
+                "blockIndex=" + blockIndex +
+                ", weakChecksum=" + weakChecksum +
+                ", strongChecksum=" + Arrays.toString(strongChecksum) +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this) return true;
+        if(!(obj instanceof CMFileSyncBlockChecksum blockChecksum)) return false;
+        return blockChecksum.getBlockIndex() == blockIndex &&
+                blockChecksum.getWeakChecksum() == weakChecksum &&
+                Arrays.equals(blockChecksum.getStrongChecksum(), strongChecksum);
     }
 }
