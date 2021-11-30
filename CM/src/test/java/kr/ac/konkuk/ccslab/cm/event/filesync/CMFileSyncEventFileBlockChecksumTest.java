@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
 public class CMFileSyncEventFileBlockChecksumTest {
     @Test
     public void marshallUnmarshall() {
-        System.out.println("CMFileSyncEventFileBlockChecksumTest.marshallUnmarshall() called..");
+        System.out.println("===== CMFileSyncEventFileBlockChecksumTest.marshallUnmarshall() called..");
         CMFileSyncEventFileBlockChecksum fse = new CMFileSyncEventFileBlockChecksum();
         fse.setFileEntryIndex(1);
         fse.setStartBlockIndex(0);

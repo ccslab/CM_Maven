@@ -11,7 +11,7 @@ public class CMFileSyncEventStartFileBlockChecksumTest {
 
     @Test
     public void marshallUnmarshall() {
-        System.out.println("CMFilesSyncEventStartFileBlockChecksumTest.marshallUnmarshall() called..");
+        System.out.println("===== CMFilesSyncEventStartFileBlockChecksumTest.marshallUnmarshall() called..");
         CMFileSyncEventStartFileBlockChecksum fse = new CMFileSyncEventStartFileBlockChecksum();
         fse.setSender("server");
         fse.setReceiver("ccslab");

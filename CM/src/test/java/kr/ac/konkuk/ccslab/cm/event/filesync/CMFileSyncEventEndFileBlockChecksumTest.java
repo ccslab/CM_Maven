@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 public class CMFileSyncEventEndFileBlockChecksumTest {
     @Test
     public void marshallUnmarshall() {
-        System.out.println("CMFileSyncEventEndFileBlockChecksumTest.marshallUnmarshall() called..");
+        System.out.println("===== CMFileSyncEventEndFileBlockChecksumTest.marshallUnmarshall() called..");
 
         CMFileSyncEventEndFileBlockChecksum fse = new CMFileSyncEventEndFileBlockChecksum();
         fse.setBlockSize(700);
