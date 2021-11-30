@@ -50,4 +50,14 @@ public class CMFileSyncEntry implements Comparable<CMFileSyncEntry> {
                 ", lastModifiedTime=" + lastModifiedTime +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == null) return false;
+        if(obj == this) return true;
+        if(!(obj instanceof CMFileSyncEntry entry)) return false;
+        return entry.getLastModifiedTime().equals(lastModifiedTime) &&
+                entry.getSize() == size &&
+                entry.getPathRelativeToHome().equals(pathRelativeToHome);
+    }
 }

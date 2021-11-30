@@ -26,5 +26,7 @@ public class CMFileSyncEventCompleteFileSyncTest {
         assertEquals(userName, "ccslab");
         int numFilesCompleted = unmarshallEvent.getNumFilesCompleted();
         assertEquals(numFilesCompleted, 25);
+
+        assertEquals(fse, unmarshallEvent);
     }
 }

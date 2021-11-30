@@ -72,5 +72,7 @@ public class CMFileSyncEventFileEntriesAckTest {
 
         int returnCode = unmarshallEvent.getReturnCode();
         assertEquals(returnCode, 1);
+
+        assertEquals(fsEvent, unmarshallEvent);
     }
 }

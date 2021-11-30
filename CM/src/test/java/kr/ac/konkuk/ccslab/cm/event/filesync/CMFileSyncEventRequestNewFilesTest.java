@@ -55,5 +55,7 @@ public class CMFileSyncEventRequestNewFilesTest {
         unmarshallRequestedFileList = unmarshallEvent.getRequestedFileList();
         assertEquals(unmarshallRequestedFileList.get(0), Paths.get("testFile1.txt"));
         assertEquals(unmarshallRequestedFileList.get(1), Paths.get("subdir/testFile2.txt"));
+
+        assertEquals(fse, unmarshallEvent);
     }
 }

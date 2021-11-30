@@ -137,6 +137,17 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventFileEntriesAck fse)) return false;
+        return fse.getUserName().equals(userName) &&
+                fse.getNumFilesCompleted() == numFilesCompleted &&
+                fse.getNumFiles() == numFiles &&
+                fse.getFileEntryList().equals(fileEntryList) &&
+                fse.getReturnCode() == returnCode;
+    }
+
     public String getUserName() {
         return userName;
     }

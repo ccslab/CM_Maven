@@ -25,5 +25,7 @@ public class CMFileSyncEventStartFileListTest {
         assertEquals(userName, "ccslab");
         int numTotalFiles = unmarshallEvent.getNumTotalFiles();
         assertEquals(numTotalFiles, 50);
+
+        assertEquals(sfle, unmarshallEvent);
     }
 }

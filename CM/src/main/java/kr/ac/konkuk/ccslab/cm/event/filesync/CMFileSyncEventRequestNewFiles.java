@@ -98,6 +98,15 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventRequestNewFiles fse)) return false;
+        return fse.getRequesterName().equals(requesterName) &&
+                fse.getNumRequestedFiles() == numRequestedFiles &&
+                fse.getRequestedFileList().equals(requestedFileList);
+    }
+
     public String getRequesterName() {
         return requesterName;
     }

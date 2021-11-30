@@ -78,10 +78,14 @@ public class CMFileSyncEventFileEntriesTest {
         assertEquals(unmarshallEntry1.getSize(), entry1.getSize());
         FileTime lastModifiedTime = unmarshallEntry1.getLastModifiedTime();
         assertEquals(unmarshallEntry1.getLastModifiedTime(), entry1.getLastModifiedTime());
+        assertEquals(entry1, unmarshallEntry1);
 
         CMFileSyncEntry unmarshallEntry2 = unmarshallEntryList.get(1);
         assertEquals(unmarshallEntry2.getPathRelativeToHome(), entry2.getPathRelativeToHome());
         assertEquals(unmarshallEntry2.getSize(), entry2.getSize());
         assertEquals(unmarshallEntry2.getLastModifiedTime(), entry2.getLastModifiedTime());
+        assertEquals(entry2, unmarshallEntry2);
+
+        assertEquals(fsEvent, unmarshallEvent);
     }
 }

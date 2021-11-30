@@ -62,6 +62,14 @@ public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventCompleteUpdateFile fse)) return false;
+        return fse.getUserName().equals(userName) &&
+                fse.getCompletedPath().equals(completedPath);
+    }
+
     public String getUserName() {
         return userName;
     }

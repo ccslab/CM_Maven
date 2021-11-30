@@ -81,6 +81,16 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventUpdateExistingFile fse)) return false;
+        return fse.getFileEntryIndex() == fileEntryIndex &&
+                fse.getMatchBlockIndex() == matchBlockIndex &&
+                fse.getNumNonMatchBytes() == numNonMatchBytes &&
+                Arrays.equals(fse.getNonMatchBytes(), nonMatchBytes);
+    }
+
     public int getFileEntryIndex() {
         return fileEntryIndex;
     }

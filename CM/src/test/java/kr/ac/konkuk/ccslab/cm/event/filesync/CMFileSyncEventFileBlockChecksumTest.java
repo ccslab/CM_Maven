@@ -57,5 +57,7 @@ public class CMFileSyncEventFileBlockChecksumTest {
         assertNotNull(fse2);
         assertEquals(fse.getNumCurrentBlocks(), fse2.getNumCurrentBlocks());
         assertArrayEquals(fse.getChecksumArray(), fse2.getChecksumArray());
+
+        assertEquals(fse, fse2);
     }
 }

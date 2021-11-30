@@ -28,5 +28,7 @@ public class CMFileSyncEventCompleteNewFileTest {
         assertEquals(userName, "ccslab");
         Path completedPath = unmarshallEvent.getCompletedPath();
         assertEquals(completedPath, Paths.get("test1.txt"));
+
+        assertEquals(fse, unmarshallEvent);
     }
 }

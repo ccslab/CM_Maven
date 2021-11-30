@@ -60,6 +60,14 @@ public class CMFileSyncEventEndFileList extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventEndFileList fse)) return false;
+        return fse.getUserName().equals(userName) &&
+                fse.getNumFilesCompleted() == numFilesCompleted;
+    }
+
     public String getUserName() {
         return userName;
     }

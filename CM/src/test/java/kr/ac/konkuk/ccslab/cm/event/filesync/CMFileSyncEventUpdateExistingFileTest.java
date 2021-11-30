@@ -28,5 +28,7 @@ public class CMFileSyncEventUpdateExistingFileTest {
         assertEquals(fse.getMatchBlockIndex(), fse2.getMatchBlockIndex());
         assertEquals(fse.getNumNonMatchBytes(), fse2.getNumNonMatchBytes());
         assertArrayEquals(fse.getNonMatchBytes(), fse2.getNonMatchBytes());
+
+        assertEquals(fse, fse2);
     }
 }

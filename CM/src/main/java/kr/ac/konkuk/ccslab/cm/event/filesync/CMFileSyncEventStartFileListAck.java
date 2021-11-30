@@ -68,6 +68,15 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventStartFileListAck fse)) return false;
+        return fse.getUserName().equals(userName) &&
+                fse.getNumTotalFiles() == numTotalFiles &&
+                fse.getReturnCode() == returnCode;
+    }
+
     public String getUserName() {
         return userName;
     }

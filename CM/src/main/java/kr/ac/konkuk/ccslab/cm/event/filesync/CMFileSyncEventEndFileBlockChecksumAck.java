@@ -84,6 +84,17 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventEndFileBlockChecksumAck fse)) return false;
+        return fse.getBlockSize() == blockSize &&
+                fse.getFileChecksum() == fileChecksum &&
+                fse.getFileEntryIndex() == fileEntryIndex &&
+                fse.getTotalNumBlocks() == totalNumBlocks &&
+                fse.getReturnCode() == returnCode;
+    }
+
     public int getFileEntryIndex() {
         return fileEntryIndex;
     }

@@ -29,5 +29,7 @@ public class CMFileSyncEventStartFileListAckTest {
         assertEquals(numTotalFiles, 50);
         int returnCode = unmarshallEvent.getReturnCode();
         assertEquals(returnCode, 1);
+
+        assertEquals(fsEvent, unmarshallEvent);
     }
 }

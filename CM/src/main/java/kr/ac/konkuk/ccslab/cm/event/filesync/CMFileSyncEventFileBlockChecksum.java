@@ -133,6 +133,17 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventFileBlockChecksum fse)) return false;
+        return fse.getFileEntryIndex() == fileEntryIndex &&
+                fse.getTotalNumBlocks() == totalNumBlocks &&
+                fse.getNumCurrentBlocks() == numCurrentBlocks &&
+                fse.getStartBlockIndex() == startBlockIndex &&
+                Arrays.equals(fse.checksumArray, checksumArray);
+    }
+
     public int getFileEntryIndex() {
         return fileEntryIndex;
     }

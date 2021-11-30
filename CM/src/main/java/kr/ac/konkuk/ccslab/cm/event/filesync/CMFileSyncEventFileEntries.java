@@ -127,6 +127,16 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(!super.equals(obj)) return false;
+        if(!(obj instanceof CMFileSyncEventFileEntries fse)) return false;
+        return fse.getUserName().equals(userName) &&
+                fse.getNumFilesCompleted() == numFilesCompleted &&
+                fse.getNumFiles() == numFiles &&
+                fse.getFileEntryList().equals(fileEntryList);
+    }
+
     public String getUserName() {
         return userName;
     }

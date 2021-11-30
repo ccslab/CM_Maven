@@ -27,6 +27,8 @@ public class CMFileSyncEventEndFileBlockChecksumTest {
         assertEquals(fse.getBlockSize(), fse2.getBlockSize());
         assertEquals(fse.getFileEntryIndex(), fse2.getFileEntryIndex());
         assertEquals(fse.getTotalNumBlocks(), fse2.getTotalNumBlocks());
+
+        assertEquals(fse, fse2);
     }
 
 }
