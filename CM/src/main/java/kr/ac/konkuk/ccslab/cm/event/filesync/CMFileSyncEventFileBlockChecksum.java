@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.event.filesync;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -27,7 +28,7 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
     }
 
     @Override
-    protected int getByteNum() {
+    public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
         // fileEntryIndex

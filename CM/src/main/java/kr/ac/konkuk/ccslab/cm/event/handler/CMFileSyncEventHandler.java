@@ -45,6 +45,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM -> processResult = processSTART_FILE_BLOCK_CHECKSUM(fse);
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM_ACK -> processResult =
                     processSTART_FILE_BLOCK_CHECKSUM_ACK(fse);
+            case CMFileSyncEvent.FILE_BLOCK_CHECKSUM -> processResult = processFILE_BLOCK_CHECKSUM(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -52,6 +53,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    private boolean processFILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
+        CMFileSyncEventFileBlockChecksum checksumEvent = (CMFileSyncEventFileBlockChecksum) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM() called..");
+            System.out.println("checksumEvent = " + checksumEvent);
+        }
+
+        // TODO: from here
+        return true;
     }
 
     // called at the server
@@ -62,8 +75,55 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK() called..");
             System.out.println("startAckEvent = " + startAckEvent);
         }
+        // get CMFileSyncGenerator reference
+        String userName = startAckEvent.getSender();
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable()
+                .get(userName);
+        Objects.requireNonNull(syncGenerator);
 
-        // TODO: from here
+        // get the block checksum array of the file
+        CMFileSyncBlockChecksum[] checksumArray = syncGenerator.getBlockChecksumArrayHashtable()
+                .get(startAckEvent.getFileEntryIndex());
+        Objects.requireNonNull(checksumArray);
+
+        // repeat to create and send FILE_BLOCK_CHECKSUM events
+        int curIndex = 0;
+        String myName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        int remainingEventBytes = 0;
+        int checksumBytes = 0;
+        int numCurrentBlocks = 0;
+        boolean ret = false;
+        while(curIndex < checksumArray.length) {
+            // create FILE_BLOCK_CHECKSUM event
+            CMFileSyncEventFileBlockChecksum checksumEvent = new CMFileSyncEventFileBlockChecksum();
+            checksumEvent.setSender(myName);
+            checksumEvent.setReceiver(startAckEvent.getSender());
+            checksumEvent.setFileEntryIndex(startAckEvent.getFileEntryIndex());
+            checksumEvent.setTotalNumBlocks(startAckEvent.getTotalNumBlocks());
+            checksumEvent.setStartBlockIndex(curIndex);
+
+            // calculate the maximum number of checksum elements
+            remainingEventBytes = CMInfo.MAX_EVENT_SIZE - checksumEvent.getByteNum();
+            checksumBytes = Integer.BYTES * 3;  // block index, weak checksum, length of array
+            checksumBytes += CMInfo.STRONG_CHECKSUM_LEN;    // length of strong checksum
+            numCurrentBlocks = remainingEventBytes / checksumBytes;
+            if(curIndex + numCurrentBlocks > checksumArray.length)
+                numCurrentBlocks = checksumArray.length - curIndex;
+
+            // set numCurrentBlocks and checksum array fields
+            checksumEvent.setNumCurrentBlocks(numCurrentBlocks);
+            CMFileSyncBlockChecksum[] partialChecksumArray =
+                    Arrays.copyOfRange(checksumArray, curIndex, curIndex+numCurrentBlocks);
+            checksumEvent.setChecksumArray(partialChecksumArray);
+
+            // send the event
+            ret = CMEventManager.unicastEvent(checksumEvent, startAckEvent.getSender(), m_cmInfo);
+            if(!ret) return false;
+
+            // update the curIndex
+            curIndex += numCurrentBlocks;
+        }
+
         return true;
     }
 

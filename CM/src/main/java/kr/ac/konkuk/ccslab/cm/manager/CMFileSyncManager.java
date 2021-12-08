@@ -519,6 +519,7 @@ public class CMFileSyncManager extends CMServiceManager {
         if(CMInfo._CM_DEBUG) {
             String checksum = DatatypeConverter.printHexBinary(digest).toUpperCase();
             System.out.println("checksum = " + checksum);
+            System.out.println("length = "+ digest.length + "bytes.");
         }
 
         return null;
