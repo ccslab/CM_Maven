@@ -4,6 +4,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventRequestNewFiles;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartFileBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -285,10 +286,25 @@ public class CMFileSyncGenerator implements Runnable {
     private boolean sendBlockChecksum(int clientFileEntryIndex, CMFileSyncBlockChecksum[] checksumArray) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.sendBlockChecksum() called..");
-            System.err.println("TO be implemented..");
         }
 
-        // TODO: from here
+        // create a START_FILE_BLOCK_CHECKSUM event
+        CMFileSyncEventStartFileBlockChecksum fse = new CMFileSyncEventStartFileBlockChecksum();
+        fse.setSender(cmInfo.getInteractionInfo().getMyself().getName());
+        fse.setReceiver(userName);
+        fse.setFileEntryIndex(clientFileEntryIndex);
+        fse.setTotalNumBlocks(checksumArray.length);
+        // get basis file index
+        int basisFileIndex = basisFileIndexHashtable.get(clientFileEntryIndex);
+        // get block size with the basis file index
+        fse.setBlockSize(blockSizeOfBasisFileTable.get(basisFileIndex));
+        // send the event
+        boolean ret = CMEventManager.unicastEvent(fse, userName, cmInfo);
+        if(!ret) {
+            System.err.println("send error, fse: "+fse);
+            return false;
+        }
+
         return true;
     }
 
