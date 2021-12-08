@@ -45,6 +45,14 @@ public class CMFileSyncInfo {
         }
     }
 
+    public Hashtable<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumHashtable() {
+        return blockChecksumHashtable;
+    }
+
+    public Hashtable<Integer, Hashtable<Short, Integer>> getFileIndexToHashToBlockIndexHashtable() {
+        return fileIndexToHashToBlockIndexHashtable;
+    }
+
     public List<Path> getPathList() {
         return pathList;
     }

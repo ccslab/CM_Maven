@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
@@ -42,6 +43,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.COMPLETE_UPDATE_FILE -> processResult = processCOMPLETE_UPDATE_FILE(fse);
             case CMFileSyncEvent.COMPLETE_FILE_SYNC -> processResult = processCOMPLETE_FILE_SYNC(fse);
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM -> processResult = processSTART_FILE_BLOCK_CHECKSUM(fse);
+            case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM_ACK -> processResult =
+                    processSTART_FILE_BLOCK_CHECKSUM_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -49,6 +52,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    // called at the server
+    private boolean processSTART_FILE_BLOCK_CHECKSUM_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventStartFileBlockChecksumAck startAckEvent = (CMFileSyncEventStartFileBlockChecksumAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK() called..");
+            System.out.println("startAckEvent = " + startAckEvent);
+        }
+
+        // TODO: from here
+        return true;
     }
 
     // called at the client
@@ -60,9 +76,46 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("startChecksumEvent = " + startChecksumEvent);
         }
 
-        // TODO: from here
+        int fileIndex = startChecksumEvent.getFileEntryIndex();
+        int totalNumBlocks = startChecksumEvent.getTotalNumBlocks();
+        int returnCode = 1;
 
-        return true;
+        // get the file in the client file entry list
+        CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
+        Objects.requireNonNull(fsInfo);
+        Path path = fsInfo.getPathList().get(fileIndex);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("path = " + path);
+        }
+        if(path == null) returnCode = 0;
+
+        // create an array of CMFileSyncBlockChecksum for the file and add to the hashtable
+        CMFileSyncBlockChecksum[] checksumArray = new CMFileSyncBlockChecksum[totalNumBlocks];
+        Hashtable<Integer, CMFileSyncBlockChecksum[]> checksumArrayTable = fsInfo.getBlockChecksumHashtable();
+        Objects.requireNonNull(checksumArrayTable);
+        checksumArrayTable.put(fileIndex, checksumArray);
+
+        // get the fileIndexToHashToBlockIndexHashtable
+        Hashtable<Integer, Hashtable<Short, Integer>> fileToHashToBlockTable =
+                fsInfo.getFileIndexToHashToBlockIndexHashtable();
+        Objects.requireNonNull(fileToHashToBlockTable);
+        // create a hashToBlockTable object and add it to the table
+        Hashtable<Short, Integer> hashToBlockTable = new Hashtable<>();
+        fileToHashToBlockTable.put(fileIndex, hashToBlockTable);
+
+        // create an ack event
+        CMFileSyncEventStartFileBlockChecksumAck ackEvent = new CMFileSyncEventStartFileBlockChecksumAck();
+        ackEvent.setSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+        ackEvent.setReceiver(startChecksumEvent.getSender());
+        // set fields as they are in the received event
+        ackEvent.setBlockSize(startChecksumEvent.getBlockSize());
+        ackEvent.setFileEntryIndex(fileIndex);
+        ackEvent.setTotalNumBlocks(totalNumBlocks);
+        // set return code
+        ackEvent.setReturnCode(returnCode);
+
+        // send the ack event
+        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender(), m_cmInfo);
     }
 
     // called at the client
