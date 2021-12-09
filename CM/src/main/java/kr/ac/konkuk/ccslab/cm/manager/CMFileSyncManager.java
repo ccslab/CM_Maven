@@ -15,10 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -518,10 +515,11 @@ public class CMFileSyncManager extends CMServiceManager {
 
         if(CMInfo._CM_DEBUG) {
             String checksum = DatatypeConverter.printHexBinary(digest).toUpperCase();
-            System.out.println("checksum = " + checksum);
+            System.out.println("checksum hex binary = " + checksum);
+            System.out.println("checksum array string = "+ Arrays.toString(digest));
             System.out.println("length = "+ digest.length + "bytes.");
         }
 
-        return null;
+        return digest;
     }
 }
