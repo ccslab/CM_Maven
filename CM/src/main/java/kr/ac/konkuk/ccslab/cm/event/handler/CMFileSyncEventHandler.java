@@ -46,6 +46,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM_ACK -> processResult =
                     processSTART_FILE_BLOCK_CHECKSUM_ACK(fse);
             case CMFileSyncEvent.FILE_BLOCK_CHECKSUM -> processResult = processFILE_BLOCK_CHECKSUM(fse);
+            case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM -> processResult = processEND_FILE_BLOCK_CHECKSUM(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -53,6 +54,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    private boolean processEND_FILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
+        CMFileSyncEventEndFileBlockChecksum endChecksumEvent = (CMFileSyncEventEndFileBlockChecksum) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM() called..");
+            System.out.println("endChecksumEvent = " + endChecksumEvent);
+        }
+
+        // TODO: from here
+        return true;
     }
 
     // called at the client
@@ -102,11 +115,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Objects.requireNonNull(syncGenerator);
 
         // get the block checksum array of the file
+        int fileEntryIndex = startAckEvent.getFileEntryIndex();
         CMFileSyncBlockChecksum[] checksumArray = syncGenerator.getBlockChecksumArrayHashtable()
-                .get(startAckEvent.getFileEntryIndex());
+                .get(fileEntryIndex);
         Objects.requireNonNull(checksumArray);
 
         // repeat to create and send FILE_BLOCK_CHECKSUM events
+        int totalNumBlocks = startAckEvent.getTotalNumBlocks();
         int curIndex = 0;
         String myName = m_cmInfo.getInteractionInfo().getMyself().getName();
         int remainingEventBytes = 0;
@@ -117,9 +132,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // create FILE_BLOCK_CHECKSUM event
             CMFileSyncEventFileBlockChecksum checksumEvent = new CMFileSyncEventFileBlockChecksum();
             checksumEvent.setSender(myName);
-            checksumEvent.setReceiver(startAckEvent.getSender());
-            checksumEvent.setFileEntryIndex(startAckEvent.getFileEntryIndex());
-            checksumEvent.setTotalNumBlocks(startAckEvent.getTotalNumBlocks());
+            checksumEvent.setReceiver(userName);
+            checksumEvent.setFileEntryIndex(fileEntryIndex);
+            checksumEvent.setTotalNumBlocks(totalNumBlocks);
             checksumEvent.setStartBlockIndex(curIndex);
 
             // calculate the maximum number of checksum elements
@@ -145,8 +160,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // create and send END_FILE_BLOCK_CHECKSUM event
-
-        // TODO: from here
+        CMFileSyncEventEndFileBlockChecksum endChecksumEvent = new CMFileSyncEventEndFileBlockChecksum();
+        endChecksumEvent.setSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+        endChecksumEvent.setReceiver(userName);
+        endChecksumEvent.setFileEntryIndex(fileEntryIndex);
+        endChecksumEvent.setTotalNumBlocks(totalNumBlocks); // checksumArrays.length
+        ret = CMEventManager.unicastEvent(endChecksumEvent, userName, m_cmInfo);
+        if(!ret) return false;
 
         return true;
     }
