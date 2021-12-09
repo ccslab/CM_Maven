@@ -55,15 +55,35 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return processResult;
     }
 
+    // called at the client
     private boolean processFILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
         CMFileSyncEventFileBlockChecksum checksumEvent = (CMFileSyncEventFileBlockChecksum) fse;
-
+        // store checksum in the hashtable
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM() called..");
             System.out.println("checksumEvent = " + checksumEvent);
         }
 
-        // TODO: from here
+        // get checksum array with the file entry index as a key
+        Hashtable<Integer, CMFileSyncBlockChecksum[]> checksumHashtable =
+                m_cmInfo.getFileSyncInfo().getBlockChecksumHashtable();
+        Objects.requireNonNull(checksumHashtable);
+        CMFileSyncBlockChecksum[] checksumArray = checksumHashtable.get(checksumEvent.getFileEntryIndex());
+        Objects.requireNonNull(checksumArray);
+
+        // add sub array of the event to the checksum array
+        CMFileSyncBlockChecksum[] subArray = checksumEvent.getChecksumArray();
+        int startIndex = checksumEvent.getStartBlockIndex();
+        for(int i = 0; i < subArray.length; i++) {
+            checksumArray[startIndex+i] = subArray[i];
+        }
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("checksumArray is ");
+            for(int i = 0; i < checksumArray.length; i++)
+                System.out.println("["+i+"] = "+checksumArray[i]);
+        }
+
         return true;
     }
 
@@ -123,6 +143,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // update the curIndex
             curIndex += numCurrentBlocks;
         }
+
+        // create and send END_FILE_BLOCK_CHECKSUM event
+
+        // TODO: from here
 
         return true;
     }
