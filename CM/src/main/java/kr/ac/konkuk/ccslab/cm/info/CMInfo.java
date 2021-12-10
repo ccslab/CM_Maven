@@ -168,8 +168,9 @@ public class CMInfo {
 		m_bStarted = false;
 	}
 
-	public synchronized <T extends CMServiceManager> void addServiceManager(T manager) {
+	public synchronized <T extends CMServiceManager> void addServiceManager(Class<T> type, T manager) {
 
+		//serviceManagerHashtable.put(type, manager);
 		// TODO: from here
 	}
 
