@@ -44,14 +44,14 @@ public class CMFileSyncGenerator implements Runnable {
         this.cmInfo = cmInfo;
         basisFileList = null;
         newFileList = null;
-        blockChecksumArrayHashtable = null;
-        basisFileIndexHashtable = null;
-        blockSizeOfBasisFileTable = null;
-        basisFileChannelForReadTable = null;
-        basisFileChannelForWriteTable = null;
+        blockChecksumArrayHashtable = new Hashtable<>();
+        basisFileIndexHashtable = new Hashtable<>();
+        blockSizeOfBasisFileTable = new Hashtable<>();
+        basisFileChannelForReadTable = new Hashtable<>();
+        basisFileChannelForWriteTable = new Hashtable<>();
 
-        isNewFileCompletedHashtable = null;
-        isUpdateFileCompletedHashtable = null;
+        isNewFileCompletedHashtable = new Hashtable<>();
+        isUpdateFileCompletedHashtable = new Hashtable<>();
         numNewFilesCompleted = 0;
         numUpdateFilesCompleted = 0;
     }
@@ -68,28 +68,12 @@ public class CMFileSyncGenerator implements Runnable {
         return blockChecksumArrayHashtable;
     }
 
-    public Hashtable<Integer, Integer> getBasisFileIndexHashtable() {
-        return basisFileIndexHashtable;
-    }
-
-    public Hashtable<Integer, Integer> getBlockSizeOfBasisFileTable() {
-        return blockSizeOfBasisFileTable;
-    }
-
     public Hashtable<Path, Boolean> getIsNewFileCompletedHashtable() {
         return isNewFileCompletedHashtable;
     }
 
-    public void setIsNewFileCompletedHashtable(Hashtable<Path, Boolean> isNewFileCompletedHashtable) {
-        this.isNewFileCompletedHashtable = isNewFileCompletedHashtable;
-    }
-
     public Hashtable<Path, Boolean> getIsUpdateFileCompletedHashtable() {
         return isUpdateFileCompletedHashtable;
-    }
-
-    public void setIsUpdateFileCompletedHashtable(Hashtable<Path, Boolean> isUpdateFileCompletedHashtable) {
-        this.isUpdateFileCompletedHashtable = isUpdateFileCompletedHashtable;
     }
 
     public int getNumNewFilesCompleted() {
@@ -127,8 +111,6 @@ public class CMFileSyncGenerator implements Runnable {
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFileList after the deletion = " + basisFileList);
         }
-        // create an isUpdateFileCompletedHashtable object
-        if(!basisFileList.isEmpty()) isUpdateFileCompletedHashtable = new Hashtable<>();
 
         // create a new file-entry-list that will be added to the server
         newFileList = createNewFileList();
@@ -139,8 +121,6 @@ public class CMFileSyncGenerator implements Runnable {
         if(CMInfo._CM_DEBUG) {
             System.out.println("newFileList = " + newFileList);
         }
-        // create an isNewFileCompletedHashtable object
-        if(!newFileList.isEmpty()) isNewFileCompletedHashtable = new Hashtable<>();
 
         // request the files in the new file-entry-list from the client
         boolean requestResult = requestTransferOfNewFiles();
@@ -184,11 +164,6 @@ public class CMFileSyncGenerator implements Runnable {
                 .get(CMInfo.CM_FILE_SYNC_MANAGER);
         // get the server sync home
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
-
-        // check and create a basis-file-index hashtable
-        if(basisFileIndexHashtable == null) {
-            basisFileIndexHashtable = new Hashtable<>();
-        }
 
         for(int basisFileIndex = 0; basisFileIndex < basisFileList.size(); basisFileIndex++) {
             Path basisFile = basisFileList.get(basisFileIndex);
@@ -255,9 +230,6 @@ public class CMFileSyncGenerator implements Runnable {
             }
 
             // add block-checksum array to the table
-            if(blockChecksumArrayHashtable == null) {
-                blockChecksumArrayHashtable = new Hashtable<>();
-            }
             // key: client entry index, value: block-checksum array
             blockChecksumArrayHashtable.put(clientFileEntryIndex, checksumArray);
 
@@ -316,8 +288,6 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // store the block size in the table
-        if(blockSizeOfBasisFileTable == null)
-            blockSizeOfBasisFileTable = new Hashtable<>();
         blockSizeOfBasisFileTable.put(basisFileIndex, blockSize);
 
         // set the number of blocks

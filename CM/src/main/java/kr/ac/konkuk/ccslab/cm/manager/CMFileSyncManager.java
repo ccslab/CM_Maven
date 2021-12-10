@@ -333,14 +333,12 @@ public class CMFileSyncManager extends CMServiceManager {
         // check each element of the isNewFileCompletedHashtable
         isNewFileCompletedTable = syncGenerator.getIsNewFileCompletedHashtable();
         numNewFilesNotCompleted = 0;
-        if(isNewFileCompletedTable != null) {
-            for (Map.Entry<Path, Boolean> entry : isNewFileCompletedTable.entrySet()) {
-                Path k = entry.getKey();
-                Boolean v = entry.getValue();
-                if (!v) {
-                    numNewFilesNotCompleted++;
-                    System.err.println("new file path='" + k + '\'' + ", value=" + v);
-                }
+        for (Map.Entry<Path, Boolean> entry : isNewFileCompletedTable.entrySet()) {
+            Path k = entry.getKey();
+            Boolean v = entry.getValue();
+            if (!v) {
+                numNewFilesNotCompleted++;
+                System.err.println("new file path='" + k + '\'' + ", value=" + v);
             }
         }
         if(numNewFilesNotCompleted > 0) {
@@ -350,14 +348,12 @@ public class CMFileSyncManager extends CMServiceManager {
         // check each element of the isUpdateFileCompletedHashtable
         isUpdateFileCompletedTable = syncGenerator.getIsUpdateFileCompletedHashtable();
         numUpdateFilesNotCompleted = 0;
-        if(isUpdateFileCompletedTable != null) {
-            for(Map.Entry<Path, Boolean> entry : isUpdateFileCompletedTable.entrySet()) {
-                Path k = entry.getKey();
-                Boolean v = entry.getValue();
-                if(!v) {
-                    numUpdateFilesNotCompleted++;
-                    System.err.println("update file path='"+k+'\''+", value="+v);
-                }
+        for (Map.Entry<Path, Boolean> entry : isUpdateFileCompletedTable.entrySet()) {
+            Path k = entry.getKey();
+            Boolean v = entry.getValue();
+            if (!v) {
+                numUpdateFilesNotCompleted++;
+                System.err.println("update file path='" + k + '\'' + ", value=" + v);
             }
         }
         if(numUpdateFilesNotCompleted > 0) {
