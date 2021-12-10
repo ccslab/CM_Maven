@@ -138,7 +138,7 @@ public class CMInfo {
 	
 	// CM service manager list
 	private Hashtable<Integer, CMServiceManager> m_serviceManagerHashtable;
-	private Hashtable<Class<? extends CMServiceManager>, CMServiceManager> serviceManagerHashtable;
+	private Hashtable<Class<? extends CMServiceManager>, ? extends CMServiceManager> serviceManagerHashtable;
 	// CM event handler hash table
 	private Hashtable<Integer, CMEventHandler> m_eventHandlerHashtable;
 	
@@ -166,6 +166,16 @@ public class CMInfo {
 		
 		m_appEventHandler = null;
 		m_bStarted = false;
+	}
+
+	public synchronized <T extends CMServiceManager> void addServiceManager(T manager) {
+
+		// TODO: from here
+	}
+
+	public synchronized <T extends CMServiceManager> T getServiceManager(Class<T> classType) {
+		T manager = (T) serviceManagerHashtable.get(classType);
+		return manager;
 	}
 	
 	public synchronized CMConfigurationInfo getConfigurationInfo()
@@ -218,11 +228,6 @@ public class CMInfo {
 	public synchronized Hashtable<Integer, CMServiceManager> getServiceManagerHashtable()
 	{
 		return m_serviceManagerHashtable;
-	}
-
-	public synchronized <T extends CMServiceManager> T getServiceManager(Class<T> classType) {
-		T manager = (T) serviceManagerHashtable.get(classType);
-		return manager;
 	}
 	
 	public synchronized Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
