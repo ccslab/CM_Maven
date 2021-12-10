@@ -323,7 +323,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
-        fileEntryList = syncGenerator.getFileEntryList();
+        fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
         if(fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
             System.err.println("numFilesCompleted = "+numFilesCompleted);

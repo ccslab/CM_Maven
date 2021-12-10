@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 public class CMFileSyncGenerator implements Runnable {
     private String userName;
     private CMInfo cmInfo;
-    private List<CMFileSyncEntry> fileEntryList;
     private List<Path> basisFileList;
     private List<Path> newFileList;
     private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayHashtable;
@@ -43,7 +42,6 @@ public class CMFileSyncGenerator implements Runnable {
     public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
         this.userName = userName;
         this.cmInfo = cmInfo;
-        fileEntryList = null;
         basisFileList = null;
         newFileList = null;
         blockChecksumArrayHashtable = null;
@@ -60,10 +58,6 @@ public class CMFileSyncGenerator implements Runnable {
 
     public List<Path> getNewFileList() {
         return newFileList;
-    }
-
-    public List<CMFileSyncEntry> getFileEntryList() {
-        return fileEntryList;
     }
 
     public List<Path> getBasisFileList() {
@@ -120,12 +114,6 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.run() called..");
         }
 
-        // get client file-entry-list
-        fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
-        if(CMInfo._CM_DEBUG) {
-            System.out.println("fileEntryList = " + fileEntryList);
-        }
-
         // create a basis file-entry-list at the server
         basisFileList = createBasisFileList();  // always return a list object
         if(CMInfo._CM_DEBUG) {
@@ -134,7 +122,7 @@ public class CMFileSyncGenerator implements Runnable {
 
         //// compare the client file-entry-list and the basis file-entry-list
 
-        // delete files that exists only at the server and update the basisFileList
+        // delete files that exist only at the server and update the basisFileList
         deleteFilesAndUpdateBasisFileList();
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFileList after the deletion = " + basisFileList);
@@ -215,6 +203,7 @@ public class CMFileSyncGenerator implements Runnable {
             // search for the client file entry
             CMFileSyncEntry clientFileEntry = null;
             int clientFileEntryIndex = -1;
+            List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
             for(int i = 0; i < fileEntryList.size(); i++) {
                 CMFileSyncEntry entry = fileEntryList.get(i);
                 if(relativeBasisFile.equals(entry.getPathRelativeToHome())) {
@@ -495,7 +484,8 @@ public class CMFileSyncGenerator implements Runnable {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.createNewFileList() called..");
         }
-        // check fileEntryList
+        // get fileEntryList
+        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
         if(fileEntryList == null) {
             return new ArrayList<>();
         }
@@ -517,10 +507,11 @@ public class CMFileSyncGenerator implements Runnable {
 
     private void deleteFilesAndUpdateBasisFileList() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncGenerator.deleteFilesOnlyAtServer() called..");
+            System.out.println("=== CMFileSyncGenerator.deleteFilesAndUpdateBasisFileList() called..");
         }
         // get the client file-entry-list
         List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+
         if(fileEntryList == null) {
             System.out.println("fileEntryList of user("+userName+") is null!");
             // remove all files in the basisFileList
@@ -542,6 +533,7 @@ public class CMFileSyncGenerator implements Runnable {
             List<Path> entryPathList = fileEntryList.stream()
                     .map(CMFileSyncEntry::getPathRelativeToHome)
                     .collect(Collectors.toList());
+            System.out.println("entryPathList = " + entryPathList);
             // get the CMFileSyncManager object
             CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
                     .get(CMInfo.CM_FILE_SYNC_MANAGER);
