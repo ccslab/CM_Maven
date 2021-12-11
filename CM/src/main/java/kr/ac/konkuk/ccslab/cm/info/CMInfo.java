@@ -136,9 +136,8 @@ public class CMInfo {
 	private CMMqttInfo m_mqttInfo;
 	private CMFileSyncInfo m_fileSyncInfo;
 	
-	// CM service manager list
-	private Hashtable<Integer, CMServiceManager> m_serviceManagerHashtable;
-	private Hashtable<Class<? extends CMServiceManager>, ? extends CMServiceManager> serviceManagerHashtable;
+	// CM service manager table
+	private Hashtable<Class<? extends CMServiceManager>, Object> serviceManagerHashtable;
 	// CM event handler hash table
 	private Hashtable<Integer, CMEventHandler> m_eventHandlerHashtable;
 	
@@ -160,7 +159,6 @@ public class CMInfo {
 		m_mqttInfo = new CMMqttInfo();
 		m_fileSyncInfo = new CMFileSyncInfo();
 		
-		m_serviceManagerHashtable = new Hashtable<Integer, CMServiceManager>();
 		serviceManagerHashtable = new Hashtable<>();
 		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
 		
@@ -169,13 +167,11 @@ public class CMInfo {
 	}
 
 	public synchronized <T extends CMServiceManager> void addServiceManager(Class<T> type, T manager) {
-
-		//serviceManagerHashtable.put(type, manager);
-		// TODO: from here
+		serviceManagerHashtable.put(type, manager);
 	}
 
-	public synchronized <T extends CMServiceManager> T getServiceManager(Class<T> classType) {
-		T manager = (T) serviceManagerHashtable.get(classType);
+	public synchronized <T extends CMServiceManager> T getServiceManager(Class<T> type) {
+		T manager = type.cast(serviceManagerHashtable.get(type));
 		return manager;
 	}
 	
@@ -225,11 +221,6 @@ public class CMInfo {
 	}
 
 	public synchronized CMFileSyncInfo getFileSyncInfo() { return m_fileSyncInfo; }
-	
-	public synchronized Hashtable<Integer, CMServiceManager> getServiceManagerHashtable()
-	{
-		return m_serviceManagerHashtable;
-	}
 	
 	public synchronized Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
 	{

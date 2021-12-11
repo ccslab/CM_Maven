@@ -475,8 +475,7 @@ public class CMInteractionManager {
 		String strUser = user.getName();
 		
 		// send MQTT will event
-		CMMqttManager mqttManager = (CMMqttManager) cmInfo.getServiceManagerHashtable()
-				.get(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
 		mqttManager.sendMqttWill(user.getName());
 
 		SocketChannel sc = (SocketChannel)user.getNonBlockSocketChannelInfo().findChannel(0);

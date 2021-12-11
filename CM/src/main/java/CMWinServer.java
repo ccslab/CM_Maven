@@ -1765,7 +1765,7 @@ public class CMWinServer extends JFrame {
 		if(strUser == null || strUser.equals("")) 
 			return;
 		
-		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_serverStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -1780,7 +1780,7 @@ public class CMWinServer extends JFrame {
 	public void printAllMqttSessionInfo()
 	{
 		printMessage("========== print all MQTT session info\n");
-		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_serverStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -1794,7 +1794,7 @@ public class CMWinServer extends JFrame {
 	public void printAllMqttRetainInfo()
 	{
 		printMessage("=========== print all MQTT retain info\n");
-		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_serverStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");

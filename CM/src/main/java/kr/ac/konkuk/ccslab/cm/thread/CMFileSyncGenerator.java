@@ -136,8 +136,7 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // check if the file-sync task is completed. (both client and server sync home are empty)
-        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         if(syncManager.isCompleteFileSync(userName)) {
             syncManager.completeFileSync(userName);
         }
@@ -160,8 +159,7 @@ public class CMFileSyncGenerator implements Runnable {
         boolean sendResult;
 
         // get CMFileSyncManager object
-        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         // get the server sync home
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
 
@@ -299,8 +297,7 @@ public class CMFileSyncGenerator implements Runnable {
         // create a block-checksum array
         CMFileSyncBlockChecksum[] checksumArray = new CMFileSyncBlockChecksum[numBlocks];
         // get the file-sync manager
-        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
 
         // get SeekableByteChannel from the basis file
@@ -460,8 +457,7 @@ public class CMFileSyncGenerator implements Runnable {
             return new ArrayList<>();
         }
         // get the start path index
-        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
         int startPathIndex = serverSyncHome.getNameCount();
         // get the relative path list from the basis file list
@@ -505,8 +501,7 @@ public class CMFileSyncGenerator implements Runnable {
                     .collect(Collectors.toList());
             System.out.println("entryPathList = " + entryPathList);
             // get the CMFileSyncManager object
-            CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
-                    .get(CMInfo.CM_FILE_SYNC_MANAGER);
+            CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
             //// create target file list that exists only at the server and that will be deleted
             // get the server sync home and the start index
             Path serverSyncHome = syncManager.getServerSyncHome(userName);
@@ -535,8 +530,7 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.createBasisFileList() called..");
         }
         // get the file sync manager
-        CMFileSyncManager syncManager = (CMFileSyncManager) cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         if(syncManager == null) {
             System.err.println("CMFileSyncGenerator.createBasisFileList(), file-sync manager is null!");
             return null;

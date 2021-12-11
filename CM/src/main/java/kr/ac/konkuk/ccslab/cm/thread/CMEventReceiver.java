@@ -332,8 +332,7 @@ public class CMEventReceiver extends Thread {
 		else if(chKey.intValue() == 0)
 		{
 			// send MQTT will event
-			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
-					.get(CMInfo.CM_MQTT_MANAGER);			
+			CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
 			mqttManager.sendMqttWill(strUser);
 			
 			// if the removed channel is default channel (#ch:0), process logout of the user

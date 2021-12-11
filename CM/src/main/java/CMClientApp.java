@@ -3083,7 +3083,7 @@ public class CMClientApp {
 				bCleanSession = true;			
 		}
 		
-		CMMqttManager mqttManager = (CMMqttManager) m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -3142,7 +3142,7 @@ public class CMClientApp {
 				bRetainFlag = true;
 		}
 		
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -3177,7 +3177,7 @@ public class CMClientApp {
 			System.err.println("Wrong QoS! QoS is set to 0!");
 		}
 		
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -3190,7 +3190,7 @@ public class CMClientApp {
 	public void testPrintMqttSessionInfo()
 	{
 		System.out.println("========== print MQTT session info");
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -3209,7 +3209,7 @@ public class CMClientApp {
 		if(strTopic == null || strTopic.isEmpty())
 			return;
 
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -3222,7 +3222,7 @@ public class CMClientApp {
 	public void testMqttDisconnect()
 	{
 		System.out.println("========== MQTT disconnect");
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -3234,8 +3234,7 @@ public class CMClientApp {
 
 	private void testStartFileSync() {
 		System.out.println("========== start file-sync");
-		CMFileSyncManager fileSyncManager = (CMFileSyncManager) m_clientStub
-				.findServiceManager(CMInfo.CM_FILE_SYNC_MANAGER);
+		CMFileSyncManager fileSyncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
 		if(fileSyncManager == null)
 		{
 			System.err.println("CMFileSyncManager is null!");

@@ -30,6 +30,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 
 /**
@@ -192,8 +193,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 
 		// to get CMMqttManager
-		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
-										.get(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttEventHandler.processCONNECT(), CMMqttManager is null!");
@@ -363,8 +363,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 				return false;
 			}
 
-			CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
-					.get(CMInfo.CM_MQTT_MANAGER);
+			CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
 			
 			// resent all sent-unack-pubrel events to the server
 			boolean bRet = mqttManager.resendSentUnAckPubrel(connackEvent.getSender(), 
@@ -438,8 +437,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			if(!bDuplicate)
 			{
-				CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
-						.get(CMInfo.CM_MQTT_MANAGER);
+				CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
 				// DUP flag = false, RETAIN flag = false
 				mqttManager.publish(pubEvent.getTopicName(), 
 						pubEvent.getAppMessage(), pubEvent.getQoS(), false, false);				
@@ -1010,8 +1008,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 			return;
 		}
 		// get mqtt manager
-		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
-				.get(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
 		for(String strTopic : retainHashtable.keySet())
 		{
 			CMMqttEventPUBLISH retainEvent = retainHashtable.get(strTopic);

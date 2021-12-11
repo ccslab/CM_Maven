@@ -1381,7 +1381,7 @@ public class CMServerApp {
 		if(strUser == null || strUser.isEmpty()) 
 			return;
 		
-		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_serverStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -1396,7 +1396,7 @@ public class CMServerApp {
 	public void printAllMqttSessionInfo()
 	{
 		System.out.println("========== print all MQTT session info");
-		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_serverStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");
@@ -1411,7 +1411,7 @@ public class CMServerApp {
 	public void printAllMqttRetainInfo()
 	{
 		System.out.println("=========== print all MQTT retain info");
-		CMMqttManager mqttManager = (CMMqttManager)m_serverStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_serverStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttManager is null!");

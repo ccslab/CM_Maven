@@ -69,12 +69,14 @@ public class CMStub {
 	
 	public boolean init()
 	{
-		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
+		//Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
 		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
 		
 		// add cm service managers
-		managerHashtable.put(CMInfo.CM_MQTT_MANAGER, new CMMqttManager(m_cmInfo));
-		managerHashtable.put(CMInfo.CM_FILE_SYNC_MANAGER, new CMFileSyncManager(m_cmInfo));
+		//managerHashtable.put(CMInfo.CM_MQTT_MANAGER, new CMMqttManager(m_cmInfo));
+		//managerHashtable.put(CMInfo.CM_FILE_SYNC_MANAGER, new CMFileSyncManager(m_cmInfo));
+		m_cmInfo.addServiceManager(CMMqttManager.class, new CMMqttManager(m_cmInfo));
+		m_cmInfo.addServiceManager(CMFileSyncManager.class, new CMFileSyncManager(m_cmInfo));
 		
 		// add cm event handlers
 		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(m_cmInfo));
@@ -230,26 +232,20 @@ public class CMStub {
 
 	///////////////////////// service manager
 	
-	public CMServiceManager addServiceManager(int nType, CMServiceManager manager)
-	{
-		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
-		return managerHashtable.put(nType, manager);
-	}
-
 	/**
 	 * Returns a CMServiceManager reference with the given type.
 	 * 
-	 * @param nType - the type of CMServiceManager.
-	 * <p> Currently available CMServiceManager types: 
-	 * <br> CMInfo.CM_MQTT_MANAGER : CMMqttManager for the publish-subscribe service
+	 * @param type - the class type of CMServiceManager.
+	 * <p> Currently available class types:
+	 * <br> CMMqttManager.class, CMFileSyncManager.class
 	 * <p>The other CM service managers such as CMFileTransferManager, CMSNSManager, 
 	 * CMDBManager and so on will be available. Now, those services are partly available 
 	 * only through the CM stub modules.
 	 * 
-	 * @return the CMServiceManager reference if found; null otherwise.
+	 * @return the reference of type T that is a subclass of CMServiceManager if found; null otherwise.
 	 * 
 	 */
-	public CMServiceManager findServiceManager(int nType)
+	public <T extends CMServiceManager> T findServiceManager(Class<T> type)
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
 		if(confInfo.getSystemType().equals("CLIENT")) {
@@ -260,49 +256,10 @@ public class CMStub {
 			}
 		}
 
-		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
-		return managerHashtable.get(nType);
+		return m_cmInfo.getServiceManager(type);
 	}
 
-	public CMServiceManager removeServiceManager(int nType)
-	{
-		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
-		return managerHashtable.remove(nType);
-	}
-	
-	public void removeAllServiceManager()
-	{
-		Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
-		managerHashtable.clear();
-		return;
-	}
-	
 	/////////////////////////// event handler
-	
-	public CMEventHandler addEventHandler(int nEventType, CMEventHandler handler)
-	{
-		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
-		return handlerHashtable.put(nEventType, handler);
-	}
-	
-	public CMEventHandler findEventHandler(int nEventType)
-	{
-		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
-		return handlerHashtable.get(nEventType);
-	}
-	
-	public CMEventHandler removeEventHandler(int nEventType)
-	{
-		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
-		return handlerHashtable.remove(nEventType);
-	}
-	
-	public void removeAllEventHandler()
-	{
-		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
-		handlerHashtable.clear();
-	}
-	
 	
 	/**
 	 * Registers the event handler of the application.

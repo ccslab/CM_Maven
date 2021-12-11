@@ -3794,7 +3794,7 @@ public class CMWinClient extends JFrame {
 		boolean bWillFlag = willFlagBox.isSelected();
 		boolean bCleanSession = cleanSessionBox.isSelected();
 		
-		CMMqttManager mqttManager = (CMMqttManager) m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -3831,7 +3831,7 @@ public class CMWinClient extends JFrame {
 		boolean bDupFlag = dupFlagBox.isSelected();
 		boolean bRetainFlag = retainFlagBox.isSelected();
 		
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -3858,7 +3858,7 @@ public class CMWinClient extends JFrame {
 		String strTopicFilter = topicFilterTextField.getText().trim();
 		byte qos = (byte) qosComboBox.getSelectedIndex();
 
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -3870,7 +3870,7 @@ public class CMWinClient extends JFrame {
 	private void testPrintMqttSessionInfo()
 	{
 		printMessage("========== print MQTT session info\n");
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -3887,7 +3887,7 @@ public class CMWinClient extends JFrame {
 		if(strTopic == null || strTopic.equals("")) 
 			return;
 
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -3899,7 +3899,7 @@ public class CMWinClient extends JFrame {
 	private void testMqttDisconnect()
 	{
 		printMessage("========== MQTT disconnect\n");
-		CMMqttManager mqttManager = (CMMqttManager)m_clientStub.findServiceManager(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_clientStub.getCMInfo().getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			printStyledMessage("CMMqttManager is null!\n", "bold");
@@ -3910,8 +3910,7 @@ public class CMWinClient extends JFrame {
 
 	private void testStartFileSync() {
 		printMessage("========== start file-sync\n");
-		CMFileSyncManager fileSyncManager = (CMFileSyncManager) m_clientStub
-				.findServiceManager(CMInfo.CM_FILE_SYNC_MANAGER);
+		CMFileSyncManager fileSyncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
 		if(fileSyncManager == null)
 		{
 			printStyledMessage("CMFileSyncManager is null!\n", "bold");

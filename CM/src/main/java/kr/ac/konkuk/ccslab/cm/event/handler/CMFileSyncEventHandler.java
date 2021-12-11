@@ -233,8 +233,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         //// to use the CMFileTransferManager service to push new files to the server
 
         // get CMFileSyncManager
-        CMFileSyncManager syncManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         // get the client sync home
         Path clientSyncHome = syncManager.getClientSyncHome();
         // get the requester name
@@ -275,8 +274,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         String userName = fse_sfl.getUserName();
         // get the file-sync manager
-        CMFileSyncManager fsManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager fsManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         // get server sync home for userName
         Path serverSyncHome = fsManager.getServerSyncHome(userName);
         // check and create the server sync home
@@ -339,8 +337,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         List<Path> subList = new ArrayList<>();
         int index = startListIndex;
         int numFiles = 0;
-        CMFileSyncManager fsManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager fsManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         Path clientSyncHome = fsManager.getClientSyncHome();
         int startPathIndex = clientSyncHome.getNameCount();
         // create sub-list that will be added as the file-entry-list to the event
@@ -655,8 +652,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // delete(initialize) info for client in CMFileSyncInfo
-        CMFileSyncManager syncManager = (CMFileSyncManager) m_cmInfo.getServiceManagerHashtable()
-                .get(CMInfo.CM_FILE_SYNC_MANAGER);
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         syncManager.deleteFileSyncInfo();
 
         // change the file-sync state to stop

@@ -987,8 +987,7 @@ public class CMMqttManager extends CMServiceManager {
 		CMMqttWill mqttWill = session.getMqttWill();
 		if(mqttWill == null) return false;
 		
-		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
-				.get(CMInfo.CM_MQTT_MANAGER);
+		CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
 		boolean bRet = false;
 		bRet = mqttManager.publish(mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
 				mqttWill.getWillQoS());
