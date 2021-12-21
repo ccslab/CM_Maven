@@ -56,6 +56,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return processResult;
     }
 
+    // called at the client
     private boolean processEND_FILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
         CMFileSyncEventEndFileBlockChecksum endChecksumEvent = (CMFileSyncEventEndFileBlockChecksum) fse;
 
@@ -64,8 +65,51 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("endChecksumEvent = " + endChecksumEvent);
         }
 
+        // create hash-to-blockIndex table
+        Hashtable<Short, Integer> hashToBlockIndexTable =
+                makeHashToBlockIndexTable(endChecksumEvent.getFileEntryIndex());
+
         // TODO: from here
         return true;
+    }
+
+    // called at the client
+    private Hashtable<Short, Integer> makeHashToBlockIndexTable(int fileEntryIndex) {
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.makeHashToBlockIndexTable() called..");
+            System.out.println("fileEntryIndex = " + fileEntryIndex);
+        }
+
+        // sort the block checksum array of the corresponding file
+        // get the block checksum array
+        Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumTable = m_cmInfo.getFileSyncInfo()
+                .getBlockChecksumHashtable();
+        Objects.requireNonNull(blockChecksumTable);
+        CMFileSyncBlockChecksum[] checksumArray = blockChecksumTable.get( fileEntryIndex );
+        Objects.requireNonNull(checksumArray);
+        // sort the checksum array by the weak checksum
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("checksumArray before sorting = " + checksumArray);
+        }
+        Arrays.sort(checksumArray, Comparator.comparingInt(CMFileSyncBlockChecksum::getWeakChecksum));
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("checksumArray after sorting = " + checksumArray);
+        }
+
+        // get the outer (fileIndex-to-hash-to-blockIndex) table
+        Hashtable<Integer, Hashtable<Short, Integer>> outerTable = m_cmInfo.getFileSyncInfo()
+                .getFileIndexToHashToBlockIndexHashtable();
+        Objects.requireNonNull(outerTable);
+        // create an inner (hash-to-blockIndex) table and set to the outer table
+        Hashtable<Short, Integer> hashToBlockIndexTable = new Hashtable<>();
+        outerTable.put(fileEntryIndex, hashToBlockIndexTable);
+
+        // repeat the following task for each checksum array element
+        
+
+        // TODO: from here
+        return null;
     }
 
     // called at the client
