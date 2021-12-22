@@ -106,10 +106,39 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         outerTable.put(fileEntryIndex, hashToBlockIndexTable);
 
         // repeat the following task for each checksum array element
-        
+        for(int i = 0; i < checksumArray.length; i++) {
+            CMFileSyncBlockChecksum blockChecksum = checksumArray[i];
+            // calculate a 16-bit hash of the weak checksum
+            int weakChecksum = blockChecksum.getWeakChecksum();
+            short hash = calculateHash(weakChecksum);
 
-        // TODO: from here
+            // TODO: from here
+        }
+
         return null;
+    }
+
+    // called at the client
+    private short calculateHash(int weakChecksum) {
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.calculateHash() called..");
+            System.out.println("weakChecksum = " + weakChecksum);
+            System.out.println("weakChecksum binary = "+Integer.toBinaryString(weakChecksum));
+        }
+
+        short hash = 0;
+        for(int i = 0; i < 2; i++) {
+            int checksum = weakChecksum >> (16*i);
+            hash += (short)checksum;
+
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("["+i+"] checksum = "+Integer.toBinaryString(checksum));
+                System.out.println("hash = "+Integer.toBinaryString(hash));
+            }
+        }
+
+        return hash;
     }
 
     // called at the client
