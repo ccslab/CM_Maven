@@ -90,11 +90,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Objects.requireNonNull(checksumArray);
         // sort the checksum array by the weak checksum
         if(CMInfo._CM_DEBUG) {
-            System.out.println("checksumArray before sorting = " + checksumArray);
+            System.out.println("checksumArray before sorting = " + Arrays.toString(checksumArray));
         }
         Arrays.sort(checksumArray, Comparator.comparingInt(CMFileSyncBlockChecksum::getWeakChecksum));
         if(CMInfo._CM_DEBUG) {
-            System.out.println("checksumArray after sorting = " + checksumArray);
+            System.out.println("checksumArray after sorting = " + Arrays.toString(checksumArray));
         }
 
         // get the outer (fileIndex-to-hash-to-blockIndex) table
@@ -111,11 +111,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // calculate a 16-bit hash of the weak checksum
             int weakChecksum = blockChecksum.getWeakChecksum();
             short hash = calculateHash(weakChecksum);
-
-            // TODO: from here
+            // set the pair (hash, block index) to the table only if the hash key does not already exist in the table.
+            // 16bit hash indicates the first element of the block checksum array.
+            // Other block checksum element that has the same 16-bit hash can be found by the linear search
+            // from the first element because the checksum array is sorted by the (weak) checksum value.
+            if(hashToBlockIndexTable.containsKey(hash)) continue;
+            hashToBlockIndexTable.put(hash, i);
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("key hash("+hash+"), value block index("+i+") added to the table.");
+            }
         }
 
-        return null;
+        return hashToBlockIndexTable;
     }
 
     // called at the client
