@@ -13,8 +13,11 @@ import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -65,9 +68,40 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("endChecksumEvent = " + endChecksumEvent);
         }
 
+        int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
         // create hash-to-blockIndex table
         Hashtable<Short, Integer> hashToBlockIndexTable =
-                makeHashToBlockIndexTable(endChecksumEvent.getFileEntryIndex());
+                makeHashToBlockIndexTable(fileEntryIndex);
+        Objects.requireNonNull(hashToBlockIndexTable);
+        // get block checksum table
+        Hashtable<Integer, CMFileSyncBlockChecksum[]> checksumHashtable = m_cmInfo.getFileSyncInfo()
+                .getBlockChecksumHashtable();
+        Objects.requireNonNull(checksumHashtable);
+        // get block checksum array with the file entry index
+        CMFileSyncBlockChecksum[] checksumArray = checksumHashtable.get(fileEntryIndex);
+        Objects.requireNonNull(checksumArray);
+
+        // get the local path list
+        List<Path> pathList = Objects.requireNonNull(m_cmInfo.getFileSyncInfo().getPathList());
+        // get the target file path
+        Path path = Objects.requireNonNull(pathList.get(fileEntryIndex));
+        // open the target file and get a file channel
+        SeekableByteChannel channel;
+        try {
+            channel = Files.newByteChannel(path, StandardOpenOption.READ);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // get the file sync manager
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        // create a ByteBuffer to read a block from the file channel
+        ByteBuffer buffer = ByteBuffer.allocate(endChecksumEvent.getBlockSize());
+        // create a ByteBuffer to store non-matching bytes
+        ByteBuffer nonMatchBuffer = ByteBuffer.allocate(CMInfo.FILE_BLOCK_LEN);
+        // initialize other local variables before the while loop
+
 
         // TODO: from here
         return true;
