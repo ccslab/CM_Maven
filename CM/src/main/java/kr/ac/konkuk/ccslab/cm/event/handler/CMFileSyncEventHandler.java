@@ -101,9 +101,46 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // create a ByteBuffer to store non-matching bytes
         ByteBuffer nonMatchBuffer = ByteBuffer.allocate(CMInfo.FILE_BLOCK_LEN);
         // initialize other local variables before the while loop
+        int numReadBytes = 0;   // number of bytes read
+        boolean bBlockMatch = true;
+        int oldA = 0;
+        int oldB = 0;
+        byte oldStartByte = 0;
+        byte newEndByte = 0;
+        int[] weakChecksumABS = new int[3]; // weak checksum array [3]
+        short hash = 0;     // 16-bit hash
 
+        // read (next) block, calculate (update) weak checksum, search a matching block
+        try {
+            while (channel.position() < channel.size()) {
+                if(bBlockMatch) {   // initial bBlockMatch is true
+                    // read a new block to the buffer and calculate weak checksum
+                    buffer.clear();
+                    channel.read(buffer);
+                    buffer.flip();
+                    weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
+                }
+                else {
+                    // read a new 1 byte to the buffer and update the weak checksum
+                    buffer.clear();
+                    oldStartByte = buffer.get();    // read (remove) the (first) head byte of the buffer
+                    buffer.compact();               // move the buffer by 1 byte to the left
+                    channel.read(buffer);   // read a new 1byte from the channel and add it to the end of the buffer
+                    buffer.clear(); // not sure
+                    newEndByte = buffer.get(buffer.limit()-1);  // read the new end byte from the buffer
+                    oldA = weakChecksumABS[0];
+                    oldB = weakChecksumABS[1];
 
-        // TODO: from here
+                    // TODO: from here
+                }
+
+                // TODO: from here
+            }
+        }catch(IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         return true;
     }
 
