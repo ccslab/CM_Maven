@@ -69,6 +69,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
+        int blockSize = endChecksumEvent.getBlockSize();
         // create hash-to-blockIndex table
         Hashtable<Short, Integer> hashToBlockIndexTable =
                 makeHashToBlockIndexTable(fileEntryIndex);
@@ -97,11 +98,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // get the file sync manager
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         // create a ByteBuffer to read a block from the file channel
-        ByteBuffer buffer = ByteBuffer.allocate(endChecksumEvent.getBlockSize());
+        ByteBuffer buffer = ByteBuffer.allocate(blockSize);
         // create a ByteBuffer to store non-matching bytes
         ByteBuffer nonMatchBuffer = ByteBuffer.allocate(CMInfo.FILE_BLOCK_LEN);
         // initialize other local variables before the while loop
-        int numReadBytes = 0;   // number of bytes read
         boolean bBlockMatch = true;
         int oldA = 0;
         int oldB = 0;
@@ -109,6 +109,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         byte newEndByte = 0;
         int[] weakChecksumABS = new int[3]; // weak checksum array [3]
         short hash = 0;     // 16-bit hash
+        int sortedBlockIndex = -1;
+        int matchBlockIndex = -1;
 
         // read (next) block, calculate (update) weak checksum, search a matching block
         try {
@@ -130,8 +132,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     newEndByte = buffer.get(buffer.limit()-1);  // read the new end byte from the buffer
                     oldA = weakChecksumABS[0];
                     oldB = weakChecksumABS[1];
+                    weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
+                }
 
-                    // TODO: from here
+                // calculate 16-bit hash of the block weak checksum
+                hash = calculateHash(weakChecksumABS[2]);
+
+                // search a matching block
+                sortedBlockIndex = Optional.ofNullable(hashToBlockIndexTable.get(hash)).orElse(-1);
+                if(sortedBlockIndex > -1) {
+                    matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS, checksumArray,
+                            hash, buffer);
                 }
 
                 // TODO: from here
@@ -142,6 +153,44 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return true;
+    }
+
+    // called at the client
+    private int searchMatchBlockIndex(int sortedBlockIndex, int[] weakChecksumABS,
+                                      CMFileSyncBlockChecksum[] checksumArray, short hash, ByteBuffer buffer) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.searchMatchBlockIndex() called..");
+            System.out.println("sortedBlockIndex = " + sortedBlockIndex);
+            System.out.println("weakChecksumABS = " + Arrays.toString(weakChecksumABS));
+        }
+
+        boolean isFoundWeakChecksum = false;
+        if(weakChecksumABS[2] == checksumArray[sortedBlockIndex].getWeakChecksum())
+            isFoundWeakChecksum = true;
+        else {
+            // look at the next sorted block while the 16-bit hash is the same
+            sortedBlockIndex++;
+            int nextWeakChecksum = checksumArray[sortedBlockIndex].getWeakChecksum();
+            while(hash == calculateHash(nextWeakChecksum)) {
+                if(weakChecksumABS[2] == nextWeakChecksum) {
+                    isFoundWeakChecksum = true;
+                    break;
+                }
+                sortedBlockIndex++;
+                nextWeakChecksum = checksumArray[sortedBlockIndex].getWeakChecksum();
+            }
+        }
+
+        // if no block with the same weak checksum in the received checksum array, return -1
+        if(!isFoundWeakChecksum) return -1;
+        // if a block with the same weak checksum is found, prepare the strong checksum
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        byte[] strongChecksum = syncManager.calculateStrongChecksum(buffer);
+
+
+        // TODO: from here
+        return -1;
     }
 
     // called at the client
