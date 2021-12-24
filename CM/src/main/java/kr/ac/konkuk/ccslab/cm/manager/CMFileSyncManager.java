@@ -485,9 +485,7 @@ public class CMFileSyncManager extends CMServiceManager {
         abs[2] = S;
         if(CMInfo._CM_DEBUG) {
             System.out.println("A = " + A + ", B = " + B + ", S = " + S);
-            System.out.print("abs = ");
-            for(int e : abs) System.out.print(e+" ");
-            System.out.println();
+            System.out.println("abs = "+Arrays.toString(abs));
         }
 
         return abs;
@@ -517,5 +515,44 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return digest;
+    }
+
+    // called by the client
+    public int[] updateWeakChecksum(int oldA, int oldB, byte oldStartByte, byte newEndByte, int blockSize) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.updateWeakChecksum() called..");
+            System.out.println("oldA = " + oldA);
+            System.out.println("oldB = " + oldB);
+            System.out.println("oldStartByte = " + oldStartByte);
+            System.out.println("newEndByte = " + newEndByte);
+            System.out.println("blockSize = " + blockSize);
+        }
+        // calculate rolling checksum from the previous checksum value
+        int A, B, S;
+        int M = (int) Math.pow(2.0, 16.0);
+        int[] newABS = new int[3];
+
+        A = oldA;
+        A -= oldStartByte;
+        A += newEndByte;
+        A %= M;
+
+        B = oldB;
+        B -= blockSize * oldStartByte;
+        B += A;
+        B %= M;
+
+        S = A + M * B;
+
+        newABS[0] = A;
+        newABS[1] = B ;
+        newABS[2] = S;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("A = " + A + ", B = " + B + ", S = " + S);
+            System.out.println("newABS = "+Arrays.toString(newABS));
+        }
+
+        return newABS;
     }
 }
