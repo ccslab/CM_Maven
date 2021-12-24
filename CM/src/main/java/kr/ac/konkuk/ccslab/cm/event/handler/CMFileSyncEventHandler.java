@@ -141,7 +141,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 // search a matching block
                 sortedBlockIndex = Optional.ofNullable(hashToBlockIndexTable.get(hash)).orElse(-1);
                 if(sortedBlockIndex > -1) {
-                    matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS, checksumArray,
+                    matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], checksumArray,
                             hash, buffer);
                 }
 
@@ -156,40 +156,51 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     }
 
     // called at the client
-    private int searchMatchBlockIndex(int sortedBlockIndex, int[] weakChecksumABS,
+    private int searchMatchBlockIndex(int sortedBlockIndex, int weakChecksum,
                                       CMFileSyncBlockChecksum[] checksumArray, short hash, ByteBuffer buffer) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.searchMatchBlockIndex() called..");
             System.out.println("sortedBlockIndex = " + sortedBlockIndex);
-            System.out.println("weakChecksumABS = " + Arrays.toString(weakChecksumABS));
+            System.out.println("weakChecksum = " + weakChecksum);
         }
 
-        boolean isFoundWeakChecksum = false;
-        if(weakChecksumABS[2] == checksumArray[sortedBlockIndex].getWeakChecksum())
-            isFoundWeakChecksum = true;
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        byte[] strongChecksum;
+        if(weakChecksum == checksumArray[sortedBlockIndex].getWeakChecksum()) {
+            // check the strong checksum
+            strongChecksum = syncManager.calculateStrongChecksum(buffer);
+            if(Arrays.equals(strongChecksum, checksumArray[sortedBlockIndex].getStrongChecksum())) {
+                int matchBlockIndex = checksumArray[sortedBlockIndex].getBlockIndex();
+                if(CMInfo._CM_DEBUG)
+                    System.out.println("matchBlockIndex = " + matchBlockIndex);
+                return matchBlockIndex;
+            }
+        }
         else {
             // look at the next sorted block while the 16-bit hash is the same
             sortedBlockIndex++;
             int nextWeakChecksum = checksumArray[sortedBlockIndex].getWeakChecksum();
             while(hash == calculateHash(nextWeakChecksum)) {
-                if(weakChecksumABS[2] == nextWeakChecksum) {
-                    isFoundWeakChecksum = true;
-                    break;
+                if(weakChecksum == nextWeakChecksum) {
+                    // check the strong checksum
+                    strongChecksum = syncManager.calculateStrongChecksum(buffer);
+                    if(Arrays.equals(strongChecksum, checksumArray[sortedBlockIndex].getStrongChecksum())) {
+                        int matchBlockIndex = checksumArray[sortedBlockIndex].getBlockIndex();
+                        if(CMInfo._CM_DEBUG)
+                            System.out.println("matchBlockIndex = " + matchBlockIndex);
+                        return matchBlockIndex;
+                    }
                 }
                 sortedBlockIndex++;
                 nextWeakChecksum = checksumArray[sortedBlockIndex].getWeakChecksum();
             }
         }
 
-        // if no block with the same weak checksum in the received checksum array, return -1
-        if(!isFoundWeakChecksum) return -1;
-        // if a block with the same weak checksum is found, prepare the strong checksum
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
-        Objects.requireNonNull(syncManager);
-        byte[] strongChecksum = syncManager.calculateStrongChecksum(buffer);
-
-
-        // TODO: from here
+        // not found a matching block
+        if(CMInfo._CM_DEBUG) {
+            System.err.println("not found a matching block");
+        }
         return -1;
     }
 
