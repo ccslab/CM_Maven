@@ -376,6 +376,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         endChecksumEvent.setReceiver(userName);
         endChecksumEvent.setFileEntryIndex(fileEntryIndex);
         endChecksumEvent.setTotalNumBlocks(totalNumBlocks); // checksumArrays.length
+        endChecksumEvent.setBlockSize(startAckEvent.getBlockSize());
         ret = CMEventManager.unicastEvent(endChecksumEvent, userName, m_cmInfo);
         if(!ret) return false;
 
