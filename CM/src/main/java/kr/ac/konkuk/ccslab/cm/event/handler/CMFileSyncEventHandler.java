@@ -115,6 +115,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // read (next) block, calculate (update) weak checksum, search a matching block
         try {
             while (channel.position() < channel.size()) {
+                System.out.println("===============================");
+
                 if(bBlockMatch) {   // initial bBlockMatch is true
                     // read a new block to the buffer and calculate weak checksum
                     buffer.clear();
@@ -140,18 +142,73 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
                 // search a matching block
                 sortedBlockIndex = Optional.ofNullable(hashToBlockIndexTable.get(hash)).orElse(-1);
-                if(sortedBlockIndex > -1) {
+                if(sortedBlockIndex >= 0) {
                     matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], checksumArray,
                             hash, buffer);
                 }
 
-                // TODO: from here
+                // if a matching block is found
+                if(matchBlockIndex >= 0) {
+                    bBlockMatch = true;
+                    // create and send an UPDATE_EXISTING_FILE event to the server
+                    boolean ret = sendUpdateExistingFileEvent(endChecksumEvent.getReceiver(),
+                            endChecksumEvent.getSender(), fileEntryIndex, nonMatchBuffer, matchBlockIndex);
+                    if(!ret) return false;
+                    // initialize buffer and non-matching block buffer
+                    nonMatchBuffer.clear();
+                    buffer.clear();
+                }
+                else {
+                    bBlockMatch = false;
+                    // write the head byte of the block buffer to the non-match buffer
+                    nonMatchBuffer.put(buffer.get(0));
+                    // if the non-match buffer is full,
+                    if(!nonMatchBuffer.hasRemaining()) {
+                        // create and send an UPDATE_EXISTING_FILE event to the server
+                        boolean ret = sendUpdateExistingFileEvent(endChecksumEvent.getReceiver(),
+                                endChecksumEvent.getSender(), fileEntryIndex, nonMatchBuffer, -1);
+                        if(!ret) return false;
+                        // initialize non-matching block buffer
+                        nonMatchBuffer.clear();
+                        // TODO: from here
+                    }
+                }
+
+                System.out.println("===============================");
             }
         }catch(IOException e) {
             e.printStackTrace();
             return false;
         }
 
+        return true;
+    }
+
+    // called at the client
+    private boolean sendUpdateExistingFileEvent(String sender, String receiver, int fileEntryIndex,
+                                                ByteBuffer nonMatchBuffer, int matchBlockIndex) {
+        ////// create and send an UPDATE_EXISTING_FILE event to the server
+        CMFileSyncEventUpdateExistingFile updateEvent = new CMFileSyncEventUpdateExistingFile();
+        updateEvent.setSender(sender);
+        updateEvent.setReceiver(receiver);
+        updateEvent.setFileEntryIndex(fileEntryIndex);
+        // set non-match buffer
+        nonMatchBuffer.flip();
+        updateEvent.setNumNonMatchBytes(nonMatchBuffer.remaining());
+        byte[] nonMatchBytes = new byte[nonMatchBuffer.remaining()];
+        nonMatchBuffer.get(nonMatchBytes);
+        updateEvent.setNonMatchBytes(nonMatchBytes);
+        // set matching block index
+        updateEvent.setMatchBlockIndex(matchBlockIndex);
+        // send the event
+        boolean ret = CMEventManager.unicastEvent(updateEvent, sender, m_cmInfo);
+        if(!ret) {
+            System.err.println("send error, updateEvent = "+updateEvent);
+            return false;
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("sent updateEvent = " + updateEvent);
+        }
         return true;
     }
 
