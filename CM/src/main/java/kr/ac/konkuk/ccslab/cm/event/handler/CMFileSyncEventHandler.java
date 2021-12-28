@@ -251,7 +251,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 return matchBlockIndex;
             }
         }
-        else {
+        else if(sortedBlockIndex+1 < checksumArray.length){
             // look at the next sorted block while the 16-bit hash is the same
             sortedBlockIndex++;
             int nextWeakChecksum = checksumArray[sortedBlockIndex].getWeakChecksum();
@@ -273,7 +273,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // not found a matching block
         if(CMInfo._CM_DEBUG) {
-            System.err.println("not found a matching block");
+            System.err.println("not found a matching block for sortedBlockIndex("+sortedBlockIndex+")");
         }
         return -1;
     }
