@@ -128,6 +128,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // read (next) block, calculate (update) weak checksum, search a matching block
         try {
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+            }
             while (channel.position() < channel.size()) {
                 System.out.println("===============================");
 
@@ -187,16 +190,22 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         if(!ret) return false;
                         // initialize non-matching block buffer
                         nonMatchBuffer.clear();
-                        // TODO: from here
                     }
                 }
 
                 System.out.println("===============================");
             }
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("finished the while loop of comparing checksum");
+                System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+                System.out.println("path = "+path);
+            }
         }catch(IOException e) {
             e.printStackTrace();
             return false;
         }
+
+        // TODO: from here
 
         return true;
     }
