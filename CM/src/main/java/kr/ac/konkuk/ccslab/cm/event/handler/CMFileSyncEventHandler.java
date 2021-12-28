@@ -50,6 +50,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     processSTART_FILE_BLOCK_CHECKSUM_ACK(fse);
             case CMFileSyncEvent.FILE_BLOCK_CHECKSUM -> processResult = processFILE_BLOCK_CHECKSUM(fse);
             case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM -> processResult = processEND_FILE_BLOCK_CHECKSUM(fse);
+            case CMFileSyncEvent.UPDATE_EXISTING_FILE -> processResult = processUPDATE_EXISTING_FILE(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -57,6 +58,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    // called at the server
+    private boolean processUPDATE_EXISTING_FILE(CMFileSyncEvent fse) {
+        CMFileSyncEventUpdateExistingFile updateEvent = (CMFileSyncEventUpdateExistingFile) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processUPDATE_EXISTING_FILE() called..");
+            System.out.println("updateEvent = " + updateEvent);
+        }
+
+        // TODO: from here
+        return true;
     }
 
     // called at the client
@@ -146,6 +160,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], checksumArray,
                             hash, buffer);
                 }
+                else {
+                    matchBlockIndex = -1;
+                }
 
                 // if a matching block is found
                 if(matchBlockIndex >= 0) {
@@ -201,7 +218,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set matching block index
         updateEvent.setMatchBlockIndex(matchBlockIndex);
         // send the event
-        boolean ret = CMEventManager.unicastEvent(updateEvent, sender, m_cmInfo);
+        boolean ret = CMEventManager.unicastEvent(updateEvent, receiver, m_cmInfo);
         if(!ret) {
             System.err.println("send error, updateEvent = "+updateEvent);
             return false;
