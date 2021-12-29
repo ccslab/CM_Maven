@@ -237,8 +237,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 System.out.println("path = "+path);
                 System.out.println("matchingCount = " + matchingCount);
                 System.out.println("nonMatchingCount = " + nonMatchingCount);
-                System.out.println("matching rate = "+matchingCount/(double)(matchingCount+nonMatchingCount));
-                System.out.println("non-matching rate = "+nonMatchingCount/(double)(matchingCount+nonMatchingCount));
+                System.out.println("matching block rate = " +
+                        matchingCount/(double)(endChecksumEvent.getTotalNumBlocks()));
+                System.out.println("non-matching bytes rate = "+
+                        nonMatchingCount/(double)(Files.size(path)));
             }
 
             // check if the non-match buffer has some bytes to be sent

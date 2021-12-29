@@ -76,7 +76,7 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
                 ", m_nByteNum=" + m_nByteNum +
                 ", fileEntryIndex=" + fileEntryIndex +
                 ", numNonMatchBytes=" + numNonMatchBytes +
-                ", nonMatchBytes=" + Arrays.toString(nonMatchBytes) +
+                //", nonMatchBytes=" + Arrays.toString(nonMatchBytes) +
                 ", matchBlockIndex=" + matchBlockIndex +
                 '}';
     }
