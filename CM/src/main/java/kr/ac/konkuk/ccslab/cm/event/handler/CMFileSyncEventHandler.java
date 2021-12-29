@@ -63,7 +63,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the server
     private boolean processEND_FILE_BLOCK_CHECKSUM_ACK(CMFileSyncEvent fse) {
-        CMFileSyncEventEndFileBlockChecksumAck ackEvent = new CMFileSyncEventEndFileBlockChecksumAck();
+        CMFileSyncEventEndFileBlockChecksumAck ackEvent = (CMFileSyncEventEndFileBlockChecksumAck) fse;
 
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK() called..");
@@ -82,6 +82,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processUPDATE_EXISTING_FILE() called..");
             System.out.println("updateEvent = " + updateEvent);
         }
+
 
         // TODO: from here
         return true;
@@ -149,7 +150,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
             }
             while (channel.position() < channel.size()) {
-                System.out.println("===============================");
+                if(CMInfo._CM_DEBUG_2)
+                    System.out.println("===============================");
 
                 if(bBlockMatch) {   // initial bBlockMatch is true
                     // read a new block to the buffer and calculate weak checksum
@@ -171,6 +173,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
                 }
 
+                if(CMInfo._CM_DEBUG_2) {
+                    System.out.println("-------rolling weak checksum = "+weakChecksumABS[2]);
+                }
+
                 // calculate 16-bit hash of the block weak checksum
                 hash = calculateHash(weakChecksumABS[2]);
 
@@ -182,6 +188,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 }
                 else {
                     matchBlockIndex = -1;
+                }
+
+                if(CMInfo._CM_DEBUG_2) {
+                    System.out.println("-------- hash = "+hash);
+                    System.out.println("-------- sortedBlockIndex = "+sortedBlockIndex);
+                    System.out.println("-------- matchBlockIndex = "+matchBlockIndex);
                 }
 
                 // if a matching block is found
@@ -210,7 +222,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     }
                 }
 
-                System.out.println("===============================");
+                if(CMInfo._CM_DEBUG_2)
+                    System.out.println("===============================");
             }
 
             if(CMInfo._CM_DEBUG) {
@@ -293,7 +306,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private int searchMatchBlockIndex(int sortedBlockIndex, int weakChecksum,
                                       CMFileSyncBlockChecksum[] checksumArray, short hash, ByteBuffer buffer) {
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("=== CMFileSyncEventHandler.searchMatchBlockIndex() called..");
             System.out.println("sortedBlockIndex = " + sortedBlockIndex);
             System.out.println("weakChecksum = " + weakChecksum);
@@ -307,7 +320,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             strongChecksum = syncManager.calculateStrongChecksum(buffer);
             if(Arrays.equals(strongChecksum, checksumArray[sortedBlockIndex].getStrongChecksum())) {
                 int matchBlockIndex = checksumArray[sortedBlockIndex].getBlockIndex();
-                if(CMInfo._CM_DEBUG)
+                if(CMInfo._CM_DEBUG_2)
                     System.out.println("matchBlockIndex = " + matchBlockIndex);
                 return matchBlockIndex;
             }
@@ -322,7 +335,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     strongChecksum = syncManager.calculateStrongChecksum(buffer);
                     if(Arrays.equals(strongChecksum, checksumArray[sortedBlockIndex].getStrongChecksum())) {
                         int matchBlockIndex = checksumArray[sortedBlockIndex].getBlockIndex();
-                        if(CMInfo._CM_DEBUG)
+                        if(CMInfo._CM_DEBUG_2)
                             System.out.println("matchBlockIndex = " + matchBlockIndex);
                         return matchBlockIndex;
                     }
@@ -333,8 +346,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // not found a matching block
-        if(CMInfo._CM_DEBUG) {
-            System.err.println("not found a matching block for sortedBlockIndex("+sortedBlockIndex+")");
+        if(CMInfo._CM_DEBUG_2) {
+            System.out.println("not found matching block for sortedBlockIndex("+sortedBlockIndex+")");
         }
         return -1;
     }
@@ -394,7 +407,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private short calculateHash(int weakChecksum) {
 
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("=== CMFileSyncEventHandler.calculateHash() called..");
             System.out.println("weakChecksum = " + weakChecksum);
             System.out.println("weakChecksum binary = "+Integer.toBinaryString(weakChecksum));
@@ -405,7 +418,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             int checksum = weakChecksum >> (16*i);
             hash += (short)checksum;
 
-            if(CMInfo._CM_DEBUG) {
+            if(CMInfo._CM_DEBUG_2) {
                 System.out.println("["+i+"] checksum = "+Integer.toBinaryString(checksum));
                 System.out.println("hash = "+Integer.toBinaryString(hash));
             }

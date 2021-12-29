@@ -447,6 +447,10 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("ByteBuffer remaining size = "+buffer.remaining());
         }
         int[] abs = calculateWeakChecksumElements(buffer);
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("weak checksum = " + abs[2]);
+        }
         return abs[2];
     }
 
@@ -454,7 +458,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // reference: http://tutorials.jenkov.com/rsync/checksums.html
     public int[] calculateWeakChecksumElements(ByteBuffer buffer) {
         Objects.requireNonNull(buffer);
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("=== CMFileSyncManager.calculateWeakChecksumElements() called..");
             System.out.println("ByteBuffer remaining size = "+buffer.remaining());
         }
@@ -464,7 +468,7 @@ public class CMFileSyncManager extends CMServiceManager {
         int S = 0;
         int[] abs = new int[3]; // abs[0] = A, abs[1] = B, abs[2] = S
         int M = (int) Math.pow(2.0, 16.0);
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("initial A = " + A + ", B = " + B + ", S = " + S);
             System.out.println("M = " + M);
             System.out.print("initial abs = ");
@@ -485,7 +489,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get checksum (S) based on A and B
         S = A + M * B;
         abs[2] = S;
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("A = " + A + ", B = " + B + ", S = " + S);
             System.out.println("abs = "+Arrays.toString(abs));
         }
@@ -521,7 +525,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the client
     public int[] updateWeakChecksum(int oldA, int oldB, byte oldStartByte, byte newEndByte, int blockSize) {
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("=== CMFileSyncManager.updateWeakChecksum() called..");
             System.out.println("oldA = " + oldA);
             System.out.println("oldB = " + oldB);
@@ -550,7 +554,7 @@ public class CMFileSyncManager extends CMServiceManager {
         newABS[1] = B ;
         newABS[2] = S;
 
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("A = " + A + ", B = " + B + ", S = " + S);
             System.out.println("newABS = "+Arrays.toString(newABS));
         }
