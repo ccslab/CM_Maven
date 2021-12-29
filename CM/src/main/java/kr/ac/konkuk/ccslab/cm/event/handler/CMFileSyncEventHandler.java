@@ -125,6 +125,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         short hash = 0;     // 16-bit hash
         int sortedBlockIndex = -1;
         int matchBlockIndex = -1;
+        String sender = endChecksumEvent.getReceiver();
+        String receiver = endChecksumEvent.getSender();
+        CMFileSyncEventEndFileBlockChecksumAck ackEvent;
 
         // read (next) block, calculate (update) weak checksum, search a matching block
         try {
@@ -171,8 +174,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 if(matchBlockIndex >= 0) {
                     bBlockMatch = true;
                     // create and send an UPDATE_EXISTING_FILE event to the server
-                    boolean ret = sendUpdateExistingFileEvent(endChecksumEvent.getReceiver(),
-                            endChecksumEvent.getSender(), fileEntryIndex, nonMatchBuffer, matchBlockIndex);
+                    boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                            nonMatchBuffer, matchBlockIndex);
                     if(!ret) return false;
                     // initialize buffer and non-matching block buffer
                     nonMatchBuffer.clear();
@@ -185,8 +188,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     // if the non-match buffer is full,
                     if(!nonMatchBuffer.hasRemaining()) {
                         // create and send an UPDATE_EXISTING_FILE event to the server
-                        boolean ret = sendUpdateExistingFileEvent(endChecksumEvent.getReceiver(),
-                                endChecksumEvent.getSender(), fileEntryIndex, nonMatchBuffer, -1);
+                        boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                                nonMatchBuffer, -1);
                         if(!ret) return false;
                         // initialize non-matching block buffer
                         nonMatchBuffer.clear();
@@ -195,17 +198,52 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
                 System.out.println("===============================");
             }
+
             if(CMInfo._CM_DEBUG) {
                 System.out.println("finished the while loop of comparing checksum");
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
                 System.out.println("path = "+path);
             }
-        }catch(IOException e) {
+
+            // check if the non-match buffer has some bytes to be sent
+            if(nonMatchBuffer.position() > 0) {
+                boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                        nonMatchBuffer, -1);
+                if(!ret) return false;
+                nonMatchBuffer.clear();
+            }
+
+            // create and send an END_FILE_BLOCK_CHECKSUM_ACK event
+            ackEvent = new CMFileSyncEventEndFileBlockChecksumAck();
+            ackEvent.setSender(sender);
+            ackEvent.setReceiver(receiver);
+            ackEvent.setFileEntryIndex(fileEntryIndex);
+            ackEvent.setTotalNumBlocks(endChecksumEvent.getTotalNumBlocks());
+            ackEvent.setBlockSize(blockSize);
+            // set a return code
+            if(channel.position() == channel.size())
+                ackEvent.setReturnCode(1);
+            else
+                ackEvent.setReturnCode(0);
+
+        } catch(IOException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            // close the file channel
+            try {
+                channel.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        // TODO: from here
+        // calculate a file checksum and set it to the ack event
+        int fileChecksum = syncManager.calculateWeakChecksum(path, blockSize);
+        ackEvent.setFileChecksum(fileChecksum);
+        // send the ack event
+        boolean ret = CMEventManager.unicastEvent(ackEvent, receiver, m_cmInfo);
+        if(!ret) return false;
 
         return true;
     }

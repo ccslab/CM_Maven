@@ -11,8 +11,10 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -554,5 +556,55 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return newABS;
+    }
+
+    // calculate a checksum of a file (that is the sum of block weak checksum values)
+    // The server will validate the newly created file with this file checksum.
+    public int calculateWeakChecksum(Path path, int blockSize) {
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.calculateWeakChecksum(Path, int) called..");
+            System.out.println("path = " + path);
+            System.out.println("blockSize = " + blockSize);
+        }
+        // assign a ByteBuffer
+        ByteBuffer buffer = ByteBuffer.allocate(blockSize);
+        // assign related variables
+        int[] weakChecksumABS;
+        int fileChecksum = 0;
+        int M = (int) Math.pow(2.0, 16.0);
+        SeekableByteChannel channel = null;
+        try {
+            // open the file channel
+            channel = Files.newByteChannel(path, StandardOpenOption.READ);
+            // repeat to calculate a block checksum and add it to the file checksum value
+            while( channel.position() < channel.size() ) {
+                // read the next block of the file and write to the buffer
+                buffer.clear();
+                channel.read(buffer);
+                // calculate the weak checksum of the block
+                buffer.flip();
+                weakChecksumABS = calculateWeakChecksumElements(buffer);
+                // add the block checksum to the current file checksum value
+                fileChecksum += weakChecksumABS[2];
+                fileChecksum %= M;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return -1;
+        } finally {
+            try {
+                channel.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("fileChecksum = " + fileChecksum);
+        }
+
+        return fileChecksum;
     }
 }
