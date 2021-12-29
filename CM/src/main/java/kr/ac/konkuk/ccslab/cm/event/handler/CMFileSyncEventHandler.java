@@ -50,6 +50,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     processSTART_FILE_BLOCK_CHECKSUM_ACK(fse);
             case CMFileSyncEvent.FILE_BLOCK_CHECKSUM -> processResult = processFILE_BLOCK_CHECKSUM(fse);
             case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM -> processResult = processEND_FILE_BLOCK_CHECKSUM(fse);
+            case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM_ACK -> processResult = processEND_FILE_BLOCK_CHECKSUM_ACK(fse);
             case CMFileSyncEvent.UPDATE_EXISTING_FILE -> processResult = processUPDATE_EXISTING_FILE(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
@@ -58,6 +59,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    // called at the server
+    private boolean processEND_FILE_BLOCK_CHECKSUM_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventEndFileBlockChecksumAck ackEvent = new CMFileSyncEventEndFileBlockChecksumAck();
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK() called..");
+            System.out.println("ackEvent = " + ackEvent);
+        }
+
+        // TODO: not yet
+        return false;
     }
 
     // called at the server
