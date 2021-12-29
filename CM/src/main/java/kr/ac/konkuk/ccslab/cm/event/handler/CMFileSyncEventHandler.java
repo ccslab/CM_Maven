@@ -149,6 +149,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             if(CMInfo._CM_DEBUG) {
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
             }
+            // for comparing rate of matching and non-matching cases
+            long matchingCount = 0;
+            long nonMatchingCount = 0;
             while (channel.position() < channel.size()) {
                 if(CMInfo._CM_DEBUG_2)
                     System.out.println("===============================");
@@ -198,6 +201,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
                 // if a matching block is found
                 if(matchBlockIndex >= 0) {
+                    matchingCount++;
                     bBlockMatch = true;
                     // create and send an UPDATE_EXISTING_FILE event to the server
                     boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
@@ -208,6 +212,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     buffer.clear();
                 }
                 else {
+                    nonMatchingCount++;
                     bBlockMatch = false;
                     // write the head byte of the block buffer to the non-match buffer
                     nonMatchBuffer.put(buffer.get(0));
@@ -230,6 +235,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 System.out.println("finished the while loop of comparing checksum");
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
                 System.out.println("path = "+path);
+                System.out.println("matchingCount = " + matchingCount);
+                System.out.println("nonMatchingCount = " + nonMatchingCount);
+                System.out.println("matching rate = "+matchingCount/(double)(matchingCount+nonMatchingCount));
+                System.out.println("non-matching rate = "+nonMatchingCount/(double)(matchingCount+nonMatchingCount));
             }
 
             // check if the non-match buffer has some bytes to be sent
