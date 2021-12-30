@@ -4,7 +4,6 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
-import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -99,16 +98,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
         int blockSize = endChecksumEvent.getBlockSize();
-        // create hash-to-blockIndex table
-        Hashtable<Short, Integer> hashToBlockIndexTable =
-                makeHashToBlockIndexTable(fileEntryIndex);
-        Objects.requireNonNull(hashToBlockIndexTable);
-        // get block checksum table
-        Hashtable<Integer, CMFileSyncBlockChecksum[]> checksumHashtable = m_cmInfo.getFileSyncInfo()
-                .getBlockChecksumHashtable();
-        Objects.requireNonNull(checksumHashtable);
+        // create hash-to-blockIndex Map
+        Map<Short, Integer> hashToBlockIndexMap =
+                makeHashToBlockIndexMap(fileEntryIndex);
+        Objects.requireNonNull(hashToBlockIndexMap);
+        // get block checksum Map
+        Map<Integer, CMFileSyncBlockChecksum[]> checksumMap = m_cmInfo.getFileSyncInfo()
+                .getBlockChecksumMap();
+        Objects.requireNonNull(checksumMap);
         // get block checksum array with the file entry index
-        CMFileSyncBlockChecksum[] checksumArray = checksumHashtable.get(fileEntryIndex);
+        CMFileSyncBlockChecksum[] checksumArray = checksumMap.get(fileEntryIndex);
         Objects.requireNonNull(checksumArray);
 
         // get the local path list
@@ -184,7 +183,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 hash = calculateHash(weakChecksumABS[2]);
 
                 // search a matching block
-                sortedBlockIndex = Optional.ofNullable(hashToBlockIndexTable.get(hash)).orElse(-1);
+                sortedBlockIndex = Optional.ofNullable(hashToBlockIndexMap.get(hash)).orElse(-1);
                 if(sortedBlockIndex >= 0) {
                     matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], checksumArray,
                             hash, buffer);
@@ -364,19 +363,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     }
 
     // called at the client
-    private Hashtable<Short, Integer> makeHashToBlockIndexTable(int fileEntryIndex) {
+    private Map<Short, Integer> makeHashToBlockIndexMap(int fileEntryIndex) {
 
         if(CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncEventHandler.makeHashToBlockIndexTable() called..");
+            System.out.println("=== CMFileSyncEventHandler.makeHashToBlockIndexMap() called..");
             System.out.println("fileEntryIndex = " + fileEntryIndex);
         }
 
         // sort the block checksum array of the corresponding file
         // get the block checksum array
-        Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumTable = m_cmInfo.getFileSyncInfo()
-                .getBlockChecksumHashtable();
-        Objects.requireNonNull(blockChecksumTable);
-        CMFileSyncBlockChecksum[] checksumArray = blockChecksumTable.get( fileEntryIndex );
+        Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumMap = m_cmInfo.getFileSyncInfo()
+                .getBlockChecksumMap();
+        Objects.requireNonNull(blockChecksumMap);
+        CMFileSyncBlockChecksum[] checksumArray = blockChecksumMap.get( fileEntryIndex );
         Objects.requireNonNull(checksumArray);
         // sort the checksum array by the weak checksum
         if(CMInfo._CM_DEBUG) {
@@ -387,13 +386,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("checksumArray after sorting = " + Arrays.toString(checksumArray));
         }
 
-        // get the outer (fileIndex-to-hash-to-blockIndex) table
-        Hashtable<Integer, Hashtable<Short, Integer>> outerTable = m_cmInfo.getFileSyncInfo()
-                .getFileIndexToHashToBlockIndexHashtable();
-        Objects.requireNonNull(outerTable);
-        // create an inner (hash-to-blockIndex) table and set to the outer table
-        Hashtable<Short, Integer> hashToBlockIndexTable = new Hashtable<>();
-        outerTable.put(fileEntryIndex, hashToBlockIndexTable);
+        // get the outer (fileIndex-to-hash-to-blockIndex) Map
+        Map<Integer, Map<Short, Integer>> outerMap = m_cmInfo.getFileSyncInfo()
+                .getFileIndexToHashToBlockIndexMap();
+        Objects.requireNonNull(outerMap);
+        // create an inner (hash-to-blockIndex) Map and set to the outer Map
+        Map<Short, Integer> hashToBlockIndexMap = new Hashtable<>();
+        outerMap.put(fileEntryIndex, hashToBlockIndexMap);
 
         // repeat the following task for each checksum array element
         for(int i = 0; i < checksumArray.length; i++) {
@@ -401,18 +400,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // calculate a 16-bit hash of the weak checksum
             int weakChecksum = blockChecksum.getWeakChecksum();
             short hash = calculateHash(weakChecksum);
-            // set the pair (hash, block index) to the table only if the hash key does not already exist in the table.
+            // set the pair (hash, block index) to the Map only if the hash key does not already exist in the Map.
             // 16bit hash indicates the first element of the block checksum array.
             // Other block checksum element that has the same 16-bit hash can be found by the linear search
             // from the first element because the checksum array is sorted by the (weak) checksum value.
-            if(hashToBlockIndexTable.containsKey(hash)) continue;
-            hashToBlockIndexTable.put(hash, i);
+            if(hashToBlockIndexMap.containsKey(hash)) continue;
+            hashToBlockIndexMap.put(hash, i);
             if(CMInfo._CM_DEBUG) {
-                System.out.println("key hash("+hash+"), value block index("+i+") added to the table.");
+                System.out.println("key hash("+hash+"), value block index("+i+") added to the Map.");
             }
         }
 
-        return hashToBlockIndexTable;
+        return hashToBlockIndexMap;
     }
 
     // called at the client
@@ -441,17 +440,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private boolean processFILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
         CMFileSyncEventFileBlockChecksum checksumEvent = (CMFileSyncEventFileBlockChecksum) fse;
-        // store checksum in the hashtable
+        // store checksum in the Map
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM() called..");
             System.out.println("checksumEvent = " + checksumEvent);
         }
 
         // get checksum array with the file entry index as a key
-        Hashtable<Integer, CMFileSyncBlockChecksum[]> checksumHashtable =
-                m_cmInfo.getFileSyncInfo().getBlockChecksumHashtable();
-        Objects.requireNonNull(checksumHashtable);
-        CMFileSyncBlockChecksum[] checksumArray = checksumHashtable.get(checksumEvent.getFileEntryIndex());
+        Map<Integer, CMFileSyncBlockChecksum[]> checksumMap =
+                m_cmInfo.getFileSyncInfo().getBlockChecksumMap();
+        Objects.requireNonNull(checksumMap);
+        CMFileSyncBlockChecksum[] checksumArray = checksumMap.get(checksumEvent.getFileEntryIndex());
         Objects.requireNonNull(checksumArray);
 
         // add sub array of the event to the checksum array
@@ -480,13 +479,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
         // get CMFileSyncGenerator reference
         String userName = startAckEvent.getSender();
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable()
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
                 .get(userName);
         Objects.requireNonNull(syncGenerator);
 
         // get the block checksum array of the file
         int fileEntryIndex = startAckEvent.getFileEntryIndex();
-        CMFileSyncBlockChecksum[] checksumArray = syncGenerator.getBlockChecksumArrayHashtable()
+        CMFileSyncBlockChecksum[] checksumArray = syncGenerator.getBlockChecksumArrayMap()
                 .get(fileEntryIndex);
         Objects.requireNonNull(checksumArray);
 
@@ -564,19 +563,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
         if(path == null) returnCode = 0;
 
-        // create an array of CMFileSyncBlockChecksum for the file and add to the hashtable
+        // create an array of CMFileSyncBlockChecksum for the file and add to the Map
         CMFileSyncBlockChecksum[] checksumArray = new CMFileSyncBlockChecksum[totalNumBlocks];
-        Hashtable<Integer, CMFileSyncBlockChecksum[]> checksumArrayTable = fsInfo.getBlockChecksumHashtable();
-        Objects.requireNonNull(checksumArrayTable);
-        checksumArrayTable.put(fileIndex, checksumArray);
+        Map<Integer, CMFileSyncBlockChecksum[]> checksumArrayMap = fsInfo.getBlockChecksumMap();
+        Objects.requireNonNull(checksumArrayMap);
+        checksumArrayMap.put(fileIndex, checksumArray);
 
-        // get the fileIndexToHashToBlockIndexHashtable
-        Hashtable<Integer, Hashtable<Short, Integer>> fileToHashToBlockTable =
-                fsInfo.getFileIndexToHashToBlockIndexHashtable();
-        Objects.requireNonNull(fileToHashToBlockTable);
-        // create a hashToBlockTable object and add it to the table
-        Hashtable<Short, Integer> hashToBlockTable = new Hashtable<>();
-        fileToHashToBlockTable.put(fileIndex, hashToBlockTable);
+        // get the fileIndexToHashToBlockIndexMap
+        Map<Integer, Map<Short, Integer>> fileToHashToBlockMap =
+                fsInfo.getFileIndexToHashToBlockIndexMap();
+        Objects.requireNonNull(fileToHashToBlockMap);
+        // create a hashToBlockMap object and add it to the Map
+        Map<Short, Integer> hashToBlockMap = new Hashtable<>();
+        fileToHashToBlockMap.put(fileIndex, hashToBlockMap);
 
         // create an ack event
         CMFileSyncEventStartFileBlockChecksumAck ackEvent = new CMFileSyncEventStartFileBlockChecksumAck();
@@ -775,11 +774,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // if 0, the entry list is null in the event
         if(numFiles > 0) {
-            // set or add the entry list of the event to the entry hashtable
-            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+            // set or add the entry list of the event to the entry Map
+            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
             if (entryList == null) {
-                // set the new entry list to the hashtable
-                m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().put(userName, fse_fe.getFileEntryList());
+                // set the new entry list to the Map
+                m_cmInfo.getFileSyncInfo().getFileEntryListMap().put(userName, fse_fe.getFileEntryList());
                 // set the number of completed files
                 numFilesCompleted = numFiles;
             } else {
@@ -905,7 +904,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // check the elements of file entry list
         String userName = fse_efl.getUserName();
         int numFilesCompleted = fse_efl.getNumFilesCompleted();
-        List<CMFileSyncEntry> fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable()
+        List<CMFileSyncEntry> fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap()
                 .get(userName);
         int numFileEntries;
         // the fileEntryList can be null if the client has no file-entry.
@@ -940,7 +939,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
         es.submit(fileSyncGenerator);
         // set the generator in the CMFileSyncInfo
-        m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().put(userName, fileSyncGenerator);
+        m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().put(userName, fileSyncGenerator);
 
         return true;
     }
@@ -967,8 +966,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
         // update info for the new-file completion at the client
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
-        Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
-        isFileSyncCompletedHashtable.put(fse_cnf.getCompletedPath(), true);
+        Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
+        isFileSyncCompletedMap.put(fse_cnf.getCompletedPath(), true);
 
         return true;
     }
@@ -983,8 +982,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
         // update info for the file-update completion at the client
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
-        Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
-        isFileSyncCompletedHashtable.put(fse_cuf.getCompletedPath(), true);
+        Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
+        isFileSyncCompletedMap.put(fse_cuf.getCompletedPath(), true);
 
         return true;
     }
@@ -998,18 +997,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("fse = " + fse_cfs);
         }
 
-        // compare event field (number of completed files) to the size of local sync-completion table
+        // compare event field (number of completed files) to the size of local sync-completion Map
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
-        Hashtable<Path, Boolean> isFileSyncCompletedHashtable = syncInfo.getIsFileSyncCompletedHashtable();
+        Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
         int numFilesCompleted = fse_cfs.getNumFilesCompleted();
-        int tableSize = isFileSyncCompletedHashtable.size();
-        if(numFilesCompleted != tableSize) {
-            System.err.println("numFilesCompleted="+numFilesCompleted+", table size="+tableSize);
+        int mapSize = isFileSyncCompletedMap.size();
+        if(numFilesCompleted != mapSize) {
+            System.err.println("numFilesCompleted="+numFilesCompleted+", Map size="+mapSize);
             return false;
         }
-        // check each element of file-sync completion table
+        // check each element of file-sync completion Map
         int numNotCompletedFiles = 0;
-        for(Map.Entry<Path, Boolean> entry : isFileSyncCompletedHashtable.entrySet()) {
+        for(Map.Entry<Path, Boolean> entry : isFileSyncCompletedMap.entrySet()) {
             Path k = entry.getKey();
             Boolean v = entry.getValue();
             if(!v) {

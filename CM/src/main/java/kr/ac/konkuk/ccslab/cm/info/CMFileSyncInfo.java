@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import java.nio.file.Path;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 public class CMFileSyncInfo {
 
@@ -16,22 +17,22 @@ public class CMFileSyncInfo {
 
     private boolean syncInProgress;
     private List<Path> pathList;        // 4 client
-    private Hashtable<Path, Boolean> isFileSyncCompletedHashtable;  // 4 client
-    private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumHashtable;   // 4 client
-    private Hashtable<Integer, Hashtable<Short, Integer>> fileIndexToHashToBlockIndexHashtable; // 4 client
+    private Map<Path, Boolean> isFileSyncCompletedMap;  // 4 client
+    private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumMap;   // 4 client
+    private Map<Integer, Map<Short, Integer>> fileIndexToHashToBlockIndexMap; // 4 client
 
-    private Hashtable<String, List<CMFileSyncEntry>> fileEntryListHashtable;    // 4 server
-    private Hashtable<String, CMFileSyncGenerator> syncGeneratorHashtable;      // 4 server
+    private Map<String, List<CMFileSyncEntry>> fileEntryListMap;    // 4 server
+    private Map<String, CMFileSyncGenerator> syncGeneratorMap;      // 4 server
 
     public CMFileSyncInfo() {
         syncInProgress = false;
         pathList = null;
-        isFileSyncCompletedHashtable = new Hashtable<>();
-        blockChecksumHashtable = new Hashtable<>();
-        fileIndexToHashToBlockIndexHashtable = new Hashtable<>();
+        isFileSyncCompletedMap = new Hashtable<>();
+        blockChecksumMap = new Hashtable<>();
+        fileIndexToHashToBlockIndexMap = new Hashtable<>();
 
-        fileEntryListHashtable = new Hashtable<>();
-        syncGeneratorHashtable = new Hashtable<>();
+        fileEntryListMap = new Hashtable<>();
+        syncGeneratorMap = new Hashtable<>();
     }
 
     public boolean isSyncInProgress() {
@@ -45,12 +46,12 @@ public class CMFileSyncInfo {
         }
     }
 
-    public Hashtable<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumHashtable() {
-        return blockChecksumHashtable;
+    public Map<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumMap() {
+        return blockChecksumMap;
     }
 
-    public Hashtable<Integer, Hashtable<Short, Integer>> getFileIndexToHashToBlockIndexHashtable() {
-        return fileIndexToHashToBlockIndexHashtable;
+    public Map<Integer, Map<Short, Integer>> getFileIndexToHashToBlockIndexMap() {
+        return fileIndexToHashToBlockIndexMap;
     }
 
     public List<Path> getPathList() {
@@ -61,15 +62,15 @@ public class CMFileSyncInfo {
         this.pathList = pathList;
     }
 
-    public Hashtable<Path, Boolean> getIsFileSyncCompletedHashtable() {
-        return isFileSyncCompletedHashtable;
+    public Map<Path, Boolean> getIsFileSyncCompletedMap() {
+        return isFileSyncCompletedMap;
     }
 
-    public Hashtable<String, List<CMFileSyncEntry>> getFileEntryListHashtable() {
-        return fileEntryListHashtable;
+    public Map<String, List<CMFileSyncEntry>> getFileEntryListMap() {
+        return fileEntryListMap;
     }
 
-    public Hashtable<String, CMFileSyncGenerator> getSyncGeneratorHashtable() {
-        return syncGeneratorHashtable;
+    public Map<String, CMFileSyncGenerator> getSyncGeneratorMap() {
+        return syncGeneratorMap;
     }
 }

@@ -18,7 +18,6 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CMFileSyncManager extends CMServiceManager {
@@ -157,7 +156,7 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileName = fe.getFileName();
         // get the new file list
         String fileSender = fe.getFileSender();
-        List<Path> newFileList = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable()
+        List<Path> newFileList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
                 .get(fileSender).getNewFileList();
         if(newFileList == null) {
             System.err.println("newFileList is null!");
@@ -183,7 +182,7 @@ public class CMFileSyncManager extends CMServiceManager {
                 e.printStackTrace();
             }
             // get the client file entry
-            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable()
+            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap()
                     .get(fileSender);
             if(entryList == null) {
                 System.err.println("The entry list of user("+fileSender+") is null!");
@@ -228,13 +227,13 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
         if(syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
         }
-        // set the isNewFileCompletedHashtable element
-        syncGenerator.getIsNewFileCompletedHashtable().put(path, true);
+        // set the isNewFileCompletedHashMap element
+        syncGenerator.getIsNewFileCompletedMap().put(path, true);
         // update numNewFilesCompleted
         int numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
         numNewFilesCompleted++;
@@ -260,13 +259,13 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
         if(syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
         }
-        // set the isUpdateFileCompletedHashtable element
-        syncGenerator.getIsUpdateFileCompletedHashtable().put(path, true);
+        // set the isUpdateFileCompletedMap element
+        syncGenerator.getIsUpdateFileCompletedMap().put(path, true);
         // update numUpdateFilesCompleted
         int numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
         numUpdateFilesCompleted++;
@@ -298,11 +297,11 @@ public class CMFileSyncManager extends CMServiceManager {
         int numFilesCompleted = 0;
         int numNewFilesNotCompleted = 0;
         int numUpdateFilesNotCompleted = 0;
-        Hashtable<Path, Boolean> isNewFileCompletedTable = null;
-        Hashtable<Path, Boolean> isUpdateFileCompletedTable = null;
+        Map<Path, Boolean> isNewFileCompletedMap = null;
+        Map<Path, Boolean> isUpdateFileCompletedMap = null;
 
         // get CMFileSyncGenerator object
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
         if(syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -325,17 +324,17 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
-        fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+        fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
         if(fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
             System.err.println("numFilesCompleted = "+numFilesCompleted);
             System.err.println("size of client file-entry list = "+fileEntryList.size());
             return false;
         }
-        // check each element of the isNewFileCompletedHashtable
-        isNewFileCompletedTable = syncGenerator.getIsNewFileCompletedHashtable();
+        // check each element of the isNewFileCompletedMap
+        isNewFileCompletedMap = syncGenerator.getIsNewFileCompletedMap();
         numNewFilesNotCompleted = 0;
-        for (Map.Entry<Path, Boolean> entry : isNewFileCompletedTable.entrySet()) {
+        for (Map.Entry<Path, Boolean> entry : isNewFileCompletedMap.entrySet()) {
             Path k = entry.getKey();
             Boolean v = entry.getValue();
             if (!v) {
@@ -347,10 +346,10 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("numNewFilesNotCompleted = " + numNewFilesNotCompleted);
             return false;
         }
-        // check each element of the isUpdateFileCompletedHashtable
-        isUpdateFileCompletedTable = syncGenerator.getIsUpdateFileCompletedHashtable();
+        // check each element of the isUpdateFileCompletedMap
+        isUpdateFileCompletedMap = syncGenerator.getIsUpdateFileCompletedMap();
         numUpdateFilesNotCompleted = 0;
-        for (Map.Entry<Path, Boolean> entry : isUpdateFileCompletedTable.entrySet()) {
+        for (Map.Entry<Path, Boolean> entry : isUpdateFileCompletedMap.entrySet()) {
             Path k = entry.getKey();
             Boolean v = entry.getValue();
             if (!v) {
@@ -392,7 +391,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get the CMFileSyncGenerator reference
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorHashtable().get(userName);
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
         if(syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -420,10 +419,10 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // get CMFileSyncInfo reference
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
-        // remove element in fileEntryListHashtable
-        syncInfo.getFileEntryListHashtable().remove(userName);
-        // remove element in syncGeneratorHashtable
-        syncInfo.getSyncGeneratorHashtable().remove(userName);
+        // remove element in fileEntryListMap
+        syncInfo.getFileEntryListMap().remove(userName);
+        // remove element in syncGeneratorMap
+        syncInfo.getSyncGeneratorMap().remove(userName);
     }
 
     // called by the client
@@ -435,8 +434,8 @@ public class CMFileSyncManager extends CMServiceManager {
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
         // initialize the pathList
         syncInfo.setPathList(null);
-        // clear the isFileSyncCompletedHashtable
-        syncInfo.getIsFileSyncCompletedHashtable().clear();
+        // clear the isFileSyncCompletedMap
+        syncInfo.getIsFileSyncCompletedMap().clear();
     }
 
     // called by the server

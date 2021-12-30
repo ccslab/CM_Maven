@@ -2,7 +2,6 @@ package kr.ac.konkuk.ccslab.cm.thread;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
-import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventRequestNewFiles;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartFileBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
@@ -17,10 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CMFileSyncGenerator implements Runnable {
@@ -28,14 +24,14 @@ public class CMFileSyncGenerator implements Runnable {
     private CMInfo cmInfo;
     private List<Path> basisFileList;
     private List<Path> newFileList;
-    private Hashtable<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayHashtable;
-    private Hashtable<Integer, Integer> basisFileIndexHashtable;    // key: client entry index, value: basis index
-    private Hashtable<Integer, Integer> blockSizeOfBasisFileTable;
-    private Hashtable<Integer, SeekableByteChannel> basisFileChannelForReadTable;   // for read basis file
-    private Hashtable<Integer, SeekableByteChannel> basisFileChannelForWriteTable;  // for write basis file
+    private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayMap;
+    private Map<Integer, Integer> basisFileIndexMap;    // key: client entry index, value: basis index
+    private Map<Integer, Integer> blockSizeOfBasisFileMap;
+    private Map<Integer, SeekableByteChannel> basisFileChannelForReadMap;   // for read basis file
+    private Map<Integer, SeekableByteChannel> basisFileChannelForWriteMap;  // for write basis file
 
-    private Hashtable<Path, Boolean> isNewFileCompletedHashtable;
-    private Hashtable<Path, Boolean> isUpdateFileCompletedHashtable;
+    private Map<Path, Boolean> isNewFileCompletedMap;
+    private Map<Path, Boolean> isUpdateFileCompletedMap;
     private int numNewFilesCompleted;
     private int numUpdateFilesCompleted;
 
@@ -44,14 +40,14 @@ public class CMFileSyncGenerator implements Runnable {
         this.cmInfo = cmInfo;
         basisFileList = null;
         newFileList = null;
-        blockChecksumArrayHashtable = new Hashtable<>();
-        basisFileIndexHashtable = new Hashtable<>();
-        blockSizeOfBasisFileTable = new Hashtable<>();
-        basisFileChannelForReadTable = new Hashtable<>();
-        basisFileChannelForWriteTable = new Hashtable<>();
+        blockChecksumArrayMap = new Hashtable<>();
+        basisFileIndexMap = new Hashtable<>();
+        blockSizeOfBasisFileMap = new Hashtable<>();
+        basisFileChannelForReadMap = new Hashtable<>();
+        basisFileChannelForWriteMap = new Hashtable<>();
 
-        isNewFileCompletedHashtable = new Hashtable<>();
-        isUpdateFileCompletedHashtable = new Hashtable<>();
+        isNewFileCompletedMap = new Hashtable<>();
+        isUpdateFileCompletedMap = new Hashtable<>();
         numNewFilesCompleted = 0;
         numUpdateFilesCompleted = 0;
     }
@@ -64,16 +60,16 @@ public class CMFileSyncGenerator implements Runnable {
         return basisFileList;
     }
 
-    public Hashtable<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumArrayHashtable() {
-        return blockChecksumArrayHashtable;
+    public Map<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumArrayMap() {
+        return blockChecksumArrayMap;
     }
 
-    public Hashtable<Path, Boolean> getIsNewFileCompletedHashtable() {
-        return isNewFileCompletedHashtable;
+    public Map<Path, Boolean> getIsNewFileCompletedMap() {
+        return isNewFileCompletedMap;
     }
 
-    public Hashtable<Path, Boolean> getIsUpdateFileCompletedHashtable() {
-        return isUpdateFileCompletedHashtable;
+    public Map<Path, Boolean> getIsUpdateFileCompletedMap() {
+        return isUpdateFileCompletedMap;
     }
 
     public int getNumNewFilesCompleted() {
@@ -176,7 +172,7 @@ public class CMFileSyncGenerator implements Runnable {
             // search for the client file entry
             CMFileSyncEntry clientFileEntry = null;
             int clientFileEntryIndex = -1;
-            List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+            List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
             for(int i = 0; i < fileEntryList.size(); i++) {
                 CMFileSyncEntry entry = fileEntryList.get(i);
                 if(relativeBasisFile.equals(entry.getPathRelativeToHome())) {
@@ -191,7 +187,7 @@ public class CMFileSyncGenerator implements Runnable {
             }
 
             // add the index pair to the table
-            basisFileIndexHashtable.put(clientFileEntryIndex, basisFileIndex);
+            basisFileIndexMap.put(clientFileEntryIndex, basisFileIndex);
             if(CMInfo._CM_DEBUG) {
                 System.out.println("clientFileEntryIndex = " + clientFileEntryIndex);
             }
@@ -229,7 +225,7 @@ public class CMFileSyncGenerator implements Runnable {
 
             // add block-checksum array to the table
             // key: client entry index, value: block-checksum array
-            blockChecksumArrayHashtable.put(clientFileEntryIndex, checksumArray);
+            blockChecksumArrayMap.put(clientFileEntryIndex, checksumArray);
 
             // send the client entry index and block-checksum array to the client
             sendResult = sendBlockChecksum(clientFileEntryIndex, checksumArray);
@@ -254,9 +250,9 @@ public class CMFileSyncGenerator implements Runnable {
         fse.setFileEntryIndex(clientFileEntryIndex);
         fse.setTotalNumBlocks(checksumArray.length);
         // get basis file index
-        int basisFileIndex = basisFileIndexHashtable.get(clientFileEntryIndex);
+        int basisFileIndex = basisFileIndexMap.get(clientFileEntryIndex);
         // get block size with the basis file index
-        fse.setBlockSize(blockSizeOfBasisFileTable.get(basisFileIndex));
+        fse.setBlockSize(blockSizeOfBasisFileMap.get(basisFileIndex));
         // send the event
         boolean ret = CMEventManager.unicastEvent(fse, userName, cmInfo);
         if(!ret) {
@@ -286,7 +282,7 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // store the block size in the table
-        blockSizeOfBasisFileTable.put(basisFileIndex, blockSize);
+        blockSizeOfBasisFileMap.put(basisFileIndex, blockSize);
 
         // set the number of blocks
         int numBlocks = (int) (fileSize / blockSize);
@@ -452,7 +448,7 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.createNewFileList() called..");
         }
         // get fileEntryList
-        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
         if(fileEntryList == null) {
             return new ArrayList<>();
         }
@@ -476,7 +472,7 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.deleteFilesAndUpdateBasisFileList() called..");
         }
         // get the client file-entry-list
-        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListHashtable().get(userName);
+        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
 
         if(fileEntryList == null) {
             System.out.println("fileEntryList of user("+userName+") is null!");
