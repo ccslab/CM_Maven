@@ -161,6 +161,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     channel.read(buffer);
                     buffer.flip();
                     weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
+                    buffer.rewind();    // rewound the buffer position after the checksum calculation
                 }
                 else {
                     // read a new 1 byte to the buffer and update the weak checksum
@@ -234,11 +235,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 System.out.println("finished the while loop of comparing checksum");
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
                 System.out.println("path = "+path);
-                System.out.println("matchingCount = " + matchingCount);
-                System.out.println("nonMatchingCount = " + nonMatchingCount);
-                System.out.println("matching block rate = " +
+                System.out.println("matchingCount = " + matchingCount + ", total number of blocks = " +
+                        endChecksumEvent.getTotalNumBlocks());
+                System.out.println("non-matching bytes = " + nonMatchingCount + ", total size = " +
+                        Files.size(path) + " bytes");
+                System.out.printf("matching block rate = %5.3f\n",
                         matchingCount/(double)(endChecksumEvent.getTotalNumBlocks()));
-                System.out.println("non-matching bytes rate = "+
+                System.out.printf("non-matching bytes rate = %5.3f\n",
                         nonMatchingCount/(double)(Files.size(path)));
             }
 
