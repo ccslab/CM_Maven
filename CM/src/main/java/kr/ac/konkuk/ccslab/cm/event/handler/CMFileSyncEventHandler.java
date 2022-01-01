@@ -82,6 +82,24 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("updateEvent = " + updateEvent);
         }
 
+        // get the server sync home
+        String userName = updateEvent.getSender();
+        CMFileSyncManager syncManager = Objects.requireNonNull(m_cmInfo.getServiceManager(CMFileSyncManager.class));
+        Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(userName));
+
+        // get the basis file path
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        Objects.requireNonNull(syncGenerator);
+        int fileEntryIndex = updateEvent.getFileEntryIndex();
+        int basisFileIndex = syncGenerator.getBasisFileIndexMap().get(fileEntryIndex);
+        List<Path> basisFileList = Objects.requireNonNull(syncGenerator.getBasisFileList());
+        Path basisFilePath = Objects.requireNonNull(basisFileList.get(basisFileIndex));
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("basisFilePath = " + basisFilePath);
+        }
+        // create a temp basis file path
+        Path tempBasisFilePath = syncManager.getTempPathOfBasisFile(basisFilePath);
+
 
         // TODO: from here
         return true;

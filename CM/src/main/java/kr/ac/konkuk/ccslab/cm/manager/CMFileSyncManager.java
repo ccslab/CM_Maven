@@ -610,4 +610,21 @@ public class CMFileSyncManager extends CMServiceManager {
 
         return fileChecksum;
     }
+
+    public Path getTempPathOfBasisFile(Path basisFilePath) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.getTempPathOfBasisFile() called..");
+            System.out.println("basisFilePath = " + basisFilePath);
+        }
+
+        String fileName = basisFilePath.getFileName().toString();
+        String tempFileName = CMInfo.TEMP_FILE_PREFIX + fileName;
+        Path tempBasisFilePath = basisFilePath.resolveSibling(tempFileName);
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("tempBasisFilePath = " + tempBasisFilePath);
+        }
+
+        return tempBasisFilePath;
+    }
 }

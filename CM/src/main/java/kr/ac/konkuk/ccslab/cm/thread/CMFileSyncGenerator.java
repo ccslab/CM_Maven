@@ -88,6 +88,10 @@ public class CMFileSyncGenerator implements Runnable {
         this.numUpdateFilesCompleted = numUpdateFilesCompleted;
     }
 
+    public Map<Integer, Integer> getBasisFileIndexMap() {
+        return basisFileIndexMap;
+    }
+
     @Override
     public void run() {
         if(CMInfo._CM_DEBUG) {
