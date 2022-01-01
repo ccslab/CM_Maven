@@ -100,6 +100,24 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // create a temp basis file path
         Path tempBasisFilePath = syncManager.getTempPathOfBasisFile(basisFilePath);
 
+        // get or create a file channel for write a temp file
+        Map<Integer, SeekableByteChannel> writeChannelMap = syncGenerator.getTempFileChannelForWriteMap();
+        Objects.requireNonNull(writeChannelMap);
+        SeekableByteChannel writeChannel = writeChannelMap.get(fileEntryIndex);
+        if(writeChannel == null) {
+            // create a new channel and put to the channel map
+            try {
+                writeChannel = Files.newByteChannel(tempBasisFilePath, StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            writeChannelMap.put(fileEntryIndex, writeChannel);
+        }
+
+        // check non-matching bytes in the update event
+
 
         // TODO: from here
         return true;

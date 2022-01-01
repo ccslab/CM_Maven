@@ -27,8 +27,9 @@ public class CMFileSyncGenerator implements Runnable {
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayMap;
     private Map<Integer, Integer> basisFileIndexMap;    // key: client entry index, value: basis index
     private Map<Integer, Integer> blockSizeOfBasisFileMap;
-    private Map<Integer, SeekableByteChannel> basisFileChannelForReadMap;   // for read basis file
-    private Map<Integer, SeekableByteChannel> basisFileChannelForWriteMap;  // for write basis file
+    private Map<Integer, SeekableByteChannel> basisFileChannelForReadMap;   // for reading basis file
+    // for writing a temp file to update basis file
+    private Map<Integer, SeekableByteChannel> tempFileChannelForWriteMap;
 
     private Map<Path, Boolean> isNewFileCompletedMap;
     private Map<Path, Boolean> isUpdateFileCompletedMap;
@@ -44,7 +45,7 @@ public class CMFileSyncGenerator implements Runnable {
         basisFileIndexMap = new Hashtable<>();
         blockSizeOfBasisFileMap = new Hashtable<>();
         basisFileChannelForReadMap = new Hashtable<>();
-        basisFileChannelForWriteMap = new Hashtable<>();
+        tempFileChannelForWriteMap = new Hashtable<>();
 
         isNewFileCompletedMap = new Hashtable<>();
         isUpdateFileCompletedMap = new Hashtable<>();
@@ -90,6 +91,14 @@ public class CMFileSyncGenerator implements Runnable {
 
     public Map<Integer, Integer> getBasisFileIndexMap() {
         return basisFileIndexMap;
+    }
+
+    public Map<Integer, SeekableByteChannel> getBasisFileChannelForReadMap() {
+        return basisFileChannelForReadMap;
+    }
+
+    public Map<Integer, SeekableByteChannel> getTempFileChannelForWriteMap() {
+        return tempFileChannelForWriteMap;
     }
 
     @Override
