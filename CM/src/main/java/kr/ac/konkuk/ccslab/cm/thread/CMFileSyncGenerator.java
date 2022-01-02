@@ -101,6 +101,10 @@ public class CMFileSyncGenerator implements Runnable {
         return tempFileChannelForWriteMap;
     }
 
+    public Map<Integer, Integer> getBlockSizeOfBasisFileMap() {
+        return blockSizeOfBasisFileMap;
+    }
+
     @Override
     public void run() {
         if(CMInfo._CM_DEBUG) {

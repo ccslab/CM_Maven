@@ -117,9 +117,78 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // check non-matching bytes in the update event
+        byte[] nonMatchBytes = updateEvent.getNonMatchBytes();
+        if(nonMatchBytes != null) {
+            ByteBuffer nonMatchBuffer = ByteBuffer.wrap(nonMatchBytes);
+            try {
+                int bytesWritten = writeChannel.write(nonMatchBuffer);
+                if(bytesWritten != nonMatchBytes.length) {
+                    System.err.println("bytes written to the channel = "+bytesWritten);
+                    System.err.println("non-match bytes = "+nonMatchBytes.length);
+                    return false;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
 
+        // check matching block index in the update event
+        int matchBlockIndex = updateEvent.getMatchBlockIndex();
+        if(matchBlockIndex > -1) {
+            // get the basis file channel map
+            Map<Integer, SeekableByteChannel> readChannelMap = syncGenerator.getBasisFileChannelForReadMap();
+            Objects.requireNonNull(readChannelMap);
+            // search or open a target file channel
+            SeekableByteChannel readChannel = readChannelMap.get(fileEntryIndex);
+            if(readChannel == null) {
+                try {
+                    readChannel = Files.newByteChannel(basisFilePath, StandardOpenOption.READ);
+                    readChannelMap.put(fileEntryIndex, readChannel);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
 
-        // TODO: from here
+            // get the block size of this file
+            Map<Integer, Integer> blockSizeMap = Objects.requireNonNull(syncGenerator.getBlockSizeOfBasisFileMap());
+            int blockSize = blockSizeMap.get(basisFileIndex);
+            // prepare ByteBuffer
+            ByteBuffer matchBuffer = ByteBuffer.allocate(blockSize);
+            // read file channel to the ByteBuffer by the block size
+            try {
+                int readBytes = readChannel.position(blockSize * matchBlockIndex).read(matchBuffer);
+                // write the ByteBuffer to the temp file channel
+                matchBuffer.flip();
+                int writeBytes = writeChannel.write(matchBuffer);
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("--------------------------");
+                    System.out.println("blockSize = " + blockSize);
+                    System.out.println("matchBlockIndex = " + matchBlockIndex);
+                    System.out.println("readChannel position = " + blockSize*matchBlockIndex);
+                    System.out.println("readBytes = " + readBytes);
+                    System.out.println("--------------------------");
+                    System.out.println("writeBytes = " + writeBytes);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                // close the channels and remove them from the map
+                try {
+                    readChannel.close();
+                    writeChannel.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                readChannelMap.remove(fileEntryIndex);
+                writeChannelMap.remove(fileEntryIndex);
+                return false;
+            }
+        }
+
+        // The file channels (readChannel and writeChannel) will be closed when END_FILE_BLOCK_CHECKSUM_ACK
+        // event is received.
         return true;
     }
 
