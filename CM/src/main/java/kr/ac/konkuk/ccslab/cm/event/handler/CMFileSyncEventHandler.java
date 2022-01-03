@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -69,7 +70,117 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("ackEvent = " + ackEvent);
         }
 
-        // TODO: not yet
+        // check the return code
+        final int returnCode = ackEvent.getReturnCode();
+        if(returnCode != 1) {
+            System.err.println("return code error: " + returnCode);
+            return false;
+        }
+
+        // get the sync generator reference
+        String userName = ackEvent.getSender();
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        Objects.requireNonNull(syncGenerator);
+
+        // get the target basis file channel
+        int fileEntryIndex = ackEvent.getFileEntryIndex();
+        Map<Integer, SeekableByteChannel> basisFileChannelMap = syncGenerator.getBasisFileChannelForReadMap();
+        Objects.requireNonNull(basisFileChannelMap);
+        SeekableByteChannel basisFileChannel = basisFileChannelMap.get(fileEntryIndex);
+        if(basisFileChannel == null) {
+            System.out.println("The basis file channel is null for the file entry index ("+fileEntryIndex+").");
+        }
+        // get the temp file channel
+        Map<Integer, SeekableByteChannel> tempFileChannelMap = syncGenerator.getTempFileChannelForWriteMap();
+        Objects.requireNonNull(tempFileChannelMap);
+        SeekableByteChannel tempFileChannel = tempFileChannelMap.get(fileEntryIndex);
+        if(tempFileChannel == null) {
+            System.out.println("The temp file channel is null for the file entry index ("+fileEntryIndex+").");
+        }
+
+        // close the channels and remove them from the Maps
+        if(basisFileChannel != null && basisFileChannel.isOpen()) {
+            try {
+                basisFileChannel.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            basisFileChannelMap.remove(fileEntryIndex);
+        }
+        if(tempFileChannel != null && tempFileChannel.isOpen()) {
+            try {
+                tempFileChannel.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            tempFileChannelMap.remove(fileEntryIndex);
+        }
+
+        // get the corresponding basis file path
+        int basisFileIndex = Optional.ofNullable(syncGenerator.getBasisFileIndexMap().get(fileEntryIndex))
+                .orElse(-1);
+        if(basisFileIndex == -1) {
+            System.err.println("Basis file index NOT FOUND for file entry index ("+fileEntryIndex+")!");
+            return false;
+        }
+        Path basisFilePath = syncGenerator.getBasisFileList().get(basisFileIndex);
+        if(basisFilePath == null) {
+            System.err.println("Basis file path NOT FOUND for basis file index ("+basisFileIndex+")!");
+            return false;
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("basisFilePath = " + basisFilePath);
+        }
+
+        // get the temp file path
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        Path tempFilePath = syncManager.getTempPathOfBasisFile(basisFilePath);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("tempFilePath = " + tempFilePath);
+        }
+        // compare file checksum of the temp file and the checksum of the ack event
+        int fileChecksum = syncManager.calculateWeakChecksum(tempFilePath, ackEvent.getBlockSize());
+        if(fileChecksum != ackEvent.getFileChecksum()) {
+            System.err.println("File checksum error!: temp checksum = " + fileChecksum
+                    + ", event checksum = " + ackEvent.getFileChecksum());
+            return false;
+        }
+
+        //// set the last modified time to that of the client file entry
+        // get the client file entry reference
+        CMFileSyncEntry clientFileEntry = Optional.of(m_cmInfo)
+                .map(CMInfo::getFileSyncInfo)
+                .map(CMFileSyncInfo::getFileEntryListMap)
+                .map(t -> t.get(userName))
+                .map(l -> l.get(fileEntryIndex))
+                .orElse(null);
+
+        if(clientFileEntry == null) {
+            System.err.println("client file entry is null! : userName("+userName+"), file entry index("
+                    +fileEntryIndex+")");
+            return false;
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("clientFileEntry = " + clientFileEntry);
+        }
+
+        // set the last modified time
+        try {
+            Files.setLastModifiedTime(tempFilePath, clientFileEntry.getLastModifiedTime());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // move the temp file to the original sync home with the basis file name
+        try {
+            Files.move(tempFilePath, basisFilePath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         return false;
     }
 
