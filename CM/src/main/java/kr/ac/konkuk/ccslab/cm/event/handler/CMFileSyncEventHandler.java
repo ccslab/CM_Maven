@@ -455,6 +455,21 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     System.out.println("===============================");
             }
 
+            // check if the last non-matching bytes that remains in buffer, and send to the server.
+            // At the last iteration of the above while loop, non-matching bytes may remain in "buffer".
+            if(buffer.hasRemaining()) {
+                nonMatchingCount--; // cancel the increase at the last iteration of the above while loop
+                nonMatchingCount += buffer.remaining();
+                // adjust the buffer position for the next flip operation.
+                // buffer position is rewound to 0 at the last iteration of the above while loop.
+                buffer.position(buffer.limit());
+                boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                        buffer, -1);
+                if(!ret) return false;
+                buffer.clear();
+                nonMatchBuffer.clear();
+            }
+
             if(CMInfo._CM_DEBUG) {
                 System.out.println("finished the while loop of comparing checksum");
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
@@ -467,14 +482,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         matchingCount/(double)(endChecksumEvent.getTotalNumBlocks()));
                 System.out.printf("non-matching bytes rate = %5.3f\n",
                         nonMatchingCount/(double)(Files.size(path)));
-            }
-
-            // check if the non-match buffer has some bytes to be sent
-            if(nonMatchBuffer.position() > 0) {
-                boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                        nonMatchBuffer, -1);
-                if(!ret) return false;
-                nonMatchBuffer.clear();
             }
 
             // create and send an END_FILE_BLOCK_CHECKSUM_ACK event
