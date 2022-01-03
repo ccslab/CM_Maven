@@ -181,7 +181,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        return false;
+        // TODO: from here (complete the update-file task)
+
+        return true;
     }
 
     // called at the server
