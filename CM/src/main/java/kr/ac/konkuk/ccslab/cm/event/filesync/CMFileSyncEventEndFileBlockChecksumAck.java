@@ -1,12 +1,14 @@
 package kr.ac.konkuk.ccslab.cm.event.filesync;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
     private int fileEntryIndex; // client file entry index
     private int totalNumBlocks; // total number of blocks of this file
     private int blockSize;      // block size
-    private int fileChecksum;   // file checksum (sum of block weakchecksum modular M)
+    private byte[] fileChecksum;   // file checksum (MD5)
     private int returnCode;
 
     public CMFileSyncEventEndFileBlockChecksumAck() {
@@ -14,7 +16,7 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         fileEntryIndex = 0;
         totalNumBlocks = 0;
         blockSize = 0;
-        fileChecksum = 0;
+        fileChecksum = null;
         returnCode = -1;
     }
 
@@ -33,8 +35,11 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         byteNum += Integer.BYTES;
         // blockSize
         byteNum += Integer.BYTES;
-        // fileChecksum
+        // numFileChecksumBytes
         byteNum += Integer.BYTES;
+        // fileChecksum
+        if(fileChecksum != null)
+            byteNum += fileChecksum.length;
         // returnCode
         byteNum += Integer.BYTES;
         return byteNum;
@@ -48,28 +53,45 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         m_bytes.putInt(totalNumBlocks);
         // blocksSize
         m_bytes.putInt(blockSize);
-        // fileChecksum
-        m_bytes.putInt(fileChecksum);
+        // numFileChecksumBytes, fileChecksum
+        if(fileChecksum != null) {
+            m_bytes.putInt(fileChecksum.length);
+            m_bytes.put(fileChecksum);
+        }
+        else {
+            m_bytes.putInt(0);
+        }
         // returnCode
         m_bytes.putInt(returnCode);
     }
 
     @Override
     protected void unmarshallBody(ByteBuffer msg) {
+        int numFileChecksumBytes = 0;
+
         // fileEntryIndex
         fileEntryIndex = msg.getInt();
         // totalNumBlocks
         totalNumBlocks = msg.getInt();
         // blocksSize
         blockSize = msg.getInt();
+        // numFileChecksumBytes
+        numFileChecksumBytes = msg.getInt();
         // fileChecksum
-        fileChecksum = msg.getInt();
+        if(numFileChecksumBytes > 0) {
+            fileChecksum = new byte[numFileChecksumBytes];
+            msg.get(fileChecksum);
+        }
         // returnCode
         returnCode = msg.getInt();
     }
 
     @Override
     public String toString() {
+        String checksum = null;
+        if(fileChecksum != null)
+            checksum = DatatypeConverter.printHexBinary(fileChecksum).toUpperCase();
+
         return "CMFileSyncEventEndFileBlockChecksumAck{" +
                 "m_nType=" + m_nType +
                 ", m_nID=" + m_nID +
@@ -79,7 +101,7 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
                 ", fileEntryIndex=" + fileEntryIndex +
                 ", totalNumBlocks=" + totalNumBlocks +
                 ", blockSize=" + blockSize +
-                ", fileChecksum=" + fileChecksum +
+                ", fileChecksum=" + checksum +
                 ", returnCode=" + returnCode +
                 '}';
     }
@@ -89,7 +111,7 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         if(!super.equals(obj)) return false;
         if(!(obj instanceof CMFileSyncEventEndFileBlockChecksumAck fse)) return false;
         return fse.getBlockSize() == blockSize &&
-                fse.getFileChecksum() == fileChecksum &&
+                Arrays.equals(fse.getFileChecksum(), fileChecksum) &&
                 fse.getFileEntryIndex() == fileEntryIndex &&
                 fse.getTotalNumBlocks() == totalNumBlocks &&
                 fse.getReturnCode() == returnCode;
@@ -119,11 +141,11 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         this.blockSize = blockSize;
     }
 
-    public int getFileChecksum() {
+    public byte[] getFileChecksum() {
         return fileChecksum;
     }
 
-    public void setFileChecksum(int fileChecksum) {
+    public void setFileChecksum(byte[] fileChecksum) {
         this.fileChecksum = fileChecksum;
     }
 

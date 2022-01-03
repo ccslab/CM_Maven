@@ -9,6 +9,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -520,6 +522,52 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return digest;
+    }
+
+    public byte[] calculateFileChecksum(Path path) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.calculateFileChecksum() called..");
+            System.out.println("path = " + path);
+        }
+        // get MD5
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(path.toFile());
+            byte[] byteArray = new byte[1024];
+            int bytesCount = 0;
+            while((bytesCount = fis.read(byteArray)) != -1) {
+                md.update(byteArray, 0, bytesCount);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                fis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        byte[] bytes = md.digest();
+
+        if(CMInfo._CM_DEBUG) {
+            String checksum = DatatypeConverter.printHexBinary(bytes).toUpperCase();
+            System.out.println("checksum = " + checksum);
+        }
+
+        return bytes;
     }
 
     // called by the client

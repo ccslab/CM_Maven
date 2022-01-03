@@ -11,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -140,10 +141,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("tempFilePath = " + tempFilePath);
         }
         // compare file checksum of the temp file and the checksum of the ack event
-        int fileChecksum = syncManager.calculateWeakChecksum(tempFilePath, ackEvent.getBlockSize());
-        if(fileChecksum != ackEvent.getFileChecksum()) {
-            System.err.println("File checksum error!: temp checksum = " + fileChecksum
-                    + ", event checksum = " + ackEvent.getFileChecksum());
+        byte[] fileChecksum = syncManager.calculateFileChecksum(tempFilePath);
+        if(!Arrays.equals(fileChecksum, ackEvent.getFileChecksum())) {
+            System.err.println("File checksum error!");
+            System.err.println("temp checksum = " + DatatypeConverter.printHexBinary(fileChecksum));
+            System.err.println("event checksum = " + DatatypeConverter.printHexBinary(ackEvent.getFileChecksum()));
             return false;
         }
 
@@ -510,7 +512,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // calculate a file checksum and set it to the ack event
-        int fileChecksum = syncManager.calculateWeakChecksum(path, blockSize);
+        byte[] fileChecksum = syncManager.calculateFileChecksum(path);
         ackEvent.setFileChecksum(fileChecksum);
         // send the ack event
         boolean ret = CMEventManager.unicastEvent(ackEvent, receiver, m_cmInfo);

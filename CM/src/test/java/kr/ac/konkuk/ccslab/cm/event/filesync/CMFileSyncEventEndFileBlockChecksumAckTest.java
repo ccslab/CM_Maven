@@ -12,8 +12,9 @@ public class CMFileSyncEventEndFileBlockChecksumAckTest {
     public void marshallUnmarshall() {
         System.out.println("===== CMFileSyncEventEndFileBlockChecksumAckTest.marshallUnmarshall() called..");
 
+        byte[] bytes = {1,2,3,4,5,6,7};
         CMFileSyncEventEndFileBlockChecksumAck fse = new CMFileSyncEventEndFileBlockChecksumAck();
-        fse.setFileChecksum(2);
+        fse.setFileChecksum(bytes);
         fse.setBlockSize(700);
         fse.setFileEntryIndex(5);
         fse.setTotalNumBlocks(100);
@@ -27,7 +28,7 @@ public class CMFileSyncEventEndFileBlockChecksumAckTest {
 
         assertNotNull(fse2);
         assertEquals(fse.getBlockSize(), fse2.getBlockSize());
-        assertEquals(fse.getFileChecksum(), fse2.getFileChecksum());
+        assertArrayEquals(fse.getFileChecksum(), fse2.getFileChecksum());
         assertEquals(fse.getFileEntryIndex(), fse2.getFileEntryIndex());
         assertEquals(fse.getTotalNumBlocks(), fse2.getTotalNumBlocks());
         assertEquals(fse.getReturnCode(), fse2.getReturnCode());
