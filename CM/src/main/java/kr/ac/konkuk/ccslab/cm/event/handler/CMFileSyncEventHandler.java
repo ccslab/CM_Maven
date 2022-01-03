@@ -240,6 +240,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     System.err.println("non-match bytes = "+nonMatchBytes.length);
                     return false;
                 }
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("-------------------------- write non-matching bytes");
+                    System.out.println("bytesWritten = " + bytesWritten);
+                    System.out.println("writeChannel position = " + writeChannel.position());
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
@@ -276,13 +281,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 matchBuffer.flip();
                 int writeBytes = writeChannel.write(matchBuffer);
                 if(CMInfo._CM_DEBUG) {
-                    System.out.println("--------------------------");
+                    System.out.println("-------------------------- write a matching block");
                     System.out.println("blockSize = " + blockSize);
                     System.out.println("matchBlockIndex = " + matchBlockIndex);
                     System.out.println("readChannel position = " + blockSize*matchBlockIndex);
                     System.out.println("readBytes = " + readBytes);
                     System.out.println("--------------------------");
                     System.out.println("writeBytes = " + writeBytes);
+                    System.out.println("writeChannel position = " + writeChannel.position());
                 }
 
             } catch (IOException e) {
