@@ -435,7 +435,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     if(!ret) return false;
                     // initialize buffer and non-matching block buffer
                     nonMatchBuffer.clear();
-                    buffer.clear();
                 }
                 else {
                     nonMatchingCount++;
@@ -453,27 +452,41 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     }
                 }
 
-                if(CMInfo._CM_DEBUG_2)
+                if(CMInfo._CM_DEBUG_2) {
                     System.out.println("===============================");
-            }
-
-            // check if the last non-matching bytes that remains in buffer, and send to the server.
-            // At the last iteration of the above while loop, non-matching bytes may remain in "buffer".
-            if(buffer.hasRemaining()) {
-                nonMatchingCount--; // cancel the increase at the last iteration of the above while loop
-                nonMatchingCount += buffer.remaining();
-                // adjust the buffer position for the next flip operation.
-                // buffer position is rewound to 0 at the last iteration of the above while loop.
-                buffer.position(buffer.limit());
-                boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                        buffer, -1);
-                if(!ret) return false;
-                buffer.clear();
-                nonMatchBuffer.clear();
+                }
             }
 
             if(CMInfo._CM_DEBUG) {
-                System.out.println("finished the while loop of comparing checksum");
+                System.out.println("------------------- end of while loop");
+            }
+            // check if the last non-matching bytes that remains in buffer and nonMatchBuffer, and send to the server.
+            // At the last iteration of the above while loop,
+            // non-matching bytes may remain in buffer and nonMatchBuffer.
+            buffer.position(1); // the first element has already been put to the nonMatchBuffer
+            nonMatchingCount += buffer.remaining(); // update the number of the last non-matching bytes
+            while( buffer.hasRemaining() ) {
+                if(buffer.remaining() > nonMatchBuffer.remaining()) {
+                    int oldLimit = buffer.limit();
+                    buffer.limit(buffer.position() + nonMatchBuffer.remaining());
+                    nonMatchBuffer.put(buffer);
+                    boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                            nonMatchBuffer, -1);
+                    if(!ret) return false;
+                    nonMatchBuffer.clear();
+                    buffer.limit(oldLimit);
+                }
+                else {
+                    nonMatchBuffer.put(buffer);
+                    boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                            nonMatchBuffer, -1);
+                    if(!ret) return false;
+                    nonMatchBuffer.clear();
+                }
+            }
+
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("--------------- info after the last transmission of UPDATE_EXISTING_FILE event");
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
                 System.out.println("path = "+path);
                 System.out.println("matchingCount = " + matchingCount + ", total number of blocks = " +
@@ -484,6 +497,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         matchingCount/(double)(endChecksumEvent.getTotalNumBlocks()));
                 System.out.printf("non-matching bytes rate = %5.3f\n",
                         nonMatchingCount/(double)(Files.size(path)));
+                System.out.println("-----------------");
             }
 
             // create and send an END_FILE_BLOCK_CHECKSUM_ACK event
