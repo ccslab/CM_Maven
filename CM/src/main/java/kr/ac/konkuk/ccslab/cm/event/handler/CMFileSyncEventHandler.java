@@ -183,7 +183,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        // TODO: from here (complete the update-file task)
+        // complete the update-existing-file task
+        boolean result = syncManager.completeUpdateFile(userName, basisFilePath);
+        if(result) {
+            // check if the file-sync is complete or not
+            if( syncManager.isCompleteFileSync(userName) ) {
+                // complete the file-sync task
+                syncManager.completeFileSync(userName);
+            }
+        }
 
         return true;
     }
@@ -462,26 +470,28 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             }
             // check if the last non-matching bytes that remains in buffer and nonMatchBuffer, and send to the server.
             // At the last iteration of the above while loop,
-            // non-matching bytes may remain in buffer and nonMatchBuffer.
-            buffer.position(1); // the first element has already been put to the nonMatchBuffer
-            nonMatchingCount += buffer.remaining(); // update the number of the last non-matching bytes
-            while( buffer.hasRemaining() ) {
-                if(buffer.remaining() > nonMatchBuffer.remaining()) {
-                    int oldLimit = buffer.limit();
-                    buffer.limit(buffer.position() + nonMatchBuffer.remaining());
-                    nonMatchBuffer.put(buffer);
-                    boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                            nonMatchBuffer, -1);
-                    if(!ret) return false;
-                    nonMatchBuffer.clear();
-                    buffer.limit(oldLimit);
-                }
-                else {
-                    nonMatchBuffer.put(buffer);
-                    boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                            nonMatchBuffer, -1);
-                    if(!ret) return false;
-                    nonMatchBuffer.clear();
+            // non-matching bytes may remain in buffer and nonMatchBuffer if bBlockMatch is false.
+            if(!bBlockMatch) {
+                buffer.position(1); // the first element has already been put to the nonMatchBuffer
+                nonMatchingCount += buffer.remaining(); // update the number of the last non-matching bytes
+                while( buffer.hasRemaining() ) {
+                    if(buffer.remaining() > nonMatchBuffer.remaining()) {
+                        int oldLimit = buffer.limit();
+                        buffer.limit(buffer.position() + nonMatchBuffer.remaining());
+                        nonMatchBuffer.put(buffer);
+                        boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                                nonMatchBuffer, -1);
+                        if(!ret) return false;
+                        nonMatchBuffer.clear();
+                        buffer.limit(oldLimit);
+                    }
+                    else {
+                        nonMatchBuffer.put(buffer);
+                        boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                                nonMatchBuffer, -1);
+                        if(!ret) return false;
+                        nonMatchBuffer.clear();
+                    }
                 }
             }
 
