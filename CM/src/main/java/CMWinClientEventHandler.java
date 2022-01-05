@@ -71,8 +71,8 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	private boolean m_bStartC2CFTPSession;
 	private int m_nTotalNumFilesPerSession;
 	private int m_nCurNumFilesPerSession;
-	
-	
+
+
 	public CMWinClientEventHandler(CMClientStub clientStub, CMWinClient client)
 	{
 		m_client = client;
@@ -305,7 +305,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	{
 		return m_nCurNumFilesPerSession;
 	}
-		
+
 	//////////////////////////////////////////////////////////////////////////////
 	
 	@Override
@@ -841,22 +841,27 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
-			printMessage("["+fe.getFileSender()+"] starts to send file("+fe.getFileName()+").\n");
+			if(fInfo.getStartRequestTime() != 0) {	// request started by app instead of other reasons
+				printMessage("["+fe.getFileSender()+"] starts to send file("+fe.getFileName()+").\n");
+			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER_ACK:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN_ACK:
-			printMessage("["+fe.getFileReceiver()+"] starts to receive file("
-					+fe.getFileName()+").\n");
+			if(fInfo.getStartRequestTime() != 0) {	// request started by app instead of other reasons
+				printMessage("["+fe.getFileReceiver()+"] starts to receive file("
+						+fe.getFileName()+").\n");
+			}
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
-			printMessage("["+fe.getFileSender()+"] completes to send file("
-					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
-			
-			lTotalDelay = fInfo.getEndRecvTime() - fInfo.getStartRequestTime();
-			lTransferDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
-			printMessage("total delay("+lTotalDelay+" ms), ");
-			printMessage("file-receiving delay("+lTransferDelay+" ms).\n");
+			if(fInfo.getStartRequestTime() != 0) {	// request started by app instead of other reasons
+				printMessage("["+fe.getFileSender()+"] completes to send file("
+						+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+				lTotalDelay = fInfo.getEndRecvTime() - fInfo.getStartRequestTime();
+				printMessage("total delay(" + lTotalDelay + " ms), ");
+				lTransferDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
+				printMessage("File-receiving delay("+lTransferDelay+" ms).\n");
+			}
 
 			if(m_bDistFileProc)
 				processFile(fe.getFileName());
@@ -875,12 +880,14 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMFileEvent.END_FILE_TRANSFER_ACK:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN_ACK:
-			printMessage("["+fe.getFileReceiver()+"] compeletes to receive file("
-					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
-			lTotalDelay = fInfo.getEndSendTime() - fInfo.getStartRequestTime();
-			lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
-			printMessage("total delay("+lTotalDelay+" ms), ");
-			printMessage("file-sending delay("+lTransferDelay+" ms).\n");
+			if(fInfo.getStartRequestTime() != 0) {	// request started by app instead of other reasons
+				printMessage("["+fe.getFileReceiver()+"] completes to receive file("
+						+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+				lTotalDelay = fInfo.getEndSendTime() - fInfo.getStartRequestTime();
+				printMessage("Total delay(" + lTotalDelay + " ms).\n");
+				lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
+				printMessage("File-sending delay("+lTransferDelay+" ms).\n");
+			}
 
 			if(m_bStartC2CFTPSession && fe.getFileReceiver().contentEquals(m_strFileReceiver))
 			{
