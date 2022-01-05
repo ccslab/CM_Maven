@@ -19,6 +19,8 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteNewFile;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteUpdateFile;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
@@ -351,6 +353,14 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		CMFileSyncEvent fse = (CMFileSyncEvent) cme;
 		switch(fse.getID())
 		{
+			case CMFileSyncEvent.COMPLETE_NEW_FILE:
+				CMFileSyncEventCompleteNewFile newFileEvent = (CMFileSyncEventCompleteNewFile) fse;
+				printMessage("new file uploaded: " + newFileEvent.getCompletedPath() + "\n");
+				break;
+			case CMFileSyncEvent.COMPLETE_UPDATE_FILE:
+				CMFileSyncEventCompleteUpdateFile updateFileEvent = (CMFileSyncEventCompleteUpdateFile) fse;
+				printMessage("file updated: " + updateFileEvent.getCompletedPath() + "\n");
+				break;
 			case CMFileSyncEvent.COMPLETE_FILE_SYNC:
 				printMessage("The file sync completes.\n");
 				break;
