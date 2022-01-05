@@ -297,7 +297,12 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setSender(serverName);
         fse.setReceiver(userName);
         fse.setUserName(userName);
-        fse.setCompletedPath(path);
+
+        // get the relative path of the basis file path
+        Path syncHome = getServerSyncHome(userName);
+        Path relativePath = path.subpath(syncHome.getNameCount(), path.getNameCount());
+        // set the relative path to the event
+        fse.setCompletedPath(relativePath);
 
         return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
     }
