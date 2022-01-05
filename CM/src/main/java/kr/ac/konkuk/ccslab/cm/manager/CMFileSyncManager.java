@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -46,6 +47,23 @@ public class CMFileSyncManager extends CMServiceManager {
 
         if(CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.startFileSync() called..");
+
+        // client -> server
+        // check if the client has logged in to the default server.
+        CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+        if(confInfo.getSystemType().equals("SERVER"))
+        {
+            System.err.println("The system type is SERVER!");
+            return false;
+        }
+
+        CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+        int nState = myself.getState();
+        if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
+        {
+            System.err.println("You must log in to the default server!");
+            return false;
+        }
 
         CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
 
