@@ -43,8 +43,10 @@ public abstract class CMFileSyncEvent extends CMEvent {
     public static final int COMPLETE_NEW_FILE = 14;
     // Fields: userName, completedPath
     public static final int COMPLETE_UPDATE_FILE = 15;
+    // Fields: userName, skippedPath
+    public static final int SKIP_UPDATE_FILE = 16;
     // Fields: userName, numFilesCompleted
-    public static final int COMPLETE_FILE_SYNC = 16;
+    public static final int COMPLETE_FILE_SYNC = 17;
 
     public CMFileSyncEvent() {
         m_nType = CMInfo.CM_FILE_SYNC_EVENT;

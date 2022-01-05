@@ -45,6 +45,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.REQUEST_NEW_FILES -> processResult = processREQUEST_NEW_FILES(fse);
             case CMFileSyncEvent.COMPLETE_NEW_FILE -> processResult = processCOMPLETE_NEW_FILE(fse);
             case CMFileSyncEvent.COMPLETE_UPDATE_FILE -> processResult = processCOMPLETE_UPDATE_FILE(fse);
+            case CMFileSyncEvent.SKIP_UPDATE_FILE -> processResult = processSKIP_UPDATE_FILE(fse);
             case CMFileSyncEvent.COMPLETE_FILE_SYNC -> processResult = processCOMPLETE_FILE_SYNC(fse);
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM -> processResult = processSTART_FILE_BLOCK_CHECKSUM(fse);
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM_ACK -> processResult =
@@ -1225,8 +1226,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("fse = " + fse_cnf);
         }
         // update info for the new-file completion at the client
-        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
+        Objects.requireNonNull(isFileSyncCompletedMap);
         isFileSyncCompletedMap.put(fse_cnf.getCompletedPath(), true);
 
         return true;
@@ -1241,9 +1243,27 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("fse = " + fse_cuf);
         }
         // update info for the file-update completion at the client
-        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
+        Objects.requireNonNull(isFileSyncCompletedMap);
         isFileSyncCompletedMap.put(fse_cuf.getCompletedPath(), true);
+
+        return true;
+    }
+
+    // called by the client
+    private boolean processSKIP_UPDATE_FILE(CMFileSyncEvent fse) {
+        CMFileSyncEventSkipUpdateFile skipFileEvent = (CMFileSyncEventSkipUpdateFile) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSKIP_UPDATE_FILE() called..");
+            System.out.println("skipFileEvent = " + skipFileEvent);
+        }
+        // update info for the file-update completion at the client
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
+        Objects.requireNonNull(isFileSyncCompletedMap);
+        isFileSyncCompletedMap.put(skipFileEvent.getSkippedPath(), true);
 
         return true;
     }

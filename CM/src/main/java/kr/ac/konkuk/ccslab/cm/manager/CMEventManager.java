@@ -208,6 +208,9 @@ public class CMEventManager {
 						CMFileSyncEventCompleteUpdateFile completeUpdateFile =
 								new CMFileSyncEventCompleteUpdateFile(buf);
 						return completeUpdateFile;
+					case CMFileSyncEvent.SKIP_UPDATE_FILE:
+						CMFileSyncEventSkipUpdateFile skipUpdateFile = new CMFileSyncEventSkipUpdateFile(buf);
+						return skipUpdateFile;
 					case CMFileSyncEvent.COMPLETE_FILE_SYNC:
 						CMFileSyncEventCompleteFileSync completeFileSync = new CMFileSyncEventCompleteFileSync(buf);
 						return completeFileSync;

@@ -20,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteNewFile;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteUpdateFile;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventSkipUpdateFile;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
@@ -232,6 +233,10 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			case CMFileSyncEvent.COMPLETE_UPDATE_FILE:
 				CMFileSyncEventCompleteUpdateFile updateFileEvent = (CMFileSyncEventCompleteUpdateFile) fse;
 				System.out.println("file updated: " + updateFileEvent.getCompletedPath());
+				break;
+			case CMFileSyncEvent.SKIP_UPDATE_FILE:
+				CMFileSyncEventSkipUpdateFile skipFileEvent = (CMFileSyncEventSkipUpdateFile) fse;
+				System.out.println("file skipped: " + skipFileEvent.getSkippedPath());
 				break;
 			case CMFileSyncEvent.COMPLETE_FILE_SYNC:
 				System.out.println("The file sync completes.");

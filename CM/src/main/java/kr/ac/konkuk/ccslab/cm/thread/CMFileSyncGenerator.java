@@ -222,7 +222,7 @@ public class CMFileSyncGenerator implements Runnable {
             if(clientFileEntry.getSize() == sizeOfBasisFile &&
                     clientFileEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
                 // already synchronized
-                syncManager.completeUpdateFile(userName, basisFile);
+                syncManager.skipUpdateFile(userName, basisFile);
                 if(CMInfo._CM_DEBUG) {
                     System.out.println("basisFile("+basisFile+") skips synchronization.");
                     System.out.println("sizeOfBasisFile = " + sizeOfBasisFile);

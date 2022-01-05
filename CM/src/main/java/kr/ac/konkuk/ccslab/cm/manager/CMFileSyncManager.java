@@ -271,6 +271,39 @@ public class CMFileSyncManager extends CMServiceManager {
         return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
     }
 
+    // called at the server
+    public boolean skipUpdateFile(String userName, Path basisFile) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.skipUpdateFile() called..");
+            System.out.println("userName = " + userName);
+            System.out.println("basisFile = " + basisFile);
+        }
+        // get CMFileSyncGenerator
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        Objects.requireNonNull(syncGenerator);
+        // set the isUpdateFileCompletedMap element
+        syncGenerator.getIsUpdateFileCompletedMap().put(basisFile, true);
+        // update numUpdateFilesCompleted
+        int numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
+        numUpdateFilesCompleted++;
+        syncGenerator.setNumUpdateFilesCompleted(numUpdateFilesCompleted);
+
+        // create a SKIP_UPDATE_FILE event
+        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        CMFileSyncEventSkipUpdateFile fse = new CMFileSyncEventSkipUpdateFile();
+        fse.setSender(serverName);
+        fse.setReceiver(userName);
+        fse.setUserName(userName);
+
+        // get the relative path of the basis file path
+        Path syncHome = getServerSyncHome(userName);
+        Path relativePath = basisFile.subpath(syncHome.getNameCount(), basisFile.getNameCount());
+        // set the relative path to the event
+        fse.setSkippedPath(relativePath);
+
+        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+    }
+
     // called by the server
     public boolean completeUpdateFile(String userName, Path path) {
         if(CMInfo._CM_DEBUG) {
@@ -280,10 +313,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // get CMFileSyncGenerator
         CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
-        if(syncGenerator == null) {
-            System.err.println("syncGenerator is null!");
-            return false;
-        }
+        Objects.requireNonNull(syncGenerator);
         // set the isUpdateFileCompletedMap element
         syncGenerator.getIsUpdateFileCompletedMap().put(path, true);
         // update numUpdateFilesCompleted
@@ -698,4 +728,5 @@ public class CMFileSyncManager extends CMServiceManager {
 
         return tempBasisFilePath;
     }
+
 }
