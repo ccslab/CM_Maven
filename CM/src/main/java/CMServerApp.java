@@ -118,6 +118,9 @@ public class CMServerApp {
 			case 8: // change a field value in the configuration file
 				changeConfiguration();
 				break;
+			case 9:	// show current thread information
+				printThreadInfo();
+				break;
 			case 20: // set file path
 				setFilePath();
 				break;
@@ -211,6 +214,7 @@ public class CMServerApp {
 		System.out.print("3: test input network throughput, 4: test output network throughput\n");
 		System.out.print("5: show current channels, 6: show login users\n");
 		System.out.print("7: show all configurations, 8: change configuration\n");
+		System.out.print("9: show current thread information\n");
 		System.out.print("---------------------------------- File Transfer\n");
 		System.out.print("20: set file path, 21: request file, 22: push file\n");
 		System.out.print("23: cancel receiving file, 24: cancel sending file\n");
@@ -1475,7 +1479,12 @@ public class CMServerApp {
 		due.setType(-1);	// set wrong event type
 		m_serverStub.send(due, strTarget);
 	}
-	
+
+	private void printThreadInfo() {
+		String threadInfo = m_serverStub.getThreadInfo();
+		System.out.println(threadInfo);
+	}
+
 	public static void main(String[] args) {
 		CMServerApp server = new CMServerApp();
 		CMServerStub cmStub = server.getServerStub();

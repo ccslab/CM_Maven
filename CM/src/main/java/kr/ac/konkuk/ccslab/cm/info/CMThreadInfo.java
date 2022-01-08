@@ -1,51 +1,76 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.*;
 
 public class CMThreadInfo {
-	private ExecutorService m_executorService;
-	private ScheduledExecutorService m_schedExecutorService;
-	private ScheduledFuture<?> m_scheduledFuture;
+	private ExecutorService executorService;
+	private ScheduledExecutorService scheduledExecutorService;
+	private ScheduledFuture<?> scheduledFuture;
 
 	public CMThreadInfo()
 	{
-		m_executorService = null;
-		m_schedExecutorService = null;
-		m_scheduledFuture = null;
+		executorService = null;
+		scheduledExecutorService = null;
+		scheduledFuture = null;
 	}
 
 	///// set/get methods
 	
 	public synchronized void setExecutorService(ExecutorService es)
 	{
-		m_executorService = es;
+		executorService = es;
 	}
 	
 	public synchronized ExecutorService getExecutorService()
 	{
-		return m_executorService;
+		return executorService;
 	}
 	
 	public synchronized void setScheduledExecutorService(ScheduledExecutorService ses)
 	{
-		m_schedExecutorService = ses;
+		scheduledExecutorService = ses;
 	}
 	
 	public synchronized ScheduledExecutorService getScheduledExecutorService()
 	{
-		return m_schedExecutorService;
+		return scheduledExecutorService;
 	}
 
 	public synchronized void setScheduledFuture(ScheduledFuture<?> future)
 	{
-		m_scheduledFuture = future;
+		scheduledFuture = future;
 	}
 	
 	public synchronized ScheduledFuture<?> getScheduledFuture()
 	{
-		return m_scheduledFuture;
+		return scheduledFuture;
+	}
+
+	// Override method
+
+	@Override
+	public String toString() {
+
+		StringBuilder sb = new StringBuilder();
+		if(executorService != null && executorService instanceof ThreadPoolExecutor) {
+			ThreadPoolExecutor pool = (ThreadPoolExecutor) executorService;
+			sb.append("---------- Thread pool info\n");
+			sb.append("maximum pool size = "+ pool.getMaximumPoolSize()+"\n");
+			sb.append("current number of threads = "+ pool.getPoolSize()+"\n");
+			sb.append("core number of threads = "+ pool.getCorePoolSize()+"\n");
+			sb.append("number of actively executing threads = "+ pool.getActiveCount()+"\n");
+		}
+		if(scheduledExecutorService != null && scheduledExecutorService instanceof ScheduledThreadPoolExecutor) {
+			ScheduledThreadPoolExecutor pool = (ScheduledThreadPoolExecutor) scheduledExecutorService;
+			sb.append("---------- Scheduled thread pool info\n");
+			sb.append("maximum pool size = "+ pool.getMaximumPoolSize()+"\n");
+			sb.append("current number of threads = "+ pool.getPoolSize()+"\n");
+			sb.append("core number of threads = "+ pool.getCorePoolSize()+"\n");
+			sb.append("number of actively executing threads = "+ pool.getActiveCount()+"\n");
+			sb.append("----------\n");
+		}
+
+		return sb.toString();
 	}
 
 }

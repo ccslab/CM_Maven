@@ -195,6 +195,10 @@ public class CMWinServer extends JFrame {
 		JMenuItem changeConfMenuItem = new JMenuItem("change configuration");
 		changeConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(changeConfMenuItem);
+		JMenuItem showThreadInfoItem = new JMenuItem("show thread information");
+		showThreadInfoItem.addActionListener(menuListener);
+		infoSubMenu.add(showThreadInfoItem);
+
 		
 		serviceMenu.add(infoSubMenu);
 		
@@ -324,6 +328,9 @@ public class CMWinServer extends JFrame {
 		case 8: // change a field value in the configuration file
 			changeConfiguration();
 			break;
+		case 9:	// show current thread information
+			printThreadInfo();
+			break;
 		case 10:	// send CMDummyEvent
 			sendCMDummyEvent();
 			break;
@@ -411,6 +418,7 @@ public class CMWinServer extends JFrame {
 		printMessage("3: test input network throughput, 4: test output network throughput\n");
 		printMessage("5: show current channels, 6: show login users\n");
 		printMessage("7: show all configurations, 8: change configuration\n");
+		printMessage("9: show current thread information\n");
 		printMessage("---------------------------------- Event Transmission\n");
 		printMessage("10: send CMDummyEvent\n");
 		printMessage("---------------------------------- File Transfer\n");
@@ -2020,6 +2028,9 @@ public class CMWinServer extends JFrame {
 			case "change configuration":
 				changeConfiguration();
 				break;
+			case "show thread information":
+				printThreadInfo();
+				break;
 			case "test input network throughput":
 				measureInputThroughput();
 				break;
@@ -2080,7 +2091,12 @@ public class CMWinServer extends JFrame {
 			}
 		}
 	}
-			
+
+	private void printThreadInfo() {
+		String threadInfo = m_serverStub.getThreadInfo();
+		printMessage(threadInfo);
+	}
+
 	public static void main(String[] args)
 	{
 		CMWinServer server = new CMWinServer();

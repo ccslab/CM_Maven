@@ -2459,5 +2459,14 @@ public class CMStub {
 		
 		return confInfo.getConfFileHome();
 	}
-	
+
+	/**
+	 * gets the current thread pool information.
+	 *
+	 * @return the current thread pool information string
+	 */
+	public String getThreadInfo() {
+		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		return threadInfo.toString();
+	}
 }
