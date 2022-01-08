@@ -5,9 +5,11 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.nio.file.Path;
+import java.nio.file.WatchService;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 public class CMFileSyncInfo {
 
@@ -24,6 +26,10 @@ public class CMFileSyncInfo {
     private Map<String, List<CMFileSyncEntry>> fileEntryListMap;    // 4 server
     private Map<String, CMFileSyncGenerator> syncGeneratorMap;      // 4 server
 
+    private boolean fileChangeDetected;
+    private WatchService watchService;
+    private Future<?> watchServiceFuture;
+
     public CMFileSyncInfo() {
         syncInProgress = false;
         pathList = null;
@@ -33,6 +39,10 @@ public class CMFileSyncInfo {
 
         fileEntryListMap = new Hashtable<>();
         syncGeneratorMap = new Hashtable<>();
+
+        fileChangeDetected = false;
+        watchService = null;
+        watchServiceFuture = null;
     }
 
     public boolean isSyncInProgress() {
@@ -72,5 +82,34 @@ public class CMFileSyncInfo {
 
     public Map<String, CMFileSyncGenerator> getSyncGeneratorMap() {
         return syncGeneratorMap;
+    }
+
+    public boolean isFileChangeDetected() {
+        return fileChangeDetected;
+    }
+
+    public void setFileChangeDetected(boolean fileChangeDetected) {
+        this.fileChangeDetected = fileChangeDetected;
+    }
+
+    public WatchService getWatchService() {
+        return watchService;
+    }
+
+    public void setWatchService(WatchService watchService) {
+        this.watchService = watchService;
+    }
+
+    public Future<?> getWatchServiceFuture() {
+        return watchServiceFuture;
+    }
+
+    public void setWatchServiceFuture(Future<?> watchServiceFuture) {
+        this.watchServiceFuture = watchServiceFuture;
+    }
+
+    public boolean isWatchServiceDone() {
+        if(watchServiceFuture == null) return true;
+        return watchServiceFuture.isDone() || watchServiceFuture.isCancelled();
     }
 }
