@@ -35,7 +35,6 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
-import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 
 public class CMClientApp {
@@ -3245,7 +3244,7 @@ public class CMClientApp {
 			return;
 		}
 
-		if(fileSyncManager.startFileSync())
+		if(fileSyncManager.sync())
 			System.out.println("File sync starts.");
 		else
 			System.err.println("File sync error!");

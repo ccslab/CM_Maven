@@ -3924,7 +3924,7 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 
-		if(fileSyncManager.startFileSync())
+		if(fileSyncManager.sync())
 			printMessage("File sync starts.\n");
 		else
 			printStyledMessage("File sync error!\n", "bold");

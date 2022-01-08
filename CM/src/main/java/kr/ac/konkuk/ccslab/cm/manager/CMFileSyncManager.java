@@ -43,7 +43,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // currently called by client
-    public boolean startFileSync() {
+    public synchronized boolean sync() {
 
         if(CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.startFileSync() called..");

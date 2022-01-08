@@ -33,7 +33,7 @@ public class CMFileSyncManagerTestForClient {
     @Test
     public void startFileSync() {
         System.out.println("===== called startFileSync()");
-        assertTrue(fileSyncManager.startFileSync());
+        assertTrue(fileSyncManager.sync());
     }
 
     @Test
