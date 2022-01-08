@@ -4,6 +4,8 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
@@ -558,18 +560,24 @@ public class CMCommManager {
 	
 	public static CMByteReceiver startReceivingMessage(CMInfo cmInfo)
 	{
+		ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
 		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
-		byteReceiver.start();
+		//byteReceiver.start();
+		Future<?> future = es.submit(byteReceiver);
 		cmInfo.getCommInfo().setByteReceiver(byteReceiver);
+		cmInfo.getCommInfo().setByteReceiverFuture(future);
 		
 		return byteReceiver;
 	}
 	
 	public static CMByteSender startSendingMessage(CMInfo cmInfo)
 	{
+		ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
 		CMByteSender byteSender = new CMByteSender(cmInfo);
-		byteSender.start();
+		//byteSender.start();
+		Future<?> future = es.submit(byteSender);
 		cmInfo.getCommInfo().setByteSender(byteSender);
+		cmInfo.getCommInfo().setByteSenderFuture(future);
 		
 		return byteSender;
 	}

@@ -3,13 +3,17 @@ package kr.ac.konkuk.ccslab.cm.info;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
+import java.util.concurrent.Future;
+
 public class CMEventInfo {
 	private CMEventReceiver m_eventReceiver;
+	private Future<?> eventReceiverFuture;
 	private CMEventSynchronizer m_eventSynchronizer;
 	
 	public CMEventInfo()
 	{
 		m_eventReceiver = null;
+		eventReceiverFuture = null;
 		m_eventSynchronizer = new CMEventSynchronizer();		
 	}
 	
@@ -34,5 +38,12 @@ public class CMEventInfo {
 	{
 		return m_eventSynchronizer;
 	}
-	
+
+	public Future<?> getEventReceiverFuture() {
+		return eventReceiverFuture;
+	}
+
+	public void setEventReceiverFuture(Future<?> eventReceiverFuture) {
+		this.eventReceiverFuture = eventReceiverFuture;
+	}
 }

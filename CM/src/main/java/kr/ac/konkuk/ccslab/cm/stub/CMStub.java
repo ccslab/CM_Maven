@@ -164,16 +164,16 @@ public class CMStub {
 		
 		// terminate threads
 		CMEventInfo eventInfo = m_cmInfo.getEventInfo();
-		CMEventReceiver er = eventInfo.getEventReceiver();
-		if(er != null)
-			er.interrupt();
+		Future<?> eventReceiverFuture = eventInfo.getEventReceiverFuture();
+		if(eventReceiverFuture != null)
+			eventReceiverFuture.cancel(true);
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
-		CMByteReceiver byteReceiver = commInfo.getByteReceiver();
-		if(byteReceiver != null)
-			byteReceiver.interrupt();
-		CMByteSender byteSender = commInfo.getByteSender();
-		if(byteSender != null)
-			byteSender.interrupt();
+		Future<?> byteReceiverFuture = commInfo.getByteReceiverFuture();
+		if(byteReceiverFuture != null)
+			byteReceiverFuture.cancel(true);
+		Future<?> byteSenderFuture = commInfo.getByteSenderFuture();
+		if(byteSenderFuture != null)
+			byteSenderFuture.cancel(true);
 		
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread

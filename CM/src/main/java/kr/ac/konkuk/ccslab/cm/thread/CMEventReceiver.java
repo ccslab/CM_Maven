@@ -33,7 +33,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 
-public class CMEventReceiver extends Thread {
+public class CMEventReceiver implements Runnable {
 	private CMBlockingEventQueue m_queue;
 	private CMInfo m_cmInfo;
 	
@@ -42,7 +42,8 @@ public class CMEventReceiver extends Thread {
 		m_cmInfo = cmInfo;
 		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
 	}
-	
+
+	@Override
 	public void run()
 	{
 		CMMessage msg = null;

@@ -4,6 +4,8 @@ import java.net.InetSocketAddress;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -52,9 +54,12 @@ public class CMEventManager {
 	public synchronized static CMEventReceiver startReceivingEvent(CMInfo cmInfo)
 	{
 		CMEventInfo eventInfo = cmInfo.getEventInfo();
+		ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
 		CMEventReceiver eventReceiver = new CMEventReceiver(cmInfo);
-		eventReceiver.start();
+		//eventReceiver.start();
+		Future<?> future = es.submit(eventReceiver);
 		eventInfo.setEventReceiver(eventReceiver);
+		eventInfo.setEventReceiverFuture(future);
 		
 		return eventReceiver;
 	}

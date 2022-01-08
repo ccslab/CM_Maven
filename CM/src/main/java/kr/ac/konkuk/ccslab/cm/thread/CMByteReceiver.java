@@ -16,7 +16,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
 import java.net.*;
 
-public class CMByteReceiver extends Thread {
+public class CMByteReceiver implements Runnable {
 	private CMInfo m_cmInfo;
 	private Selector m_selector;
 	private CMBlockingEventQueue m_queue;
@@ -30,7 +30,8 @@ public class CMByteReceiver extends Thread {
 		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
 		m_unknownChannelList = cmInfo.getCommInfo().getUnknownChannelInfoList();
 	}
-	
+
+	@Override
 	public void run()
 	{
 		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();

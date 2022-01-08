@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.info;
 import java.io.IOException;
 import java.nio.channels.*;
+import java.util.concurrent.Future;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
@@ -24,6 +25,8 @@ public class CMCommInfo {
 	private CMBlockingEventQueue m_sendQueue;
 	private CMByteReceiver m_byteReceiver;
 	private CMByteSender m_byteSender;
+	private Future<?> byteReceiverFuture;
+	private Future<?> byteSenderFuture;
 	
 	//private Vector<SelectableChannel> m_toBeDeletedChannelList; 
 	//for datagram
@@ -47,6 +50,8 @@ public class CMCommInfo {
 		
 		m_byteReceiver = null;
 		m_byteSender = null;
+		byteReceiverFuture = null;
+		byteSenderFuture = null;
 		//m_scList = new Vector<SocketChannel>();
 		//m_dcList = new Vector<DatagramChannel>();
 		//m_mcList = new Vector<MulticastChannel>();
@@ -193,7 +198,20 @@ public class CMCommInfo {
 	{
 		return m_blockDCInfo;
 	}
-		
 
+	public Future<?> getByteReceiverFuture() {
+		return byteReceiverFuture;
+	}
 
+	public void setByteReceiverFuture(Future<?> byteReceiverFuture) {
+		this.byteReceiverFuture = byteReceiverFuture;
+	}
+
+	public Future<?> getByteSenderFuture() {
+		return byteSenderFuture;
+	}
+
+	public void setByteSenderFuture(Future<?> byteSenderFuture) {
+		this.byteSenderFuture = byteSenderFuture;
+	}
 }

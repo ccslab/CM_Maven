@@ -13,7 +13,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
-public class CMByteSender extends Thread {
+public class CMByteSender implements Runnable {
 
 	private CMBlockingEventQueue m_sendQueue = null;
 	private CMInfo m_cmInfo;
@@ -23,7 +23,8 @@ public class CMByteSender extends Thread {
 		m_sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
 		m_cmInfo = cmInfo;
 	}
-	
+
+	@Override
 	public void run()
 	{
 		CMMessage msg = null;
