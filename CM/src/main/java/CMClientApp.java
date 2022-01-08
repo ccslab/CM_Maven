@@ -214,6 +214,9 @@ public class CMClientApp {
 			case 58: // change configuration
 				testChangeConfiguration();
 				break;
+			case 59: // show current thread information
+				printThreadInfo();
+				break;
 			case 60: // add additional channel
 				testAddChannel();
 				break;
@@ -374,6 +377,7 @@ public class CMClientApp {
 		System.out.println("54: show group information of designated server");
 		System.out.println("55: measure input network throughput, 56: measure output network throughput");
 		System.out.println("57: show all configurations, 58: change configuration");
+		System.out.println("59: show current thread information");
 		System.out.println("---------------------------------- Channel");
 		System.out.println("60: add channel, 61: remove channel, 62: test blocking channel");
 		System.out.println("---------------------------------- File Transfer");
@@ -3291,7 +3295,11 @@ public class CMClientApp {
 		m_clientStub.send(due, strServer);
 	}
 
-	
+	private void printThreadInfo() {
+		String threadInfo = m_clientStub.getThreadInfo();
+		System.out.println(threadInfo);
+	}
+
 	public static void main(String[] args) {
 		CMClientApp client = new CMClientApp();
 		CMClientStub cmStub = client.getClientStub();

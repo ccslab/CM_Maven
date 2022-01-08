@@ -370,7 +370,10 @@ public class CMWinClient extends JFrame {
 		JMenuItem changeConfMenuItem = new JMenuItem("change configuration");
 		changeConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(changeConfMenuItem);
-		
+		JMenuItem showThreadInfoItem = new JMenuItem("show thread information");
+		showThreadInfoItem.addActionListener(menuListener);
+		infoSubMenu.add(showThreadInfoItem);
+
 		cmServiceMenu.add(infoSubMenu);
 		
 		JMenu channelSubMenu = new JMenu("Channel");
@@ -785,6 +788,9 @@ public class CMWinClient extends JFrame {
 		case 58: // change configuration
 			testChangeConfiguration();
 			break;
+		case 59: // show current thread information
+			printThreadInfo();
+			break;
 		case 60: // add additional channel
 			testAddChannel();
 			break;
@@ -943,6 +949,7 @@ public class CMWinClient extends JFrame {
 		printMessage("54: show group information of designated server\n");
 		printMessage("55: measure input network throughput, 56: measure output network throughput\n");
 		printMessage("57: show all configurations, 58: change configuration\n");
+		printMessage("59: show current thread information\n");
 		printMessage("---------------------------------- Channel\n");
 		printMessage("60: add channel, 61: remove channel, 62: test blocking channel\n");
 		printMessage("---------------------------------- File Transfer\n");
@@ -4380,6 +4387,9 @@ public class CMWinClient extends JFrame {
 			case "change configuration":
 				testChangeConfiguration();
 				break;
+			case "show thread information":
+				printThreadInfo();
+				break;
 			case "add channel":
 				testAddChannel();
 				break;
@@ -4557,7 +4567,12 @@ public class CMWinClient extends JFrame {
 		}
 		
 	}
-	
+
+	private void printThreadInfo() {
+		String threadInfo = m_clientStub.getThreadInfo();
+		printMessage(threadInfo);
+	}
+
 	public static void main(String[] args) {
 		CMWinClient client = new CMWinClient();
 		CMClientStub cmStub = client.getClientStub();
