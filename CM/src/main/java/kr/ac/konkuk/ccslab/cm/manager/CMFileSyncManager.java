@@ -20,8 +20,7 @@ import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class CMFileSyncManager extends CMServiceManager {
@@ -759,6 +758,56 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // store the Future<?> to the syncInfo
         syncInfo.setWatchServiceFuture(future);
+
+        return true;
+    }
+
+    public boolean stopWatchService() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.stopWatchService() called..");
+        }
+
+        // get syncInfo
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        // get WatchService reference
+        WatchService watchService = syncInfo.getWatchService();
+        if(watchService == null) {
+            System.err.println("WatchService refernce is null!");
+            return false;
+        }
+        // stop the WatchService
+        try {
+            watchService.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // get the Future<?> reference of the watch-service task
+        Future<?> watchFuture = syncInfo.getWatchServiceFuture();
+        if(watchFuture == null) {
+            System.err.println("Future<?> of the watch-service task is null!");
+            return false;
+        }
+        // wait until the task is done
+        try {
+            watchFuture.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+            return false;
+        }
+        // check if the watch-service task is done in the ExecutorService
+        if(!syncInfo.isWatchServiceTaskDone()) {
+            System.err.println("The watch-service task is not done!");
+            return false;
+        }
+        // initialize the WatchService and WatchService task references
+        syncInfo.setWatchService(null);
+        syncInfo.setWatchServiceFuture(null);
 
         return true;
     }

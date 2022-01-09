@@ -108,7 +108,7 @@ public class CMFileSyncInfo {
         this.watchServiceFuture = watchServiceFuture;
     }
 
-    public boolean isWatchServiceDone() {
+    public boolean isWatchServiceTaskDone() {
         if(watchServiceFuture == null) return true;
         return watchServiceFuture.isDone() || watchServiceFuture.isCancelled();
     }

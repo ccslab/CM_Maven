@@ -1306,7 +1306,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         syncManager.deleteFileSyncInfo();
 
         // check if the watch service has detected another change
-        if(syncInfo.isFileChangeDetected() && !syncInfo.isWatchServiceDone()) {
+        if(syncInfo.isFileChangeDetected() && !syncInfo.isWatchServiceTaskDone()) {
             syncManager.sync();
         }
         else {

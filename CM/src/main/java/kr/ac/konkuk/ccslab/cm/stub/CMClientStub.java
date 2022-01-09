@@ -3707,5 +3707,36 @@ public class CMClientStub extends CMStub {
 
 		return true;
 	}
+
+	public boolean stopFileSync() {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.stopFileSync() called..");
+		}
+		// check the system type
+		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		if(confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("The system type is SERVER!");
+			return false;
+		}
+		// check the login state
+		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		int state = myself.getState();
+		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
+			System.err.println("You must log in to the default server!");
+			return false;
+		}
+
+		// get CMFileSyncManager
+		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		// stop the watch service
+		boolean ret = syncManager.stopWatchService();
+		if(!ret) {
+			System.err.println("error stopping watch service!");
+			return false;
+		}
+
+		return true;
+	}
 	
 }
