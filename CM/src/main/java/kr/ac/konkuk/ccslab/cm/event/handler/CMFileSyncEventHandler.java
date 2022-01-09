@@ -1305,8 +1305,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         syncManager.deleteFileSyncInfo();
 
-        // change the file-sync state to stop
-        syncInfo.setSyncInProgress(false);
+        // check if the watch service has detected another change
+        if(syncInfo.isFileChangeDetected() && !syncInfo.isWatchServiceDone()) {
+            syncManager.sync();
+        }
+        else {
+            // change the file-sync state to stop
+            syncInfo.setSyncInProgress(false);
+        }
+
         return true;
     }
 }

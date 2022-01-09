@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.FileInputStream;
@@ -15,12 +16,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class CMFileSyncManager extends CMServiceManager {
@@ -729,4 +730,36 @@ public class CMFileSyncManager extends CMServiceManager {
         return tempBasisFilePath;
     }
 
+    public boolean startWatchService() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.startWatchService() called..");
+        }
+        // get ExecutorService reference
+        ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+        Objects.requireNonNull(es);
+        // create WatchService and store the reference
+        final WatchService watchService;
+        try {
+            watchService = FileSystems.getDefault().newWatchService();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        syncInfo.setWatchService(watchService);
+
+        // create a WatchServiceTask
+        Path syncHome = Objects.requireNonNull(getClientSyncHome());
+        CMWatchServiceTask watchTask = new CMWatchServiceTask(syncHome, watchService, this, syncInfo);
+        // start the WatchServiceTask
+        Future<?> future = es.submit(watchTask);
+        if(future == null) {
+            System.err.println("error submitting watch-service task to the ExecutorService!");
+            return false;
+        }
+        // store the Future<?> to the syncInfo
+        syncInfo.setWatchServiceFuture(future);
+
+        return true;
+    }
 }

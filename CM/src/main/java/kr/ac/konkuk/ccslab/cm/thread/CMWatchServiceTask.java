@@ -98,6 +98,10 @@ public class CMWatchServiceTask implements Runnable {
         }
         // initialize watch service
         syncInfo.setWatchService(null);
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMWatchServiceTask.run() ended..");
+        }
     }
 
     private void registerPath(Path path) throws IOException {

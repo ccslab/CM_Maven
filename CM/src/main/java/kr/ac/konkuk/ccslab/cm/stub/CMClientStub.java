@@ -32,11 +32,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMGroupManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
+import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
@@ -3673,6 +3669,43 @@ public class CMClientStub extends CMStub {
 		}
 		
 		return sb.toString();
+	}
+
+	public boolean startFileSync() {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.startFileSync() called..");
+		}
+		// check the system type
+		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		if(confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("The system type is SERVER!");
+			return false;
+		}
+		// check the login state
+		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		int state = myself.getState();
+		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
+			System.err.println("You must log in to the default server!");
+			return false;
+		}
+
+		// get CMFileSyncManager
+		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		// start the watch service
+		boolean ret = syncManager.startWatchService();
+		if(!ret) {
+			System.err.println("error starting watch service!");
+			return false;
+		}
+		// conduct file-sync task once
+		ret = syncManager.sync();
+		if(!ret) {
+			System.err.println("error starting file-sync!");
+			return false;
+		}
+
+		return true;
 	}
 	
 }
