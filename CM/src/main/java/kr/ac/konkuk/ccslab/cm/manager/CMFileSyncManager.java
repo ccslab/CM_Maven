@@ -733,6 +733,13 @@ public class CMFileSyncManager extends CMServiceManager {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startWatchService() called..");
         }
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        // check if the WatchService is already started
+        if(!syncInfo.isWatchServiceTaskDone()) {
+            System.out.println("The watch service is already running..");
+            return true;
+        }
+
         // get ExecutorService reference
         ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
         Objects.requireNonNull(es);
@@ -744,7 +751,6 @@ public class CMFileSyncManager extends CMServiceManager {
             e.printStackTrace();
             return false;
         }
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         syncInfo.setWatchService(watchService);
 
         // create a WatchServiceTask
@@ -769,6 +775,13 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // get syncInfo
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+
+        // check if the watch service is already done
+        if(syncInfo.isWatchServiceTaskDone()) {
+            System.out.println("The watch service has already stopped..");
+            return true;
+        }
+
         // get WatchService reference
         WatchService watchService = syncInfo.getWatchService();
         if(watchService == null) {
