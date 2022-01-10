@@ -32,16 +32,25 @@ public class CMWatchServiceTask implements Runnable {
     public void run() {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMWatchServiceTask.run() called..");
+            System.out.println("syncPath = " + syncPath);
         }
 
-        // set the watchService to the syncInfo
-        syncInfo.setWatchService(watchService);
+        // register sync path to the watchService
+        try {
+            registerTree(syncPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
 
         while(true) {
             final WatchKey key;
             try {
                 key = watchService.take();
             } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
+            } catch (ClosedWatchServiceException e) {
                 e.printStackTrace();
                 break;
             }

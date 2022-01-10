@@ -772,7 +772,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get WatchService reference
         WatchService watchService = syncInfo.getWatchService();
         if(watchService == null) {
-            System.err.println("WatchService refernce is null!");
+            System.err.println("WatchService reference is null!");
             return false;
         }
         // stop the WatchService
