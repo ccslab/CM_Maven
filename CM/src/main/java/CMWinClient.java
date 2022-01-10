@@ -482,11 +482,13 @@ public class CMWinClient extends JFrame {
 		
 		cmServiceMenu.add(pubsubSubMenu);
 
-		JMenu fileSyncMenu = new JMenu("File Sync");
+		JMenu fileSyncSubMenu = new JMenu("File Sync");
 		JMenuItem startFileSyncMenuItem = new JMenuItem("start file-sync");
-		fileSyncMenu.add(startMenuItem);
+		fileSyncSubMenu.add(startFileSyncMenuItem);
+		JMenuItem stopFileSyncMenuItem = new JMenuItem("stop file-sync");
+		fileSyncSubMenu.add(stopFileSyncMenuItem);
 
-		cmServiceMenu.add(fileSyncMenu);
+		cmServiceMenu.add(fileSyncSubMenu);
 		
 		JMenu otherSubMenu = new JMenu("Other CM Test");
 		JMenuItem forwardMenuItem = new JMenuItem("test forwarding scheme");
@@ -911,6 +913,9 @@ public class CMWinClient extends JFrame {
 		case 300:	// start file-sync
 			testStartFileSync();
 			break;
+		case 301:	// stop file-sync
+			testStopFileSync();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -967,7 +972,7 @@ public class CMWinClient extends JFrame {
 		printMessage("200: connect, 201: publish, 202: subscribe, 203: print session info\n");
 		printMessage("204: unsubscribe, 205: disconnect \n");
 		printMessage("---------------------------------- File Sync\n");
-		printMessage("300: start file-sync\n");
+		printMessage("300: start file-sync, 301: stop file-sync\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -3917,17 +3922,24 @@ public class CMWinClient extends JFrame {
 
 	private void testStartFileSync() {
 		printMessage("========== start file-sync\n");
-		CMFileSyncManager fileSyncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
-		if(fileSyncManager == null)
-		{
-			printStyledMessage("CMFileSyncManager is null!\n", "bold");
-			return;
+		boolean ret = m_clientStub.startFileSync();
+		if(!ret) {
+			printStyledMessage("Start error of file sync!\n", "bold");
 		}
-
-		if(fileSyncManager.sync())
+		else {
 			printMessage("File sync starts.\n");
-		else
-			printStyledMessage("File sync error!\n", "bold");
+		}
+	}
+
+	private void testStopFileSync() {
+		printMessage("========== stop file-sync\n");
+		boolean ret = m_clientStub.stopFileSync();
+		if(!ret) {
+			printStyledMessage("Stop error of file sync!\n", "bold");
+		}
+		else {
+			printMessage("File sync stops.\n");
+		}
 	}
 
 	private void testSendEventWithWrongByteNum()
@@ -4503,6 +4515,9 @@ public class CMWinClient extends JFrame {
 				break;
 			case "start file-sync":
 				testStartFileSync();
+				break;
+			case "stop file-sync":
+				testStopFileSync();
 				break;
 			}
 		}

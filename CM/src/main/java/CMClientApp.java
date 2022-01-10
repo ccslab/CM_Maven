@@ -330,6 +330,9 @@ public class CMClientApp {
 			case 300:	// start file-sync
 				testStartFileSync();
 				break;
+			case 301:	// stop file-sync
+				testStopFileSync();
+				break;
 			default:
 				System.err.println("Unknown command.");
 				break;
@@ -394,7 +397,7 @@ public class CMClientApp {
 		System.out.println("200: connect, 201: publish, 202: subscribe, 203: print session info");
 		System.out.println("204: unsubscribe, 205: disconnect");
 		System.out.println("---------------------------------- File Sync");
-		System.out.println("300: start file-sync");
+		System.out.println("300: start file-sync, 301: stop file-sync");
 		System.out.println("---------------------------------- Other CM Tests");
 		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
 		System.out.println("103: test repeated request of SNS content list");
@@ -3237,17 +3240,24 @@ public class CMClientApp {
 
 	private void testStartFileSync() {
 		System.out.println("========== start file-sync");
-		CMFileSyncManager fileSyncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
-		if(fileSyncManager == null)
-		{
-			System.err.println("CMFileSyncManager is null!");
-			return;
+		boolean ret = m_clientStub.startFileSync();
+		if(!ret) {
+			System.err.println("Start error of file sync!");
 		}
-
-		if(fileSyncManager.sync())
+		else {
 			System.out.println("File sync starts.");
-		else
-			System.err.println("File sync error!");
+		}
+	}
+
+	private void testStopFileSync() {
+		System.out.println("========== stop file-sync");
+		boolean ret = m_clientStub.stopFileSync();
+		if(!ret) {
+			System.err.println("Stop error of file sync!");
+		}
+		else {
+			System.out.println("File sync stops.");
+		}
 	}
 
 	public void testSendEventWithWrongByteNum()
