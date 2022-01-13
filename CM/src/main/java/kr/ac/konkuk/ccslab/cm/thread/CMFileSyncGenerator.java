@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
@@ -492,51 +493,73 @@ public class CMFileSyncGenerator implements Runnable {
         // get the client file-entry-list
         List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
 
-        if(fileEntryList == null) {
-            System.out.println("fileEntryList of user("+userName+") is null!");
-            // remove all files in the basisFileList
-            basisFileList
-                    .forEach(path -> {
-                        try {
-                            if(CMInfo._CM_DEBUG)
-                                System.out.println("path = " + path);
-                            Files.delete(path);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
-            // clear the basisFileList
-            basisFileList.clear();
-        }
-        else {
-            // get the client path list from the file-entry-list
-            List<Path> entryPathList = fileEntryList.stream()
+        // get the client path list from the file-entry-list
+        List<Path> entryPathList = null;
+        if (fileEntryList != null) {
+            entryPathList = fileEntryList.stream()
                     .map(CMFileSyncEntry::getPathRelativeToHome)
                     .collect(Collectors.toList());
-            System.out.println("entryPathList = " + entryPathList);
-            // get the CMFileSyncManager object
-            CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-            //// create target file list that exists only at the server and that will be deleted
-            // get the server sync home and the start index
-            Path serverSyncHome = syncManager.getServerSyncHome(userName);
-            int startPathIndex = serverSyncHome.getNameCount();
-            // create the deleted file list
-            basisFileList.stream()
-                    .filter(path -> !entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
-                    .forEach(path -> {
-                        try {
-                            if(CMInfo._CM_DEBUG)
-                                System.out.println("path = " + path);
-                            Files.delete(path);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
-            // update the basis file list
-            basisFileList = basisFileList.stream()
-                    .filter(path -> entryPathList.contains(path.subpath(startPathIndex, path.getNameCount())))
-                    .collect(Collectors.toList());
         }
+        // get the CMFileSyncManager object
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+
+        //// create target file list that exists only at the server and that will be deleted
+        // get the server sync home and the start index
+        Path serverSyncHome = syncManager.getServerSyncHome(userName);
+        int startPathIndex = serverSyncHome.getNameCount();
+        // firstly, delete files (not directories) that exist only at the basis file list
+        Iterator<Path> iter = basisFileList.iterator();
+        while (iter.hasNext()) {
+            Path path = iter.next();
+            if (!Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+                if (entryPathList == null ||
+                        !entryPathList.contains(path.subpath(startPathIndex, path.getNameCount()))) {
+                    try {
+                        Files.delete(path);
+                        iter.remove();
+                        if (CMInfo._CM_DEBUG) {
+                            System.out.println("deleted file = " + path);
+                        }
+                    } catch (IOException e) {
+                        System.err.println("file delete error: " + path);
+                        e.printStackTrace();
+                        continue;
+                    }
+                }
+            }
+        }
+        // delete directories that exist only at the basis file list
+        iter = basisFileList.iterator();
+        while (iter.hasNext()) {
+            Path path = iter.next();
+            if (entryPathList == null ||
+                    !entryPathList.contains(path.subpath(startPathIndex, path.getNameCount()))) {
+                try {
+                    Files.delete(path);
+                    iter.remove();
+                    if (CMInfo._CM_DEBUG) {
+                        System.out.println("deleted directory = " + path);
+                    }
+                } catch (IOException e) {
+                    System.err.println("directory delete error: " + path);
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+        }
+
+        if(entryPathList == null) {
+            // check if the basis file list is empty
+            if(!basisFileList.isEmpty()) {
+                System.err.println("The basis file list is not empty after deletion!");
+                for(Path path : basisFileList)
+                    System.out.println("remaining path = " + path);
+                basisFileList.clear();
+            }
+        }
+
+        // TODO: from here
     }
 
     private List<Path> createBasisFileList() {
