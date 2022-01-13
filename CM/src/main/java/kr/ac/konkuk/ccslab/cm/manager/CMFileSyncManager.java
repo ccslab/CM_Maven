@@ -110,6 +110,7 @@ public class CMFileSyncManager extends CMServiceManager {
         try {
             // filter only regular files -> change to absolute path -> sorted -> change to a list
             pathList = Files.walk(syncHome)
+                    .filter(path -> !path.equals(syncHome))
                     .map(path -> path.toAbsolutePath().normalize())
                     .sorted()
                     .collect(Collectors.toList());
