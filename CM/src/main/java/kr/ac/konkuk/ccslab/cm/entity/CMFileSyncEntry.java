@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
 
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
+
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 
@@ -9,6 +11,14 @@ public class CMFileSyncEntry implements Comparable<CMFileSyncEntry> {
     private Path pathRelativeToHome;    // remaining path except the sync home
     private long size;  // the file size
     private FileTime lastModifiedTime;  // last modified time
+    private CMFileType type;    // file type enum
+
+    public CMFileSyncEntry() {
+        pathRelativeToHome = null;
+        size = 0;
+        lastModifiedTime = null;
+        type = null;
+    }
 
     public Path getPathRelativeToHome() {
         return pathRelativeToHome;
@@ -37,6 +47,15 @@ public class CMFileSyncEntry implements Comparable<CMFileSyncEntry> {
         return this;
     }
 
+    public CMFileType getType() {
+        return type;
+    }
+
+    public CMFileSyncEntry setType(CMFileType type) {
+        this.type = type;
+        return this;
+    }
+
     @Override
     public int compareTo(CMFileSyncEntry o) {
         return pathRelativeToHome.compareTo(o.getPathRelativeToHome());
@@ -48,6 +67,7 @@ public class CMFileSyncEntry implements Comparable<CMFileSyncEntry> {
                 "pathRelativeToHome=" + pathRelativeToHome +
                 ", size=" + size +
                 ", lastModifiedTime=" + lastModifiedTime +
+                ", type=" + type +
                 '}';
     }
 
@@ -58,6 +78,7 @@ public class CMFileSyncEntry implements Comparable<CMFileSyncEntry> {
         if(!(obj instanceof CMFileSyncEntry entry)) return false;
         return entry.getLastModifiedTime().equals(lastModifiedTime) &&
                 entry.getSize() == size &&
-                entry.getPathRelativeToHome().equals(pathRelativeToHome);
+                entry.getPathRelativeToHome().equals(pathRelativeToHome) &&
+                entry.getType().equals(type);
     }
 }
