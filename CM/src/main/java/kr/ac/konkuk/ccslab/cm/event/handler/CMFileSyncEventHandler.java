@@ -1071,6 +1071,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         fseAck.setUserName(fse_fe.getUserName());
         fseAck.setNumFilesCompleted(numFilesCompleted);   // updated
         fseAck.setNumFiles(numFiles);
+        fseAck.setReturnCode(returnCode);
 
         // send the ack event
         return CMEventManager.unicastEvent(fseAck, userName, m_cmInfo);
