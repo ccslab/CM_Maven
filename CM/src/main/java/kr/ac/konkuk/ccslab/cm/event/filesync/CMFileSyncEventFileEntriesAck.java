@@ -15,7 +15,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
     private String userName;    // user name
     private int numFilesCompleted;  // number of files completed
     private int numFiles;       // number of current files
-    private List<CMFileSyncEntry> fileEntryList;    // list of CMFileSyncEntry
     private int returnCode;     // return code
 
     public CMFileSyncEventFileEntriesAck() {
@@ -23,7 +22,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         userName = null;
         numFilesCompleted = 0;
         numFiles = 0;
-        fileEntryList = null;
         returnCode = -1;
     }
 
@@ -42,20 +40,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         byteNum += Integer.BYTES;
         // numFiles
         byteNum += Integer.BYTES;
-        // number of elements of fileEntryList
-        byteNum += Integer.BYTES;
-        // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
-        if(fileEntryList != null) {
-            for (CMFileSyncEntry entry : fileEntryList) {
-                // Path pathRelativeToHome
-                byteNum += CMInfo.STRING_LEN_BYTES_LEN +
-                        entry.getPathRelativeToHome().toString().getBytes().length;
-                // long size
-                byteNum += Long.BYTES;
-                // FileTime lastModifiedTime -> long type of milliseconds
-                byteNum += Long.BYTES;
-            }
-        }
         // returnCode
         byteNum += Integer.BYTES;
         return byteNum;
@@ -69,21 +53,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         m_bytes.putInt(numFilesCompleted);
         // numFiles
         m_bytes.putInt(numFiles);
-        if(fileEntryList != null) {
-            // number of elements of fileEntryList
-            m_bytes.putInt(fileEntryList.size());
-            // fileEntryList
-            for (CMFileSyncEntry entry : fileEntryList) {
-                // Path relativePathToHome
-                putStringToByteBuffer(entry.getPathRelativeToHome().toString());
-                // long size
-                m_bytes.putLong(entry.getSize());
-                // FileTime lastModifiedTime (changed to long milliseconds)
-                m_bytes.putLong(entry.getLastModifiedTime().toMillis());
-            }
-        }
-        else
-            m_bytes.putInt(0);
         // returnCode
         m_bytes.putInt(returnCode);
     }
@@ -98,25 +67,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         numFilesCompleted = msg.getInt();
         // numFiles
         numFiles = msg.getInt();
-        // fileEntryList
-        numFileEntries = msg.getInt();
-        if(numFileEntries > 0){
-            // create a new entry list
-            fileEntryList = new ArrayList<>();
-            for (int i = 0; i < numFileEntries; i++) {
-                CMFileSyncEntry entry = new CMFileSyncEntry();
-                // Path relativePathToHome
-                Path relativePath = Paths.get(getStringFromByteBuffer(msg));
-                entry.setPathRelativeToHome(relativePath);
-                // long size
-                entry.setSize(msg.getLong());
-                // FileTime lastModifiedTime
-                FileTime lastModifiedTime = FileTime.fromMillis(msg.getLong());
-                entry.setLastModifiedTime(lastModifiedTime);
-                // add to the entry list
-                fileEntryList.add(entry);
-            }
-        }
         // returnCode
         returnCode = msg.getInt();
     }
@@ -132,7 +82,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
                 ", userName='" + userName + '\'' +
                 ", numFilesCompleted=" + numFilesCompleted +
                 ", numFiles=" + numFiles +
-                ", fileEntryList=" + fileEntryList +
                 ", returnCode=" + returnCode +
                 '}';
     }
@@ -144,7 +93,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         return fse.getUserName().equals(userName) &&
                 fse.getNumFilesCompleted() == numFilesCompleted &&
                 fse.getNumFiles() == numFiles &&
-                fse.getFileEntryList().equals(fileEntryList) &&
                 fse.getReturnCode() == returnCode;
     }
 
@@ -170,14 +118,6 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
 
     public void setNumFiles(int numFiles) {
         this.numFiles = numFiles;
-    }
-
-    public List<CMFileSyncEntry> getFileEntryList() {
-        return fileEntryList;
-    }
-
-    public void setFileEntryList(List<CMFileSyncEntry> fileEntryList) {
-        this.fileEntryList = fileEntryList;
     }
 
     public int getReturnCode() {
