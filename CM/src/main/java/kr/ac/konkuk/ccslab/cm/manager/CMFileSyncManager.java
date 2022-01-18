@@ -177,7 +177,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get the new file list
         String fileSender = fe.getFileSender();
         List<Path> newFileList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
-                .get(fileSender).getNewFileList();
+                .get(fileSender).getNewClientPathEntryList();
         if(newFileList == null) {
             System.err.println("newFileList is null!");
             return;
@@ -363,7 +363,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // compare the number of new files completed to the size of the new-file list
-        newFileList = syncGenerator.getNewFileList();
+        newFileList = syncGenerator.getNewClientPathEntryList();
         numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
         if(newFileList != null && numNewFilesCompleted < newFileList.size()) {
             System.err.println("numNewFilesCompleted = "+numNewFilesCompleted);

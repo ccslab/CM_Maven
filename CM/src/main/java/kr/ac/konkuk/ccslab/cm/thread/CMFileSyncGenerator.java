@@ -24,7 +24,7 @@ public class CMFileSyncGenerator implements Runnable {
     private String userName;
     private CMInfo cmInfo;
     private List<Path> basisFileList;
-    private List<Path> newFileList;
+    private List<Path> newClientPathEntryList;
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayMap;
     private Map<Integer, Integer> basisFileIndexMap;    // key: client entry index, value: basis index
     private Map<Integer, Integer> blockSizeOfBasisFileMap;
@@ -41,7 +41,7 @@ public class CMFileSyncGenerator implements Runnable {
         this.userName = userName;
         this.cmInfo = cmInfo;
         basisFileList = null;
-        newFileList = null;
+        newClientPathEntryList = null;
         blockChecksumArrayMap = new Hashtable<>();
         basisFileIndexMap = new Hashtable<>();
         blockSizeOfBasisFileMap = new Hashtable<>();
@@ -54,8 +54,8 @@ public class CMFileSyncGenerator implements Runnable {
         numUpdateFilesCompleted = 0;
     }
 
-    public List<Path> getNewFileList() {
-        return newFileList;
+    public List<Path> getNewClientPathEntryList() {
+        return newClientPathEntryList;
     }
 
     public List<Path> getBasisFileList() {
@@ -127,13 +127,13 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // create a new file-entry-list that will be added to the server
-        newFileList = createNewFileList();
-        if(newFileList == null) {
+        newClientPathEntryList = createNewFileList();
+        if(newClientPathEntryList == null) {
             System.err.println("CMFileSyncGenerator.run(), newFileList is null!");
             return;
         }
         if(CMInfo._CM_DEBUG) {
-            System.out.println("newFileList = " + newFileList);
+            System.out.println("newFileList = " + newClientPathEntryList);
         }
 
         // request the files in the new file-entry-list from the client
@@ -406,18 +406,18 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.requestTransferOfNewFiles() called..");
         }
 
-        if(newFileList == null) {
+        if(newClientPathEntryList == null) {
             System.err.println("newFileList is null!");
             return false;   // null is an error
         }
-        if(newFileList.isEmpty()) {
+        if(newClientPathEntryList.isEmpty()) {
             System.out.println("newFileList is empty.");
             return true;
         }
 
         int numRequestsCompleted = 0;
         boolean sendResult;
-        while(numRequestsCompleted < newFileList.size()) {
+        while(numRequestsCompleted < newClientPathEntryList.size()) {
             // create a request event
             CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
             String serverName = cmInfo.getInteractionInfo().getMyself().getName();
@@ -429,8 +429,8 @@ public class CMFileSyncGenerator implements Runnable {
             int curByteNum = fse.getByteNum();
             List<Path> requestedFileList = new ArrayList<>();
             int numRequestedFiles = 0;
-            while(numRequestsCompleted < newFileList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
-                Path path = newFileList.get(numRequestsCompleted);
+            while(numRequestsCompleted < newClientPathEntryList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                Path path = newClientPathEntryList.get(numRequestsCompleted);
                 curByteNum += CMInfo.STRING_LEN_BYTES_LEN
                         + path.toString().getBytes().length;
                 if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
