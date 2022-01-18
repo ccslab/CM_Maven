@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.event.filesync;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import org.junit.Test;
 
@@ -35,18 +36,18 @@ public class CMFileSyncEventFileEntriesTest {
         int numFiles = unmarshallEvent.getNumFiles();
         assertEquals(numFiles, 11);
         // List<CMFileSyncEntry> is null
-        List<CMFileSyncEntry> entryList = unmarshallEvent.getFileEntryList();
+        List<CMFileSyncEntry> entryList = unmarshallEvent.getClientPathEntryList();
         assertNull(entryList);
 
         // add an empty List<CMFileSyncEntry>
         entryList = new ArrayList<>();
-        fsEvent.setFileEntryList(entryList);
+        fsEvent.setClientPathEntryList(entryList);
         System.out.println("fsEvent = " + fsEvent);
         byteBuffer = CMEventManager.marshallEvent(fsEvent);
         unmarshallEvent = (CMFileSyncEventFileEntries) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
-        List<CMFileSyncEntry> unmarshallEntryList = unmarshallEvent.getFileEntryList();
+        List<CMFileSyncEntry> unmarshallEntryList = unmarshallEvent.getClientPathEntryList();
         assertNull(unmarshallEntryList);
 
         // add an List<CMFileSyncEntry> with 2 items
@@ -54,29 +55,28 @@ public class CMFileSyncEventFileEntriesTest {
         entry1.setPathRelativeToHome(Paths.get("testFile1"));
         entry1.setSize(100);
         entry1.setLastModifiedTime(FileTime.fromMillis(System.currentTimeMillis()));
+        entry1.setType(CMFileType.FILE);
         entryList.add(entry1);
 
         CMFileSyncEntry entry2 = new CMFileSyncEntry();
         entry2.setPathRelativeToHome(Paths.get("testFile2"));
         entry2.setSize(1000000);
         entry2.setLastModifiedTime(FileTime.fromMillis(System.currentTimeMillis()));
+        entry2.setType(CMFileType.DIR);
         entryList.add(entry2);
 
-        fsEvent.setFileEntryList(entryList);
+        fsEvent.setClientPathEntryList(entryList);
         System.out.println("fsEvent = " + fsEvent);
 
         byteBuffer = CMEventManager.marshallEvent(fsEvent);
         unmarshallEvent = (CMFileSyncEventFileEntries) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
-        unmarshallEntryList = unmarshallEvent.getFileEntryList();
+        unmarshallEntryList = unmarshallEvent.getClientPathEntryList();
 
         CMFileSyncEntry unmarshallEntry1 = unmarshallEntryList.get(0);
-        Path pathRelativeToHome = unmarshallEntry1.getPathRelativeToHome();
         assertEquals(unmarshallEntry1.getPathRelativeToHome(), entry1.getPathRelativeToHome());
-        long size = unmarshallEntry1.getSize();
         assertEquals(unmarshallEntry1.getSize(), entry1.getSize());
-        FileTime lastModifiedTime = unmarshallEntry1.getLastModifiedTime();
         assertEquals(unmarshallEntry1.getLastModifiedTime(), entry1.getLastModifiedTime());
         assertEquals(entry1, unmarshallEntry1);
 

@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -14,14 +15,14 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
     private String userName;    // user name
     private int numFilesCompleted;  // number of files completed
     private int numFiles;       // number of current files
-    private List<CMFileSyncEntry> fileEntryList;    // list of CMFileSyncEntry
+    private List<CMFileSyncEntry> clientPathEntryList;    // list of CMFileSyncEntry
 
     public CMFileSyncEventFileEntries() {
         m_nID = CMFileSyncEvent.FILE_ENTRIES;
         userName = null;
         numFilesCompleted = 0;
         numFiles = 0;
-        fileEntryList = null;
+        clientPathEntryList = null;
     }
 
     public CMFileSyncEventFileEntries(ByteBuffer msg) {
@@ -42,8 +43,8 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         // number of elements of fileEntryList
         byteNum += Integer.BYTES;
         // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
-        if(fileEntryList != null) {
-            for (CMFileSyncEntry entry : fileEntryList) {
+        if(clientPathEntryList != null) {
+            for (CMFileSyncEntry entry : clientPathEntryList) {
                 // Path pathRelativeToHome
                 byteNum += CMInfo.STRING_LEN_BYTES_LEN +
                         entry.getPathRelativeToHome().toString().getBytes().length;
@@ -51,6 +52,8 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 byteNum += Long.BYTES;
                 // FileTime lastModifiedTime -> long type of milliseconds
                 byteNum += Long.BYTES;
+                // CMFileType -> int
+                byteNum += Integer.BYTES;
             }
         }
         return byteNum;
@@ -64,17 +67,19 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         m_bytes.putInt(numFilesCompleted);
         // numFiles
         m_bytes.putInt(numFiles);
-        if(fileEntryList != null) {
+        if(clientPathEntryList != null) {
             // number of elements of fileEntryList
-            m_bytes.putInt(fileEntryList.size());
+            m_bytes.putInt(clientPathEntryList.size());
             // fileEntryList
-            for (CMFileSyncEntry entry : fileEntryList) {
+            for (CMFileSyncEntry entry : clientPathEntryList) {
                 // Path relativePathToHome
                 putStringToByteBuffer(entry.getPathRelativeToHome().toString());
                 // long size
                 m_bytes.putLong(entry.getSize());
                 // FileTime lastModifiedTime (changed to long milliseconds)
                 m_bytes.putLong(entry.getLastModifiedTime().toMillis());
+                // CMFileType (enum -> int)
+                m_bytes.putInt(entry.getType().ordinal());
             }
         }
         else
@@ -95,7 +100,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         numFileEntries = msg.getInt();
         if(numFileEntries > 0){
             // create a new entry list
-            fileEntryList = new ArrayList<>();
+            clientPathEntryList = new ArrayList<>();
             for (int i = 0; i < numFileEntries; i++) {
                 CMFileSyncEntry entry = new CMFileSyncEntry();
                 // Path relativePathToHome
@@ -106,8 +111,11 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 // FileTime lastModifiedTime
                 FileTime lastModifiedTime = FileTime.fromMillis(msg.getLong());
                 entry.setLastModifiedTime(lastModifiedTime);
+                // CMFileType (int -> enum)
+                CMFileType type = CMFileType.values()[msg.getInt()];
+                entry.setType(type);
                 // add to the entry list
-                fileEntryList.add(entry);
+                clientPathEntryList.add(entry);
             }
         }
     }
@@ -123,7 +131,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 ", userName='" + userName + '\'' +
                 ", numFilesCompleted=" + numFilesCompleted +
                 ", numFiles=" + numFiles +
-                ", fileEntryList=" + fileEntryList +
+                ", fileEntryList=" + clientPathEntryList +
                 '}';
     }
 
@@ -134,7 +142,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         return fse.getUserName().equals(userName) &&
                 fse.getNumFilesCompleted() == numFilesCompleted &&
                 fse.getNumFiles() == numFiles &&
-                fse.getFileEntryList().equals(fileEntryList);
+                fse.getClientPathEntryList().equals(clientPathEntryList);
     }
 
     public String getUserName() {
@@ -161,11 +169,11 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         this.numFiles = numFiles;
     }
 
-    public List<CMFileSyncEntry> getFileEntryList() {
-        return fileEntryList;
+    public List<CMFileSyncEntry> getClientPathEntryList() {
+        return clientPathEntryList;
     }
 
-    public void setFileEntryList(List<CMFileSyncEntry> fileEntryList) {
-        this.fileEntryList = fileEntryList;
+    public void setClientPathEntryList(List<CMFileSyncEntry> clientPathEntryList) {
+        this.clientPathEntryList = clientPathEntryList;
     }
 }

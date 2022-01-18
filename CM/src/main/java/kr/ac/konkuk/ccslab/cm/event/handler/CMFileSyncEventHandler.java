@@ -1015,7 +1015,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if (fileEntryList.isEmpty())
             System.err.println("fileEntryList is empty.");
         else
-            newfse.setFileEntryList(fileEntryList);
+            newfse.setClientPathEntryList(fileEntryList);
 
         return newfse;
     }
@@ -1039,16 +1039,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
             if (entryList == null) {
                 // set the new entry list to the Map
-                m_cmInfo.getFileSyncInfo().getFileEntryListMap().put(userName, fse_fe.getFileEntryList());
+                m_cmInfo.getFileSyncInfo().getFileEntryListMap().put(userName, fse_fe.getClientPathEntryList());
                 // set the number of completed files
                 numFilesCompleted = numFiles;
             } else {
                 // add the new entry list to the existing list
-                boolean addResult = entryList.addAll(fse_fe.getFileEntryList());
+                boolean addResult = entryList.addAll(fse_fe.getClientPathEntryList());
                 if(!addResult) {
                     System.err.println("entry list add error!");
                     System.err.println("existing list = "+entryList);
-                    System.err.println("new list = "+fse_fe.getFileEntryList());
+                    System.err.println("new list = "+fse_fe.getClientPathEntryList());
                     returnCode = 0;
                     numFilesCompleted = numFiles;
                 }
