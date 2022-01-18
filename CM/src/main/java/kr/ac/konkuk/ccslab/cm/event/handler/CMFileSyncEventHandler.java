@@ -6,6 +6,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
@@ -979,7 +980,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             curByteNum += CMInfo.STRING_LEN_BYTES_LEN
                     + relativePath.toString().getBytes().length
                     + Long.BYTES
-                    + Long.BYTES;
+                    + Long.BYTES
+                    + Integer.BYTES;    // file type (CMFileType -> int)
             if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
                 subList.add(path);  // add the absolute path because it will be used to get meta-data.
                 numFiles++;
@@ -1002,7 +1004,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     try {
                         fileEntry.setPathRelativeToHome(path.subpath(startPathIndex, path.getNameCount()))
                                 .setSize(Files.size(path))
-                                .setLastModifiedTime(Files.getLastModifiedTime(path));
+                                .setLastModifiedTime(Files.getLastModifiedTime(path))
+                                .setType(CMFileType.getType(path));
                         if (CMInfo._CM_DEBUG)
                             System.out.println("fileEntry = " + fileEntry);
                     } catch (IOException e) {
