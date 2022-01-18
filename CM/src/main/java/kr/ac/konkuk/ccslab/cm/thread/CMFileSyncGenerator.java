@@ -6,6 +6,7 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventRequestNewFiles;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartFileBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 
@@ -407,17 +408,58 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         if(newClientPathEntryList == null) {
-            System.err.println("newFileList is null!");
+            System.err.println("newClientPathEntryList is null!");
             return false;   // null is an error
         }
         if(newClientPathEntryList.isEmpty()) {
-            System.out.println("newFileList is empty.");
+            System.out.println("newClientPathEntryList is empty.");
             return true;
         }
 
+        // get sync home
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        Path syncHome = syncManager.getServerSyncHome(userName);
+
+        // create new sub-directories that do not have to be requested from the client
+        for(CMFileSyncEntry entry : newClientPathEntryList) {
+            if(entry.getType() == CMFileType.DIR) {
+                // get an absolute path of the new sub-directory
+                Path absolutePath = syncHome.resolve(entry.getPathRelativeToHome());
+                // create the sub-directory
+                try {
+                    Files.createDirectories(absolutePath);
+                } catch (IOException e) {
+                    System.err.println("error of creating a new sub-directory: "+absolutePath);
+                    e.printStackTrace();
+                    continue;
+                }
+                // set the last modified time of the directory
+                try {
+                    Files.setLastModifiedTime(absolutePath, entry.getLastModifiedTime());
+                } catch (IOException e) {
+                    System.err.println("error of setting last modified time of: "+absolutePath);
+                    e.printStackTrace();
+                    continue;
+                }
+                // set the completion of new-file-transfer
+                boolean ret = syncManager.completeNewFileTransfer(userName, entry.getPathRelativeToHome());
+                if(!ret) {
+                    System.err.println("error of completeNewFileTransfer(), user("+userName
+                            +"), relative path("+entry.getPathRelativeToHome()+")");
+                    continue;
+                }
+            }
+        }
+
+        // filter only file entry list out of newClientPathEntryList
+        List<CMFileSyncEntry> newFileEntryList = newClientPathEntryList.stream()
+                .filter(entry -> entry.getType() != CMFileType.DIR)
+                .collect(Collectors.toList());
+
         int numRequestsCompleted = 0;
         boolean sendResult;
-        while(numRequestsCompleted < newClientPathEntryList.size()) {
+        while(numRequestsCompleted < newFileEntryList.size()) {
             // create a request event
             CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
             String serverName = cmInfo.getInteractionInfo().getMyself().getName();
@@ -429,8 +471,8 @@ public class CMFileSyncGenerator implements Runnable {
             int curByteNum = fse.getByteNum();
             List<Path> requestedFileList = new ArrayList<>();
             int numRequestedFiles = 0;
-            while(numRequestsCompleted < newClientPathEntryList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
-                Path path = newClientPathEntryList.get(numRequestsCompleted).getPathRelativeToHome();
+            while(numRequestsCompleted < newFileEntryList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                Path path = newFileEntryList.get(numRequestsCompleted).getPathRelativeToHome();
                 curByteNum += CMInfo.STRING_LEN_BYTES_LEN
                         + path.toString().getBytes().length;
                 if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
