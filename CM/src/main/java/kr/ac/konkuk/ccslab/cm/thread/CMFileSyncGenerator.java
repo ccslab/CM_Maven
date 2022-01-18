@@ -24,7 +24,7 @@ public class CMFileSyncGenerator implements Runnable {
     private String userName;
     private CMInfo cmInfo;
     private List<Path> basisFileList;
-    private List<Path> newClientPathEntryList;
+    private List<CMFileSyncEntry> newClientPathEntryList;
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayMap;
     private Map<Integer, Integer> basisFileIndexMap;    // key: client entry index, value: basis index
     private Map<Integer, Integer> blockSizeOfBasisFileMap;
@@ -54,7 +54,7 @@ public class CMFileSyncGenerator implements Runnable {
         numUpdateFilesCompleted = 0;
     }
 
-    public List<Path> getNewClientPathEntryList() {
+    public List<CMFileSyncEntry> getNewClientPathEntryList() {
         return newClientPathEntryList;
     }
 
@@ -127,7 +127,7 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // create a new file-entry-list that will be added to the server
-        newClientPathEntryList = createNewFileList();
+        newClientPathEntryList = createNewClientPathEntryList();
         if(newClientPathEntryList == null) {
             System.err.println("CMFileSyncGenerator.run(), newFileList is null!");
             return;
@@ -430,7 +430,7 @@ public class CMFileSyncGenerator implements Runnable {
             List<Path> requestedFileList = new ArrayList<>();
             int numRequestedFiles = 0;
             while(numRequestsCompleted < newClientPathEntryList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
-                Path path = newClientPathEntryList.get(numRequestsCompleted);
+                Path path = newClientPathEntryList.get(numRequestsCompleted).getPathRelativeToHome();
                 curByteNum += CMInfo.STRING_LEN_BYTES_LEN
                         + path.toString().getBytes().length;
                 if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
@@ -462,13 +462,13 @@ public class CMFileSyncGenerator implements Runnable {
         return true;
     }
 
-    private List<Path> createNewFileList() {
+    private List<CMFileSyncEntry> createNewClientPathEntryList() {
         if(CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncGenerator.createNewFileList() called..");
+            System.out.println("=== CMFileSyncGenerator.createNewClientPathEntryList() called..");
         }
-        // get fileEntryList
-        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
-        if(fileEntryList == null) {
+        // get clientPathEntryList
+        List<CMFileSyncEntry> clientPathEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
+        if(clientPathEntryList == null) {
             return new ArrayList<>();
         }
         // get the start path index
@@ -480,9 +480,8 @@ public class CMFileSyncGenerator implements Runnable {
                 .map(path -> path.subpath(startPathIndex, path.getNameCount()))
                 .collect(Collectors.toList());
         // create a new file list that will be added to the server
-        return fileEntryList.stream()
-                .map(CMFileSyncEntry::getPathRelativeToHome)
-                .filter(path -> !relativeBasisFileList.contains(path))
+        return clientPathEntryList.stream()
+                .filter(entry -> !relativeBasisFileList.contains(entry.getPathRelativeToHome()))
                 .collect(Collectors.toList());
     }
 

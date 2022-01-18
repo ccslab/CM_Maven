@@ -176,17 +176,17 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileName = fe.getFileName();
         // get the new file list
         String fileSender = fe.getFileSender();
-        List<Path> newFileList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
+        List<CMFileSyncEntry> newClientPathEntryList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
                 .get(fileSender).getNewClientPathEntryList();
-        if(newFileList == null) {
-            System.err.println("newFileList is null!");
+        if(newClientPathEntryList == null) {
+            System.err.println("newClientPathEntryList is null!");
             return;
         }
         // search for the fileName in the newFileList
         Path foundPath = null;
-        for(Path path : newFileList) {
-            if(path.endsWith(fileName)) {
-                foundPath = path;
+        for(CMFileSyncEntry entry : newClientPathEntryList) {
+            if(entry.getPathRelativeToHome().endsWith(fileName)) {
+                foundPath = entry.getPathRelativeToHome();
                 break;
             }
         }
@@ -344,7 +344,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("userName = " + userName);
         }
 
-        List<Path> newFileList = null;
+        List<CMFileSyncEntry> newClientPathEntryList = null;
         List<Path> basisFileList = null;
         List<CMFileSyncEntry> fileEntryList = null;
         int numNewFilesCompleted = 0;
@@ -363,11 +363,11 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // compare the number of new files completed to the size of the new-file list
-        newFileList = syncGenerator.getNewClientPathEntryList();
+        newClientPathEntryList = syncGenerator.getNewClientPathEntryList();
         numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
-        if(newFileList != null && numNewFilesCompleted < newFileList.size()) {
+        if(newClientPathEntryList != null && numNewFilesCompleted < newClientPathEntryList.size()) {
             System.err.println("numNewFilesCompleted = "+numNewFilesCompleted);
-            System.err.println("size of newFileList = "+newFileList.size());
+            System.err.println("size of newClientPathEntryList = "+newClientPathEntryList.size());
             return false;
         }
         // compare the number of updated files to the size of the basis-file list
