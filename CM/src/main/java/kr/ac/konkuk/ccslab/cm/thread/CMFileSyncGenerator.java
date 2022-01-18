@@ -190,7 +190,7 @@ public class CMFileSyncGenerator implements Runnable {
             // search for the client file entry
             CMFileSyncEntry clientFileEntry = null;
             int clientFileEntryIndex = -1;
-            List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
+            List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
             for(int i = 0; i < fileEntryList.size(); i++) {
                 CMFileSyncEntry entry = fileEntryList.get(i);
                 if(relativeBasisFile.equals(entry.getPathRelativeToHome())) {
@@ -467,7 +467,7 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.createNewFileList() called..");
         }
         // get fileEntryList
-        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
+        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
         if(fileEntryList == null) {
             return new ArrayList<>();
         }
@@ -491,7 +491,7 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.deleteFilesAndUpdateBasisFileList() called..");
         }
         // get the client file-entry-list
-        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
+        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
 
         // get the client path list from the file-entry-list
         List<Path> entryPathList = null;

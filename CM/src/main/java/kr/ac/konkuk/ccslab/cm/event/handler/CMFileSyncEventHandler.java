@@ -155,7 +155,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // get the client file entry reference
         CMFileSyncEntry clientFileEntry = Optional.of(m_cmInfo)
                 .map(CMInfo::getFileSyncInfo)
-                .map(CMFileSyncInfo::getFileEntryListMap)
+                .map(CMFileSyncInfo::getClientPathEntryListMap)
                 .map(t -> t.get(userName))
                 .map(l -> l.get(fileEntryIndex))
                 .orElse(null);
@@ -1039,10 +1039,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // if 0, the entry list is null in the event
         if(numFiles > 0) {
             // set or add the entry list of the event to the entry Map
-            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
+            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
             if (entryList == null) {
                 // set the new entry list to the Map
-                m_cmInfo.getFileSyncInfo().getFileEntryListMap().put(userName, fse_fe.getClientPathEntryList());
+                m_cmInfo.getFileSyncInfo().getClientPathEntryListMap().put(userName, fse_fe.getClientPathEntryList());
                 // set the number of completed files
                 numFilesCompleted = numFiles;
             } else {
@@ -1169,7 +1169,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // check the elements of file entry list
         String userName = fse_efl.getUserName();
         int numFilesCompleted = fse_efl.getNumFilesCompleted();
-        List<CMFileSyncEntry> fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap()
+        List<CMFileSyncEntry> fileEntryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap()
                 .get(userName);
         int numFileEntries;
         // the fileEntryList can be null if the client has no file-entry.

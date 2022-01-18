@@ -23,7 +23,7 @@ public class CMFileSyncInfo {
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumMap;   // 4 client
     private Map<Integer, Map<Short, Integer>> fileIndexToHashToBlockIndexMap; // 4 client
 
-    private Map<String, List<CMFileSyncEntry>> fileEntryListMap;    // 4 server
+    private Map<String, List<CMFileSyncEntry>> clientPathEntryListMap;    // 4 server
     private Map<String, CMFileSyncGenerator> syncGeneratorMap;      // 4 server
 
     private boolean fileChangeDetected;
@@ -37,7 +37,7 @@ public class CMFileSyncInfo {
         blockChecksumMap = new Hashtable<>();
         fileIndexToHashToBlockIndexMap = new Hashtable<>();
 
-        fileEntryListMap = new Hashtable<>();
+        clientPathEntryListMap = new Hashtable<>();
         syncGeneratorMap = new Hashtable<>();
 
         fileChangeDetected = false;
@@ -76,8 +76,8 @@ public class CMFileSyncInfo {
         return isFileSyncCompletedMap;
     }
 
-    public Map<String, List<CMFileSyncEntry>> getFileEntryListMap() {
-        return fileEntryListMap;
+    public Map<String, List<CMFileSyncEntry>> getClientPathEntryListMap() {
+        return clientPathEntryListMap;
     }
 
     public Map<String, CMFileSyncGenerator> getSyncGeneratorMap() {

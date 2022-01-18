@@ -202,7 +202,7 @@ public class CMFileSyncManager extends CMServiceManager {
                 e.printStackTrace();
             }
             // get the client file entry
-            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap()
+            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap()
                     .get(fileSender);
             if(entryList == null) {
                 System.err.println("The entry list of user("+fileSender+") is null!");
@@ -379,7 +379,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
-        fileEntryList = m_cmInfo.getFileSyncInfo().getFileEntryListMap().get(userName);
+        fileEntryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
         if(fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
             System.err.println("numFilesCompleted = "+numFilesCompleted);
@@ -475,7 +475,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get CMFileSyncInfo reference
         CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
         // remove element in fileEntryListMap
-        syncInfo.getFileEntryListMap().remove(userName);
+        syncInfo.getClientPathEntryListMap().remove(userName);
         // remove element in syncGeneratorMap
         syncInfo.getSyncGeneratorMap().remove(userName);
     }
