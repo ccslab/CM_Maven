@@ -168,6 +168,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // currently called by server
     public void checkNewTransferForSync(CMFileEvent fe) {
+
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.checkNewTransferForSync() called..");
             System.out.println("file event = " + fe);
@@ -178,14 +179,14 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileSender = fe.getFileSender();
         List<CMFileSyncEntry> newClientPathEntryList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
                 .get(fileSender).getNewClientPathEntryList();
-        if(newClientPathEntryList == null) {
-            System.err.println("newClientPathEntryList is null!");
-            return;
-        }
-        // search for the fileName in the newFileList
+        Objects.requireNonNull(newClientPathEntryList);
+
+        // search for the entry in the newClientPathEntryList
+        CMFileSyncEntry foundEntry = null;
         Path foundPath = null;
         for(CMFileSyncEntry entry : newClientPathEntryList) {
             if(entry.getPathRelativeToHome().endsWith(fileName)) {
+                foundEntry = entry;
                 foundPath = entry.getPathRelativeToHome();
                 break;
             }
@@ -201,26 +202,11 @@ public class CMFileSyncManager extends CMServiceManager {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            // get the client path entry list
-            List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap()
-                    .get(fileSender);
-            Objects.requireNonNull(entryList);
-            // search for the corresponding client entry
-            boolean searchResult = false;
-            for(CMFileSyncEntry entry : entryList) {
-                if(entry.getPathRelativeToHome().equals(foundPath)) {
-                    // set the last-modified-time of the corresponding client file entry
-                    try {
-                        Files.setLastModifiedTime(serverSyncHome.resolve(foundPath), entry.getLastModifiedTime());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                    searchResult = true;
-                }
-            }
-            if(!searchResult) {
-                System.err.println("No file entry found for ("+foundPath+")!");
+            // set the last-modified-time of the corresponding client file entry
+            try {
+                Files.setLastModifiedTime(serverSyncHome.resolve(foundPath), foundEntry.getLastModifiedTime());
+            } catch (IOException e) {
+                e.printStackTrace();
                 return;
             }
 
