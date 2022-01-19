@@ -9,6 +9,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class CMWatchServiceTask implements Runnable {
 
@@ -46,13 +47,18 @@ public class CMWatchServiceTask implements Runnable {
         while(true) {
             final WatchKey key;
             try {
-                key = watchService.take();
+                key = watchService.poll(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 break;
             } catch (ClosedWatchServiceException e) {
                 e.printStackTrace();
                 break;
+            }
+
+            if(key == null) {
+                syncInfo.setFileChangeDetected(false);
+                continue;
             }
 
             for(WatchEvent<?> watchEvent : key.pollEvents()) {
@@ -82,12 +88,11 @@ public class CMWatchServiceTask implements Runnable {
             }
 
             // start the file-sync if possible
-            if(syncInfo.isSyncInProgress()) {
-                syncInfo.setFileChangeDetected(true);
+            if(syncManager.sync()) {
+                syncInfo.setFileChangeDetected(false);
             }
             else {
-                syncInfo.setFileChangeDetected(false);
-                syncManager.sync();
+                syncInfo.setFileChangeDetected(true);
             }
 
             // initialize the key
