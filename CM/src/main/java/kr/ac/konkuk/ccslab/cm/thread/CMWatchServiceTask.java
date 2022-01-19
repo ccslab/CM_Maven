@@ -87,6 +87,12 @@ public class CMWatchServiceTask implements Runnable {
                 System.out.println(kind + "->" + filename);
             }
 
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             // start the file-sync if possible
             if(syncManager.sync()) {
                 syncInfo.setFileChangeDetected(false);
