@@ -189,26 +189,21 @@ public class CMFileSyncGenerator implements Runnable {
             Path relativeBasisFile = basisFile.subpath(serverSyncHome.getNameCount(),
                     basisFile.getNameCount());
             // search for the client file entry
-            CMFileSyncEntry clientFileEntry = null;
-            int clientFileEntryIndex = -1;
-            List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
-            for(int i = 0; i < fileEntryList.size(); i++) {
-                CMFileSyncEntry entry = fileEntryList.get(i);
+            CMFileSyncEntry clientPathEntry = null;
+            int clientPathEntryIndex = -1;
+            List<CMFileSyncEntry> clientPathEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap()
+                    .get(userName);
+            for(int i = 0; i < clientPathEntryList.size(); i++) {
+                CMFileSyncEntry entry = clientPathEntryList.get(i);
                 if(relativeBasisFile.equals(entry.getPathRelativeToHome())) {
-                    clientFileEntry = entry;
-                    clientFileEntryIndex = i;
+                    clientPathEntry = entry;
+                    clientPathEntryIndex = i;
                     break;
                 }
             }
-            if(clientFileEntry == null) {
+            if(clientPathEntry == null) {
                 System.err.println("client file entry not found for basisFile("+relativeBasisFile+")!");
                 continue;   // proceed to the next basis file
-            }
-
-            // add the index pair to the table
-            basisFileIndexMap.put(clientFileEntryIndex, basisFileIndex);
-            if(CMInfo._CM_DEBUG) {
-                System.out.println("clientFileEntryIndex = " + clientFileEntryIndex);
             }
 
             // compare clientFileEntry and basisFile
@@ -221,8 +216,8 @@ public class CMFileSyncGenerator implements Runnable {
                 e.printStackTrace();
                 continue;
             }
-            if(clientFileEntry.getSize() == sizeOfBasisFile &&
-                    clientFileEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
+            if(clientPathEntry.getSize() == sizeOfBasisFile &&
+                    clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
                 // already synchronized
                 syncManager.skipUpdateFile(userName, basisFile);
                 if(CMInfo._CM_DEBUG) {
@@ -232,6 +227,29 @@ public class CMFileSyncGenerator implements Runnable {
                 }
                 continue;
             }
+
+            // check the directory case
+            if(clientPathEntry.getType() == CMFileType.DIR) {
+                if(!clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
+                    try {
+                        // update the last modified time of the sub-directory
+                        Files.setLastModifiedTime(basisFile, clientPathEntry.getLastModifiedTime());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                // complete the update-file task of the file-sync for this sub-directory
+                boolean ret = syncManager.completeUpdateFile(userName, basisFile);
+                if(!ret) {
+                    System.err.println("error of completing update file(dir)!");
+                    System.err.println("userName("+userName+"), dir("+basisFile+")");
+                }
+                // continue with the next basis file
+                continue;
+            }
+
+            // add the index pair to the table
+            basisFileIndexMap.put(clientPathEntryIndex, basisFileIndex);
 
             // get block checksum
             CMFileSyncBlockChecksum[] checksumArray = createBlockChecksum(basisFileIndex, basisFile);
@@ -245,13 +263,17 @@ public class CMFileSyncGenerator implements Runnable {
 
             // add block-checksum array to the table
             // key: client entry index, value: block-checksum array
-            blockChecksumArrayMap.put(clientFileEntryIndex, checksumArray);
+            blockChecksumArrayMap.put(clientPathEntryIndex, checksumArray);
 
             // send the client entry index and block-checksum array to the client
-            sendResult = sendBlockChecksum(clientFileEntryIndex, checksumArray);
+            sendResult = sendBlockChecksum(clientPathEntryIndex, checksumArray);
             if(!sendResult) {
                 System.err.println("send block-checksum error!");
                 return false;
+            }
+
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("-----------------------------------");
             }
         }
 
