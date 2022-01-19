@@ -195,26 +195,23 @@ public class CMFileSyncManager extends CMServiceManager {
             Path transferFileHome = m_cmInfo.getConfigurationInfo().getTransferedFileHome().resolve(fileSender);
             // get the server sync home
             Path serverSyncHome = getServerSyncHome(fileSender);
-            // move the transferred file to the sync home
+            // move the transferred file to the sync home (including sub-directories)
             try {
-                Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(fileName));
+                Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(foundPath));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            // get the client file entry
+            // get the client path entry list
             List<CMFileSyncEntry> entryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap()
                     .get(fileSender);
-            if(entryList == null) {
-                System.err.println("The entry list of user("+fileSender+") is null!");
-                return;
-            }
+            Objects.requireNonNull(entryList);
             // search for the corresponding client entry
             boolean searchResult = false;
             for(CMFileSyncEntry entry : entryList) {
-                if(entry.getPathRelativeToHome().toString().equals(fileName)) {
+                if(entry.getPathRelativeToHome().equals(foundPath)) {
                     // set the last-modified-time of the corresponding client file entry
                     try {
-                        Files.setLastModifiedTime(serverSyncHome.resolve(fileName), entry.getLastModifiedTime());
+                        Files.setLastModifiedTime(serverSyncHome.resolve(foundPath), entry.getLastModifiedTime());
                     } catch (IOException e) {
                         e.printStackTrace();
                         return;
@@ -223,7 +220,7 @@ public class CMFileSyncManager extends CMServiceManager {
                 }
             }
             if(!searchResult) {
-                System.err.println("No file entry found for ("+fileName+")!");
+                System.err.println("No file entry found for ("+foundPath+")!");
                 return;
             }
 
