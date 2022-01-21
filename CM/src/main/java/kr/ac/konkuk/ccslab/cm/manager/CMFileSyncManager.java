@@ -251,7 +251,20 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setCompletedPath(path);
 
         // send the event
-        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+        boolean ret = CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+        if(ret) {
+            List<CMFileSyncEntry> newClientPathEntryList = syncGenerator.getNewClientPathEntryList();
+            Objects.requireNonNull(newClientPathEntryList);
+            // remove the completed newClientPathEntry from the list
+            boolean removeResult = newClientPathEntryList.removeIf(entry ->
+                    entry.getPathRelativeToHome().equals(path));
+            if(!removeResult) {
+                System.err.println("remove error from the new-client-path-entry-list: "+path);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // called at the server
@@ -348,7 +361,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // compare the number of new files completed to the size of the new-file list
         newClientPathEntryList = syncGenerator.getNewClientPathEntryList();
         numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
-        if(newClientPathEntryList != null && numNewFilesCompleted < newClientPathEntryList.size()) {
+        if(!newClientPathEntryList.isEmpty()) {
             System.err.println("numNewFilesCompleted = "+numNewFilesCompleted);
             System.err.println("size of newClientPathEntryList = "+newClientPathEntryList.size());
             return false;
