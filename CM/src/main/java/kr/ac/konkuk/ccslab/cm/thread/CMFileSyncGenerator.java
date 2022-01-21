@@ -544,9 +544,16 @@ public class CMFileSyncGenerator implements Runnable {
                 .map(path -> path.subpath(startPathIndex, path.getNameCount()))
                 .collect(Collectors.toList());
         // create a new file list that will be added to the server
-        return clientPathEntryList.stream()
+        List<CMFileSyncEntry> newClientPathEntryList = clientPathEntryList.stream()
                 .filter(entry -> !relativeBasisFileList.contains(entry.getPathRelativeToHome()))
                 .collect(Collectors.toList());
+
+        // initialize isNewFileCompletedMap
+        for(CMFileSyncEntry entry : newClientPathEntryList) {
+            isNewFileCompletedMap.put(entry.getPathRelativeToHome(), false);
+        }
+
+        return newClientPathEntryList;
     }
 
     private void deleteFilesAndUpdateBasisFileList() {
@@ -622,7 +629,10 @@ public class CMFileSyncGenerator implements Runnable {
             }
         }
 
-        // TODO: from here
+        // initialize isUpdateFileCompletedMap
+        for(Path path : basisFileList) {
+            isUpdateFileCompletedMap.put(path, false);
+        }
     }
 
     private List<Path> createBasisFileList() {
