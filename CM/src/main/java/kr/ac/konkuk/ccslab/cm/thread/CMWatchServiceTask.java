@@ -7,8 +7,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class CMWatchServiceTask implements Runnable {
@@ -18,6 +17,7 @@ public class CMWatchServiceTask implements Runnable {
     private final CMFileSyncInfo syncInfo;
     private final WatchService watchService;
     private final Map<WatchKey, Path> directoryMap;
+    private final Map<WatchEvent.Kind<?>, List<Path>> detectedPathMap;
 
     public CMWatchServiceTask(Path syncPath, WatchService watchService, CMFileSyncManager syncManager,
                               CMFileSyncInfo syncInfo) {
@@ -27,6 +27,7 @@ public class CMWatchServiceTask implements Runnable {
         this.syncInfo = syncInfo;
 
         directoryMap = new HashMap<>();
+        detectedPathMap = new HashMap<>();
     }
 
     @Override
@@ -47,18 +48,36 @@ public class CMWatchServiceTask implements Runnable {
         while(true) {
             final WatchKey key;
             try {
-                key = watchService.poll(1, TimeUnit.SECONDS);
+                if(detectedPathMap.isEmpty()) {
+                    // if there is no change-detected path i nthe previous monitoring
+                    key = watchService.take();
+                }
+                else {
+                    // if there is any change-detected path in the previous monitoring
+                    key = watchService.poll();
+                    if(key == null) {
+                        // if there is no more change-detected path
+                        if(CMInfo._CM_DEBUG) {
+                            detectedPathMap.forEach((eventKey, listValue) -> {
+                                System.out.println("key = "+eventKey);
+                                listValue.forEach(System.out::println);
+                            });
+                        }
+                        // start the file-sync task
+                        boolean ret = syncManager.sync();
+                        // clear the detectedPathMap
+                        detectedPathMap.clear();
+                        if(!ret) syncInfo.setFileChangeDetected(true);
+                        else syncInfo.setFileChangeDetected(false);
+                        continue; // restart monitoring
+                    }
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 break;
             } catch (ClosedWatchServiceException e) {
                 e.printStackTrace();
                 break;
-            }
-
-            if(key == null) {
-                syncInfo.setFileChangeDetected(false);
-                continue;
             }
 
             for(WatchEvent<?> watchEvent : key.pollEvents()) {
@@ -71,9 +90,9 @@ public class CMWatchServiceTask implements Runnable {
                 if(kind == StandardWatchEventKinds.OVERFLOW)
                     continue;
                 // process CREATE event of a new sub-directory
+                final Path directory = directoryMap.get(key);
+                final Path child = directory.resolve(filename);
                 if(kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                    final Path directory = directoryMap.get(key);
-                    final Path child = directory.resolve(filename);
                     if(Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
                         try {
                             registerTree(child);
@@ -83,22 +102,18 @@ public class CMWatchServiceTask implements Runnable {
                         }
                     }
                 }
+
+                // get the path list of the detectedPathMap
+                List<Path> detectedPathList = detectedPathMap.get(kind);
+                if(detectedPathList == null) {
+                    detectedPathList = new ArrayList<>();
+                    detectedPathMap.put(kind, detectedPathList);
+                }
+                // add the detected path to the list
+                detectedPathList.add(child);
+
                 // print the result
-                System.out.println(kind + "->" + filename);
-            }
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            // start the file-sync if possible
-            if(syncManager.sync()) {
-                syncInfo.setFileChangeDetected(false);
-            }
-            else {
-                syncInfo.setFileChangeDetected(true);
+                System.out.println(kind + "->" + child);
             }
 
             // initialize the key
