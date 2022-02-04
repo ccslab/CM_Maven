@@ -484,8 +484,10 @@ public class CMWinClient extends JFrame {
 
 		JMenu fileSyncSubMenu = new JMenu("File Sync");
 		JMenuItem startFileSyncMenuItem = new JMenuItem("start file-sync");
+		startFileSyncMenuItem.addActionListener(menuListener);
 		fileSyncSubMenu.add(startFileSyncMenuItem);
 		JMenuItem stopFileSyncMenuItem = new JMenuItem("stop file-sync");
+		stopFileSyncMenuItem.addActionListener(menuListener);
 		fileSyncSubMenu.add(stopFileSyncMenuItem);
 
 		cmServiceMenu.add(fileSyncSubMenu);
