@@ -489,6 +489,9 @@ public class CMWinClient extends JFrame {
 		JMenuItem stopFileSyncMenuItem = new JMenuItem("stop file-sync");
 		stopFileSyncMenuItem.addActionListener(menuListener);
 		fileSyncSubMenu.add(stopFileSyncMenuItem);
+		JMenuItem openFileSyncFolderMenuItem = new JMenuItem("open file-sync folder");
+		openFileSyncFolderMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(openFileSyncFolderMenuItem);
 
 		cmServiceMenu.add(fileSyncSubMenu);
 		
@@ -918,6 +921,9 @@ public class CMWinClient extends JFrame {
 		case 301:	// stop file-sync
 			testStopFileSync();
 			break;
+		case 302:	// open file-sync folder
+			testOpenFileSyncFolder();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -975,6 +981,7 @@ public class CMWinClient extends JFrame {
 		printMessage("204: unsubscribe, 205: disconnect \n");
 		printMessage("---------------------------------- File Sync\n");
 		printMessage("300: start file-sync, 301: stop file-sync\n");
+		printMessage("302: open file-sync folder\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -3944,6 +3951,20 @@ public class CMWinClient extends JFrame {
 		}
 	}
 
+	private void testOpenFileSyncFolder() {
+		printMessage("========== open file-sync folder\n");
+		CMFileSyncManager syncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		Path syncHome = syncManager.getClientSyncHome();
+		// open syncHome folder
+		Desktop desktop = Desktop.getDesktop();
+		try {
+			desktop.open(syncHome.toFile());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void testSendEventWithWrongByteNum()
 	{
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
@@ -4521,10 +4542,13 @@ public class CMWinClient extends JFrame {
 			case "stop file-sync":
 				testStopFileSync();
 				break;
+			case "open file-sync folder":
+				testOpenFileSyncFolder();
+				break;
 			}
 		}
 	}
-	
+
 	public class MyMouseListener implements MouseListener {
 
 		@Override
