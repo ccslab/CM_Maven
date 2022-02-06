@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -6,6 +7,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -333,6 +335,9 @@ public class CMClientApp {
 			case 301:	// stop file-sync
 				testStopFileSync();
 				break;
+			case 302:	// open file-sync folder
+				testOpenFileSyncFolder();
+				break;
 			default:
 				System.err.println("Unknown command.");
 				break;
@@ -346,7 +351,7 @@ public class CMClientApp {
 		}
 		m_scan.close();
 	}
-	
+
 	public void printAllMenus()
 	{
 		System.out.println("---------------------------------- Help");
@@ -398,6 +403,7 @@ public class CMClientApp {
 		System.out.println("204: unsubscribe, 205: disconnect");
 		System.out.println("---------------------------------- File Sync");
 		System.out.println("300: start file-sync, 301: stop file-sync");
+		System.out.println("302: open file-sync folder");
 		System.out.println("---------------------------------- Other CM Tests");
 		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
 		System.out.println("103: test repeated request of SNS content list");
@@ -3257,6 +3263,20 @@ public class CMClientApp {
 		}
 		else {
 			System.out.println("File sync stops.");
+		}
+	}
+
+	private void testOpenFileSyncFolder() {
+		System.out.println("========== open file-sync folder");
+		CMFileSyncManager syncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		Path syncHome = syncManager.getClientSyncHome();
+		// open syncHome folder
+		Desktop desktop = Desktop.getDesktop();
+		try {
+			desktop.open(syncHome.toFile());
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
