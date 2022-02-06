@@ -1,18 +1,13 @@
+import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectableChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Image;
 import java.awt.event.*;
-import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -39,6 +34,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
@@ -199,7 +195,6 @@ public class CMWinServer extends JFrame {
 		showThreadInfoItem.addActionListener(menuListener);
 		infoSubMenu.add(showThreadInfoItem);
 
-		
 		serviceMenu.add(infoSubMenu);
 		
 		JMenu eventTransmissionSubMenu = new JMenu("Event Transmission");
@@ -261,8 +256,15 @@ public class CMWinServer extends JFrame {
 		printAllRetainInfoMenuItem.addActionListener(menuListener);
 		pubsubSubMenu.add(printAllRetainInfoMenuItem);
 		
-		serviceMenu.add(pubsubSubMenu);		
-		
+		serviceMenu.add(pubsubSubMenu);
+
+		JMenu fileSyncSubMenu = new JMenu("File Sync");
+		JMenuItem openSyncFolderMenuItem = new JMenuItem("open file-sync folder");
+		openSyncFolderMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(openSyncFolderMenuItem);
+
+		serviceMenu.add(fileSyncSubMenu);
+
 		JMenu otherSubMenu = new JMenu("Other CM Tests");
 		JMenuItem configUserAccessSimMenuItem = new JMenuItem("configure SNS user access simulation");
 		configUserAccessSimMenuItem.addActionListener(menuListener);
@@ -382,6 +384,9 @@ public class CMWinServer extends JFrame {
 		case 62:	// print all retain info
 			printAllMqttRetainInfo();
 			break;
+		case 70:	// open file-sync folder
+			openFileSyncFolder();
+			break;
 		case 101:	// configure variables of user access simulation
 			configureUserAccessSimulation();
 			break;
@@ -434,6 +439,8 @@ public class CMWinServer extends JFrame {
 		printMessage("50: add channel, 51: remove channel\n");
 		printMessage("---------------------------------- MQTT\n");
 		printMessage("60: find session info, 61: print all session info, 62: print all retain info\n");
+		printMessage("---------------------------------- File Sync\n");
+		printMessage("70: open file-sync folder\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
 		printMessage("103: start SNS user access simulation and measure prefetch accuracy\n");
@@ -2088,6 +2095,28 @@ public class CMWinServer extends JFrame {
 			case "print all retain info":
 				printAllMqttRetainInfo();
 				break;
+			case "open file-sync folder":
+				openFileSyncFolder();
+				break;
+			}
+		}
+	}
+
+	private void openFileSyncFolder() {
+		printMessage("=========== open file-sync folder\n");
+		// ask client name
+		String userName = JOptionPane.showInputDialog("User Name:");
+		if(userName != null) {
+			// get the file-sync home of "userName"
+			CMFileSyncManager syncManager = m_serverStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
+			Objects.requireNonNull(syncManager);
+			Path syncHome = syncManager.getServerSyncHome(userName);
+			// open syncHome folder
+			Desktop desktop = Desktop.getDesktop();
+			try {
+				desktop.open(syncHome.toFile());
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
