@@ -16,10 +16,12 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -28,6 +30,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -169,6 +172,9 @@ public class CMServerApp {
 			case 62:	// print all retain info
 				printAllMqttRetainInfo();
 				break;
+			case 70:	// open file-sync folder
+				openFileSyncFolder();
+				break;
 			case 101:	// configure variables of user access simulation
 				configureUserAccessSimulation();
 				break;
@@ -202,7 +208,26 @@ public class CMServerApp {
 		m_scan.close();
 		
 	}
-	
+
+	private void openFileSyncFolder() {
+		System.out.println("=========== open file-sync folder\n");
+		// ask client name
+		String userName = JOptionPane.showInputDialog("User Name:");
+		if(userName != null) {
+			// get the file-sync home of "userName"
+			CMFileSyncManager syncManager = m_serverStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
+			Objects.requireNonNull(syncManager);
+			Path syncHome = syncManager.getServerSyncHome(userName);
+			// open syncHome folder
+			Desktop desktop = Desktop.getDesktop();
+			try {
+				desktop.open(syncHome.toFile());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public void printAllMenus()
 	{
 		System.out.print("---------------------------------- Help\n");
@@ -228,6 +253,8 @@ public class CMServerApp {
 		System.out.print("50: add channel, 51: remove channel\n");
 		System.out.print("---------------------------------- MQTT\n");
 		System.out.print("60: find session info, 61: print all session info, 62: print all retain info\n");
+		System.out.print("---------------------------------- File Sync\n");
+		System.out.print("70: open file-sync folder\n");
 		System.out.print("---------------------------------- Other CM Tests\n");
 		System.out.print("101: configure SNS user access simulation, 102: start SNS user access simulation\n");
 		System.out.print("103: start SNS user access simulation and measure prefetch accuracy\n");
