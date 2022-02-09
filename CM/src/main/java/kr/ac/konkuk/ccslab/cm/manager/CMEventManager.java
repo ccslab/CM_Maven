@@ -219,6 +219,9 @@ public class CMEventManager {
 					case CMFileSyncEvent.COMPLETE_FILE_SYNC:
 						CMFileSyncEventCompleteFileSync completeFileSync = new CMFileSyncEventCompleteFileSync(buf);
 						return completeFileSync;
+					case CMFileSyncEvent.ONLINE_MODE_LIST:
+						CMFileSyncEventOnlineModeList onlineModeList = new CMFileSyncEventOnlineModeList(buf);
+						return onlineModeList;
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);
