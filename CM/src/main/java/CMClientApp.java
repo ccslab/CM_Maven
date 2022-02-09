@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
@@ -338,6 +338,12 @@ public class CMClientApp {
 			case 302:	// open file-sync folder
 				testOpenFileSyncFolder();
 				break;
+			case 303:	// request file-sync online mode
+				testRequestFileSyncOnlineMode();
+				break;
+			case 304:	// request file-sync local mode
+				testRequestFileSyncLocalMode();
+				break;
 			default:
 				System.err.println("Unknown command.");
 				break;
@@ -404,6 +410,7 @@ public class CMClientApp {
 		System.out.println("---------------------------------- File Sync");
 		System.out.println("300: start file-sync, 301: stop file-sync");
 		System.out.println("302: open file-sync folder");
+		System.out.println("303: request online mode, 304: request local mode");
 		System.out.println("---------------------------------- Other CM Tests");
 		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
 		System.out.println("103: test repeated request of SNS content list");
@@ -3278,6 +3285,63 @@ public class CMClientApp {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void testRequestFileSyncOnlineMode() {
+		System.out.println("========== request file-sync online mode");
+		// get sync home
+		CMFileSyncManager syncManager = m_clientStub.findServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		Path syncHome = syncManager.getClientSyncHome();
+
+		// open file chooser to choose files
+		JFileChooser fc = new JFileChooser();
+		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		fc.setMultiSelectionEnabled(true);
+		fc.setCurrentDirectory(syncHome.toFile());
+		int fcRet = fc.showOpenDialog(null);
+		if(fcRet != JFileChooser.APPROVE_OPTION) return;
+		File[] files = fc.getSelectedFiles();
+		if(CMInfo._CM_DEBUG) {
+			for(File file : files)
+				System.out.println("file = " + file);
+		}
+		if(files.length < 1) return;
+
+		// call the request API of the client stub
+		boolean ret = m_clientStub.requestFileSyncOnlineMode(files);
+		if(!ret) {
+			System.err.println("request error!");
+		}
+		return;
+	}
+
+	private void testRequestFileSyncLocalMode() {
+		System.out.println("========== request file-sync local mode");
+		// get sync home
+		CMFileSyncManager syncManager = m_clientStub.findServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		Path syncHome = syncManager.getClientSyncHome();
+
+		// open file chooser to choose files
+		JFileChooser fc = new JFileChooser();
+		fc.setMultiSelectionEnabled(true);
+		fc.setCurrentDirectory(syncHome.toFile());
+		int fcRet = fc.showOpenDialog(null);
+		if(fcRet != JFileChooser.APPROVE_OPTION) return;
+		File[] files = fc.getSelectedFiles();
+		if(CMInfo._CM_DEBUG) {
+			for(File file : files)
+				System.out.println("file = " + file);
+		}
+		if(files.length < 1) return;
+
+		// call the request API of the client stub
+		boolean ret = m_clientStub.requestFileSyncLocalMode(files);
+		if(!ret) {
+			System.out.println("request error!");
+		}
+		return;
 	}
 
 	public void testSendEventWithWrongByteNum()
