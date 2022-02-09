@@ -6,9 +6,8 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.nio.file.Path;
 import java.nio.file.WatchService;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 
 public class CMFileSyncInfo {
@@ -30,6 +29,10 @@ public class CMFileSyncInfo {
     private WatchService watchService;
     private Future<?> watchServiceFuture;
 
+    private ConcurrentLinkedQueue<Path> onlineModeRequestQueue;     // 4 client
+    private List<Path> onlineModePathList;      // 4 client
+    private Map<String, List<Path>> onlineModePathListMap;      // 4 server
+
     public CMFileSyncInfo() {
         syncInProgress = false;
         pathList = null;
@@ -43,6 +46,10 @@ public class CMFileSyncInfo {
         fileChangeDetected = false;
         watchService = null;
         watchServiceFuture = null;
+
+        onlineModeRequestQueue = new ConcurrentLinkedQueue<>();
+        onlineModePathList = new ArrayList<>();
+        onlineModePathListMap = new HashMap<>();
     }
 
     public boolean isSyncInProgress() {
@@ -111,5 +118,17 @@ public class CMFileSyncInfo {
     public boolean isWatchServiceTaskDone() {
         if(watchServiceFuture == null) return true;
         return watchServiceFuture.isDone() || watchServiceFuture.isCancelled();
+    }
+
+    public ConcurrentLinkedQueue<Path> getOnlineModeRequestQueue() {
+        return onlineModeRequestQueue;
+    }
+
+    public List<Path> getOnlineModePathList() {
+        return onlineModePathList;
+    }
+
+    public Map<String, List<Path>> getOnlineModePathListMap() {
+        return onlineModePathListMap;
     }
 }
