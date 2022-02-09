@@ -492,6 +492,12 @@ public class CMWinClient extends JFrame {
 		JMenuItem openFileSyncFolderMenuItem = new JMenuItem("open file-sync folder");
 		openFileSyncFolderMenuItem.addActionListener(menuListener);
 		fileSyncSubMenu.add(openFileSyncFolderMenuItem);
+		JMenuItem reqOnlineModeMenuItem = new JMenuItem("request online mode");
+		reqOnlineModeMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(reqOnlineModeMenuItem);
+		JMenuItem reqLocalModeMenuItem = new JMenuItem("request local mode");
+		reqLocalModeMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(reqLocalModeMenuItem);
 
 		cmServiceMenu.add(fileSyncSubMenu);
 		
@@ -924,6 +930,12 @@ public class CMWinClient extends JFrame {
 		case 302:	// open file-sync folder
 			testOpenFileSyncFolder();
 			break;
+		case 303:	// request file-sync online mode
+			testRequestFileSyncOnlineMode();
+			break;
+		case 304:	// request file-sync local mode
+			testRequestFileSyncLocalMode();
+			break;
 		default:
 			System.err.println("Unknown command.");
 			break;
@@ -982,6 +994,7 @@ public class CMWinClient extends JFrame {
 		printMessage("---------------------------------- File Sync\n");
 		printMessage("300: start file-sync, 301: stop file-sync\n");
 		printMessage("302: open file-sync folder\n");
+		printMessage("303: request online mode, 304: request local mode\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -3965,6 +3978,63 @@ public class CMWinClient extends JFrame {
 		}
 	}
 
+	private void testRequestFileSyncOnlineMode() {
+		printMessage("========== request file-sync online mode\n");
+		// get sync home
+		CMFileSyncManager syncManager = m_clientStub.findServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		Path syncHome = syncManager.getClientSyncHome();
+
+		// open file chooser to choose files
+		JFileChooser fc = new JFileChooser();
+		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		fc.setMultiSelectionEnabled(true);
+		fc.setCurrentDirectory(syncHome.toFile());
+		int fcRet = fc.showOpenDialog(this);
+		if(fcRet != JFileChooser.APPROVE_OPTION) return;
+		File[] files = fc.getSelectedFiles();
+		if(CMInfo._CM_DEBUG) {
+			for(File file : files)
+				System.out.println("file = " + file);
+		}
+		if(files.length < 1) return;
+
+		// call the request API of the client stub
+		boolean ret = m_clientStub.requestFileSyncOnlineMode(files);
+		if(!ret) {
+			printStyledMessage("request error!\n", "bold");
+		}
+		return;
+	}
+
+	private void testRequestFileSyncLocalMode() {
+		printMessage("========== request file-sync local mode\n");
+		// get sync home
+		CMFileSyncManager syncManager = m_clientStub.findServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		Path syncHome = syncManager.getClientSyncHome();
+
+		// open file chooser to choose files
+		JFileChooser fc = new JFileChooser();
+		fc.setMultiSelectionEnabled(true);
+		fc.setCurrentDirectory(syncHome.toFile());
+		int fcRet = fc.showOpenDialog(this);
+		if(fcRet != JFileChooser.APPROVE_OPTION) return;
+		File[] files = fc.getSelectedFiles();
+		if(CMInfo._CM_DEBUG) {
+			for(File file : files)
+				System.out.println("file = " + file);
+		}
+		if(files.length < 1) return;
+
+		// call the request API of the client stub
+		boolean ret = m_clientStub.requestFileSyncLocalMode(files);
+		if(!ret) {
+			printStyledMessage("request error!\n", "bold");
+		}
+		return;
+	}
+
 	private void testSendEventWithWrongByteNum()
 	{
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
@@ -4544,6 +4614,12 @@ public class CMWinClient extends JFrame {
 				break;
 			case "open file-sync folder":
 				testOpenFileSyncFolder();
+				break;
+			case "request online mode":
+				testRequestFileSyncOnlineMode();
+				break;
+			case "request local mode":
+				testRequestFileSyncLocalMode();
 				break;
 			}
 		}

@@ -3738,5 +3738,18 @@ public class CMClientStub extends CMStub {
 
 		return true;
 	}
-	
+
+	public boolean requestFileSyncOnlineMode(File[] files) {
+
+		// TODO: not yet implemented
+
+		return false;
+	}
+
+	public boolean requestFileSyncLocalMode(File[] files) {
+
+		// TODO: not yet implemented
+
+		return false;
+	}
 }
