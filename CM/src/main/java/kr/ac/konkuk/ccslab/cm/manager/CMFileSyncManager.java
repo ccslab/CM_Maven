@@ -820,4 +820,16 @@ public class CMFileSyncManager extends CMServiceManager {
 
         return true;
     }
+
+    public boolean requestOnlineMode(List<Path> pathList) {
+        System.err.println("CMFileSyncManager.requestOnlineMode() not implemented yet!");
+        // TODO: from here
+        return false;
+    }
+
+    public boolean requestLocalMode(List<Path> pathList) {
+        System.err.println("CMFileSyncManager.requestLocalMode() not implemented yet!");
+        // TODO: not yet
+        return false;
+    }
 }

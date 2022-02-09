@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Collectors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
@@ -3740,16 +3741,78 @@ public class CMClientStub extends CMStub {
 	}
 
 	public boolean requestFileSyncOnlineMode(File[] files) {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.requestFileSyncOnlineMode() called..");
+		}
+		// check system type
+		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		if(confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("The system type is SERVER!");
+			return false;
+		}
+		// check the login state
+		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		int state = myself.getState();
+		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
+			System.err.println("You must log in to the default server!");
+			return false;
+		}
 
-		// TODO: not yet implemented
+		if(files == null) {
+			System.err.println("The files parameter is null!");
+			return false;
+		}
 
-		return false;
+		// change files array to a list
+		List<Path> pathList = Arrays.stream(files).map(File::toPath).collect(Collectors.toList());
+
+		// call API of CMFileSyncManager
+		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		boolean ret = syncManager.requestOnlineMode(pathList);
+		if(!ret) {
+			System.err.println("request error !");
+			return false;
+		}
+
+		return true;
 	}
 
 	public boolean requestFileSyncLocalMode(File[] files) {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.requestFileSyncLocalMode() called..");
+		}
+		// check system type
+		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		if(confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("The system type is SERVER!");
+			return false;
+		}
+		// check the login state
+		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		int state = myself.getState();
+		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
+			System.err.println("You must log in to the default server!");
+			return false;
+		}
 
-		// TODO: not yet implemented
+		if(files == null) {
+			System.err.println("The files parameter is null!");
+			return false;
+		}
 
-		return false;
+		// change files array to a list
+		List<Path> pathList = Arrays.stream(files).map(File::toPath).collect(Collectors.toList());
+
+		// call API of CMFileSyncManager
+		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		boolean ret = syncManager.requestLocalMode(pathList);
+		if(!ret) {
+			System.err.println("request error !");
+			return false;
+		}
+
+		return true;
 	}
 }
