@@ -13,17 +13,26 @@ public class CMFileSyncEventOnlineModeListTest {
     @Test
     public void marshallUnmarshall() {
         System.out.println("===== CMFileSyncEventOnlineModeListTest.marshallUnmarshall() called..");
-        CMFileSyncEventOnlineModeList onlineModeListEvent = new CMFileSyncEventOnlineModeList();
-        onlineModeListEvent.setRequester("ccslab");
+        CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
+        listEvent.setRequester("ccslab");
         List<Path> pathList = List.of(Path.of("test1.txt"), Path.of("test2.txt"));
-        onlineModeListEvent.setRelativePathList(pathList);
-        System.out.println("onlineModeListEvent = " + onlineModeListEvent);
+        listEvent.setRelativePathList(pathList);
+        System.out.println("onlineModeListEvent = " + listEvent);
 
-        ByteBuffer buffer = CMEventManager.marshallEvent(onlineModeListEvent);
+        ByteBuffer buffer = CMEventManager.marshallEvent(listEvent);
         CMFileSyncEventOnlineModeList unmarhsallEvent =
                 (CMFileSyncEventOnlineModeList) CMEventManager.unmarshallEvent(buffer);
         assertNotNull(unmarhsallEvent);
         System.out.println("unmarhsallEvent = " + unmarhsallEvent);
-        assertEquals(onlineModeListEvent, unmarhsallEvent);
+        assertEquals(listEvent, unmarhsallEvent);
+    }
+
+    @Test(expected=NullPointerException.class)
+    public void marshallException() {
+        System.out.println("===== CMFileSyncEventOnlineModeListTest.marshallException() called..");
+        CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
+        listEvent.setRequester("ccslab");
+
+        ByteBuffer buffer = CMEventManager.marshallEvent(listEvent);
     }
 }
