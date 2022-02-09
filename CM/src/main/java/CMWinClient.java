@@ -4016,6 +4016,7 @@ public class CMWinClient extends JFrame {
 
 		// open file chooser to choose files
 		JFileChooser fc = new JFileChooser();
+		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		fc.setMultiSelectionEnabled(true);
 		fc.setCurrentDirectory(syncHome.toFile());
 		int fcRet = fc.showOpenDialog(this);
