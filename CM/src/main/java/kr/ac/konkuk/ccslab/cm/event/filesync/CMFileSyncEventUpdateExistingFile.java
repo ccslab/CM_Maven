@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
     private int fileEntryIndex;     // client file entry index
@@ -81,6 +82,7 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
@@ -89,6 +91,26 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
                 fse.getMatchBlockIndex() == matchBlockIndex &&
                 fse.getNumNonMatchBytes() == numNonMatchBytes &&
                 Arrays.equals(fse.getNonMatchBytes(), nonMatchBytes);
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventUpdateExistingFile that = (CMFileSyncEventUpdateExistingFile) o;
+        return fileEntryIndex == that.fileEntryIndex &&
+                numNonMatchBytes == that.numNonMatchBytes &&
+                matchBlockIndex == that.matchBlockIndex &&
+                Arrays.equals(nonMatchBytes, that.nonMatchBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(fileEntryIndex, numNonMatchBytes, matchBlockIndex);
+        result = 31 * result + Arrays.hashCode(nonMatchBytes);
+        return result;
     }
 
     public int getFileEntryIndex() {

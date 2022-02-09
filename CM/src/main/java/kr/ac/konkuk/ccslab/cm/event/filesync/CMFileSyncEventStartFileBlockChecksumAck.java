@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.event.filesync;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 public class CMFileSyncEventStartFileBlockChecksumAck extends CMFileSyncEvent {
     private int fileEntryIndex; // client file entry index
@@ -75,6 +76,7 @@ public class CMFileSyncEventStartFileBlockChecksumAck extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
@@ -83,6 +85,24 @@ public class CMFileSyncEventStartFileBlockChecksumAck extends CMFileSyncEvent {
                 fse.getFileEntryIndex() == fileEntryIndex &&
                 fse.getTotalNumBlocks() == totalNumBlocks &&
                 fse.getReturnCode() == returnCode;
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventStartFileBlockChecksumAck that = (CMFileSyncEventStartFileBlockChecksumAck) o;
+        return fileEntryIndex == that.fileEntryIndex &&
+                totalNumBlocks == that.totalNumBlocks &&
+                blockSize == that.blockSize &&
+                returnCode == that.returnCode;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fileEntryIndex, totalNumBlocks, blockSize, returnCode);
     }
 
     public int getFileEntryIndex() {

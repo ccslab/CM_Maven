@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
     // Fields: userName, numFilesCompleted, numFiles, fileEntryList, returnCode
@@ -86,6 +87,7 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
@@ -94,6 +96,24 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
                 fse.getNumFilesCompleted() == numFilesCompleted &&
                 fse.getNumFiles() == numFiles &&
                 fse.getReturnCode() == returnCode;
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventFileEntriesAck that = (CMFileSyncEventFileEntriesAck) o;
+        return numFilesCompleted == that.numFilesCompleted &&
+                numFiles == that.numFiles &&
+                returnCode == that.returnCode &&
+                userName.equals(that.userName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName, numFilesCompleted, numFiles, returnCode);
     }
 
     public String getUserName() {

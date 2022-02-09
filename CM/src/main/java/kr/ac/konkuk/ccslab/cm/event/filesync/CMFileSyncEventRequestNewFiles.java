@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
     // Fields: String requesterName, int numRequestedFiles, List<Path> requestedFileList
@@ -98,6 +99,7 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
@@ -105,6 +107,23 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         return fse.getRequesterName().equals(requesterName) &&
                 fse.getNumRequestedFiles() == numRequestedFiles &&
                 fse.getRequestedFileList().equals(requestedFileList);
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventRequestNewFiles that = (CMFileSyncEventRequestNewFiles) o;
+        return numRequestedFiles == that.numRequestedFiles &&
+                requesterName.equals(that.requesterName) &&
+                requestedFileList.equals(that.requestedFileList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(requesterName, numRequestedFiles, requestedFileList);
     }
 
     public String getRequesterName() {

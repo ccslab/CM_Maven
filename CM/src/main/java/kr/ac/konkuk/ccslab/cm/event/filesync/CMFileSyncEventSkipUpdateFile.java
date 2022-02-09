@@ -5,6 +5,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
     // Fields: userName, skippedPath
@@ -62,12 +63,28 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
         if(!(obj instanceof CMFileSyncEventSkipUpdateFile fse)) return false;
         return fse.getUserName().equals(userName) &&
                 fse.getSkippedPath().equals(skippedPath);
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventSkipUpdateFile that = (CMFileSyncEventSkipUpdateFile) o;
+        return userName.equals(that.userName) && skippedPath.equals(that.skippedPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName, skippedPath);
     }
 
     public String getUserName() {

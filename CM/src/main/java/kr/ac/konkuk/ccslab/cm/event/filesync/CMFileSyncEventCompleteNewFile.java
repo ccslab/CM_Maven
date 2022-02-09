@@ -5,6 +5,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
     // Fields: userName, completedPath
@@ -62,12 +63,28 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
         if(!(obj instanceof CMFileSyncEventCompleteNewFile fse)) return false;
         return fse.getUserName().equals(userName) &&
                 fse.getCompletedPath().equals(completedPath);
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventCompleteNewFile that = (CMFileSyncEventCompleteNewFile) o;
+        return userName.equals(that.userName) && completedPath.equals(that.completedPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName, completedPath);
     }
 
     public String getUserName() {

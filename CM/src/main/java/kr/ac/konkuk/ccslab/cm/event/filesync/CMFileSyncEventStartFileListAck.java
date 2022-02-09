@@ -3,6 +3,7 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
     private String userName;    // user name
@@ -68,6 +69,7 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
@@ -75,6 +77,21 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
         return fse.getUserName().equals(userName) &&
                 fse.getNumTotalFiles() == numTotalFiles &&
                 fse.getReturnCode() == returnCode;
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventStartFileListAck that = (CMFileSyncEventStartFileListAck) o;
+        return numTotalFiles == that.numTotalFiles && returnCode == that.returnCode && userName.equals(that.userName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName, numTotalFiles, returnCode);
     }
 
     public String getUserName() {

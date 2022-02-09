@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
     private String userName;    // user name
@@ -135,6 +136,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 '}';
     }
 
+/*
     @Override
     public boolean equals(Object obj) {
         if(!super.equals(obj)) return false;
@@ -143,6 +145,24 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 fse.getNumFilesCompleted() == numFilesCompleted &&
                 fse.getNumFiles() == numFiles &&
                 fse.getClientPathEntryList().equals(clientPathEntryList);
+    }
+*/
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CMFileSyncEventFileEntries that = (CMFileSyncEventFileEntries) o;
+        return numFilesCompleted == that.numFilesCompleted &&
+                numFiles == that.numFiles &&
+                userName.equals(that.userName) &&
+                clientPathEntryList.equals(that.clientPathEntryList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName, numFilesCompleted, numFiles, clientPathEntryList);
     }
 
     public String getUserName() {
