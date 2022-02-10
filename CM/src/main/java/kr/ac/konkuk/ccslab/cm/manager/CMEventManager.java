@@ -222,6 +222,9 @@ public class CMEventManager {
 					case CMFileSyncEvent.ONLINE_MODE_LIST:
 						CMFileSyncEventOnlineModeList onlineModeList = new CMFileSyncEventOnlineModeList(buf);
 						return onlineModeList;
+					case CMFileSyncEvent.ONLINE_MODE_LIST_ACK:
+						CMFileSyncEventOnlineModeListAck onlineModeListAck = new CMFileSyncEventOnlineModeListAck(buf);
+						return onlineModeListAck;
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);
