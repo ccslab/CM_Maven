@@ -822,8 +822,40 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public boolean requestOnlineMode(List<Path> pathList) {
-        System.err.println("CMFileSyncManager.requestOnlineMode() not implemented yet!");
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.requestOnlineMode() called..");
+        }
+
+        // check if current file-sync status
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        if(syncInfo.isSyncInProgress()) {
+            System.err.println("Currently file-sync task is working! You should wait!");
+            return false;
+        }
+        // check argument
+        if(pathList == null) {
+            System.err.println("The argument pathList is null!");
+            return false;
+        }
+
+        // change the file-sync status
+        syncInfo.setSyncInProgress(true);
+        // stop the watch service
+        boolean ret = stopWatchService();
+        if(!ret) {
+            System.err.println("error stopping WatchService!");
+            return false;
+        }
+
+        //// extending all directory paths in the path list to file paths
+        // extracting file-only list in the argument path list
+
         // TODO: from here
+
+        // extracting directory-only list in the argument path list
+        // extend each directory to a list of files and added to the file-only list
+        // take out path element that is already the online mode in the file-only list
+
         return false;
     }
 
