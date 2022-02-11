@@ -55,6 +55,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM -> processResult = processEND_FILE_BLOCK_CHECKSUM(fse);
             case CMFileSyncEvent.END_FILE_BLOCK_CHECKSUM_ACK -> processResult = processEND_FILE_BLOCK_CHECKSUM_ACK(fse);
             case CMFileSyncEvent.UPDATE_EXISTING_FILE -> processResult = processUPDATE_EXISTING_FILE(fse);
+            case CMFileSyncEvent.ONLINE_MODE_LIST -> processResult = processONLINE_MODE_LIST(fse);
+            case CMFileSyncEvent.ONLINE_MODE_LIST_ACK -> processResult = processONLINE_MODE_LIST_ACK(fse);
+            case CMFileSyncEvent.END_ONLINE_MODE_LIST -> processResult = processEND_ONLINE_MODE_LIST(fse);
+            case CMFileSyncEvent.END_ONLINE_MODE_LIST_ACK -> processResult = processEND_ONLINE_MODE_LIST_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -62,6 +66,71 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    // called at the client
+    private boolean processEND_ONLINE_MODE_LIST_ACK(CMFileSyncEvent fse) {
+        System.err.println("CMFileSyncEventHandler.processEND_ONLINE_MODE_LIST_ACK() not yet implemented!");
+        // TODO: not yet
+        return false;
+    }
+
+    // called at the server
+    private boolean processEND_ONLINE_MODE_LIST(CMFileSyncEvent fse) {
+        System.err.println("CMFileSyncEventHandler.processEND_ONLINE_MODE_LIST() not yet implemented!");
+        // TODO: not yet
+        return false;
+    }
+
+    // called at the client
+    private boolean processONLINE_MODE_LIST_ACK(CMFileSyncEvent fse) {
+
+        // TODO: from here
+        return false;
+    }
+
+    // called at the server
+    private boolean processONLINE_MODE_LIST(CMFileSyncEvent fse) {
+        CMFileSyncEventOnlineModeList listEvent = (CMFileSyncEventOnlineModeList) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processONLINE_MODE_LIST() called..");
+            System.out.println("listEvent = " + listEvent);
+        }
+
+        // get online-mode-list Map
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        Map<String, List<Path>> onlineModeListMap = syncInfo.getOnlineModePathListMap();
+        Objects.requireNonNull(onlineModeListMap);
+        // get the online mode list with the requester
+        String requester = listEvent.getRequester();
+        List<Path> onlineModeList = onlineModeListMap.get(requester);
+        if(onlineModeList == null) {
+            onlineModeList = new ArrayList<>();
+            onlineModeListMap.put(requester, onlineModeList);
+        }
+        // add the list in the event to the online mode list
+        boolean ret = onlineModeList.addAll(listEvent.getRelativePathList());
+        if(!ret) {
+            System.err.println("error to add event list to the online mode list!");
+        }
+
+        // create and send an ack event
+        CMFileSyncEventOnlineModeListAck ackEvent = new CMFileSyncEventOnlineModeListAck();
+        ackEvent.setSender(listEvent.getReceiver());
+        ackEvent.setReceiver(listEvent.getSender());
+        ackEvent.setRequester(requester);
+        ackEvent.setRelativePathList(listEvent.getRelativePathList());
+        if(ret) ackEvent.setReturnCode(1);
+        else ackEvent.setReturnCode(0);
+
+        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), m_cmInfo);
+        if(!ret) {
+            System.err.println("send error : "+ackEvent);
+            return false;
+        }
+
+        return true;
     }
 
     // called at the server
