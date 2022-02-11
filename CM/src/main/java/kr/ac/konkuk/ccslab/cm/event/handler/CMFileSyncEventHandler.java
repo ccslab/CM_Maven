@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -132,19 +133,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             if(eventList.contains(relativeHeadPath)) {
                 //// change the head path to the online mode
                 try {
-                    // save the file attribute
-                    Map<String, Object> fileAttributeMap = Files.readAttributes(headPath,
-                            "*", LinkOption.NOFOLLOW_LINKS);
+                    // save the last-modified time of headPath
+                    FileTime lastModifiedTime = Files.getLastModifiedTime(headPath, LinkOption.NOFOLLOW_LINKS);
                     // truncate the file
-                    try(SeekableByteChannel channel = Files.newByteChannel(headPath)) {
+                    try(SeekableByteChannel channel = Files.newByteChannel(headPath, StandardOpenOption.WRITE)) {
                         channel.truncate(0);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return false;
                     }
-                    // restore the file attribute
-                    for(Map.Entry<String, Object> entry : fileAttributeMap.entrySet()) {
-                        String key = entry.getKey();
-                        Object value = entry.getValue();
-                        Files.setAttribute(headPath, key, value, LinkOption.NOFOLLOW_LINKS);
-                    }
+                    // restore the last-modified time of headPath
+                    Files.setLastModifiedTime(headPath, lastModifiedTime);
                 } catch (IOException e) {
                     e.printStackTrace();
                     return false;
@@ -163,8 +162,30 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             }
         }
 
+        // check if the number of paths that are moved to the online mode list is
+        // the same as the list size of event
+        if(numCompletePath != eventList.size()) {
+            System.err.println("numCompletePath and list size of event are different!");
+            System.err.println("numCompletePath = " + numCompletePath);
+            System.err.println("list size of event = " + eventList.size());
+            return false;
+        }
 
-        // TODO: from here
+        // check if the online-mode-request queue is empty
+        if(requestQueue.isEmpty()) {
+            // create and send the end-online-mode event
+            CMFileSyncEventEndOnlineModeList endEvent = new CMFileSyncEventEndOnlineModeList();
+            endEvent.setSender(ackEvent.getReceiver());
+            endEvent.setReceiver(ackEvent.getSender());
+            endEvent.setRequester(ackEvent.getRequester());
+            endEvent.setNumOnlineModeFiles(onlineModeList.size());
+
+            boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender(), m_cmInfo);
+            if(!ret) {
+                System.err.println("send error: "+endEvent);
+                return false;
+            }
+        }
 
         return true;
     }

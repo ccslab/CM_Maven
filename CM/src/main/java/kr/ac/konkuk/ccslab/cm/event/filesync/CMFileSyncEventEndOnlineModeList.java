@@ -5,17 +5,17 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class CMFileSyncEventEndOnlineMode extends CMFileSyncEvent {
+public class CMFileSyncEventEndOnlineModeList extends CMFileSyncEvent {
     private String requester;
     private int numOnlineModeFiles;
 
-    public CMFileSyncEventEndOnlineMode() {
+    public CMFileSyncEventEndOnlineModeList() {
         m_nID = CMFileSyncEvent.END_ONLINE_MODE_LIST;
         requester = null;   // must not be null
         numOnlineModeFiles = 0;
     }
 
-    public CMFileSyncEventEndOnlineMode(ByteBuffer msg) {
+    public CMFileSyncEventEndOnlineModeList(ByteBuffer msg) {
         this();
         unmarshall(msg);
     }
@@ -61,7 +61,7 @@ public class CMFileSyncEventEndOnlineMode extends CMFileSyncEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        CMFileSyncEventEndOnlineMode that = (CMFileSyncEventEndOnlineMode) o;
+        CMFileSyncEventEndOnlineModeList that = (CMFileSyncEventEndOnlineModeList) o;
         return numOnlineModeFiles == that.numOnlineModeFiles && requester.equals(that.requester);
     }
 

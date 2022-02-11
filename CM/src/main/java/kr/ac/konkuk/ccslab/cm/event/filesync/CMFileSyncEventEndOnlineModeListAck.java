@@ -5,19 +5,19 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class CMFileSyncEventEndOnlineModeAck extends CMFileSyncEvent {
+public class CMFileSyncEventEndOnlineModeListAck extends CMFileSyncEvent {
     private String requester;
     private int numOnlineModeFiles;
     private int returnCode;
 
-    public CMFileSyncEventEndOnlineModeAck() {
+    public CMFileSyncEventEndOnlineModeListAck() {
         m_nID = CMFileSyncEvent.END_ONLINE_MODE_LIST_ACK;
         requester = null;   // must not be null
         numOnlineModeFiles = 0;
         returnCode = -1;
     }
 
-    public CMFileSyncEventEndOnlineModeAck(ByteBuffer msg) {
+    public CMFileSyncEventEndOnlineModeListAck(ByteBuffer msg) {
         this();
         unmarshall(msg);
     }
@@ -70,7 +70,7 @@ public class CMFileSyncEventEndOnlineModeAck extends CMFileSyncEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        CMFileSyncEventEndOnlineModeAck that = (CMFileSyncEventEndOnlineModeAck) o;
+        CMFileSyncEventEndOnlineModeListAck that = (CMFileSyncEventEndOnlineModeListAck) o;
         return numOnlineModeFiles == that.numOnlineModeFiles && returnCode == that.returnCode && requester.equals(that.requester);
     }
 
