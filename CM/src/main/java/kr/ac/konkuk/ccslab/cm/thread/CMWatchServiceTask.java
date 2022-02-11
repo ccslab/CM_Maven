@@ -76,7 +76,7 @@ public class CMWatchServiceTask implements Runnable {
                 e.printStackTrace();
                 break;
             } catch (ClosedWatchServiceException e) {
-                e.printStackTrace();
+                System.out.println("CMWatchServiceTask is closed by another thread.");
                 break;
             }
 

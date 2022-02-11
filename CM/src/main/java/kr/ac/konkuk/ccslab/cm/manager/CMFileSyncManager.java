@@ -832,6 +832,12 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("Currently file-sync task is working! You should wait!");
             return false;
         }
+        // check if the watch service is running
+        if(syncInfo.isWatchServiceTaskDone()) {
+            System.err.println("The file-sync monitoring stops! You should start the file-sync!");
+            return false;
+        }
+
         // check argument
         if(pathList == null) {
             System.err.println("The argument pathList is null!");
@@ -891,6 +897,12 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("filtered file only list: ");
+            for(Path path : filteredFileOnlyList)
+                System.out.println("path = " + path);
+        }
+
         //// create and send an online-mode-list event
 
         // get the user and server names
@@ -920,6 +932,9 @@ public class CMFileSyncManager extends CMServiceManager {
                 System.err.println("send error: "+listEvent);
                 return false;
             }
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("sent listEvent = " + listEvent);
+            }
         }
 
         // add filteredFileOnlyList to the online-mode-request queue
@@ -940,6 +955,9 @@ public class CMFileSyncManager extends CMServiceManager {
                                                        List<Path> filteredFileOnlyList, int listIndex) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.createSubOnlineModeListForEvent() called..");
+            System.out.println("listEvent = " + listEvent);
+            System.out.println("filteredFileOnlyList = " + filteredFileOnlyList);
+            System.out.println("listIndex = " + listIndex);
         }
         // get the name count of the sync home path
         int startPathIndex = getClientSyncHome().getNameCount();

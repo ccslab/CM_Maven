@@ -32,9 +32,11 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
         byteNum += CMInfo.STRING_LEN_BYTES_LEN + requester.getBytes().length;
         // size of list
         byteNum += Integer.BYTES;
-        // relativePathList (must not null)
-        for (Path path : relativePathList) {
-            byteNum += CMInfo.STRING_LEN_BYTES_LEN + path.toString().getBytes().length;
+        // relativePathList (can be null by calling the method before setting a list)
+        if(relativePathList != null) {
+            for (Path path : relativePathList) {
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + path.toString().getBytes().length;
+            }
         }
 
         return byteNum;
