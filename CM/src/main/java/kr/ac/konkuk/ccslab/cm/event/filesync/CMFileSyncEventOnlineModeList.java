@@ -25,7 +25,7 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
     }
 
     @Override
-    protected int getByteNum() {
+    public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
         // requester

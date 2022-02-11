@@ -848,15 +848,124 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         //// extending all directory paths in the path list to file paths
+
         // extracting file-only list in the argument path list
-
-        // TODO: from here
-
+        List<Path> fileOnlyList = pathList.stream()
+                .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .collect(Collectors.toList());
         // extracting directory-only list in the argument path list
+        List<Path> dirOnlyList = pathList.stream()
+                .filter(path -> Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .collect(Collectors.toList());
         // extend each directory to a list of files and added to the file-only list
+        ret = false;
+        for(Path dir : dirOnlyList) {
+            try {
+                List<Path> fileList = Files.walk(dir)
+                        .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                        .collect(Collectors.toList());
+                if(!fileList.isEmpty()) {
+                    ret = fileOnlyList.addAll(fileList);
+                    if(!ret) {
+                        System.err.println("error to add files in "+dir);
+                        continue;
+                    }
+                    if(CMInfo._CM_DEBUG) {
+                        System.out.println("files in "+dir+" added to the file-only list");
+                        for(Path path : fileList)
+                            System.out.println("path = " + path);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         // take out path element that is already the online mode in the file-only list
+        List<Path> onlineModePathList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
+        List<Path> filteredFileOnlyList = fileOnlyList.stream()
+                .filter(path -> !onlineModePathList.contains(path))
+                .collect(Collectors.toList());
 
-        return false;
+        if(filteredFileOnlyList.isEmpty()) {
+            System.err.println("Selected files are already online mode ones!");
+            return false;
+        }
+
+        //// create and send an online-mode-list event
+
+        // get the user and server names
+        String userName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        Objects.requireNonNull(userName);
+        String serverName = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        Objects.requireNonNull(serverName);
+        // event transmission loop
+        int listIndex = 0;
+        boolean sendResult = false;
+        while(listIndex < filteredFileOnlyList.size()) {
+            // create an event
+            CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
+            listEvent.setSender(userName);
+            listEvent.setReceiver(serverName);
+            listEvent.setRequester(userName);
+
+            // get relative path list to be added to this event
+            List<Path> subList = createSubOnlineModeListForEvent(listEvent, filteredFileOnlyList, listIndex);
+            // update the listIndex
+            listIndex += subList.size();
+            // set the sublist to the event
+            listEvent.setRelativePathList(subList);
+            // send the event
+            sendResult = CMEventManager.unicastEvent(listEvent, serverName, m_cmInfo);
+            if(!sendResult) {
+                System.err.println("send error: "+listEvent);
+                return false;
+            }
+        }
+
+        // add filteredFileOnlyList to the online-mode-request queue
+        ConcurrentLinkedQueue<Path> onlineModeRequestQueue = syncInfo.getOnlineModeRequestQueue();
+        Objects.requireNonNull(onlineModeRequestQueue);
+        ret = onlineModeRequestQueue.addAll(filteredFileOnlyList);
+        if(!ret) {
+            System.err.println("error to add filteredFileOnlyList to the online-mode-request queue!");
+            return false;
+        }
+
+        return true;
+    }
+
+    // From the starting index (listIndex) of filteredFileOnlyList,
+    // create a sublist that will be added to a online-mode-list event (listEvent)
+    private List<Path> createSubOnlineModeListForEvent(CMFileSyncEventOnlineModeList listEvent,
+                                                       List<Path> filteredFileOnlyList, int listIndex) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.createSubOnlineModeListForEvent() called..");
+        }
+        // get the name count of the sync home path
+        int startPathIndex = getClientSyncHome().getNameCount();
+        // get the current size of the given event
+        int curByteNum = listEvent.getByteNum();
+        // create an empty sublist
+        List<Path> subList = new ArrayList<>();
+
+        boolean ret = false;
+        for(int i = listIndex; i < filteredFileOnlyList.size(); i++) {
+            // get the relative path of the i-th element
+            Path path = filteredFileOnlyList.get(i);
+            Path relativePath = path.subpath(startPathIndex, path.getNameCount());
+            // check the size of the relative path and add it to the event
+            curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
+            if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                ret = subList.add(relativePath);
+                if(!ret) {
+                    System.err.println("error to add "+relativePath);
+                    return null;
+                }
+            }
+            else
+                break;
+        }
+        return subList;
     }
 
     public boolean requestLocalMode(List<Path> pathList) {
