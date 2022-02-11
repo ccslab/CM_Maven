@@ -16,11 +16,9 @@ import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
@@ -84,9 +82,91 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processONLINE_MODE_LIST_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventOnlineModeListAck ackEvent = (CMFileSyncEventOnlineModeListAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processONLINE_MODE_LIST_ACK() called..");
+            System.out.println("ackEvent = " + ackEvent);
+        }
+
+        // check return code
+        int returnCode = ackEvent.getReturnCode();
+        if(returnCode == 0) {
+            System.err.println("return code is "+returnCode);
+            return false;
+        }
+
+        // get online-mode-request queue
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        ConcurrentLinkedQueue<Path> requestQueue = Objects.requireNonNull(syncInfo.getOnlineModeRequestQueue());
+        // get the list in event
+        List<Path> eventList = ackEvent.getRelativePathList();
+        if(eventList == null || eventList.isEmpty()) {
+            System.err.println("The list in event is null or empty!");
+            return false;
+        }
+        // get online mode list
+        List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
+        // get info of sync home path
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        Path clientSyncHome = Objects.requireNonNull(syncManager.getClientSyncHome());
+        int startPathIndex = clientSyncHome.getNameCount();
+
+        boolean isInList = true;    // if the queue head is in the relative path list
+        Path headPath = null;
+        Path relativeHeadPath = null;
+        boolean addResult = false;
+        int numCompletePath = 0;
+
+        while(isInList) {
+            // check the queue head
+            headPath = requestQueue.peek();
+            if(headPath == null) {
+                System.out.println("The online mode request queue is empty!");
+                break;
+            }
+            // change the queue head to relative path
+            relativeHeadPath = headPath.subpath(startPathIndex, headPath.getNameCount());
+            // if the head is in the list of event
+            if(eventList.contains(relativeHeadPath)) {
+                //// change the head path to the online mode
+                try {
+                    // save the file attribute
+                    Map<String, Object> fileAttributeMap = Files.readAttributes(headPath,
+                            "*", LinkOption.NOFOLLOW_LINKS);
+                    // truncate the file
+                    try(SeekableByteChannel channel = Files.newByteChannel(headPath)) {
+                        channel.truncate(0);
+                    }
+                    // restore the file attribute
+                    for(Map.Entry<String, Object> entry : fileAttributeMap.entrySet()) {
+                        String key = entry.getKey();
+                        Object value = entry.getValue();
+                        Files.setAttribute(headPath, key, value, LinkOption.NOFOLLOW_LINKS);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+                // move the head of queue to the online mode list
+                addResult = onlineModeList.add(requestQueue.remove());
+                if(!addResult) {
+                    System.err.println("error to add queue head to the online mode list!");
+                    System.err.println(headPath);
+                    return false;
+                }
+                numCompletePath++;
+            }
+            else {
+                isInList = false;
+            }
+        }
+
 
         // TODO: from here
-        return false;
+
+        return true;
     }
 
     // called at the server
