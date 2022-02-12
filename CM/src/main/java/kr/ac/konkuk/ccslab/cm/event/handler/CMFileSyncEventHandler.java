@@ -69,16 +69,52 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processEND_ONLINE_MODE_LIST_ACK(CMFileSyncEvent fse) {
-        System.err.println("CMFileSyncEventHandler.processEND_ONLINE_MODE_LIST_ACK() not yet implemented!");
-        // TODO: not yet
+        CMFileSyncEventEndOnlineModeListAck ackEvent = (CMFileSyncEventEndOnlineModeListAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_ONLINE_MODE_LIST_ACK() called..");
+            System.out.println("ackEvent = " + ackEvent);
+        }
+
+        // TODO: from here
         return false;
     }
 
     // called at the server
     private boolean processEND_ONLINE_MODE_LIST(CMFileSyncEvent fse) {
-        System.err.println("CMFileSyncEventHandler.processEND_ONLINE_MODE_LIST() not yet implemented!");
-        // TODO: not yet
-        return false;
+        CMFileSyncEventEndOnlineModeList endEvent = (CMFileSyncEventEndOnlineModeList) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_ONLINE_MODE_LIST() called..");
+            System.out.println("endEvent = " + endEvent);
+        }
+
+        // get the online mode list of requester
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        Map<String, List<Path>> onlineModeListMap = syncInfo.getOnlineModePathListMap();
+        Objects.requireNonNull(onlineModeListMap);
+        List<Path> onlineModeList = onlineModeListMap.get(endEvent.getRequester());
+        Objects.requireNonNull(onlineModeList);
+
+        // create and send ack event
+        CMFileSyncEventEndOnlineModeListAck ackEvent = new CMFileSyncEventEndOnlineModeListAck();
+        ackEvent.setSender(endEvent.getReceiver());
+        ackEvent.setReceiver(endEvent.getSender());
+        ackEvent.setRequester(endEvent.getRequester());
+        int numOnlineFiles = endEvent.getNumOnlineModeFiles();
+        ackEvent.setNumOnlineModeFiles(numOnlineFiles);
+        if(numOnlineFiles == onlineModeList.size())
+            ackEvent.setReturnCode(1);
+        else
+            ackEvent.setReturnCode(0);
+
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), m_cmInfo);
+        if(!ret) {
+            System.err.println("send error: "+ackEvent);
+            return false;
+        }
+
+        return true;
     }
 
     // called at the client
