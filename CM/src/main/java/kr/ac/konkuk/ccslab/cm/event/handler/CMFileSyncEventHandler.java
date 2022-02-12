@@ -76,8 +76,33 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("ackEvent = " + ackEvent);
         }
 
-        // TODO: from here
-        return false;
+        // check return code
+        if(ackEvent.getReturnCode() != 1) {
+            System.err.println("return code = "+ackEvent.getReturnCode());
+            return false;
+        }
+
+        // set syncInProgress to false
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        syncInfo.setSyncInProgress(false);
+
+        // restart watch service
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        boolean ret = syncManager.startWatchService();
+        if(!ret) {
+            System.err.println("error to start WatchService!");
+            return false;
+        }
+
+        // perform file-sync
+        ret = syncManager.sync();
+        if(!ret) {
+            System.err.println("error to start file-sync!");
+            return false;
+        }
+
+        return true;
     }
 
     // called at the server
@@ -348,16 +373,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if(CMInfo._CM_DEBUG) {
             System.out.println("tempFilePath = " + tempFilePath);
         }
-        // compare file checksum of the temp file and the checksum of the ack event
-        byte[] fileChecksum = syncManager.calculateFileChecksum(tempFilePath);
-        if(!Arrays.equals(fileChecksum, ackEvent.getFileChecksum())) {
-            System.err.println("File checksum error!");
-            System.err.println("temp checksum = " + DatatypeConverter.printHexBinary(fileChecksum));
-            System.err.println("event checksum = " + DatatypeConverter.printHexBinary(ackEvent.getFileChecksum()));
-            return false;
-        }
 
-        //// set the last modified time to that of the client file entry
         // get the client file entry reference
         CMFileSyncEntry clientFileEntry = Optional.of(m_cmInfo)
                 .map(CMInfo::getFileSyncInfo)
@@ -365,7 +381,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 .map(t -> t.get(userName))
                 .map(l -> l.get(fileEntryIndex))
                 .orElse(null);
-
         if(clientFileEntry == null) {
             System.err.println("client file entry is null! : userName("+userName+"), file entry index("
                     +fileEntryIndex+")");
@@ -375,20 +390,41 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("clientFileEntry = " + clientFileEntry);
         }
 
-        // set the last modified time
-        try {
-            Files.setLastModifiedTime(tempFilePath, clientFileEntry.getLastModifiedTime());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+        if(basisFileChannel != null && tempFileChannel != null) {
+            // compare file checksum of the temp file and the checksum of the ack event
+            byte[] fileChecksum = syncManager.calculateFileChecksum(tempFilePath);
+            if(!Arrays.equals(fileChecksum, ackEvent.getFileChecksum())) {
+                System.err.println("File checksum error!");
+                System.err.println("temp checksum = " + DatatypeConverter.printHexBinary(fileChecksum));
+                System.err.println("event checksum = " + DatatypeConverter.printHexBinary(ackEvent.getFileChecksum()));
+                return false;
+            }
 
-        // move the temp file to the original sync home with the basis file name
-        try {
-            Files.move(tempFilePath, basisFilePath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            // set the last modified time to that of the client file entry
+            try {
+                Files.setLastModifiedTime(tempFilePath, clientFileEntry.getLastModifiedTime());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            // move the temp file to the original sync home with the basis file name
+            try {
+                Files.move(tempFilePath, basisFilePath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        else {
+            // client file size = 0 (online mode)
+            // client have never sent a UPDATE_EXISTING_FILE event
+            try {
+                Files.setLastModifiedTime(basisFilePath, clientFileEntry.getLastModifiedTime());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
 
         // complete the update-existing-file task
