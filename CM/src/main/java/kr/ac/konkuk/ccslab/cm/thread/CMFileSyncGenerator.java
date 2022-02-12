@@ -444,7 +444,10 @@ public class CMFileSyncGenerator implements Runnable {
         Path syncHome = syncManager.getServerSyncHome(userName);
 
         // create new sub-directories that do not have to be requested from the client
-        for(CMFileSyncEntry entry : newClientPathEntryList) {
+        Iterator<CMFileSyncEntry> iter = newClientPathEntryList.iterator();
+        while(iter.hasNext()) {
+            CMFileSyncEntry entry = iter.next();
+
             if(entry.getType() == CMFileType.DIR) {
                 // get an absolute path of the new sub-directory
                 Path absolutePath = syncHome.resolve(entry.getPathRelativeToHome());
@@ -466,7 +469,11 @@ public class CMFileSyncGenerator implements Runnable {
                 }
                 // set the completion of new-file-transfer
                 boolean ret = syncManager.completeNewFileTransfer(userName, entry.getPathRelativeToHome());
-                if(!ret) {
+                if(ret) {
+                    // remove the current entry from this list
+                    iter.remove();
+                }
+                else {
                     System.err.println("error of completeNewFileTransfer(), user("+userName
                             +"), relative path("+entry.getPathRelativeToHome()+")");
                     continue;

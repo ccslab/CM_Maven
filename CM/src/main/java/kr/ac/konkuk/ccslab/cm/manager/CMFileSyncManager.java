@@ -213,6 +213,15 @@ public class CMFileSyncManager extends CMServiceManager {
             // complete the new-file-transfer
             boolean result = completeNewFileTransfer(fileSender, foundPath);
             if(result) {
+                // remove the completed newClientPathEntry from the list
+                final Path finalFoundPath = foundPath;
+                boolean removeResult = newClientPathEntryList.removeIf(entry ->
+                        entry.getPathRelativeToHome().equals(finalFoundPath));
+
+                if(!removeResult) {
+                    System.err.println("remove error from the new-client-path-entry-list: "+foundPath);
+                    return;
+                }
                 // check if the file-sync is complete or not
                 if(isCompleteFileSync(fileSender)) {
                     // complete the file-sync task
@@ -252,16 +261,9 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // send the event
         boolean ret = CMEventManager.unicastEvent(fse, userName, m_cmInfo);
-        if(ret) {
-            List<CMFileSyncEntry> newClientPathEntryList = syncGenerator.getNewClientPathEntryList();
-            Objects.requireNonNull(newClientPathEntryList);
-            // remove the completed newClientPathEntry from the list
-            boolean removeResult = newClientPathEntryList.removeIf(entry ->
-                    entry.getPathRelativeToHome().equals(path));
-            if(!removeResult) {
-                System.err.println("remove error from the new-client-path-entry-list: "+path);
-                return false;
-            }
+        if(!ret) {
+            System.err.println("send error: "+fse);
+            return false;
         }
 
         return true;
