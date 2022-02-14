@@ -828,6 +828,7 @@ public class CMFileSyncManager extends CMServiceManager {
     public boolean requestOnlineMode(List<Path> pathList) {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.requestOnlineMode() called..");
+            System.out.println("pathList = " + pathList);
         }
 
         // check if current file-sync status
@@ -954,7 +955,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // From the starting index (listIndex) of filteredFileOnlyList,
-    // create a sublist that will be added to a online-mode-list event (listEvent)
+    // create a sublist that will be added to an online-mode-list event (listEvent)
     private List<Path> createSubOnlineModeListForEvent(CMFileSyncEventOnlineModeList listEvent,
                                                        List<Path> filteredFileOnlyList, int listIndex) {
         if(CMInfo._CM_DEBUG) {
@@ -991,8 +992,170 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public boolean requestLocalMode(List<Path> pathList) {
-        System.err.println("CMFileSyncManager.requestLocalMode() not implemented yet!");
-        // TODO: not yet
-        return false;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.requestLocalMode() called..");
+            System.out.println("pathList = " + pathList);
+        }
+
+        // check if current file-sync status
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        if(syncInfo.isSyncInProgress()) {
+            System.err.println("Currently file-sync task is working! You should wait!");
+            return false;
+        }
+        // check if the watch service is running
+        if(syncInfo.isWatchServiceTaskDone()) {
+            System.err.println("The file-sync monitoring stops! You should start the file-sync!");
+            return false;
+        }
+
+        // check argument
+        if(pathList == null) {
+            System.err.println("The argument pathList is null!");
+            return false;
+        }
+
+        // change the file-sync status
+        syncInfo.setSyncInProgress(true);
+        // stop the watch service
+        boolean ret = stopWatchService();
+        if(!ret) {
+            System.err.println("error stopping WatchService!");
+            return false;
+        }
+
+        //// extending all directory paths in the path list to file paths
+
+        // extracting file-only list in the argument path list
+        List<Path> fileOnlyList = pathList.stream()
+                .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .collect(Collectors.toList());
+        // extracting directory-only list in the argument path list
+        List<Path> dirOnlyList = pathList.stream()
+                .filter(path -> Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .collect(Collectors.toList());
+        // extend each directory to a list of files and added to the file-only list
+        ret = false;
+        for(Path dir : dirOnlyList) {
+            try {
+                List<Path> fileList = Files.walk(dir)
+                        .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                        .collect(Collectors.toList());
+                if(!fileList.isEmpty()) {
+                    ret = fileOnlyList.addAll(fileList);
+                    if(!ret) {
+                        System.err.println("error to add files in "+dir);
+                        continue;
+                    }
+                    if(CMInfo._CM_DEBUG) {
+                        System.out.println("files in "+dir+" added to the file-only list");
+                        for(Path path : fileList)
+                            System.out.println("path = " + path);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        // take out path element that is already the local mode in the file-only list
+        // The local mode files are not in the online mode list.
+        List<Path> onlineModePathList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
+        List<Path> filteredFileOnlyList = fileOnlyList.stream()
+                .filter(path -> onlineModePathList.contains(path))
+                .collect(Collectors.toList());
+
+        if(filteredFileOnlyList.isEmpty()) {
+            System.err.println("Selected files are already local mode ones!");
+            return false;
+        }
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("filtered file only list: ");
+            for(Path path : filteredFileOnlyList)
+                System.out.println("path = " + path);
+        }
+
+        //// create and send a local-mode-list event
+
+        // get the user and server names
+        String userName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        Objects.requireNonNull(userName);
+        String serverName = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        Objects.requireNonNull(serverName);
+        // event transmission loop
+        int listIndex = 0;
+        boolean sendResult = false;
+        while(listIndex < filteredFileOnlyList.size()) {
+            // create an event
+            CMFileSyncEventLocalModeList listEvent = new CMFileSyncEventLocalModeList();
+            listEvent.setSender(userName);
+            listEvent.setReceiver(serverName);
+            listEvent.setRequester(userName);
+
+            // get relative path list to be added to this event
+            List<Path> subList = createSubLocalModeListForEvent(listEvent, filteredFileOnlyList, listIndex);
+            // update the listIndex
+            listIndex += subList.size();
+            // set the sublist to the event
+            listEvent.setRelativePathList(subList);
+            // send the event
+            sendResult = CMEventManager.unicastEvent(listEvent, serverName, m_cmInfo);
+            if(!sendResult) {
+                System.err.println("send error: "+listEvent);
+                return false;
+            }
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("sent listEvent = " + listEvent);
+            }
+        }
+
+        // add filteredFileOnlyList to the local-mode-request queue
+        ConcurrentLinkedQueue<Path> localModeRequestQueue = syncInfo.getLocalModeRequestQueue();
+        Objects.requireNonNull(localModeRequestQueue);
+        ret = localModeRequestQueue.addAll(filteredFileOnlyList);
+        if(!ret) {
+            System.err.println("error to add filteredFileOnlyList to the local-mode-request queue!");
+            return false;
+        }
+
+        return true;
     }
+
+    // From the starting index (listIndex) of filteredFileOnlyList,
+    // create a sublist that will be added to a local-mode-list event (listEvent)
+    private List<Path> createSubLocalModeListForEvent(CMFileSyncEventLocalModeList listEvent, List<Path> filteredFileOnlyList, int listIndex) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.createSubLocalModeListForEvent() called..");
+            System.out.println("listEvent = " + listEvent);
+            System.out.println("filteredFileOnlyList = " + filteredFileOnlyList);
+            System.out.println("listIndex = " + listIndex);
+        }
+        // get the name count of the sync home path
+        int startPathIndex = getClientSyncHome().getNameCount();
+        // get the current size of the given event
+        int curByteNum = listEvent.getByteNum();
+        // create an empty sublist
+        List<Path> subList = new ArrayList<>();
+
+        boolean ret = false;
+        for(int i = listIndex; i < filteredFileOnlyList.size(); i++) {
+            // get the relative path of the i-th element
+            Path path = filteredFileOnlyList.get(i);
+            Path relativePath = path.subpath(startPathIndex, path.getNameCount());
+            // check the size of the relative path and add it to the event
+            curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
+            if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                ret = subList.add(relativePath);
+                if(!ret) {
+                    System.err.println("error to add "+relativePath);
+                    return null;
+                }
+            }
+            else
+                break;
+        }
+        return subList;
+    }
+
+
 }
