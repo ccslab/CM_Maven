@@ -456,22 +456,28 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			break;
 		case CMFileEvent.START_FILE_TRANSFER:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN:
-			printMessage("["+fe.getFileSender()+"] starts to send file("+fe.getFileName()+").\n");
+			if(fInfo.getStartRequestTime() != 0) {
+				printMessage("["+fe.getFileSender()+"] starts to send file("+fe.getFileName()+").\n");
+			}
 			break;
 		case CMFileEvent.START_FILE_TRANSFER_ACK:
 		case CMFileEvent.START_FILE_TRANSFER_CHAN_ACK:
-			printMessage("["+fe.getFileReceiver()+"] starts to receive file("
-					+fe.getFileName()+").\n");
+			if(fInfo.getStartRequestTime() != 0) {
+				printMessage("["+fe.getFileReceiver()+"] starts to receive file("
+						+fe.getFileName()+").\n");
+			}
 			break;
 		case CMFileEvent.END_FILE_TRANSFER:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN:
-			printMessage("["+fe.getFileSender()+"] completes to send file("
-					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
-			
-			lTotalDelay = fInfo.getEndRecvTime() - fInfo.getStartRequestTime();
-			lTransferDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
-			printMessage("total delay("+lTotalDelay+" ms), ");
-			printMessage("file-receiving delay("+lTransferDelay+" ms).\n");
+			if(fInfo.getStartRequestTime() != 0) {
+				printMessage("["+fe.getFileSender()+"] completes to send file("
+						+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+
+				lTotalDelay = fInfo.getEndRecvTime() - fInfo.getStartRequestTime();
+				lTransferDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();
+				printMessage("total delay("+lTotalDelay+" ms), ");
+				printMessage("file-receiving delay("+lTransferDelay+" ms).\n");
+			}
 
 			String strFile = fe.getFileName();
 			if(m_bDistFileProc)
@@ -495,13 +501,15 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			break;
 		case CMFileEvent.END_FILE_TRANSFER_ACK:
 		case CMFileEvent.END_FILE_TRANSFER_CHAN_ACK:
-			printMessage("["+fe.getFileReceiver()+"] compeletes to receive file("
-					+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
-			lTotalDelay = fInfo.getEndSendTime() - fInfo.getStartRequestTime();
-			lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
-			printMessage("total delay("+lTotalDelay+" ms), ");
-			printMessage("file-sending delay("+lTransferDelay+" ms).\n");
-			
+			if(fInfo.getStartRequestTime() != 0) {
+				printMessage("["+fe.getFileReceiver()+"] completes to receive file("
+						+fe.getFileName()+", "+fe.getFileSize()+" Bytes).\n");
+				lTotalDelay = fInfo.getEndSendTime() - fInfo.getStartRequestTime();
+				lTransferDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();
+				printMessage("total delay("+lTotalDelay+" ms), ");
+				printMessage("file-sending delay("+lTransferDelay+" ms).\n");
+			}
+
 			if(m_bStartCSCFTPSession && fe.getFileReceiver().contentEquals(m_strFileReceiver))
 			{
 				checkCompleteCSCFTPSession(fe);
