@@ -48,14 +48,22 @@ public abstract class CMFileSyncEvent extends CMEvent {
     // Fields: userName, numFilesCompleted
     public static final int COMPLETE_FILE_SYNC = 17;
 
-    // Fields: String requester, int numCurrentFiles, List<Path> relativePathList
+    // Fields: String requester, List<Path> relativePathList
     public static final int ONLINE_MODE_LIST = 20;
-    // Fields: String requester, int numCurrentFiles, List<Path> relativePathList, int returnCode
+    // Fields: String requester, List<Path> relativePathList, int returnCode
     public static final int ONLINE_MODE_LIST_ACK = 21;
     // Fields: String requester, int numOnlineModeFiles
     public static final int END_ONLINE_MODE_LIST = 22;
     // Fields: String requester, int numOnlineModeFiles, int returnCode
     public static final int END_ONLINE_MODE_LIST_ACK = 23;
+    // Fields: String requester, List<Path> relativePathList
+    public static final int LOCAL_MODE_LIST = 24;
+    // Fields: String requester, List,Path> relativePathList, int returnCode
+    public static final int LOCAL_MODE_LIST_ACK = 25;
+    // Fields: String requester, int numLocalModeFiles
+    public static final int END_LOCAL_MODE_LIST = 26;
+    // Fields: String requester, int numLocalModeFiles, int returnCode
+    public static final int END_LOCAL_MODE_LIST_ACK = 27;
 
     public CMFileSyncEvent() {
         m_nType = CMInfo.CM_FILE_SYNC_EVENT;
