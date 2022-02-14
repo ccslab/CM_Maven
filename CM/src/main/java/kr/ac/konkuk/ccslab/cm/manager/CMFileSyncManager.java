@@ -368,8 +368,10 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("size of newClientPathEntryList = "+newClientPathEntryList.size());
             return false;
         }
+        // get basis file list
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(userName);
         // compare the number of updated files to the size of the basis-file list
-        basisFileList = syncGenerator.getBasisFileList();
         numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
         if(basisFileList != null && numUpdateFilesCompleted < basisFileList.size()) {
             System.err.println("numUpdateFilesCompleted = "+numUpdateFilesCompleted);

@@ -33,6 +33,9 @@ public class CMFileSyncInfo {
     private List<Path> onlineModePathList;      // 4 client
     private Map<String, List<Path>> onlineModePathListMap;      // 4 server
 
+    private ConcurrentLinkedQueue<Path> localModeRequestQueue;      // 4 client
+    private Map<String, List<Path>> basisFileListMap;           // 4 server
+
     public CMFileSyncInfo() {
         syncInProgress = false;
         pathList = null;
@@ -50,6 +53,9 @@ public class CMFileSyncInfo {
         onlineModeRequestQueue = new ConcurrentLinkedQueue<>();
         onlineModePathList = new ArrayList<>();
         onlineModePathListMap = new HashMap<>();
+
+        localModeRequestQueue = new ConcurrentLinkedQueue<>();
+        basisFileListMap = new HashMap<>();
     }
 
     public boolean isSyncInProgress() {
@@ -130,5 +136,13 @@ public class CMFileSyncInfo {
 
     public Map<String, List<Path>> getOnlineModePathListMap() {
         return onlineModePathListMap;
+    }
+
+    public ConcurrentLinkedQueue<Path> getLocalModeRequestQueue() {
+        return localModeRequestQueue;
+    }
+
+    public Map<String, List<Path>> getBasisFileListMap() {
+        return basisFileListMap;
     }
 }

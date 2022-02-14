@@ -357,7 +357,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.err.println("Basis file index NOT FOUND for file entry index ("+fileEntryIndex+")!");
             return false;
         }
-        Path basisFilePath = syncGenerator.getBasisFileList().get(basisFileIndex);
+
+        List<Path> basisFileList = Objects.requireNonNull(m_cmInfo.getFileSyncInfo().getBasisFileListMap()
+                .get(userName));
+        Path basisFilePath = basisFileList.get(basisFileIndex);
         if(basisFilePath == null) {
             System.err.println("Basis file path NOT FOUND for basis file index ("+basisFileIndex+")!");
             return false;
@@ -459,7 +462,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Objects.requireNonNull(syncGenerator);
         int fileEntryIndex = updateEvent.getFileEntryIndex();
         int basisFileIndex = syncGenerator.getBasisFileIndexMap().get(fileEntryIndex);
-        List<Path> basisFileList = Objects.requireNonNull(syncGenerator.getBasisFileList());
+        List<Path> basisFileList = Objects.requireNonNull(m_cmInfo.getFileSyncInfo().getBasisFileListMap()
+                .get(userName));
         Path basisFilePath = Objects.requireNonNull(basisFileList.get(basisFileIndex));
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFilePath = " + basisFilePath);

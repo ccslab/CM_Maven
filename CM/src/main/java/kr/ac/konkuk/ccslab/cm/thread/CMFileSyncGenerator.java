@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 public class CMFileSyncGenerator implements Runnable {
     private String userName;
     private CMInfo cmInfo;
-    private List<Path> basisFileList;
     private List<CMFileSyncEntry> newClientPathEntryList;
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayMap;
     private Map<Integer, Integer> basisFileIndexMap;    // key: client entry index, value: basis index
@@ -41,7 +40,6 @@ public class CMFileSyncGenerator implements Runnable {
     public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
         this.userName = userName;
         this.cmInfo = cmInfo;
-        basisFileList = null;
         newClientPathEntryList = null;
         blockChecksumArrayMap = new Hashtable<>();
         basisFileIndexMap = new Hashtable<>();
@@ -57,10 +55,6 @@ public class CMFileSyncGenerator implements Runnable {
 
     public List<CMFileSyncEntry> getNewClientPathEntryList() {
         return newClientPathEntryList;
-    }
-
-    public List<Path> getBasisFileList() {
-        return basisFileList;
     }
 
     public Map<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumArrayMap() {
@@ -114,10 +108,14 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // create a basis file-entry-list at the server
-        basisFileList = createBasisFileList();  // always return a list object
+        List<Path> basisFileList = createBasisFileList();  // always return a list object
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFileList = " + basisFileList);
         }
+        // put the basis file list to the basis-file-list-map
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(cmInfo.getFileSyncInfo());
+        Map<String, List<Path>> basisFileListMap = Objects.requireNonNull(syncInfo.getBasisFileListMap());
+        basisFileListMap.put(userName, basisFileList);
 
         //// compare the client file-entry-list and the basis file-entry-list
 
@@ -161,6 +159,9 @@ public class CMFileSyncGenerator implements Runnable {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.compareBasisAndClientFileList() called..");
         }
+
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(cmInfo.getFileSyncInfo());
+        List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(userName);
 
         if(basisFileList == null) {
             System.err.println("basisFileList is null!");
@@ -538,7 +539,10 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.createNewClientPathEntryList() called..");
         }
         // get clientPathEntryList
-        List<CMFileSyncEntry> clientPathEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(cmInfo.getFileSyncInfo());
+        Map<String, List<CMFileSyncEntry>> clientPathEntryListMap = syncInfo.getClientPathEntryListMap();
+        Objects.requireNonNull(clientPathEntryListMap);
+        List<CMFileSyncEntry> clientPathEntryList = clientPathEntryListMap.get(userName);
         if(clientPathEntryList == null) {
             return new ArrayList<>();
         }
@@ -546,6 +550,8 @@ public class CMFileSyncGenerator implements Runnable {
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
         int startPathIndex = serverSyncHome.getNameCount();
+        // get basis file list
+        List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap().get(userName));
         // get the relative path list from the basis file list
         List<Path> relativeBasisFileList = basisFileList.stream()
                 .map(path -> path.subpath(startPathIndex, path.getNameCount()))
@@ -568,7 +574,10 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.deleteFilesAndUpdateBasisFileList() called..");
         }
         // get the client file-entry-list
-        List<CMFileSyncEntry> fileEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(cmInfo.getFileSyncInfo());
+        Map<String, List<CMFileSyncEntry>> clientPathEntryListMap = syncInfo.getClientPathEntryListMap();
+        Objects.requireNonNull(clientPathEntryListMap);
+        List<CMFileSyncEntry> fileEntryList = clientPathEntryListMap.get(userName);
 
         // get the client path list from the file-entry-list
         List<Path> entryPathList = null;
@@ -585,6 +594,8 @@ public class CMFileSyncGenerator implements Runnable {
         // get the server sync home and the start index
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
         int startPathIndex = serverSyncHome.getNameCount();
+        // get basis file list
+        List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(userName);
         // firstly, delete files (not directories) that exist only at the basis file list
         Iterator<Path> iter = basisFileList.iterator();
         while (iter.hasNext()) {
