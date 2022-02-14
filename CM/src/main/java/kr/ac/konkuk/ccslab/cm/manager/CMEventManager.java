@@ -240,6 +240,9 @@ public class CMEventManager {
 					case CMFileSyncEvent.END_LOCAL_MODE_LIST:
 						CMFileSyncEventEndLocalModeList endLocalMode = new CMFileSyncEventEndLocalModeList(buf);
 						return endLocalMode;
+					case CMFileSyncEvent.END_LOCAL_MODE_LIST_ACK:
+						CMFileSyncEventEndLocalModeListAck endLocalModeAck = new CMFileSyncEventEndLocalModeListAck(buf);
+						return endLocalModeAck;
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);

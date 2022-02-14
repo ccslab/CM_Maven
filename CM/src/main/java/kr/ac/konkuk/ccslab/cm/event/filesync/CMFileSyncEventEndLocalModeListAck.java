@@ -5,17 +5,19 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
+public class CMFileSyncEventEndLocalModeListAck extends CMFileSyncEvent {
     private String requester;
     private int numLocalModeFiles;
+    private int returnCode;
 
-    public CMFileSyncEventEndLocalModeList() {
-        m_nID = CMFileSyncEvent.END_LOCAL_MODE_LIST;
+    public CMFileSyncEventEndLocalModeListAck() {
+        m_nID = CMFileSyncEvent.END_LOCAL_MODE_LIST_ACK;
         requester = null;   // must not be null
         numLocalModeFiles = 0;
+        returnCode = -1;
     }
 
-    public CMFileSyncEventEndLocalModeList(ByteBuffer msg) {
+    public CMFileSyncEventEndLocalModeListAck(ByteBuffer msg) {
         this();
         unmarshall(msg);
     }
@@ -28,6 +30,8 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
         byteNum += CMInfo.STRING_LEN_BYTES_LEN + requester.getBytes().length;
         // numLocalModeFiles
         byteNum += Integer.BYTES;
+        // returnCode
+        byteNum += Integer.BYTES;
 
         return byteNum;
     }
@@ -38,6 +42,8 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
         putStringToByteBuffer(requester);
         // numLocalModeFiles
         m_bytes.putInt(numLocalModeFiles);
+        // returnCode
+        m_bytes.putInt(returnCode);
     }
 
     @Override
@@ -46,13 +52,16 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
         requester = getStringFromByteBuffer(msg);
         // numLocalModeFiles
         numLocalModeFiles = msg.getInt();
+        // returnCode
+        returnCode = msg.getInt();
     }
 
     @Override
     public String toString() {
-        return "CMFileSyncEventEndLocalModeList{" +
+        return "CMFileSyncEventEndLocalModeListAck{" +
                 "requester='" + requester + '\'' +
                 ", numLocalModeFiles=" + numLocalModeFiles +
+                ", returnCode=" + returnCode +
                 '}';
     }
 
@@ -61,13 +70,13 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        CMFileSyncEventEndLocalModeList that = (CMFileSyncEventEndLocalModeList) o;
-        return numLocalModeFiles == that.numLocalModeFiles && requester.equals(that.requester);
+        CMFileSyncEventEndLocalModeListAck that = (CMFileSyncEventEndLocalModeListAck) o;
+        return numLocalModeFiles == that.numLocalModeFiles && returnCode == that.returnCode && requester.equals(that.requester);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requester, numLocalModeFiles);
+        return Objects.hash(requester, numLocalModeFiles, returnCode);
     }
 
     public String getRequester() {
@@ -84,5 +93,13 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
 
     public void setNumLocalModeFiles(int numLocalModeFiles) {
         this.numLocalModeFiles = numLocalModeFiles;
+    }
+
+    public int getReturnCode() {
+        return returnCode;
+    }
+
+    public void setReturnCode(int returnCode) {
+        this.returnCode = returnCode;
     }
 }
