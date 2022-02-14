@@ -231,6 +231,9 @@ public class CMEventManager {
 					case CMFileSyncEvent.END_ONLINE_MODE_LIST_ACK:
 						CMFileSyncEventEndOnlineModeListAck endOnlineModeAck = new CMFileSyncEventEndOnlineModeListAck(buf);
 						return endOnlineModeAck;
+					case CMFileSyncEvent.LOCAL_MODE_LIST:
+						CMFileSyncEventLocalModeList localModeList = new CMFileSyncEventLocalModeList(buf);
+						return localModeList;
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);

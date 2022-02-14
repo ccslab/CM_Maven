@@ -9,17 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
+public class CMFileSyncEventLocalModeList extends CMFileSyncEvent {
     private String requester;
     private List<Path> relativePathList;
 
-    public CMFileSyncEventOnlineModeList() {
-        m_nID = CMFileSyncEvent.ONLINE_MODE_LIST;
+    public CMFileSyncEventLocalModeList() {
+        m_nID = CMFileSyncEvent.LOCAL_MODE_LIST;
         requester = null;   // must not be null
         relativePathList = null;    // must not be null
     }
 
-    public CMFileSyncEventOnlineModeList(ByteBuffer msg) {
+    public CMFileSyncEventLocalModeList(ByteBuffer msg) {
         this();
         unmarshall(msg);
     }
@@ -71,28 +71,18 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
 
     @Override
     public String toString() {
-        return "CMFileSyncEventOnlineModeList{" +
+        return "CMFileSyncEventLocalModeList{" +
                 "requester='" + requester + '\'' +
                 ", relativePathList=" + relativePathList +
                 '}';
     }
-
-/*
-    @Override
-    public boolean equals(Object obj) {
-        if(!super.equals(obj)) return false;
-        if(!(obj instanceof CMFileSyncEventOnlineModeList fse)) return false;
-        return fse.getRequester().equals(requester) &&
-                fse.getRelativePathList().equals(relativePathList);
-    }
-*/
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        CMFileSyncEventOnlineModeList that = (CMFileSyncEventOnlineModeList) o;
+        CMFileSyncEventLocalModeList that = (CMFileSyncEventLocalModeList) o;
         return requester.equals(that.requester) && relativePathList.equals(that.relativePathList);
     }
 
