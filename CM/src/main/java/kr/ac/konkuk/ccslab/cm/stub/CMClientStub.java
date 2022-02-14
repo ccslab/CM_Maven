@@ -26,13 +26,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMSNSEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
@@ -3726,6 +3720,10 @@ public class CMClientStub extends CMStub {
 			System.err.println("You must log in to the default server!");
 			return false;
 		}
+
+		// set syncInProgress to false
+		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+		syncInfo.setSyncInProgress(false);
 
 		// get CMFileSyncManager
 		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
