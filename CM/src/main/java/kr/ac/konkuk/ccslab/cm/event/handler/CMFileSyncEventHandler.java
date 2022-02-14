@@ -58,6 +58,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.ONLINE_MODE_LIST_ACK -> processResult = processONLINE_MODE_LIST_ACK(fse);
             case CMFileSyncEvent.END_ONLINE_MODE_LIST -> processResult = processEND_ONLINE_MODE_LIST(fse);
             case CMFileSyncEvent.END_ONLINE_MODE_LIST_ACK -> processResult = processEND_ONLINE_MODE_LIST_ACK(fse);
+            case CMFileSyncEvent.LOCAL_MODE_LIST -> processResult = processLOCAL_MODE_LIST(fse);
+            case CMFileSyncEvent.LOCAL_MODE_LIST_ACK -> processResult = processLOCAL_MODE_LIST_ACK(fse);
+            case CMFileSyncEvent.END_LOCAL_MODE_LIST -> processResult = processEND_LOCAL_MODE_LIST(fse);
+            case CMFileSyncEvent.END_LOCAL_MODE_LIST_ACK -> processResult = processEND_LOCAL_MODE_LIST_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -65,6 +69,79 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    // called at the client
+    private boolean processEND_LOCAL_MODE_LIST_ACK(CMFileSyncEvent fse) {
+        System.err.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST_ACK() not implemented yet!");
+        return false;
+    }
+
+    // called at the server
+    private boolean processEND_LOCAL_MODE_LIST(CMFileSyncEvent fse) {
+        System.err.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST() not implemented yet!");
+        return false;
+    }
+
+    // called at the client
+    private boolean processLOCAL_MODE_LIST_ACK(CMFileSyncEvent fse) {
+        System.err.println("CMFileSyncEventHandler.processLOCAL_MODE_LIST_ACK() not implemented yet!");
+        return false;
+    }
+
+    // called at the server
+    private boolean processLOCAL_MODE_LIST(CMFileSyncEvent fse) {
+        CMFileSyncEventLocalModeList listEvent = (CMFileSyncEventLocalModeList)fse;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processLOCAL_MODE_LIST() called..");
+            System.out.println("listEvent = " + listEvent);
+        }
+
+        // get the online-mode-list-map
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        Map<String, List<Path>> onlineModeListMap = Objects.requireNonNull(syncInfo.getOnlineModePathListMap());
+        // get the online-mode list with requester
+        String requester = listEvent.getRequester();
+        List<Path> onlineModeList = Objects.requireNonNull(onlineModeListMap.get(requester));
+        // get sync home of requester
+        CMFileSyncManager syncManager = Objects.requireNonNull(m_cmInfo.getServiceManager(CMFileSyncManager.class));
+        Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(requester));
+
+        // start push-file for all paths in the event
+        boolean ret = true;
+        for(Path relativePath : listEvent.getRelativePathList()) {
+            // get the absolute path
+            Path absPath = serverSyncHome.resolve(relativePath);
+            // start push-file
+            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester, m_cmInfo);
+            if(!ret) {
+                System.err.println("push error: "+absPath);
+                return false;
+            }
+        }
+
+        // delete the list in the listEvent from the online-mode-list
+        ret = onlineModeList.removeAll(listEvent.getRelativePathList());
+        if(!ret) {
+            System.err.println("remove error of path list from the online-mode-list!");
+        }
+
+        // create and send ack event
+        CMFileSyncEventLocalModeListAck ackEvent = new CMFileSyncEventLocalModeListAck();
+        ackEvent.setSender(listEvent.getReceiver());
+        ackEvent.setReceiver(listEvent.getSender());
+        ackEvent.setRequester(requester);
+        ackEvent.setRelativePathList(listEvent.getRelativePathList());
+        if(ret) ackEvent.setReturnCode(1);
+        else ackEvent.setReturnCode(0);
+
+        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), m_cmInfo);
+        if(!ret) {
+            System.err.println("send error: "+ackEvent);
+            return false;
+        }
+
+        return true;
     }
 
     // called at the client
