@@ -73,9 +73,38 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processEND_LOCAL_MODE_LIST_ACK(CMFileSyncEvent fse) {
-        System.err.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST_ACK() not implemented yet!");
+        CMFileSyncEventEndLocalModeListAck ackEvent = (CMFileSyncEventEndLocalModeListAck) fse;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST_ACK() called..");
+            System.out.println("ackEvent = " + ackEvent);
+        }
+        // check return code
+        int returnCode = ackEvent.getReturnCode();
+        if(returnCode != 1) {
+            System.err.println("return code: "+returnCode);
+            return false;
+        }
 
-        // TODO: from here
+        // start the watch service
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        boolean ret = syncManager.startWatchService();
+        if(!ret) {
+            System.err.println("error to start WatchService!");
+            return false;
+        }
+
+        // set the syncInProgress to false
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        syncInfo.setSyncInProgress(false);
+
+        // perform file-sync
+        ret = syncManager.sync();
+        if(!ret) {
+            System.err.println("error to start file-sync!");
+            return false;
+        }
+
         return true;
     }
 
