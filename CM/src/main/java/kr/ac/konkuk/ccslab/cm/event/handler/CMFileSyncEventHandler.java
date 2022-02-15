@@ -74,7 +74,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private boolean processEND_LOCAL_MODE_LIST_ACK(CMFileSyncEvent fse) {
         System.err.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST_ACK() not implemented yet!");
-        return false;
+
+        // TODO: from here
+        return true;
     }
 
     // called at the server
@@ -97,7 +99,23 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 .collect(Collectors.toList());
         int numLocalModeFiles = filteredBasisFileList.size() - onlineModePathList.size();
 
-        // TODO: from here
+        // create an end-local-mode-list event
+        CMFileSyncEventEndLocalModeListAck ackEvent = new CMFileSyncEventEndLocalModeListAck();
+        ackEvent.setSender(endEvent.getReceiver());
+        ackEvent.setReceiver(endEvent.getSender());
+        ackEvent.setRequester(endEvent.getRequester());
+        ackEvent.setNumLocalModeFiles(numLocalModeFiles);   // number calculated at the server
+        if(endEvent.getNumLocalModeFiles() == numLocalModeFiles)
+            ackEvent.setReturnCode(1);
+        else
+            ackEvent.setReturnCode(0);
+
+        // send the ack event
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), m_cmInfo);
+        if(!ret) {
+            System.err.println("send error: "+ackEvent);
+            return false;
+        }
 
         return true;
     }
