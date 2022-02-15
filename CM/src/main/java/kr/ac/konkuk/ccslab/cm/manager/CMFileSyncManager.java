@@ -178,6 +178,11 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileName = fe.getFileName();
         // get the new file list
         String fileSender = fe.getFileSender();
+        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(fileSender);
+        if(syncGenerator == null) {
+            System.err.println("The sync generator for ("+fileSender+") is null!");
+            return;
+        }
         List<CMFileSyncEntry> newClientPathEntryList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
                 .get(fileSender).getNewClientPathEntryList();
         Objects.requireNonNull(newClientPathEntryList);
@@ -482,6 +487,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called by the client
+/*
     public void deleteFileSyncInfo() {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.deleteFileSyncInfo() called..");
@@ -493,6 +499,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // clear the isFileSyncCompletedMap
         syncInfo.getIsFileSyncCompletedMap().clear();
     }
+*/
 
     // called by the server
     public int calculateWeakChecksum(ByteBuffer buffer) {
@@ -1192,7 +1199,7 @@ public class CMFileSyncManager extends CMServiceManager {
             // save the last modified time of the queue head path
             FileTime lastModifiedTime = Files.getLastModifiedTime(headPath, LinkOption.NOFOLLOW_LINKS);
             // move the transferred file to the sync home
-            Files.move(transferFileHome.resolve(fileName), headPath);
+            Files.move(transferFileHome.resolve(fileName), headPath, StandardCopyOption.REPLACE_EXISTING);
             // restore the last modified time
             Files.setLastModifiedTime(headPath, lastModifiedTime);
         } catch (IOException e) {
@@ -1222,7 +1229,8 @@ public class CMFileSyncManager extends CMServiceManager {
         endEvent.setRequester(fe.getFileReceiver());
 
         // filter only file type from the path list
-        List<Path> filteredPathList = syncInfo.getPathList().stream()
+        List<Path> pathList = Objects.requireNonNull(syncInfo.getPathList());
+        List<Path> filteredPathList = pathList.stream()
                 .filter(path -> !Files.isDirectory(path))
                 .collect(Collectors.toList());
         // get the number of local-mode files
