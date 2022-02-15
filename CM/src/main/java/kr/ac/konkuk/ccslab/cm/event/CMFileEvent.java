@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.event;
 import java.nio.*;
+import java.util.Arrays;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
@@ -1026,4 +1027,164 @@ public class CMFileEvent extends CMEvent{
 		}		
 		
 	}
+
+	@Override
+	public String toString() {
+		switch (m_nID) {
+			case REQUEST_PERMIT_PULL_FILE:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_nContentID=" + m_nContentID +
+						", m_byteFileAppendFlag=" + m_byteFileAppendFlag +
+						", m_nSSCPort=" + m_nSSCPort +
+						'}';
+			case REPLY_PERMIT_PULL_FILE:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_nReturnCode=" + m_nReturnCode +
+						", m_nContentID=" + m_nContentID +
+						'}';
+			case REQUEST_PERMIT_PUSH_FILE:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFilePath='" + m_strFilePath + '\'' +
+						", m_lFileSize=" + m_lFileSize +
+						", m_nContentID=" + m_nContentID +
+						", m_byteFileAppendFlag=" + m_byteFileAppendFlag +
+						'}';
+			case REPLY_PERMIT_PUSH_FILE:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFilePath='" + m_strFilePath + '\'' +
+						", m_lFileSize=" + m_lFileSize +
+						", m_nReturnCode=" + m_nReturnCode +
+						", m_nContentID=" + m_nContentID +
+						", m_byteFileAppendFlag=" + m_byteFileAppendFlag +
+						", m_nSSCPort=" + m_nSSCPort +
+						'}';
+			case START_FILE_TRANSFER:
+			case START_FILE_TRANSFER_CHAN:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_lReceivedFileSize=" + m_lReceivedFileSize +
+						", m_nContentID=" + m_nContentID +
+						'}';
+			case CONTINUE_FILE_TRANSFER:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_cFileBlock=" + Arrays.toString(m_cFileBlock) +
+						", m_nBlockSize=" + m_nBlockSize +
+						", m_nContentID=" + m_nContentID +
+						'}';
+			case CONTINUE_FILE_TRANSFER_ACK:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_lReceivedFileSize=" + m_lReceivedFileSize +
+						", m_nContentID=" + m_nContentID +
+						'}';
+			case END_FILE_TRANSFER:
+			case END_FILE_TRANSFER_CHAN:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_lFileSize=" + m_lFileSize +
+						", m_nContentID=" + m_nContentID +
+						'}';
+			case END_FILE_TRANSFER_ACK:
+			case END_FILE_TRANSFER_CHAN_ACK:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_lFileSize=" + m_lFileSize +
+						", m_nReturnCode=" + m_nReturnCode +
+						", m_nContentID=" + m_nContentID +
+						'}';
+			case REQUEST_DIST_FILE_PROC:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_nContentID=" + m_nContentID +
+						'}';
+			case CANCEL_FILE_SEND:
+			case CANCEL_FILE_SEND_CHAN:
+			case CANCEL_FILE_RECV_CHAN:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						'}';
+			case ERR_SEND_FILE_CHAN:
+			case ERR_RECV_FILE_CHAN:
+				return "CMFileEvent{" +
+						"m_strSender='" + m_strSender + '\'' +
+						", m_strReceiver='" + m_strReceiver + '\'' +
+						", m_nID=" + m_nID +
+						", m_nByteNum=" + m_nByteNum +
+						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_strFileName='" + m_strFileName + '\'' +
+						", m_nContentID=" + m_nContentID +
+						'}';
+		}
+
+		return super.toString();
+	}
+
 }
