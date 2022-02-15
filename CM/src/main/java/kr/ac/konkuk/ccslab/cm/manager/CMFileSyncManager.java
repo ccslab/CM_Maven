@@ -1157,5 +1157,40 @@ public class CMFileSyncManager extends CMServiceManager {
         return subList;
     }
 
+    // called at the client
+    public void checkTransferForLocalMode(CMFileEvent fe) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.checkTransferForLocalMode() called..");
+            System.out.println("fe = " + fe);
+        }
+
+        // get transferred file info
+        String fileName = fe.getFileName();
+        String fileSender = fe.getFileSender();
+        Path transferFileHome = Objects.requireNonNull(m_cmInfo.getConfigurationInfo().getTransferedFileHome());
+
+        // get local-mode-request queue
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        ConcurrentLinkedQueue<Path> localModeRequestQueue = syncInfo.getLocalModeRequestQueue();
+        Objects.requireNonNull(localModeRequestQueue);
+
+        // compare the queue head (absolute path) and the transferred file name
+        Path headPath = localModeRequestQueue.peek();
+        if(headPath == null) {
+            System.err.println("Local-mode-request queue is empty!");
+            return;
+        }
+        if(!headPath.endsWith(fileName)) {
+            System.err.println("Head of local-mode-request queue does not match the transferred file name!");
+            System.out.println("headPath = " + headPath);
+            System.out.println("fileName = " + fileName);
+            return;
+        }
+
+        // save the last modified time of the queue head path
+
+
+        // TODO: from here
+    }
 
 }
