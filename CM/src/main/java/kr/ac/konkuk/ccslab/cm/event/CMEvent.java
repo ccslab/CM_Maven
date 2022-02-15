@@ -316,26 +316,23 @@ public abstract class CMEvent extends CMObject {
 		
 		return false;
 	}
-	
+
 	@Override
-	public String toString()
-	{
-		StringBuffer strEventHeader = new StringBuffer();
-		strEventHeader.append("{");
-		strEventHeader.append(super.toString()+", "); // m_nType of CMObject
-		strEventHeader.append("\"ID\": "+m_nID+", ");
-		strEventHeader.append("\"ByteNum\": "+m_nByteNum+", ");
-		strEventHeader.append("\"sender\": \""+m_strSender+"\", ");
-		strEventHeader.append("\"receiver\": \""+m_strReceiver+"\", ");
-		strEventHeader.append("\"handlerSession\": \""+m_strHandlerSession+"\", ");
-		strEventHeader.append("\"handlerGroup\": \""+m_strHandlerGroup+"\", ");
-		strEventHeader.append("\"distributionSession\": \""+m_strDistributionSession+"\", ");
-		strEventHeader.append("\"distributionGroup\": \""+m_strDistributionGroup+"\"");
-		strEventHeader.append("}");
-		
-		return strEventHeader.toString();
+	public String toString() {
+		return "CMEvent{" +
+				"m_nType=" + m_nType +
+				", m_strSender='" + m_strSender + '\'' +
+				", m_strReceiver='" + m_strReceiver + '\'' +
+				", m_strHandlerSession='" + m_strHandlerSession + '\'' +
+				", m_strHandlerGroup='" + m_strHandlerGroup + '\'' +
+				", m_strDistributionSession='" + m_strDistributionSession + '\'' +
+				", m_strDistributionGroup='" + m_strDistributionGroup + '\'' +
+				", m_nID=" + m_nID +
+				", m_nByteNum=" + m_nByteNum +
+				", m_bytes=" + m_bytes +
+				'}';
 	}
-	
+
 	/////////////////////////////////////////////////
 	
 	protected boolean allocate()
