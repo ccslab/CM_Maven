@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -108,7 +109,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         List<Path> pathList;
         try {
-            // filter only regular files -> change to absolute path -> sorted -> change to a list
+            // change to absolute path -> sorted -> change to a list
             pathList = Files.walk(syncHome)
                     .filter(path -> !path.equals(syncHome))
                     .map(path -> path.toAbsolutePath().normalize())
@@ -1187,10 +1188,48 @@ public class CMFileSyncManager extends CMServiceManager {
             return;
         }
 
-        // save the last modified time of the queue head path
+        try {
+            // save the last modified time of the queue head path
+            FileTime lastModifiedTime = Files.getLastModifiedTime(headPath, LinkOption.NOFOLLOW_LINKS);
+            // move the transferred file to the sync home
+            Files.move(transferFileHome.resolve(fileName), headPath);
+            // restore the last modified time
+            Files.setLastModifiedTime(headPath, lastModifiedTime);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
 
+        // delete head from the request queue
+        localModeRequestQueue.remove();
+        // delete path from the online-mode-list
+        List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
+        boolean ret = onlineModeList.remove(headPath);
+        if(!ret) {
+            System.err.println("remove error from the online-mode-list: "+headPath);
+            return;
+        }
 
-        // TODO: from here
+        // check if the queue is not empty
+        if(!localModeRequestQueue.isEmpty()) {
+            System.out.println("Local-mode-request queue is not empty.");
+            return;
+        }
+        // if the queue is empty, create and send an end-local-mode-list event
+        CMFileSyncEventEndLocalModeList endEvent = new CMFileSyncEventEndLocalModeList();
+        endEvent.setSender(fe.getFileReceiver());
+        endEvent.setReceiver(fileSender);
+        endEvent.setRequester(fe.getFileReceiver());
+        // numLocalModeFiles includes directories.
+        int numLocalModeFiles = syncInfo.getPathList().size() - syncInfo.getOnlineModePathList().size();
+        endEvent.setNumLocalModeFiles(numLocalModeFiles);
+
+        ret = CMEventManager.unicastEvent(endEvent, fileSender, m_cmInfo);
+        if(!ret) {
+            System.err.println("send error: "+endEvent);
+        }
+
+        return;
     }
 
 }
