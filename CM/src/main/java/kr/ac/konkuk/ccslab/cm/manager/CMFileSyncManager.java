@@ -1220,8 +1220,13 @@ public class CMFileSyncManager extends CMServiceManager {
         endEvent.setSender(fe.getFileReceiver());
         endEvent.setReceiver(fileSender);
         endEvent.setRequester(fe.getFileReceiver());
-        // numLocalModeFiles includes directories.
-        int numLocalModeFiles = syncInfo.getPathList().size() - syncInfo.getOnlineModePathList().size();
+
+        // filter only file type from the path list
+        List<Path> filteredPathList = syncInfo.getPathList().stream()
+                .filter(path -> !Files.isDirectory(path))
+                .collect(Collectors.toList());
+        // get the number of local-mode files
+        int numLocalModeFiles = filteredPathList.size() - syncInfo.getOnlineModePathList().size();
         endEvent.setNumLocalModeFiles(numLocalModeFiles);
 
         ret = CMEventManager.unicastEvent(endEvent, fileSender, m_cmInfo);

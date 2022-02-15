@@ -79,8 +79,27 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the server
     private boolean processEND_LOCAL_MODE_LIST(CMFileSyncEvent fse) {
-        System.err.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST() not implemented yet!");
-        return false;
+        CMFileSyncEventEndLocalModeList endEvent = (CMFileSyncEventEndLocalModeList) fse;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST() called..");
+            System.out.println("endEvent = " + endEvent);
+        }
+        String requester = endEvent.getRequester();
+
+        //// get the number of local-mode files
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap().get(requester));
+        List<Path> onlineModePathList = syncInfo.getOnlineModePathListMap().get(requester);
+        Objects.requireNonNull(onlineModePathList);
+        // filter only file type in basisFileList
+        List<Path> filteredBasisFileList = basisFileList.stream()
+                .filter(path -> !Files.isDirectory(path))
+                .collect(Collectors.toList());
+        int numLocalModeFiles = filteredBasisFileList.size() - onlineModePathList.size();
+
+        // TODO: from here
+
+        return true;
     }
 
     // called at the client
