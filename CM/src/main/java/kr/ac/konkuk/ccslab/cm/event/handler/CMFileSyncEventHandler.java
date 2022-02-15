@@ -85,8 +85,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
     // called at the client
     private boolean processLOCAL_MODE_LIST_ACK(CMFileSyncEvent fse) {
-        System.err.println("CMFileSyncEventHandler.processLOCAL_MODE_LIST_ACK() not implemented yet!");
-        return false;
+        CMFileSyncEventLocalModeListAck ackEvent = (CMFileSyncEventLocalModeListAck) fse;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncEventHandler.processLOCAL_MODE_LIST_ACK() called..");
+            System.out.println("ackEvent = " + ackEvent);
+        }
+
+        int returnCode = ackEvent.getReturnCode();
+        if(returnCode != 1) {
+            System.err.println("return code = "+returnCode);
+            return false;
+        }
+
+        return true;
     }
 
     // called at the server
