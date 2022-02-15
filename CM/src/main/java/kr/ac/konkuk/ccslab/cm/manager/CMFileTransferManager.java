@@ -2625,6 +2625,8 @@ public class CMFileTransferManager {
 		// check if the transfer is for sync a new file
 		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
 		syncManager.checkNewTransferForSync(fe);
+		// check if the transfer is for the file-sync local mode
+		syncManager.checkTransferForLocalMode(fe);
 
 		return bForward;
 	}
@@ -3079,6 +3081,8 @@ public class CMFileTransferManager {
 		// check if the transfer is for sync a new file
 		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
 		syncManager.checkNewTransferForSync(fe);
+		// check if the transfer is for the file-sync local mode
+		syncManager.checkTransferForLocalMode(fe);
 
 		// check whether there is a remaining receiving file info or not
 		CMRecvFileInfo nextRecvInfo = fInfo.findRecvFileInfoNotStarted(fe.getFileSender());
