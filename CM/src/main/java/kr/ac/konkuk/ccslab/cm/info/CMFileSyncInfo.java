@@ -31,7 +31,7 @@ public class CMFileSyncInfo {
 
     private ConcurrentLinkedQueue<Path> onlineModeRequestQueue;     // 4 client
     private List<Path> onlineModePathList;      // 4 client
-    private Map<String, List<Path>> onlineModePathListMap;      // 4 server
+    //private Map<String, List<Path>> onlineModePathListMap;      // 4 server
 
     private ConcurrentLinkedQueue<Path> localModeRequestQueue;      // 4 client
     private Map<String, List<Path>> basisFileListMap;           // 4 server
@@ -52,7 +52,7 @@ public class CMFileSyncInfo {
 
         onlineModeRequestQueue = new ConcurrentLinkedQueue<>();
         onlineModePathList = new ArrayList<>();
-        onlineModePathListMap = new HashMap<>();
+        //onlineModePathListMap = new HashMap<>();
 
         localModeRequestQueue = new ConcurrentLinkedQueue<>();
         basisFileListMap = new HashMap<>();
@@ -134,9 +134,11 @@ public class CMFileSyncInfo {
         return onlineModePathList;
     }
 
+/*
     public Map<String, List<Path>> getOnlineModePathListMap() {
         return onlineModePathListMap;
     }
+*/
 
     public ConcurrentLinkedQueue<Path> getLocalModeRequestQueue() {
         return localModeRequestQueue;

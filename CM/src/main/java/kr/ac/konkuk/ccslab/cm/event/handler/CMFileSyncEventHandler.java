@@ -117,6 +117,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
         String requester = endEvent.getRequester();
 
+/*
         //// get the number of local-mode files
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap().get(requester));
@@ -127,17 +128,22 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 .filter(path -> !Files.isDirectory(path))
                 .collect(Collectors.toList());
         int numLocalModeFiles = filteredBasisFileList.size() - onlineModePathList.size();
+*/
 
         // create an end-local-mode-list event
         CMFileSyncEventEndLocalModeListAck ackEvent = new CMFileSyncEventEndLocalModeListAck();
         ackEvent.setSender(endEvent.getReceiver());
         ackEvent.setReceiver(endEvent.getSender());
         ackEvent.setRequester(endEvent.getRequester());
+        ackEvent.setNumLocalModeFiles(endEvent.getNumLocalModeFiles());
+        ackEvent.setReturnCode(1);
+/*
         ackEvent.setNumLocalModeFiles(numLocalModeFiles);   // number calculated at the server
         if(endEvent.getNumLocalModeFiles() == numLocalModeFiles)
             ackEvent.setReturnCode(1);
         else
             ackEvent.setReturnCode(0);
+*/
 
         // send the ack event
         boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), m_cmInfo);
@@ -173,13 +179,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processLOCAL_MODE_LIST() called..");
             System.out.println("listEvent = " + listEvent);
         }
+        String requester = listEvent.getRequester();
 
+/*
         // get the online-mode-list-map
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         Map<String, List<Path>> onlineModeListMap = Objects.requireNonNull(syncInfo.getOnlineModePathListMap());
         // get the online-mode list with requester
-        String requester = listEvent.getRequester();
         List<Path> onlineModeList = Objects.requireNonNull(onlineModeListMap.get(requester));
+*/
         // get sync home of requester
         CMFileSyncManager syncManager = Objects.requireNonNull(m_cmInfo.getServiceManager(CMFileSyncManager.class));
         Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(requester));
@@ -197,11 +205,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             }
         }
 
+/*
         // delete the list in the listEvent from the online-mode-list
         ret = onlineModeList.removeAll(listEvent.getRelativePathList());
         if(!ret) {
             System.err.println("remove error of path list from the online-mode-list!");
         }
+*/
 
         // create and send ack event
         CMFileSyncEventLocalModeListAck ackEvent = new CMFileSyncEventLocalModeListAck();
@@ -268,24 +278,30 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("endEvent = " + endEvent);
         }
 
+/*
         // get the online mode list of requester
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         Map<String, List<Path>> onlineModeListMap = syncInfo.getOnlineModePathListMap();
         Objects.requireNonNull(onlineModeListMap);
         List<Path> onlineModeList = onlineModeListMap.get(endEvent.getRequester());
         Objects.requireNonNull(onlineModeList);
+*/
 
         // create and send ack event
         CMFileSyncEventEndOnlineModeListAck ackEvent = new CMFileSyncEventEndOnlineModeListAck();
         ackEvent.setSender(endEvent.getReceiver());
         ackEvent.setReceiver(endEvent.getSender());
         ackEvent.setRequester(endEvent.getRequester());
+        ackEvent.setNumOnlineModeFiles(endEvent.getNumOnlineModeFiles());
+        ackEvent.setReturnCode(1);
+/*
         int numOnlineFiles = endEvent.getNumOnlineModeFiles();
         ackEvent.setNumOnlineModeFiles(numOnlineFiles);
         if(numOnlineFiles == onlineModeList.size())
             ackEvent.setReturnCode(1);
         else
             ackEvent.setReturnCode(0);
+*/
 
         boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), m_cmInfo);
         if(!ret) {
@@ -413,13 +429,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processONLINE_MODE_LIST() called..");
             System.out.println("listEvent = " + listEvent);
         }
-
+        String requester = listEvent.getRequester();
+/*
         // get online-mode-list Map
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         Map<String, List<Path>> onlineModeListMap = syncInfo.getOnlineModePathListMap();
         Objects.requireNonNull(onlineModeListMap);
         // get the online mode list with the requester
-        String requester = listEvent.getRequester();
         List<Path> onlineModeList = onlineModeListMap.get(requester);
         if(onlineModeList == null) {
             onlineModeList = new ArrayList<>();
@@ -430,6 +446,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if(!ret) {
             System.err.println("error to add event list to the online mode list!");
         }
+*/
 
         // create and send an ack event
         CMFileSyncEventOnlineModeListAck ackEvent = new CMFileSyncEventOnlineModeListAck();
@@ -437,10 +454,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReceiver(listEvent.getSender());
         ackEvent.setRequester(requester);
         ackEvent.setRelativePathList(listEvent.getRelativePathList());
+        ackEvent.setReturnCode(1);
+/*
         if(ret) ackEvent.setReturnCode(1);
         else ackEvent.setReturnCode(0);
+*/
 
-        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), m_cmInfo);
+        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), m_cmInfo);
         if(!ret) {
             System.err.println("send error : "+ackEvent);
             return false;
