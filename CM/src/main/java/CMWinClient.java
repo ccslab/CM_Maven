@@ -4057,6 +4057,8 @@ public class CMWinClient extends JFrame {
 		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
 		List<Path> onlineFiles = syncInfo.getOnlineModePathList();
 		List<Path> pathList = syncInfo.getPathList();
+		if(pathList == null) return;
+
 		for(Path path : pathList) {
 			if(!Files.isDirectory(path)) {
 				if(!onlineFiles.contains(path)) {
