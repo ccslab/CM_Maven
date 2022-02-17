@@ -1,3 +1,4 @@
+import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 import java.awt.*;
@@ -37,11 +38,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
@@ -498,6 +495,12 @@ public class CMWinClient extends JFrame {
 		JMenuItem reqLocalModeMenuItem = new JMenuItem("request local mode");
 		reqLocalModeMenuItem.addActionListener(menuListener);
 		fileSyncSubMenu.add(reqLocalModeMenuItem);
+		JMenuItem printOnlineFilesMenuItem = new JMenuItem("print online mode files");
+		printOnlineFilesMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(printOnlineFilesMenuItem);
+		JMenuItem printLocalFilesMenuItem = new JMenuItem("print local mode files");
+		printLocalFilesMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(printLocalFilesMenuItem);
 
 		cmServiceMenu.add(fileSyncSubMenu);
 		
@@ -675,270 +678,275 @@ public class CMWinClient extends JFrame {
 			printMessage("Incorrect command number!\n");
 			return;
 		}
-		
-		switch(nCommand)
-		{
-		case 0:
-			printAllMenus();
-			break;
-		case 100:
-			testStartCM();
-			break;
-		case 999:
-			testTerminateCM();
-			break;			
-		case 1: // connect to default server
-			testConnectionDS();
-			break;
-		case 2: // disconnect from default server
-			testDisconnectionDS();
-			break;
-		case 3: // connect to a designated server
-			testConnectToServer();
-			break;
-		case 4: // disconnect from a designated server
-			testDisconnectFromServer();
-			break;
-		case 10: // asynchronous login to default server
-			testLoginDS();
-			break;
-		case 11: // synchronously login to default server
-			testSyncLoginDS();
-			break;
-		case 12: // logout from default server
-			testLogoutDS();
-			break;
-		case 13: // log in to a designated server
-			testLoginServer();
-			break;
-		case 14: // log out from a designated server
-			testLogoutServer();
-			break;
-		case 20: // request session info from default server
-			testSessionInfoDS();
-			break;
-		case 21: // synchronously request session info from default server
-			testSyncSessionInfoDS();
-			break;
-		case 22: // join a session
-			testJoinSession();
-			break;
-		case 23: // synchronously join a session
-			testSyncJoinSession();
-			break;
-		case 24: // leave the current session
-			testLeaveSession();
-			break;
-		case 25: // change current group
-			testChangeGroup();
-			break;
-		case 26: // print group members
-			testPrintGroupMembers();
-			break;
-		case 27: // request session information from a designated server
-			testRequestSessionInfoOfServer();
-			break;
-		case 28: // join a session of a designated server
-			testJoinSessionOfServer();
-			break;
-		case 29: // leave a session of a designated server
-			testLeaveSessionOfServer();
-			break;
-		case 40: // chat
-			testChat();
-			break;
-		case 41: // test multicast chat in current group
-			testMulticastChat();
-			break;
-		case 42: // test CMDummyEvent
-			testDummyEvent();
-			break;
-		case 43: // test CMUserEvent
-			testUserEvent();
-			break;
-		case 44: // test datagram message
-			testDatagram();
-			break;			
-		case 45: // user position
-			testUserPosition();
-			break;
-		case 46: // test sendrecv
-			testSendRecv();
-			break;
-		case 47: // test castrecv
-			testCastRecv();
-			break;
-		case 48: // test asynchronous sendrecv
-			testAsyncSendRecv();
-			break;
-		case 49: // test asynchronous castrecv
-			testAsyncCastRecv();
-			break;
-		case 50: // print group info
-			testPrintGroupInfo();
-			break;
-		case 51: // print current information about the client
-			testCurrentUserStatus();
-			break;
-		case 52: 	// print current channels information
-			testPrintCurrentChannelInfo();
-			break;
-		case 53: // request additional server info
-			testRequestServerInfo();
-			break;
-		case 54: // print current group info of a designated server
-			testPrintGroupInfoOfServer();
-			break;
-		case 55: // test input network throughput
-			testMeasureInputThroughput();
-			break;
-		case 56: // test output network throughput
-			testMeasureOutputThroughput();
-			break;
-		case 57: // print all configurations
-			testPrintConfigurations();
-			break;
-		case 58: // change configuration
-			testChangeConfiguration();
-			break;
-		case 59: // show current thread information
-			printThreadInfo();
-			break;
-		case 60: // add additional channel
-			testAddChannel();
-			break;
-		case 61: // remove additional channel
-			testRemoveChannel();
-			break;
-		case 62: // test blocking channel
-			testBlockingChannel();
-			break;
-		case 70: // set file path
-			testSetFilePath();
-			break;
-		case 71: // request a file
-			testRequestFile();
-			break;
-		case 72: // push a file
-			testPushFile();
-			break;
-		case 73:	// test cancel receiving a file
-			cancelRecvFile();
-			break;
-		case 74:	// test cancel sending a file
-			cancelSendFile();
-			break;
-		case 75:	// print sending/receiving file info
-			printSendRecvFileInfo();
-			break;
-		case 80: // test SNS content download
-			testDownloadNewSNSContent();
-			break;
-		case 81:
-			testDownloadNextSNSContent();
-			break;
-		case 82:
-			testDownloadPreviousSNSContent();
-			break;
-		case 83: // request an attached file of SNS content
-			testRequestAttachedFileOfSNSContent();
-			break;
-		case 84: // test SNS content upload
-			testSNSContentUpload();
-			break;
-		case 90: // register user
-			testRegisterUser();
-			break;
-		case 91: // deregister user
-			testDeregisterUser();
-			break;
-		case 92: // find user
-			testFindRegisteredUser();
-			break;
-		case 93: // add a new friend
-			testAddNewFriend();
-			break;
-		case 94: // remove a friend
-			testRemoveFriend();
-			break;
-		case 95: // request current friends list
-			testRequestFriendsList();
-			break;
-		case 96: // request friend requesters list
-			testRequestFriendRequestersList();
-			break;
-		case 97: // request bi-directional friends
-			testRequestBiFriendsList();
-			break;
-		case 101: // test forwarding schemes (typical vs. internal)
-			testForwarding();
-			break;
-		case 102: // test delay of forwarding schemes
-			testForwardingDelay();
-			break;
-		case 103: // test repeated downloading of SNS content
-			testRepeatedSNSContentDownload();
-			break;
-		case 104: // pull or push multiple files
-			testSendMultipleFiles();
-			break;
-		case 105: // split a file
-			testSplitFile();
-			break;
-		case 106: // merge files
-			testMergeFiles();
-			break;
-		case 107: // distribute a file and merge
-			testDistFileProc();
-			break;
-		case 108: // send an event with wrong # bytes
-			testSendEventWithWrongByteNum();
-			break;
-		case 109: // send an event with wrong event type
-			testSendEventWithWrongEventType();
-			break;
-		case 110: // test and measure delay of c-s-c file transfer
-			testCSCFileTransfer();
-			break;
-		case 111: // test and measure delay of c2c file transfer
-			testC2CFileTransfer();
-			break;
-		case 200: // MQTT connect
-			testMqttConnect();
-			break;
-		case 201: // MQTT publish
-			testMqttPublish();
-			break;
-		case 202: // MQTT subscribe
-			testMqttSubscribe();
-			break;
-		case 203: // print MQTT session info
-			testPrintMqttSessionInfo();
-			break;
-		case 204: // MQTT unsubscribe
-			testMqttUnsubscribe();
-			break;
-		case 205: // MQTT disconnect
-			testMqttDisconnect();
-			break;
-		case 300:	// start file-sync
-			testStartFileSync();
-			break;
-		case 301:	// stop file-sync
-			testStopFileSync();
-			break;
-		case 302:	// open file-sync folder
-			testOpenFileSyncFolder();
-			break;
-		case 303:	// request file-sync online mode
-			testRequestFileSyncOnlineMode();
-			break;
-		case 304:	// request file-sync local mode
-			testRequestFileSyncLocalMode();
-			break;
-		default:
-			System.err.println("Unknown command.");
-			break;
+
+		switch (nCommand) {
+			case 0:
+				printAllMenus();
+				break;
+			case 100:
+				testStartCM();
+				break;
+			case 999:
+				testTerminateCM();
+				break;
+			case 1: // connect to default server
+				testConnectionDS();
+				break;
+			case 2: // disconnect from default server
+				testDisconnectionDS();
+				break;
+			case 3: // connect to a designated server
+				testConnectToServer();
+				break;
+			case 4: // disconnect from a designated server
+				testDisconnectFromServer();
+				break;
+			case 10: // asynchronous login to default server
+				testLoginDS();
+				break;
+			case 11: // synchronously login to default server
+				testSyncLoginDS();
+				break;
+			case 12: // logout from default server
+				testLogoutDS();
+				break;
+			case 13: // log in to a designated server
+				testLoginServer();
+				break;
+			case 14: // log out from a designated server
+				testLogoutServer();
+				break;
+			case 20: // request session info from default server
+				testSessionInfoDS();
+				break;
+			case 21: // synchronously request session info from default server
+				testSyncSessionInfoDS();
+				break;
+			case 22: // join a session
+				testJoinSession();
+				break;
+			case 23: // synchronously join a session
+				testSyncJoinSession();
+				break;
+			case 24: // leave the current session
+				testLeaveSession();
+				break;
+			case 25: // change current group
+				testChangeGroup();
+				break;
+			case 26: // print group members
+				testPrintGroupMembers();
+				break;
+			case 27: // request session information from a designated server
+				testRequestSessionInfoOfServer();
+				break;
+			case 28: // join a session of a designated server
+				testJoinSessionOfServer();
+				break;
+			case 29: // leave a session of a designated server
+				testLeaveSessionOfServer();
+				break;
+			case 40: // chat
+				testChat();
+				break;
+			case 41: // test multicast chat in current group
+				testMulticastChat();
+				break;
+			case 42: // test CMDummyEvent
+				testDummyEvent();
+				break;
+			case 43: // test CMUserEvent
+				testUserEvent();
+				break;
+			case 44: // test datagram message
+				testDatagram();
+				break;
+			case 45: // user position
+				testUserPosition();
+				break;
+			case 46: // test sendrecv
+				testSendRecv();
+				break;
+			case 47: // test castrecv
+				testCastRecv();
+				break;
+			case 48: // test asynchronous sendrecv
+				testAsyncSendRecv();
+				break;
+			case 49: // test asynchronous castrecv
+				testAsyncCastRecv();
+				break;
+			case 50: // print group info
+				testPrintGroupInfo();
+				break;
+			case 51: // print current information about the client
+				testCurrentUserStatus();
+				break;
+			case 52:    // print current channels information
+				testPrintCurrentChannelInfo();
+				break;
+			case 53: // request additional server info
+				testRequestServerInfo();
+				break;
+			case 54: // print current group info of a designated server
+				testPrintGroupInfoOfServer();
+				break;
+			case 55: // test input network throughput
+				testMeasureInputThroughput();
+				break;
+			case 56: // test output network throughput
+				testMeasureOutputThroughput();
+				break;
+			case 57: // print all configurations
+				testPrintConfigurations();
+				break;
+			case 58: // change configuration
+				testChangeConfiguration();
+				break;
+			case 59: // show current thread information
+				printThreadInfo();
+				break;
+			case 60: // add additional channel
+				testAddChannel();
+				break;
+			case 61: // remove additional channel
+				testRemoveChannel();
+				break;
+			case 62: // test blocking channel
+				testBlockingChannel();
+				break;
+			case 70: // set file path
+				testSetFilePath();
+				break;
+			case 71: // request a file
+				testRequestFile();
+				break;
+			case 72: // push a file
+				testPushFile();
+				break;
+			case 73:    // test cancel receiving a file
+				cancelRecvFile();
+				break;
+			case 74:    // test cancel sending a file
+				cancelSendFile();
+				break;
+			case 75:    // print sending/receiving file info
+				printSendRecvFileInfo();
+				break;
+			case 80: // test SNS content download
+				testDownloadNewSNSContent();
+				break;
+			case 81:
+				testDownloadNextSNSContent();
+				break;
+			case 82:
+				testDownloadPreviousSNSContent();
+				break;
+			case 83: // request an attached file of SNS content
+				testRequestAttachedFileOfSNSContent();
+				break;
+			case 84: // test SNS content upload
+				testSNSContentUpload();
+				break;
+			case 90: // register user
+				testRegisterUser();
+				break;
+			case 91: // deregister user
+				testDeregisterUser();
+				break;
+			case 92: // find user
+				testFindRegisteredUser();
+				break;
+			case 93: // add a new friend
+				testAddNewFriend();
+				break;
+			case 94: // remove a friend
+				testRemoveFriend();
+				break;
+			case 95: // request current friends list
+				testRequestFriendsList();
+				break;
+			case 96: // request friend requesters list
+				testRequestFriendRequestersList();
+				break;
+			case 97: // request bi-directional friends
+				testRequestBiFriendsList();
+				break;
+			case 101: // test forwarding schemes (typical vs. internal)
+				testForwarding();
+				break;
+			case 102: // test delay of forwarding schemes
+				testForwardingDelay();
+				break;
+			case 103: // test repeated downloading of SNS content
+				testRepeatedSNSContentDownload();
+				break;
+			case 104: // pull or push multiple files
+				testSendMultipleFiles();
+				break;
+			case 105: // split a file
+				testSplitFile();
+				break;
+			case 106: // merge files
+				testMergeFiles();
+				break;
+			case 107: // distribute a file and merge
+				testDistFileProc();
+				break;
+			case 108: // send an event with wrong # bytes
+				testSendEventWithWrongByteNum();
+				break;
+			case 109: // send an event with wrong event type
+				testSendEventWithWrongEventType();
+				break;
+			case 110: // test and measure delay of c-s-c file transfer
+				testCSCFileTransfer();
+				break;
+			case 111: // test and measure delay of c2c file transfer
+				testC2CFileTransfer();
+				break;
+			case 200: // MQTT connect
+				testMqttConnect();
+				break;
+			case 201: // MQTT publish
+				testMqttPublish();
+				break;
+			case 202: // MQTT subscribe
+				testMqttSubscribe();
+				break;
+			case 203: // print MQTT session info
+				testPrintMqttSessionInfo();
+				break;
+			case 204: // MQTT unsubscribe
+				testMqttUnsubscribe();
+				break;
+			case 205: // MQTT disconnect
+				testMqttDisconnect();
+				break;
+			case 300:    // start file-sync
+				testStartFileSync();
+				break;
+			case 301:    // stop file-sync
+				testStopFileSync();
+				break;
+			case 302:    // open file-sync folder
+				testOpenFileSyncFolder();
+				break;
+			case 303:    // request file-sync online mode
+				testRequestFileSyncOnlineMode();
+				break;
+			case 304:    // request file-sync local mode
+				testRequestFileSyncLocalMode();
+				break;
+			case 305:    // print online mode files
+				testPrintOnlineModeFiles();
+				break;
+			case 306:    // print local mode files
+				testPrintLocalModeFiles();
+				break;
+			default:
+				System.err.println("Unknown command.");
+				break;
 		}
 	}
 
@@ -995,6 +1003,7 @@ public class CMWinClient extends JFrame {
 		printMessage("300: start file-sync, 301: stop file-sync\n");
 		printMessage("302: open file-sync folder\n");
 		printMessage("303: request online mode, 304: request local mode\n");
+		printMessage("305: print online mode files, 306: print local mode files\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -4036,6 +4045,27 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
+	private void testPrintOnlineModeFiles() {
+		printMessage("========== print online mode files\n");
+		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
+		syncInfo.getOnlineModePathList().stream()
+				.forEach(path -> printMessage(path+"\n"));
+	}
+
+	private void testPrintLocalModeFiles() {
+		printMessage("========== print local mode files\n");
+		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
+		List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+		List<Path> pathList = syncInfo.getPathList();
+		for(Path path : pathList) {
+			if(!Files.isDirectory(path)) {
+				if(!onlineFiles.contains(path)) {
+					printMessage(path+"\n");
+				}
+			}
+		}
+	}
+
 	private void testSendEventWithWrongByteNum()
 	{
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
@@ -4368,260 +4398,265 @@ public class CMWinClient extends JFrame {
 		public void actionPerformed(ActionEvent e)
 		{
 			String strMenu = e.getActionCommand();
-			switch(strMenu)
-			{
-			case "show all menus":
-				printAllMenus();
-				break;
-			case "start CM":
-				testStartCM();
-				break;
-			case "terminate CM":
-				testTerminateCM();
-				break;
-			case "connect to default server":
-				testConnectionDS();
-				break;
-			case "disconnect from default server":
-				testDisconnectionDS();
-				break;
-			case "connect to designated server":
-				testConnectToServer();
-				break;
-			case "disconnect from designated server":
-				testDisconnectFromServer();
-				break;
-			case "login to default server":
-				testLoginDS();
-				break;
-			case "synchronously login to default server":
-				testSyncLoginDS();
-				break;
-			case "logout from default server":
-				testLogoutDS();
-				break;
-			case "login to designated server":
-				testLoginServer();
-				break;
-			case "logout from designated server":
-				testLogoutServer();
-				break;
-			case "request session information from default server":
-				testSessionInfoDS();
-				break;
-			case "synchronously request session information from default server":
-				testSyncSessionInfoDS();
-				break;
-			case "join session of default server":
-				testJoinSession();
-				break;
-			case "synchronously join session of default server":
-				testSyncJoinSession();
-				break;
-			case "leave session of default server":
-				testLeaveSession();
-				break;
-			case "change group of default server":
-				testChangeGroup();
-				break;
-			case "print group members":
-				testPrintGroupMembers();
-				break;
-			case "request session information from designated server":
-				testRequestSessionInfoOfServer();
-				break;
-			case "join session of designated server":
-				testJoinSessionOfServer();
-				break;
-			case "leave session of designated server":
-				testLeaveSessionOfServer();
-				break;
-			case "chat":
-				testChat();
-				break;
-			case "multicast chat in current group":
-				testMulticastChat();
-				break;
-			case "test CMDummyEvent":
-				testDummyEvent();
-				break;
-			case "test CMUserEvent":
-				testUserEvent();
-				break;
-			case "test datagram event":
-				testDatagram();
-				break;
-			case "test user position":
-				testUserPosition();
-				break;
-			case "test sendrecv":
-				testSendRecv();
-				break;
-			case "test castrecv":
-				testCastRecv();
-				break;
-			case "test asynchronous sendrecv":
-				testAsyncSendRecv();
-				break;
-			case "test asynchronous castrecv":
-				testAsyncCastRecv();
-				break;
-			case "show group information of default server":
-				testPrintGroupInfo();
-				break;
-			case "show current user status":
-				testCurrentUserStatus();
-				break;
-			case "show current channels":
-				testPrintCurrentChannelInfo();
-				break;
-			case "show current server information":
-				testRequestServerInfo();
-				break;
-			case "show group information of designated server":
-				testPrintGroupInfoOfServer();
-				break;
-			case "measure input network throughput":
-				testMeasureInputThroughput();
-				break;
-			case "measure output network throughput":
-				testMeasureOutputThroughput();
-				break;
-			case "show all configurations":
-				testPrintConfigurations();
-				break;
-			case "change configuration":
-				testChangeConfiguration();
-				break;
-			case "show thread information":
-				printThreadInfo();
-				break;
-			case "add channel":
-				testAddChannel();
-				break;
-			case "remove channel":
-				testRemoveChannel();
-				break;
-			case "test blocking channel":
-				testBlockingChannel();
-				break;
-			case "set file path":
-				testSetFilePath();
-				break;
-			case "request file":
-				testRequestFile();
-				break;
-			case "push file":
-				testPushFile();
-				break;
-			case "cancel receiving file":
-				cancelRecvFile();
-				break;
-			case "cancel sending file":
-				cancelSendFile();
-				break;
-			case "print sending/receiving file info":
-				printSendRecvFileInfo();
-				break;
-			case "request content list":
-				testDownloadNewSNSContent();
-				break;
-			case "request next content list":
-				testDownloadNextSNSContent();
-				break;
-			case "request previous content list":
-				testDownloadPreviousSNSContent();
-				break;
-			case "request attached file":
-				testRequestAttachedFileOfSNSContent();
-				break;
-			case "upload content":
-				testSNSContentUpload();
-				break;
-			case "register new user":
-				testRegisterUser();
-				break;
-			case "deregister user":
-				testDeregisterUser();
-				break;
-			case "find registered user":
-				testFindRegisteredUser();
-				break;
-			case "add new friend":
-				testAddNewFriend();
-				break;
-			case "remove friend":
-				testRemoveFriend();
-				break;
-			case "show friends":
-				testRequestFriendsList();
-				break;
-			case "show friend requesters":
-				testRequestFriendRequestersList();
-				break;
-			case "show bi-directional friends":
-				testRequestBiFriendsList();
-				break;
-			case "test forwarding scheme":
-				testForwarding();
-				break;
-			case "test delay of forwarding scheme":
-				testForwardingDelay();
-				break;
-			case "test repeated request of SNS content list":
-				testRepeatedSNSContentDownload();
-				break;
-			case "pull/push multiple files":
-				testSendMultipleFiles();
-				break;
-			case "split file":
-				testSplitFile();
-				break;
-			case "merge files":
-				testMergeFiles();
-				break;
-			case "distribute and merge file":
-				testDistFileProc();
-				break;
-			case "connect MQTT service":
-				testMqttConnect();
-				break;
-			case "publish":
-				testMqttPublish();
-				break;
-			case "subscribe":
-				testMqttSubscribe();
-				break;
-			case "print session info":
-				testPrintMqttSessionInfo();
-				break;
-			case "unsubscribe":
-				testMqttUnsubscribe();
-				break;
-			case "disconnect MQTT service":
-				testMqttDisconnect();
-				break;
-			case "test csc file transfer":
-				testCSCFileTransfer();
-				break;
-			case "test c2c file transfer":
-				testC2CFileTransfer();
-				break;
-			case "start file-sync":
-				testStartFileSync();
-				break;
-			case "stop file-sync":
-				testStopFileSync();
-				break;
-			case "open file-sync folder":
-				testOpenFileSyncFolder();
-				break;
-			case "request online mode":
-				testRequestFileSyncOnlineMode();
-				break;
-			case "request local mode":
-				testRequestFileSyncLocalMode();
-				break;
+			switch (strMenu) {
+				case "show all menus":
+					printAllMenus();
+					break;
+				case "start CM":
+					testStartCM();
+					break;
+				case "terminate CM":
+					testTerminateCM();
+					break;
+				case "connect to default server":
+					testConnectionDS();
+					break;
+				case "disconnect from default server":
+					testDisconnectionDS();
+					break;
+				case "connect to designated server":
+					testConnectToServer();
+					break;
+				case "disconnect from designated server":
+					testDisconnectFromServer();
+					break;
+				case "login to default server":
+					testLoginDS();
+					break;
+				case "synchronously login to default server":
+					testSyncLoginDS();
+					break;
+				case "logout from default server":
+					testLogoutDS();
+					break;
+				case "login to designated server":
+					testLoginServer();
+					break;
+				case "logout from designated server":
+					testLogoutServer();
+					break;
+				case "request session information from default server":
+					testSessionInfoDS();
+					break;
+				case "synchronously request session information from default server":
+					testSyncSessionInfoDS();
+					break;
+				case "join session of default server":
+					testJoinSession();
+					break;
+				case "synchronously join session of default server":
+					testSyncJoinSession();
+					break;
+				case "leave session of default server":
+					testLeaveSession();
+					break;
+				case "change group of default server":
+					testChangeGroup();
+					break;
+				case "print group members":
+					testPrintGroupMembers();
+					break;
+				case "request session information from designated server":
+					testRequestSessionInfoOfServer();
+					break;
+				case "join session of designated server":
+					testJoinSessionOfServer();
+					break;
+				case "leave session of designated server":
+					testLeaveSessionOfServer();
+					break;
+				case "chat":
+					testChat();
+					break;
+				case "multicast chat in current group":
+					testMulticastChat();
+					break;
+				case "test CMDummyEvent":
+					testDummyEvent();
+					break;
+				case "test CMUserEvent":
+					testUserEvent();
+					break;
+				case "test datagram event":
+					testDatagram();
+					break;
+				case "test user position":
+					testUserPosition();
+					break;
+				case "test sendrecv":
+					testSendRecv();
+					break;
+				case "test castrecv":
+					testCastRecv();
+					break;
+				case "test asynchronous sendrecv":
+					testAsyncSendRecv();
+					break;
+				case "test asynchronous castrecv":
+					testAsyncCastRecv();
+					break;
+				case "show group information of default server":
+					testPrintGroupInfo();
+					break;
+				case "show current user status":
+					testCurrentUserStatus();
+					break;
+				case "show current channels":
+					testPrintCurrentChannelInfo();
+					break;
+				case "show current server information":
+					testRequestServerInfo();
+					break;
+				case "show group information of designated server":
+					testPrintGroupInfoOfServer();
+					break;
+				case "measure input network throughput":
+					testMeasureInputThroughput();
+					break;
+				case "measure output network throughput":
+					testMeasureOutputThroughput();
+					break;
+				case "show all configurations":
+					testPrintConfigurations();
+					break;
+				case "change configuration":
+					testChangeConfiguration();
+					break;
+				case "show thread information":
+					printThreadInfo();
+					break;
+				case "add channel":
+					testAddChannel();
+					break;
+				case "remove channel":
+					testRemoveChannel();
+					break;
+				case "test blocking channel":
+					testBlockingChannel();
+					break;
+				case "set file path":
+					testSetFilePath();
+					break;
+				case "request file":
+					testRequestFile();
+					break;
+				case "push file":
+					testPushFile();
+					break;
+				case "cancel receiving file":
+					cancelRecvFile();
+					break;
+				case "cancel sending file":
+					cancelSendFile();
+					break;
+				case "print sending/receiving file info":
+					printSendRecvFileInfo();
+					break;
+				case "request content list":
+					testDownloadNewSNSContent();
+					break;
+				case "request next content list":
+					testDownloadNextSNSContent();
+					break;
+				case "request previous content list":
+					testDownloadPreviousSNSContent();
+					break;
+				case "request attached file":
+					testRequestAttachedFileOfSNSContent();
+					break;
+				case "upload content":
+					testSNSContentUpload();
+					break;
+				case "register new user":
+					testRegisterUser();
+					break;
+				case "deregister user":
+					testDeregisterUser();
+					break;
+				case "find registered user":
+					testFindRegisteredUser();
+					break;
+				case "add new friend":
+					testAddNewFriend();
+					break;
+				case "remove friend":
+					testRemoveFriend();
+					break;
+				case "show friends":
+					testRequestFriendsList();
+					break;
+				case "show friend requesters":
+					testRequestFriendRequestersList();
+					break;
+				case "show bi-directional friends":
+					testRequestBiFriendsList();
+					break;
+				case "test forwarding scheme":
+					testForwarding();
+					break;
+				case "test delay of forwarding scheme":
+					testForwardingDelay();
+					break;
+				case "test repeated request of SNS content list":
+					testRepeatedSNSContentDownload();
+					break;
+				case "pull/push multiple files":
+					testSendMultipleFiles();
+					break;
+				case "split file":
+					testSplitFile();
+					break;
+				case "merge files":
+					testMergeFiles();
+					break;
+				case "distribute and merge file":
+					testDistFileProc();
+					break;
+				case "connect MQTT service":
+					testMqttConnect();
+					break;
+				case "publish":
+					testMqttPublish();
+					break;
+				case "subscribe":
+					testMqttSubscribe();
+					break;
+				case "print session info":
+					testPrintMqttSessionInfo();
+					break;
+				case "unsubscribe":
+					testMqttUnsubscribe();
+					break;
+				case "disconnect MQTT service":
+					testMqttDisconnect();
+					break;
+				case "test csc file transfer":
+					testCSCFileTransfer();
+					break;
+				case "test c2c file transfer":
+					testC2CFileTransfer();
+					break;
+				case "start file-sync":
+					testStartFileSync();
+					break;
+				case "stop file-sync":
+					testStopFileSync();
+					break;
+				case "open file-sync folder":
+					testOpenFileSyncFolder();
+					break;
+				case "request online mode":
+					testRequestFileSyncOnlineMode();
+					break;
+				case "request local mode":
+					testRequestFileSyncLocalMode();
+					break;
+				case "print online mode files":
+					testPrintOnlineModeFiles();
+					break;
+				case "print local mode files":
+					testPrintLocalModeFiles();
+					break;
 			}
 		}
 	}
