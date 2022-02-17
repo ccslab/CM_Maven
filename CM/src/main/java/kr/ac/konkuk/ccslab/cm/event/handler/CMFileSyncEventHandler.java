@@ -85,6 +85,23 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+
+        // print local mode files
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("--- local mode files ---");
+            List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+            List<Path> pathList = syncInfo.getPathList();
+            for(Path path : pathList) {
+                if(!Files.isDirectory(path)) {
+                    if(!onlineFiles.contains(path)) {
+                        System.out.println(path);
+                    }
+                }
+            }
+            System.out.println("---");
+        }
+
         // start the watch service
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
@@ -95,7 +112,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // set the syncInProgress to false
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         syncInfo.setSyncInProgress(false);
 
         // perform file-sync
@@ -246,8 +262,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        // set syncInProgress to false
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+
+        // print the online mode files
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("--- online mode files ---");
+            syncInfo.getOnlineModePathList().stream().forEach(System.out::println);
+            System.out.println("---");
+        }
+
+        // set syncInProgress to false
         syncInfo.setSyncInProgress(false);
 
         // restart watch service
@@ -379,12 +403,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     e.printStackTrace();
                     return false;
                 }
-                // move the head of queue to the online mode list
-                addResult = onlineModeList.add(requestQueue.remove());
-                if(!addResult) {
-                    System.err.println("error to add queue head to the online mode list!");
-                    System.err.println(headPath);
-                    return false;
+                // remove the head of queue and add it to the online mode list
+                requestQueue.remove();
+                if(!onlineModeList.contains(headPath)) {
+                    addResult = onlineModeList.add(headPath);
+                    if(!addResult) {
+                        System.err.println("error to add queue head to the online mode list!");
+                        System.err.println(headPath);
+                        return false;
+                    }
                 }
                 numCompletePath++;
             }
