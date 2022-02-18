@@ -1,6 +1,7 @@
 # CM
 client-file-path/
 server-file-path/
+.cm-settings/
 # Eclipse
 bin/
 .classpath
