@@ -15,6 +15,7 @@ public class CMFileSyncInfo {
     public static final String SYNC_HOME = "FileSyncHome";
     public static final int BLOCK_SIZE = 700;   // Bytes, from rsync
     public static final int MAX_BLOCK_SIZE = 1 << 17;   // 2^17 = 131,072 (from rsync version > 30)
+    public static final String ONLINE_MODE_LIST_FILE_NAME = "online_mode_list.txt";
 
     private boolean syncInProgress;
     private List<Path> pathList;        // 4 client

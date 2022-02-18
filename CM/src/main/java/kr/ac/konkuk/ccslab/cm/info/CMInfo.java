@@ -126,6 +126,8 @@ public class CMInfo {
 
 	// temp file prefix for file sync
 	public static final String TEMP_FILE_PREFIX = "temp_";
+	// directory name to maintain internal files
+	public static final String SETTINGS_DIR = ".cm-settings";
 
 	// repository
 	private CMConfigurationInfo m_confInfo;
