@@ -1368,7 +1368,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    private boolean saveOnlineModeListToFile() {
+    public boolean saveOnlineModeListToFile() {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.saveOnlineModeListToFile() called..");
         }

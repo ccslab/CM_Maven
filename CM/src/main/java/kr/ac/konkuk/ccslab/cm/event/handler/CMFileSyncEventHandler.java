@@ -102,10 +102,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("---");
         }
 
-        // start the watch service
+        // save the online-mode-path list to file
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
-        boolean ret = syncManager.startWatchService();
+        boolean ret = syncManager.saveOnlineModeListToFile();
+        if(!ret) {
+            System.err.println("error to save the online-mode-path list to file!");
+        }
+
+        // start the watch service
+        ret = syncManager.startWatchService();
         if(!ret) {
             System.err.println("error to start WatchService!");
             return false;
@@ -271,13 +277,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("---");
         }
 
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        // save the online-mode-path list to file
+        boolean ret = syncManager.saveOnlineModeListToFile();
+        if(!ret) {
+            System.err.println("error to save the online-mode-path list to file!");
+        }
+
         // set syncInProgress to false
         syncInfo.setSyncInProgress(false);
 
         // restart watch service
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
-        Objects.requireNonNull(syncManager);
-        boolean ret = syncManager.startWatchService();
+        ret = syncManager.startWatchService();
         if(!ret) {
             System.err.println("error to start WatchService!");
             return false;
