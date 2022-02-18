@@ -1404,7 +1404,9 @@ public class CMFileSyncManager extends CMServiceManager {
 
         if(!Files.exists(storedPath)) {
             try {
-                Files.createDirectories(storedPath);
+                Path parentPath = storedPath.getParent();
+                if(parentPath != null)
+                    Files.createDirectories(parentPath);
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
