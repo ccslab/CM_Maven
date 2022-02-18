@@ -11,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -1342,16 +1343,87 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean stopFileSync() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.stopFileSync() called..");
+        }
 
-        // TODO: not yet
-        return false;
+        // save the online-mode-path list to the file
+        boolean ret = saveOnlineModeListToFile();
+        if(!ret) {
+            System.err.println("error to save the online-mode-path-list to file!");
+        }
+
+		// set syncInProgress to false
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        syncInfo.setSyncInProgress(false);
+
+		// stop the watch service
+		ret = stopWatchService();
+		if(!ret) {
+			System.err.println("error stopping watch service!");
+			return false;
+		}
+
+        return true;
     }
 
     // called at the client
     private boolean saveOnlineModeListToFile() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.saveOnlineModeListToFile() called..");
+        }
 
-        // TODO: not yet
-        return false;
+        // get the online-mode-path list
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
+        // get the online-mode-list file path
+        Path storedPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
+
+        // save the list to the file
+        boolean ret = savePathListToFile(onlineModeList, storedPath);
+        if(!ret) {
+            System.err.println("error to save the online-mode-path list to file!");
+            return false;
+        }
+
+        return true;
+    }
+
+    // called at the client
+    private boolean savePathListToFile(List<Path> pathList, Path storedPath) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.savePathListToFile() called..");
+            System.out.println("pathList = " + pathList);
+            System.out.println("storedPath = " + storedPath);
+        }
+
+        if(pathList == null || storedPath == null) {
+            System.err.println("The path list or path is null!");
+            return false;
+        }
+
+        if(!Files.exists(storedPath)) {
+            try {
+                Files.createDirectories(storedPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // create or open file
+        try(BufferedWriter writer = Files.newBufferedWriter(storedPath)) {
+            // write lists to the file
+            for(Path path : pathList) {
+                writer.write(path.toString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
 }

@@ -3723,19 +3723,6 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 
-/*
-		// set syncInProgress to false
-		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
-		syncInfo.setSyncInProgress(false);
-
-		// stop the watch service
-		boolean ret = syncManager.stopWatchService();
-		if(!ret) {
-			System.err.println("error stopping watch service!");
-			return false;
-		}
-*/
-
 		return true;
 	}
 
