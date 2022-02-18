@@ -92,6 +92,20 @@ public class CMFileSyncManager extends CMServiceManager {
         List<Path> pathList = createPathList(syncHome);
         // store the path list in the CMFileSyncInfo.
         fsInfo.setPathList(pathList);
+
+        // update the online-mode-list
+        List<Path> onlineModeList = Objects.requireNonNull(fsInfo.getOnlineModePathList());
+        Iterator<Path> iter = onlineModeList.iterator();
+        while(iter.hasNext()) {
+            Path onlinePath = iter.next();
+            if(!pathList.contains(onlinePath))
+                iter.remove();
+        }
+        boolean ret = saveOnlineModeListToFile();
+        if(!ret) {
+            System.err.println("error to save online-mode-list to file!");
+        }
+
         // send the file list to the server
         boolean sendResult = sendFileList();
         if(!sendResult) {
@@ -1257,6 +1271,87 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return;
+    }
+
+    // called at the client
+    public boolean startFileSync() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.startFileSync() called..");
+        }
+
+        // get the online-mode-list-file path
+        Path storedListPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
+        // load the online-mode-list file
+        List<Path> onlineModePathList = loadPathListFromFile(storedListPath);
+        if(onlineModePathList != null) {
+            // set to CMFileSyncInfo
+            CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+            syncInfo.setOnlineModePathList(onlineModePathList);
+        }
+        else {
+            System.err.println("The loaded online-mode-path-list is null!");
+        }
+
+		// start the watch service
+		boolean ret = startWatchService();
+		if(!ret) {
+			System.err.println("error starting watch service!");
+			return false;
+		}
+		// conduct file-sync task once
+		ret = sync();
+		if(!ret) {
+			System.err.println("error starting file-sync!");
+			return false;
+		}
+
+        return true;
+    }
+
+    private List<Path> loadPathListFromFile(Path listPath) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.loadPathListFromFile() called..");
+            System.out.println("storedListPath = " + listPath);
+        }
+
+        if(listPath == null) {
+            System.err.println("The argument list path is null!");
+            return null;
+        }
+        if(!Files.exists(listPath)) {
+            System.err.println("The argument ("+listPath+") does not exists!");
+            return null;
+        }
+
+        List<Path> list;
+        try {
+            list = Files.lines(listPath).map(Path::of).collect(Collectors.toList());
+
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("--- loaded online-mode path list: ");
+                for(Path path : list)
+                    System.out.println("path = " + path);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return list;
+    }
+
+    // called at the client
+    public boolean stopFileSync() {
+
+        // TODO: not yet
+        return false;
+    }
+
+    // called at the client
+    private boolean saveOnlineModeListToFile() {
+
+        // TODO: not yet
+        return false;
     }
 
 }

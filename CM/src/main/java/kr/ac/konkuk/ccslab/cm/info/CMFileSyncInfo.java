@@ -135,7 +135,11 @@ public class CMFileSyncInfo {
         return onlineModePathList;
     }
 
-/*
+    public void setOnlineModePathList(List<Path> onlineModePathList) {
+        this.onlineModePathList = onlineModePathList;
+    }
+
+    /*
     public Map<String, List<Path>> getOnlineModePathListMap() {
         return onlineModePathListMap;
     }

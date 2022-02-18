@@ -3684,17 +3684,10 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 
-		// get CMFileSyncManager
+		// call CMFileSyncManager.startFileSync()
 		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
 		Objects.requireNonNull(syncManager);
-		// start the watch service
-		boolean ret = syncManager.startWatchService();
-		if(!ret) {
-			System.err.println("error starting watch service!");
-			return false;
-		}
-		// conduct file-sync task once
-		ret = syncManager.sync();
+		boolean ret = syncManager.startFileSync();
 		if(!ret) {
 			System.err.println("error starting file-sync!");
 			return false;
@@ -3721,19 +3714,27 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 
+		// stop file-sync
+		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		boolean ret = syncManager.stopFileSync();
+		if(!ret) {
+			System.err.println("error stopping file-sync!");
+			return false;
+		}
+
+/*
 		// set syncInProgress to false
 		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
 		syncInfo.setSyncInProgress(false);
 
-		// get CMFileSyncManager
-		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
-		Objects.requireNonNull(syncManager);
 		// stop the watch service
 		boolean ret = syncManager.stopWatchService();
 		if(!ret) {
 			System.err.println("error stopping watch service!");
 			return false;
 		}
+*/
 
 		return true;
 	}
