@@ -1765,9 +1765,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        // delete(initialize) info for client in CMFileSyncInfo
+        // delete(initialize) isFileSyncCompletedMap for client in CMFileSyncInfo
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
-        //syncManager.deleteFileSyncInfo();
+        syncInfo.getIsFileSyncCompletedMap().clear();
 
         // change the file-sync state to stop
         syncInfo.setSyncInProgress(false);
