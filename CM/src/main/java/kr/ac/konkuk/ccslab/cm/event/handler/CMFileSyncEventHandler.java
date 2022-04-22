@@ -722,23 +722,24 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             }
         }
 
+        // get the basis file channel map
+        Map<Integer, SeekableByteChannel> readChannelMap = syncGenerator.getBasisFileChannelForReadMap();
+        Objects.requireNonNull(readChannelMap);
+        // search or open a target file channel
+        SeekableByteChannel readChannel = readChannelMap.get(fileEntryIndex);
+        if(readChannel == null) {
+            try {
+                readChannel = Files.newByteChannel(basisFilePath, StandardOpenOption.READ);
+                readChannelMap.put(fileEntryIndex, readChannel);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
         // check matching block index in the update event
         int matchBlockIndex = updateEvent.getMatchBlockIndex();
         if(matchBlockIndex > -1) {
-            // get the basis file channel map
-            Map<Integer, SeekableByteChannel> readChannelMap = syncGenerator.getBasisFileChannelForReadMap();
-            Objects.requireNonNull(readChannelMap);
-            // search or open a target file channel
-            SeekableByteChannel readChannel = readChannelMap.get(fileEntryIndex);
-            if(readChannel == null) {
-                try {
-                    readChannel = Files.newByteChannel(basisFilePath, StandardOpenOption.READ);
-                    readChannelMap.put(fileEntryIndex, readChannel);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
 
             // get the block size of this file
             Map<Integer, Integer> blockSizeMap = Objects.requireNonNull(syncGenerator.getBlockSizeOfBasisFileMap());
