@@ -379,6 +379,11 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				break;
 			case CMFileSyncEvent.COMPLETE_FILE_SYNC:
 				printMessage("The file sync completes.\n");
+				if(startTimeOfFileSync > 0) {
+					long elapsedTime = System.currentTimeMillis() - startTimeOfFileSync;
+					printMessage("File-sync delay: "+elapsedTime+" ms.\n");
+					startTimeOfFileSync = 0;
+				}
 				break;
 			default:
 				return;

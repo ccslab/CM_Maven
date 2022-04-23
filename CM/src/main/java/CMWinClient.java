@@ -3953,9 +3953,13 @@ public class CMWinClient extends JFrame {
 
 	private void testStartFileSync() {
 		printMessage("========== start file-sync\n");
+
+		m_eventHandler.setStartTimeOfFileSync(System.currentTimeMillis());
+
 		boolean ret = m_clientStub.startFileSync();
 		if(!ret) {
 			printStyledMessage("Start error of file sync!\n", "bold");
+			m_eventHandler.setStartTimeOfFileSync(0);
 		}
 		else {
 			printMessage("File sync starts.\n");

@@ -3256,9 +3256,13 @@ public class CMClientApp {
 
 	private void testStartFileSync() {
 		System.out.println("========== start file-sync");
+
+		m_eventHandler.setStartTimeOfFileSync(System.currentTimeMillis());
+
 		boolean ret = m_clientStub.startFileSync();
 		if(!ret) {
 			System.err.println("Start error of file sync!");
+			m_eventHandler.setStartTimeOfFileSync(0);
 		}
 		else {
 			System.out.println("File sync starts.");

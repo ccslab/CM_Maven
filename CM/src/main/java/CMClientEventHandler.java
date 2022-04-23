@@ -253,6 +253,11 @@ public class CMClientEventHandler implements CMAppEventHandler {
 				break;
 			case CMFileSyncEvent.COMPLETE_FILE_SYNC:
 				System.out.println("The file sync completes.");
+				if(startTimeOfFileSync > 0) {
+					long elapsedTime = System.currentTimeMillis() - startTimeOfFileSync;
+					System.out.println("File-sync delay: "+elapsedTime+" ms.");
+					startTimeOfFileSync = 0;
+				}
 				break;
 			default:
 				return;
