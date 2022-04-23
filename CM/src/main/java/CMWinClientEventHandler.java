@@ -74,7 +74,8 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	private boolean m_bStartC2CFTPSession;
 	private int m_nTotalNumFilesPerSession;
 	private int m_nCurNumFilesPerSession;
-
+	// for file-sync delay
+	private long startTimeOfFileSync;
 
 	public CMWinClientEventHandler(CMClientStub clientStub, CMWinClient client)
 	{
@@ -104,6 +105,8 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 		m_bStartC2CFTPSession = false;
 		m_nTotalNumFilesPerSession = 0;
 		m_nCurNumFilesPerSession = 0;
+
+		startTimeOfFileSync = 0;
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////
@@ -307,6 +310,14 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	public int getCurNumFilesPerSession()
 	{
 		return m_nCurNumFilesPerSession;
+	}
+
+	public long getStartTimeOfFileSync() {
+		return startTimeOfFileSync;
+	}
+
+	public void setStartTimeOfFileSync(long startTimeOfFileSync) {
+		this.startTimeOfFileSync = startTimeOfFileSync;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////

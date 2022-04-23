@@ -55,7 +55,10 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	private String[] m_filePieces;		// for distributed file processing
 	private int m_nMinNumWaitedEvents;  // for checking the completion of asynchronous castrecv service
 	private int m_nRecvReplyEvents;		// for checking the completion of asynchronous castrecv service
-		
+
+	// for file-sync delay
+	private long startTimeOfFileSync;
+
 	public CMClientEventHandler(CMClientStub stub)
 	{
 		m_clientStub = stub;
@@ -70,6 +73,8 @@ public class CMClientEventHandler implements CMAppEventHandler {
 		m_bDistFileProc = false;
 		m_strExt = null;
 		m_filePieces = null;
+
+		startTimeOfFileSync = 0;
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////
@@ -179,7 +184,15 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	{
 		return m_nRecvReplyEvents;
 	}
-	
+
+	public long getStartTimeOfFileSync() {
+		return startTimeOfFileSync;
+	}
+
+	public void setStartTimeOfFileSync(long startTimeOfFileSync) {
+		this.startTimeOfFileSync = startTimeOfFileSync;
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	
 	@Override
