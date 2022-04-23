@@ -1428,4 +1428,105 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    public boolean createTestFile(Path path, long size) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.crateTestFile() called..");
+            System.out.println("path = " + path);
+            System.out.println("size = " + size);
+        }
+
+        try(SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.CREATE_NEW,
+                            StandardOpenOption.WRITE)) {
+
+            // declare relevant variables
+            final int arraySize = 1024;
+            byte[] byteArray = new byte[arraySize];
+            long remainingBytes = size;
+            ByteBuffer byteBuffer = ByteBuffer.allocate(arraySize);
+            int numBytesWritten = 0;
+
+            // create a Random object
+            Random random = new Random();
+            while(remainingBytes > 0) {
+                // get random bytes array
+                random.nextBytes(byteArray);
+                // init byteBuffer
+                byteBuffer.clear();
+                // write array to byteBuffer
+                if(remainingBytes < arraySize) {
+                    byteBuffer.put(byteArray, 0, (int)remainingBytes);
+                }
+                else {
+                    byteBuffer.put(byteArray);
+                }
+                // write byteBuffer to the file channel
+                byteBuffer.flip();
+                numBytesWritten = channel.write(byteBuffer);
+                // update remainingBytes
+                remainingBytes -= numBytesWritten;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean createModifiedTestFile(Path path, Path modPath, int percentage) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.createModifiedTestFile() called..");
+            System.out.println("path = " + path);
+            System.out.println("modPath = " + modPath);
+            System.out.println("percentage = " + percentage + " %");
+        }
+
+        // copy source file (path) to target file (modPath)
+        try {
+            Files.copy(path, modPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        try(SeekableByteChannel channel = Files.newByteChannel(modPath, StandardOpenOption.WRITE)) {
+            // get the file size
+            long size = channel.size();
+            // get the modification size
+            long modifiedSize = size * percentage / 100;
+            // declare relevant variables
+            final int arraySize = 1024;
+            byte[] byteArray = new byte[arraySize];
+            long remainingBytes = modifiedSize;
+            ByteBuffer byteBuffer = ByteBuffer.allocate(arraySize);
+            int numBytesWritten = 0;
+
+            // create a Random object
+            Random random = new Random();
+            while(remainingBytes > 0) {
+                // get random bytes array
+                random.nextBytes(byteArray);
+                // init byteBuffer
+                byteBuffer.clear();
+                // write array to byteBuffer
+                if(remainingBytes < arraySize) {
+                    byteBuffer.put(byteArray, 0, (int)remainingBytes);
+                }
+                else {
+                    byteBuffer.put(byteArray);
+                }
+                // write byteBuffer to the file channel
+                byteBuffer.flip();
+                numBytesWritten = channel.write(byteBuffer);
+                // update remainingBytes
+                remainingBytes -= numBytesWritten;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
 }

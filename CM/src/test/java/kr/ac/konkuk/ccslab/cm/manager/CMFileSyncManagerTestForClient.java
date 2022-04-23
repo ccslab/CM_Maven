@@ -4,6 +4,8 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.Assert.*;
@@ -42,4 +44,77 @@ public class CMFileSyncManagerTestForClient {
         Path syncHome = fileSyncManager.getClientSyncHome();
         assertNotNull(fileSyncManager.createPathList(syncHome));
     }
+
+/*
+
+    @Test
+    public void createTestFile() {
+        System.out.println("==== called createTestFile()");
+        Path dir = cmInfo.getConfigurationInfo().getTransferedFileHome().resolve("test-file-sync");
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        boolean ret;
+        try {
+            Path file1 = dir.resolve("10k.test");
+            ret = fileSyncManager.createTestFile(file1, 10*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file1), 10*1024L);
+
+            Path file2 = dir.resolve("100k.test");
+            ret = fileSyncManager.createTestFile(file2, 100*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file2), 100*1024L);
+
+            Path file3 = dir.resolve("1m.test");
+            ret = fileSyncManager.createTestFile(file3, 1024*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file3), 1024*1024L);
+
+            Path file4 = dir.resolve("10m.test");
+            ret = fileSyncManager.createTestFile(file4, 10*1024*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file4), 10*1024*1024L);
+
+            Path file5 = dir.resolve("100m.test");
+            ret = fileSyncManager.createTestFile(file5, 100*1024*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file5), 100*1024*1024L);
+
+            Path file6 = dir.resolve("1g.test");
+            ret = fileSyncManager.createTestFile(file6, 1024*1024*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file6), 1024*1024*1024L);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void createModifiedTestFile() {
+        System.out.println("==== called createModifiedTestFile()");
+        Path dir = cmInfo.getConfigurationInfo().getTransferedFileHome().resolve("test-file-sync");
+        boolean ret;
+        String[] fileNameArray = {"10k.test", "100k.test", "1m.test", "10m.test", "100m.test", "1g.test"};
+
+        for(String name: fileNameArray) {
+            String prefix = name.substring(0, name.lastIndexOf(".test"));
+            String postfix = name.substring(name.lastIndexOf(".test"));
+            for(int i = 10; i<=100; i+=10) {
+                String modName = prefix+"-"+i+postfix;
+                ret = fileSyncManager.createModifiedTestFile(dir.resolve(name), dir.resolve(modName), i);
+                assertTrue(ret);
+                try {
+                    assertTrue(Files.mismatch(dir.resolve(name), dir.resolve(modName)) >= 0);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+*/
+
 }
