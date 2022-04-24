@@ -307,6 +307,9 @@ public class CMClientApp {
 				case 109: // send an event with wrong event type
 					testSendEventWithWrongEventType();
 					break;
+				case 112: // create test files for file-sync
+					testCreateTestFileForSync();
+					break;
 				case 200: // MQTT connect
 					testMqttConnect();
 					break;
@@ -419,6 +422,7 @@ public class CMClientApp {
 		System.out.println("103: test repeated request of SNS content list");
 		System.out.println("104: pull/push multiple files, 105: split file, 106: merge files, 107: distribute and merge file");
 		System.out.println("108: send event with wrong # bytes, 109: send event with wrong type");
+		System.out.println("112: create test files for file-sync");
 	}
 	
 	public void testConnectionDS()
@@ -3372,6 +3376,84 @@ public class CMClientApp {
 				}
 			}
 		}
+	}
+
+	private void testCreateTestFileForSync() {
+		System.out.println("========== create test files for file-sync");
+		// get CMFileSyncManager reference
+		CMFileSyncManager syncManager = m_clientStub.findServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		// get the transferred-file home
+		Path transferredFileHome = m_clientStub.getTransferedFileHome();
+		Objects.requireNonNull(transferredFileHome);
+		// set the directory to store the test files
+		Path testDir = transferredFileHome.resolve("test-file-sync");
+		try {
+			Files.createDirectories(testDir);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		// declare a file-name array
+		//String[] fileNameArray = {"10k.test", "100k.test", "1m.test", "10m.test", "100m.test", "1g.test"};
+		String[] fileNameArray = {"10k.test", "100k.test", "1m.test", "10m.test", "100m.test"};
+		// create test files
+		boolean ret;
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[0]), 10*1024L);
+		if(ret) System.out.println(testDir.resolve(fileNameArray[0])+" created..");
+		else {
+			System.err.println(testDir.resolve(fileNameArray[0])+" error!");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[1]), 100*1024L);
+		if(ret) System.out.println(testDir.resolve(fileNameArray[1])+" created..");
+		else {
+			System.err.println(testDir.resolve(fileNameArray[1])+" error!");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[2]), 1024*1024L);
+		if(ret) System.out.println(testDir.resolve(fileNameArray[2])+" created..");
+		else {
+			System.err.println(testDir.resolve(fileNameArray[2])+" error!");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[3]), 10*1024*1024L);
+		if(ret) System.out.println(testDir.resolve(fileNameArray[3])+" created..");
+		else {
+			System.err.println(testDir.resolve(fileNameArray[3])+" error!");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[4]), 100*1024*1024L);
+		if(ret) System.out.println(testDir.resolve(fileNameArray[4])+" created..");
+		else {
+			System.err.println(testDir.resolve(fileNameArray[4])+" error!");
+			return;
+		}
+
+/*
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[5]), 1024*1024*1024L);
+		if(ret) printMessage(testDir.resolve(fileNameArray[5])+" created..\n");
+		else printStyledMessage(testDir.resolve(fileNameArray[5])+" error!\n", "bold");
+*/
+		// create modified test files
+		for(String name: fileNameArray) {
+			String prefix = name.substring(0, name.lastIndexOf(".test"));
+			String postfix = name.substring(name.lastIndexOf(".test"));
+			for(int i = 10; i <= 100; i+=10) {
+				String modName = prefix+"-"+i+postfix;
+				ret = syncManager.createModifiedTestFile(testDir.resolve(name), testDir.resolve(modName), i);
+				if(ret) System.out.println(testDir.resolve(modName)+" created..");
+				else {
+					System.err.println(testDir.resolve(modName)+" error!");
+					return;
+				}
+			}
+		}
+
+		return;
 	}
 
 	public void testSendEventWithWrongByteNum()

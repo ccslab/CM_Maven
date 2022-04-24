@@ -532,6 +532,9 @@ public class CMWinClient extends JFrame {
 		JMenuItem c2cFtpMenuItem = new JMenuItem("test c2c file transfer");
 		c2cFtpMenuItem.addActionListener(menuListener);
 		otherSubMenu.add(c2cFtpMenuItem);
+		JMenuItem createTestFilesForSyncMenuItem = new JMenuItem("create test files for file-sync");
+		createTestFilesForSyncMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(createTestFilesForSyncMenuItem);
 		
 		cmServiceMenu.add(otherSubMenu);
 
@@ -905,6 +908,9 @@ public class CMWinClient extends JFrame {
 			case 111: // test and measure delay of c2c file transfer
 				testC2CFileTransfer();
 				break;
+			case 112: // create test files for file-sync
+				testCreateTestFileForSync();
+				break;
 			case 200: // MQTT connect
 				testMqttConnect();
 				break;
@@ -1010,6 +1016,7 @@ public class CMWinClient extends JFrame {
 		printMessage("104: pull/push multiple files, 105: split file, 106: merge files, 107: distribute and merge file\n");
 		printMessage("108: send event with wrong # bytes, 109: send event with wrong type\n");
 		printMessage("110: test csc file transfer, 111: test c2c file transfer\n");
+		printMessage("112: create test files for file-sync\n");
 	}
 	
 	private void testConnectionDS()
@@ -4072,6 +4079,84 @@ public class CMWinClient extends JFrame {
 		}
 	}
 
+	private void testCreateTestFileForSync() {
+		printMessage("========== create test files for file-sync\n");
+		// get CMFileSyncManager reference
+		CMFileSyncManager syncManager = m_clientStub.findServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		// get the transferred-file home
+		Path transferredFileHome = m_clientStub.getTransferedFileHome();
+		Objects.requireNonNull(transferredFileHome);
+		// set the directory to store the test files
+		Path testDir = transferredFileHome.resolve("test-file-sync");
+		try {
+			Files.createDirectories(testDir);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		// declare a file-name array
+		//String[] fileNameArray = {"10k.test", "100k.test", "1m.test", "10m.test", "100m.test", "1g.test"};
+		String[] fileNameArray = {"10k.test", "100k.test", "1m.test", "10m.test", "100m.test"};
+		// create test files
+		boolean ret;
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[0]), 10*1024L);
+		if(ret) printMessage(testDir.resolve(fileNameArray[0])+" created..\n");
+		else {
+			printStyledMessage(testDir.resolve(fileNameArray[0])+" error!\n", "bold");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[1]), 100*1024L);
+		if(ret) printMessage(testDir.resolve(fileNameArray[1])+" created..\n");
+		else {
+			printStyledMessage(testDir.resolve(fileNameArray[1])+" error!\n", "bold");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[2]), 1024*1024L);
+		if(ret) printMessage(testDir.resolve(fileNameArray[2])+" created..\n");
+		else {
+			printStyledMessage(testDir.resolve(fileNameArray[2])+" error!\n", "bold");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[3]), 10*1024*1024L);
+		if(ret) printMessage(testDir.resolve(fileNameArray[3])+" created..\n");
+		else {
+			printStyledMessage(testDir.resolve(fileNameArray[3])+" error!\n", "bold");
+			return;
+		}
+
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[4]), 100*1024*1024L);
+		if(ret) printMessage(testDir.resolve(fileNameArray[4])+" created..\n");
+		else {
+			printStyledMessage(testDir.resolve(fileNameArray[4])+" error!\n", "bold");
+			return;
+		}
+
+/*
+		ret = syncManager.createTestFile(testDir.resolve(fileNameArray[5]), 1024*1024*1024L);
+		if(ret) printMessage(testDir.resolve(fileNameArray[5])+" created..\n");
+		else printStyledMessage(testDir.resolve(fileNameArray[5])+" error!\n", "bold");
+*/
+		// create modified test files
+		for(String name: fileNameArray) {
+			String prefix = name.substring(0, name.lastIndexOf(".test"));
+			String postfix = name.substring(name.lastIndexOf(".test"));
+			for(int i = 10; i <= 100; i+=10) {
+				String modName = prefix+"-"+i+postfix;
+				ret = syncManager.createModifiedTestFile(testDir.resolve(name), testDir.resolve(modName), i);
+				if(ret) printMessage(testDir.resolve(modName)+" created..\n");
+				else {
+					printStyledMessage(testDir.resolve(modName)+" error!\n", "bold");
+					return;
+				}
+			}
+		}
+
+		return;
+	}
+
 	private void testSendEventWithWrongByteNum()
 	{
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
@@ -4662,6 +4747,9 @@ public class CMWinClient extends JFrame {
 					break;
 				case "print local mode files":
 					testPrintLocalModeFiles();
+					break;
+				case "create test files for file-sync":
+					testCreateTestFileForSync();
 					break;
 			}
 		}
