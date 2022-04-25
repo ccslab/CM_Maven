@@ -4088,7 +4088,7 @@ public class CMWinClient extends JFrame {
 		Path transferredFileHome = m_clientStub.getTransferedFileHome();
 		Objects.requireNonNull(transferredFileHome);
 		// set the directory to store the test files
-		Path testDir = transferredFileHome.resolve("test-file-sync");
+		Path testDir = transferredFileHome.resolve("test-file-sync-2");
 		try {
 			Files.createDirectories(testDir);
 		} catch (IOException e) {
@@ -4143,7 +4143,7 @@ public class CMWinClient extends JFrame {
 		for(String name: fileNameArray) {
 			String prefix = name.substring(0, name.lastIndexOf(".test"));
 			String postfix = name.substring(name.lastIndexOf(".test"));
-			for(int i = 10; i <= 100; i+=10) {
+			for(int i = 1; i <= 10; i++) {
 				String modName = prefix+"-"+i+postfix;
 				ret = syncManager.createModifiedTestFile(testDir.resolve(name), testDir.resolve(modName), i);
 				if(ret) printMessage(testDir.resolve(modName)+" created..\n");
