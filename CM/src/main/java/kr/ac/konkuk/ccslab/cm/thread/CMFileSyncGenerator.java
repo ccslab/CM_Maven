@@ -103,13 +103,13 @@ public class CMFileSyncGenerator implements Runnable {
 
     @Override
     public void run() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.run() called..");
         }
 
         // create a basis file-entry-list at the server
         List<Path> basisFileList = createBasisFileList();  // always return a list object
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("basisFileList = " + basisFileList);
         }
         // put the basis file list to the basis-file-list-map
@@ -121,54 +121,56 @@ public class CMFileSyncGenerator implements Runnable {
 
         // delete files that exist only at the server and update the basisFileList
         deleteFilesAndUpdateBasisFileList();
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("basisFileList after the deletion = " + basisFileList);
         }
 
         // create a new file-entry-list that will be added to the server
         newClientPathEntryList = createNewClientPathEntryList();
-        if(newClientPathEntryList == null) {
+        if (newClientPathEntryList == null) {
             System.err.println("CMFileSyncGenerator.run(), newFileList is null!");
             return;
         }
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("newFileList = " + newClientPathEntryList);
         }
 
         // request the files in the new file-entry-list from the client
         boolean requestResult = requestTransferOfNewFiles();
-        if(!requestResult) {
+        if (!requestResult) {
             System.err.println("request new files error!");
             return;
         }
 
         // update the files at the server by synchronizing with those at the client
         requestResult = compareBasisAndClientFileList();
-        if(!requestResult) {
+        if (!requestResult) {
             System.err.println("compare-basis-and-client-file-list error!");
         }
 
         // check if the file-sync task is completed. (both client and server sync home are empty)
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-        if(syncManager.isCompleteFileSync(userName)) {
+        if (syncManager.isCompleteFileSync(userName)) {
             syncManager.completeFileSync(userName);
         }
     }
 
     private boolean compareBasisAndClientFileList() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.compareBasisAndClientFileList() called..");
         }
 
         CMFileSyncInfo syncInfo = Objects.requireNonNull(cmInfo.getFileSyncInfo());
         List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(userName);
 
-        if(basisFileList == null) {
+        if (basisFileList == null) {
             System.err.println("basisFileList is null!");
             return false;
         }
-        if(basisFileList.isEmpty()) {
-            System.out.println("basisFileList is empty.");
+        if (basisFileList.isEmpty()) {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("basisFileList is empty.");
+            }
             return true;
         }
 
@@ -179,9 +181,9 @@ public class CMFileSyncGenerator implements Runnable {
         // get the server sync home
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
 
-        for(int basisFileIndex = 0; basisFileIndex < basisFileList.size(); basisFileIndex++) {
+        for (int basisFileIndex = 0; basisFileIndex < basisFileList.size(); basisFileIndex++) {
             Path basisFile = basisFileList.get(basisFileIndex);
-            if(CMInfo._CM_DEBUG) {
+            if (CMInfo._CM_DEBUG) {
                 System.out.println("-----------------------------------");
                 System.out.println("basisFileIndex = " + basisFileIndex);
                 System.out.println("basisFile = " + basisFile);
@@ -194,16 +196,16 @@ public class CMFileSyncGenerator implements Runnable {
             int clientPathEntryIndex = -1;
             List<CMFileSyncEntry> clientPathEntryList = cmInfo.getFileSyncInfo().getClientPathEntryListMap()
                     .get(userName);
-            for(int i = 0; i < clientPathEntryList.size(); i++) {
+            for (int i = 0; i < clientPathEntryList.size(); i++) {
                 CMFileSyncEntry entry = clientPathEntryList.get(i);
-                if(relativeBasisFile.equals(entry.getPathRelativeToHome())) {
+                if (relativeBasisFile.equals(entry.getPathRelativeToHome())) {
                     clientPathEntry = entry;
                     clientPathEntryIndex = i;
                     break;
                 }
             }
-            if(clientPathEntry == null) {
-                System.err.println("client file entry not found for basisFile("+relativeBasisFile+")!");
+            if (clientPathEntry == null) {
+                System.err.println("client file entry not found for basisFile(" + relativeBasisFile + ")!");
                 continue;   // proceed to the next basis file
             }
 
@@ -217,12 +219,12 @@ public class CMFileSyncGenerator implements Runnable {
                 e.printStackTrace();
                 continue;
             }
-            if(clientPathEntry.getSize() == sizeOfBasisFile &&
+            if (clientPathEntry.getSize() == sizeOfBasisFile &&
                     clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
                 // already synchronized
                 syncManager.skipUpdateFile(userName, basisFile);
-                if(CMInfo._CM_DEBUG) {
-                    System.out.println("basisFile("+basisFile+") skips synchronization.");
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("basisFile(" + basisFile + ") skips synchronization.");
                     System.out.println("sizeOfBasisFile = " + sizeOfBasisFile);
                     System.out.println("lastModifiedTimeOfBasisFile = " + lastModifiedTimeOfBasisFile);
                 }
@@ -230,8 +232,8 @@ public class CMFileSyncGenerator implements Runnable {
             }
 
             // check the directory case
-            if(clientPathEntry.getType() == CMFileType.DIR) {
-                if(!clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
+            if (clientPathEntry.getType() == CMFileType.DIR) {
+                if (!clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
                     try {
                         // update the last modified time of the sub-directory
                         Files.setLastModifiedTime(basisFile, clientPathEntry.getLastModifiedTime());
@@ -241,9 +243,9 @@ public class CMFileSyncGenerator implements Runnable {
                 }
                 // complete the update-file task of the file-sync for this sub-directory
                 boolean ret = syncManager.completeUpdateFile(userName, basisFile);
-                if(!ret) {
+                if (!ret) {
                     System.err.println("error of completing update file(dir)!");
-                    System.err.println("userName("+userName+"), dir("+basisFile+")");
+                    System.err.println("userName(" + userName + "), dir(" + basisFile + ")");
                 }
                 // continue with the next basis file
                 continue;
@@ -254,12 +256,12 @@ public class CMFileSyncGenerator implements Runnable {
 
             // get block checksum
             CMFileSyncBlockChecksum[] checksumArray = createBlockChecksum(basisFileIndex, basisFile);
-            if(checksumArray == null) {
+            if (checksumArray == null) {
                 System.err.println("checksum array is null!");
                 continue;
             }
-            if(CMInfo._CM_DEBUG) {
-                System.out.println("checksum array size = "+checksumArray.length);
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("checksum array size = " + checksumArray.length);
             }
 
             // add block-checksum array to the table
@@ -268,12 +270,12 @@ public class CMFileSyncGenerator implements Runnable {
 
             // send the client entry index and block-checksum array to the client
             sendResult = sendBlockChecksum(clientPathEntryIndex, checksumArray);
-            if(!sendResult) {
+            if (!sendResult) {
                 System.err.println("send block-checksum error!");
                 return false;
             }
 
-            if(CMInfo._CM_DEBUG) {
+            if (CMInfo._CM_DEBUG) {
                 System.out.println("-----------------------------------");
             }
         }
@@ -282,7 +284,7 @@ public class CMFileSyncGenerator implements Runnable {
     }
 
     private boolean sendBlockChecksum(int clientFileEntryIndex, CMFileSyncBlockChecksum[] checksumArray) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.sendBlockChecksum() called..");
         }
 
@@ -298,8 +300,8 @@ public class CMFileSyncGenerator implements Runnable {
         fse.setBlockSize(blockSizeOfBasisFileMap.get(basisFileIndex));
         // send the event
         boolean ret = CMEventManager.unicastEvent(fse, userName, cmInfo);
-        if(!ret) {
-            System.err.println("send error, fse: "+fse);
+        if (!ret) {
+            System.err.println("send error, fse: " + fse);
             return false;
         }
 
@@ -307,7 +309,7 @@ public class CMFileSyncGenerator implements Runnable {
     }
 
     private CMFileSyncBlockChecksum[] createBlockChecksum(int basisFileIndex, Path basisFile) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.createBlockChecksum() called..");
             System.out.println("basisFileIndex = " + basisFileIndex);
             System.out.println("basisFile = " + basisFile);
@@ -329,8 +331,8 @@ public class CMFileSyncGenerator implements Runnable {
 
         // set the number of blocks
         int numBlocks = (int) (fileSize / blockSize);
-        if(fileSize % blockSize > 0) numBlocks++;
-        if(CMInfo._CM_DEBUG)
+        if (fileSize % blockSize > 0) numBlocks++;
+        if (CMInfo._CM_DEBUG)
             System.out.println("numBlocks = " + numBlocks);
 
         // create a block-checksum array
@@ -353,7 +355,7 @@ public class CMFileSyncGenerator implements Runnable {
         int bytesRead = 0;
         int weakChecksum = 0;
         byte[] strongChecksum = null;
-        for(int i = 0; i < checksumArray.length; i++) {
+        for (int i = 0; i < checksumArray.length; i++) {
             // create a block-checksum object that is set to the i-th element
             checksumArray[i] = new CMFileSyncBlockChecksum();
             // initialize the ByteBuffer
@@ -361,9 +363,9 @@ public class CMFileSyncGenerator implements Runnable {
             // read the i-th block from the channel to the buffer
             try {
                 bytesRead = channel.read(buffer);
-                if(CMInfo._CM_DEBUG) {
+                if (CMInfo._CM_DEBUG) {
                     System.out.println("--------------");
-                    System.out.println("block("+i+"), bytesRead = " + bytesRead);
+                    System.out.println("block(" + i + "), bytesRead = " + bytesRead);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -393,49 +395,51 @@ public class CMFileSyncGenerator implements Runnable {
 
     // refer to the rsync code to calculate block size according to file size
     private int calculateBlockSize(long fileSize) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.calculateBlockSize() called..");
             System.out.println("fileSize = " + fileSize);
         }
         int blength;
-        if(fileSize < CMFileSyncInfo.BLOCK_SIZE * CMFileSyncInfo.BLOCK_SIZE) {
+        if (fileSize < CMFileSyncInfo.BLOCK_SIZE * CMFileSyncInfo.BLOCK_SIZE) {
             blength = CMFileSyncInfo.BLOCK_SIZE;
-        }
-        else {
+        } else {
             int c, cnt;
             long l;
-            for(c = 1, l = fileSize, cnt = 0; (l >>= 2) > 0; c <<= 1, cnt++){}
-            System.out.println("c="+c+", l="+l+", cnt="+cnt);
-            if(c < 0 || c >= CMFileSyncInfo.MAX_BLOCK_SIZE)
+            for (c = 1, l = fileSize, cnt = 0; (l >>= 2) > 0; c <<= 1, cnt++) {
+            }
+            System.out.println("c=" + c + ", l=" + l + ", cnt=" + cnt);
+            if (c < 0 || c >= CMFileSyncInfo.MAX_BLOCK_SIZE)
                 blength = CMFileSyncInfo.MAX_BLOCK_SIZE;
             else {
                 blength = 0;
                 do {
                     blength |= c;
-                    if(fileSize < (long)blength*blength)
+                    if (fileSize < (long) blength * blength)
                         blength &= ~c;
                     c >>= 1;
-                } while(c >= 8);    // round to multiple of 8
+                } while (c >= 8);    // round to multiple of 8
                 blength = Math.max(blength, CMFileSyncInfo.BLOCK_SIZE);
             }
         }
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("calculated block size = " + blength);
         }
         return blength;
     }
 
     private boolean requestTransferOfNewFiles() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.requestTransferOfNewFiles() called..");
         }
 
-        if(newClientPathEntryList == null) {
+        if (newClientPathEntryList == null) {
             System.err.println("newClientPathEntryList is null!");
             return false;   // null is an error
         }
-        if(newClientPathEntryList.isEmpty()) {
-            System.out.println("newClientPathEntryList is empty.");
+        if (newClientPathEntryList.isEmpty()) {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("newClientPathEntryList is empty.");
+            }
             return true;
         }
 
@@ -446,17 +450,17 @@ public class CMFileSyncGenerator implements Runnable {
 
         // create new sub-directories that do not have to be requested from the client
         Iterator<CMFileSyncEntry> iter = newClientPathEntryList.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             CMFileSyncEntry entry = iter.next();
 
-            if(entry.getType() == CMFileType.DIR) {
+            if (entry.getType() == CMFileType.DIR) {
                 // get an absolute path of the new sub-directory
                 Path absolutePath = syncHome.resolve(entry.getPathRelativeToHome());
                 // create the sub-directory
                 try {
                     Files.createDirectories(absolutePath);
                 } catch (IOException e) {
-                    System.err.println("error of creating a new sub-directory: "+absolutePath);
+                    System.err.println("error of creating a new sub-directory: " + absolutePath);
                     e.printStackTrace();
                     continue;
                 }
@@ -464,19 +468,18 @@ public class CMFileSyncGenerator implements Runnable {
                 try {
                     Files.setLastModifiedTime(absolutePath, entry.getLastModifiedTime());
                 } catch (IOException e) {
-                    System.err.println("error of setting last modified time of: "+absolutePath);
+                    System.err.println("error of setting last modified time of: " + absolutePath);
                     e.printStackTrace();
                     continue;
                 }
                 // set the completion of new-file-transfer
                 boolean ret = syncManager.completeNewFileTransfer(userName, entry.getPathRelativeToHome());
-                if(ret) {
+                if (ret) {
                     // remove the current entry from this list
                     iter.remove();
-                }
-                else {
-                    System.err.println("error of completeNewFileTransfer(), user("+userName
-                            +"), relative path("+entry.getPathRelativeToHome()+")");
+                } else {
+                    System.err.println("error of completeNewFileTransfer(), user(" + userName
+                            + "), relative path(" + entry.getPathRelativeToHome() + ")");
                     continue;
                 }
             }
@@ -489,7 +492,7 @@ public class CMFileSyncGenerator implements Runnable {
 
         int numRequestsCompleted = 0;
         boolean sendResult;
-        while(numRequestsCompleted < newFileEntryList.size()) {
+        while (numRequestsCompleted < newFileEntryList.size()) {
             // create a request event
             CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
             String serverName = cmInfo.getInteractionInfo().getMyself().getName();
@@ -501,19 +504,18 @@ public class CMFileSyncGenerator implements Runnable {
             int curByteNum = fse.getByteNum();
             List<Path> requestedFileList = new ArrayList<>();
             int numRequestedFiles = 0;
-            while(numRequestsCompleted < newFileEntryList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+            while (numRequestsCompleted < newFileEntryList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
                 Path path = newFileEntryList.get(numRequestsCompleted).getPathRelativeToHome();
                 curByteNum += CMInfo.STRING_LEN_BYTES_LEN
                         + path.toString().getBytes().length;
-                if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
                     // increment the numRequestedFiles
                     numRequestedFiles++;
                     // add path to the requestedFileList
                     requestedFileList.add(path);
                     // increment the numRequestsCompleted
                     numRequestsCompleted++;
-                }
-                else
+                } else
                     break;
             }
             // set numRequestedFiles and requestedFileList to the event
@@ -521,12 +523,12 @@ public class CMFileSyncGenerator implements Runnable {
             fse.setRequestedFileList(requestedFileList);
             // send the request event
             sendResult = CMEventManager.unicastEvent(fse, userName, cmInfo);
-            if(!sendResult) {
+            if (!sendResult) {
                 System.err.println("CMFileSyncGenerator.requestTransferOfNewFiles(), send error!");
                 return false;
             }
 
-            if(CMInfo._CM_DEBUG) {
+            if (CMInfo._CM_DEBUG) {
                 System.out.println("sent REQUEST_NEW_FILES event = " + fse);
             }
         }
@@ -535,7 +537,7 @@ public class CMFileSyncGenerator implements Runnable {
     }
 
     private List<CMFileSyncEntry> createNewClientPathEntryList() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.createNewClientPathEntryList() called..");
         }
         // get clientPathEntryList
@@ -543,7 +545,7 @@ public class CMFileSyncGenerator implements Runnable {
         Map<String, List<CMFileSyncEntry>> clientPathEntryListMap = syncInfo.getClientPathEntryListMap();
         Objects.requireNonNull(clientPathEntryListMap);
         List<CMFileSyncEntry> clientPathEntryList = clientPathEntryListMap.get(userName);
-        if(clientPathEntryList == null) {
+        if (clientPathEntryList == null) {
             return new ArrayList<>();
         }
         // get the start path index
@@ -562,7 +564,7 @@ public class CMFileSyncGenerator implements Runnable {
                 .collect(Collectors.toList());
 
         // initialize isNewFileCompletedMap
-        for(CMFileSyncEntry entry : newClientPathEntryList) {
+        for (CMFileSyncEntry entry : newClientPathEntryList) {
             isNewFileCompletedMap.put(entry.getPathRelativeToHome(), false);
         }
 
@@ -570,7 +572,7 @@ public class CMFileSyncGenerator implements Runnable {
     }
 
     private void deleteFilesAndUpdateBasisFileList() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.deleteFilesAndUpdateBasisFileList() called..");
         }
         // get the client file-entry-list
@@ -637,36 +639,36 @@ public class CMFileSyncGenerator implements Runnable {
             }
         }
 
-        if(entryPathList == null) {
+        if (entryPathList == null) {
             // check if the basis file list is empty
-            if(!basisFileList.isEmpty()) {
+            if (!basisFileList.isEmpty()) {
                 System.err.println("The basis file list is not empty after deletion!");
-                for(Path path : basisFileList)
+                for (Path path : basisFileList)
                     System.out.println("remaining path = " + path);
                 basisFileList.clear();
             }
         }
 
         // initialize isUpdateFileCompletedMap
-        for(Path path : basisFileList) {
+        for (Path path : basisFileList) {
             isUpdateFileCompletedMap.put(path, false);
         }
     }
 
     private List<Path> createBasisFileList() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.createBasisFileList() called..");
         }
         // get the file sync manager
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-        if(syncManager == null) {
+        if (syncManager == null) {
             System.err.println("CMFileSyncGenerator.createBasisFileList(), file-sync manager is null!");
             return null;
         }
         // get the server sync home
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
         // check if the sync home exists or not
-        if(Files.notExists(serverSyncHome)) {
+        if (Files.notExists(serverSyncHome)) {
             System.err.println("CMFileSyncGenerator.createBasisFileList(), the server sync-home does not exist!");
             return null;
         }

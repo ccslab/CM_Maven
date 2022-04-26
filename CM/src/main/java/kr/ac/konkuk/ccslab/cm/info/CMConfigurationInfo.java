@@ -457,10 +457,7 @@ public class CMConfigurationInfo {
 	public synchronized void setTransferedFileHome(Path filePath)
 	{
 		m_transFileHome = filePath;
-		
-		if(CMInfo._CM_DEBUG)
-			System.out.println("CMConfigurationInfo.setTransferedFileHome(): "+m_transFileHome.toString());
-		
+
 		return;
 	}
 	

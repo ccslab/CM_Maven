@@ -32,7 +32,7 @@ public class CMWatchServiceTask implements Runnable {
 
     @Override
     public void run() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMWatchServiceTask.run() called..");
             System.out.println("syncPath = " + syncPath);
         }
@@ -45,21 +45,20 @@ public class CMWatchServiceTask implements Runnable {
             return;
         }
 
-        while(true) {
+        while (true) {
             final WatchKey key;
             try {
-                if(detectedPathMap.isEmpty()) {
+                if (detectedPathMap.isEmpty()) {
                     // if there is no change-detected path i nthe previous monitoring
                     key = watchService.take();
-                }
-                else {
+                } else {
                     // if there is any change-detected path in the previous monitoring
                     key = watchService.poll();
-                    if(key == null) {
+                    if (key == null) {
                         // if there is no more change-detected path
-                        if(CMInfo._CM_DEBUG) {
+                        if (CMInfo._CM_DEBUG) {
                             detectedPathMap.forEach((eventKey, listValue) -> {
-                                System.out.println("key = "+eventKey);
+                                System.out.println("key = " + eventKey);
                                 listValue.forEach(System.out::println);
                             });
                         }
@@ -67,7 +66,7 @@ public class CMWatchServiceTask implements Runnable {
                         boolean ret = syncManager.sync();
                         // clear the detectedPathMap
                         detectedPathMap.clear();
-                        if(!ret) syncInfo.setFileChangeDetected(true);
+                        if (!ret) syncInfo.setFileChangeDetected(true);
                         else syncInfo.setFileChangeDetected(false);
                         continue; // restart monitoring
                     }
@@ -76,24 +75,26 @@ public class CMWatchServiceTask implements Runnable {
                 e.printStackTrace();
                 break;
             } catch (ClosedWatchServiceException e) {
-                System.out.println("CMWatchServiceTask is closed by another thread.");
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("CMWatchServiceTask is closed by another thread.");
+                }
                 break;
             }
 
-            for(WatchEvent<?> watchEvent : key.pollEvents()) {
+            for (WatchEvent<?> watchEvent : key.pollEvents()) {
                 // get event type
                 final WatchEvent.Kind<?> kind = watchEvent.kind();
                 // get file name
                 final WatchEvent<Path> watchEventPath = (WatchEvent<Path>) watchEvent;
                 final Path filename = watchEventPath.context();
                 // process OVERFLOW event
-                if(kind == StandardWatchEventKinds.OVERFLOW)
+                if (kind == StandardWatchEventKinds.OVERFLOW)
                     continue;
                 // process CREATE event of a new sub-directory
                 final Path directory = directoryMap.get(key);
                 final Path child = directory.resolve(filename);
-                if(kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                    if(Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
+                if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
+                    if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
                         try {
                             registerTree(child);
                         } catch (IOException e) {
@@ -105,7 +106,7 @@ public class CMWatchServiceTask implements Runnable {
 
                 // get the path list of the detectedPathMap
                 List<Path> detectedPathList = detectedPathMap.get(kind);
-                if(detectedPathList == null) {
+                if (detectedPathList == null) {
                     detectedPathList = new ArrayList<>();
                     detectedPathMap.put(kind, detectedPathList);
                 }
@@ -119,9 +120,9 @@ public class CMWatchServiceTask implements Runnable {
             // initialize the key
             boolean valid = key.reset();
             // if the key is not valid, remove the key
-            if(!valid) {
+            if (!valid) {
                 directoryMap.remove(key);
-                if(directoryMap.isEmpty())
+                if (directoryMap.isEmpty())
                     break;
             }
         }
@@ -134,7 +135,7 @@ public class CMWatchServiceTask implements Runnable {
         // initialize watch service
         syncInfo.setWatchService(null);
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("CMWatchServiceTask.run() ended..");
         }
     }
@@ -149,7 +150,7 @@ public class CMWatchServiceTask implements Runnable {
     }
 
     private void registerTree(Path start) throws IOException {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMWatchServiceTask.registerTree() called..");
         }
 
@@ -157,7 +158,7 @@ public class CMWatchServiceTask implements Runnable {
         Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                if(CMInfo._CM_DEBUG) {
+                if (CMInfo._CM_DEBUG) {
                     System.out.println("Registering: " + dir);
                 }
                 registerPath(dir);

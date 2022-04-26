@@ -1521,8 +1521,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 }
             }
         }
-        System.out.println("numFilesCompleted = " + numFilesCompleted);
-        System.out.println("returnCode = " + returnCode);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("numFilesCompleted = " + numFilesCompleted);
+            System.out.println("returnCode = " + returnCode);
+        }
 
         // create FILE_ENTRIES_ACK event
         CMFileSyncEventFileEntriesAck fseAck = new CMFileSyncEventFileEntriesAck();

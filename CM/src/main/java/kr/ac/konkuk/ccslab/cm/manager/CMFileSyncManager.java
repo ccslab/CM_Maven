@@ -47,40 +47,37 @@ public class CMFileSyncManager extends CMServiceManager {
     // currently called by client
     public synchronized boolean sync() {
 
-        if(CMInfo._CM_DEBUG)
+        if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.startFileSync() called..");
 
         // client -> server
         // check if the client has logged in to the default server.
         CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-        if(confInfo.getSystemType().equals("SERVER"))
-        {
+        if (confInfo.getSystemType().equals("SERVER")) {
             System.err.println("The system type is SERVER!");
             return false;
         }
 
         CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
         int nState = myself.getState();
-        if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
-        {
+        if (nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT) {
             System.err.println("You must log in to the default server!");
             return false;
         }
 
         CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
 
-        if(fsInfo.isSyncInProgress()) {
+        if (fsInfo.isSyncInProgress()) {
             System.err.println("The file sync is in progress!");
             return false;
-        }
-        else {
+        } else {
             // set syncInProgress to true.
             fsInfo.setSyncInProgress(true);
         }
 
         // set file sync home.
         Path syncHome = getClientSyncHome();
-        if(Files.notExists(syncHome)) {
+        if (Files.notExists(syncHome)) {
             try {
                 Files.createDirectories(syncHome);
             } catch (IOException e) {
@@ -97,19 +94,19 @@ public class CMFileSyncManager extends CMServiceManager {
         // update the online-mode-list
         List<Path> onlineModeList = Objects.requireNonNull(fsInfo.getOnlineModePathList());
         Iterator<Path> iter = onlineModeList.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             Path onlinePath = iter.next();
-            if(!pathList.contains(onlinePath))
+            if (!pathList.contains(onlinePath))
                 iter.remove();
         }
         boolean ret = saveOnlineModeListToFile();
-        if(!ret) {
+        if (!ret) {
             System.err.println("error to save online-mode-list to file!");
         }
 
         // send the file list to the server
         boolean sendResult = sendFileList();
-        if(!sendResult) {
+        if (!sendResult) {
             System.err.println("CMFileSyncManager.startFileSync(), error to send the file list.");
             return false;
         }
@@ -119,7 +116,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     public List<Path> createPathList(Path syncHome) {
 
-        if(CMInfo._CM_DEBUG)
+        if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.createPathList() called..");
 
         List<Path> pathList;
@@ -135,10 +132,13 @@ public class CMFileSyncManager extends CMServiceManager {
             return null;
         }
 
-        if( pathList.isEmpty() )
-            System.err.println("CMFileSyncManager.createPathList(), The sync-home is empty.");
+        if (pathList.isEmpty()) {
+            if (CMInfo._CM_DEBUG) {
+                System.err.println("CMFileSyncManager.createPathList(), The sync-home is empty.");
+            }
+        }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             for (Path p : pathList)
                 System.out.println(p);
         }
@@ -148,7 +148,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // currently called by client
     private boolean sendFileList() {
-        if(CMInfo._CM_DEBUG)
+        if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.sendFileList() called..");
 
         String userName;
@@ -167,14 +167,14 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setUserName(userName);
         // get path list
         pathList = m_cmInfo.getFileSyncInfo().getPathList();
-        if(pathList == null)
+        if (pathList == null)
             fse.setNumTotalFiles(0);
         else
             fse.setNumTotalFiles(pathList.size());
 
         // send the event
         boolean sendResult = CMEventManager.unicastEvent(fse, serverName, m_cmInfo);
-        if(!sendResult) {
+        if (!sendResult) {
             System.err.println("CMFileSyncManager.sendFileList(), send error!");
             System.err.println(fse);
             return false;
@@ -185,7 +185,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // currently called by server
     public void checkNewTransferForSync(CMFileEvent fe) {
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.checkNewTransferForSync() called..");
             System.out.println("file event = " + fe);
         }
@@ -194,8 +194,8 @@ public class CMFileSyncManager extends CMServiceManager {
         // get the new file list
         String fileSender = fe.getFileSender();
         CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(fileSender);
-        if(syncGenerator == null) {
-            System.err.println("The sync generator for ("+fileSender+") is null!");
+        if (syncGenerator == null) {
+            System.err.println("The sync generator for (" + fileSender + ") is null!");
             return;
         }
         List<CMFileSyncEntry> newClientPathEntryList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
@@ -205,14 +205,14 @@ public class CMFileSyncManager extends CMServiceManager {
         // search for the entry in the newClientPathEntryList
         CMFileSyncEntry foundEntry = null;
         Path foundPath = null;
-        for(CMFileSyncEntry entry : newClientPathEntryList) {
-            if(entry.getPathRelativeToHome().endsWith(fileName)) {
+        for (CMFileSyncEntry entry : newClientPathEntryList) {
+            if (entry.getPathRelativeToHome().endsWith(fileName)) {
                 foundEntry = entry;
                 foundPath = entry.getPathRelativeToHome();
                 break;
             }
         }
-        if(foundPath != null) {
+        if (foundPath != null) {
             // get the file-transfer home
             Path transferFileHome = m_cmInfo.getConfigurationInfo().getTransferedFileHome().resolve(fileSender);
             // get the server sync home
@@ -233,18 +233,18 @@ public class CMFileSyncManager extends CMServiceManager {
 
             // complete the new-file-transfer
             boolean result = completeNewFileTransfer(fileSender, foundPath);
-            if(result) {
+            if (result) {
                 // remove the completed newClientPathEntry from the list
                 final Path finalFoundPath = foundPath;
                 boolean removeResult = newClientPathEntryList.removeIf(entry ->
                         entry.getPathRelativeToHome().equals(finalFoundPath));
 
-                if(!removeResult) {
-                    System.err.println("remove error from the new-client-path-entry-list: "+foundPath);
+                if (!removeResult) {
+                    System.err.println("remove error from the new-client-path-entry-list: " + foundPath);
                     return;
                 }
                 // check if the file-sync is complete or not
-                if(isCompleteFileSync(fileSender)) {
+                if (isCompleteFileSync(fileSender)) {
                     // complete the file-sync task
                     completeFileSync(fileSender);
                 }
@@ -254,14 +254,14 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     public boolean completeNewFileTransfer(String userName, Path path) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeNewFileTransfer() called..");
             System.out.println("userName = " + userName);
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
         CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
-        if(syncGenerator == null) {
+        if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
         }
@@ -282,8 +282,8 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // send the event
         boolean ret = CMEventManager.unicastEvent(fse, userName, m_cmInfo);
-        if(!ret) {
-            System.err.println("send error: "+fse);
+        if (!ret) {
+            System.err.println("send error: " + fse);
             return false;
         }
 
@@ -292,7 +292,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the server
     public boolean skipUpdateFile(String userName, Path basisFile) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.skipUpdateFile() called..");
             System.out.println("userName = " + userName);
             System.out.println("basisFile = " + basisFile);
@@ -325,7 +325,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     public boolean completeUpdateFile(String userName, Path path) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeUpdateFile() called..");
             System.out.println("userName = " + userName);
             System.out.println("path = " + path);
@@ -358,7 +358,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     public boolean isCompleteFileSync(String userName) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.isCompleteFileSync() called..");
             System.out.println("userName = " + userName);
         }
@@ -376,7 +376,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // get CMFileSyncGenerator object
         CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
-        if(syncGenerator == null) {
+        if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
         }
@@ -384,9 +384,11 @@ public class CMFileSyncManager extends CMServiceManager {
         // compare the number of new files completed to the size of the new-file list
         newClientPathEntryList = syncGenerator.getNewClientPathEntryList();
         numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
-        if(!newClientPathEntryList.isEmpty()) {
-            System.err.println("numNewFilesCompleted = "+numNewFilesCompleted);
-            System.err.println("size of newClientPathEntryList = "+newClientPathEntryList.size());
+        if (!newClientPathEntryList.isEmpty()) {
+            if (CMInfo._CM_DEBUG) {
+                System.err.println("numNewFilesCompleted = " + numNewFilesCompleted);
+                System.err.println("size of newClientPathEntryList = " + newClientPathEntryList.size());
+            }
             return false;
         }
         // get basis file list
@@ -394,17 +396,19 @@ public class CMFileSyncManager extends CMServiceManager {
         basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(userName);
         // compare the number of updated files to the size of the basis-file list
         numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
-        if(basisFileList != null && numUpdateFilesCompleted < basisFileList.size()) {
-            System.err.println("numUpdateFilesCompleted = "+numUpdateFilesCompleted);
-            System.err.println("size of basisFileList = "+basisFileList.size());
+        if (basisFileList != null && numUpdateFilesCompleted < basisFileList.size()) {
+            if (CMInfo._CM_DEBUG) {
+                System.err.println("numUpdateFilesCompleted = " + numUpdateFilesCompleted);
+                System.err.println("size of basisFileList = " + basisFileList.size());
+            }
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
         fileEntryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
-        if(fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
-            System.err.println("numFilesCompleted = "+numFilesCompleted);
-            System.err.println("size of client file-entry list = "+fileEntryList.size());
+        if (fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
+            System.err.println("numFilesCompleted = " + numFilesCompleted);
+            System.err.println("size of client file-entry list = " + fileEntryList.size());
             return false;
         }
         // check each element of the isNewFileCompletedMap
@@ -418,7 +422,7 @@ public class CMFileSyncManager extends CMServiceManager {
                 System.err.println("new file path='" + k + '\'' + ", value=" + v);
             }
         }
-        if(numNewFilesNotCompleted > 0) {
+        if (numNewFilesNotCompleted > 0) {
             System.err.println("numNewFilesNotCompleted = " + numNewFilesNotCompleted);
             return false;
         }
@@ -433,12 +437,12 @@ public class CMFileSyncManager extends CMServiceManager {
                 System.err.println("update file path='" + k + '\'' + ", value=" + v);
             }
         }
-        if(numUpdateFilesNotCompleted > 0) {
+        if (numUpdateFilesNotCompleted > 0) {
             System.err.println("numUpdateFilesNotCompleted = " + numUpdateFilesNotCompleted);
             return false;
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("The sync of all files is completed.");
         }
 
@@ -447,28 +451,28 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     public boolean completeFileSync(String userName) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeFileSync() called..");
             System.out.println("userName = " + userName);
         }
         // send the file-sync completion event
         boolean result = true;
         result = sendCompleteFileSync(userName);
-        if(!result) return false;
+        if (!result) return false;
         deleteFileSyncInfo(userName);
         return true;
     }
 
     // called by the server
     private boolean sendCompleteFileSync(String userName) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.sendCompleteFileSync() called..");
             System.out.println("userName = " + userName);
         }
 
         // get the CMFileSyncGenerator reference
         CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
-        if(syncGenerator == null) {
+        if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
         }
@@ -489,7 +493,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     private void deleteFileSyncInfo(String userName) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.deleteFileSyncInfo() called..");
             System.out.println("userName = " + userName);
         }
@@ -519,13 +523,13 @@ public class CMFileSyncManager extends CMServiceManager {
     // called by the server
     public int calculateWeakChecksum(ByteBuffer buffer) {
         Objects.requireNonNull(buffer);
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateWeakChecksum() called..");
-            System.out.println("ByteBuffer remaining size = "+buffer.remaining());
+            System.out.println("ByteBuffer remaining size = " + buffer.remaining());
         }
         int[] abs = calculateWeakChecksumElements(buffer);
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("weak checksum = " + abs[2]);
         }
         return abs[2];
@@ -535,9 +539,9 @@ public class CMFileSyncManager extends CMServiceManager {
     // reference: http://tutorials.jenkov.com/rsync/checksums.html
     public int[] calculateWeakChecksumElements(ByteBuffer buffer) {
         Objects.requireNonNull(buffer);
-        if(CMInfo._CM_DEBUG_2) {
+        if (CMInfo._CM_DEBUG_2) {
             System.out.println("=== CMFileSyncManager.calculateWeakChecksumElements() called..");
-            System.out.println("ByteBuffer remaining size = "+buffer.remaining());
+            System.out.println("ByteBuffer remaining size = " + buffer.remaining());
         }
 
         int A = 0;
@@ -545,16 +549,16 @@ public class CMFileSyncManager extends CMServiceManager {
         int S = 0;
         int[] abs = new int[3]; // abs[0] = A, abs[1] = B, abs[2] = S
         int M = (int) Math.pow(2.0, 16.0);
-        if(CMInfo._CM_DEBUG_2) {
+        if (CMInfo._CM_DEBUG_2) {
             System.out.println("initial A = " + A + ", B = " + B + ", S = " + S);
             System.out.println("M = " + M);
             System.out.print("initial abs = ");
-            for(int e : abs) System.out.print(e+" ");
+            for (int e : abs) System.out.print(e + " ");
             System.out.println();
         }
 
         // repeat to update A and B for each block data
-        while( buffer.hasRemaining() ) {
+        while (buffer.hasRemaining()) {
             A += buffer.get();
             B += A;
         }
@@ -566,18 +570,18 @@ public class CMFileSyncManager extends CMServiceManager {
         // get checksum (S) based on A and B
         S = A + M * B;
         abs[2] = S;
-        if(CMInfo._CM_DEBUG_2) {
+        if (CMInfo._CM_DEBUG_2) {
             System.out.println("A = " + A + ", B = " + B + ", S = " + S);
-            System.out.println("abs = "+Arrays.toString(abs));
+            System.out.println("abs = " + Arrays.toString(abs));
         }
 
         return abs;
     }
 
     public byte[] calculateStrongChecksum(ByteBuffer buffer) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateStrongChecksum() called..");
-            System.out.println("ByteBuffer remaining size = "+buffer.remaining());
+            System.out.println("ByteBuffer remaining size = " + buffer.remaining());
         }
         // get MD5
         MessageDigest md;
@@ -587,21 +591,21 @@ public class CMFileSyncManager extends CMServiceManager {
             e.printStackTrace();
             return null;
         }
-        md.update( buffer.array() );
+        md.update(buffer.array());
         byte[] digest = md.digest();
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             String checksum = DatatypeConverter.printHexBinary(digest).toUpperCase();
             System.out.println("checksum hex binary = " + checksum);
-            System.out.println("checksum array string = "+ Arrays.toString(digest));
-            System.out.println("length = "+ digest.length + "bytes.");
+            System.out.println("checksum array string = " + Arrays.toString(digest));
+            System.out.println("length = " + digest.length + "bytes.");
         }
 
         return digest;
     }
 
     public byte[] calculateFileChecksum(Path path) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateFileChecksum() called..");
             System.out.println("path = " + path);
         }
@@ -619,7 +623,7 @@ public class CMFileSyncManager extends CMServiceManager {
             fis = new FileInputStream(path.toFile());
             byte[] byteArray = new byte[1024];
             int bytesCount = 0;
-            while((bytesCount = fis.read(byteArray)) != -1) {
+            while ((bytesCount = fis.read(byteArray)) != -1) {
                 md.update(byteArray, 0, bytesCount);
             }
         } catch (FileNotFoundException e) {
@@ -638,7 +642,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         byte[] bytes = md.digest();
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             String checksum = DatatypeConverter.printHexBinary(bytes).toUpperCase();
             System.out.println("checksum = " + checksum);
         }
@@ -648,7 +652,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the client
     public int[] updateWeakChecksum(int oldA, int oldB, byte oldStartByte, byte newEndByte, int blockSize) {
-        if(CMInfo._CM_DEBUG_2) {
+        if (CMInfo._CM_DEBUG_2) {
             System.out.println("=== CMFileSyncManager.updateWeakChecksum() called..");
             System.out.println("oldA = " + oldA);
             System.out.println("oldB = " + oldB);
@@ -674,12 +678,12 @@ public class CMFileSyncManager extends CMServiceManager {
         S = A + M * B;
 
         newABS[0] = A;
-        newABS[1] = B ;
+        newABS[1] = B;
         newABS[2] = S;
 
-        if(CMInfo._CM_DEBUG_2) {
+        if (CMInfo._CM_DEBUG_2) {
             System.out.println("A = " + A + ", B = " + B + ", S = " + S);
-            System.out.println("newABS = "+Arrays.toString(newABS));
+            System.out.println("newABS = " + Arrays.toString(newABS));
         }
 
         return newABS;
@@ -689,7 +693,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // The server will validate the newly created file with this file checksum.
     public int calculateWeakChecksum(Path path, int blockSize) {
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateWeakChecksum(Path, int) called..");
             System.out.println("path = " + path);
             System.out.println("blockSize = " + blockSize);
@@ -705,7 +709,7 @@ public class CMFileSyncManager extends CMServiceManager {
             // open the file channel
             channel = Files.newByteChannel(path, StandardOpenOption.READ);
             // repeat to calculate a block checksum and add it to the file checksum value
-            while( channel.position() < channel.size() ) {
+            while (channel.position() < channel.size()) {
                 // read the next block of the file and write to the buffer
                 buffer.clear();
                 channel.read(buffer);
@@ -728,7 +732,7 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("fileChecksum = " + fileChecksum);
         }
 
@@ -736,7 +740,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public Path getTempPathOfBasisFile(Path basisFilePath) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.getTempPathOfBasisFile() called..");
             System.out.println("basisFilePath = " + basisFilePath);
         }
@@ -745,7 +749,7 @@ public class CMFileSyncManager extends CMServiceManager {
         String tempFileName = CMInfo.TEMP_FILE_PREFIX + fileName;
         Path tempBasisFilePath = basisFilePath.resolveSibling(tempFileName);
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("tempBasisFilePath = " + tempBasisFilePath);
         }
 
@@ -753,12 +757,12 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public boolean startWatchService() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startWatchService() called..");
         }
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         // check if the WatchService is already started
-        if(!syncInfo.isWatchServiceTaskDone()) {
+        if (!syncInfo.isWatchServiceTaskDone()) {
             System.out.println("The watch service is already running..");
             return true;
         }
@@ -781,7 +785,7 @@ public class CMFileSyncManager extends CMServiceManager {
         CMWatchServiceTask watchTask = new CMWatchServiceTask(syncHome, watchService, this, syncInfo);
         // start the WatchServiceTask
         Future<?> future = es.submit(watchTask);
-        if(future == null) {
+        if (future == null) {
             System.err.println("error submitting watch-service task to the ExecutorService!");
             return false;
         }
@@ -792,7 +796,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public boolean stopWatchService() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.stopWatchService() called..");
         }
 
@@ -800,14 +804,14 @@ public class CMFileSyncManager extends CMServiceManager {
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
 
         // check if the watch service is already done
-        if(syncInfo.isWatchServiceTaskDone()) {
+        if (syncInfo.isWatchServiceTaskDone()) {
             System.out.println("The watch service has already stopped..");
             return true;
         }
 
         // get WatchService reference
         WatchService watchService = syncInfo.getWatchService();
-        if(watchService == null) {
+        if (watchService == null) {
             System.err.println("WatchService reference is null!");
             return false;
         }
@@ -821,7 +825,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // get the Future<?> reference of the watch-service task
         Future<?> watchFuture = syncInfo.getWatchServiceFuture();
-        if(watchFuture == null) {
+        if (watchFuture == null) {
             System.err.println("Future<?> of the watch-service task is null!");
             return false;
         }
@@ -837,7 +841,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // check if the watch-service task is done in the ExecutorService
-        if(!syncInfo.isWatchServiceTaskDone()) {
+        if (!syncInfo.isWatchServiceTaskDone()) {
             System.err.println("The watch-service task is not done!");
             return false;
         }
@@ -849,25 +853,25 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public boolean requestOnlineMode(List<Path> pathList) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.requestOnlineMode() called..");
             System.out.println("pathList = " + pathList);
         }
 
         // check if current file-sync status
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
-        if(syncInfo.isSyncInProgress()) {
+        if (syncInfo.isSyncInProgress()) {
             System.err.println("Currently file-sync task is working! You should wait!");
             return false;
         }
         // check if the watch service is running
-        if(syncInfo.isWatchServiceTaskDone()) {
+        if (syncInfo.isWatchServiceTaskDone()) {
             System.err.println("The file-sync monitoring stops! You should start the file-sync!");
             return false;
         }
 
         // check argument
-        if(pathList == null) {
+        if (pathList == null) {
             System.err.println("The argument pathList is null!");
             return false;
         }
@@ -876,7 +880,7 @@ public class CMFileSyncManager extends CMServiceManager {
         syncInfo.setSyncInProgress(true);
         // stop the watch service
         boolean ret = stopWatchService();
-        if(!ret) {
+        if (!ret) {
             System.err.println("error stopping WatchService!");
             return false;
         }
@@ -893,20 +897,20 @@ public class CMFileSyncManager extends CMServiceManager {
                 .collect(Collectors.toList());
         // extend each directory to a list of files and added to the file-only list
         ret = false;
-        for(Path dir : dirOnlyList) {
+        for (Path dir : dirOnlyList) {
             try {
                 List<Path> fileList = Files.walk(dir)
                         .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
                         .collect(Collectors.toList());
-                if(!fileList.isEmpty()) {
+                if (!fileList.isEmpty()) {
                     ret = fileOnlyList.addAll(fileList);
-                    if(!ret) {
-                        System.err.println("error to add files in "+dir);
+                    if (!ret) {
+                        System.err.println("error to add files in " + dir);
                         continue;
                     }
-                    if(CMInfo._CM_DEBUG) {
-                        System.out.println("files in "+dir+" added to the file-only list");
-                        for(Path path : fileList)
+                    if (CMInfo._CM_DEBUG) {
+                        System.out.println("files in " + dir + " added to the file-only list");
+                        for (Path path : fileList)
                             System.out.println("path = " + path);
                     }
                 }
@@ -915,9 +919,9 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("file only list: ");
-            for(Path path : fileOnlyList)
+            for (Path path : fileOnlyList)
                 System.out.println("path = " + path);
         }
 
@@ -948,7 +952,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
-        while(listIndex < fileOnlyList.size()) {
+        while (listIndex < fileOnlyList.size()) {
             // create an event
             CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
             listEvent.setSender(userName);
@@ -963,11 +967,11 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setRelativePathList(subList);
             // send the event
             sendResult = CMEventManager.unicastEvent(listEvent, serverName, m_cmInfo);
-            if(!sendResult) {
-                System.err.println("send error: "+listEvent);
+            if (!sendResult) {
+                System.err.println("send error: " + listEvent);
                 return false;
             }
-            if(CMInfo._CM_DEBUG) {
+            if (CMInfo._CM_DEBUG) {
                 System.out.println("sent listEvent = " + listEvent);
             }
         }
@@ -976,7 +980,7 @@ public class CMFileSyncManager extends CMServiceManager {
         ConcurrentLinkedQueue<Path> onlineModeRequestQueue = syncInfo.getOnlineModeRequestQueue();
         Objects.requireNonNull(onlineModeRequestQueue);
         ret = onlineModeRequestQueue.addAll(fileOnlyList);
-        if(!ret) {
+        if (!ret) {
             System.err.println("error to add filteredFileOnlyList to the online-mode-request queue!");
             return false;
         }
@@ -988,7 +992,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // create a sublist that will be added to an online-mode-list event (listEvent)
     private List<Path> createSubOnlineModeListForEvent(CMFileSyncEventOnlineModeList listEvent,
                                                        List<Path> filteredFileOnlyList, int listIndex) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.createSubOnlineModeListForEvent() called..");
             System.out.println("listEvent = " + listEvent);
             System.out.println("filteredFileOnlyList = " + filteredFileOnlyList);
@@ -1002,45 +1006,44 @@ public class CMFileSyncManager extends CMServiceManager {
         List<Path> subList = new ArrayList<>();
 
         boolean ret = false;
-        for(int i = listIndex; i < filteredFileOnlyList.size(); i++) {
+        for (int i = listIndex; i < filteredFileOnlyList.size(); i++) {
             // get the relative path of the i-th element
             Path path = filteredFileOnlyList.get(i);
             Path relativePath = path.subpath(startPathIndex, path.getNameCount());
             // check the size of the relative path and add it to the event
             curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
-            if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
+            if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
                 ret = subList.add(relativePath);
-                if(!ret) {
-                    System.err.println("error to add "+relativePath);
+                if (!ret) {
+                    System.err.println("error to add " + relativePath);
                     return null;
                 }
-            }
-            else
+            } else
                 break;
         }
         return subList;
     }
 
     public boolean requestLocalMode(List<Path> pathList) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.requestLocalMode() called..");
             System.out.println("pathList = " + pathList);
         }
 
         // check if current file-sync status
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
-        if(syncInfo.isSyncInProgress()) {
+        if (syncInfo.isSyncInProgress()) {
             System.err.println("Currently file-sync task is working! You should wait!");
             return false;
         }
         // check if the watch service is running
-        if(syncInfo.isWatchServiceTaskDone()) {
+        if (syncInfo.isWatchServiceTaskDone()) {
             System.err.println("The file-sync monitoring stops! You should start the file-sync!");
             return false;
         }
 
         // check argument
-        if(pathList == null) {
+        if (pathList == null) {
             System.err.println("The argument pathList is null!");
             return false;
         }
@@ -1049,7 +1052,7 @@ public class CMFileSyncManager extends CMServiceManager {
         syncInfo.setSyncInProgress(true);
         // stop the watch service
         boolean ret = stopWatchService();
-        if(!ret) {
+        if (!ret) {
             System.err.println("error stopping WatchService!");
             return false;
         }
@@ -1066,20 +1069,20 @@ public class CMFileSyncManager extends CMServiceManager {
                 .collect(Collectors.toList());
         // extend each directory to a list of files and added to the file-only list
         ret = false;
-        for(Path dir : dirOnlyList) {
+        for (Path dir : dirOnlyList) {
             try {
                 List<Path> fileList = Files.walk(dir)
                         .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
                         .collect(Collectors.toList());
-                if(!fileList.isEmpty()) {
+                if (!fileList.isEmpty()) {
                     ret = fileOnlyList.addAll(fileList);
-                    if(!ret) {
-                        System.err.println("error to add files in "+dir);
+                    if (!ret) {
+                        System.err.println("error to add files in " + dir);
                         continue;
                     }
-                    if(CMInfo._CM_DEBUG) {
-                        System.out.println("files in "+dir+" added to the file-only list");
-                        for(Path path : fileList)
+                    if (CMInfo._CM_DEBUG) {
+                        System.out.println("files in " + dir + " added to the file-only list");
+                        for (Path path : fileList)
                             System.out.println("path = " + path);
                     }
                 }
@@ -1088,9 +1091,9 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("file only list: ");
-            for(Path path : fileOnlyList)
+            for (Path path : fileOnlyList)
                 System.out.println("path = " + path);
         }
 /*
@@ -1123,7 +1126,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
-        while(listIndex < fileOnlyList.size()) {
+        while (listIndex < fileOnlyList.size()) {
             // create an event
             CMFileSyncEventLocalModeList listEvent = new CMFileSyncEventLocalModeList();
             listEvent.setSender(userName);
@@ -1138,11 +1141,11 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setRelativePathList(subList);
             // send the event
             sendResult = CMEventManager.unicastEvent(listEvent, serverName, m_cmInfo);
-            if(!sendResult) {
-                System.err.println("send error: "+listEvent);
+            if (!sendResult) {
+                System.err.println("send error: " + listEvent);
                 return false;
             }
-            if(CMInfo._CM_DEBUG) {
+            if (CMInfo._CM_DEBUG) {
                 System.out.println("sent listEvent = " + listEvent);
             }
         }
@@ -1151,7 +1154,7 @@ public class CMFileSyncManager extends CMServiceManager {
         ConcurrentLinkedQueue<Path> localModeRequestQueue = syncInfo.getLocalModeRequestQueue();
         Objects.requireNonNull(localModeRequestQueue);
         ret = localModeRequestQueue.addAll(fileOnlyList);
-        if(!ret) {
+        if (!ret) {
             System.err.println("error to add filteredFileOnlyList to the local-mode-request queue!");
             return false;
         }
@@ -1162,7 +1165,7 @@ public class CMFileSyncManager extends CMServiceManager {
     // From the starting index (listIndex) of filteredFileOnlyList,
     // create a sublist that will be added to a local-mode-list event (listEvent)
     private List<Path> createSubLocalModeListForEvent(CMFileSyncEventLocalModeList listEvent, List<Path> filteredFileOnlyList, int listIndex) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.createSubLocalModeListForEvent() called..");
             System.out.println("listEvent = " + listEvent);
             System.out.println("filteredFileOnlyList = " + filteredFileOnlyList);
@@ -1176,20 +1179,19 @@ public class CMFileSyncManager extends CMServiceManager {
         List<Path> subList = new ArrayList<>();
 
         boolean ret = false;
-        for(int i = listIndex; i < filteredFileOnlyList.size(); i++) {
+        for (int i = listIndex; i < filteredFileOnlyList.size(); i++) {
             // get the relative path of the i-th element
             Path path = filteredFileOnlyList.get(i);
             Path relativePath = path.subpath(startPathIndex, path.getNameCount());
             // check the size of the relative path and add it to the event
             curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
-            if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
+            if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
                 ret = subList.add(relativePath);
-                if(!ret) {
-                    System.err.println("error to add "+relativePath);
+                if (!ret) {
+                    System.err.println("error to add " + relativePath);
                     return null;
                 }
-            }
-            else
+            } else
                 break;
         }
         return subList;
@@ -1197,7 +1199,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public void checkTransferForLocalMode(CMFileEvent fe) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.checkTransferForLocalMode() called..");
             System.out.println("fe = " + fe);
         }
@@ -1214,11 +1216,13 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // compare the queue head (absolute path) and the transferred file name
         Path headPath = localModeRequestQueue.peek();
-        if(headPath == null) {
-            System.err.println("Local-mode-request queue is empty!");
+        if (headPath == null) {
+            if (CMInfo._CM_DEBUG) {
+                System.err.println("Local-mode-request queue is empty!");
+            }
             return;
         }
-        if(!headPath.endsWith(fileName)) {
+        if (!headPath.endsWith(fileName)) {
             System.err.println("Head of local-mode-request queue does not match the transferred file name!");
             System.out.println("headPath = " + headPath);
             System.out.println("fileName = " + fileName);
@@ -1242,12 +1246,12 @@ public class CMFileSyncManager extends CMServiceManager {
         // delete path from the online-mode-list
         List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
         boolean ret = onlineModeList.remove(headPath);
-        if(!ret) {
-            System.err.println("remove error from the online-mode-list: "+headPath);
+        if (!ret) {
+            System.err.println("remove error from the online-mode-list: " + headPath);
         }
 
         // check if the queue is not empty
-        if(!localModeRequestQueue.isEmpty()) {
+        if (!localModeRequestQueue.isEmpty()) {
             System.out.println("Local-mode-request queue is not empty.");
             return;
         }
@@ -1267,8 +1271,8 @@ public class CMFileSyncManager extends CMServiceManager {
         endEvent.setNumLocalModeFiles(numLocalModeFiles);
 
         ret = CMEventManager.unicastEvent(endEvent, fileSender, m_cmInfo);
-        if(!ret) {
-            System.err.println("send error: "+endEvent);
+        if (!ret) {
+            System.err.println("send error: " + endEvent);
         }
 
         return;
@@ -1276,7 +1280,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean startFileSync() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startFileSync() called..");
         }
 
@@ -1284,43 +1288,42 @@ public class CMFileSyncManager extends CMServiceManager {
         Path storedListPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
         // load the online-mode-list file
         List<Path> onlineModePathList = loadPathListFromFile(storedListPath);
-        if(onlineModePathList != null) {
+        if (onlineModePathList != null) {
             // set to CMFileSyncInfo
             CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
             syncInfo.setOnlineModePathList(onlineModePathList);
-        }
-        else {
+        } else {
             System.err.println("The loaded online-mode-path-list is null!");
         }
 
-		// start the watch service
-		boolean ret = startWatchService();
-		if(!ret) {
-			System.err.println("error starting watch service!");
-			return false;
-		}
-		// conduct file-sync task once
-		ret = sync();
-		if(!ret) {
-			System.err.println("error starting file-sync!");
-			return false;
-		}
+        // start the watch service
+        boolean ret = startWatchService();
+        if (!ret) {
+            System.err.println("error starting watch service!");
+            return false;
+        }
+        // conduct file-sync task once
+        ret = sync();
+        if (!ret) {
+            System.err.println("error starting file-sync!");
+            return false;
+        }
 
         return true;
     }
 
     private List<Path> loadPathListFromFile(Path listPath) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.loadPathListFromFile() called..");
             System.out.println("storedListPath = " + listPath);
         }
 
-        if(listPath == null) {
+        if (listPath == null) {
             System.err.println("The argument list path is null!");
             return null;
         }
-        if(!Files.exists(listPath)) {
-            System.err.println("The argument ("+listPath+") does not exists!");
+        if (!Files.exists(listPath)) {
+            System.err.println("The argument (" + listPath + ") does not exists!");
             return null;
         }
 
@@ -1328,9 +1331,9 @@ public class CMFileSyncManager extends CMServiceManager {
         try {
             list = Files.lines(listPath).map(Path::of).collect(Collectors.toList());
 
-            if(CMInfo._CM_DEBUG) {
+            if (CMInfo._CM_DEBUG) {
                 System.out.println("--- loaded online-mode path list: ");
-                for(Path path : list)
+                for (Path path : list)
                     System.out.println("path = " + path);
             }
         } catch (IOException e) {
@@ -1343,33 +1346,33 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean stopFileSync() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.stopFileSync() called..");
         }
 
         // save the online-mode-path list to the file
         boolean ret = saveOnlineModeListToFile();
-        if(!ret) {
+        if (!ret) {
             System.err.println("error to save the online-mode-path-list to file!");
         }
 
-		// set syncInProgress to false
+        // set syncInProgress to false
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         syncInfo.setSyncInProgress(false);
 
-		// stop the watch service
-		ret = stopWatchService();
-		if(!ret) {
-			System.err.println("error stopping watch service!");
-			return false;
-		}
+        // stop the watch service
+        ret = stopWatchService();
+        if (!ret) {
+            System.err.println("error stopping watch service!");
+            return false;
+        }
 
         return true;
     }
 
     // called at the client
     public boolean saveOnlineModeListToFile() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.saveOnlineModeListToFile() called..");
         }
 
@@ -1381,7 +1384,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // save the list to the file
         boolean ret = savePathListToFile(onlineModeList, storedPath);
-        if(!ret) {
+        if (!ret) {
             System.err.println("error to save the online-mode-path list to file!");
             return false;
         }
@@ -1391,21 +1394,21 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     private boolean savePathListToFile(List<Path> pathList, Path storedPath) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.savePathListToFile() called..");
             System.out.println("pathList = " + pathList);
             System.out.println("storedPath = " + storedPath);
         }
 
-        if(pathList == null || storedPath == null) {
+        if (pathList == null || storedPath == null) {
             System.err.println("The path list or path is null!");
             return false;
         }
 
-        if(!Files.exists(storedPath)) {
+        if (!Files.exists(storedPath)) {
             try {
                 Path parentPath = storedPath.getParent();
-                if(parentPath != null)
+                if (parentPath != null)
                     Files.createDirectories(parentPath);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -1414,9 +1417,9 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // create or open file
-        try(BufferedWriter writer = Files.newBufferedWriter(storedPath)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(storedPath)) {
             // write lists to the file
-            for(Path path : pathList) {
+            for (Path path : pathList) {
                 writer.write(path.toString());
                 writer.newLine();
             }
@@ -1429,14 +1432,14 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public boolean createTestFile(Path path, long size) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.crateTestFile() called..");
             System.out.println("path = " + path);
             System.out.println("size = " + size);
         }
 
-        try(SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.CREATE_NEW,
-                            StandardOpenOption.WRITE)) {
+        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.CREATE_NEW,
+                StandardOpenOption.WRITE)) {
 
             // declare relevant variables
             final int arraySize = 1024;
@@ -1447,16 +1450,15 @@ public class CMFileSyncManager extends CMServiceManager {
 
             // create a Random object
             Random random = new Random();
-            while(remainingBytes > 0) {
+            while (remainingBytes > 0) {
                 // get random bytes array
                 random.nextBytes(byteArray);
                 // init byteBuffer
                 byteBuffer.clear();
                 // write array to byteBuffer
-                if(remainingBytes < arraySize) {
-                    byteBuffer.put(byteArray, 0, (int)remainingBytes);
-                }
-                else {
+                if (remainingBytes < arraySize) {
+                    byteBuffer.put(byteArray, 0, (int) remainingBytes);
+                } else {
                     byteBuffer.put(byteArray);
                 }
                 // write byteBuffer to the file channel
@@ -1475,7 +1477,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public boolean createModifiedTestFile(Path path, Path modPath, int percentage) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.createModifiedTestFile() called..");
             System.out.println("path = " + path);
             System.out.println("modPath = " + modPath);
@@ -1490,7 +1492,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
-        try(SeekableByteChannel channel = Files.newByteChannel(modPath, StandardOpenOption.WRITE)) {
+        try (SeekableByteChannel channel = Files.newByteChannel(modPath, StandardOpenOption.WRITE)) {
             // get the file size
             long size = channel.size();
             // get the modification size
@@ -1504,16 +1506,15 @@ public class CMFileSyncManager extends CMServiceManager {
 
             // create a Random object
             Random random = new Random();
-            while(remainingBytes > 0) {
+            while (remainingBytes > 0) {
                 // get random bytes array
                 random.nextBytes(byteArray);
                 // init byteBuffer
                 byteBuffer.clear();
                 // write array to byteBuffer
-                if(remainingBytes < arraySize) {
-                    byteBuffer.put(byteArray, 0, (int)remainingBytes);
-                }
-                else {
+                if (remainingBytes < arraySize) {
+                    byteBuffer.put(byteArray, 0, (int) remainingBytes);
+                } else {
                     byteBuffer.put(byteArray);
                 }
                 // write byteBuffer to the file channel
