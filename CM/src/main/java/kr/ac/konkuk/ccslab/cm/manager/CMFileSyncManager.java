@@ -591,7 +591,8 @@ public class CMFileSyncManager extends CMServiceManager {
             e.printStackTrace();
             return null;
         }
-        md.update(buffer.array());
+        //md.update(buffer.array());
+        md.update(buffer);
         byte[] digest = md.digest();
 
         if (CMInfo._CM_DEBUG) {
