@@ -810,14 +810,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         List<Path> pathList = Objects.requireNonNull(m_cmInfo.getFileSyncInfo().getPathList());
         // get the target file path
         Path path = Objects.requireNonNull(pathList.get(fileEntryIndex));
-        // open the target file and get a file channel
-        SeekableByteChannel channel;
-        try {
-            channel = Files.newByteChannel(path, StandardOpenOption.READ);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
 
         // get the file sync manager
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
@@ -840,7 +832,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncEventEndFileBlockChecksumAck ackEvent;
 
         // read (next) block, calculate (update) weak checksum, search a matching block
-        try {
+        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
+
             if(CMInfo._CM_DEBUG) {
                 System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
             }
@@ -988,13 +981,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         } catch(IOException e) {
             e.printStackTrace();
             return false;
-        } finally {
-            // close the file channel
-            try {
-                channel.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
         // calculate a file checksum and set it to the ack event
