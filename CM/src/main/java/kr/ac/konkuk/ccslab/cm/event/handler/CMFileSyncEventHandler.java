@@ -15,6 +15,8 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
@@ -814,7 +816,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // get the file sync manager
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         // create a ByteBuffer to read a block from the file channel
-        ByteBuffer buffer = ByteBuffer.allocate(blockSize);
+        // ByteBuffer buffer = ByteBuffer.allocate(blockSize);
+        // create a ByteBuffer to read a block from the memory-mapped file (MappedByteBuffer)
+        ByteBuffer buffer = null;
         // create a ByteBuffer to store non-matching bytes
         ByteBuffer nonMatchBuffer = ByteBuffer.allocate(CMInfo.FILE_BLOCK_LEN);
         // initialize other local variables before the while loop
@@ -832,34 +836,64 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncEventEndFileBlockChecksumAck ackEvent;
 
         // read (next) block, calculate (update) weak checksum, search a matching block
-        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
+        //try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
+        try (FileChannel channel = (FileChannel) Files.newByteChannel(path, StandardOpenOption.READ)) {
+
+            MappedByteBuffer mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+            if(mappedBuffer == null) {
+                System.err.println("MappedByteBuffer is null!");
+                return false;
+            }
 
             if(CMInfo._CM_DEBUG) {
-                System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+                //System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+                System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
+                        mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
             }
             // for comparing rate of matching and non-matching cases
             long matchingCount = 0;
             long nonMatchingCount = 0;
-            while (channel.position() < channel.size()) {
+            //while (channel.position() < channel.size()) {
+            while(bBlockMatch && mappedBuffer.hasRemaining() || !bBlockMatch && mappedBuffer.remaining() > blockSize) {
+
                 if(CMInfo._CM_DEBUG_2)
                     System.out.println("===============================");
 
                 if(bBlockMatch) {   // initial bBlockMatch is true
                     // read a new block to the buffer and calculate weak checksum
+/*
                     buffer.clear();
                     channel.read(buffer);
                     buffer.flip();
                     weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
                     buffer.rewind();    // rewound the buffer position after the checksum calculation
+*/
+                    if(mappedBuffer.remaining() < blockSize) {
+                        buffer = mappedBuffer.slice(mappedBuffer.position(), mappedBuffer.remaining());
+                    }
+                    else {
+                        buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                    }
+                    weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
+                    buffer.rewind();
                 }
                 else {
                     // read a new 1 byte to the buffer and update the weak checksum
+/*
                     buffer.clear();
                     oldStartByte = buffer.get();    // read (remove) the (first) head byte of the buffer
                     buffer.compact();               // move the buffer by 1 byte to the left
                     channel.read(buffer);   // read a new 1byte from the channel and add it to the end of the buffer
                     buffer.clear(); // not sure
                     newEndByte = buffer.get(buffer.limit()-1);  // read the new end byte from the buffer
+                    oldA = weakChecksumABS[0];
+                    oldB = weakChecksumABS[1];
+                    weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
+*/
+                    buffer.clear();
+                    oldStartByte = buffer.get();
+                    buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                    newEndByte = buffer.get(buffer.limit()-1);
                     oldA = weakChecksumABS[0];
                     oldB = weakChecksumABS[1];
                     weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
@@ -898,6 +932,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     if(!ret) return false;
                     // initialize buffer and non-matching block buffer
                     nonMatchBuffer.clear();
+
+                    // update the position of mappedBuffer
+                    if(mappedBuffer.remaining() < blockSize)
+                        mappedBuffer.position(mappedBuffer.position()+mappedBuffer.remaining());
+                    else
+                        mappedBuffer.position(mappedBuffer.position()+blockSize);
                 }
                 else {
                     nonMatchingCount++;
@@ -913,6 +953,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         // initialize non-matching block buffer
                         nonMatchBuffer.clear();
                     }
+
+                    // update the position of mappedBuffer
+                    mappedBuffer.position(mappedBuffer.position()+1);
                 }
 
                 if(CMInfo._CM_DEBUG_2) {
@@ -929,6 +972,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             if(!bBlockMatch) {
                 buffer.position(1); // the first element has already been put to the nonMatchBuffer
                 nonMatchingCount += buffer.remaining(); // update the number of the last non-matching bytes
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("================ send the last bytes in buffer and nonMatchBuffer");
+                    System.out.println("buffer.remaining(): "+buffer.remaining());
+                    System.out.println("nonMatchBuffer.remaining(): "+nonMatchBuffer.remaining());
+                }
                 while( buffer.hasRemaining() ) {
                     if(buffer.remaining() > nonMatchBuffer.remaining()) {
                         int oldLimit = buffer.limit();
@@ -952,7 +1000,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
             if(CMInfo._CM_DEBUG) {
                 System.out.println("--------------- info after the last transmission of UPDATE_EXISTING_FILE event");
-                System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+                //System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+                System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
+                        mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
                 System.out.println("path = "+path);
                 System.out.println("matchingCount = " + matchingCount + ", total number of blocks = " +
                         endChecksumEvent.getTotalNumBlocks());
@@ -973,10 +1023,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             ackEvent.setTotalNumBlocks(endChecksumEvent.getTotalNumBlocks());
             ackEvent.setBlockSize(blockSize);
             // set a return code
+/*
             if(channel.position() == channel.size())
                 ackEvent.setReturnCode(1);
             else
                 ackEvent.setReturnCode(0);
+*/
+            ackEvent.setReturnCode(1);
 
         } catch(IOException e) {
             e.printStackTrace();
