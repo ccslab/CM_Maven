@@ -854,7 +854,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             long matchingCount = 0;
             long nonMatchingCount = 0;
             //while (channel.position() < channel.size()) {
-            while(bBlockMatch && mappedBuffer.hasRemaining() || !bBlockMatch && mappedBuffer.remaining() > blockSize) {
+            while(bBlockMatch && mappedBuffer.hasRemaining() || !bBlockMatch && mappedBuffer.remaining() >= blockSize) {
 
                 if(CMInfo._CM_DEBUG_2)
                     System.out.println("===============================");
