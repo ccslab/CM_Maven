@@ -622,7 +622,7 @@ public class CMFileSyncManager extends CMServiceManager {
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(path.toFile());
-            byte[] byteArray = new byte[1024];
+            byte[] byteArray = new byte[8192];
             int bytesCount = 0;
             while ((bytesCount = fis.read(byteArray)) != -1) {
                 md.update(byteArray, 0, bytesCount);
