@@ -49,11 +49,11 @@ public class CMWatchServiceTask implements Runnable {
             final WatchKey key;
             try {
                 if (detectedPathMap.isEmpty()) {
-                    // if there is no change-detected path i nthe previous monitoring
+                    // if there is no change-detected path in the previous monitoring
                     key = watchService.take();
                 } else {
                     // if there is any change-detected path in the previous monitoring
-                    key = watchService.poll();
+                    key = watchService.poll(500, TimeUnit.MILLISECONDS);
                     if (key == null) {
                         // if there is no more change-detected path
                         if (CMInfo._CM_DEBUG) {
