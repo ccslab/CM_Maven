@@ -114,7 +114,9 @@ public class CMWatchServiceTask implements Runnable {
                 detectedPathList.add(child);
 
                 // print the result
-                System.out.println(kind + "->" + child);
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println(kind + "->" + child);
+                }
             }
 
             // initialize the key
