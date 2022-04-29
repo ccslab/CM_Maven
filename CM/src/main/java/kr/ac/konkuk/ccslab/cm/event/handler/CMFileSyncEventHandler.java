@@ -884,28 +884,51 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         //try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
         try (FileChannel channel = (FileChannel) Files.newByteChannel(path, StandardOpenOption.READ)) {
 
-            mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
-            if(mappedBuffer == null) {
-                System.err.println("MappedByteBuffer is null!");
-                return false;
-            }
+            long mapStartPosition = 0;
+            long fileSize = channel.size();
+            int mapCount = 0;
+            while(mapStartPosition < fileSize) {
 
-            if(CMInfo._CM_DEBUG) {
-                //System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
-                System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
-                        mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
-            }
-            // for comparing rate of matching and non-matching cases
-            long matchingCount = 0;
-            long nonMatchingCount = 0;
-            //while (channel.position() < channel.size()) {
-            while(bBlockMatch && mappedBuffer.hasRemaining() || !bBlockMatch && mappedBuffer.remaining() >= blockSize) {
+                System.out.println("==========================================");
+                System.out.println("mapCount = " + mapCount);
+                System.out.println("fileSize = " + fileSize);
+                System.out.println("mapStartPosition = " + mapStartPosition);
 
-                if(CMInfo._CM_DEBUG_2)
-                    System.out.println("===============================");
+                mapCount++;
 
-                if(bBlockMatch) {   // initial bBlockMatch is true
-                    // read a new block to the buffer and calculate weak checksum
+                if(fileSize - mapStartPosition > Integer.MAX_VALUE) {
+                    mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, mapStartPosition, Integer.MAX_VALUE);
+                    mapStartPosition += Integer.MAX_VALUE;
+                }
+                else {
+                    mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, mapStartPosition,
+                            fileSize - mapStartPosition);
+                    mapStartPosition += fileSize - mapStartPosition;
+                }
+
+                bBlockMatch = true;
+
+                if(mappedBuffer == null) {
+                    System.err.println("MappedByteBuffer is null!");
+                    return false;
+                }
+
+                if(CMInfo._CM_DEBUG) {
+                    //System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+                    System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
+                            mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
+                }
+                // for comparing rate of matching and non-matching cases
+                long matchingCount = 0;
+                long nonMatchingCount = 0;
+                //while (channel.position() < channel.size()) {
+                while(bBlockMatch && mappedBuffer.hasRemaining() || !bBlockMatch && mappedBuffer.remaining() >= blockSize) {
+
+                    if(CMInfo._CM_DEBUG_2)
+                        System.out.println("===============================");
+
+                    if(bBlockMatch) {   // initial bBlockMatch is true
+                        // read a new block to the buffer and calculate weak checksum
 /*
                     buffer.clear();
                     channel.read(buffer);
@@ -913,17 +936,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
                     buffer.rewind();    // rewound the buffer position after the checksum calculation
 */
-                    if(mappedBuffer.remaining() < blockSize) {
-                        buffer = mappedBuffer.slice(mappedBuffer.position(), mappedBuffer.remaining());
+                        if(mappedBuffer.remaining() < blockSize) {
+                            buffer = mappedBuffer.slice(mappedBuffer.position(), mappedBuffer.remaining());
+                        }
+                        else {
+                            buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                        }
+                        weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
+                        buffer.rewind();
                     }
                     else {
-                        buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
-                    }
-                    weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
-                    buffer.rewind();
-                }
-                else {
-                    // read a new 1 byte to the buffer and update the weak checksum
+                        // read a new 1 byte to the buffer and update the weak checksum
 /*
                     buffer.clear();
                     oldStartByte = buffer.get();    // read (remove) the (first) head byte of the buffer
@@ -935,129 +958,131 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     oldB = weakChecksumABS[1];
                     weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
 */
-                    buffer.clear();
-                    oldStartByte = buffer.get();
-                    buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
-                    newEndByte = buffer.get(buffer.limit()-1);
-                    oldA = weakChecksumABS[0];
-                    oldB = weakChecksumABS[1];
-                    weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
-                }
-
-                if(CMInfo._CM_DEBUG_2) {
-                    System.out.println("-------rolling weak checksum = "+weakChecksumABS[2]);
-                }
-
-                // calculate 16-bit hash of the block weak checksum
-                hash = calculateHash(weakChecksumABS[2]);
-
-                // search a matching block
-                sortedBlockIndex = Optional.ofNullable(hashToBlockIndexMap.get(hash)).orElse(-1);
-                if(sortedBlockIndex >= 0) {
-                    matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], checksumArray,
-                            hash, buffer);
-                }
-                else {
-                    matchBlockIndex = -1;
-                }
-
-                if(CMInfo._CM_DEBUG_2) {
-                    System.out.println("-------- hash = "+hash);
-                    System.out.println("-------- sortedBlockIndex = "+sortedBlockIndex);
-                    System.out.println("-------- matchBlockIndex = "+matchBlockIndex);
-                }
-
-                // if a matching block is found
-                if(matchBlockIndex >= 0) {
-                    matchingCount++;
-                    bBlockMatch = true;
-                    // create and send an UPDATE_EXISTING_FILE event to the server
-                    boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                            nonMatchBuffer, matchBlockIndex);
-                    if(!ret) return false;
-                    // initialize buffer and non-matching block buffer
-                    nonMatchBuffer.clear();
-
-                    // update the position of mappedBuffer
-                    if(mappedBuffer.remaining() < blockSize)
-                        mappedBuffer.position(mappedBuffer.position()+mappedBuffer.remaining());
-                    else
-                        mappedBuffer.position(mappedBuffer.position()+blockSize);
-                }
-                else {
-                    nonMatchingCount++;
-                    bBlockMatch = false;
-                    // write the head byte of the block buffer to the non-match buffer
-                    nonMatchBuffer.put(buffer.get(0));
-                    // if the non-match buffer is full,
-                    if(!nonMatchBuffer.hasRemaining()) {
-                        // create and send an UPDATE_EXISTING_FILE event to the server
-                        boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                                nonMatchBuffer, -1);
-                        if(!ret) return false;
-                        // initialize non-matching block buffer
-                        nonMatchBuffer.clear();
+                        buffer.clear();
+                        oldStartByte = buffer.get();
+                        buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                        newEndByte = buffer.get(buffer.limit()-1);
+                        oldA = weakChecksumABS[0];
+                        oldB = weakChecksumABS[1];
+                        weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
                     }
 
-                    // update the position of mappedBuffer
-                    mappedBuffer.position(mappedBuffer.position()+1);
-                }
+                    if(CMInfo._CM_DEBUG_2) {
+                        System.out.println("-------rolling weak checksum = "+weakChecksumABS[2]);
+                    }
 
-                if(CMInfo._CM_DEBUG_2) {
-                    System.out.println("===============================");
-                }
-            }
+                    // calculate 16-bit hash of the block weak checksum
+                    hash = calculateHash(weakChecksumABS[2]);
 
-            if(CMInfo._CM_DEBUG) {
-                System.out.println("------------------- end of while loop");
-            }
-            // check if the last non-matching bytes that remains in buffer and nonMatchBuffer, and send to the server.
-            // At the last iteration of the above while loop,
-            // non-matching bytes may remain in buffer and nonMatchBuffer if bBlockMatch is false.
-            if(!bBlockMatch) {
-                buffer.position(1); // the first element has already been put to the nonMatchBuffer
-                nonMatchingCount += buffer.remaining(); // update the number of the last non-matching bytes
-                if(CMInfo._CM_DEBUG) {
-                    System.out.println("================ send the last bytes in buffer and nonMatchBuffer");
-                    System.out.println("buffer.remaining(): "+buffer.remaining());
-                    System.out.println("nonMatchBuffer.remaining(): "+nonMatchBuffer.remaining());
-                }
-                while( buffer.hasRemaining() ) {
-                    if(buffer.remaining() > nonMatchBuffer.remaining()) {
-                        int oldLimit = buffer.limit();
-                        buffer.limit(buffer.position() + nonMatchBuffer.remaining());
-                        nonMatchBuffer.put(buffer);
-                        boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                                nonMatchBuffer, -1);
-                        if(!ret) return false;
-                        nonMatchBuffer.clear();
-                        buffer.limit(oldLimit);
+                    // search a matching block
+                    sortedBlockIndex = Optional.ofNullable(hashToBlockIndexMap.get(hash)).orElse(-1);
+                    if(sortedBlockIndex >= 0) {
+                        matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], checksumArray,
+                                hash, buffer);
                     }
                     else {
-                        nonMatchBuffer.put(buffer);
+                        matchBlockIndex = -1;
+                    }
+
+                    if(CMInfo._CM_DEBUG_2) {
+                        System.out.println("-------- hash = "+hash);
+                        System.out.println("-------- sortedBlockIndex = "+sortedBlockIndex);
+                        System.out.println("-------- matchBlockIndex = "+matchBlockIndex);
+                    }
+
+                    // if a matching block is found
+                    if(matchBlockIndex >= 0) {
+                        matchingCount++;
+                        bBlockMatch = true;
+                        // create and send an UPDATE_EXISTING_FILE event to the server
                         boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
-                                nonMatchBuffer, -1);
+                                nonMatchBuffer, matchBlockIndex);
                         if(!ret) return false;
+                        // initialize buffer and non-matching block buffer
                         nonMatchBuffer.clear();
+
+                        // update the position of mappedBuffer
+                        if(mappedBuffer.remaining() < blockSize)
+                            mappedBuffer.position(mappedBuffer.position()+mappedBuffer.remaining());
+                        else
+                            mappedBuffer.position(mappedBuffer.position()+blockSize);
+                    }
+                    else {
+                        nonMatchingCount++;
+                        bBlockMatch = false;
+                        // write the head byte of the block buffer to the non-match buffer
+                        nonMatchBuffer.put(buffer.get(0));
+                        // if the non-match buffer is full,
+                        if(!nonMatchBuffer.hasRemaining()) {
+                            // create and send an UPDATE_EXISTING_FILE event to the server
+                            boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if(!ret) return false;
+                            // initialize non-matching block buffer
+                            nonMatchBuffer.clear();
+                        }
+
+                        // update the position of mappedBuffer
+                        mappedBuffer.position(mappedBuffer.position()+1);
+                    }
+
+                    if(CMInfo._CM_DEBUG_2) {
+                        System.out.println("===============================");
                     }
                 }
-            }
 
-            if(CMInfo._CM_DEBUG) {
-                System.out.println("--------------- info after the last transmission of UPDATE_EXISTING_FILE event");
-                //System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
-                System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
-                        mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
-                System.out.println("path = "+path);
-                System.out.println("matchingCount = " + matchingCount + ", total number of blocks = " +
-                        endChecksumEvent.getTotalNumBlocks());
-                System.out.println("non-matching bytes = " + nonMatchingCount + ", total size = " +
-                        Files.size(path) + " bytes");
-                System.out.printf("matching block rate = %5.3f\n",
-                        matchingCount/(double)(endChecksumEvent.getTotalNumBlocks()));
-                System.out.printf("non-matching bytes rate = %5.3f\n",
-                        nonMatchingCount/(double)(Files.size(path)));
-                System.out.println("-----------------");
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("------------------- end of while loop");
+                }
+                // check if the last non-matching bytes that remains in buffer and nonMatchBuffer, and send to the server.
+                // At the last iteration of the above while loop,
+                // non-matching bytes may remain in buffer and nonMatchBuffer if bBlockMatch is false.
+                if(!bBlockMatch) {
+                    buffer.position(1); // the first element has already been put to the nonMatchBuffer
+                    nonMatchingCount += buffer.remaining(); // update the number of the last non-matching bytes
+                    if(CMInfo._CM_DEBUG) {
+                        System.out.println("================ send the last bytes in buffer and nonMatchBuffer");
+                        System.out.println("buffer.remaining(): "+buffer.remaining());
+                        System.out.println("nonMatchBuffer.remaining(): "+nonMatchBuffer.remaining());
+                    }
+                    while( buffer.hasRemaining() ) {
+                        if(buffer.remaining() > nonMatchBuffer.remaining()) {
+                            int oldLimit = buffer.limit();
+                            buffer.limit(buffer.position() + nonMatchBuffer.remaining());
+                            nonMatchBuffer.put(buffer);
+                            boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if(!ret) return false;
+                            nonMatchBuffer.clear();
+                            buffer.limit(oldLimit);
+                        }
+                        else {
+                            nonMatchBuffer.put(buffer);
+                            boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if(!ret) return false;
+                            nonMatchBuffer.clear();
+                        }
+                    }
+                }
+
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("--------------- info after the last transmission of UPDATE_EXISTING_FILE event");
+                    //System.out.println("channel position = "+channel.position()+", channel size = "+channel.size());
+                    System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
+                            mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
+                    System.out.println("path = "+path);
+                    System.out.println("matchingCount = " + matchingCount + ", total number of blocks = " +
+                            endChecksumEvent.getTotalNumBlocks());
+                    System.out.println("non-matching bytes = " + nonMatchingCount + ", total size = " +
+                            Files.size(path) + " bytes");
+                    System.out.printf("matching block rate = %5.3f\n",
+                            matchingCount/(double)(endChecksumEvent.getTotalNumBlocks()));
+                    System.out.printf("non-matching bytes rate = %5.3f\n",
+                            nonMatchingCount/(double)(Files.size(path)));
+                    System.out.println("-----------------");
+                }
+
             }
 
         } catch(IOException e) {
