@@ -818,6 +818,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // create a ByteBuffer to read a block from the file channel
         // ByteBuffer buffer = ByteBuffer.allocate(blockSize);
         // create a ByteBuffer to read a block from the memory-mapped file (MappedByteBuffer)
+        MappedByteBuffer mappedBuffer = null;
         ByteBuffer buffer = null;
         // create a ByteBuffer to store non-matching bytes
         ByteBuffer nonMatchBuffer = ByteBuffer.allocate(CMInfo.FILE_BLOCK_LEN);
@@ -839,7 +840,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         //try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
         try (FileChannel channel = (FileChannel) Files.newByteChannel(path, StandardOpenOption.READ)) {
 
-            MappedByteBuffer mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+            mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
             if(mappedBuffer == null) {
                 System.err.println("MappedByteBuffer is null!");
                 return false;
@@ -1034,6 +1035,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         } catch(IOException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            if(mappedBuffer != null)
+                syncManager.closeDirectBuffer(mappedBuffer);
         }
 
         // calculate a file checksum and set it to the ack event
