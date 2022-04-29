@@ -796,6 +796,51 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
         int blockSize = endChecksumEvent.getBlockSize();
+        String sender = endChecksumEvent.getReceiver();
+        String receiver = endChecksumEvent.getSender();
+        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        // get the local path list
+        List<Path> pathList = Objects.requireNonNull(m_cmInfo.getFileSyncInfo().getPathList());
+        // get the target file path
+        Path path = Objects.requireNonNull(pathList.get(fileEntryIndex));
+
+        boolean ret = compareFileBlocks(endChecksumEvent);
+        if(!ret) {
+            System.err.println("error to compare file blocks!");
+            return false;
+        }
+
+        // create and send an END_FILE_BLOCK_CHECKSUM_ACK event
+        CMFileSyncEventEndFileBlockChecksumAck ackEvent = new CMFileSyncEventEndFileBlockChecksumAck();
+        ackEvent.setSender(sender);
+        ackEvent.setReceiver(receiver);
+        ackEvent.setFileEntryIndex(fileEntryIndex);
+        ackEvent.setTotalNumBlocks(endChecksumEvent.getTotalNumBlocks());
+        ackEvent.setBlockSize(blockSize);
+        // set a return code
+/*
+            if(channel.position() == channel.size())
+                ackEvent.setReturnCode(1);
+            else
+                ackEvent.setReturnCode(0);
+*/
+        ackEvent.setReturnCode(1);
+
+        // calculate a file checksum and set it to the ack event
+        byte[] fileChecksum = syncManager.calculateFileChecksum(path);
+        ackEvent.setFileChecksum(fileChecksum);
+        // send the ack event
+        ret = CMEventManager.unicastEvent(ackEvent, receiver, m_cmInfo);
+        if(!ret) return false;
+
+        return true;
+    }
+
+    // called at the client
+    private boolean compareFileBlocks(CMFileSyncEventEndFileBlockChecksum endChecksumEvent) {
+        int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
+        int blockSize = endChecksumEvent.getBlockSize();
         // create hash-to-blockIndex Map
         Map<Short, Integer> hashToBlockIndexMap =
                 makeHashToBlockIndexMap(fileEntryIndex);
@@ -834,7 +879,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int matchBlockIndex = -1;
         String sender = endChecksumEvent.getReceiver();
         String receiver = endChecksumEvent.getSender();
-        CMFileSyncEventEndFileBlockChecksumAck ackEvent;
 
         // read (next) block, calculate (update) weak checksum, search a matching block
         //try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
@@ -1016,22 +1060,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 System.out.println("-----------------");
             }
 
-            // create and send an END_FILE_BLOCK_CHECKSUM_ACK event
-            ackEvent = new CMFileSyncEventEndFileBlockChecksumAck();
-            ackEvent.setSender(sender);
-            ackEvent.setReceiver(receiver);
-            ackEvent.setFileEntryIndex(fileEntryIndex);
-            ackEvent.setTotalNumBlocks(endChecksumEvent.getTotalNumBlocks());
-            ackEvent.setBlockSize(blockSize);
-            // set a return code
-/*
-            if(channel.position() == channel.size())
-                ackEvent.setReturnCode(1);
-            else
-                ackEvent.setReturnCode(0);
-*/
-            ackEvent.setReturnCode(1);
-
         } catch(IOException e) {
             e.printStackTrace();
             return false;
@@ -1039,13 +1067,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             if(mappedBuffer != null)
                 syncManager.closeDirectBuffer(mappedBuffer);
         }
-
-        // calculate a file checksum and set it to the ack event
-        byte[] fileChecksum = syncManager.calculateFileChecksum(path);
-        ackEvent.setFileChecksum(fileChecksum);
-        // send the ack event
-        boolean ret = CMEventManager.unicastEvent(ackEvent, receiver, m_cmInfo);
-        if(!ret) return false;
 
         return true;
     }
