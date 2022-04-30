@@ -889,10 +889,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             int mapCount = 0;
             while(mapStartPosition < fileSize) {
 
-                System.out.println("==========================================");
-                System.out.println("mapCount = " + mapCount);
-                System.out.println("fileSize = " + fileSize);
-                System.out.println("mapStartPosition = " + mapStartPosition);
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("==========================================");
+                    System.out.println("mapCount = " + mapCount);
+                    System.out.println("fileSize = " + fileSize);
+                    System.out.println("mapStartPosition = " + mapStartPosition);
+                }
 
                 mapCount++;
 
