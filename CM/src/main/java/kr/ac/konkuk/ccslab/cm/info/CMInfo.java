@@ -10,7 +10,10 @@ import kr.ac.konkuk.ccslab.cm.manager.CMServiceManager;
 
 public class CMInfo {
 	//// global variables
-	
+
+	// minimum number of required threads in CM
+	public static final int MIN_NUM_THREADS = 8;
+
 	// general number and lengths setting
 	public static final int MAXSESSION_NUM = 64;
 	public static final int NAME_NUM = 80;
@@ -26,7 +29,7 @@ public class CMInfo {
 	public static final int STRING_LEN_BYTES_LEN = 2;
 	public static final int MQTT_ID_RANGE = 65536;
 	public static final int STRONG_CHECKSUM_LEN = 16;	// MD5, 128bit
-	
+
 	// big/little endian
 	public static final int CM_BIG_ENDIAN = 0;
 	public static final int CM_LITTLE_ENDIAN = 1;

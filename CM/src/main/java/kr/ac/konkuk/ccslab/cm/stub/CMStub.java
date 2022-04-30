@@ -107,7 +107,12 @@ public class CMStub {
 		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
 		ExecutorService es = threadInfo.getExecutorService();
 		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
-		es = Executors.newFixedThreadPool(nAvailableProcessors);
+		if(nAvailableProcessors < CMInfo.MIN_NUM_THREADS) {
+			es = Executors.newCachedThreadPool();
+		}
+		else {
+			es = Executors.newFixedThreadPool(nAvailableProcessors);
+		}
 		threadInfo.setExecutorService(es);
 		if(CMInfo._CM_DEBUG_2)
 		{
