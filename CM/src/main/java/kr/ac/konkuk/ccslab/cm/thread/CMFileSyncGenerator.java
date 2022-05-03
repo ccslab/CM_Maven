@@ -407,7 +407,10 @@ public class CMFileSyncGenerator implements Runnable {
             long l;
             for (c = 1, l = fileSize, cnt = 0; (l >>= 2) > 0; c <<= 1, cnt++) {
             }
-            System.out.println("c=" + c + ", l=" + l + ", cnt=" + cnt);
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("c=" + c + ", l=" + l + ", cnt=" + cnt);
+            }
+
             if (c < 0 || c >= CMFileSyncInfo.MAX_BLOCK_SIZE)
                 blength = CMFileSyncInfo.MAX_BLOCK_SIZE;
             else {
