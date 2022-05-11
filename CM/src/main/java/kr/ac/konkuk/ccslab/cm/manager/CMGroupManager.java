@@ -21,6 +21,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -661,6 +662,21 @@ public class CMGroupManager {
 			if(CMInfo._CM_DEBUG)
 				System.out.println("CMGroupManager.processNEW_USER(), the new user is myself.");
 			de = null;
+
+			// get file-sync mode
+			CMConfigurationInfo confInfo = Objects.requireNonNull(cmInfo.getConfigurationInfo());
+			CMFileSyncMode fileSyncMode = confInfo.getFileSyncMode();
+			if(CMInfo._CM_DEBUG) {
+				System.out.println("file-sync mode: "+fileSyncMode);
+			}
+			if(fileSyncMode != CMFileSyncMode.OFF) {
+				// get CMFileSyncManager
+				CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+				Objects.requireNonNull(syncManager);
+				// start file-sync
+				boolean ret;
+				ret = syncManager.startFileSync(fileSyncMode);
+			}
 			return;
 		}
 		

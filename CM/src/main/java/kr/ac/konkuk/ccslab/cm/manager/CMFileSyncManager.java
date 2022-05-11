@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 
@@ -1313,6 +1314,12 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return true;
+    }
+
+    public boolean startFileSync(CMFileSyncMode fileSyncMode) {
+        // TODO: not yet
+        System.err.println("CMFileSyncManager.startFileSync(CMFileSyncMode) to be implemented!");;
+        return false;
     }
 
     private List<Path> loadPathListFromFile(Path listPath) {
