@@ -27,6 +27,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMDataEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.*;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
@@ -3687,7 +3688,7 @@ public class CMClientStub extends CMStub {
 		// call CMFileSyncManager.startFileSync()
 		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
 		Objects.requireNonNull(syncManager);
-		boolean ret = syncManager.startFileSync();
+		boolean ret = syncManager.startFileSync(CMFileSyncMode.MANUAL);
 		if(!ret) {
 			System.err.println("error starting file-sync!");
 			return false;

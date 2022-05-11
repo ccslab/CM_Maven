@@ -1283,10 +1283,19 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    public boolean startFileSync() {
+    public boolean startFileSync(CMFileSyncMode fileSyncMode) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startFileSync() called..");
+            System.out.println("fileSyncMode = " + fileSyncMode);
         }
+
+        if(fileSyncMode == CMFileSyncMode.OFF) {
+            System.err.println("Current file-sync mode is OFF!");
+            return false;
+        }
+
+        // get CMFileSyncInfo reference
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
 
         // get the online-mode-list-file path
         Path storedListPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
@@ -1294,7 +1303,6 @@ public class CMFileSyncManager extends CMServiceManager {
         List<Path> onlineModePathList = loadPathListFromFile(storedListPath);
         if (onlineModePathList != null) {
             // set to CMFileSyncInfo
-            CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
             syncInfo.setOnlineModePathList(onlineModePathList);
         } else {
             System.err.println("The loaded online-mode-path-list is null!");
@@ -1306,6 +1314,23 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("error starting watch service!");
             return false;
         }
+
+        // check if the file-sync mode is AUTO
+        if(fileSyncMode == CMFileSyncMode.AUTO) {
+            // start the proactive mode task
+            ret = startProactiveMode();
+            if(!ret) {
+                System.err.println("error to start proactive mode!");
+                return false;
+            }
+            // update the current file-sync mode to AUTO
+            syncInfo.setCurrentMode(CMFileSyncMode.AUTO);
+        }
+        else {
+            // update the current file-sync mode to MANUAL
+            syncInfo.setCurrentMode(CMFileSyncMode.MANUAL);
+        }
+
         // conduct file-sync task once
         ret = sync();
         if (!ret) {
@@ -1316,9 +1341,9 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    public boolean startFileSync(CMFileSyncMode fileSyncMode) {
+    private boolean startProactiveMode() {
         // TODO: not yet
-        System.err.println("CMFileSyncManager.startFileSync(CMFileSyncMode) to be implemented!");;
+        System.err.println("CMFileSyncManager.startProactiveMode() not implemented!");
         return false;
     }
 
