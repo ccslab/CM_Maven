@@ -1,8 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class CMConfigurationInfo {
 	private Path m_confFileHome;
@@ -52,6 +55,28 @@ public class CMConfigurationInfo {
 	private int m_nSimTransDelay;
 	// log level
 	private int m_nLogLevel;
+
+	////////// file-sync (4 client)
+	// file-sync mode
+	private CMFileSyncMode fileSyncMode;
+	// monitoring period of directory activation ratio (DAMP)
+	private long dirActivationMonitoringPeriod;
+	// monitoring period unit of directory activation ratio (TimeUnit string)
+	private TimeUnit dirActivationMonitoringPeriodUnit;
+	// duration-since-last-access threshold (DSLAT)
+	private long durationSinceLastAccessThreshold;
+	// duration-since-last-access threshold unit (TimeUnit string)
+	private TimeUnit durationSinceLastAccessThresholdUnit;
+	// threshold of proactive online-mode (0~1)
+	private double onlineModeThreshold;
+	// threshold of proactive local-mode (0~1)
+	private double localModeThreshold;
+	// available storage ratio for file-sync (FSSR) (0~1)
+	private double fileSyncStorageRatio;
+	// used storage ratio threshold (USRT) (0~1)
+	private double usedStorageRatioThreshold;
+	// max access delay threshold (MADT) (milliseconds)
+	private long maxAccessDelayThreshold;
 	
 	public CMConfigurationInfo()
 	{
@@ -94,6 +119,17 @@ public class CMConfigurationInfo {
 		
 		m_nSimTransDelay = 0;
 		m_nLogLevel = 1;
+
+		fileSyncMode = CMFileSyncMode.OFF;
+		dirActivationMonitoringPeriod = 0;
+		dirActivationMonitoringPeriodUnit = TimeUnit.DAYS;
+		durationSinceLastAccessThreshold = 0;
+		durationSinceLastAccessThresholdUnit = TimeUnit.DAYS;
+		onlineModeThreshold = 0;
+		localModeThreshold = 0;
+		fileSyncStorageRatio = 0;
+		usedStorageRatioThreshold = 0;
+		maxAccessDelayThreshold = 0;
 	}
 
 	// set/get methods
@@ -549,5 +585,87 @@ public class CMConfigurationInfo {
 	public synchronized int getLogLevel()
 	{
 		return m_nLogLevel;
+	}
+
+	/////////////////////////////////////////////////////////////////////
+
+	public synchronized CMFileSyncMode getFileSyncMode() {
+		return fileSyncMode;
+	}
+
+	public synchronized void setFileSyncMode(CMFileSyncMode fileSyncMode) {
+		this.fileSyncMode = fileSyncMode;
+	}
+
+	public synchronized long getDirActivationMonitoringPeriod() {
+		return dirActivationMonitoringPeriod;
+	}
+
+	public synchronized void setDirActivationMonitoringPeriod(long dirActivationMonitoringPeriod) {
+		this.dirActivationMonitoringPeriod = dirActivationMonitoringPeriod;
+	}
+
+	public synchronized TimeUnit getDirActivationMonitoringPeriodUnit() {
+		return dirActivationMonitoringPeriodUnit;
+	}
+
+	public synchronized void setDirActivationMonitoringPeriodUnit(TimeUnit dirActivationMonitoringPeriodUnit) {
+		this.dirActivationMonitoringPeriodUnit = dirActivationMonitoringPeriodUnit;
+	}
+
+	public synchronized long getDurationSinceLastAccessThreshold() {
+		return durationSinceLastAccessThreshold;
+	}
+
+	public synchronized void setDurationSinceLastAccessThreshold(long durationSinceLastAccessThreshold) {
+		this.durationSinceLastAccessThreshold = durationSinceLastAccessThreshold;
+	}
+
+	public synchronized TimeUnit getDurationSinceLastAccessThresholdUnit() {
+		return durationSinceLastAccessThresholdUnit;
+	}
+
+	public synchronized void setDurationSinceLastAccessThresholdUnit(TimeUnit durationSinceLastAccessThresholdUnit) {
+		this.durationSinceLastAccessThresholdUnit = durationSinceLastAccessThresholdUnit;
+	}
+
+	public synchronized double getOnlineModeThreshold() {
+		return onlineModeThreshold;
+	}
+
+	public synchronized void setOnlineModeThreshold(double onlineModeThreshold) {
+		this.onlineModeThreshold = onlineModeThreshold;
+	}
+
+	public synchronized double getLocalModeThreshold() {
+		return localModeThreshold;
+	}
+
+	public synchronized void setLocalModeThreshold(double localModeThreshold) {
+		this.localModeThreshold = localModeThreshold;
+	}
+
+	public synchronized double getFileSyncStorageRatio() {
+		return fileSyncStorageRatio;
+	}
+
+	public synchronized void setFileSyncStorageRatio(double fileSyncStorageRatio) {
+		this.fileSyncStorageRatio = fileSyncStorageRatio;
+	}
+
+	public synchronized double getUsedStorageRatioThreshold() {
+		return usedStorageRatioThreshold;
+	}
+
+	public synchronized void setUsedStorageRatioThreshold(double usedStorageRatioThreshold) {
+		this.usedStorageRatioThreshold = usedStorageRatioThreshold;
+	}
+
+	public synchronized long getMaxAccessDelayThreshold() {
+		return maxAccessDelayThreshold;
+	}
+
+	public synchronized void setMaxAccessDelayThreshold(long maxAccessDelayThreshold) {
+		this.maxAccessDelayThreshold = maxAccessDelayThreshold;
 	}
 }

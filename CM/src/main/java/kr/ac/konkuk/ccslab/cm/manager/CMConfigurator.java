@@ -4,9 +4,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 
 public class CMConfigurator {
 	
@@ -121,8 +123,29 @@ public class CMConfigurator {
 		else if( confInfo.getSystemType().equals("CLIENT") )
 		{
 			//confInfo.setMyAddress(InetAddress.getLocalHost().getHostAddress());
-		}
 
+			// init file-sync configuration
+			confInfo.setFileSyncMode(CMFileSyncMode.valueOf(CMConfigurator.getConfiguration(
+					strConfFilePath, "FILE_SYNC_MODE")));
+			confInfo.setDirActivationMonitoringPeriod(Long.parseLong(CMConfigurator.getConfiguration(
+					strConfFilePath, "DIR_ACTIVATION_MONITORING_PERIOD")));
+			confInfo.setDirActivationMonitoringPeriodUnit(TimeUnit.valueOf(CMConfigurator.getConfiguration(
+					strConfFilePath, "DIR_ACTIVATION_MONITORING_PERIOD_UNIT")));
+			confInfo.setDurationSinceLastAccessThreshold(Long.parseLong(CMConfigurator.getConfiguration(
+					strConfFilePath, "DURATION_SINCE_LAST_ACCESS_THRESHOLD")));
+			confInfo.setDurationSinceLastAccessThresholdUnit(TimeUnit.valueOf(CMConfigurator.getConfiguration(
+					strConfFilePath, "DURATION_SINCE_LAST_ACCESS_THRESHOLD_UNIT")));
+			confInfo.setOnlineModeThreshold(Double.parseDouble(CMConfigurator.getConfiguration(
+					strConfFilePath, "ONLINE_MODE_THRESHOLD")));
+			confInfo.setLocalModeThreshold(Double.parseDouble(CMConfigurator.getConfiguration(
+					strConfFilePath, "LOCAL_MODE_THRESHOLD")));
+			confInfo.setFileSyncStorageRatio(Double.parseDouble(CMConfigurator.getConfiguration(
+					strConfFilePath, "FILE_SYNC_STORAGE_RATIO")));
+			confInfo.setUsedStorageRatioThreshold(Double.parseDouble(CMConfigurator.getConfiguration(
+					strConfFilePath, "USED_STORAGE_RATIO_THRESHOLD")));
+			confInfo.setMaxAccessDelayThreshold(Long.parseLong(CMConfigurator.getConfiguration(
+					strConfFilePath, "MAX_ACCESS_DELAY_THRESHOLD")));
+		}
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -192,6 +215,21 @@ public class CMConfigurator {
 			else if(confInfo.getSystemType().equals("CLIENT"))
 			{
 				//System.out.println("MY_ADDR: "+confInfo.getMyAddress());
+
+				// file-sync configuration
+				System.out.println("FILE_SYNC_MODE: "+confInfo.getFileSyncMode());
+				System.out.println("DIR_ACTIVATION_MONITORING_PERIOD: "+confInfo.getDirActivationMonitoringPeriod());
+				System.out.println("DIR_ACTIVATION_MONITORING_PERIOD_UNIT: "+
+						confInfo.getDirActivationMonitoringPeriodUnit());
+				System.out.println("DURATION_SINCE_LAST_ACCESS_THRESHOLD: "+
+						confInfo.getDurationSinceLastAccessThreshold());
+				System.out.println("DURATION_SINCE_LAST_ACCESS_THRESHOLD_UNIT: "+
+						confInfo.getDurationSinceLastAccessThresholdUnit());
+				System.out.println("ONLINE_MODE_THRESHOLD: "+confInfo.getOnlineModeThreshold());
+				System.out.println("LOCAL_MODE_THRESHOLD: "+confInfo.getLocalModeThreshold());
+				System.out.println("FILE_SYNC_STORAGE_RATIO: "+confInfo.getFileSyncStorageRatio());
+				System.out.println("USED_STORAGE_RATIO_THRESHOLD: "+confInfo.getUsedStorageRatioThreshold());
+				System.out.println("MAX_ACCESS_DELAY_THRESHOLD: "+confInfo.getMaxAccessDelayThreshold());
 			}
 		}
 		
