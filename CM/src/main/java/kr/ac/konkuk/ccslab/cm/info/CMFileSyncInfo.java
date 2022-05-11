@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
 import java.nio.file.Path;
@@ -17,6 +18,7 @@ public class CMFileSyncInfo {
     public static final int MAX_BLOCK_SIZE = 1 << 17;   // 2^17 = 131,072 (from rsync version > 30)
     public static final String ONLINE_MODE_LIST_FILE_NAME = "online_mode_list.txt";
 
+    private CMFileSyncMode currentMode;
     private boolean syncInProgress;
     private List<Path> pathList;        // 4 client
     private Map<Path, Boolean> isFileSyncCompletedMap;  // 4 client
@@ -38,6 +40,8 @@ public class CMFileSyncInfo {
     private Map<String, List<Path>> basisFileListMap;           // 4 server
 
     public CMFileSyncInfo() {
+
+        currentMode = CMFileSyncMode.OFF;
         syncInProgress = false;
         pathList = null;
         isFileSyncCompletedMap = new Hashtable<>();
@@ -57,6 +61,14 @@ public class CMFileSyncInfo {
 
         localModeRequestQueue = new ConcurrentLinkedQueue<>();
         basisFileListMap = new HashMap<>();
+    }
+
+    public CMFileSyncMode getCurrentMode() {
+        return currentMode;
+    }
+
+    public void setCurrentMode(CMFileSyncMode currentMode) {
+        this.currentMode = currentMode;
     }
 
     public boolean isSyncInProgress() {
