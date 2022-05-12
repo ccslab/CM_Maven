@@ -1546,8 +1546,42 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     private boolean savePathSizeMapToFile(Map<Path,Long> map, Path storedPath) {
-        // TODO: from here
-        return false;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.savePathSizeMapToFile() called..");
+            System.out.println("map = " + map);
+            System.out.println("storedPath = " + storedPath);
+        }
+        // check arguments
+        if(map == null || storedPath == null) {
+            System.err.println("The argument map or path is null!");
+            return false;
+        }
+        // check the stored file
+        if (!Files.exists(storedPath)) {
+            Path parentPath = storedPath.getParent();
+            if(parentPath != null) {
+                try {
+                    Files.createDirectories(parentPath);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+        }
+        // create or open file
+        try(BufferedWriter writer = Files.newBufferedWriter(storedPath)) {
+            for (Map.Entry<Path, Long> entry : map.entrySet()) {
+                Path path = entry.getKey();
+                long size = entry.getValue();
+                writer.write(path.toString()+" "+Long.toString(size));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     public boolean createTestFile(Path path, long size) {
