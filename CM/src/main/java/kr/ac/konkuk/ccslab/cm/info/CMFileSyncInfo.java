@@ -10,6 +10,7 @@ import java.nio.file.WatchService;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
 
 public class CMFileSyncInfo {
 
@@ -39,6 +40,8 @@ public class CMFileSyncInfo {
     private ConcurrentLinkedQueue<Path> localModeRequestQueue;      // 4 client
     private Map<String, List<Path>> basisFileListMap;           // 4 server
 
+    private ScheduledFuture<?> proactiveModeTaskFuture;
+
     public CMFileSyncInfo() {
 
         currentMode = CMFileSyncMode.OFF;
@@ -61,6 +64,8 @@ public class CMFileSyncInfo {
 
         localModeRequestQueue = new ConcurrentLinkedQueue<>();
         basisFileListMap = new HashMap<>();
+
+        proactiveModeTaskFuture = null;
     }
 
     public CMFileSyncMode getCurrentMode() {
@@ -163,5 +168,20 @@ public class CMFileSyncInfo {
 
     public Map<String, List<Path>> getBasisFileListMap() {
         return basisFileListMap;
+    }
+
+    public ScheduledFuture<?> getProactiveModeTaskFuture() {
+        return proactiveModeTaskFuture;
+    }
+
+    public void setProactiveModeTaskFuture(ScheduledFuture<?> proactiveModeTaskFuture) {
+        this.proactiveModeTaskFuture = proactiveModeTaskFuture;
+    }
+
+    public boolean isProactiveModeTaskDone() {
+        if (proactiveModeTaskFuture == null) {
+            return true;
+        }
+        return proactiveModeTaskFuture.isDone() || proactiveModeTaskFuture.isCancelled();
     }
 }
