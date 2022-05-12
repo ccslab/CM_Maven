@@ -96,14 +96,16 @@ public class CMFileSyncManager extends CMServiceManager {
         fsInfo.setPathList(pathList);
 
         // update the online-mode-list
-        List<Path> onlineModeList = Objects.requireNonNull(fsInfo.getOnlineModePathList());
+        //List<Path> onlineModeList = Objects.requireNonNull(fsInfo.getOnlineModePathList());
+        List<Path> onlineModeList = fsInfo.getOnlineModePathSizeMap().keySet().stream().toList();
         Iterator<Path> iter = onlineModeList.iterator();
         while (iter.hasNext()) {
             Path onlinePath = iter.next();
             if (!pathList.contains(onlinePath))
                 iter.remove();
         }
-        boolean ret = saveOnlineModeListToFile();
+        //boolean ret = saveOnlineModeListToFile();
+        boolean ret = saveOnlineModePathSizeMapToFile();
         if (!ret) {
             System.err.println("error to save online-mode-list to file!");
         }
@@ -1249,10 +1251,19 @@ public class CMFileSyncManager extends CMServiceManager {
         // delete head from the request queue
         localModeRequestQueue.remove();
         // delete path from the online-mode-list
+/*
         List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
         boolean ret = onlineModeList.remove(headPath);
         if (!ret) {
             System.err.println("remove error from the online-mode-list: " + headPath);
+        }
+*/
+        // delete path from the online-mode-map
+        Map<Path,Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        Objects.requireNonNull(onlineModePathSizeMap);
+        Long size = onlineModePathSizeMap.remove(headPath);
+        if(size == null) {
+            System.err.println("remove error from the online-mode-map: " + headPath);
         }
 
         // check if the queue is not empty
@@ -1272,10 +1283,11 @@ public class CMFileSyncManager extends CMServiceManager {
                 .filter(path -> !Files.isDirectory(path))
                 .collect(Collectors.toList());
         // get the number of local-mode files
-        int numLocalModeFiles = filteredPathList.size() - syncInfo.getOnlineModePathList().size();
+        //int numLocalModeFiles = filteredPathList.size() - syncInfo.getOnlineModePathList().size();
+        int numLocalModeFiles = filteredPathList.size() - syncInfo.getOnlineModePathSizeMap().size();
         endEvent.setNumLocalModeFiles(numLocalModeFiles);
 
-        ret = CMEventManager.unicastEvent(endEvent, fileSender, m_cmInfo);
+        boolean ret = CMEventManager.unicastEvent(endEvent, fileSender, m_cmInfo);
         if (!ret) {
             System.err.println("send error: " + endEvent);
         }
@@ -1299,14 +1311,25 @@ public class CMFileSyncManager extends CMServiceManager {
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
 
         // get the online-mode-list-file path
-        Path storedListPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
+        //Path storedListPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
+        Path storedListPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_MAP_FILE);
         // load the online-mode-list file
+/*
         List<Path> onlineModePathList = loadPathListFromFile(storedListPath);
         if (onlineModePathList != null) {
             // set to CMFileSyncInfo
             syncInfo.setOnlineModePathList(onlineModePathList);
         } else {
             System.err.println("The loaded online-mode-path-list is null!");
+        }
+*/
+        // load the online-mode-map file
+        Map<Path,Long> onlineModePathSizeMap = loadPathSizeMapFromFile(storedListPath);
+        if(onlineModePathSizeMap != null) {
+            // set to CMFileSyncInfo
+            syncInfo.setOnlineModePathSizeMap(onlineModePathSizeMap);
+        } else {
+            System.err.println("The loaded online-mode-map is null!");
         }
 
         // start the watch service
@@ -1374,7 +1397,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    private List<Path> loadPathListFromFile(Path listPath) {
+/*    private List<Path> loadPathListFromFile(Path listPath) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.loadPathListFromFile() called..");
             System.out.println("storedListPath = " + listPath);
@@ -1404,6 +1427,12 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return list;
+    }*/
+
+    // called at the client
+    private Map<Path,Long> loadPathSizeMapFromFile(Path storedPath) {
+        // TODO: from here
+        return null;
     }
 
     // called at the client
@@ -1413,7 +1442,9 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // save the online-mode-path list to the file
-        boolean ret = saveOnlineModeListToFile();
+        //boolean ret = saveOnlineModeListToFile();
+        // save the online-mode-map to the file
+        boolean ret = saveOnlineModePathSizeMapToFile();
         if (!ret) {
             System.err.println("error to save the online-mode-path-list to file!");
         }
@@ -1433,7 +1464,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    public boolean saveOnlineModeListToFile() {
+/*    public boolean saveOnlineModeListToFile() {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.saveOnlineModeListToFile() called..");
         }
@@ -1491,6 +1522,18 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return true;
+    }*/
+
+    // called at the client
+    public boolean saveOnlineModePathSizeMapToFile() {
+        // TODO: from here
+        return false;
+    }
+
+    // called at the client
+    private boolean savePathSizeMapToFile(Map<Path,Long> map, Path storedPath) {
+        // TODO: not yet
+        return false;
     }
 
     public boolean createTestFile(Path path, long size) {

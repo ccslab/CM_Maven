@@ -17,7 +17,8 @@ public class CMFileSyncInfo {
     public static final String SYNC_HOME = "FileSyncHome";
     public static final int BLOCK_SIZE = 700;   // Bytes, from rsync
     public static final int MAX_BLOCK_SIZE = 1 << 17;   // 2^17 = 131,072 (from rsync version > 30)
-    public static final String ONLINE_MODE_LIST_FILE_NAME = "online_mode_list.txt";
+    //public static final String ONLINE_MODE_LIST_FILE_NAME = "online_mode_list.txt";
+    public static final String ONLINE_MODE_MAP_FILE = "online_mode_map.txt";
 
     private CMFileSyncMode currentMode;
     private boolean syncInProgress;
@@ -34,7 +35,8 @@ public class CMFileSyncInfo {
     private Future<?> watchServiceFuture;
 
     private ConcurrentLinkedQueue<Path> onlineModeRequestQueue;     // 4 client
-    private List<Path> onlineModePathList;      // 4 client
+    //private List<Path> onlineModePathList;      // 4 client
+    private Map<Path,Long> onlineModePathSizeMap;  // 4 client
     //private Map<String, List<Path>> onlineModePathListMap;      // 4 server
 
     private ConcurrentLinkedQueue<Path> localModeRequestQueue;      // 4 client
@@ -59,7 +61,8 @@ public class CMFileSyncInfo {
         watchServiceFuture = null;
 
         onlineModeRequestQueue = new ConcurrentLinkedQueue<>();
-        onlineModePathList = new ArrayList<>();
+        //onlineModePathList = new ArrayList<>();
+        onlineModePathSizeMap = new HashMap<>();
         //onlineModePathListMap = new HashMap<>();
 
         localModeRequestQueue = new ConcurrentLinkedQueue<>();
@@ -148,6 +151,7 @@ public class CMFileSyncInfo {
         return onlineModeRequestQueue;
     }
 
+/*
     public List<Path> getOnlineModePathList() {
         return onlineModePathList;
     }
@@ -155,8 +159,17 @@ public class CMFileSyncInfo {
     public void setOnlineModePathList(List<Path> onlineModePathList) {
         this.onlineModePathList = onlineModePathList;
     }
+*/
 
-    /*
+    public Map<Path, Long> getOnlineModePathSizeMap() {
+        return onlineModePathSizeMap;
+    }
+
+    public void setOnlineModePathSizeMap(Map<Path, Long> onlineModePathSizeMap) {
+        this.onlineModePathSizeMap = onlineModePathSizeMap;
+    }
+
+/*
     public Map<String, List<Path>> getOnlineModePathListMap() {
         return onlineModePathListMap;
     }

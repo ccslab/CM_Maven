@@ -92,7 +92,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // print local mode files
         if(CMInfo._CM_DEBUG) {
             System.out.println("--- local mode files ---");
-            List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+            //List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+            List<Path> onlineFiles = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
             List<Path> pathList = syncInfo.getPathList();
             for(Path path : pathList) {
                 if(!Files.isDirectory(path)) {
@@ -275,7 +276,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // print the online mode files
         if(CMInfo._CM_DEBUG) {
             System.out.println("--- online mode files ---");
-            syncInfo.getOnlineModePathList().stream().forEach(System.out::println);
+            //syncInfo.getOnlineModePathList().stream().forEach(System.out::println);
+            syncInfo.getOnlineModePathSizeMap().entrySet().stream().forEach(System.out::println);
             System.out.println("---");
         }
 
@@ -376,7 +378,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
         // get online mode list
-        List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
+        // List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
+        // get online mode map
+        Map<Path,Long> onlineModePathSizeMap = Objects.requireNonNull(syncInfo.getOnlineModePathSizeMap());
+        List<Path> onlineModeList = onlineModePathSizeMap.keySet().stream().toList();
         // get info of sync home path
         CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
@@ -401,9 +406,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // if the head is in the list of event
             if(eventList.contains(relativeHeadPath)) {
                 //// change the head path to the online mode
+                long size;
                 try {
                     // save the last-modified time of headPath
                     FileTime lastModifiedTime = Files.getLastModifiedTime(headPath, LinkOption.NOFOLLOW_LINKS);
+                    // get the file size
+                    size = Files.size(headPath);
                     // truncate the file
                     try(SeekableByteChannel channel = Files.newByteChannel(headPath, StandardOpenOption.WRITE)) {
                         channel.truncate(0);
@@ -417,8 +425,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     e.printStackTrace();
                     return false;
                 }
-                // remove the head of queue and add it to the online mode list
+                // remove the head of queue and add it to the online mode map
                 requestQueue.remove();
+/*
                 if(!onlineModeList.contains(headPath)) {
                     addResult = onlineModeList.add(headPath);
                     if(!addResult) {
@@ -427,6 +436,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         return false;
                     }
                 }
+*/
+                onlineModePathSizeMap.put(headPath, size);
                 numCompletePath++;
             }
             else {
@@ -450,7 +461,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             endEvent.setSender(ackEvent.getReceiver());
             endEvent.setReceiver(ackEvent.getSender());
             endEvent.setRequester(ackEvent.getRequester());
-            endEvent.setNumOnlineModeFiles(onlineModeList.size());
+            //endEvent.setNumOnlineModeFiles(onlineModeList.size());
+            endEvent.setNumOnlineModeFiles(onlineModePathSizeMap.size());
 
             boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender(), m_cmInfo);
             if(!ret) {
