@@ -9,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 
 import javax.xml.bind.DatatypeConverter;
@@ -1342,9 +1343,35 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     private boolean startProactiveMode() {
-        // TODO: not yet
-        System.err.println("CMFileSyncManager.startProactiveMode() not implemented!");
-        return false;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.startProactiveMode() called..");
+        }
+        // check if a proactive mode task is already running
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        if (!syncInfo.isProactiveModeTaskDone()) {
+            System.err.println("A proactive mode task is already running!");
+            return false;
+        }
+
+        // get the scheduled-executor-service reference
+        ScheduledExecutorService ses = m_cmInfo.getThreadInfo().getScheduledExecutorService();
+        Objects.requireNonNull(ses);
+        // get directory-activation-monitoring-period
+        CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        long period = confInfo.getDirActivationMonitoringPeriod();
+        TimeUnit unit = confInfo.getDirActivationMonitoringPeriodUnit();
+        // create a scheduled proactive mode task
+        CMFileSyncProactiveModeTask proactiveModeTask = new CMFileSyncProactiveModeTask(this,
+                syncInfo, confInfo);
+        ScheduledFuture<?> scheduledFuture = ses.scheduleWithFixedDelay(proactiveModeTask, period, period, unit);
+        if (scheduledFuture == null) {
+            System.err.println("error to call scheduleWithFixedDelay()!");
+            return false;
+        }
+        // set the task future reference
+        syncInfo.setProactiveModeTaskFuture(scheduledFuture);
+
+        return true;
     }
 
     private List<Path> loadPathListFromFile(Path listPath) {
