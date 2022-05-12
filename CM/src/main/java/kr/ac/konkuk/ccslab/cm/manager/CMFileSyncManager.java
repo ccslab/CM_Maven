@@ -1431,7 +1431,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     private Map<Path,Long> loadPathSizeMapFromFile(Path storedPath) {
-        // TODO: from here
+        // TODO: not yet
         return null;
     }
 
@@ -1526,13 +1526,27 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean saveOnlineModePathSizeMapToFile() {
-        // TODO: from here
-        return false;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.saveOnlineModePathSizeMapToFile() called..");
+        }
+        // get online-mode-map
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        Map<Path,Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        Objects.requireNonNull(onlineModePathSizeMap);
+        // get online-mode-map file path
+        Path storedPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_MAP_FILE);
+        // save map to the file
+        boolean ret = savePathSizeMapToFile(onlineModePathSizeMap, storedPath);
+        if (!ret) {
+            System.err.println("error to save the online-mode-map to file!");
+            return false;
+        }
+        return true;
     }
 
     // called at the client
     private boolean savePathSizeMapToFile(Map<Path,Long> map, Path storedPath) {
-        // TODO: not yet
+        // TODO: from here
         return false;
     }
 
