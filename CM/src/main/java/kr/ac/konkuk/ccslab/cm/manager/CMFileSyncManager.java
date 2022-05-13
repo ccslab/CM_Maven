@@ -1431,8 +1431,32 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     private Map<Path,Long> loadPathSizeMapFromFile(Path storedPath) {
-        // TODO: not yet
-        return null;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.loadPathSizeMapFromFile() called..");
+            System.out.println("storedPath = " + storedPath);
+        }
+        // check if the argument is null
+        if(storedPath == null) {
+            System.err.println("The argument path is null!");
+            return null;
+        }
+        // check if the argument path exists
+        if(!Files.exists(storedPath)) {
+            System.err.println("The argument (" + storedPath + ") does not exists!");
+            return null;
+        }
+        // read line-by-line from the file and add (key, value) to the online-mode-map
+        Map<Path,Long> pathSizeMap;
+        try {
+            pathSizeMap = Files.lines(storedPath)
+                    .map(line -> line.split(" "))
+                    .collect(Collectors.toMap(tokens -> Paths.get(tokens[0]),
+                            tokens -> Long.parseLong(tokens[1])));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return pathSizeMap;
     }
 
     // called at the client
