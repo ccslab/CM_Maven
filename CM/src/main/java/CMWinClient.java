@@ -4059,14 +4059,19 @@ public class CMWinClient extends JFrame {
 	private void testPrintOnlineModeFiles() {
 		printMessage("========== print online mode files\n");
 		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
+/*
 		syncInfo.getOnlineModePathList().stream()
+				.forEach(path -> printMessage(path+"\n"));
+*/
+		syncInfo.getOnlineModePathSizeMap().keySet().stream()
 				.forEach(path -> printMessage(path+"\n"));
 	}
 
 	private void testPrintLocalModeFiles() {
 		printMessage("========== print local mode files\n");
 		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
-		List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+		//List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+		List<Path> onlineFiles = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
 		List<Path> pathList = syncInfo.getPathList();
 		if(pathList == null) return;
 

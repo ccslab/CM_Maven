@@ -3358,14 +3358,19 @@ public class CMClientApp {
 	private void testPrintOnlineModeFiles() {
 		System.out.println("========== print online mode files");
 		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
+/*
 		syncInfo.getOnlineModePathList().stream()
+				.forEach(System.out::println);
+*/
+		syncInfo.getOnlineModePathSizeMap().keySet().stream()
 				.forEach(System.out::println);
 	}
 
 	private void testPrintLocalModeFiles() {
 		System.out.println("========== print local mode files");
 		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
-		List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+		//List<Path> onlineFiles = syncInfo.getOnlineModePathList();
+		List<Path> onlineFiles = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
 		List<Path> pathList = syncInfo.getPathList();
 		if(pathList == null) return;
 
