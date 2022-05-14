@@ -6,12 +6,14 @@ public class CMThreadInfo {
 	private ExecutorService executorService;
 	private ScheduledExecutorService scheduledExecutorService;
 	private ScheduledFuture<?> scheduledFuture;
+	private long eventReceiverId;
 
 	public CMThreadInfo()
 	{
 		executorService = null;
 		scheduledExecutorService = null;
 		scheduledFuture = null;
+		eventReceiverId = -1;
 	}
 
 	///// set/get methods
@@ -44,6 +46,14 @@ public class CMThreadInfo {
 	public synchronized ScheduledFuture<?> getScheduledFuture()
 	{
 		return scheduledFuture;
+	}
+
+	public synchronized long getEventReceiverId() {
+		return eventReceiverId;
+	}
+
+	public synchronized void setEventReceiverId(long eventReceiverId) {
+		this.eventReceiverId = eventReceiverId;
 	}
 
 	// Override method

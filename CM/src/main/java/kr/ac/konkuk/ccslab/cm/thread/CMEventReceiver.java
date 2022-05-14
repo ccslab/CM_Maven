@@ -49,9 +49,17 @@ public class CMEventReceiver implements Runnable {
 		CMMessage msg = null;
 		boolean bForwardToApp = true;
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
-		
-		if(CMInfo._CM_DEBUG)
-			System.out.println("CMEventReceiver starts to receive events.");
+
+		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		Objects.requireNonNull(threadInfo);
+		long threadId = Thread.currentThread().getId();
+		threadInfo.setEventReceiverId(threadId);
+
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMEventReceiver starts to receive events.");
+			System.out.println("threadId = " + threadId);
+		}
+
 		while(!Thread.currentThread().isInterrupted())
 		{
 			msg = m_queue.pop();
