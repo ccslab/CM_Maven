@@ -14,10 +14,10 @@ import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
+import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 
@@ -657,5 +657,82 @@ public class CMCommManager {
 			buf = null;
 		
 		return nTotalSentByteNum;
+	}
+
+	public static double measureInputThroughput(String target, CMInfo cmInfo) {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMCommManager.measureInputThroughput() called..");
+			System.out.println("target = " + target);
+		}
+
+		// check the current thread id
+		long threadId = Thread.currentThread().getId();
+		CMThreadInfo threadInfo = Objects.requireNonNull(cmInfo.getThreadInfo());
+		if(threadId == threadInfo.getEventReceiverId()) {
+			System.err.println("The current thread is the event-receiver thread ("+threadId+")!");
+			return -1;
+		}
+
+		boolean bReturn = false;
+		double speed = 0.0;
+		long lFileSize = -1;	// the size of a file to measure the transmission delay
+		long lTransDelay = -1;
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMEventInfo eInfo = cmInfo.getEventInfo();
+		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
+		CMFileEvent replyEvent = null;
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+
+		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
+				target, CMInfo.FILE_OVERWRITE, cmInfo);
+
+		if(!bReturn)
+			return -1;
+
+		eventSync.init();
+		if(confInfo.isFileTransferScheme())
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN, target);
+		else
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER, target);
+
+		synchronized(eventSync)
+		{
+			try {
+				eventSync.wait(20000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			replyEvent = (CMFileEvent) eventSync.getReplyEvent();
+			if(replyEvent == null)
+			{
+				System.err.println("CMCommManager.measureInputThroughput(), timeout expired!");
+				CMFileTransferManager.cancelPullFile(target, cmInfo);
+				return -1;
+			}
+
+			lFileSize = replyEvent.getFileSize();
+		}
+
+		if(replyEvent.getID() == CMFileEvent.REPLY_PERMIT_PULL_FILE)
+		{
+			return -1;
+		}
+
+		lTransDelay = fInfo.getEndRecvTime() - fInfo.getStartRecvTime();	// millisecond
+		speed = ((double)lFileSize / 1000000) / ((double)lTransDelay / 1000);	// MBps
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMCommManager.measureInputThroughput(); received file size("
+					+lFileSize+"), delay("+lTransDelay+" ms), speed("+speed+" MBps)");
+		}
+
+		return speed;
+	}
+
+	public static double measureOutputThroughput(String target, CMInfo cmInfo) {
+
+		// TODO: not yet
+		return -1;
 	}
 }
