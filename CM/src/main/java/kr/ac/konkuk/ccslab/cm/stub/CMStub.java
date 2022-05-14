@@ -2271,60 +2271,14 @@ public class CMStub {
 	 * @see CMStub#measureInputThroughput(String)
 	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
-	public float measureOutputThroughput(String strTarget)
-	{
-		boolean bReturn = false;
-		float fSpeed = -1;
-		long lFileSize = -1;	// the size of a file to measure the transmission delay
-		long lTransDelay = -1;
-		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
-		CMEventInfo eInfo = m_cmInfo.getEventInfo();
-		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
-		CMFileEvent replyEvent = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + CMInfo.THROUGHPUT_TEST_FILE;
-		
-		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
-		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strTarget, 
-				CMInfo.FILE_OVERWRITE, -1, m_cmInfo);
-		
-		if(!bReturn)
-			return -1;
-	
-		eventSync.init();
-		if(confInfo.isFileTransferScheme())
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, strTarget);
-		else
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK, strTarget);
-		
-		synchronized(eventSync)
-		{
-			try {
-				eventSync.wait(20000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			replyEvent = (CMFileEvent) eventSync.getReplyEvent();
-			if(replyEvent == null)
-			{
-				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPushFile(strTarget, m_cmInfo);
-				return -1;
-			}
-			
-			lFileSize = replyEvent.getFileSize();
-		}
-				
-		lTransDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();	// millisecond
-		fSpeed = ((float)lFileSize / 1000000) / ((float)lTransDelay / 1000);	// MBps
-		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMStub.measureOutputThroughput(); received file size("+lFileSize+"), delay("
-					+lTransDelay+" ms), speed("+fSpeed+" MBps)");
+	public double measureOutputThroughput(String strTarget) {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMStub.measureOutputThroughput() called..");
+			System.out.println("strTarget = " + strTarget);
 		}
 
-		return fSpeed;
+		double speed = CMCommManager.measureOutputThroughput(strTarget, m_cmInfo);
+		return speed;
 	}
 	
 	/**

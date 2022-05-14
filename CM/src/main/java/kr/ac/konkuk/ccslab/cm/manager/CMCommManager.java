@@ -1,4 +1,5 @@
 package kr.ac.konkuk.ccslab.cm.manager;
+import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -731,8 +732,70 @@ public class CMCommManager {
 	}
 
 	public static double measureOutputThroughput(String target, CMInfo cmInfo) {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMCommManager.measureOutputThroughput() called..");
+			System.out.println("target = " + target);
+		}
 
-		// TODO: not yet
-		return -1;
+		// check the current thread id
+		long threadId = Thread.currentThread().getId();
+		CMThreadInfo threadInfo = Objects.requireNonNull(cmInfo.getThreadInfo());
+		if(threadId == threadInfo.getEventReceiverId()) {
+			System.err.println("The current thread is the event-receiver thread ("+threadId+")!");
+			return -1;
+		}
+
+		boolean bReturn = false;
+		double speed = -1;
+		long lFileSize = -1;	// the size of a file to measure the transmission delay
+		long lTransDelay = -1;
+		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMEventInfo eInfo = cmInfo.getEventInfo();
+		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
+		CMFileEvent replyEvent = null;
+		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + CMInfo.THROUGHPUT_TEST_FILE;
+
+		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
+		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, target,
+				CMInfo.FILE_OVERWRITE, -1, cmInfo);
+
+		if(!bReturn)
+			return -1;
+
+		eventSync.init();
+		if(confInfo.isFileTransferScheme())
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, target);
+		else
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK, target);
+
+		synchronized(eventSync)
+		{
+			try {
+				eventSync.wait(20000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			replyEvent = (CMFileEvent) eventSync.getReplyEvent();
+			if(replyEvent == null)
+			{
+				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
+				CMFileTransferManager.cancelPushFile(target, cmInfo);
+				return -1;
+			}
+
+			lFileSize = replyEvent.getFileSize();
+		}
+
+		lTransDelay = fInfo.getEndSendTime() - fInfo.getStartSendTime();	// millisecond
+		speed = ((double)lFileSize / 1000000) / ((double)lTransDelay / 1000);	// MBps
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMStub.measureOutputThroughput(); received file size("+lFileSize+"), delay("
+					+lTransDelay+" ms), speed("+speed+" MBps)");
+		}
+
+		return speed;
 	}
 }

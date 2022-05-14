@@ -899,15 +899,15 @@ public class CMServerApp {
 	public void measureOutputThroughput()
 	{
 		String strTarget = null;
-		float fSpeed = -1; // MBps
+		double speed = -1; // MBps
 		System.out.println("========== test output network throughput");
 		System.out.print("target user: ");
 		strTarget = m_scan.next();
-		fSpeed = m_serverStub.measureOutputThroughput(strTarget);
-		if(fSpeed == -1)
+		speed = m_serverStub.measureOutputThroughput(strTarget);
+		if(speed == -1)
 			System.err.println("Test failed!");
 		else
-			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, fSpeed);		
+			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, speed);
 	}
 	
 	public void addChannel()

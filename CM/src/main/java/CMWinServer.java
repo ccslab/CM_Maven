@@ -1209,18 +1209,18 @@ public class CMWinServer extends JFrame {
 	public void measureOutputThroughput()
 	{
 		String strTarget = null;
-		float fSpeed = -1; // MBps
+		double speed = -1; // MBps
 		printMessage("========== test output network throughput\n");
 		
 		strTarget = JOptionPane.showInputDialog("Target node");
 		if(strTarget == null || strTarget.equals("")) 
 			return;
 
-		fSpeed = m_serverStub.measureOutputThroughput(strTarget);
-		if(fSpeed == -1)
+		speed = m_serverStub.measureOutputThroughput(strTarget);
+		if(speed == -1)
 			printMessage("Test failed!\n");
 		else
-			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, fSpeed));
+			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, speed));
 	}
 	
 	public void addChannel()

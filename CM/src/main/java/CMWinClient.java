@@ -3730,7 +3730,7 @@ public class CMWinClient extends JFrame {
 	private void testMeasureOutputThroughput()
 	{
 		String strTarget = null;
-		float fSpeed = -1; // MBps
+		double speed = -1; // MBps
 		printMessage("========== test output network throughput\n");
 		
 		strTarget = JOptionPane.showInputDialog("Target node (empty for the default server)");
@@ -3739,11 +3739,11 @@ public class CMWinClient extends JFrame {
 		else if(strTarget.equals(""))
 			strTarget = m_clientStub.getDefaultServerName();
 
-		fSpeed = m_clientStub.measureOutputThroughput(strTarget);
-		if(fSpeed == -1)
+		speed = m_clientStub.measureOutputThroughput(strTarget);
+		if(speed == -1)
 			printMessage("Test failed!\n");
 		else
-			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, fSpeed));
+			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, speed));
 	}
 	
 	private void testPrintCurrentChannelInfo()
