@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -116,5 +117,11 @@ public class CMFileSyncManagerTestForClient {
         }
     }
 */
+    @Test
+    public void getSyncDirectoryList() {
+        System.out.println("===== called getSyncDirectoryList() ");
+        List<Path> dirList = fileSyncManager.getSyncDirectoryList();
+        assertNotNull(dirList);
+    }
 
 }

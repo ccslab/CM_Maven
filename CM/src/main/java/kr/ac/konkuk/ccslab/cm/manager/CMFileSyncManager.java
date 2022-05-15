@@ -1744,4 +1744,31 @@ public class CMFileSyncManager extends CMServiceManager {
         } catch(Exception ex) { }
         cb = null;
     }
+
+    // called at the client
+    public List<Path> getSyncDirectoryList() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.getSyncDirectoryList() called..");
+        }
+
+        // get file-sync home
+        Path syncHome = getClientSyncHome();
+        Objects.requireNonNull(syncHome);
+        // get the list of directory paths
+        List<Path> dirList;
+        try {
+            dirList = Files.walk(syncHome)
+                    .filter(Files::isDirectory)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        if(CMInfo._CM_DEBUG) {
+            dirList.forEach(System.out::println);
+        }
+
+        return dirList;
+    }
 }
