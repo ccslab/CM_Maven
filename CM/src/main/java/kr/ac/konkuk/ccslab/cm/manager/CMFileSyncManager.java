@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -1770,5 +1771,93 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return dirList;
+    }
+
+    // called at the client
+    public double calculateDirActivationRatio(Path dir) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.calculateDirActivationRatio() called..");
+            System.out.println("dir = " + dir);
+        }
+        // check the argument
+        if(!Files.isDirectory(dir)) {
+            System.err.println(dir + " is not a directory!");
+        }
+        // get list of normal files (not directory types)
+        List<Path> fileList;
+        try {
+            fileList = Files.walk(dir, 0)
+                    .filter(p -> !Files.isDirectory(p))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
+        }
+        if(fileList.isEmpty()) {
+            System.out.println(dir + " does not have a normal file.");
+            return 0;
+        }
+
+        ///// calculate average of last access time of files
+        // get the unit of duration since last access threshold (DSLATU)
+        CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+        Objects.requireNonNull(confInfo);
+        TimeUnit unit = confInfo.getDurationSinceLastAccessThresholdUnit();
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("unit = " + unit);
+        }
+
+        // get the sum of access time of files
+        long totalAccessTime = 0;
+        for(Path path : fileList) {
+            BasicFileAttributes attr = null;
+            try {
+                attr = Files.readAttributes(path, BasicFileAttributes.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            FileTime accessTime = attr.lastAccessTime();
+            totalAccessTime += accessTime.to(unit);
+
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("----- path = " + path);
+                System.out.println("accessTime = " + accessTime);
+                System.out.println(unit+": " + accessTime.to(unit));
+                System.out.println("totalAccessTime = " + totalAccessTime);
+            }
+        }
+        // get the average
+        double averageAccessTime = totalAccessTime / (double)fileList.size();
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("averageAccessTime = " + averageAccessTime);
+        }
+
+        // get duration-since-last-access threshold (DSLAT)
+        long durationSinceLastAccessThreshold = confInfo.getDurationSinceLastAccessThreshold();
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("durationSinceLastAccessThreshold = " + durationSinceLastAccessThreshold);
+        }
+        if(durationSinceLastAccessThreshold == 0) {
+            System.err.println("duration-since-last-access threshold is 0!");
+            return 0;
+        }
+
+        // get current time (DSLATU)
+        long currentTimeMillis = System.currentTimeMillis();
+        long currentTime = unit.convert(currentTimeMillis, TimeUnit.MILLISECONDS);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("currentTimeMillis = " + currentTimeMillis);
+            System.out.println("currentTime("+unit+") = " + currentTime);
+        }
+
+        // calculate directory activation ratio (DAR)
+        // DAR = (DSLAT - (current time - averageAccessTime)) / DSLAT
+        double dirActivationRatio = (durationSinceLastAccessThreshold - (currentTime - averageAccessTime)) /
+                (double)durationSinceLastAccessThreshold;
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("dirActivationRatio = " + dirActivationRatio);
+        }
+
+        return dirActivationRatio;
     }
 }

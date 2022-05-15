@@ -119,9 +119,17 @@ public class CMFileSyncManagerTestForClient {
 */
     @Test
     public void getSyncDirectoryList() {
-        System.out.println("===== called getSyncDirectoryList() ");
+        System.out.println("===== called getSyncDirectoryList()");
         List<Path> dirList = fileSyncManager.getSyncDirectoryList();
         assertNotNull(dirList);
+    }
+
+    @Test
+    public void calculateDirActivationRatio() {
+        System.out.println("===== called calculateDirActivationRatio()");
+        Path syncHome = fileSyncManager.getClientSyncHome();
+        double DAR = fileSyncManager.calculateDirActivationRatio(syncHome);
+
     }
 
 }
