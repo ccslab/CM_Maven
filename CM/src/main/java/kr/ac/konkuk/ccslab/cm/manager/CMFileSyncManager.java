@@ -1747,7 +1747,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    public List<Path> getSyncDirectoryList() {
+    public synchronized List<Path> getSyncDirectoryList() {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.getSyncDirectoryList() called..");
         }
@@ -2007,5 +2007,17 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return size;
+    }
+
+    // called at the client
+    public boolean startProactiveLocalMode(Path dir) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.startProactiveLocalMode() called..");
+            System.out.println("dir = " + dir);
+            System.err.println("startProactiveLocalMode() not implemented yet!");
+        }
+
+        // TODO: not yet
+        return false;
     }
 }
