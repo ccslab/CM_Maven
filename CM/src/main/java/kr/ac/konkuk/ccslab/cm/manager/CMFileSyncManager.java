@@ -1956,11 +1956,32 @@ public class CMFileSyncManager extends CMServiceManager {
         List<Path> pathListToBeOnline = new ArrayList<Path>();
         // move files from the local-mode list to the list to be online mode.
         for(Path path : localModePathList) {
+            try {
+                usedSyncSpaceToBeUpdated -= Files.size(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)totalSyncSpace;
+            if(usedStorageRatioToBeUpdated <= usedStorageRatioThreshold)
+                break;
+            pathListToBeOnline.add(path);
 
-            // TODO: from here
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("** path = " + path + " : added to the list to be online.");
+                System.out.println("usedSyncSpaceToBeUpdated = " + usedSyncSpaceToBeUpdated);
+                System.out.println("usedStorageRatioToBeUpdated = " + usedStorageRatioToBeUpdated);
+            }
+        }
+        /////
+
+        // request online-mode for the list
+        boolean ret = requestOnlineMode(pathListToBeOnline);
+        if(!ret) {
+            System.err.println("error from requestOnlineMode()!");
+            return false;
         }
 
-        /////
         return true;
     }
 
