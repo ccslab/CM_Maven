@@ -1260,10 +1260,10 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 */
         // delete path from the online-mode-map
-        Map<Path,Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
         Objects.requireNonNull(onlineModePathSizeMap);
         Long size = onlineModePathSizeMap.remove(headPath);
-        if(size == null) {
+        if (size == null) {
             System.err.println("remove error from the online-mode-map: " + headPath);
         }
 
@@ -1303,7 +1303,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("fileSyncMode = " + fileSyncMode);
         }
 
-        if(fileSyncMode == CMFileSyncMode.OFF) {
+        if (fileSyncMode == CMFileSyncMode.OFF) {
             System.err.println("Current file-sync mode is OFF!");
             return false;
         }
@@ -1325,8 +1325,8 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 */
         // load the online-mode-map file
-        Map<Path,Long> onlineModePathSizeMap = loadPathSizeMapFromFile(storedListPath);
-        if(onlineModePathSizeMap != null) {
+        Map<Path, Long> onlineModePathSizeMap = loadPathSizeMapFromFile(storedListPath);
+        if (onlineModePathSizeMap != null) {
             // set to CMFileSyncInfo
             syncInfo.setOnlineModePathSizeMap(onlineModePathSizeMap);
         } else {
@@ -1341,17 +1341,16 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // check if the file-sync mode is AUTO
-        if(fileSyncMode == CMFileSyncMode.AUTO) {
+        if (fileSyncMode == CMFileSyncMode.AUTO) {
             // start the proactive mode task
             ret = startProactiveMode();
-            if(!ret) {
+            if (!ret) {
                 System.err.println("error to start proactive mode!");
                 return false;
             }
             // update the current file-sync mode to AUTO
             syncInfo.setCurrentMode(CMFileSyncMode.AUTO);
-        }
-        else {
+        } else {
             // update the current file-sync mode to MANUAL
             syncInfo.setCurrentMode(CMFileSyncMode.MANUAL);
         }
@@ -1367,7 +1366,7 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     private boolean startProactiveMode() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startProactiveMode() called..");
         }
         // check if a proactive mode task is already running
@@ -1431,23 +1430,23 @@ public class CMFileSyncManager extends CMServiceManager {
     }*/
 
     // called at the client
-    private Map<Path,Long> loadPathSizeMapFromFile(Path storedPath) {
+    private Map<Path, Long> loadPathSizeMapFromFile(Path storedPath) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.loadPathSizeMapFromFile() called..");
             System.out.println("storedPath = " + storedPath);
         }
         // check if the argument is null
-        if(storedPath == null) {
+        if (storedPath == null) {
             System.err.println("The argument path is null!");
             return null;
         }
         // check if the argument path exists
-        if(!Files.exists(storedPath)) {
+        if (!Files.exists(storedPath)) {
             System.err.println("The argument (" + storedPath + ") does not exists!");
             return null;
         }
         // read line-by-line from the file and add (key, value) to the online-mode-map
-        Map<Path,Long> pathSizeMap;
+        Map<Path, Long> pathSizeMap;
         try {
             pathSizeMap = Files.lines(storedPath)
                     .map(line -> line.split(" "))
@@ -1551,12 +1550,12 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean saveOnlineModePathSizeMapToFile() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.saveOnlineModePathSizeMapToFile() called..");
         }
         // get online-mode-map
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
-        Map<Path,Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
         Objects.requireNonNull(onlineModePathSizeMap);
         // get online-mode-map file path
         Path storedPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_MAP_FILE);
@@ -1570,21 +1569,21 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    private boolean savePathSizeMapToFile(Map<Path,Long> map, Path storedPath) {
-        if(CMInfo._CM_DEBUG) {
+    private boolean savePathSizeMapToFile(Map<Path, Long> map, Path storedPath) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.savePathSizeMapToFile() called..");
             System.out.println("map = " + map);
             System.out.println("storedPath = " + storedPath);
         }
         // check arguments
-        if(map == null || storedPath == null) {
+        if (map == null || storedPath == null) {
             System.err.println("The argument map or path is null!");
             return false;
         }
         // check the stored file
         if (!Files.exists(storedPath)) {
             Path parentPath = storedPath.getParent();
-            if(parentPath != null) {
+            if (parentPath != null) {
                 try {
                     Files.createDirectories(parentPath);
                 } catch (IOException e) {
@@ -1594,11 +1593,11 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
         // create or open file
-        try(BufferedWriter writer = Files.newBufferedWriter(storedPath)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(storedPath)) {
             for (Map.Entry<Path, Long> entry : map.entrySet()) {
                 Path path = entry.getKey();
                 long size = entry.getValue();
-                writer.write(path.toString()+" "+Long.toString(size));
+                writer.write(path.toString() + " " + Long.toString(size));
                 writer.newLine();
             }
         } catch (IOException e) {
@@ -1712,13 +1711,13 @@ public class CMFileSyncManager extends CMServiceManager {
     // URL: https://stackoverflow.com/questions/2972986/
     // how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java/19447758#19447758
     public void closeDirectBuffer(ByteBuffer cb) {
-        if (cb==null || !cb.isDirect()) return;
+        if (cb == null || !cb.isDirect()) return;
         // we could use this type cast and call functions without reflection code,
         // but static import from sun.* package is risky for non-SUN virtual machine.
         //try { ((sun.nio.ch.DirectBuffer)cb).cleaner().clean(); } catch (Exception ex) { }
 
         // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
-        boolean isOldJDK = System.getProperty("java.specification.version","99").startsWith("1.");
+        boolean isOldJDK = System.getProperty("java.specification.version", "99").startsWith("1.");
         try {
             if (isOldJDK) {
                 Method cleaner = cb.getClass().getMethod("cleaner");
@@ -1730,7 +1729,7 @@ public class CMFileSyncManager extends CMServiceManager {
                 Class unsafeClass;
                 try {
                     unsafeClass = Class.forName("sun.misc.Unsafe");
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     // jdk.internal.misc.Unsafe doesn't yet have an invokeCleaner() method,
                     // but that method should be added if sun.misc.Unsafe is removed.
                     unsafeClass = Class.forName("jdk.internal.misc.Unsafe");
@@ -1742,13 +1741,14 @@ public class CMFileSyncManager extends CMServiceManager {
                 Object theUnsafe = theUnsafeField.get(null);
                 clean.invoke(theUnsafe, cb);
             }
-        } catch(Exception ex) { }
+        } catch (Exception ex) {
+        }
         cb = null;
     }
 
     // called at the client
     public List<Path> getSyncDirectoryList() {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.getSyncDirectoryList() called..");
         }
 
@@ -1766,7 +1766,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return null;
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             dirList.forEach(System.out::println);
         }
 
@@ -1775,12 +1775,12 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public double calculateDirActivationRatio(Path dir) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateDirActivationRatio() called..");
             System.out.println("dir = " + dir);
         }
         // check the argument
-        if(!Files.isDirectory(dir)) {
+        if (!Files.isDirectory(dir)) {
             System.err.println(dir + " is not a directory!");
         }
         // get list of normal files (not directory types)
@@ -1793,7 +1793,7 @@ public class CMFileSyncManager extends CMServiceManager {
             e.printStackTrace();
             return 0;
         }
-        if(fileList.isEmpty()) {
+        if (fileList.isEmpty()) {
             System.out.println(dir + " does not have a normal file.");
             return 0;
         }
@@ -1803,13 +1803,13 @@ public class CMFileSyncManager extends CMServiceManager {
         CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
         Objects.requireNonNull(confInfo);
         TimeUnit unit = confInfo.getDurationSinceLastAccessThresholdUnit();
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("unit = " + unit);
         }
 
         // get the sum of access time of files
         long totalAccessTime = 0;
-        for(Path path : fileList) {
+        for (Path path : fileList) {
             BasicFileAttributes attr = null;
             try {
                 attr = Files.readAttributes(path, BasicFileAttributes.class);
@@ -1819,25 +1819,25 @@ public class CMFileSyncManager extends CMServiceManager {
             FileTime accessTime = attr.lastAccessTime();
             totalAccessTime += accessTime.to(unit);
 
-            if(CMInfo._CM_DEBUG) {
+            if (CMInfo._CM_DEBUG) {
                 System.out.println("----- path = " + path);
                 System.out.println("accessTime = " + accessTime);
-                System.out.println(unit+": " + accessTime.to(unit));
+                System.out.println(unit + ": " + accessTime.to(unit));
                 System.out.println("totalAccessTime = " + totalAccessTime);
             }
         }
         // get the average
-        double averageAccessTime = totalAccessTime / (double)fileList.size();
-        if(CMInfo._CM_DEBUG) {
+        double averageAccessTime = totalAccessTime / (double) fileList.size();
+        if (CMInfo._CM_DEBUG) {
             System.out.println("averageAccessTime = " + averageAccessTime);
         }
 
         // get duration-since-last-access threshold (DSLAT)
         long durationSinceLastAccessThreshold = confInfo.getDurationSinceLastAccessThreshold();
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("durationSinceLastAccessThreshold = " + durationSinceLastAccessThreshold);
         }
-        if(durationSinceLastAccessThreshold == 0) {
+        if (durationSinceLastAccessThreshold == 0) {
             System.err.println("duration-since-last-access threshold is 0!");
             return 0;
         }
@@ -1845,16 +1845,16 @@ public class CMFileSyncManager extends CMServiceManager {
         // get current time (DSLATU)
         long currentTimeMillis = System.currentTimeMillis();
         long currentTime = unit.convert(currentTimeMillis, TimeUnit.MILLISECONDS);
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("currentTimeMillis = " + currentTimeMillis);
-            System.out.println("currentTime("+unit+") = " + currentTime);
+            System.out.println("currentTime(" + unit + ") = " + currentTime);
         }
 
         // calculate directory activation ratio (DAR)
         // DAR = (DSLAT - (current time - averageAccessTime)) / DSLAT
         double dirActivationRatio = (durationSinceLastAccessThreshold - (currentTime - averageAccessTime)) /
-                (double)durationSinceLastAccessThreshold;
-        if(CMInfo._CM_DEBUG) {
+                (double) durationSinceLastAccessThreshold;
+        if (CMInfo._CM_DEBUG) {
             System.out.println("dirActivationRatio = " + dirActivationRatio);
         }
 
@@ -1863,7 +1863,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean startProactiveOnlineMode(Path dir) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startProactiveOnlineMode() called..");
             System.out.println("dir = " + dir);
         }
@@ -1878,37 +1878,95 @@ public class CMFileSyncManager extends CMServiceManager {
         CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
         double fileSyncStorageRatio = confInfo.getFileSyncStorageRatio();
         // calculate total space for file-sync
-        long totalSyncSpace = (long)(totalSpace * fileSyncStorageRatio);
+        long totalSyncSpace = (long) (totalSpace * fileSyncStorageRatio);
+        if(totalSyncSpace == 0) {
+            System.err.println("Total space for file-sync is 0! It must be greater than 0!");
+            return false;
+        }
         /////
         ///// get used-sync-space ratio
         // get used space of the file-sync home dir
         long usedSyncSpace = getDirectorySize(syncHome);
         // calculate used sync-space ratio
-        double usedStorageRatio = usedSyncSpace / (double)totalSyncSpace;
+        double usedStorageRatio = usedSyncSpace / (double) totalSyncSpace;
         /////
         // get used-sync-space-ratio threshold
         double usedStorageRatioThreshold = confInfo.getUsedStorageRatioThreshold();
 
-        if(CMInfo._CM_DEBUG) {
-            System.out.println("syncHome = " + syncHome);
-            System.out.println("root = " + root);
-            System.out.println("totalSpace = " + totalSpace + " Bytes.");
-            System.out.println("fileSyncStorageRatio = " + fileSyncStorageRatio);
-            System.out.println("totalSyncSpace = " + totalSyncSpace);
-            System.out.println("usedSyncSpace = " + usedSyncSpace);
-            System.out.println("usedStorageRatio = " + usedStorageRatio);
-            System.out.println("usedStorageRatioThreshold = " + usedStorageRatioThreshold);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("* syncHome = " + syncHome);
+            System.out.println("* root = " + root);
+            System.out.println("* totalSpace = " + totalSpace + " Bytes.");
+            System.out.println("* fileSyncStorageRatio = " + fileSyncStorageRatio);
+            System.out.println("* totalSyncSpace = " + totalSyncSpace);
+            System.out.println("* usedSyncSpace = " + usedSyncSpace);
+            System.out.println("* usedStorageRatio = " + usedStorageRatio);
+            System.out.println("* usedStorageRatioThreshold = " + usedStorageRatioThreshold);
         }
 
-        // compare used-sync-space-ratio and threshold
+        // check used-sync-space-ratio and threshold
+        if (usedStorageRatio <= usedStorageRatioThreshold) {
+            System.out.println("** No need to change any file to the online mode.");
+            return true;
+        }
 
-        // TODO: from here
-        return false;
+        ///// get a list of local-mode files sorted by ascending order of last-access-time
+        // get local-mode file list
+        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        Objects.requireNonNull(syncInfo);
+        List<Path> pathList = syncInfo.getPathList();
+        List<Path> onlineModePathList = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
+        List<Path> localModePathList = pathList.stream()
+                .filter(p -> !Files.isDirectory(p))
+                .filter(p -> !onlineModePathList.contains(p))
+                .collect(Collectors.toList());
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("** local-mode path list");
+            localModePathList.forEach(System.out::println);
+        }
+        // check local-mode path list
+        if (localModePathList.isEmpty()) {
+            System.err.println("The local-mode path list is empty!");
+            return false;
+        }
+        // sort the local-mode path list by ascending order of last access time
+        localModePathList.sort((p1, p2) -> {
+                    BasicFileAttributes attr1 = null;
+                    BasicFileAttributes attr2 = null;
+                    try {
+                        attr1 = Files.readAttributes(p1, BasicFileAttributes.class);
+                        attr2 = Files.readAttributes(p2, BasicFileAttributes.class);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    FileTime accessTime1 = attr1.lastAccessTime();
+                    FileTime accessTime2 = attr2.lastAccessTime();
+                    return accessTime1.compareTo(accessTime2);
+                }
+        );
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("** sorted local-mode path list");
+            localModePathList.forEach(System.out::println);
+        }
+        /////
+
+        ///// get the list of local-mode files to become online mode.
+        long usedSyncSpaceToBeUpdated = usedSyncSpace;
+        double usedStorageRatioToBeUpdated = usedStorageRatio;
+        List<Path> pathListToBeOnline = new ArrayList<Path>();
+        // move files from the local-mode list to the list to be online mode.
+        for(Path path : localModePathList) {
+
+            // TODO: from here
+        }
+
+        /////
+        return true;
     }
 
     // called at the client
     private long getDirectorySize(Path path) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.getDirectorySize() called..");
             System.out.println("path = " + path);
         }
@@ -1923,7 +1981,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return 0;
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("size = " + size + " Bytes.");
         }
 
