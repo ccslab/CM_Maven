@@ -425,7 +425,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 long size;
                 try {
                     // save the last-modified time of headPath
-                    FileTime lastModifiedTime = Files.getLastModifiedTime(headPath, LinkOption.NOFOLLOW_LINKS);
+                    FileTime lastModifiedTime = Files.getLastModifiedTime(headPath);
                     // get the file size
                     size = Files.size(headPath);
                     // truncate the file

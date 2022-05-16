@@ -94,7 +94,7 @@ public class CMWatchServiceTask implements Runnable {
                 final Path directory = directoryMap.get(key);
                 final Path child = directory.resolve(filename);
                 if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
-                    if (Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS)) {
+                    if (Files.isDirectory(child)) {
                         try {
                             registerTree(child);
                         } catch (IOException e) {

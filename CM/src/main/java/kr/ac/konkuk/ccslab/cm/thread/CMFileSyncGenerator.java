@@ -605,7 +605,7 @@ public class CMFileSyncGenerator implements Runnable {
         Iterator<Path> iter = basisFileList.iterator();
         while (iter.hasNext()) {
             Path path = iter.next();
-            if (!Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+            if (!Files.isDirectory(path)) {
                 if (entryPathList == null ||
                         !entryPathList.contains(path.subpath(startPathIndex, path.getNameCount()))) {
                     try {

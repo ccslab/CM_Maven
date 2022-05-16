@@ -897,18 +897,18 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // extracting file-only list in the argument path list
         List<Path> fileOnlyList = pathList.stream()
-                .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .filter(path -> !Files.isDirectory(path))
                 .collect(Collectors.toList());
         // extracting directory-only list in the argument path list
         List<Path> dirOnlyList = pathList.stream()
-                .filter(path -> Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .filter(path -> Files.isDirectory(path))
                 .collect(Collectors.toList());
         // extend each directory to a list of files and added to the file-only list
         ret = false;
         for (Path dir : dirOnlyList) {
             try {
                 List<Path> fileList = Files.walk(dir)
-                        .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                        .filter(path -> !Files.isDirectory(path))
                         .collect(Collectors.toList());
                 if (!fileList.isEmpty()) {
                     ret = fileOnlyList.addAll(fileList);
@@ -1069,18 +1069,18 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // extracting file-only list in the argument path list
         List<Path> fileOnlyList = pathList.stream()
-                .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .filter(path -> !Files.isDirectory(path))
                 .collect(Collectors.toList());
         // extracting directory-only list in the argument path list
         List<Path> dirOnlyList = pathList.stream()
-                .filter(path -> Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                .filter(path -> Files.isDirectory(path))
                 .collect(Collectors.toList());
         // extend each directory to a list of files and added to the file-only list
         ret = false;
         for (Path dir : dirOnlyList) {
             try {
                 List<Path> fileList = Files.walk(dir)
-                        .filter(path -> !Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS))
+                        .filter(path -> !Files.isDirectory(path))
                         .collect(Collectors.toList());
                 if (!fileList.isEmpty()) {
                     ret = fileOnlyList.addAll(fileList);
@@ -1239,7 +1239,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         try {
             // save the last modified time of the queue head path
-            FileTime lastModifiedTime = Files.getLastModifiedTime(headPath, LinkOption.NOFOLLOW_LINKS);
+            FileTime lastModifiedTime = Files.getLastModifiedTime(headPath);
             // move the transferred file to the sync home
             Files.move(transferFileHome.resolve(fileName), headPath, StandardCopyOption.REPLACE_EXISTING);
             // restore the last modified time
