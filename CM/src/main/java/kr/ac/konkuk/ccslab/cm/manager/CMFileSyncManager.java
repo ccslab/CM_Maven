@@ -1860,4 +1860,73 @@ public class CMFileSyncManager extends CMServiceManager {
 
         return dirActivationRatio;
     }
+
+    // called at the client
+    public boolean startProactiveOnlineMode(Path dir) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.startProactiveOnlineMode() called..");
+            System.out.println("dir = " + dir);
+        }
+        // get the file-sync home dir
+        Path syncHome = Objects.requireNonNull(getClientSyncHome());
+        // get the root drive of the sync home
+        Path root = Objects.requireNonNull(syncHome.getRoot());
+        // get total space of the root drive
+        long totalSpace = root.toFile().getTotalSpace();
+        ///// get total space for file-sync
+        // get file-sync storage ratio
+        CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        double fileSyncStorageRatio = confInfo.getFileSyncStorageRatio();
+        // calculate total space for file-sync
+        long totalSyncSpace = (long)(totalSpace * fileSyncStorageRatio);
+        /////
+        ///// get used-sync-space ratio
+        // get used space of the file-sync home dir
+        long usedSyncSpace = getDirectorySize(syncHome);
+        // calculate used sync-space ratio
+        double usedStorageRatio = usedSyncSpace / (double)totalSyncSpace;
+        /////
+        // get used-sync-space-ratio threshold
+        double usedStorageRatioThreshold = confInfo.getUsedStorageRatioThreshold();
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("syncHome = " + syncHome);
+            System.out.println("root = " + root);
+            System.out.println("totalSpace = " + totalSpace + " Bytes.");
+            System.out.println("fileSyncStorageRatio = " + fileSyncStorageRatio);
+            System.out.println("totalSyncSpace = " + totalSyncSpace);
+            System.out.println("usedSyncSpace = " + usedSyncSpace);
+            System.out.println("usedStorageRatio = " + usedStorageRatio);
+            System.out.println("usedStorageRatioThreshold = " + usedStorageRatioThreshold);
+        }
+
+        // compare used-sync-space-ratio and threshold
+
+        // TODO: from here
+        return false;
+    }
+
+    // called at the client
+    private long getDirectorySize(Path path) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.getDirectorySize() called..");
+            System.out.println("path = " + path);
+        }
+        long size;
+        try {
+            size = Files.walk(path)
+                    .filter(Files::isRegularFile)
+                    .mapToLong(p -> p.toFile().length())
+                    .sum();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
+        }
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("size = " + size + " Bytes.");
+        }
+
+        return size;
+    }
 }
