@@ -63,6 +63,11 @@ public class CMFileSyncProactiveModeTask implements Runnable {
                     System.err.println("error to start proactive local mode!: " + dir);
                 }
             }
+            else {
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("*** No proactive (online or local) mode starts.");
+                }
+            }
         }
 
     }
