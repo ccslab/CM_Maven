@@ -62,7 +62,7 @@ public class CMFileSyncProactiveModeTask implements Runnable {
                     System.err.println("* error to start proactive online mode!: " + dir);
                 }
             }
-            else if(dirActivationRatio > localModeThreshold) {
+            else if(dirActivationRatio >= localModeThreshold) {
                 ret = syncManager.startProactiveLocalMode(dir);
                 if(!ret) {
                     System.err.println("* error to start proactive local mode!: " + dir);
