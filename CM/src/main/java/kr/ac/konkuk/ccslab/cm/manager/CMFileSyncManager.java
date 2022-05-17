@@ -1798,62 +1798,53 @@ public class CMFileSyncManager extends CMServiceManager {
             return 0;
         }
 
-        ///// calculate average of last access time of files
-        // get the unit of duration since last access threshold (DSLATU)
+        // get duration-since-last-access threshold (DSLAT)
         CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
         Objects.requireNonNull(confInfo);
+        long durationSinceLastAccessThreshold = confInfo.getDurationSinceLastAccessThreshold();
+        // get the unit of duration since last access threshold (DSLATU)
         TimeUnit unit = confInfo.getDurationSinceLastAccessThresholdUnit();
         if (CMInfo._CM_DEBUG) {
+            System.out.println("durationSinceLastAccessThreshold = " + durationSinceLastAccessThreshold);
             System.out.println("unit = " + unit);
         }
 
-        // get the sum of access time of files
-        long totalAccessTime = 0;
+        // get the sum of file activation ratio
+        double totalActivationRatio = 0;
+        // get current time by DSLATU
+        long currentTime = System.currentTimeMillis();
+        long ct = unit.convert(currentTime, TimeUnit.MILLISECONDS);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("currentTime = " + currentTime);
+            System.out.println("ct = " + ct + " " +unit);
+        }
         for (Path path : fileList) {
+            // get the last access time
             BasicFileAttributes attr = null;
             try {
                 attr = Files.readAttributes(path, BasicFileAttributes.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            FileTime accessTime = attr.lastAccessTime();
-            totalAccessTime += accessTime.to(unit);
+            FileTime lastAccessTime = attr.lastAccessTime();
+            long lat = lastAccessTime.to(unit);
+
+            // calculate file activation ratio
+            double fileActivationRatio = (double)durationSinceLastAccessThreshold / (ct - lat);
+            if(fileActivationRatio > 1) fileActivationRatio = 1;
+            // sum file activation ratio
+            totalActivationRatio += fileActivationRatio;
 
             if (CMInfo._CM_DEBUG) {
                 System.out.println("----- path = " + path);
-                System.out.println("accessTime = " + accessTime);
-                System.out.println(unit + ": " + accessTime.to(unit));
-                System.out.println("totalAccessTime = " + totalAccessTime);
+                System.out.println("lastAccessTime = " + lastAccessTime);
+                System.out.println("lat = " + lat + " " +unit);
+                System.out.println("fileActivationRatio = " + fileActivationRatio);
+                System.out.println("totalActivationRatio = " + totalActivationRatio);
             }
         }
-        // get the average
-        double averageAccessTime = totalAccessTime / (double) fileList.size();
-        if (CMInfo._CM_DEBUG) {
-            System.out.println("averageAccessTime = " + averageAccessTime);
-        }
-
-        // get duration-since-last-access threshold (DSLAT)
-        long durationSinceLastAccessThreshold = confInfo.getDurationSinceLastAccessThreshold();
-        if (CMInfo._CM_DEBUG) {
-            System.out.println("durationSinceLastAccessThreshold = " + durationSinceLastAccessThreshold);
-        }
-        if (durationSinceLastAccessThreshold == 0) {
-            System.err.println("duration-since-last-access threshold is 0!");
-            return 0;
-        }
-
-        // get current time (DSLATU)
-        long currentTimeMillis = System.currentTimeMillis();
-        long currentTime = unit.convert(currentTimeMillis, TimeUnit.MILLISECONDS);
-        if (CMInfo._CM_DEBUG) {
-            System.out.println("currentTimeMillis = " + currentTimeMillis);
-            System.out.println("currentTime(" + unit + ") = " + currentTime);
-        }
-
-        // calculate directory activation ratio (DAR)
-        // DAR = (DSLAT - (current time - averageAccessTime)) / DSLAT
-        double dirActivationRatio = (durationSinceLastAccessThreshold - (currentTime - averageAccessTime)) /
-                (double) durationSinceLastAccessThreshold;
+        // get DAR (= average of FAR)
+        double dirActivationRatio = totalActivationRatio / fileList.size();
         if (CMInfo._CM_DEBUG) {
             System.out.println("dirActivationRatio = " + dirActivationRatio);
         }
