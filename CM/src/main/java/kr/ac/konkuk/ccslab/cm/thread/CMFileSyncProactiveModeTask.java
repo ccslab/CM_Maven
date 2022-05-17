@@ -47,25 +47,30 @@ public class CMFileSyncProactiveModeTask implements Runnable {
             double dirActivationRatio = syncManager.calculateDirActivationRatio(dir);
             if(CMInfo._CM_DEBUG) {
                 System.out.println("*** dir = " + dir);
-                System.out.println("-- dirActivationRatio = " + dirActivationRatio);
+                System.out.println("* dirActivationRatio = " + dirActivationRatio);
             }
             // check directory-activation-ratio
-            if(dirActivationRatio == 0) continue;
+            if(dirActivationRatio == 0) {
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("* No need to start proactive (online or local) mode!");
+                }
+                continue;
+            }
             if(dirActivationRatio < onlineModeThreshold) {
                 ret = syncManager.startProactiveOnlineMode(dir);
                 if(!ret) {
-                    System.err.println("error to start proactive online mode!: " + dir);
+                    System.err.println("* error to start proactive online mode!: " + dir);
                 }
             }
             else if(dirActivationRatio > localModeThreshold) {
                 ret = syncManager.startProactiveLocalMode(dir);
                 if(!ret) {
-                    System.err.println("error to start proactive local mode!: " + dir);
+                    System.err.println("* error to start proactive local mode!: " + dir);
                 }
             }
             else {
                 if(CMInfo._CM_DEBUG) {
-                    System.out.println("*** No proactive (online or local) mode starts.");
+                    System.out.println("* No need to start proactive (online or local) mode!");
                 }
             }
         }
