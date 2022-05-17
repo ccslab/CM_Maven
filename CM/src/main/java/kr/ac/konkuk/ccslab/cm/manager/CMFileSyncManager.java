@@ -1786,7 +1786,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get list of normal files (not directory types)
         List<Path> fileList;
         try {
-            fileList = Files.walk(dir, 0)
+            fileList = Files.walk(dir, 1)
                     .filter(p -> !Files.isDirectory(p))
                     .collect(Collectors.toList());
         } catch (IOException e) {
