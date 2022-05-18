@@ -1944,7 +1944,7 @@ public class CMFileSyncManager extends CMServiceManager {
         ///// get the list of local-mode files to become online mode.
         long usedSyncSpaceToBeUpdated = usedSyncSpace;
         double usedStorageRatioToBeUpdated = usedStorageRatio;
-        List<Path> pathListToBeOnline = new ArrayList<Path>();
+        List<Path> pathListToBeOnline = new ArrayList<>();
         // move files from the local-mode list to the list to be online mode.
         for(Path path : localModePathList) {
             try {
@@ -1954,14 +1954,17 @@ public class CMFileSyncManager extends CMServiceManager {
                 return false;
             }
             usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)totalSyncSpace;
-            if(usedStorageRatioToBeUpdated <= usedStorageRatioThreshold)
-                break;
             pathListToBeOnline.add(path);
 
             if(CMInfo._CM_DEBUG) {
                 System.out.println("** path = " + path + " : added to the list to be online.");
                 System.out.println("usedSyncSpaceToBeUpdated = " + usedSyncSpaceToBeUpdated);
                 System.out.println("usedStorageRatioToBeUpdated = " + usedStorageRatioToBeUpdated);
+            }
+            if(usedStorageRatioToBeUpdated <= usedStorageRatioThreshold) {
+                System.out.println("** Now USR-updated("+usedStorageRatioToBeUpdated+") <= USRT("
+                        +usedStorageRatioThreshold+")");
+                break;
             }
         }
         /////
