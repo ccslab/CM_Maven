@@ -19,6 +19,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -426,6 +427,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 try {
                     // save the last-modified time of headPath
                     FileTime lastModifiedTime = Files.getLastModifiedTime(headPath);
+                    // save the last-access time of headPath
+                    BasicFileAttributes attrs = Files.readAttributes(headPath, BasicFileAttributes.class);
+                    FileTime lastAccessTime = attrs.lastAccessTime();
                     // get the file size
                     size = Files.size(headPath);
                     // truncate the file
@@ -437,6 +441,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     }
                     // restore the last-modified time of headPath
                     Files.setLastModifiedTime(headPath, lastModifiedTime);
+                    // restore the last-access time of headPath
+                    Files.setAttribute(headPath, "lastAccessTime", lastAccessTime);
                 } catch (IOException e) {
                     e.printStackTrace();
                     return false;
