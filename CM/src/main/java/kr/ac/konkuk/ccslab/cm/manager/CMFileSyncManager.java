@@ -1943,9 +1943,9 @@ public class CMFileSyncManager extends CMServiceManager {
 
         ///// get the list of local-mode files to become online mode.
         long usedSyncSpaceToBeUpdated = usedSyncSpace;
-        double usedStorageRatioToBeUpdated = usedStorageRatio;
+        double usedStorageRatioToBeUpdated;
         List<Path> pathListToBeOnline = new ArrayList<>();
-        // move files from the local-mode list to the list to be online mode.
+        // add files from the local-mode list to the list to be online mode.
         for(Path path : localModePathList) {
             try {
                 usedSyncSpaceToBeUpdated -= Files.size(path);
@@ -2010,8 +2010,175 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("dir = " + dir);
             System.err.println("startProactiveLocalMode() not implemented yet!");
         }
+        // get the file-sync home dir
+        Path syncHome = Objects.requireNonNull(getClientSyncHome());
+        // get the root drive of the sync home
+        Path root = Objects.requireNonNull(syncHome.getRoot());
+        // get total space of the root drive
+        long totalSpace = root.toFile().getTotalSpace();
+        ///// get total space for file-sync
+        // get file-sync storage ratio
+        CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        double fileSyncStorageRatio = confInfo.getFileSyncStorageRatio();
+        // calculate total space for file-sync
+        long totalSyncSpace = (long) (totalSpace * fileSyncStorageRatio);
+        if(totalSyncSpace == 0) {
+            System.err.println("Total space for file-sync is 0! It must be greater than 0!");
+            return false;
+        }
+        /////
+        ///// get used-sync-space ratio
+        // get used space of the file-sync home dir
+        long usedSyncSpace = getDirectorySize(syncHome);
+        // calculate used sync-space ratio
+        double usedStorageRatio = usedSyncSpace / (double) totalSyncSpace;
+        /////
+        // get used-sync-space-ratio threshold
+        double usedStorageRatioThreshold = confInfo.getUsedStorageRatioThreshold();
 
-        // TODO: not yet
-        return false;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("* syncHome = " + syncHome);
+            System.out.println("* root = " + root);
+            System.out.println("* totalSpace = " + totalSpace + " Bytes.");
+            System.out.println("* fileSyncStorageRatio = " + fileSyncStorageRatio);
+            System.out.println("* totalSyncSpace = " + totalSyncSpace);
+            System.out.println("* usedSyncSpace = " + usedSyncSpace);
+            System.out.println("* usedStorageRatio = " + usedStorageRatio);
+            System.out.println("* usedStorageRatioThreshold = " + usedStorageRatioThreshold);
+        }
+
+        // check used-sync-space-ratio and threshold
+        if (usedStorageRatio > usedStorageRatioThreshold) {
+            System.out.println("** Not enough sync space to change any online-mode file to the local mode.");
+            return true;
+        }
+        // get max-delay-access threshold
+        long maxAccessDelayThreshold = confInfo.getMaxAccessDelayThreshold();
+        // check max-delay-access threshold
+        if(maxAccessDelayThreshold == 0) {
+            System.err.println("maxAccessDelayThreshold is 0!");
+            return false;
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("maxAccessDelayThreshold = " + maxAccessDelayThreshold + " ms.");
+        }
+        // get input throughput from the server
+        String defaultServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        double inputThroughput = CMCommManager.measureInputThroughput(defaultServer, m_cmInfo);
+        // calculate minimum size of a file to be local mode
+        long minFileSizeForLocalMode = (long)(inputThroughput * maxAccessDelayThreshold / 1000);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println(String.format("inputThroughput from [%s] = %.2f MBps%n",
+                    defaultServer, inputThroughput));
+            System.out.println("minFileSizeForLocalMode = " + minFileSizeForLocalMode + " Bytes");
+        }
+        // get online-mode file list
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        List<Path> onlineModePathList = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
+        if(onlineModePathList.isEmpty()) {
+            System.err.println("The online-mode-path list is empty!");
+            return false;
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("** online-mode-path list");
+            onlineModePathList.forEach(System.out::println);
+        }
+
+        // get list of online-mode files of size greater than minimum size
+        // and sorted by descending order of last access time
+        List<Path> bigSortedOnlineModePathList = onlineModePathList.stream()
+                .filter(p -> syncInfo.getOnlineModePathSizeMap().get(p) >= minFileSizeForLocalMode)
+                .sorted((p1,p2) -> {
+                    BasicFileAttributes attr1 = null;
+                    BasicFileAttributes attr2 = null;
+                    try {
+                        attr1 = Files.readAttributes(p1, BasicFileAttributes.class);
+                        attr2 = Files.readAttributes(p2, BasicFileAttributes.class);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    FileTime accessTime1 = attr1.lastAccessTime();
+                    FileTime accessTime2 = attr2.lastAccessTime();
+                    return accessTime2.compareTo(accessTime1);
+                })
+                .collect(Collectors.toList());
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("** sorted online-mode-path list greater than min size");
+            bigSortedOnlineModePathList.forEach(System.out::println);
+        }
+        
+        ///// get the list of online-mode files to become local mode
+        long usedSyncSpaceToBeUpdated = usedSyncSpace;
+        double usedStorageRatioToBeUpdated = usedSyncSpace / (double)totalSyncSpace;
+        List<Path> pathListToBeLocal = new ArrayList<>();
+        // add files from the sorted BIG online-mode list to the list to be local mode.
+        for(Path path : bigSortedOnlineModePathList) {
+            usedSyncSpaceToBeUpdated += syncInfo.getOnlineModePathSizeMap().get(path);
+            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)totalSyncSpace;
+            pathListToBeLocal.add(path);
+
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("** path = " + path + " : added to the list to be local.");
+                System.out.println("usedSyncSpaceToBeUpdated = " + usedSyncSpaceToBeUpdated);
+                System.out.println("usedStorageRatioToBeUpdated = " + usedStorageRatioToBeUpdated);
+            }
+
+            if(usedStorageRatioToBeUpdated > usedStorageRatioThreshold) {
+                System.out.println("** Now USR-updated("+usedStorageRatioToBeUpdated+") > USRT("
+                        +usedStorageRatioThreshold+")");
+                break;
+            }
+        }
+        /////
+        // check used-storage-ratio updated
+        if(usedStorageRatioToBeUpdated > usedStorageRatioThreshold) {
+            boolean ret = requestLocalMode(pathListToBeLocal);
+            return ret;
+        }
+
+        ///// Here, USR <= USRT, that is, more online-mode files can be added to the list to become local
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("** Still USR <= USRT");
+        }
+        // get list of the remaining online-mode files sorted by descending order of last access time
+        List<Path> smallSortedOnlineModePathList = onlineModePathList.stream()
+                .filter(p -> syncInfo.getOnlineModePathSizeMap().get(p) < minFileSizeForLocalMode)
+                .sorted((p1,p2) -> {
+                    BasicFileAttributes attr1 = null;
+                    BasicFileAttributes attr2 = null;
+                    try {
+                        attr1 = Files.readAttributes(p1, BasicFileAttributes.class);
+                        attr2 = Files.readAttributes(p2, BasicFileAttributes.class);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    FileTime accessTime1 = attr1.lastAccessTime();
+                    FileTime accessTime2 = attr2.lastAccessTime();
+                    return accessTime2.compareTo(accessTime1);
+                })
+                .collect(Collectors.toList());
+
+        // add files from the sorted SMALL online-mode list to the list to be local mode.
+        for(Path path : smallSortedOnlineModePathList) {
+            usedSyncSpaceToBeUpdated += syncInfo.getOnlineModePathSizeMap().get(path);
+            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)totalSyncSpace;
+            pathListToBeLocal.add(path);
+
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("** path = " + path + " : added to the list to be local.");
+                System.out.println("usedSyncSpaceToBeUpdated = " + usedSyncSpaceToBeUpdated);
+                System.out.println("usedStorageRatioToBeUpdated = " + usedStorageRatioToBeUpdated);
+            }
+
+            if(usedStorageRatioToBeUpdated > usedStorageRatioThreshold) {
+                System.out.println("** Now USR-updated("+usedStorageRatioToBeUpdated+") > USRT("
+                        +usedStorageRatioThreshold+")");
+                break;
+            }
+        }
+        /////
+        // request local-mode
+        boolean ret = requestLocalMode(pathListToBeLocal);
+        return ret;
     }
 }
