@@ -2008,7 +2008,6 @@ public class CMFileSyncManager extends CMServiceManager {
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startProactiveLocalMode() called..");
             System.out.println("dir = " + dir);
-            System.err.println("startProactiveLocalMode() not implemented yet!");
         }
         // get the file-sync home dir
         Path syncHome = Objects.requireNonNull(getClientSyncHome());
@@ -2070,7 +2069,7 @@ public class CMFileSyncManager extends CMServiceManager {
         if(CMInfo._CM_DEBUG) {
             System.out.println(String.format("inputThroughput from [%s] = %.2f MBps%n",
                     defaultServer, inputThroughput));
-            System.out.println("minFileSizeForLocalMode = " + minFileSizeForLocalMode + " Bytes");
+            System.out.println("minFileSizeForLocalMode = " + minFileSizeForLocalMode + " MB");
         }
         // get online-mode file list
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
@@ -2102,6 +2101,10 @@ public class CMFileSyncManager extends CMServiceManager {
                     return accessTime2.compareTo(accessTime1);
                 })
                 .collect(Collectors.toList());
+        if(bigSortedOnlineModePathList.isEmpty()) {
+            System.err.println("sorted online-mode-path list greater than min size is empty!");
+            return false;
+        }
         if(CMInfo._CM_DEBUG) {
             System.out.println("** sorted online-mode-path list greater than min size");
             bigSortedOnlineModePathList.forEach(System.out::println);
