@@ -1523,12 +1523,24 @@ public class CMFileSyncManager extends CMServiceManager {
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         syncInfo.setSyncInProgress(false);
 
+        // check file-sync mode
+        if(syncInfo.getCurrentMode() == CMFileSyncMode.AUTO) {
+            ret = stopProactiveMode();
+            if(!ret) {
+                System.err.println("error to stop proactive-mode task!");
+                return false;
+            }
+        }
+
         // stop the watch service
         ret = stopWatchService();
         if (!ret) {
-            System.err.println("error stopping watch service!");
+            System.err.println("error to stop watch service!");
             return false;
         }
+
+        // update the current file-sync mode
+        syncInfo.setCurrentMode(CMFileSyncMode.OFF);
 
         return true;
     }
