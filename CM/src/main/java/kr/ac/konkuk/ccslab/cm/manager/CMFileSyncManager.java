@@ -1365,6 +1365,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // called at the client
     private boolean startProactiveMode() {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startProactiveMode() called..");
@@ -1393,6 +1394,51 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // set the task future reference
         syncInfo.setProactiveModeTaskFuture(scheduledFuture);
+
+        return true;
+    }
+
+    // called at the client
+    private boolean stopProactiveMode() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.stopProactiveMode() called..");
+        }
+
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        // check if the proactive-mode task has already done
+        if(syncInfo.isProactiveModeTaskDone()) {
+            System.out.println("The proactive-mode task has already done.");
+            return true;
+        }
+
+        // get Future reference of the proactive-mode task
+        ScheduledFuture<?> proactiveModeTaskFuture = syncInfo.getProactiveModeTaskFuture();
+        if(proactiveModeTaskFuture == null) {
+            System.err.println("proactiveModeTaskFuture is null!");
+            return false;
+        }
+        // cancel the proactive-mode task
+        proactiveModeTaskFuture.cancel(true);
+        try {
+            proactiveModeTaskFuture.get(5, TimeUnit.SECONDS);
+        } catch(CancellationException e) {
+            e.printStackTrace();
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        } catch(ExecutionException e) {
+            e.printStackTrace();
+        } catch(TimeoutException e) {
+            e.printStackTrace();
+            return false;
+        }
+        // check the state of the proactive-mode task
+        if(!syncInfo.isProactiveModeTaskDone()) {
+            System.err.println("The proactive-mode task is still running!");
+            return false;
+        }
+
+        // initialize the future reference in CMFileSyncInfo
+        syncInfo.setProactiveModeTaskFuture(null);
 
         return true;
     }
