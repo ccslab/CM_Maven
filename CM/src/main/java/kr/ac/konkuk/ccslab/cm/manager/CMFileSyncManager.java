@@ -866,8 +866,14 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("pathList = " + pathList);
         }
 
-        // check if current file-sync status
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        // check current file-sync mode
+        if(syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
+            System.err.println("Current file-sync mode is OFF!");
+            return false;
+        }
+
+        // check if current file-sync status
         if (syncInfo.isSyncInProgress()) {
             System.err.println("Currently file-sync task is working! You should wait!");
             return false;
@@ -1038,8 +1044,14 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("pathList = " + pathList);
         }
 
-        // check if current file-sync status
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        // check current file-sync mode
+        if(syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
+            System.err.println("Current file-sync mode is OFF!");
+            return false;
+        }
+
+        // check if current file-sync status
         if (syncInfo.isSyncInProgress()) {
             System.err.println("Currently file-sync task is working! You should wait!");
             return false;
@@ -1303,13 +1315,20 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("fileSyncMode = " + fileSyncMode);
         }
 
+        // check the argument
         if (fileSyncMode == CMFileSyncMode.OFF) {
-            System.err.println("Current file-sync mode is OFF!");
+            System.err.println("The argument file-sync mode is OFF!");
             return false;
         }
 
         // get CMFileSyncInfo reference
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+
+        // check the current file-sync mode
+        if(syncInfo.getCurrentMode() != CMFileSyncMode.OFF) {
+            System.err.println("Current file-sync mode ("+syncInfo.getCurrentMode()+") has already started!");
+            return false;
+        }
 
         // get the online-mode-list-file path
         //Path storedListPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
@@ -1511,6 +1530,14 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("=== CMFileSyncManager.stopFileSync() called..");
         }
 
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+
+        // check current file-sync mode
+        if(syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
+            System.out.println("Current file-sync mode is already "+syncInfo.getCurrentMode());
+            return true;
+        }
+
         // save the online-mode-path list to the file
         //boolean ret = saveOnlineModeListToFile();
         // save the online-mode-map to the file
@@ -1520,7 +1547,6 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // set syncInProgress to false
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         syncInfo.setSyncInProgress(false);
 
         // check file-sync mode

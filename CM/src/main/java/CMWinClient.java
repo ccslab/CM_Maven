@@ -39,6 +39,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.*;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
@@ -480,9 +481,9 @@ public class CMWinClient extends JFrame {
 		cmServiceMenu.add(pubsubSubMenu);
 
 		JMenu fileSyncSubMenu = new JMenu("File Sync");
-		JMenuItem startFileSyncMenuItem = new JMenuItem("start file-sync");
-		startFileSyncMenuItem.addActionListener(menuListener);
-		fileSyncSubMenu.add(startFileSyncMenuItem);
+		JMenuItem startFileSyncManualMenuItem = new JMenuItem("start file-sync with manual mode");
+		startFileSyncManualMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(startFileSyncManualMenuItem);
 		JMenuItem stopFileSyncMenuItem = new JMenuItem("stop file-sync");
 		stopFileSyncMenuItem.addActionListener(menuListener);
 		fileSyncSubMenu.add(stopFileSyncMenuItem);
@@ -501,6 +502,12 @@ public class CMWinClient extends JFrame {
 		JMenuItem printLocalFilesMenuItem = new JMenuItem("print local mode files");
 		printLocalFilesMenuItem.addActionListener(menuListener);
 		fileSyncSubMenu.add(printLocalFilesMenuItem);
+		JMenuItem startFileSyncAutoMenuItem = new JMenuItem("start file-sync with auto mode");
+		startFileSyncAutoMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(startFileSyncAutoMenuItem);
+		JMenuItem printFileSyncModeMenuItem = new JMenuItem("print current file-sync mode");
+		printFileSyncModeMenuItem.addActionListener(menuListener);
+		fileSyncSubMenu.add(printFileSyncModeMenuItem);
 
 		cmServiceMenu.add(fileSyncSubMenu);
 		
@@ -929,8 +936,8 @@ public class CMWinClient extends JFrame {
 			case 205: // MQTT disconnect
 				testMqttDisconnect();
 				break;
-			case 300:    // start file-sync
-				testStartFileSync();
+			case 300:    // start file-sync with manual mode
+				testStartFileSyncWithManualMode();
 				break;
 			case 301:    // stop file-sync
 				testStopFileSync();
@@ -949,6 +956,12 @@ public class CMWinClient extends JFrame {
 				break;
 			case 306:    // print local mode files
 				testPrintLocalModeFiles();
+				break;
+			case 307:	// start file-sync with auto mode
+				testStartFileSyncWithAutoMode();
+				break;
+			case 308:	// print current file-sync mode
+				testPrintCurrentFileSyncMode();
 				break;
 			default:
 				System.err.println("Unknown command.");
@@ -1006,10 +1019,11 @@ public class CMWinClient extends JFrame {
 		printMessage("200: connect, 201: publish, 202: subscribe, 203: print session info\n");
 		printMessage("204: unsubscribe, 205: disconnect \n");
 		printMessage("---------------------------------- File Sync\n");
-		printMessage("300: start file-sync, 301: stop file-sync\n");
+		printMessage("300: start file-sync with manual mode, 301: stop file-sync\n");
 		printMessage("302: open file-sync folder\n");
 		printMessage("303: request online mode, 304: request local mode\n");
 		printMessage("305: print online mode files, 306: print local mode files\n");
+		printMessage("307: start file-sync with auto mode, 308: print current file-sync mode\n");
 		printMessage("---------------------------------- Other CM Tests\n");
 		printMessage("101: test forwarding scheme, 102: test delay of forwarding scheme\n");
 		printMessage("103: test repeated request of SNS content list\n");
@@ -3958,19 +3972,41 @@ public class CMWinClient extends JFrame {
 		mqttManager.disconnect();
 	}
 
-	private void testStartFileSync() {
-		printMessage("========== start file-sync\n");
+	private void testStartFileSyncWithManualMode() {
+		printMessage("========== start file-sync with manual mode\n");
 
 		m_eventHandler.setStartTimeOfFileSync(System.currentTimeMillis());
 
-		boolean ret = m_clientStub.startFileSync();
+		boolean ret = m_clientStub.startFileSync(CMFileSyncMode.MANUAL);
 		if(!ret) {
-			printStyledMessage("Start error of file sync!\n", "bold");
+			printStyledMessage("Start error of file sync with manual mode!\n", "bold");
 			m_eventHandler.setStartTimeOfFileSync(0);
 		}
 		else {
-			printMessage("File sync starts.\n");
+			printMessage("File sync with manual mode starts.\n");
 		}
+	}
+
+	private void testStartFileSyncWithAutoMode() {
+		printMessage("========== start file-sync with auto mode\n");
+
+		m_eventHandler.setStartTimeOfFileSync(System.currentTimeMillis());
+
+		boolean ret = m_clientStub.startFileSync(CMFileSyncMode.AUTO);
+		if(!ret) {
+			printStyledMessage("Start error of file sync with auto mode!\n", "bold");
+			m_eventHandler.setStartTimeOfFileSync(0);
+		}
+		else {
+			printMessage("File sync with auto mode starts.\n");
+		}
+	}
+
+	private void testPrintCurrentFileSyncMode() {
+		printMessage("========== print current file-sync mode\n");
+		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_clientStub.getCMInfo().getFileSyncInfo());
+		CMFileSyncMode currentMode = syncInfo.getCurrentMode();
+		printMessage("Current file-sync mode is "+currentMode+".\n");
 	}
 
 	private void testStopFileSync() {
@@ -4732,8 +4768,8 @@ public class CMWinClient extends JFrame {
 				case "test c2c file transfer":
 					testC2CFileTransfer();
 					break;
-				case "start file-sync":
-					testStartFileSync();
+				case "start file-sync with manual mode":
+					testStartFileSyncWithManualMode();
 					break;
 				case "stop file-sync":
 					testStopFileSync();
@@ -4752,6 +4788,12 @@ public class CMWinClient extends JFrame {
 					break;
 				case "print local mode files":
 					testPrintLocalModeFiles();
+					break;
+				case "start file-sync with auto mode":
+					testStartFileSyncWithAutoMode();
+					break;
+				case "print current file-sync mode":
+					testPrintCurrentFileSyncMode();
 					break;
 				case "create test files for file-sync":
 					testCreateTestFileForSync();

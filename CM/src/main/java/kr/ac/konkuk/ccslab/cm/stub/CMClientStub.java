@@ -3667,9 +3667,10 @@ public class CMClientStub extends CMStub {
 		return sb.toString();
 	}
 
-	public boolean startFileSync() {
+	public boolean startFileSync(CMFileSyncMode mode) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.startFileSync() called..");
+			System.out.println("mode = " + mode);
 		}
 		// check the system type
 		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
@@ -3684,11 +3685,16 @@ public class CMClientStub extends CMStub {
 			System.err.println("You must log in to the default server!");
 			return false;
 		}
+		// check the argument "mode"
+		if(mode == CMFileSyncMode.OFF) {
+			System.err.println("The argument mode is "+mode+" !");
+			return false;
+		}
 
 		// call CMFileSyncManager.startFileSync()
 		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
 		Objects.requireNonNull(syncManager);
-		boolean ret = syncManager.startFileSync(CMFileSyncMode.MANUAL);
+		boolean ret = syncManager.startFileSync(mode);
 		if(!ret) {
 			System.err.println("error starting file-sync!");
 			return false;

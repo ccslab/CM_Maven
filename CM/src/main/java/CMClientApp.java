@@ -32,6 +32,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMInterestEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.*;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
@@ -328,8 +329,8 @@ public class CMClientApp {
 				case 205: // MQTT disconnect
 					testMqttDisconnect();
 					break;
-				case 300:    // start file-sync
-					testStartFileSync();
+				case 300:    // start file-sync with manual mode
+					testStartFileSyncWithManualMode();
 					break;
 				case 301:    // stop file-sync
 					testStopFileSync();
@@ -348,6 +349,12 @@ public class CMClientApp {
 					break;
 				case 306:    // print local mode files
 					testPrintLocalModeFiles();
+					break;
+				case 307:	// start file-sync with auto mode
+					testStartFileSyncWithAutoMode();
+					break;
+				case 308:	// print current file-sync mode
+					testPrintCurrentFileSyncMode();
 					break;
 				default:
 					System.err.println("Unknown command.");
@@ -413,10 +420,11 @@ public class CMClientApp {
 		System.out.println("200: connect, 201: publish, 202: subscribe, 203: print session info");
 		System.out.println("204: unsubscribe, 205: disconnect");
 		System.out.println("---------------------------------- File Sync");
-		System.out.println("300: start file-sync, 301: stop file-sync");
+		System.out.println("300: start file-sync with manual mode, 301: stop file-sync");
 		System.out.println("302: open file-sync folder");
 		System.out.println("303: request online mode, 304: request local mode");
 		System.out.println("305: print online mode files, 306: print local mode files");
+		System.out.println("307: start file-sync with auto mode, 308: print current file-sync mode");
 		System.out.println("---------------------------------- Other CM Tests");
 		System.out.println("101: test forwarding scheme, 102: test delay of forwarding scheme");
 		System.out.println("103: test repeated request of SNS content list");
@@ -3258,19 +3266,41 @@ public class CMClientApp {
 
 	}
 
-	private void testStartFileSync() {
-		System.out.println("========== start file-sync");
+	private void testStartFileSyncWithManualMode() {
+		System.out.println("========== start file-sync with manual mode");
 
 		m_eventHandler.setStartTimeOfFileSync(System.currentTimeMillis());
 
-		boolean ret = m_clientStub.startFileSync();
+		boolean ret = m_clientStub.startFileSync(CMFileSyncMode.MANUAL);
 		if(!ret) {
-			System.err.println("Start error of file sync!");
+			System.err.println("Start error of file sync with manual mode!");
 			m_eventHandler.setStartTimeOfFileSync(0);
 		}
 		else {
-			System.out.println("File sync starts.");
+			System.out.println("File sync with manual mode starts.");
 		}
+	}
+
+	private void testStartFileSyncWithAutoMode() {
+		System.out.println("========== start file-sync with auto mode");
+
+		m_eventHandler.setStartTimeOfFileSync(System.currentTimeMillis());
+
+		boolean ret = m_clientStub.startFileSync(CMFileSyncMode.AUTO);
+		if(!ret) {
+			System.err.println("Start error of file sync with auto mode!");
+			m_eventHandler.setStartTimeOfFileSync(0);
+		}
+		else {
+			System.out.println("File sync with auto mode starts.");
+		}
+	}
+
+	private void testPrintCurrentFileSyncMode() {
+		System.out.println("========== print current file-sync mode");
+		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_clientStub.getCMInfo().getFileSyncInfo());
+		CMFileSyncMode currentMode = syncInfo.getCurrentMode();
+		System.out.println("Current file-sync mode is "+currentMode+".");
 	}
 
 	private void testStopFileSync() {
