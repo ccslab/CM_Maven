@@ -1225,11 +1225,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncBlockChecksum[] checksumArray = blockChecksumMap.get( fileEntryIndex );
         Objects.requireNonNull(checksumArray);
         // sort the checksum array by the weak checksum
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("checksumArray before sorting = " + Arrays.toString(checksumArray));
         }
         Arrays.sort(checksumArray, Comparator.comparingInt(CMFileSyncBlockChecksum::getWeakChecksum));
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("checksumArray after sorting = " + Arrays.toString(checksumArray));
         }
 
@@ -1253,7 +1253,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // from the first element because the checksum array is sorted by the (weak) checksum value.
             if(hashToBlockIndexMap.containsKey(hash)) continue;
             hashToBlockIndexMap.put(hash, i);
-            if(CMInfo._CM_DEBUG) {
+            if(CMInfo._CM_DEBUG_2) {
                 System.out.println("key hash("+hash+"), value block index("+i+") added to the Map.");
             }
         }
@@ -1307,7 +1307,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             checksumArray[startIndex+i] = subArray[i];
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if(CMInfo._CM_DEBUG_2) {
             System.out.println("checksumArray is ");
             for(int i = 0; i < checksumArray.length; i++)
                 System.out.println("["+i+"] = "+checksumArray[i]);
