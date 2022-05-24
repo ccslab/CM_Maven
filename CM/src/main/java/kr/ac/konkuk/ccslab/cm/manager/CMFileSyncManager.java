@@ -1951,19 +1951,22 @@ public class CMFileSyncManager extends CMServiceManager {
         ///// get total space for file-sync
         // get file-sync storage ratio
         CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
-        double fileSyncStorageRatio = confInfo.getFileSyncStorageRatio();
-        // calculate total space for file-sync
-        long totalSyncSpace = (long) (totalSpace * fileSyncStorageRatio);
-        if(totalSyncSpace == 0) {
-            System.err.println("Total space for file-sync is 0! It must be greater than 0!");
+        long fileSyncStorage = confInfo.getFileSyncStorage()*1024*1024; // MB to Bytes
+        if(fileSyncStorage == 0) {
+            System.err.println("File-sync storage is 0! It must be greater than 0!");
             return false;
         }
+        if(fileSyncStorage > totalSpace) {
+            System.err.println("file-sync storage("+fileSyncStorage+") > total-space("+totalSpace+")!");
+            return false;
+        }
+
         /////
         ///// get used-sync-space ratio
         // get used space of the file-sync home dir
         long usedSyncSpace = getDirectorySize(syncHome);
         // calculate used sync-space ratio
-        double usedStorageRatio = usedSyncSpace / (double) totalSyncSpace;
+        double usedStorageRatio = usedSyncSpace / (double) fileSyncStorage;
         /////
         // get used-sync-space-ratio threshold
         double usedStorageRatioThreshold = confInfo.getUsedStorageRatioThreshold();
@@ -1972,8 +1975,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("* syncHome = " + syncHome);
             System.out.println("* root = " + root);
             System.out.println("* totalSpace = " + totalSpace + " Bytes.");
-            System.out.println("* fileSyncStorageRatio = " + fileSyncStorageRatio);
-            System.out.println("* totalSyncSpace = " + totalSyncSpace);
+            System.out.println("* fileSyncStorage = " + fileSyncStorage + " Bytes.");
             System.out.println("* usedSyncSpace = " + usedSyncSpace);
             System.out.println("* usedStorageRatio = " + usedStorageRatio);
             System.out.println("* usedStorageRatioThreshold = " + usedStorageRatioThreshold);
@@ -2037,7 +2039,7 @@ public class CMFileSyncManager extends CMServiceManager {
                 e.printStackTrace();
                 return false;
             }
-            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)totalSyncSpace;
+            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)fileSyncStorage;
             pathListToBeOnline.add(path);
 
             if(CMInfo._CM_DEBUG) {
@@ -2102,19 +2104,22 @@ public class CMFileSyncManager extends CMServiceManager {
         ///// get total space for file-sync
         // get file-sync storage ratio
         CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
-        double fileSyncStorageRatio = confInfo.getFileSyncStorageRatio();
-        // calculate total space for file-sync
-        long totalSyncSpace = (long) (totalSpace * fileSyncStorageRatio);
-        if(totalSyncSpace == 0) {
-            System.err.println("Total space for file-sync is 0! It must be greater than 0!");
+        long fileSyncStorage = confInfo.getFileSyncStorage()*1024*1024; // MB to Bytes
+        if(fileSyncStorage == 0) {
+            System.err.println("File-sync storage is 0! It must be greater than 0!");
             return false;
         }
+        if(fileSyncStorage > totalSpace) {
+            System.err.println("file-sync storage("+fileSyncStorage+") > total-space("+totalSpace+")!");
+            return false;
+        }
+
         /////
         ///// get used-sync-space ratio
         // get used space of the file-sync home dir
         long usedSyncSpace = getDirectorySize(syncHome);
         // calculate used sync-space ratio
-        double usedStorageRatio = usedSyncSpace / (double) totalSyncSpace;
+        double usedStorageRatio = usedSyncSpace / (double) fileSyncStorage;
         /////
         // get used-sync-space-ratio threshold
         double usedStorageRatioThreshold = confInfo.getUsedStorageRatioThreshold();
@@ -2123,8 +2128,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("* syncHome = " + syncHome);
             System.out.println("* root = " + root);
             System.out.println("* totalSpace = " + totalSpace + " Bytes.");
-            System.out.println("* fileSyncStorageRatio = " + fileSyncStorageRatio);
-            System.out.println("* totalSyncSpace = " + totalSyncSpace);
+            System.out.println("* fileSyncStorage = " + fileSyncStorage + " Bytes.");
             System.out.println("* usedSyncSpace = " + usedSyncSpace);
             System.out.println("* usedStorageRatio = " + usedStorageRatio);
             System.out.println("* usedStorageRatioThreshold = " + usedStorageRatioThreshold);
@@ -2192,12 +2196,12 @@ public class CMFileSyncManager extends CMServiceManager {
         
         ///// get the list of online-mode files to become local mode
         long usedSyncSpaceToBeUpdated = usedSyncSpace;
-        double usedStorageRatioToBeUpdated = usedSyncSpace / (double)totalSyncSpace;
+        double usedStorageRatioToBeUpdated = usedSyncSpace / (double)fileSyncStorage;
         List<Path> pathListToBeLocal = new ArrayList<>();
         // add files from the sorted BIG online-mode list to the list to be local mode.
         for(Path path : bigSortedOnlineModePathList) {
             usedSyncSpaceToBeUpdated += syncInfo.getOnlineModePathSizeMap().get(path);
-            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)totalSyncSpace;
+            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)fileSyncStorage;
             pathListToBeLocal.add(path);
 
             if(CMInfo._CM_DEBUG) {
@@ -2244,7 +2248,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // add files from the sorted SMALL online-mode list to the list to be local mode.
         for(Path path : smallSortedOnlineModePathList) {
             usedSyncSpaceToBeUpdated += syncInfo.getOnlineModePathSizeMap().get(path);
-            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)totalSyncSpace;
+            usedStorageRatioToBeUpdated = usedSyncSpaceToBeUpdated / (double)fileSyncStorage;
             pathListToBeLocal.add(path);
 
             if(CMInfo._CM_DEBUG) {

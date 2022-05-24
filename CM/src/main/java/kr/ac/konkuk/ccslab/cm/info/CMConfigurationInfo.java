@@ -71,8 +71,8 @@ public class CMConfigurationInfo {
 	private double onlineModeThreshold;
 	// threshold of proactive local-mode (0~1)
 	private double localModeThreshold;
-	// available storage ratio for file-sync (FSSR) (0~1)
-	private double fileSyncStorageRatio;
+	// file-sync storage (FSS) (MB)
+	private long fileSyncStorage;
 	// used storage ratio threshold (USRT) (0~1)
 	private double usedStorageRatioThreshold;
 	// max access delay threshold (MADT) (milliseconds)
@@ -127,7 +127,7 @@ public class CMConfigurationInfo {
 		durationSinceLastAccessThresholdUnit = TimeUnit.DAYS;
 		onlineModeThreshold = 0;
 		localModeThreshold = 0;
-		fileSyncStorageRatio = 0;
+		fileSyncStorage = 0;
 		usedStorageRatioThreshold = 0;
 		maxAccessDelayThreshold = 0;
 	}
@@ -645,12 +645,12 @@ public class CMConfigurationInfo {
 		this.localModeThreshold = localModeThreshold;
 	}
 
-	public synchronized double getFileSyncStorageRatio() {
-		return fileSyncStorageRatio;
+	public synchronized long getFileSyncStorage() {
+		return fileSyncStorage;
 	}
 
-	public synchronized void setFileSyncStorageRatio(double fileSyncStorageRatio) {
-		this.fileSyncStorageRatio = fileSyncStorageRatio;
+	public synchronized void setFileSyncStorage(long fileSyncStorage) {
+		this.fileSyncStorage = fileSyncStorage;
 	}
 
 	public synchronized double getUsedStorageRatioThreshold() {

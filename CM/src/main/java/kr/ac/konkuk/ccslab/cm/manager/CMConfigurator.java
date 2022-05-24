@@ -139,8 +139,8 @@ public class CMConfigurator {
 					strConfFilePath, "ONLINE_MODE_THRESHOLD")));
 			confInfo.setLocalModeThreshold(Double.parseDouble(CMConfigurator.getConfiguration(
 					strConfFilePath, "LOCAL_MODE_THRESHOLD")));
-			confInfo.setFileSyncStorageRatio(Double.parseDouble(CMConfigurator.getConfiguration(
-					strConfFilePath, "FILE_SYNC_STORAGE_RATIO")));
+			confInfo.setFileSyncStorage(Long.parseLong(CMConfigurator.getConfiguration(
+					strConfFilePath, "FILE_SYNC_STORAGE")));
 			confInfo.setUsedStorageRatioThreshold(Double.parseDouble(CMConfigurator.getConfiguration(
 					strConfFilePath, "USED_STORAGE_RATIO_THRESHOLD")));
 			confInfo.setMaxAccessDelayThreshold(Long.parseLong(CMConfigurator.getConfiguration(
@@ -227,7 +227,7 @@ public class CMConfigurator {
 						confInfo.getDurationSinceLastAccessThresholdUnit());
 				System.out.println("ONLINE_MODE_THRESHOLD: "+confInfo.getOnlineModeThreshold());
 				System.out.println("LOCAL_MODE_THRESHOLD: "+confInfo.getLocalModeThreshold());
-				System.out.println("FILE_SYNC_STORAGE_RATIO: "+confInfo.getFileSyncStorageRatio());
+				System.out.println("FILE_SYNC_STORAGE: "+confInfo.getFileSyncStorage()+" MB");
 				System.out.println("USED_STORAGE_RATIO_THRESHOLD: "+confInfo.getUsedStorageRatioThreshold());
 				System.out.println("MAX_ACCESS_DELAY_THRESHOLD: "+confInfo.getMaxAccessDelayThreshold());
 			}
