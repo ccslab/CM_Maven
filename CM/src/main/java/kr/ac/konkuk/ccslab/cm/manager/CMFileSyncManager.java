@@ -2137,23 +2137,19 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // get max-delay-access threshold
         long maxAccessDelayThreshold = confInfo.getMaxAccessDelayThreshold();
-        // check max-delay-access threshold
-        if(maxAccessDelayThreshold == 0) {
-            System.err.println("maxAccessDelayThreshold is 0!");
-            return false;
-        }
         if(CMInfo._CM_DEBUG) {
             System.out.println("maxAccessDelayThreshold = " + maxAccessDelayThreshold + " ms.");
         }
         // get input throughput from the server
         String defaultServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        // get input throughput (MBps)
         double inputThroughput = CMCommManager.measureInputThroughput(defaultServer, m_cmInfo);
-        // calculate minimum size of a file to be local mode
-        long minFileSizeForLocalMode = (long)(inputThroughput * maxAccessDelayThreshold / 1000);
+        // calculate minimum size (Bytes) of a file to be local mode
+        long minFileSizeForLocalMode = (long)(inputThroughput * 1000000 * maxAccessDelayThreshold / 1000);
         if(CMInfo._CM_DEBUG) {
             System.out.println(String.format("inputThroughput from [%s] = %.2f MBps%n",
                     defaultServer, inputThroughput));
-            System.out.println("minFileSizeForLocalMode = " + minFileSizeForLocalMode + " MB");
+            System.out.println("minFileSizeForLocalMode = " + minFileSizeForLocalMode + " Bytes.");
         }
         // get online-mode file list
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
