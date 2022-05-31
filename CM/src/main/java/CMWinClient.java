@@ -4226,7 +4226,7 @@ public class CMWinClient extends JFrame {
 				"file-sync mode", JOptionPane.OK_CANCEL_OPTION);
 		// check the response
 		if(response != JOptionPane.OK_OPTION) {
-			printStyledMessage("Test cancelled.", "bold");
+			printStyledMessage("Test cancelled.\n", "bold");
 			return;
 		}
 
