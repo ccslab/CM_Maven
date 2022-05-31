@@ -2269,6 +2269,23 @@ public class CMFileSyncManager extends CMServiceManager {
         return ret;
     }
 
+    public boolean isOnlineMode(Path path) {
+        System.out.println("=== CMFileSyncManager.isOnlineMode() called..");
+        System.out.println("path = " + path);
+
+        // get online-mode path-size map
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        Map<Path,Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        Objects.requireNonNull(onlineModePathSizeMap);
+        final Long size = onlineModePathSizeMap.get(path);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("size = " + size);
+        }
+        if(size == null) {
+            return false;
+        }
+        return true;
+    }
     public boolean simulateDeactivatingFileAccess(String fileName) {
         System.out.println("=== CMFileSyncManager.simulateDeactivatingFileAccess() called..");
         System.out.println("fileName = " + fileName);
