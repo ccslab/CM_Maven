@@ -2268,4 +2268,22 @@ public class CMFileSyncManager extends CMServiceManager {
         boolean ret = requestLocalMode(pathListToBeLocal);
         return ret;
     }
+
+    public boolean simulateDeactivatingFileAccess(String fileName) {
+        System.out.println("=== CMFileSyncManager.simulateDeactivatingFileAccess() called..");
+        System.out.println("fileName = " + fileName);
+        System.err.println("To be implemented!");
+
+        // TODO: from here
+        return false;
+    }
+
+    public boolean simulateActivatingFileAccess(String fileName) {
+        System.out.println("=== CMFileSyncManager.simulateActivatingFileAccess() called..");
+        System.out.println("fileName = " + fileName);
+        System.err.println("To be implemented!");
+
+        // TODO: not yet
+        return false;
+    }
 }

@@ -542,6 +542,9 @@ public class CMWinClient extends JFrame {
 		JMenuItem createTestFilesForSyncMenuItem = new JMenuItem("create test files for file-sync");
 		createTestFilesForSyncMenuItem.addActionListener(menuListener);
 		otherSubMenu.add(createTestFilesForSyncMenuItem);
+		JMenuItem testFileAccessForSyncMenuItem = new JMenuItem("test file access for file-sync");
+		testFileAccessForSyncMenuItem.addActionListener(menuListener);
+		otherSubMenu.add(testFileAccessForSyncMenuItem);
 		
 		cmServiceMenu.add(otherSubMenu);
 
@@ -918,6 +921,9 @@ public class CMWinClient extends JFrame {
 			case 112: // create test files for file-sync
 				testCreateTestFileForSync();
 				break;
+			case 113: // test file access for file-sync
+				testFileAccessForSync();
+				break;
 			case 200: // MQTT connect
 				testMqttConnect();
 				break;
@@ -1031,6 +1037,7 @@ public class CMWinClient extends JFrame {
 		printMessage("108: send event with wrong # bytes, 109: send event with wrong type\n");
 		printMessage("110: test csc file transfer, 111: test c2c file transfer\n");
 		printMessage("112: create test files for file-sync\n");
+		printMessage("113: test file access for file-sync\n");
 	}
 	
 	private void testConnectionDS()
@@ -4198,6 +4205,95 @@ public class CMWinClient extends JFrame {
 		return;
 	}
 
+	private void testFileAccessForSync() {
+		printMessage("========= test file access for file-sync\n");
+
+		// select file-sync mode and access method
+		final JRadioButton manualRadioButton = new JRadioButton("Manual");
+		manualRadioButton.setSelected(true);
+		final JRadioButton autoRadioButton = new JRadioButton("Auto");
+		final ButtonGroup buttonGroup = new ButtonGroup();
+		buttonGroup.add(manualRadioButton);
+		buttonGroup.add(autoRadioButton);
+		String[] testTypeArray = {"activation->deactivation", "deactivation->activation"};
+		JComboBox<String> testTypeComboBox = new JComboBox<>(testTypeArray);
+		final Object[] message = {
+				"", manualRadioButton,
+				"", autoRadioButton,
+				"Test type", testTypeComboBox
+		};
+		final int response = JOptionPane.showConfirmDialog(null, message,
+				"file-sync mode", JOptionPane.OK_CANCEL_OPTION);
+		// check the response
+		if(response != JOptionPane.OK_OPTION) {
+			printStyledMessage("Test cancelled.", "bold");
+			return;
+		}
+
+		// selected file-sync mode
+		final CMFileSyncMode selectedFileSyncMode;
+		if(manualRadioButton.isSelected())
+			selectedFileSyncMode = CMFileSyncMode.MANUAL;
+		else if(autoRadioButton.isSelected())
+			selectedFileSyncMode = CMFileSyncMode.AUTO;
+		else
+			selectedFileSyncMode = CMFileSyncMode.OFF;
+
+		// selected test type
+		int selectedTestTypeIndex = testTypeComboBox.getSelectedIndex();
+
+		// check current file-sync mode
+		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_clientStub.getCMInfo().getFileSyncInfo());
+		CMFileSyncMode currentFileSyncMode = syncInfo.getCurrentMode();
+		if(currentFileSyncMode != CMFileSyncMode.OFF) {
+			boolean ret = m_clientStub.stopFileSync();
+			if(!ret) {
+				printStyledMessage("Error to stop file-sync before test!\n", "bold");
+				return;
+			}
+		}
+
+		// input file-name for test results
+		String fileName = JOptionPane.showInputDialog("File name to record test result").trim();
+		// check the response
+		if(fileName == null || fileName.isEmpty()) {
+			printStyledMessage("File name for recording test result is null or empty!\n", "bold");
+			return;
+		}
+
+		// start the selected file-sync mode
+		boolean ret = m_clientStub.startFileSync(selectedFileSyncMode);
+		if(!ret) {
+			printStyledMessage("Error to start file-sync "+selectedFileSyncMode+"!\n", "bold");
+			return;
+		}
+
+		// start the file-access test
+		CMFileSyncManager syncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		if(selectedTestTypeIndex == 0) {
+			// activation -> deactivation
+			ret = syncManager.simulateDeactivatingFileAccess(fileName);
+			if(!ret) {
+				printStyledMessage("Error to simulate deactivating file access!\n", "bold");
+				return;
+			}
+		}
+		else if(selectedTestTypeIndex == 1) {
+			// deactivation -> activation
+			ret = syncManager.simulateActivatingFileAccess(fileName);
+			if(!ret) {
+				printStyledMessage("Error to simulate activating file access!\n", "bold");
+				return;
+			}
+		}
+		else {
+			printStyledMessage("Invalid test type: "+selectedTestTypeIndex+"\n", "bold");
+			return;
+		}
+
+	}
+
 	private void testSendEventWithWrongByteNum()
 	{
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
@@ -4797,6 +4893,9 @@ public class CMWinClient extends JFrame {
 					break;
 				case "create test files for file-sync":
 					testCreateTestFileForSync();
+					break;
+				case "test file access for file-sync":
+					testFileAccessForSync();
 					break;
 			}
 		}
