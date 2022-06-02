@@ -2288,7 +2288,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     private void writeCommonTestInfoToFile(Path resultPath) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.writeCommonTestInfoToFile() called..");
             System.out.println("resultPath = " + resultPath);
         }
@@ -2314,26 +2314,26 @@ public class CMFileSyncManager extends CMServiceManager {
             throw new RuntimeException(e);
         }
 
-        if(CMInfo._CM_DEBUG) {
-            System.out.println("Current file-sync mode: "+syncInfo.getCurrentMode());
-            System.out.println("DIR_ACTIVATION_MONITORING_PERIOD: "+confInfo.getDirActivationMonitoringPeriod());
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("Current file-sync mode: " + syncInfo.getCurrentMode());
+            System.out.println("DIR_ACTIVATION_MONITORING_PERIOD: " + confInfo.getDirActivationMonitoringPeriod());
             System.out.println("DIR_ACTIVATION_MONITORING_PERIOD_UNIT: "
-                    +confInfo.getDirActivationMonitoringPeriodUnit());
-            System.out.println("DURATION_SINCE_LAST_ACCESS_THRESHOLD: "+confInfo.getDurationSinceLastAccessThreshold());
+                    + confInfo.getDirActivationMonitoringPeriodUnit());
+            System.out.println("DURATION_SINCE_LAST_ACCESS_THRESHOLD: " + confInfo.getDurationSinceLastAccessThreshold());
             System.out.println("DURATION_SINCE_LAST_ACCESS_THRESHOLD: "
-                    +confInfo.getDurationSinceLastAccessThresholdUnit());
-            System.out.println("ONLINE_MODE_THRESHOLD: "+confInfo.getOnlineModeThreshold());
-            System.out.println("LOCAL_MODE_THRESHOLD: "+confInfo.getLocalModeThreshold());
-            System.out.println("FILE_SYNC_STORAGE: "+confInfo.getFileSyncStorage());
-            System.out.println("USED_STORAGE_RATIO_THRESHOLD: "+confInfo.getUsedStorageRatioThreshold());
-            System.out.println("MAX_ACCESS_DELAY_THRESHOLD: "+confInfo.getMaxAccessDelayThreshold());
+                    + confInfo.getDurationSinceLastAccessThresholdUnit());
+            System.out.println("ONLINE_MODE_THRESHOLD: " + confInfo.getOnlineModeThreshold());
+            System.out.println("LOCAL_MODE_THRESHOLD: " + confInfo.getLocalModeThreshold());
+            System.out.println("FILE_SYNC_STORAGE: " + confInfo.getFileSyncStorage());
+            System.out.println("USED_STORAGE_RATIO_THRESHOLD: " + confInfo.getUsedStorageRatioThreshold());
+            System.out.println("MAX_ACCESS_DELAY_THRESHOLD: " + confInfo.getMaxAccessDelayThreshold());
         }
 
     }
 
     // called at the client
     private Path[] checkAndCreateTestFileNameArray(Path testFileDir, final int NUM_TEST_FILES) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.checkAndCreateTestFileNameArray() called..");
             System.out.println("testFileDir = " + testFileDir);
             System.out.println("NUM_TEST_FILES = " + NUM_TEST_FILES);
@@ -2353,7 +2353,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return null;
         }
 
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println(Arrays.toString(testFileNameArray));
         }
 
@@ -2362,7 +2362,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     private boolean testAddFile(Path srcPath, Path targetPath, Path resultPath) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.testAddFile() called..");
             System.out.println("srcPath = " + srcPath);
             System.out.println("targetPath = " + targetPath);
@@ -2376,15 +2376,15 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // write the file-add event to the result file
         Path syncHome = getClientSyncHome();
-        try(BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
-            PrintWriter pw = new PrintWriter(bw)) {
-            pw.println(targetPath.getFileName()+", add, local, "+getDirectorySize(syncHome)+" Bytes");
+        try (BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
+             PrintWriter pw = new PrintWriter(bw)) {
+            pw.println(targetPath.getFileName() + ", add, local, " + getDirectorySize(syncHome) + " Bytes");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if(CMInfo._CM_DEBUG) {
-            System.out.println("**"+targetPath.getFileName()+", add, local, "
-                    +getDirectorySize(syncHome)+" Bytes");
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("**" + targetPath.getFileName() + ", add, local, "
+                    + getDirectorySize(syncHome) + " Bytes");
         }
 
         return true;
@@ -2392,7 +2392,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     private boolean testAccessFile(Path srcPath, Path targetPath, Path resultPath) {
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.testAccessFile() called..");
             System.out.println("srcPath = " + srcPath);
             System.out.println("targetPath = " + targetPath);
@@ -2400,22 +2400,21 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // access a file (file copy or request for local-mode)
-        if(!Files.exists(targetPath)) {
+        if (!Files.exists(targetPath)) {
             System.err.println("A file to be accessed does not exist!");
             System.err.println(targetPath);
             return false;
         }
         boolean isOnlineMode = isOnlineMode(targetPath);
-        if(isOnlineMode) {
+        if (isOnlineMode) {
             List<Path> list = new ArrayList<>();
             list.add(targetPath);
             boolean ret = requestLocalMode(list);
-            if(!ret) {
+            if (!ret) {
                 System.err.println("Error to request local mode!");
                 return false;
             }
-        }
-        else {
+        } else {
             try {
                 Files.copy(srcPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
@@ -2425,20 +2424,20 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // write the file-access event to the result file
         Path syncHome = getClientSyncHome();
-        try(BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
-        PrintWriter pw = new PrintWriter(bw)) {
-            pw.print(targetPath.getFileName()+", access, ");
-            if(isOnlineMode) pw.print("online, ");
+        try (BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
+             PrintWriter pw = new PrintWriter(bw)) {
+            pw.print(targetPath.getFileName() + ", access, ");
+            if (isOnlineMode) pw.print("online, ");
             else pw.print("local, ");
-            pw.println(getDirectorySize(syncHome)+" Bytes");
+            pw.println(getDirectorySize(syncHome) + " Bytes");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if(CMInfo._CM_DEBUG) {
-            System.out.println("**"+targetPath.getFileName()+", access, ");
-            if(isOnlineMode) System.out.print("online, ");
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("**" + targetPath.getFileName() + ", access, ");
+            if (isOnlineMode) System.out.print("online, ");
             else System.out.print("local, ");
-            System.out.println(getDirectorySize(syncHome)+" Bytes");
+            System.out.println(getDirectorySize(syncHome) + " Bytes");
         }
 
         return true;
@@ -2503,11 +2502,11 @@ public class CMFileSyncManager extends CMServiceManager {
         boolean ret = false;
         while (totalElapsedSeconds < ACTIVATION_PERIOD) {
             // wait for file-addition period
-            if(CMInfo._CM_DEBUG) {
-                System.out.println("** waiting for file-addition period: "+FILE_ADD_PERIOD+" seconds.");
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("** waiting for file-addition period: " + FILE_ADD_PERIOD + " seconds.");
             }
             try {
-                Thread.sleep(FILE_ADD_PERIOD*1000);
+                Thread.sleep(FILE_ADD_PERIOD * 1000);
                 totalElapsedSeconds += FILE_ADD_PERIOD;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -2516,35 +2515,67 @@ public class CMFileSyncManager extends CMServiceManager {
             Path srcPath = testFileDir.resolve(testFileNameArray[fileIndex]);
             Path targetPath = syncHome.resolve(testFileNameArray[fileIndex]);
             ret = testAddFile(srcPath, targetPath, resultPath);
-            if(!ret) {
+            if (!ret) {
                 System.err.println("testAddFile() error!");
                 return false;
             }
 
             // wait for file-access period
-            if(CMInfo._CM_DEBUG) {
-                System.out.println("** waiting for file-access period: "+FILE_ACCESS_PERIOD+" seconds.");
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("** waiting for file-access period: " + FILE_ACCESS_PERIOD + " seconds.");
             }
             try {
-                Thread.sleep(FILE_ACCESS_PERIOD*1000);
+                Thread.sleep(FILE_ACCESS_PERIOD * 1000);
                 totalElapsedSeconds += FILE_ACCESS_PERIOD;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
             // access a file (file copy or request for local-mode)
             ret = testAccessFile(srcPath, targetPath, resultPath);
-            if(!ret) {
+            if (!ret) {
                 System.err.println("testAccessFile() error!");
                 return false;
             }
             // update file index to be tested
             fileIndex = (fileIndex + 1) % testFileNameArray.length;
         }
+        /////
         ///// file-access deactivation test
+        totalElapsedSeconds = 0;
+        while (totalElapsedSeconds < DEACTIVATION_PERIOD) {
+            // wait until the next recording to the result file
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("** waiting for next no-access record");
+            }
+            try {
+                Thread.sleep((FILE_ADD_PERIOD + FILE_ACCESS_PERIOD) * 1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            // write current access state to the result file
+            try (BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
+                 PrintWriter pw = new PrintWriter(bw)) {
+                pw.println("no file access, "+getDirectorySize(syncHome)+" Bytes");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("** no file access, "+getDirectorySize(syncHome)+" Bytes");
+            }
+        }
+        /////
+        // print out the result file
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("---------------- end of deactivating file-access test");
+            try {
+                Files.readAllLines(resultPath).forEach(System.out::println);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("----------------");
+        }
 
-        // TODO: from here
-
-        return false;
+        return true;
     }
 
     // called at the client
