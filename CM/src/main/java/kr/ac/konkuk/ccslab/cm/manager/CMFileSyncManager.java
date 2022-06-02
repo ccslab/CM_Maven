@@ -2501,8 +2501,6 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("fileName = " + fileName);
         }
 
-        final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
-
         // declare constants for the file-access simulation
         final String TEST_FILE_DIR_NAME = "test-file-access";
         final int NUM_TEST_FILES = 10;
@@ -2528,6 +2526,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // check if the sync-home directory is empty
+        final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         final Path syncHome = getClientSyncHome();
         if (!syncInfo.getPathList().isEmpty()) {
             System.err.println("The sync home must be empty to start the file-access test!");
@@ -2612,8 +2611,104 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("To be implemented!");
         }
 
-        // TODO: from here
-        return false;
+        // declare constants for the file-access simulation
+        final String TEST_FILE_DIR_NAME = "test-file-access";
+        final int NUM_TEST_FILES = 10;
+        final int FILE_ACCESS_PERIOD = 7;
+        final int ACTIVATION_PERIOD = 3 * 24;
+        final int DEACTIVATION_PERIOD = 3 * 24;
+
+        // check the existence of the test-file directory
+        final CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        final Path testFileDir = confInfo.getTransferedFileHome().resolve(TEST_FILE_DIR_NAME)
+                .toAbsolutePath().normalize();
+        if (!Files.exists(testFileDir)) {
+            System.err.println("Test-file directory (" + testFileDir + ") not exists!");
+            return false;
+        }
+
+        // check the test files in the test-file directory
+        final Path[] testFileNameArray = checkAndCreateTestFileNameArray(testFileDir, NUM_TEST_FILES);
+        if (testFileNameArray == null) {
+            System.err.println("testFileNameArray is null!");
+            return false;
+        }
+
+        // check the number of files in the sync home and if all files are online mode
+        final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        final Path syncHome = getClientSyncHome();
+        List<Path> pathList = syncInfo.getPathList();
+        if(pathList.size() != NUM_TEST_FILES) {
+            System.err.println("Number of files in sync home ("+pathList.size()+") different from NUM_TEST_FILES ("
+                    +NUM_TEST_FILES+")");
+            return false;
+        }
+        for(Path path : pathList) {
+            if(!isOnlineMode(path)) {
+                System.err.println(path+" is not online mode!");
+                System.err.println("All files in the sync home must be online mode for this test!");
+                return false;
+            }
+        }
+        // print out the current working directory where the result file will be created.
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("current working directory: " + System.getProperty("user.dir"));
+        }
+        // create the result file
+        final Path resultPath;
+        try {
+            resultPath = Files.createFile(Path.of(fileName));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // write common info to the result file
+        writeCommonTestInfoToFile(resultPath);
+
+        ///// file-access deactivation test
+        int totalElapsedSeconds = 0;
+        boolean ret = false;
+        while(totalElapsedSeconds < DEACTIVATION_PERIOD) {
+            // after sleep time, record current state to the result file
+            ret = testAccessNoFile(FILE_ACCESS_PERIOD*1000, resultPath);
+            if(!ret) {
+                System.err.println("testAccessNoFile() error!");
+                return false;
+            }
+            // update total elapsed seconds
+            totalElapsedSeconds += FILE_ACCESS_PERIOD;
+        }
+        /////
+        ///// file-access activation test
+        totalElapsedSeconds = 0;
+        int fileIndex = 0;
+        while(totalElapsedSeconds < ACTIVATION_PERIOD) {
+            // after sleep time, access a file
+            Path srcPath = testFileDir.resolve(testFileNameArray[fileIndex]);
+            Path targetPath = syncHome.resolve(testFileNameArray[fileIndex]);
+            ret = testAccessFile(FILE_ACCESS_PERIOD, srcPath, targetPath, resultPath);
+            if(!ret) {
+                System.err.println("testAccessFile() error!");
+                return false;
+            }
+            // update total elapsed seconds
+            totalElapsedSeconds += FILE_ACCESS_PERIOD;
+            // update file index to be accessed
+            fileIndex = (fileIndex + 1) % testFileNameArray.length;
+        }
+        /////
+        // print out the result file
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("---------------- end of activating file-access test");
+            try {
+                Files.readAllLines(resultPath).forEach(System.out::println);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("----------------");
+        }
+
+        return true;
     }
 
 }
