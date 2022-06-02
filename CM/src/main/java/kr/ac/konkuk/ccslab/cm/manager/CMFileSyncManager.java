@@ -2361,12 +2361,22 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    private boolean testAddFile(Path srcPath, Path targetPath, Path resultPath) {
+    private boolean testAddFile(final long sleepTime, Path srcPath, Path targetPath, Path resultPath) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.testAddFile() called..");
             System.out.println("srcPath = " + srcPath);
             System.out.println("targetPath = " + targetPath);
             System.out.println("resultPath = " + resultPath);
+        }
+
+        // wait for file-addition period
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("** waiting for file-addition period: " + sleepTime/1000 + " seconds.");
+        }
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
         try {
@@ -2391,12 +2401,21 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    private boolean testAccessFile(Path srcPath, Path targetPath, Path resultPath) {
+    private boolean testAccessFile(final long sleepTime, Path srcPath, Path targetPath, Path resultPath) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.testAccessFile() called..");
             System.out.println("srcPath = " + srcPath);
             System.out.println("targetPath = " + targetPath);
             System.out.println("resultPath = " + resultPath);
+        }
+        // wait for file-access period
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("** waiting for file-access period: " + sleepTime/1000 + " seconds.");
+        }
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
         // access a file (file copy or request for local-mode)
@@ -2444,15 +2463,24 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-    private boolean testAccessNoFile(Path resultPath) {
+    private boolean testAccessNoFile(final long sleepTime, Path resultPath) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("CMFileSyncManager.testAccessNoFile() called..");
             System.out.println("resultPath = " + resultPath);
         }
 
-        Path syncHome = getClientSyncHome();
+        // wait until the next recording to the result file
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("** waiting for next no-access record: "+sleepTime/1000+" seconds.");
+        }
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         // write current access state to the result file
+        Path syncHome = getClientSyncHome();
         try (BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
              PrintWriter pw = new PrintWriter(bw)) {
             pw.println("no file access, " + getDirectorySize(syncHome) + " Bytes");
@@ -2525,41 +2553,26 @@ public class CMFileSyncManager extends CMServiceManager {
         int fileIndex = 0;
         boolean ret = false;
         while (totalElapsedSeconds < ACTIVATION_PERIOD) {
-            // wait for file-addition period
-            if (CMInfo._CM_DEBUG) {
-                System.out.println("** waiting for file-addition period: " + FILE_ADD_PERIOD + " seconds.");
-            }
-            try {
-                Thread.sleep(FILE_ADD_PERIOD * 1000);
-                totalElapsedSeconds += FILE_ADD_PERIOD;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
             // add a new file (copy a file from the test dir to the sync home)
             Path srcPath = testFileDir.resolve(testFileNameArray[fileIndex]);
             Path targetPath = syncHome.resolve(testFileNameArray[fileIndex]);
-            ret = testAddFile(srcPath, targetPath, resultPath);
+            ret = testAddFile(FILE_ADD_PERIOD*1000, srcPath, targetPath, resultPath);
             if (!ret) {
                 System.err.println("testAddFile() error!");
                 return false;
             }
+            // update total elapsed seconds
+            totalElapsedSeconds += FILE_ADD_PERIOD;
 
-            // wait for file-access period
-            if (CMInfo._CM_DEBUG) {
-                System.out.println("** waiting for file-access period: " + FILE_ACCESS_PERIOD + " seconds.");
-            }
-            try {
-                Thread.sleep(FILE_ACCESS_PERIOD * 1000);
-                totalElapsedSeconds += FILE_ACCESS_PERIOD;
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
             // access a file (file copy or request for local-mode)
-            ret = testAccessFile(srcPath, targetPath, resultPath);
+            ret = testAccessFile(FILE_ACCESS_PERIOD*1000, srcPath, targetPath, resultPath);
             if (!ret) {
                 System.err.println("testAccessFile() error!");
                 return false;
             }
+            // update total elapsed seconds
+            totalElapsedSeconds += FILE_ACCESS_PERIOD;
+
             // update file index to be tested
             fileIndex = (fileIndex + 1) % testFileNameArray.length;
         }
@@ -2567,20 +2580,14 @@ public class CMFileSyncManager extends CMServiceManager {
         ///// file-access deactivation test
         totalElapsedSeconds = 0;
         while (totalElapsedSeconds < DEACTIVATION_PERIOD) {
-            // wait until the next recording to the result file
-            if (CMInfo._CM_DEBUG) {
-                System.out.println("** waiting for next no-access record");
-            }
-            try {
-                Thread.sleep((FILE_ADD_PERIOD + FILE_ACCESS_PERIOD) * 1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            ret = testAccessNoFile(resultPath);
+
+            ret = testAccessNoFile((FILE_ADD_PERIOD+FILE_ACCESS_PERIOD)*1000, resultPath);
             if(!ret) {
                 System.err.println("testAccessNoFile() error!");
                 return false;
             }
+            // update total elapsed seconds
+            totalElapsedSeconds += FILE_ADD_PERIOD + FILE_ACCESS_PERIOD;
         }
         /////
         // print out the result file
