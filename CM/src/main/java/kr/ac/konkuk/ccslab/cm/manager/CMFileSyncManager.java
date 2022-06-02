@@ -2444,9 +2444,34 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
+    private boolean testAccessNoFile(Path resultPath) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncManager.testAccessNoFile() called..");
+            System.out.println("resultPath = " + resultPath);
+        }
+
+        Path syncHome = getClientSyncHome();
+
+        // write current access state to the result file
+        try (BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
+             PrintWriter pw = new PrintWriter(bw)) {
+            pw.println("no file access, " + getDirectorySize(syncHome) + " Bytes");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("** no file access, " + getDirectorySize(syncHome) + " Bytes");
+        }
+
+        return true;
+    }
+
+    // called at the client
     public boolean simulateDeactivatingFileAccess(String fileName) {
-        System.out.println("=== CMFileSyncManager.simulateDeactivatingFileAccess() called..");
-        System.out.println("fileName = " + fileName);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.simulateDeactivatingFileAccess() called..");
+            System.out.println("fileName = " + fileName);
+        }
 
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
 
@@ -2551,20 +2576,15 @@ public class CMFileSyncManager extends CMServiceManager {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            // write current access state to the result file
-            try (BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
-                 PrintWriter pw = new PrintWriter(bw)) {
-                pw.println("no file access, "+getDirectorySize(syncHome)+" Bytes");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if(CMInfo._CM_DEBUG) {
-                System.out.println("** no file access, "+getDirectorySize(syncHome)+" Bytes");
+            ret = testAccessNoFile(resultPath);
+            if(!ret) {
+                System.err.println("testAccessNoFile() error!");
+                return false;
             }
         }
         /////
         // print out the result file
-        if(CMInfo._CM_DEBUG) {
+        if (CMInfo._CM_DEBUG) {
             System.out.println("---------------- end of deactivating file-access test");
             try {
                 Files.readAllLines(resultPath).forEach(System.out::println);
@@ -2579,11 +2599,13 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean simulateActivatingFileAccess(String fileName) {
-        System.out.println("=== CMFileSyncManager.simulateActivatingFileAccess() called..");
-        System.out.println("fileName = " + fileName);
-        System.err.println("To be implemented!");
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.simulateActivatingFileAccess() called..");
+            System.out.println("fileName = " + fileName);
+            System.err.println("To be implemented!");
+        }
 
-        // TODO: not yet
+        // TODO: from here
         return false;
     }
 
