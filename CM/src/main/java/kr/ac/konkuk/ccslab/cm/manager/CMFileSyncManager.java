@@ -2424,9 +2424,23 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // write the file-access event to the result file
+        Path syncHome = getClientSyncHome();
+        try(BufferedWriter bw = Files.newBufferedWriter(resultPath, StandardOpenOption.APPEND);
+        PrintWriter pw = new PrintWriter(bw)) {
+            pw.print(targetPath.getFileName()+", access, ");
+            if(isOnlineMode) pw.print("online, ");
+            else pw.print("local, ");
+            pw.println(getDirectorySize(syncHome)+" Bytes");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("**"+targetPath.getFileName()+", access, ");
+            if(isOnlineMode) System.out.print("online, ");
+            else System.out.print("local, ");
+            System.out.println(getDirectorySize(syncHome)+" Bytes");
+        }
 
-
-        // TODO: from here
         return true;
     }
 
@@ -2523,10 +2537,12 @@ public class CMFileSyncManager extends CMServiceManager {
                 System.err.println("testAccessFile() error!");
                 return false;
             }
-
-            // TODO: from here
+            // update file index to be tested
+            fileIndex = (fileIndex + 1) % testFileNameArray.length;
         }
-        /////
+        ///// file-access deactivation test
+
+        // TODO: from here
 
         return false;
     }
