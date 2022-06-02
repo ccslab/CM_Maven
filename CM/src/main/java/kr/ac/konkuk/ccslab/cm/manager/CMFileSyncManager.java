@@ -2447,7 +2447,6 @@ public class CMFileSyncManager extends CMServiceManager {
     public boolean simulateDeactivatingFileAccess(String fileName) {
         System.out.println("=== CMFileSyncManager.simulateDeactivatingFileAccess() called..");
         System.out.println("fileName = " + fileName);
-        System.err.println("To be implemented!");
 
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
 
