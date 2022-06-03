@@ -2608,7 +2608,6 @@ public class CMFileSyncManager extends CMServiceManager {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.simulateActivatingFileAccess() called..");
             System.out.println("fileName = " + fileName);
-            System.err.println("To be implemented!");
         }
 
         // declare constants for the file-access simulation
