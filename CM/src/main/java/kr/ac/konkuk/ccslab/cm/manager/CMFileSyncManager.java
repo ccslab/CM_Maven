@@ -2687,7 +2687,7 @@ public class CMFileSyncManager extends CMServiceManager {
             // after sleep time, access a file
             Path srcPath = testFileDir.resolve(testFileNameArray[fileIndex]);
             Path targetPath = syncHome.resolve(testFileNameArray[fileIndex]);
-            ret = testAccessFile(FILE_ACCESS_PERIOD, srcPath, targetPath, resultPath);
+            ret = testAccessFile(FILE_ACCESS_PERIOD*1000, srcPath, targetPath, resultPath);
             if(!ret) {
                 System.err.println("testAccessFile() error!");
                 return false;
