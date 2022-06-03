@@ -2269,8 +2269,10 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the client
     public boolean isOnlineMode(Path path) {
-        System.out.println("=== CMFileSyncManager.isOnlineMode() called..");
-        System.out.println("path = " + path);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.isOnlineMode() called..");
+            System.out.println("path = " + path);
+        }
 
         // get online-mode path-size map
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
