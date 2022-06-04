@@ -1583,6 +1583,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set numFiles
         newfse.setNumFiles(numFiles);
         // make an entry list from the subList
+/*
         List<CMFileSyncEntry> fileEntryList = subList.stream()
                 .map(path -> {
                     CMFileSyncEntry fileEntry = new CMFileSyncEntry();
@@ -1599,6 +1600,25 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     }
                     return fileEntry;
                 }).collect(Collectors.toList());
+*/
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        Map<Path,Long> onlineModePathToSizeMap = Objects.requireNonNull(syncInfo.getOnlineModePathSizeMap());
+        List<CMFileSyncEntry> fileEntryList = new ArrayList<>();
+        for(Path path : subList) {
+            CMFileSyncEntry fileEntry = new CMFileSyncEntry();
+            try {
+                fileEntry.setPathRelativeToHome(path.subpath(startPathIndex, path.getNameCount()))
+                        .setLastModifiedTime(Files.getLastModifiedTime(path))
+                        .setType(CMFileType.getType(path));
+                // set size of the path according to file mode (online or local)
+                if(fsManager.isOnlineMode(path))
+                    fileEntry.setSize(onlineModePathToSizeMap.get(path));
+                else fileEntry.setSize(Files.size(path));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            fileEntryList.add(fileEntry);
+        }
 
         if (fileEntryList.isEmpty())
             System.err.println("fileEntryList is empty.");
