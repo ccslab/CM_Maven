@@ -100,9 +100,12 @@ public class CMFileSyncManager extends CMServiceManager {
         Iterator<Path> iter = onlineModeList.iterator();
         while (iter.hasNext()) {
             Path onlinePath = iter.next();
-            if (!pathList.contains(onlinePath))
-                iter.remove();
+            if (!pathList.contains(onlinePath)) {
+                //iter.remove();
+                fsInfo.getOnlineModePathSizeMap().remove(onlinePath);
+            }
         }
+
         //boolean ret = saveOnlineModeListToFile();
         boolean ret = saveOnlineModePathSizeMapToFile();
         if (!ret) {
