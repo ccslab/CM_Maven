@@ -3512,7 +3512,7 @@ public class CMClientApp {
 				"", autoRadioButton,
 				"Test type", testTypeComboBox
 		};
-		final int response = JOptionPane.showConfirmDialog(null, message,
+		int response = JOptionPane.showConfirmDialog(null, message,
 				"file-sync mode", JOptionPane.OK_CANCEL_OPTION);
 		// check the response
 		if(response != JOptionPane.OK_OPTION) {
@@ -3543,8 +3543,32 @@ public class CMClientApp {
 			}
 		}
 
+		// show confirm dialog notifying that all files in the sync home will be deleted
+		response = JOptionPane.showConfirmDialog(null,
+				"All files in the sync home will be deleted!",
+				"Notice", JOptionPane.OK_CANCEL_OPTION,
+				JOptionPane.WARNING_MESSAGE);
+		if(response != JOptionPane.OK_OPTION) {
+			System.err.println("Test cancelled!");
+			return;
+		}
+
+		// clear the sync home
+		CMFileSyncManager syncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
+		Objects.requireNonNull(syncManager);
+		syncManager.clearSyncHome();
+
 		// input file-name for test results
-		String fileName = JOptionPane.showInputDialog("File name to record test result").trim();
+		StringBuilder resultNameBuilder = new StringBuilder();
+		if(selectedTestTypeIndex == 0) resultNameBuilder.append("ad-");
+		else if(selectedTestTypeIndex == 1) resultNameBuilder.append("da-");
+		else {
+			System.err.println("Invalid test type: "+selectedTestTypeIndex);
+			return;
+		}
+		resultNameBuilder.append(selectedFileSyncMode.name()).append("-");
+		String fileName = JOptionPane.showInputDialog("File name to record test result", resultNameBuilder)
+				.trim();
 		// check the response
 		if(fileName == null || fileName.isEmpty()) {
 			System.err.println("File name for recording test result is null or empty!");
@@ -3559,8 +3583,6 @@ public class CMClientApp {
 		}
 
 		// start the file-access test
-		CMFileSyncManager syncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
-		Objects.requireNonNull(syncManager);
 		if(selectedTestTypeIndex == 0) {
 			// activation -> deactivation
 			ret = syncManager.simulateDeactivatingFileAccess(fileName);

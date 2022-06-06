@@ -2638,22 +2638,45 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
-        // check the number of files in the sync home and if all files are online mode
+        // check if the sync-home directory is empty
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
         final Path syncHome = getClientSyncHome();
-        List<Path> pathList = syncInfo.getPathList();
-        if(pathList.size() != NUM_TEST_FILES) {
-            System.err.println("Number of files in sync home ("+pathList.size()+") different from NUM_TEST_FILES ("
-                    +NUM_TEST_FILES+")");
+        if (!syncInfo.getPathList().isEmpty()) {
+            System.err.println("The sync home must be empty to start the file-access test!");
             return false;
         }
-        for(Path path : pathList) {
-            if(!isOnlineMode(path)) {
-                System.err.println(path+" is not online mode!");
-                System.err.println("All files in the sync home must be online mode for this test!");
-                return false;
+
+        // copy test directory files to the sync home
+        for(Path name : testFileNameArray) {
+            Path srcPath = testFileDir.resolve(name);
+            Path targetPath = syncHome.resolve(name);
+            try {
+                Files.copy(srcPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
+        // wait until the file-sync completes
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // request online-mode for all files in the sync home
+        try {
+            List<Path> pathList = Files.walk(syncHome)
+                    .filter(Files::isRegularFile)
+                    .collect(Collectors.toList());
+            boolean ret = requestOnlineMode(pathList);
+            if(!ret) {
+                System.err.println("error to request online mode!");
+                return false;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         // print out the current working directory where the result file will be created.
         if (CMInfo._CM_DEBUG) {
             System.out.println("current working directory: " + System.getProperty("user.dir"));
@@ -2715,4 +2738,20 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    public void clearSyncHome() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.clearSyncHome() called..");
+        }
+
+        Path syncHome = getClientSyncHome();
+        try {
+            Files.walk(syncHome)
+                    .filter(p -> !(p.equals(syncHome)))
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
