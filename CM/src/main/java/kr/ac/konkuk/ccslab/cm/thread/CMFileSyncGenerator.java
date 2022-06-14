@@ -544,6 +544,7 @@ public class CMFileSyncGenerator implements Runnable {
         return true;
     }
 
+/*
     private List<CMFileSyncEntry> createNewClientPathEntryList() {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.createNewClientPathEntryList() called..");
@@ -578,6 +579,7 @@ public class CMFileSyncGenerator implements Runnable {
 
         return newClientPathEntryList;
     }
+*/
 
     private List<CMFileSyncEntry> createNewClientPathEntryListAndUpdateBasisFileList(CMFileSyncUpdateMode updateMode) {
         if (CMInfo._CM_DEBUG) {
