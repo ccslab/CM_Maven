@@ -227,7 +227,9 @@ public class CMFileSyncManager extends CMServiceManager {
             Path serverSyncHome = getServerSyncHome(fileSender);
             // move the transferred file to the sync home (including sub-directories)
             try {
-                Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(foundPath));
+                //Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(foundPath));
+                Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(foundPath),
+                        StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 e.printStackTrace();
             }
