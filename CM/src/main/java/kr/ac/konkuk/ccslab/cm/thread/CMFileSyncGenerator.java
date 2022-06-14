@@ -4,8 +4,10 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventRequestNewFiles;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartFileBlockChecksum;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncUpdateMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
@@ -126,7 +128,10 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // create a new file-entry-list that will be added to the server
-        newClientPathEntryList = createNewClientPathEntryList();
+        //newClientPathEntryList = createNewClientPathEntryList();
+        CMConfigurationInfo confInfo = Objects.requireNonNull(cmInfo.getConfigurationInfo());
+        CMFileSyncUpdateMode updateMode = confInfo.getFileSyncUpdateMode();
+        newClientPathEntryList = createNewClientPathEntryListAndUpdateBasisFileList(updateMode);
         if (newClientPathEntryList == null) {
             System.err.println("CMFileSyncGenerator.run(), newFileList is null!");
             return;
@@ -569,6 +574,96 @@ public class CMFileSyncGenerator implements Runnable {
         // initialize isNewFileCompletedMap
         for (CMFileSyncEntry entry : newClientPathEntryList) {
             isNewFileCompletedMap.put(entry.getPathRelativeToHome(), false);
+        }
+
+        return newClientPathEntryList;
+    }
+
+    private List<CMFileSyncEntry> createNewClientPathEntryListAndUpdateBasisFileList(CMFileSyncUpdateMode updateMode) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncGenerator.createNewClientPathEntryListAndUpdateBasisFileList called..");
+            System.out.println("updateMode = " + updateMode);
+        }
+        // get the client-file-entry list
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(cmInfo.getFileSyncInfo());
+        Map<String, List<CMFileSyncEntry>> clientPathEntryListMap = syncInfo.getClientPathEntryListMap();
+        Objects.requireNonNull(clientPathEntryListMap);
+        List<CMFileSyncEntry> clientPathEntryList = clientPathEntryListMap.get(userName);
+        if (clientPathEntryList == null) {
+            return new ArrayList<>();
+        }
+
+        // get the basis file list
+        List<Path> basisFileList = syncInfo.getBasisFileListMap().get(userName);
+        Objects.requireNonNull(basisFileList);
+
+        // get the basis file list with relative path
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        Path serverSyncHome = syncManager.getServerSyncHome(userName);
+        int startPathIndex = serverSyncHome.getNameCount();
+        List<Path> relativeBasisFileList = basisFileList.stream()
+                .map(path -> path.subpath(startPathIndex, path.getNameCount()))
+                .collect(Collectors.toList());
+
+        List<CMFileSyncEntry> newClientPathEntryList = null;
+        if (updateMode == CMFileSyncUpdateMode.DELTA) {
+            // client entries that is not contained in the basis file list becomes the new client entry list.
+            newClientPathEntryList = clientPathEntryList.stream()
+                    .filter(entry -> !relativeBasisFileList.contains(entry.getPathRelativeToHome()))
+                    .collect(Collectors.toList());
+        } else if (updateMode == CMFileSyncUpdateMode.FILE) {
+            // all client entries becomes the new client entry list.
+            newClientPathEntryList = clientPathEntryList;
+        } else if (updateMode == CMFileSyncUpdateMode.HYBRID) {
+            // get configurations
+            CMConfigurationInfo confInfo = Objects.requireNonNull(cmInfo.getConfigurationInfo());
+            long fileSizeThreshold = confInfo.getFileSizeThreshold();
+            double fileModRatioThreshold = confInfo.getFileModRatioThreshold();
+            // create an empty list
+            newClientPathEntryList = new ArrayList<>();
+            for (CMFileSyncEntry entry : clientPathEntryList) {
+                // If the entry is not in the basis file list, it is added to the new list.
+                if(!relativeBasisFileList.contains(entry.getPathRelativeToHome())) {
+                    newClientPathEntryList.add(entry);
+                }
+                // if the entry is not DIR type
+                else if(entry.getType() != CMFileType.DIR) {
+                    // if the entry file size is less than or equal to the size threshold,
+                    // the entry is added to the new list.
+                    if(entry.getSize() <= fileSizeThreshold) {
+                        newClientPathEntryList.add(entry);
+                    }
+                    else {
+                        // if the difference of modified size is greater than the ratio threshold,
+                        // the entry is added to the new list.
+                        Path basisFile = serverSyncHome.resolve(entry.getPathRelativeToHome());
+                        long basisFileSize;
+                        try {
+                            basisFileSize = Files.size(basisFile);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        long entrySize = entry.getSize();
+                        long sizeDifference;
+                        if(basisFileSize >= entrySize) sizeDifference = basisFileSize - entrySize;
+                        else sizeDifference = entrySize - basisFileSize;
+                        if(sizeDifference/(double)basisFileSize <= fileModRatioThreshold)
+                            newClientPathEntryList.add(entry);
+                    }
+                }
+            }
+        }
+
+        // added the new client-entry list to isNewFileCompletedMap
+        // and deleted new entries in the basis file list
+        for(CMFileSyncEntry entry : newClientPathEntryList) {
+            Path entryPath = entry.getPathRelativeToHome();
+            isNewFileCompletedMap.put(entryPath, false);
+            if(relativeBasisFileList.contains(entryPath)) {
+                Path absolutePath = serverSyncHome.resolve(entryPath);
+                basisFileList.remove(absolutePath);
+            }
         }
 
         return newClientPathEntryList;
