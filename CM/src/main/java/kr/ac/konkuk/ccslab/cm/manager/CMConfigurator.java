@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncUpdateMode;
 
 public class CMConfigurator {
 	
@@ -119,6 +120,14 @@ public class CMConfigurator {
 			confInfo.setDBPass(CMConfigurator.getConfiguration(strConfFilePath, "DB_PASS"));
 			confInfo.setDBPort(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DB_PORT")));
 			confInfo.setDBName(CMConfigurator.getConfiguration(strConfFilePath, "DB_NAME"));
+
+			// file-sync update mode
+			confInfo.setFileSyncUpdateMode(CMFileSyncUpdateMode.valueOf(CMConfigurator.getConfiguration(strConfFilePath,
+					"FILE_UPDATE_MODE")));
+			confInfo.setFileSizeThreshold(Long.parseLong(CMConfigurator.getConfiguration(strConfFilePath,
+					"FILE_SIZE_THRESHOLD")));
+			confInfo.setFileModRatioThreshold(Double.parseDouble(CMConfigurator.getConfiguration(strConfFilePath,
+					"FILE_MOD_RATIO_THRESHOLD")));
 		}
 		else if( confInfo.getSystemType().equals("CLIENT") )
 		{
@@ -206,6 +215,11 @@ public class CMConfigurator {
 				System.out.println("DB_PASS: "+confInfo.getDBPass());
 				System.out.println("DB_PORT: "+confInfo.getDBPort());
 				System.out.println("DB_NAME: "+confInfo.getDBName());
+
+				// file-sync update mode
+				System.out.println("FILE_UPDATE_MODE: "+confInfo.getFileSyncUpdateMode());
+				System.out.println("FILE_SIZE_THRESHOLD: "+confInfo.getFileSizeThreshold());
+				System.out.println("FILE_MOD_RATIO_THRESHOLD: "+confInfo.getFileModRatioThreshold());
 
 				if( CMConfigurator.isDServer(cmInfo) )
 					System.out.println("This server is a default server!!");
