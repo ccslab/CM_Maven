@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncUpdateMode;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,6 +78,12 @@ public class CMConfigurationInfo {
 	private double usedStorageRatioThreshold;
 	// max access delay threshold (MADT) (milliseconds)
 	private long maxAccessDelayThreshold;
+	// file-sync update mode (DELTA, FILE, HYBRID)
+	private CMFileSyncUpdateMode fileSyncUpdateMode;
+	// file size threshold (for HYBRID mode of file-sync update) (Bytes)
+	private long fileSizeThreshold;
+	// file modification ratio threshold (for HYBRID mode of file-sync update) (0~1)
+	private double fileModRatioThreshold;
 	
 	public CMConfigurationInfo()
 	{
@@ -130,6 +137,9 @@ public class CMConfigurationInfo {
 		fileSyncStorage = 0;
 		usedStorageRatioThreshold = 0;
 		maxAccessDelayThreshold = 0;
+		fileSyncUpdateMode = CMFileSyncUpdateMode.DELTA;
+		fileSizeThreshold = 0;
+		fileModRatioThreshold = 1;	// always DELTA
 	}
 
 	// set/get methods
@@ -667,5 +677,29 @@ public class CMConfigurationInfo {
 
 	public synchronized void setMaxAccessDelayThreshold(long maxAccessDelayThreshold) {
 		this.maxAccessDelayThreshold = maxAccessDelayThreshold;
+	}
+
+	public CMFileSyncUpdateMode getFileSyncUpdateMode() {
+		return fileSyncUpdateMode;
+	}
+
+	public void setFileSyncUpdateMode(CMFileSyncUpdateMode fileSyncUpdateMode) {
+		this.fileSyncUpdateMode = fileSyncUpdateMode;
+	}
+
+	public long getFileSizeThreshold() {
+		return fileSizeThreshold;
+	}
+
+	public void setFileSizeThreshold(long fileSizeThreshold) {
+		this.fileSizeThreshold = fileSizeThreshold;
+	}
+
+	public double getFileModRatioThreshold() {
+		return fileModRatioThreshold;
+	}
+
+	public void setFileModRatioThreshold(double fileModRatioThreshold) {
+		this.fileModRatioThreshold = fileModRatioThreshold;
 	}
 }
