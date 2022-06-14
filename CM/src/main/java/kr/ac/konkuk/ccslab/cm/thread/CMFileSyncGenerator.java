@@ -626,7 +626,8 @@ public class CMFileSyncGenerator implements Runnable {
                     throw new RuntimeException(e);
                 }
                 // if the client entry needs to be synchronized with the basis file,
-                if(basisFileSize != entry.getSize() || basisFileLastModifiedTime != entry.getLastModifiedTime()) {
+                if(basisFileSize != entry.getSize() ||
+                        !basisFileLastModifiedTime.equals(entry.getLastModifiedTime())) {
                     // if the update mode is FILE
                     if(updateMode == CMFileSyncUpdateMode.FILE) {
                         // every client entry to be synced is added to the new list.
