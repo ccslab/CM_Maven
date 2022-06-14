@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
@@ -1740,6 +1741,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+/*
     public boolean createModifiedTestFile(Path path, Path modPath, int percentage) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.createModifiedTestFile() called..");
@@ -1793,6 +1795,79 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return true;
+    }
+*/
+
+    public boolean createModifiedTestFile(Path path, Path modPath, CMTestFileModType modType, int percentage) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.createModifiedTestFile() called..");
+            System.out.println("path = " + path);
+            System.out.println("modPath = " + modPath);
+            System.out.println("modType = " + modType);
+            System.out.println("percentage = " + percentage);
+        }
+
+        // copy the source file (path) to the target file (modPath)
+        try {
+            Files.copy(path, modPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+        SeekableByteChannel channel = null;
+        try {
+            // open the target channel
+            if(modType == CMTestFileModType.APPEND)
+                channel = Files.newByteChannel(modPath, StandardOpenOption.APPEND);
+            else channel = Files.newByteChannel(modPath, StandardOpenOption.WRITE);
+
+            // calculate number of bytes to be modified
+            long size = channel.size();
+            long modifiedSize = size * percentage / 100;
+
+            // if modType is TRUNC, truncate the target file
+            if(modType == CMTestFileModType.TRUNC) {
+                channel.truncate(size - modifiedSize);
+            }
+            else {
+                // declare variables to write new bytes
+                final int arraySize = 1024;
+                byte[] byteArray = new byte[arraySize];
+                long remainingBytes = modifiedSize;
+                ByteBuffer byteBuffer = ByteBuffer.allocate(arraySize);
+                int numBytesWritten = 0;
+                // write new random bytes to the target channel until the remaining bytes becomes 0
+                Random random = new Random();
+                while(remainingBytes > 0) {
+                    // get random bytes array
+                    random.nextBytes(byteArray);
+                    // clear byteBuffer
+                    byteBuffer.clear();
+                    // write byteArray to byteBuffer
+                    if(remainingBytes < arraySize) byteBuffer.put(byteArray, 0, (int) remainingBytes);
+                    else byteBuffer.put(byteArray);
+                    // write byteBuffer to the file channel
+                    byteBuffer.flip();
+                    numBytesWritten = channel.write(byteBuffer);
+                    // update remainingBytes
+                    remainingBytes -= numBytesWritten;
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                channel.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        }
+
+        return false;
     }
 
     // URL: https://stackoverflow.com/questions/2972986/
