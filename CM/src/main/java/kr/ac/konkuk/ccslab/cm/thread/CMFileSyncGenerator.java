@@ -653,7 +653,7 @@ public class CMFileSyncGenerator implements Runnable {
                                 long sizeDifference;
                                 if (basisFileSize >= entrySize) sizeDifference = basisFileSize - entrySize;
                                 else sizeDifference = entrySize - basisFileSize;
-                                if (sizeDifference / (double) basisFileSize <= fileModRatioThreshold)
+                                if (sizeDifference / (double) basisFileSize > fileModRatioThreshold)
                                     newClientPathEntryList.add(entry);
                             }
                         }
