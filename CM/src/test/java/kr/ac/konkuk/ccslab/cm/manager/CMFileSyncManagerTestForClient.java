@@ -123,21 +123,21 @@ public class CMFileSyncManagerTestForClient {
     @Test
     public void createAppendedTestFile() {
         System.out.println("=== called createAppendedTestFile()");
-        Path dir = cmInfo.getConfigurationInfo().getTransferedFileHome().resolve("test-appended-file-sync");
+        Path dir = cmInfo.getConfigurationInfo().getTransferedFileHome().resolve("test-appended-file-sync-2");
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         boolean ret;
-        String name = "10m.test";
+        String name = "1m.test";
 
         try {
             // create a 10m file
             Path file4 = dir.resolve(name);
-            ret = fileSyncManager.createTestFile(file4, 10 * 1024 * 1024L);
+            ret = fileSyncManager.createTestFile(file4, 1024 * 1024L);
             assertTrue(ret);
-            assertEquals(Files.size(file4), 10 * 1024 * 1024L);
+            assertEquals(Files.size(file4), 1024 * 1024L);
             // create appended files
             String prefix = name.substring(0, name.lastIndexOf(".test"));
             String postfix = name.substring(name.lastIndexOf(".test"));
@@ -159,48 +159,48 @@ public class CMFileSyncManagerTestForClient {
         }
     }
 */
-
 /*
-@Test
-public void createTruncatedTestFile() {
-    System.out.println("=== called createTruncatedTestFile()");
-    Path dir = cmInfo.getConfigurationInfo().getTransferedFileHome().resolve("test-trunc-file-sync");
-    try {
-        Files.createDirectories(dir);
-    } catch (IOException e) {
-        throw new RuntimeException(e);
-    }
-    boolean ret;
-    String name = "10m.test";
 
-    try {
-        // create a 10m file
-        Path file4 = dir.resolve(name);
-        //ret = fileSyncManager.createTestFile(file4, 10 * 1024 * 1024L);
-        ret = fileSyncManager.createTestFile(file4, 1024L);
-        assertTrue(ret);
-        //assertEquals(Files.size(file4), 10 * 1024 * 1024L);
-        assertEquals(Files.size(file4), 1024L);
-        // create appended files
-        String prefix = name.substring(0, name.lastIndexOf(".test"));
-        String postfix = name.substring(name.lastIndexOf(".test"));
-        for(int i = 10; i<=100; i+=10) {
-            String modName = prefix+"-"+i+"-trunc"+postfix;
-            ret = fileSyncManager.createModifiedTestFile(dir.resolve(name), dir.resolve(modName),
-                    CMTestFileModType.TRUNC, i);
-            try {
-                assertTrue(Files.mismatch(dir.resolve(name), dir.resolve(modName)) >= 0);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
+    @Test
+    public void createTruncatedTestFile() {
+        System.out.println("=== called createTruncatedTestFile()");
+        Path dir = cmInfo.getConfigurationInfo().getTransferedFileHome().resolve("test-trunc-file-sync");
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        boolean ret;
+        String name = "10m.test";
 
-    } catch (IOException e) {
-        e.printStackTrace();
-        throw new RuntimeException(e);
+        try {
+            // create a 10m file
+            Path file4 = dir.resolve(name);
+            //ret = fileSyncManager.createTestFile(file4, 10 * 1024 * 1024L);
+            ret = fileSyncManager.createTestFile(file4, 1024L);
+            assertTrue(ret);
+            //assertEquals(Files.size(file4), 10 * 1024 * 1024L);
+            assertEquals(Files.size(file4), 1024L);
+            // create appended files
+            String prefix = name.substring(0, name.lastIndexOf(".test"));
+            String postfix = name.substring(name.lastIndexOf(".test"));
+            for(int i = 10; i<=100; i+=10) {
+                String modName = prefix+"-"+i+"-trunc"+postfix;
+                ret = fileSyncManager.createModifiedTestFile(dir.resolve(name), dir.resolve(modName),
+                        CMTestFileModType.TRUNC, i);
+                try {
+                    assertTrue(Files.mismatch(dir.resolve(name), dir.resolve(modName)) >= 0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
-}
 */
 
     @Test
