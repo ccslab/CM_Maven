@@ -119,7 +119,6 @@ public class CMFileSyncManagerTestForClient {
     }
 */
 
-/*
     @Test
     public void createAppendedTestFile() {
         System.out.println("=== called createAppendedTestFile()");
@@ -130,26 +129,39 @@ public class CMFileSyncManagerTestForClient {
             throw new RuntimeException(e);
         }
         boolean ret;
-        String name = "1m.test";
+        String[] fileNameArray = {"100k.test", "1m.test", "10m.test"};
 
         try {
-            // create a 10m file
-            Path file4 = dir.resolve(name);
-            ret = fileSyncManager.createTestFile(file4, 1024 * 1024L);
+            // create files
+            Path file2 = dir.resolve("100k.test");
+            ret = fileSyncManager.createTestFile(file2, 100*1024L);
             assertTrue(ret);
-            assertEquals(Files.size(file4), 1024 * 1024L);
-            // create appended files
-            String prefix = name.substring(0, name.lastIndexOf(".test"));
-            String postfix = name.substring(name.lastIndexOf(".test"));
-            for(int i = 100; i<=900; i+=200) {
-                String modName = prefix+"-"+i+"-appended"+postfix;
-                ret = fileSyncManager.createModifiedTestFile(dir.resolve(name), dir.resolve(modName),
-                        CMTestFileModType.APPEND, i);
-                try {
-                    assertTrue(Files.mismatch(dir.resolve(name), dir.resolve(modName)) >= 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
+            assertEquals(Files.size(file2), 100*1024L);
+
+            Path file3 = dir.resolve("1m.test");
+            ret = fileSyncManager.createTestFile(file3, 1024*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file3), 1024*1024L);
+
+            Path file4 = dir.resolve("10m.test");
+            ret = fileSyncManager.createTestFile(file4, 10*1024*1024L);
+            assertTrue(ret);
+            assertEquals(Files.size(file4), 10*1024*1024L);
+
+            for(String name : fileNameArray) {
+                // create appended files
+                String prefix = name.substring(0, name.lastIndexOf(".test"));
+                String postfix = name.substring(name.lastIndexOf(".test"));
+                for(int i = 100; i<=900; i+=200) {
+                    String modName = prefix+"-"+i+"-appended"+postfix;
+                    ret = fileSyncManager.createModifiedTestFile(dir.resolve(name), dir.resolve(modName),
+                            CMTestFileModType.APPEND, i);
+                    try {
+                        assertTrue(Files.mismatch(dir.resolve(name), dir.resolve(modName)) >= 0);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
                 }
             }
 
@@ -158,7 +170,6 @@ public class CMFileSyncManagerTestForClient {
             throw new RuntimeException(e);
         }
     }
-*/
 
 /*
     @Test
