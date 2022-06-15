@@ -119,6 +119,7 @@ public class CMFileSyncManagerTestForClient {
     }
 */
 
+/*
     @Test
     public void createAppendedTestFile() {
         System.out.println("=== called createAppendedTestFile()");
@@ -170,6 +171,7 @@ public class CMFileSyncManagerTestForClient {
             throw new RuntimeException(e);
         }
     }
+*/
 
 /*
     @Test
