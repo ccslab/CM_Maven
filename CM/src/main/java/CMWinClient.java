@@ -40,6 +40,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
@@ -4193,7 +4194,8 @@ public class CMWinClient extends JFrame {
 			String postfix = name.substring(name.lastIndexOf(".test"));
 			for(int i = 1; i <= 10; i++) {
 				String modName = prefix+"-"+i+postfix;
-				ret = syncManager.createModifiedTestFile(testDir.resolve(name), testDir.resolve(modName), i);
+				ret = syncManager.createModifiedTestFile(testDir.resolve(name), testDir.resolve(modName),
+						CMTestFileModType.MODIFY, i);
 				if(ret) printMessage(testDir.resolve(modName)+" created..\n");
 				else {
 					printStyledMessage(testDir.resolve(modName)+" error!\n", "bold");
