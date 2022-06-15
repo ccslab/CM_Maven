@@ -141,7 +141,7 @@ public class CMFileSyncManagerTestForClient {
             // create appended files
             String prefix = name.substring(0, name.lastIndexOf(".test"));
             String postfix = name.substring(name.lastIndexOf(".test"));
-            for(int i = 10; i<=100; i+=10) {
+            for(int i = 100; i<=900; i+=200) {
                 String modName = prefix+"-"+i+"-appended"+postfix;
                 ret = fileSyncManager.createModifiedTestFile(dir.resolve(name), dir.resolve(modName),
                         CMTestFileModType.APPEND, i);
@@ -159,8 +159,8 @@ public class CMFileSyncManagerTestForClient {
         }
     }
 */
-/*
 
+/*
     @Test
     public void createTruncatedTestFile() {
         System.out.println("=== called createTruncatedTestFile()");
