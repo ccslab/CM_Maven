@@ -4012,8 +4012,12 @@ public class CMWinClient extends JFrame {
 
 	private void testPrintCurrentFileSyncMode() {
 		printMessage("========== print current file-sync mode\n");
-		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_clientStub.getCMInfo().getFileSyncInfo());
-		CMFileSyncMode currentMode = syncInfo.getCurrentMode();
+		CMFileSyncMode currentMode = m_clientStub.getCurrentFileSyncMode();
+		if(currentMode == null) {
+			printStyledMessage("Error! Please see error message in console for more information!\n",
+					"bold");
+			return;
+		}
 		printMessage("Current file-sync mode is "+currentMode+".\n");
 	}
 

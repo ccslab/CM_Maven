@@ -3303,8 +3303,11 @@ public class CMClientApp {
 
 	private void testPrintCurrentFileSyncMode() {
 		System.out.println("========== print current file-sync mode");
-		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_clientStub.getCMInfo().getFileSyncInfo());
-		CMFileSyncMode currentMode = syncInfo.getCurrentMode();
+		CMFileSyncMode currentMode = m_clientStub.getCurrentFileSyncMode();
+		if(currentMode == null) {
+			System.err.println("Error! Please see error message in console for more information!");
+			return;
+		}
 		System.out.println("Current file-sync mode is "+currentMode+".");
 	}
 
