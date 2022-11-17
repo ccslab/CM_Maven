@@ -3392,29 +3392,29 @@ public class CMClientApp {
 
 	private void testPrintOnlineModeFiles() {
 		System.out.println("========== print online mode files");
-		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
-/*
-		syncInfo.getOnlineModePathList().stream()
-				.forEach(System.out::println);
-*/
-		syncInfo.getOnlineModePathSizeMap().keySet().stream()
-				.forEach(System.out::println);
+		List<Path> onlineModeFiles = m_clientStub.getOnlineModeFiles();
+		if(onlineModeFiles == null) {
+			System.err.println("online mode file list is null!");
+			System.err.println("Please check error message in console for more information!");
+			return;
+		}
+
+		for(Path path : onlineModeFiles) {
+			System.out.println(path);
+		}
 	}
 
 	private void testPrintLocalModeFiles() {
 		System.out.println("========== print local mode files");
-		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
-		//List<Path> onlineFiles = syncInfo.getOnlineModePathList();
-		List<Path> onlineFiles = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
-		List<Path> pathList = syncInfo.getPathList();
-		if(pathList == null) return;
+		List<Path> localModeFiles = m_clientStub.getLocalModeFiles();
+		if(localModeFiles == null) {
+			System.err.println("local mode file list is null!");
+			System.err.println("Please check error message in console for more information!");
+			return;
+		}
 
-		for(Path path : pathList) {
-			if(!Files.isDirectory(path)) {
-				if(!onlineFiles.contains(path)) {
-					System.out.println(path);
-				}
-			}
+		for(Path path : localModeFiles) {
+			System.out.println(path);
 		}
 	}
 

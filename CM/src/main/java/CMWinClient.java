@@ -4102,29 +4102,31 @@ public class CMWinClient extends JFrame {
 
 	private void testPrintOnlineModeFiles() {
 		printMessage("========== print online mode files\n");
-		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
-/*
-		syncInfo.getOnlineModePathList().stream()
-				.forEach(path -> printMessage(path+"\n"));
-*/
-		syncInfo.getOnlineModePathSizeMap().keySet().stream()
-				.forEach(path -> printMessage(path+"\n"));
+		List<Path> onlineModeFiles = m_clientStub.getOnlineModeFiles();
+		if(onlineModeFiles == null) {
+			printStyledMessage("online mode file list is null!\n", "bold");
+			printStyledMessage("Please check error message in console for more information!\n",
+					"bold");
+			return;
+		}
+
+		for(Path path : onlineModeFiles) {
+			printMessage(path+"\n");
+		}
 	}
 
 	private void testPrintLocalModeFiles() {
 		printMessage("========== print local mode files\n");
-		CMFileSyncInfo syncInfo = m_clientStub.getCMInfo().getFileSyncInfo();
-		//List<Path> onlineFiles = syncInfo.getOnlineModePathList();
-		List<Path> onlineFiles = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
-		List<Path> pathList = syncInfo.getPathList();
-		if(pathList == null) return;
+		List<Path> localModeFiles = m_clientStub.getLocalModeFiles();
+		if(localModeFiles == null) {
+			printStyledMessage("local mode file list is null!\n", "bold");
+			printStyledMessage("Please check error message in console for more information!\n",
+					"bold");
+			return;
+		}
 
-		for(Path path : pathList) {
-			if(!Files.isDirectory(path)) {
-				if(!onlineFiles.contains(path)) {
-					printMessage(path+"\n");
-				}
-			}
+		for(Path path : localModeFiles) {
+			printMessage(path+"\n");
 		}
 	}
 

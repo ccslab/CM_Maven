@@ -2831,4 +2831,56 @@ public class CMFileSyncManager extends CMServiceManager {
             throw new RuntimeException(e);
         }
     }
+
+    // called at the client
+    public List<Path> getOnlineModeFiles() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.getOnlineModeFiles() called..");
+        }
+
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        if(syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
+            System.err.println("Current file sync mode is OFF!");
+            System.err.println("You should start file sync to get the updated online mode file list.");
+            return null;
+        }
+
+        List<Path> onlineModeFiles = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("-- online mode file list");
+            for(Path path : onlineModeFiles)
+                System.out.println(path);
+        }
+        return onlineModeFiles;
+    }
+
+    // called at the client
+    public List<Path> getLocalModeFiles() {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.getLocalModeFiles() called..");
+        }
+
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        if(syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
+            System.err.println("Current file sync mode is OFF!");
+            System.err.println("You should start file sync to get the updated local mode file list.");
+            return null;
+        }
+
+        List<Path> onlineModeFiles = getOnlineModeFiles();
+        List<Path> pathList = syncInfo.getPathList();
+
+        List<Path> localModeFiles = pathList.stream()
+                .filter(p -> !Files.isDirectory(p))
+                .filter(p -> !onlineModeFiles.contains(p)).toList();
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("-- local mode file list");
+            for(Path path : localModeFiles)
+                System.out.println(path);
+        }
+
+        return localModeFiles;
+    }
 }

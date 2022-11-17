@@ -3808,4 +3808,47 @@ public class CMClientStub extends CMStub {
 
 		return true;
 	}
+
+	public List<Path> getOnlineModeFiles() {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.getOnlineModeFiles() called..");
+		}
+
+		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		if(confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("System type is SERVER!");
+			return null;
+		}
+		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		int state = myself.getState();
+		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
+			System.err.println("You should log in to the default server!");
+			return null;
+		}
+
+		CMFileSyncManager syncManager = Objects.requireNonNull(findServiceManager(CMFileSyncManager.class));
+		return syncManager.getOnlineModeFiles();
+	}
+
+	public List<Path> getLocalModeFiles() {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.getLocalModeFiles() called..");
+		}
+
+		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		if(confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("System type is SERVER!");
+			return null;
+		}
+		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		int state = myself.getState();
+		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
+			System.err.println("You should log in to the default server!");
+			return null;
+		}
+
+		CMFileSyncManager syncManager = Objects.requireNonNull(findServiceManager(CMFileSyncManager.class));
+		return syncManager.getLocalModeFiles();
+	}
+
 }
