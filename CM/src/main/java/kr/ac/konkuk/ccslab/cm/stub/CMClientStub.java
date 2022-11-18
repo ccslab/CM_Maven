@@ -1945,48 +1945,48 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMSNSEvent.CONTENT_DOWNLOAD event</caption>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
 	 *   <tr> 
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNEEvent.CONTENT_DOWNLOAD </td> 
+	 *     <td> Event ID </td> <td> CMSNEEvent.CONTENT_DOWNLOAD </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
+	 *     <td> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Requester name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *     <td> Requester name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Requested content offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
+	 *     <td> Requested content offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   </tr>
 	 *   <tr> 
-	 *     <td bgcolor="lightgrey"> Written date and time of the content </td> <td> {@link CMSNSEvent#getDate()} </td> 
+	 *     <td> Written date and time of the content </td> <td> {@link CMSNSEvent#getDate()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Writer name of the content </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *     <td> Writer name of the content </td> <td> {@link CMSNSEvent#getWriterName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Text message of the content </td> <td> {@link CMSNSEvent#getMessage()} </td>
+	 *     <td> Text message of the content </td> <td> {@link CMSNSEvent#getMessage()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Number of attachments </td> <td> {@link CMSNSEvent#getNumAttachedFiles()} </td>
+	 *     <td> Number of attachments </td> <td> {@link CMSNSEvent#getNumAttachedFiles()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Content ID to which this message replies (0 for no reply) </td>
+	 *     <td> Content ID to which this message replies (0 for no reply) </td>
 	 *     <td> {@link CMSNSEvent#getReplyOf()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Level of disclosure of the content
+	 *     <td> Level of disclosure of the content
 	 *          <br> 0: open to public <br> 1: open only to friends <br> 2: open only to bi-friends 
 	 *          <br> 3: private 
 	 *     </td> 
 	 *     <td> {@link CMSNSEvent#getLevelOfDisclosure()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> List of attached file names </td> <td> {@link CMSNSEvent#getFileNameList()} </td>
+	 *     <td> List of attached file names </td> <td> {@link CMSNSEvent#getFileNameList()} </td>
 	 *   </tr>
 	 * </table>
 	 * 
@@ -2000,25 +2000,25 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMSNSEvent.CONTENT_DOWNLOAD_END event</caption>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.CONTENT_DOWNLOAD_END </td>
+	 *     <td> Event ID </td> <td> CMSNSEvent.CONTENT_DOWNLOAD_END </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
+	 *     <td> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *     <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
+	 *     <td> Offset </td> <td> {@link CMSNSEvent#getContentOffset()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Number of downloaded items </td> <td> {@link CMSNSEvent#getNumContents()} </td>
+	 *     <td> Number of downloaded items </td> <td> {@link CMSNSEvent#getNumContents()} </td>
 	 *   <tr>
 	 * </table>
 	 * 
@@ -2140,25 +2140,25 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMSNSEvent.CONTENT_UPLOAD_RESPONSE event</caption>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
+	 *     <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 *   </tr>
 	 *   <tr> 
-	 *     <td bgcolor="lightgrey"> Event ID </td> <td> CMSNEEvent.CONTENT_UPLOAD_RESPONSE </td> 
+	 *     <td> Event ID </td> <td> CMSNEEvent.CONTENT_UPLOAD_RESPONSE </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Event field </td> <td> Get method </td>
+	 *     <td> Event field </td> <td> Get method </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
+	 *     <td> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *     <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> Date and time </td> <td> {@link CMSNSEvent#getDate()} </td>
+	 *     <td> Date and time </td> <td> {@link CMSNSEvent#getDate()} </td>
 	 *   </tr>
 	 *   <tr>
-	 *     <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
+	 *     <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   </tr>
 	 * </table>  
 	 * 
@@ -2265,32 +2265,32 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMSNSEvent.RESPONSE_ATTACHED_FILE event</caption>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
+	 *   <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.RESPONSE_ATTACHED_FILE </td>
+	 *   <td> Event ID </td> <td> CMSNSEvent.RESPONSE_ATTACHED_FILE </td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 *   <td> Event field </td> <td> Get method </td> <td> Description </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
+	 *   <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   <td> The requesting user name </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   <td> The ID of the SNS content that attached the requested file </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   <td> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
 	 *   <td> The writer name of the SNS content </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> File name </td> <td> {@link CMSNSEvent#getFileName()} </td>
+	 *   <td> File name </td> <td> {@link CMSNSEvent#getFileName()} </td>
 	 *   <td> The name of the attached file </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
+	 *   <td> Return code </td> <td> {@link CMSNSEvent#getReturnCode()} </td>
 	 *   <td> The request result. If the value is 1, the requested file will be delivered to the client. If the value 
 	 *   is 0, the server does nothing further for the request. </td>
 	 * </tr>
@@ -2387,28 +2387,28 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMSNSEvent.ACCESS_ATTACHED_FILE event</caption>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Event type </td> <td> CMInfo.CM_SNS_EVENT </td> 
+	 *   <td> Event type </td> <td> CMInfo.CM_SNS_EVENT </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Event ID </td> <td> CMSNSEvent.ACCESS_ATTACHED_FILE </td>
+	 *   <td> Event ID </td> <td> CMSNSEvent.ACCESS_ATTACHED_FILE </td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 *   <td> Event field </td> <td> Get method </td> <td> Description </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> User name </td> <td> {@link CMSNSEvent#getUserName()} </td> 
+	 *   <td> User name </td> <td> {@link CMSNSEvent#getUserName()} </td>
 	 *   <td> The name of the file-accessing user </td> 
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
+	 *   <td> Content ID </td> <td> {@link CMSNSEvent#getContentID()} </td>
 	 *   <td> ID of the SNS content of which attached file is accessed </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
+	 *   <td> Writer name </td> <td> {@link CMSNSEvent#getWriterName()} </td>
 	 *   <td> The writer name of the SNS content of which attached file is accessed </td>
 	 * </tr>
 	 * <tr>
-	 *   <td bgcolor="lightgrey"> Attached file name </td> <td> {@link CMSNSEvent#getFileName()} </td>
+	 *   <td> Attached file name </td> <td> {@link CMSNSEvent#getFileName()} </td>
 	 *   <td> The name of an attached file that the user accessed </td>
 	 * </tr>
 	 * </table>
@@ -2504,12 +2504,12 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMMultiServerEvent.NOTIFY_SERVER_INFO event</caption>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
+	 * <td>Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMMultiServerEvent.NOTIFY_SERVER_INFO</td>
+	 * <td>Event ID</td><td>CMMultiServerEvent.NOTIFY_SERVER_INFO</td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
 	 * </tr>
 	 * <tr>
@@ -2527,12 +2527,12 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMMultiServerEvent.NOTIFY_SERVER_LEAVE event</caption>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
+	 * <td>Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMMultiServerEvent.NOTIFY_SERVER_LEAVE</td>
+	 * <td>Event ID</td><td>CMMultiServerEvent.NOTIFY_SERVER_LEAVE</td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
 	 * </tr>
 	 * <tr>
@@ -3282,12 +3282,12 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMSNSEvent.ADD_NEW_FRIEND_ACK event</caption>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
+	 * <td>Event type</td><td>CMInfo.CM_SNS_EVENT</td>
 	 * </tr>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSNSEvent.ADD_NEW_FRIEND_ACK</td>
+	 * <td>Event ID</td><td>CMSNSEvent.ADD_NEW_FRIEND_ACK</td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
 	 * </tr>
 	 * <tr>
@@ -3346,12 +3346,12 @@ public class CMClientStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMSNSEvent.REMOVE_FRIEND_ACK event</caption>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
+	 * <td>Event type</td><td>CMInfo.CM_SNS_EVENT</td>
 	 * </tr>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMSNSEvent.REMOVE_FRIEND_ACK</td>
+	 * <td>Event ID</td><td>CMSNSEvent.REMOVE_FRIEND_ACK</td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
 	 * </tr>
 	 * <tr>
@@ -3425,14 +3425,14 @@ public class CMClientStub extends CMStub {
 	 * <caption>CMSNSEvent.RESPONSE_FRIEND_LIST, RESPONSE_FRIEND_REQUESTER_LIST, 
 	 * RESPONSE_BI_FRIEND_LIST events</caption>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_SNS_EVENT</td>
+	 * <td>Event type</td><td>CMInfo.CM_SNS_EVENT</td>
 	 * </tr>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td>
+	 * <td>Event ID</td>
 	 * <td>CMSNSEvent.RESPONSE_FRIEND_LIST<br>CMSNSEvent.RESPONSE_FRIEND_REQUESTER_LIST
 	 * <br>CMSNSEvent.RESPONSE_BI_FRIEND_LIST</td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
 	 * </tr>
 	 * <tr>

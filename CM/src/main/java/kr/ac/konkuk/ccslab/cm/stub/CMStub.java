@@ -1325,7 +1325,7 @@ public class CMStub {
 	 * 
 	 * <table border=1>
 	 * <caption>Receiver ranges of the chat() method</caption>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>sessionName</td><td>groupName</td><td>receiver range</td>
 	 * </tr>
 	 * <tr>
@@ -2354,10 +2354,10 @@ public class CMStub {
 	 * gets the path to the CM configuration file.
 	 * 
 	 * <p>If the CM client needs to access the configuration file, the path to it can be retrieved as follows:
-	 * <br><center> cmClientStub.getConfigurationHome().resolve("cm-client.conf"); </center>
+	 * <br><div style="text-align:center"> cmClientStub.getConfigurationHome().resolve("cm-client.conf"); </div>
 	 * <br> cmClientStub is the reference to a CM client-stub object.
 	 * <br> If the CM server needs to access its configuration file, the path to it can be retrieved as follows:
-	 * <p><center> cmServerStub.getConfigurationHome().resolve("cm-server.conf"); </center>
+	 * <p style="text-align:center">cmServerStub.getConfigurationHome().resolve("cm-server.conf");
 	 * <br> cmServerStub is the reference to a CM server-stub object. 
 	 * 
 	 * @return the path to the CM configuration file

@@ -316,12 +316,12 @@ public class CMServerStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMMultiServerEvent.RES_SERVER_REG event</caption>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
+	 * <td>Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMMultiServerEvent.RES_SERVER_REG</td>
+	 * <td>Event ID</td><td>CMMultiServerEvent.RES_SERVER_REG</td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
 	 * </tr>
 	 * <tr>
@@ -407,12 +407,12 @@ public class CMServerStub extends CMStub {
 	 * <table border=1>
 	 * <caption>CMMultiServerEvent.RES_SERVER_DEREG event</caption>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
+	 * <td>Event type</td><td>CMInfo.CM_MULTI_SERVER_EVENT</td>
 	 * </tr>
 	 * <tr>
-	 * <td bgcolor="lightgrey">Event ID</td><td>CMMultiServerEvent.RES_SERVER_DEREG</td>
+	 * <td>Event ID</td><td>CMMultiServerEvent.RES_SERVER_DEREG</td>
 	 * </tr>
-	 * <tr bgcolor="lightgrey">
+	 * <tr>
 	 * <td>Event field</td><td>Field data type</td><td>Field definition</td><td>Get method</td>
 	 * </tr>
 	 * <tr>
@@ -531,7 +531,7 @@ public class CMServerStub extends CMStub {
 	 * CMInfo.SNS_ATTACH_PREFETCH(or 2) and CMInfo.SNS_ATTACH_NONE(or 3).
 	 * <table border=1>
 	 * <caption>Download scheme of attached images of SNS content</caption>
-	 * 	<tr bgcolor=lightgrey>
+	 * 	<tr>
 	 * 		<td>download scheme</td><td>description</td>
 	 * 	</tr>
 	 * 	<tr>
