@@ -3324,9 +3324,14 @@ public class CMClientApp {
 
 	private void testOpenFileSyncFolder() {
 		System.out.println("========== open file-sync folder");
-		CMFileSyncManager syncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
-		Objects.requireNonNull(syncManager);
-		Path syncHome = syncManager.getClientSyncHome();
+
+		Path syncHome = m_clientStub.getFileSyncHome();
+		if(syncHome == null) {
+			System.err.println("File sync home is null!");
+			System.err.println("Please see error message on console for more information.");
+			return;
+		}
+
 		// open syncHome folder
 		Desktop desktop = Desktop.getDesktop();
 		try {

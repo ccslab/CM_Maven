@@ -6,6 +6,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,11 +25,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMSNSManager;
+import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.thread.CMServerKeepAliveTask;
 
 /**
@@ -768,6 +765,26 @@ public class CMServerStub extends CMStub {
 		loginUsers = interInfo.getLoginUsers();
 		
 		return loginUsers;
+	}
+
+	public Path getFileSyncHome(String userName) {
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMServerStub.getFileSyncHome() called..");
+			System.out.println("userName = " + userName);
+		}
+
+		if(userName == null) {
+			System.err.println("User name argument is null!");
+			return null;
+		}
+
+		CMFileSyncManager syncManager = Objects.requireNonNull(findServiceManager(CMFileSyncManager.class));
+		Path syncHome = syncManager.getServerSyncHome(userName);
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("syncHome = " + syncHome);
+		}
+
+		return syncHome;
 	}
 	
 }

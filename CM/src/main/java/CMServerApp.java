@@ -215,9 +215,12 @@ public class CMServerApp {
 		String userName = JOptionPane.showInputDialog("User Name:");
 		if(userName != null) {
 			// get the file-sync home of "userName"
-			CMFileSyncManager syncManager = m_serverStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
-			Objects.requireNonNull(syncManager);
-			Path syncHome = syncManager.getServerSyncHome(userName);
+			Path syncHome = m_serverStub.getFileSyncHome(userName);
+			if(syncHome == null) {
+				System.err.println("File sync home is null!");
+				System.err.println("Please see error message on console for more information.");
+				return;
+			}
 			// open syncHome folder
 			Desktop desktop = Desktop.getDesktop();
 			try {

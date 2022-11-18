@@ -4034,9 +4034,15 @@ public class CMWinClient extends JFrame {
 
 	private void testOpenFileSyncFolder() {
 		printMessage("========== open file-sync folder\n");
-		CMFileSyncManager syncManager = m_clientStub.getCMInfo().getServiceManager(CMFileSyncManager.class);
-		Objects.requireNonNull(syncManager);
-		Path syncHome = syncManager.getClientSyncHome();
+
+		Path syncHome = m_clientStub.getFileSyncHome();
+		if(syncHome == null) {
+			printStyledMessage("File sync home is null!\n", "bold");
+			printStyledMessage("Please see error message on console for more information.\n",
+					"bold");
+			return;
+		}
+
 		// open syncHome folder
 		Desktop desktop = Desktop.getDesktop();
 		try {
