@@ -777,8 +777,17 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         syncInfo.setWatchService(watchService);
 
-        // create a WatchServiceTask
+        // check sync home directory
         Path syncHome = Objects.requireNonNull(getClientSyncHome());
+        if (Files.notExists(syncHome)) {
+            try {
+                Files.createDirectories(syncHome);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        // create a WatchServiceTask
         CMWatchServiceTask watchTask = new CMWatchServiceTask(syncHome, watchService, this, syncInfo);
         // start the WatchServiceTask
         Future<?> future = es.submit(watchTask);
