@@ -3,6 +3,11 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the server to notify the client of
+ * the completion of sending block checksums of a file.
+ * @author CCSLab, Konkuk University
+ * */
 public class CMFileSyncEventEndFileBlockChecksum extends CMFileSyncEvent {
     private int fileEntryIndex; // client file entry index
     private int totalNumBlocks; // total number of blocks of this file
@@ -93,6 +98,10 @@ public class CMFileSyncEventEndFileBlockChecksum extends CMFileSyncEvent {
         return Objects.hash(fileEntryIndex, totalNumBlocks, blockSize);
     }
 
+    /**
+     * gets an index of a file entry for synchronization.
+     * @return index of a file entry for synchronization
+     */
     public int getFileEntryIndex() {
         return fileEntryIndex;
     }
@@ -101,6 +110,10 @@ public class CMFileSyncEventEndFileBlockChecksum extends CMFileSyncEvent {
         this.fileEntryIndex = fileEntryIndex;
     }
 
+    /**
+     * gets the total number of blocks of the file.
+     * @return total number of blocks of the file
+     */
     public int getTotalNumBlocks() {
         return totalNumBlocks;
     }
@@ -109,6 +122,10 @@ public class CMFileSyncEventEndFileBlockChecksum extends CMFileSyncEvent {
         this.totalNumBlocks = totalNumBlocks;
     }
 
+    /**
+     * gets the block size of the file.
+     * @return block size of the file
+     */
     public int getBlockSize() {
         return blockSize;
     }

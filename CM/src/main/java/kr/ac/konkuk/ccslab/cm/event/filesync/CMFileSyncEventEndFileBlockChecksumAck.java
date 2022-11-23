@@ -5,6 +5,11 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the client to reply
+ * the completion of receiving block checksums of a file to the server.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
     private int fileEntryIndex; // client file entry index
     private int totalNumBlocks; // total number of blocks of this file
@@ -140,6 +145,10 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         return result;
     }
 
+    /**
+     * gets an index of a file entry for synchronization.
+     * @return index of a file entry for synchronization
+     */
     public int getFileEntryIndex() {
         return fileEntryIndex;
     }
@@ -148,6 +157,10 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         this.fileEntryIndex = fileEntryIndex;
     }
 
+    /**
+     * gets the total number of blocks of the file.
+     * @return total number of blocks of the file
+     */
     public int getTotalNumBlocks() {
         return totalNumBlocks;
     }
@@ -156,6 +169,10 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         this.totalNumBlocks = totalNumBlocks;
     }
 
+    /**
+     * gets the block size of the file.
+     * @return block size of the file
+     */
     public int getBlockSize() {
         return blockSize;
     }
@@ -164,6 +181,10 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         this.blockSize = blockSize;
     }
 
+    /**
+     * gets the file checksum.
+     * @return file checksum
+     */
     public byte[] getFileChecksum() {
         return fileChecksum;
     }
@@ -172,6 +193,11 @@ public class CMFileSyncEventEndFileBlockChecksumAck extends CMFileSyncEvent {
         this.fileChecksum = fileChecksum;
     }
 
+    /**
+     * gets the return code.
+     * @return return code
+     * <br> 1 if successful; 0 otherwise
+     */
     public int getReturnCode() {
         return returnCode;
     }
