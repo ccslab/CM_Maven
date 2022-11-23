@@ -4009,6 +4009,8 @@ public class CMClientStub extends CMStub {
 	 *     If we add a new file in the sync directory, it is synchronized with the server.
 	 * </p>
 	 * @return the file synchronization home directory.
+	 * <br> This method returns null instead of the synchronization home directory
+	 * if the client has wrong system type (“SERVER”), or has not logged in to the server.
 	 * @see CMClientStub#startFileSync(CMFileSyncMode)
 	 * @see CMClientStub#stopFileSync()
 	 */
