@@ -3997,6 +3997,21 @@ public class CMClientStub extends CMStub {
 		return syncInfo.getCurrentMode();
 	}
 
+	/**
+	 * gets the file synchronization home directory.
+	 * <p>
+	 *     To use the file sync, the client uses a designated synchronization directory in
+	 *     the transferred file home. The transferred file home is set in the FILE_PATH field of
+	 *     CM client configuration file (cm-client.conf). CM specifies the name of synchronization directory
+	 *     as “FileSyncHome”. Therefore, if the transferred file home is “./client-file-path”,
+	 *     then the synchronization home directory is “./client-file-path/FileSyncHome”.
+	 *     When we start the file sync at the first time, CM creates the empty synchronization home directory.
+	 *     If we add a new file in the sync directory, it is synchronized with the server.
+	 * </p>
+	 * @return the file synchronization home directory.
+	 * @see CMClientStub#startFileSync(CMFileSyncMode)
+	 * @see CMClientStub#stopFileSync()
+	 */
 	public Path getFileSyncHome() {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.getFileSyncHome() called..");
