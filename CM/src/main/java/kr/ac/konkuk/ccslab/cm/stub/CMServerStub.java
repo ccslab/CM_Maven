@@ -767,6 +767,19 @@ public class CMServerStub extends CMStub {
 		return loginUsers;
 	}
 
+	/**
+	 * gets the synchronization home directory of the specified user.
+	 * <p>
+	 *     The server maintains a synchronization home directory per user. The server also specifies
+	 *     the “FileSyncHome” directory in the transferred file home of a user.
+	 *     The transferred file home is set in the FILE_PATH field of CM server configuration file (cm-server.conf).
+	 *     For example, if the transferred file home of a user “ccslab” is “./server-file-path”,
+	 *     then the synchronization home directory is “./server-file-path/ccslab/FileSyncHome”.
+	 * </p>
+	 * @param userName user name
+	 * @return synchronization home directory of the user.
+	 * <br> This method return null if the userName argument is null.
+	 */
 	public Path getFileSyncHome(String userName) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMServerStub.getFileSyncHome() called..");

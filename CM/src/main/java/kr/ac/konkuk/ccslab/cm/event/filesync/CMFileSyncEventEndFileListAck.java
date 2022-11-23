@@ -5,6 +5,11 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the server to reply
+ * the completion of receiving file list for synchronization to the client.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventEndFileListAck extends CMFileSyncEvent {
     // Fields: userName, numFilesCompleted, returnCode
     private String userName;    // user name
@@ -96,6 +101,10 @@ public class CMFileSyncEventEndFileListAck extends CMFileSyncEvent {
         return Objects.hash(userName, numFilesCompleted, returnCode);
     }
 
+    /**
+     * gets the user name of the client.
+     * @return user name of the client
+     */
     public String getUserName() {
         return userName;
     }
@@ -104,6 +113,10 @@ public class CMFileSyncEventEndFileListAck extends CMFileSyncEvent {
         this.userName = userName;
     }
 
+    /**
+     * gets the number of files.
+     * @return number of files
+     */
     public int getNumFilesCompleted() {
         return numFilesCompleted;
     }
@@ -112,6 +125,11 @@ public class CMFileSyncEventEndFileListAck extends CMFileSyncEvent {
         this.numFilesCompleted = numFilesCompleted;
     }
 
+    /**
+     * gets the return code.
+     * @return return code
+     * <br>1 if successful; 0 otherwise
+     */
     public int getReturnCode() {
         return returnCode;
     }

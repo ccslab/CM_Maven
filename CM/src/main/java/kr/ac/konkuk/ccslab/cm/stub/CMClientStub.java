@@ -3667,6 +3667,42 @@ public class CMClientStub extends CMStub {
 		return sb.toString();
 	}
 
+	/**
+	 * start file synchronization.
+	 *
+	 * <p>
+	 *     CM supports simple file synchronization (file sync) functionality between a client and a server.
+	 *     When the client starts the file sync, files in the client directory and files in the server directory
+	 *     are synchronized. If the client adds a new file or modifies an existing file, the updated file is also
+	 *     synchronized with the corresponding server file.
+	 * </p>
+	 * <p>
+	 *     When the file sync is completed, the server sends a CMFileSyncEvent to the client.
+	 *     {@link kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent} is an abstract class that is a parent
+	 *     of all specific file sync events.
+	 *     For the file sync completion, the server actually sends a
+	 *     {@link kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteFileSync} event.
+	 *     The client can catch the event to check when the file sync is completed.
+	 * </p>
+	 *
+	 * @param mode file sync mode. ({@link CMFileSyncMode#MANUAL}, {@link CMFileSyncMode#AUTO})
+	 *             <p>
+	 *             The MANUAL mode is the manual file mode change mechanism, and it is the same as MANUAL
+	 *             in the FILE_SYNC_MODE field of the CM client configuration file.
+	 *             In the MANUAL mode, CM starts the file sync with manual file mode change
+	 *             mechanism when the client logs in to the server. In the manual file mode change mechanism,
+	 *             file mode can be changed to local or online mode by the user request.
+	 *             The AUTO mode is the active file mode change mechanism, and it is the same as AUTO
+	 *             in the FILE_SYNC_MODE field of the CM client configuration file.
+	 *             In the AUTO mode, CM starts the file sync with active file mode change mechanism
+	 *             when the client logs in to the server. In the active file mode change mechanism,
+	 *             CM actively changes the file mode of files in the synchronization directory according to
+	 *             directory activation ratio.
+	 *             </p>
+	 * @return true if successfully file sync started; false otherwise.
+	 *
+	 * @see CMClientStub#stopFileSync()
+	 */
 	public boolean startFileSync(CMFileSyncMode mode) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.startFileSync() called..");
@@ -3703,6 +3739,16 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 
+	/**
+	 * stops file synchronization.
+	 * <p>
+	 *     This method terminates all the monitoring threads for synchronization related tasks.
+	 * </p>
+	 *
+	 * @return true if the file sync successfully stops. If the file sync cannot stop or any monitoring thread
+	 * cannot terminate, the method returns false.
+	 * @see CMClientStub#startFileSync(CMFileSyncMode) 
+	 */
 	public boolean stopFileSync() {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.stopFileSync() called..");
@@ -3733,6 +3779,32 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 
+	/**
+	 * requests to change file mode of synchronization to online mode.
+	 *
+	 * <p>
+	 *     In the file synchronization service, the client can change the file mode of the files
+	 *     in the synchronization directory. The file mode is assumed to be the local mode or the online mode.
+	 *     In the online mode, file content exists only in the remote storage of the server.
+	 *     The local storage of the client maintains only file attributes, and has no file content.
+	 *     Since the file data does not exist on the client, the online mode has the advantage of saving
+	 *     the local storage space. However, when a client tries to access an online mode file, it should
+	 *     first download the original file data from the server, which increases the file access delay.
+	 *     Therefore, the online mode is used to save the client's local storage space.
+	 * </p>
+	 * <p>
+	 *		Note that the true return value does not mean that CM completes to change the files to the online mode.
+	 *		To check the completion of the file mode change request, the client should catch the file sync
+	 *		completion event ({@link kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteFileSync})
+	 *		from the server.
+	 * </p>
+	 *
+	 * @param files an array of requested local mode files
+	 *              <br> If a file is already online mode, CM ignores such file in the file mode change process.
+	 * @return true if the file mode change request is successfully delivered to CM; false otherwise.
+	 * @see CMClientStub#requestFileSyncLocalMode(File[])
+	 * @see CMClientStub#getLocalModeFiles()
+	 */
 	public boolean requestFileSyncOnlineMode(File[] files) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.requestFileSyncOnlineMode() called..");
@@ -3771,6 +3843,27 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 
+	/**
+	 * requests to change file mode of synchronization to local mode.
+	 *
+	 * <p>
+	 *     In the local mode, file data exists in both the client's local storage and the server's remote storage,
+	 *     and both files are synchronized. The client can directly access the local mode file to read or
+	 *     update it. As soon as the local mode file is updated, the server-side file is also synchronized
+	 *     to reflect the updated content.
+	 * </p>
+	 * <p>
+	 *     Note that the true return value does not mean that CM completes to change the files to the local mode.
+	 *     To check the completion of the file mode change request, the client should catch the file sync
+	 *     completion event ({@link kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteFileSync})
+	 *     from the server.
+	 * </p>
+	 * @param files an array of requested online mode files
+	 *              <br> If a file is already local mode, CM ignores such file in the file mode change process.
+	 * @return true if the file mode change request is successfully delivered to CM; false otherwise.
+	 * @see CMClientStub#requestFileSyncOnlineMode(File[])
+	 * @see CMClientStub#getOnlineModeFiles()
+	 */
 	public boolean requestFileSyncLocalMode(File[] files) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.requestFileSyncLocalMode() called..");
@@ -3809,6 +3902,16 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 
+	/**
+	 * gets a list of online mode files in the synchronization home directory.
+	 * <p>
+	 *     The client can get the synchronization home directory by calling {@link CMClientStub#getFileSyncHome()}.
+	 * </p>
+	 * @return a list of online mode files.
+	 * <br> If the client has wrong system type, does not log in to the server, or the file sync mode is OFF,
+	 * the method returns null.
+	 * @see CMClientStub#getLocalModeFiles()
+	 */
 	public List<Path> getOnlineModeFiles() {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.getOnlineModeFiles() called..");
@@ -3830,6 +3933,16 @@ public class CMClientStub extends CMStub {
 		return syncManager.getOnlineModeFiles();
 	}
 
+	/**
+	 * gets a list of local mode files in the synchronization home directory.
+	 * <p>
+	 *     The client can get the synchronization home directory by calling {@link CMClientStub#getFileSyncHome()}.
+	 * </p>
+	 * @return a list of local mode files.
+	 * <br> If the client has wrong system type, does not log in to the server, or the file sync mode is OFF,
+	 * the method returns null.
+	 * @see CMClientStub#getOnlineModeFiles()
+	 */
 	public List<Path> getLocalModeFiles() {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.getLocalModeFiles() called..");
@@ -3851,6 +3964,18 @@ public class CMClientStub extends CMStub {
 		return syncManager.getLocalModeFiles();
 	}
 
+	/**
+	 * gets a current file synchronization mode.
+	 *
+	 * @return current file synchronization mode.
+	 * <br> {@link CMFileSyncMode} is an enum object that has three values: OFF, MANUAL, and AUTO.
+	 * The value is the same as the FILE_SYNC_MODE field of the client CM configuration file (cm-client.conf).
+	 * If the client does not start the file sync, this method returns OFF.
+	 * If the client starts the file sync with the manual file mode change mechanism, this method returns MANUAL.
+	 * If the client starts the file sync with the active file mode change mechanism, this method returns AUTO.
+	 * @see CMClientStub#startFileSync(CMFileSyncMode)
+	 * @see CMClientStub#stopFileSync()
+	 */
 	public CMFileSyncMode getCurrentFileSyncMode() {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.getCurrentFileSyncMode() called..");
@@ -3872,6 +3997,23 @@ public class CMClientStub extends CMStub {
 		return syncInfo.getCurrentMode();
 	}
 
+	/**
+	 * gets the file synchronization home directory.
+	 * <p>
+	 *     To use the file sync, the client uses a designated synchronization directory in
+	 *     the transferred file home. The transferred file home is set in the FILE_PATH field of
+	 *     CM client configuration file (cm-client.conf). CM specifies the name of synchronization directory
+	 *     as “FileSyncHome”. Therefore, if the transferred file home is “./client-file-path”,
+	 *     then the synchronization home directory is “./client-file-path/FileSyncHome”.
+	 *     When we start the file sync at the first time, CM creates the empty synchronization home directory.
+	 *     If we add a new file in the sync directory, it is synchronized with the server.
+	 * </p>
+	 * @return the file synchronization home directory.
+	 * <br> This method returns null instead of the synchronization home directory
+	 * if the client has wrong system type (“SERVER”), or has not logged in to the server.
+	 * @see CMClientStub#startFileSync(CMFileSyncMode)
+	 * @see CMClientStub#stopFileSync()
+	 */
 	public Path getFileSyncHome() {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.getFileSyncHome() called..");

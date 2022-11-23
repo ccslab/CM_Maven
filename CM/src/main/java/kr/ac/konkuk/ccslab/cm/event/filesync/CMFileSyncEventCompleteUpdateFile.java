@@ -7,6 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the server to notify the client of
+ * the completion of update of a modified file for synchronization.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
     // Fields: userName, completedPath
     private String userName;    // user name
@@ -87,6 +92,10 @@ public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
         return Objects.hash(userName, completedPath);
     }
 
+    /**
+     * gets the target user name.
+     * @return user name
+     */
     public String getUserName() {
         return userName;
     }
@@ -95,6 +104,10 @@ public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
         this.userName = userName;
     }
 
+    /**
+     * gets the path of the update file.
+     * @return path of the updated file
+     */
     public Path getCompletedPath() {
         return completedPath;
     }

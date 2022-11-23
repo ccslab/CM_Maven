@@ -5,6 +5,11 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the server to reply to the client about
+ * the completion of receiving the list of requested files to be changed to the local mode.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventEndLocalModeListAck extends CMFileSyncEvent {
     private String requester;
     private int numLocalModeFiles;
@@ -79,6 +84,10 @@ public class CMFileSyncEventEndLocalModeListAck extends CMFileSyncEvent {
         return Objects.hash(requester, numLocalModeFiles, returnCode);
     }
 
+    /**
+     * gets the requesting user name
+     * @return user name
+     */
     public String getRequester() {
         return requester;
     }
@@ -87,6 +96,10 @@ public class CMFileSyncEventEndLocalModeListAck extends CMFileSyncEvent {
         this.requester = requester;
     }
 
+    /**
+     * gets the number of requested files to be changed to the local mode.
+     * @return number of requested online mode files
+     */
     public int getNumLocalModeFiles() {
         return numLocalModeFiles;
     }
@@ -95,6 +108,11 @@ public class CMFileSyncEventEndLocalModeListAck extends CMFileSyncEvent {
         this.numLocalModeFiles = numLocalModeFiles;
     }
 
+    /**
+     * gets the return code.
+     * @return return code
+     * <br> 1 if successful; 0 otherwise
+     */
     public int getReturnCode() {
         return returnCode;
     }
