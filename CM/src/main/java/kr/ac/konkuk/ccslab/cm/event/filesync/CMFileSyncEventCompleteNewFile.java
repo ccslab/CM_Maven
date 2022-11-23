@@ -17,9 +17,6 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
     private String userName;    // user name
     private Path completedPath;     // completed path
 
-    /**
-     * creates an instance of the CMFileSyncEventCompleteNewFile class.
-     */
     public CMFileSyncEventCompleteNewFile() {
         m_nID = CMFileSyncEvent.COMPLETE_NEW_FILE;
         userName = null;

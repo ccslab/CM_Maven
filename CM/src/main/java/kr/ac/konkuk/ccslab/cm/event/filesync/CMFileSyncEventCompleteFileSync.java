@@ -15,9 +15,6 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
     private String userName;    // user name
     private int numFilesCompleted;  // number of files completed
 
-    /**
-     * creates an instance of the CMFileSyncEventCompleteFileSync class.
-     */
     public CMFileSyncEventCompleteFileSync() {
         m_nID = CMFileSyncEvent.COMPLETE_FILE_SYNC;
         userName = null;
