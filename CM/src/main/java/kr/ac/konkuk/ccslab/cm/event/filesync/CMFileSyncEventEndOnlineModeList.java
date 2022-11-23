@@ -5,6 +5,11 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the client to notify the server of
+ * the completion of sending the list of requested files to be changed to the online mode.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventEndOnlineModeList extends CMFileSyncEvent {
     private String requester;
     private int numOnlineModeFiles;
@@ -70,6 +75,10 @@ public class CMFileSyncEventEndOnlineModeList extends CMFileSyncEvent {
         return Objects.hash(requester, numOnlineModeFiles);
     }
 
+    /**
+     * gets the requesting user name.
+     * @return user name
+     */
     public String getRequester() {
         return requester;
     }
@@ -78,6 +87,10 @@ public class CMFileSyncEventEndOnlineModeList extends CMFileSyncEvent {
         this.requester = requester;
     }
 
+    /**
+     * gets the number of requested files to be changed to the online mode.
+     * @return number of requested local mode files
+     */
     public int getNumOnlineModeFiles() {
         return numOnlineModeFiles;
     }
