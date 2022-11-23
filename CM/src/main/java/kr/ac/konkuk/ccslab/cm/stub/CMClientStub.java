@@ -3667,6 +3667,42 @@ public class CMClientStub extends CMStub {
 		return sb.toString();
 	}
 
+	/**
+	 * start file synchronization.
+	 *
+	 * <p>
+	 *     CM supports simple file synchronization (file sync) functionality between a client and a server.
+	 *     When the client starts the file sync, files in the client directory and files in the server directory
+	 *     are synchronized. If the client adds a new file or modifies an existing file, the updated file is also
+	 *     synchronized with the corresponding server file.
+	 * </p>
+	 * <p>
+	 *     When the file sync is completed, the server sends a CMFileSyncEvent to the client.
+	 *     {@link kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent} is an abstract class that is a parent
+	 *     of all specific file sync events.
+	 *     For the file sync completion, the server actually sends a
+	 *     {@link kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteFileSync} event.
+	 *     The client can catch the event to check when the file sync is completed.
+	 * </p>
+	 *
+	 * @param mode file sync mode. ({@link CMFileSyncMode#MANUAL}, {@link CMFileSyncMode#AUTO})
+	 *             <p>
+	 *             The MANUAL mode is the manual file mode change mechanism, and it is the same as MANUAL
+	 *             in the FILE_SYNC_MODE field of the CM client configuration file.
+	 *             In the MANUAL mode, CM starts the file sync with manual file mode change
+	 *             mechanism when the client logs in to the server. In the manual file mode change mechanism,
+	 *             file mode can be changed to local or online mode by the user request.
+	 *             The AUTO mode is the active file mode change mechanism, and it is the same as AUTO
+	 *             in the FILE_SYNC_MODE field of the CM client configuration file.
+	 *             In the AUTO mode, CM starts the file sync with active file mode change mechanism
+	 *             when the client logs in to the server. In the active file mode change mechanism,
+	 *             CM actively changes the file mode of files in the synchronization directory according to
+	 *             directory activation ratio.
+	 *             </p>
+	 * @return true if successfully file sync started; false otherwise.
+	 *
+	 * @see CMClientStub#stopFileSync()
+	 */
 	public boolean startFileSync(CMFileSyncMode mode) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.startFileSync() called..");
@@ -3703,6 +3739,16 @@ public class CMClientStub extends CMStub {
 		return true;
 	}
 
+	/**
+	 * stops file synchronization.
+	 * <p>
+	 *     This method terminates all the monitoring threads for synchronization related tasks.
+	 * </p>
+	 *
+	 * @return true if the file sync successfully stops. If the file sync cannot stop or any monitoring thread
+	 * cannot terminate, the method returns false.
+	 * @see CMClientStub#startFileSync(CMFileSyncMode) 
+	 */
 	public boolean stopFileSync() {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.stopFileSync() called..");
