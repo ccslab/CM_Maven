@@ -7,6 +7,11 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the server to send the client
+ * an array of block checksums of a file.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
     private int fileEntryIndex;     // client file entry index
     private int totalNumBlocks;     // total number of blocks
@@ -168,6 +173,10 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
         return result;
     }
 
+    /**
+     * gets an index of a file entry for synchronization.
+     * @return an index of a file entry for synchronization
+     */
     public int getFileEntryIndex() {
         return fileEntryIndex;
     }
@@ -176,6 +185,10 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
         this.fileEntryIndex = fileEntryIndex;
     }
 
+    /**
+     * gets the total number of blocks of the file.
+     * @return total number of blocks of the file
+     */
     public int getTotalNumBlocks() {
         return totalNumBlocks;
     }
@@ -184,6 +197,10 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
         this.totalNumBlocks = totalNumBlocks;
     }
 
+    /**
+     * gets the index of a starting file block in this event.
+     * @return an index of a starting file block
+     */
     public int getStartBlockIndex() {
         return startBlockIndex;
     }
@@ -192,6 +209,10 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
         this.startBlockIndex = startBlockIndex;
     }
 
+    /**
+     * gets the number of file blocks in this event.
+     * @return number of file blocks in this event.
+     */
     public int getNumCurrentBlocks() {
         return numCurrentBlocks;
     }
@@ -200,6 +221,10 @@ public class CMFileSyncEventFileBlockChecksum extends CMFileSyncEvent {
         this.numCurrentBlocks = numCurrentBlocks;
     }
 
+    /**
+     * gets the array of file block checksum in this event.
+     * @return an array of file block checksum
+     */
     public CMFileSyncBlockChecksum[] getChecksumArray() {
         return checksumArray;
     }
