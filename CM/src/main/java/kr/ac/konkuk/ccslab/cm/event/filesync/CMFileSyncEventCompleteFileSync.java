@@ -102,10 +102,6 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         return userName;
     }
 
-    /**
-     * sets the target user name.
-     * @param userName user name
-     */
     public void setUserName(String userName) {
         this.userName = userName;
     }
@@ -121,10 +117,6 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         return numFilesCompleted;
     }
 
-    /**
-     * sets the number of files that completed synchronization.
-     * @param numFilesCompleted number of files that completed synchronization
-     */
     public void setNumFilesCompleted(int numFilesCompleted) {
         this.numFilesCompleted = numFilesCompleted;
     }
