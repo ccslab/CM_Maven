@@ -4,6 +4,11 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent with which the client notifies the server of
+ * how to update of an existing file for synchronization.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
     private int fileEntryIndex;     // client file entry index
     private int numNonMatchBytes;   // number of non-matching bytes
@@ -113,6 +118,10 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
         return result;
     }
 
+    /**
+     * gets the index of the target file entry.
+     * @return index of the target file entry
+     */
     public int getFileEntryIndex() {
         return fileEntryIndex;
     }
@@ -121,6 +130,10 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
         this.fileEntryIndex = fileEntryIndex;
     }
 
+    /**
+     * gets the number of updated bytes that should be overwritten to the file.
+     * @return number of updated bytes
+     */
     public int getNumNonMatchBytes() {
         return numNonMatchBytes;
     }
@@ -129,6 +142,10 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
         this.numNonMatchBytes = numNonMatchBytes;
     }
 
+    /**
+     * gets the array of updated bytes that should be overwritten to the file.
+     * @return the array of updated bytes
+     */
     public byte[] getNonMatchBytes() {
         return nonMatchBytes;
     }
@@ -137,6 +154,10 @@ public class CMFileSyncEventUpdateExistingFile extends CMFileSyncEvent {
         this.nonMatchBytes = nonMatchBytes;
     }
 
+    /**
+     * gets the index of a matching block that is not modified.
+     * @return matching block index
+     */
     public int getMatchBlockIndex() {
         return matchBlockIndex;
     }
