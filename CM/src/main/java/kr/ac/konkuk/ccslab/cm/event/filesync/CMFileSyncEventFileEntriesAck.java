@@ -11,6 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the server to acknowledge
+ * the reception of a list of file entries that will be synchronized.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
     // Fields: userName, numFilesCompleted, numFiles, fileEntryList, returnCode
     private String userName;    // user name
@@ -116,6 +121,10 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         return Objects.hash(userName, numFilesCompleted, numFiles, returnCode);
     }
 
+    /**
+     * gets the user name (client ID).
+     * @return user name
+     */
     public String getUserName() {
         return userName;
     }
@@ -124,6 +133,10 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         this.userName = userName;
     }
 
+    /**
+     * gets the number of file entries that has been already transferred.
+     * @return number of file entries that has been already transferred
+     */
     public int getNumFilesCompleted() {
         return numFilesCompleted;
     }
@@ -132,6 +145,10 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         this.numFilesCompleted = numFilesCompleted;
     }
 
+    /**
+     * gets the number of file entries in this event.
+     * @return number of file entries in this event
+     */
     public int getNumFiles() {
         return numFiles;
     }
@@ -140,6 +157,11 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
         this.numFiles = numFiles;
     }
 
+    /**
+     * gets the return code.
+     * @return return code
+     * <br> 1 if successful; 0 otherwise.
+     */
     public int getReturnCode() {
         return returnCode;
     }

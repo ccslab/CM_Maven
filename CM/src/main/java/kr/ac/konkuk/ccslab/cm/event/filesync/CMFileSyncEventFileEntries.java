@@ -12,6 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent for the client to send the server
+ * a list of file entries that will be synchronized.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
     private String userName;    // user name
     private int numFilesCompleted;  // number of files completed
@@ -165,6 +170,10 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         return Objects.hash(userName, numFilesCompleted, numFiles, clientPathEntryList);
     }
 
+    /**
+     * gets user name (client ID).
+     * @return user name
+     */
     public String getUserName() {
         return userName;
     }
@@ -173,6 +182,10 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         this.userName = userName;
     }
 
+    /**
+     * gets the number of file entries that has been already transferred.
+     * @return number of file entries that has been already transferred
+     */
     public int getNumFilesCompleted() {
         return numFilesCompleted;
     }
@@ -181,6 +194,10 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         this.numFilesCompleted = numFilesCompleted;
     }
 
+    /**
+     * gets the number of file entries in this event.
+     * @return number of file entries in this event
+     */
     public int getNumFiles() {
         return numFiles;
     }
@@ -189,6 +206,10 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         this.numFiles = numFiles;
     }
 
+    /**
+     * gets the list of file entries in this event.
+     * @return a list of file entries
+     */
     public List<CMFileSyncEntry> getClientPathEntryList() {
         return clientPathEntryList;
     }
