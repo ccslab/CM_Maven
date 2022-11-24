@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to request
+ * This class represents a CMFileSyncEvent with which the server requests
  * the transmission of new files for the synchronization from the client.
  * @author CCSLab, Konkuk University
  */

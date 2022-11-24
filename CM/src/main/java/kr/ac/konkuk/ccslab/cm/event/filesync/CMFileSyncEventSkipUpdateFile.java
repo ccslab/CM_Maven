@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to notify the client of
+ * This class represents a CMFileSyncEvent with which the server notifies the client of
  * skipping update of a file for synchronization.
  * @author CCSLab, Konkuk University
  */

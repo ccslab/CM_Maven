@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to reply to the client about
+ * This class represents a CMFileSyncEvent with which the server replies to the client about
  * the completion of receiving the list of requested files to be changed to the local mode.
  * @author CCSLab, Konkuk University
  */
@@ -85,8 +85,8 @@ public class CMFileSyncEventEndLocalModeListAck extends CMFileSyncEvent {
     }
 
     /**
-     * gets the requesting user name
-     * @return user name
+     * gets the requester (client) name.
+     * @return requester (client) name
      */
     public String getRequester() {
         return requester;

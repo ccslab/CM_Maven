@@ -6,8 +6,8 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to reply
- * the completion of receiving file list for synchronization to the client.
+ * This class represents a CMFileSyncEvent with which the server replies to the client about
+ * the completion of receiving file list for synchronization.
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventEndFileListAck extends CMFileSyncEvent {
@@ -102,8 +102,8 @@ public class CMFileSyncEventEndFileListAck extends CMFileSyncEvent {
     }
 
     /**
-     * gets the user name of the client.
-     * @return user name of the client
+     * gets the user (client) name.
+     * @return user (client) name
      */
     public String getUserName() {
         return userName;

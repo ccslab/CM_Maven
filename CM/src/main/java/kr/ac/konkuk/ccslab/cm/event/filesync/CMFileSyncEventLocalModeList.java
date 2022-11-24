@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the client to send the server
+ * This class represents a CMFileSyncEvent with which the client sends the server
  * a list of online mode file paths that will be changed to the local mode.
  * @author CCSLab, Konkuk University
  */
@@ -97,8 +97,8 @@ public class CMFileSyncEventLocalModeList extends CMFileSyncEvent {
     }
 
     /**
-     * gets the requester name (client ID).
-     * @return requester name
+     * gets the requester (client) name.
+     * @return requester (client) name
      */
     public String getRequester() {
         return requester;

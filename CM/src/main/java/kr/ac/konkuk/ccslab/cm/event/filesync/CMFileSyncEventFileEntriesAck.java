@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to acknowledge
+ * This class represents a CMFileSyncEvent with which the server acknowledges
  * the reception of a list of file entries that will be synchronized.
  * @author CCSLab, Konkuk University
  */
@@ -122,8 +122,8 @@ public class CMFileSyncEventFileEntriesAck extends CMFileSyncEvent {
     }
 
     /**
-     * gets the user name (client ID).
-     * @return user name
+     * gets the user (client) name.
+     * @return user (client) name
      */
     public String getUserName() {
         return userName;

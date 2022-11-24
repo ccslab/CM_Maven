@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to notify the client of
+ * This class represents a CMFileSyncEvent with which the server notifies the client of
  * the completion of sending block checksums of a file.
  * @author CCSLab, Konkuk University
  * */

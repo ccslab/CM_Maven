@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to acknowledge the reception of
+ * This class represents a CMFileSyncEvent with which the server acknowledges the reception of
  * the list of local mode file paths that will be changed to the online mode.
  * @author CCSLab, Konkuk University
  */
@@ -104,8 +104,8 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
     }
 
     /**
-     * gets the requester name (client ID).
-     * @return requester name (client ID)
+     * gets the requester (client) name.
+     * @return requester (client) name
      */
     public String getRequester() {
         return requester;

@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to send the client
+ * This class represents a CMFileSyncEvent with which the server sends the client
  * an array of block checksums of a file.
  * @author CCSLab, Konkuk University
  */
