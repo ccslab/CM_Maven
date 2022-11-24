@@ -9,6 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent with which the server requests
+ * the transmission of new files for the synchronization from the client.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
     // Fields: String requesterName, int numRequestedFiles, List<Path> requestedFileList
     private String requesterName;   // requester name
@@ -126,6 +131,10 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         return Objects.hash(requesterName, numRequestedFiles, requestedFileList);
     }
 
+    /**
+     * gets the requester (server) name
+     * @return requester (server) name
+     */
     public String getRequesterName() {
         return requesterName;
     }
@@ -134,6 +143,10 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         this.requesterName = requesterName;
     }
 
+    /**
+     * gets the number of requested new files.
+     * @return number of requested new files
+     */
     public int getNumRequestedFiles() {
         return numRequestedFiles;
     }
@@ -142,6 +155,11 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         this.numRequestedFiles = numRequestedFiles;
     }
 
+    /**
+     * gets the list of new file paths that will be transferred.
+     * @return a list of new file paths.
+     * <br> The path is an absolute path of the file sender.
+     */
     public List<Path> getRequestedFileList() {
         return requestedFileList;
     }

@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the server to notify the client of
+ * This class represents a CMFileSyncEvent with which the server notifies the client of
  * the completion of file sync operation.
  * @author CCSLab, Konkuk University
  */
@@ -91,9 +91,9 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
     }
 
     /**
-     * gets the target user name.
+     * gets the target user (client) name.
      *
-     * @return user name
+     * @return user (client) name
      */
     public String getUserName() {
         return userName;

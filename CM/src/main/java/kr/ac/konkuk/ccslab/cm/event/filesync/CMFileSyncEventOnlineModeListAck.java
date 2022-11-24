@@ -9,6 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent with which the server acknowledges the reception of
+ * the list of local mode file paths that will be changed to the online mode.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
     private String requester;
     private List<Path> relativePathList;
@@ -98,6 +103,10 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
         return Objects.hash(requester, relativePathList, returnCode);
     }
 
+    /**
+     * gets the requester (client) name.
+     * @return requester (client) name
+     */
     public String getRequester() {
         return requester;
     }
@@ -106,6 +115,11 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
         this.requester = requester;
     }
 
+    /**
+     * gets the list of local mode file paths that will be changed to the online mode.
+     * @return a list of local mode file paths
+     * <br>The path is a relative path from the synchronization home directory.
+     */
     public List<Path> getRelativePathList() {
         return relativePathList;
     }
@@ -114,6 +128,11 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
         this.relativePathList = relativePathList;
     }
 
+    /**
+     * gets the return code.
+     * @return return code
+     * <br>1 if successful; 0 otherwise.
+     */
     public int getReturnCode() {
         return returnCode;
     }

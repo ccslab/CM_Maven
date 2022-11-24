@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * This class represents a CMFileSyncEvent for the client to notify the server of
+ * This class represents a CMFileSyncEvent with which the client notifies the server of
  * the completion of sending the list of requested files to be changed to the online mode.
  * @author CCSLab, Konkuk University
  */
@@ -76,8 +76,8 @@ public class CMFileSyncEventEndOnlineModeList extends CMFileSyncEvent {
     }
 
     /**
-     * gets the requesting user name.
-     * @return user name
+     * gets the requester (client) name.
+     * @return requester (client) name
      */
     public String getRequester() {
         return requester;

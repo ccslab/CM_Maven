@@ -7,6 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+/**
+ * This class represents a CMFileSyncEvent with which the server notifies the client of
+ * skipping update of a file for synchronization.
+ * @author CCSLab, Konkuk University
+ */
 public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
     // Fields: userName, skippedPath
     private String userName;    // user name
@@ -87,6 +92,10 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
         return Objects.hash(userName, skippedPath);
     }
 
+    /**
+     * gets the user (client) name.
+     * @return user (client) name
+     */
     public String getUserName() {
         return userName;
     }
@@ -95,6 +104,11 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
         this.userName = userName;
     }
 
+    /**
+     * gets the file path that does not need to be synchronized.
+     * @return a skipped file path
+     * <br>The path is a relative path from the synchronization home directory.
+     */
     public Path getSkippedPath() {
         return skippedPath;
     }
