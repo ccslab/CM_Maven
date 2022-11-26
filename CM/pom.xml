@@ -20,6 +20,24 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.4.1</version>
+				<configuration>
+					<excludePackageNames>kr.ac.konkuk.ccslab</excludePackageNames>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadoc</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.2.0</version>
 				<executions>
@@ -53,7 +71,7 @@
 							<outputDirectory>${basedir}/target/cm-win-server</outputDirectory>
 							<archive>
 								<manifest>
-									<mainClass>CMWinServer</mainClass>
+									<mainClass>kr.ac.konkuk.ccslab.CMWinServer</mainClass>
 								</manifest>
 							</archive>
 							<descriptorRefs>
@@ -72,7 +90,7 @@
 							<outputDirectory>${basedir}/target/cm-win-client</outputDirectory>
 							<archive>
 								<manifest>
-									<mainClass>CMWinClient</mainClass>
+									<mainClass>kr.ac.konkuk.ccslab.CMWinClient</mainClass>
 								</manifest>
 							</archive>
 							<descriptorRefs>
