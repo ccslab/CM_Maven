@@ -38,31 +38,9 @@
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>default-jar</id>
-						<phase>none</phase>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>3.3.0</version>
 				<executions>
-					<execution>
-						<id>cm-lib</id>
-						<phase>package</phase>
-						<goals><goal>single</goal></goals>
-						<configuration>
-							<descriptors>
-								<descriptor>src/assembly/cm-lib.xml</descriptor>
-							</descriptors>
-						</configuration>        	
-					</execution>
 					<execution>
 						<id>cm-win-server</id>
 						<phase>package</phase>
