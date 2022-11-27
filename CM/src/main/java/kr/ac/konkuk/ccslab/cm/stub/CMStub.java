@@ -12,15 +12,11 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMember;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
-import kr.ac.konkuk.ccslab.cm.event.CMEvent;
-import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
-import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
-import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
+import kr.ac.konkuk.ccslab.cm.event.*;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMFileSyncEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMMqttEventHandler;
-import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
@@ -169,13 +165,19 @@ public class CMStub {
 		
 		// terminate threads
 		CMEventInfo eventInfo = m_cmInfo.getEventInfo();
+		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMBlockingEventQueue recvQueue = m_cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		CMBlockingEventQueue sendQueue = m_cmInfo.getCommInfo().getSendBlockingEventQueue();
+
+		recvQueue.push(null);
 		Future<?> eventReceiverFuture = eventInfo.getEventReceiverFuture();
 		if(eventReceiverFuture != null)
 			eventReceiverFuture.cancel(true);
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		Future<?> byteReceiverFuture = commInfo.getByteReceiverFuture();
 		if(byteReceiverFuture != null)
 			byteReceiverFuture.cancel(true);
+
+		sendQueue.push(null);
 		Future<?> byteSenderFuture = commInfo.getByteSenderFuture();
 		if(byteSenderFuture != null)
 			byteSenderFuture.cancel(true);
