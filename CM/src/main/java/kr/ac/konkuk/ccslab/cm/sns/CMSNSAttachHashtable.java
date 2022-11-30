@@ -63,7 +63,8 @@ public class CMSNSAttachHashtable extends CMObject {
 		//if(!m_attachMap.containsKey(strUserName))
 		if(!m_attachHashtable.containsKey(strUserName))
 		{
-			System.err.println("CMSNSAttachHashtable.removeSNSAttachList(), key("+strUserName+") not found!");
+			if(CMInfo._CM_DEBUG)
+				System.err.println("CMSNSAttachHashtable.removeSNSAttachList(), key("+strUserName+") not found!");
 			return false;
 		}
 		

@@ -189,7 +189,8 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileSender = fe.getFileSender();
         CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(fileSender);
         if (syncGenerator == null) {
-            System.err.println("The sync generator for (" + fileSender + ") is null!");
+            if(CMInfo._CM_DEBUG)
+                System.err.println("The sync generator for (" + fileSender + ") is null!");
             return;
         }
         List<CMFileSyncEntry> newClientPathEntryList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()

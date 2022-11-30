@@ -56,7 +56,8 @@ public class CMSNSPrefetchHashMap extends CMObject {
 		
 		if(!m_prefetchMap.containsKey(strUserName))
 		{
-			System.err.println("CMSNSPrefetchHashMap.removePrefetchList(), key("+strUserName+") not found!");
+			if(CMInfo._CM_DEBUG)
+				System.err.println("CMSNSPrefetchHashMap.removePrefetchList(), key("+strUserName+") not found!");
 			return false;
 		}
 		
