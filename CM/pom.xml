@@ -91,7 +91,7 @@
 						<phase>package</phase>
 						<goals><goal>copy-resources</goal></goals>
 						<configuration>
-							<outputDirectory>${basedir}/target/cm-win-server</outputDirectory>
+							<outputDirectory>${basedir}/target/cm-win-server-${project.version}</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${basedir}</directory>
@@ -111,7 +111,7 @@
 						<phase>package</phase>
 						<goals><goal>copy-resources</goal></goals>
 						<configuration>
-							<outputDirectory>${basedir}/target/cm-win-client</outputDirectory>
+							<outputDirectory>${basedir}/target/cm-win-client-${project.version}</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${basedir}</directory>
