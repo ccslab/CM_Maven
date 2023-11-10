@@ -39,7 +39,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.6.0</version>
 				<executions>
 					<execution>
 						<id>cm-win-server</id>
@@ -49,7 +49,7 @@
 							<outputDirectory>${basedir}/target/cm-win-server</outputDirectory>
 							<archive>
 								<manifest>
-									<mainClass>kr.ac.konkuk.ccslab.CMWinServer</mainClass>
+									<mainClass>CMWinServer</mainClass>
 								</manifest>
 							</archive>
 							<descriptorRefs>
@@ -68,7 +68,7 @@
 							<outputDirectory>${basedir}/target/cm-win-client</outputDirectory>
 							<archive>
 								<manifest>
-									<mainClass>kr.ac.konkuk.ccslab.CMWinClient</mainClass>
+									<mainClass>CMWinClient</mainClass>
 								</manifest>
 							</archive>
 							<descriptorRefs>
