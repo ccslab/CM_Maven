@@ -10,6 +10,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 
 public class CMClientKeepAliveTask implements Runnable {
@@ -29,9 +30,9 @@ public class CMClientKeepAliveTask implements Runnable {
 		if(confInfo.getLogLevel() == 0)
 			LOG.setLevel(Level.SEVERE);
 
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		Hashtable<String, Long> myLastEventTransTimeHashtable = myself.getMyLastEventTransTimeHashtable();
-		CMServer defServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo();
+		CMServer defServer = CMInteractionInfo.getInstance().getDefaultServerInfo();
 		Long lMyLastEventTransTimeToDefServer = myLastEventTransTimeHashtable
 				.get(defServer.getServerName());
 		if(lMyLastEventTransTimeToDefServer == null)
@@ -57,7 +58,7 @@ public class CMClientKeepAliveTask implements Runnable {
 			CMEventManager.unicastEvent(reqPingEvent, defServer.getServerName(), m_cmInfo);
 		}
 		
-		Vector<CMServer> addServerList = m_cmInfo.getInteractionInfo().getAddServerList();
+		Vector<CMServer> addServerList = CMInteractionInfo.getInstance().getAddServerList();
 		for(CMServer addServer : addServerList)
 		{
 			if(addServer.getClientState() >= CMInfo.CM_LOGIN) 

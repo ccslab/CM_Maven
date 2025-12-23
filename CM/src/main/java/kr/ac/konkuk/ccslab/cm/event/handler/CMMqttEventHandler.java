@@ -27,6 +27,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -112,7 +113,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		String strClient = conEvent.getSender();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		CMMqttEventCONNACK ackEvent = new CMMqttEventCONNACK();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		boolean bConnAckFlag = false;
 		byte returnCode = 0;	// connection success
 		boolean bRet = false;
@@ -483,7 +484,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			// change the PUBLISH event before retain it
 			// The server will send the retained event
-			pubEvent.setSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+			pubEvent.setSender(CMInteractionInfo.getInstance().getMyself().getName());
 			// DUP flag is reset
 			pubEvent.setDupFlag(false);
 			// retain the PUBLISH event about the topic
@@ -581,7 +582,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// initialize PUBACK event
 		CMMqttEventPUBACK pubackEvent = new CMMqttEventPUBACK();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		pubackEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEVentPUBACK constructor
 		// set variable header
@@ -609,7 +610,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// initialize PUBREC event
 		CMMqttEventPUBREC recEvent = new CMMqttEventPUBREC();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		recEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEventPUBREC constructor
 		// set variable header
@@ -757,7 +758,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// make and send PUBREL event
 		CMMqttEventPUBREL relEvent =  new CMMqttEventPUBREL();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		// set sender (CM event header)
 		relEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEventPUBREL constructor
@@ -835,7 +836,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to make and send PUBCOMP event
 		CMMqttEventPUBCOMP compEvent = new CMMqttEventPUBCOMP();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		// set sender (in CM event header)
 		compEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEventPUBCOMP constructor
@@ -946,7 +947,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// make SUBACK event
 		CMMqttEventSUBACK ackEvent = new CMMqttEventSUBACK();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		ackEvent.setSender(myself.getName());
 		// set fixed header in the SUBACK constructor
 		// set variable header
@@ -1113,7 +1114,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// make and send UNSUBACK event
 		CMMqttEventUNSUBACK unsubAckEvent = new CMMqttEventUNSUBACK();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		unsubAckEvent.setSender(myself.getName());
 		// set fixed header in the UNSUBACK constructor
 		// set variable header
@@ -1157,7 +1158,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		CMMqttEventPINGRESP resPingEvent = new CMMqttEventPINGRESP();
-		String strMyName = m_cmInfo.getInteractionInfo().getMyself().getName();
+		String strMyName = CMInteractionInfo.getInstance().getMyself().getName();
 		resPingEvent.setSender(strMyName);
 		
 		boolean bRet = CMEventManager.unicastEvent(resPingEvent, reqPingEvent.getSender(), m_cmInfo);

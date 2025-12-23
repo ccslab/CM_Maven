@@ -43,7 +43,7 @@ public class CMSendFileTask implements Runnable {
 		ByteBuffer buf = ByteBuffer.allocateDirect(CMInfo.FILE_BLOCK_LEN);
 		CMFileEvent fe = null;
 		boolean bInterrupted = false;
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		// open the file
 		try {
@@ -208,7 +208,7 @@ public class CMSendFileTask implements Runnable {
 	{
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.ERR_SEND_FILE_CHAN);
-		fe.setFileSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+		fe.setFileSender(CMInteractionInfo.getInstance().getMyself().getName());
 		fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
 		fe.setFileName(m_sendFileInfo.getFileName());
 		fe.setContentID(m_sendFileInfo.getContentID());

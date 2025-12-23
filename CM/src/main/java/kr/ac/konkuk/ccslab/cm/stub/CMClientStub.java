@@ -517,7 +517,7 @@ public class CMClientStub extends CMStub {
 		myself.setUDPPort(nMyUDPPort);
 		
 		// send the event
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRequestResult = send(se, strDefServer);
 		se = null;
@@ -547,7 +547,7 @@ public class CMClientStub extends CMStub {
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
 		CMSessionEvent loginAckEvent = null;
 		boolean bRequestResult = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		
 		bRequestResult = loginCM(strUserName, strPassword);
@@ -586,7 +586,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean logoutCM()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bRequestResult = false;
 		
 		// check state of the local user
@@ -679,7 +679,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSessionEvent.REQUEST_SESSION_INFO);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRequestResult = send(se, strDefServer);
 		
@@ -706,7 +706,7 @@ public class CMClientStub extends CMStub {
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		boolean bRequestResult = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		
 		bRequestResult = requestSessionInfo();
@@ -788,7 +788,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean joinSession(String sname)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
 		
 		// check local state
@@ -844,7 +844,7 @@ public class CMClientStub extends CMStub {
 		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		boolean bRequestResult = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		
 		bRequestResult = joinSession(sname);
@@ -919,7 +919,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(myself.getName());
 		se.setSessionName(myself.getCurrentSession());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRequestResult = send(se, strDefServer);
 		
@@ -965,7 +965,7 @@ public class CMClientStub extends CMStub {
 		ie.setUserName(myself.getName());
 		ie.setPosition(pq);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(ie, strDefServer);
 		
@@ -1428,7 +1428,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean addBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
@@ -1536,7 +1536,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public SocketChannel syncAddBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
@@ -1707,7 +1707,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean removeBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
 		CMChannelInfo<Integer> scInfo = null;
@@ -1780,7 +1780,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean syncRemoveBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
 		CMChannelInfo<Integer> scInfo = null;
@@ -1890,7 +1890,7 @@ public class CMClientStub extends CMStub {
 		SocketChannel sc = null;
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> chInfo = null;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
@@ -1901,11 +1901,11 @@ public class CMClientStub extends CMStub {
 		
 		if(strServerName.equals(strDefServer))
 		{
-			serverInfo = m_cmInfo.getInteractionInfo().getDefaultServerInfo();
+			serverInfo = CMInteractionInfo.getInstance().getDefaultServerInfo();
 		}
 		else
 		{
-			serverInfo = m_cmInfo.getInteractionInfo().findAddServer(strServerName);
+			serverInfo = CMInteractionInfo.getInstance().findAddServer(strServerName);
 			if(serverInfo == null)
 			{
 				System.err.println("CMClientStub.getBlockSocketChannel(), additional server info not found! : "
@@ -2059,7 +2059,7 @@ public class CMClientStub extends CMStub {
 		se.setWriterName(strWriter);
 		se.setContentOffset(nOffset);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -2238,7 +2238,7 @@ public class CMClientStub extends CMStub {
 			se.setFileNameList(fileNameList);
 		}
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -2366,7 +2366,7 @@ public class CMClientStub extends CMStub {
 		se.setWriterName(strWriterName);
 		se.setFileName(strFileName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -2482,7 +2482,7 @@ public class CMClientStub extends CMStub {
 		se.setWriterName(strWriterName);
 		se.setFileName(strFileName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -2557,7 +2557,7 @@ public class CMClientStub extends CMStub {
 		mse.setID(CMMultiServerEvent.REQ_SERVER_INFO);
 		mse.setUserName( myself.getName() );
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send( mse, strDefServer );
 
@@ -2582,7 +2582,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer(String strServerName)
 	{
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 
 		// If CM has been terminated, it must start first.
@@ -2645,7 +2645,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean disconnectFromServer(String strServerName)
 	{
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 
 		////////// for Android client where network-related methods must be called in a separate thread
@@ -2704,7 +2704,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean loginCM(String strServer, String strUser, String strPasswd)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMServer tserver = null;
 		String myAddress = null;
@@ -2791,7 +2791,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean logoutCM(String strServer)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
 		
 		// if a server is the default server, call the original function.
@@ -2876,12 +2876,12 @@ public class CMClientStub extends CMStub {
 	// requests available session information of a designated server
 	public boolean requestSessionInfo(String strServerName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		boolean bResult = false;
 
 		// if a server is the default server, call the original function
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		if( strServerName.equals(strDefServer) )
 		{
@@ -2945,7 +2945,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean joinSession(String strServer, String strSession)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMSession tsession = null;
 		boolean bResult = false;
@@ -3026,7 +3026,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean leaveSession(String strServer)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		boolean bResult = false;
 		
@@ -3119,7 +3119,7 @@ public class CMClientStub extends CMStub {
 		se.setPassword(strEncPasswd);
 
 		// send the request (a default server will send back REGISTER_USER_ACK event)
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -3166,7 +3166,7 @@ public class CMClientStub extends CMStub {
 		se.setPassword(strEncPasswd);
 
 		// send the request (a default server will send back DEREGISTER_USER_ACK event)
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -3209,7 +3209,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(strName);
 
 		// send the request (a default server will send back FIND_REGISTERED_USER_ACK event)
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -3230,7 +3230,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMMember getGroupMembers()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 
 		// check if the user is connected to a default server
@@ -3325,7 +3325,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3389,7 +3389,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3472,7 +3472,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSNSEvent.REQUEST_FRIEND_LIST);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3505,7 +3505,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3538,7 +3538,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSNSEvent.REQUEST_BI_FRIEND_LIST);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3562,7 +3562,7 @@ public class CMClientStub extends CMStub {
 	public String getCurrentChannelInfo()
 	{
 		StringBuffer sb = new StringBuffer();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer defaultServer = interInfo.getDefaultServerInfo();
 		String strChInfo = null;
 		
@@ -3715,7 +3715,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3760,7 +3760,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3816,7 +3816,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3875,7 +3875,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3922,7 +3922,7 @@ public class CMClientStub extends CMStub {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");
@@ -3953,7 +3953,7 @@ public class CMClientStub extends CMStub {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");
@@ -3986,7 +3986,7 @@ public class CMClientStub extends CMStub {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");
@@ -4024,7 +4024,7 @@ public class CMClientStub extends CMStub {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");

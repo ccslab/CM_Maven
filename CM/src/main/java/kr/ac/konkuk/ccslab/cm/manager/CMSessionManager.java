@@ -35,7 +35,7 @@ public class CMSessionManager {
 	
 	private static void configureGroups(CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		Iterator<CMSession> iter = interInfo.getSessionList().iterator();
 		
@@ -134,7 +134,7 @@ public class CMSessionManager {
 	private static void processJOIN_SESSION(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 			return;
@@ -169,7 +169,7 @@ public class CMSessionManager {
 	// join session of the default server
 	private static boolean joinSession(CMUser user, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
 		
 		// find session
@@ -219,7 +219,7 @@ public class CMSessionManager {
 	private static void processJOIN_SESSION_ACK(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -287,7 +287,7 @@ public class CMSessionManager {
 	private static void processLEAVE_SESSION(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 			return;
@@ -327,7 +327,7 @@ public class CMSessionManager {
 	// leave current session of the default server
 	public static void leaveSession(CMUser user, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strCurrentSession = user.getCurrentSession();
 		
 		// leave from the current group and notify group members
@@ -374,7 +374,7 @@ public class CMSessionManager {
 	// join a session of an additional server
 	public static boolean addJoinSession(CMUser user, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		boolean ret = false;
 		
@@ -415,7 +415,7 @@ public class CMSessionManager {
 	// leave a session of an additional server
 	public static void addLeaveSession(CMUser user, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strCurrentSession = user.getCurrentSession();
 		
 		// leave from the current group and notify group members

@@ -778,7 +778,7 @@ public class CMClientApp {
 
 	public void testDummyEvent()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -809,7 +809,7 @@ public class CMClientApp {
 	
 	public void testDatagram()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 
@@ -886,7 +886,7 @@ public class CMClientApp {
 		boolean bEnd = false;
 		String[] strTokens = null;
 		int nValueByteNum = -1;
-		CMUser myself = m_clientStub.getCMInfo().getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
@@ -1202,7 +1202,7 @@ public class CMClientApp {
 	public void testPrintGroupInfo()
 	{
 		// check local state
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -1228,7 +1228,7 @@ public class CMClientApp {
 	
 	public void testCurrentUserStatus()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.println("------ for the default server");
@@ -1299,7 +1299,7 @@ public class CMClientApp {
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
 		String strBlock = null;
 		boolean isBlock = false;
@@ -1527,7 +1527,7 @@ public class CMClientApp {
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean result = false;
 		String strBlock = null;
 		boolean isBlock = false;
@@ -1889,7 +1889,7 @@ public class CMClientApp {
 		String strUserName = null;
 		CMUserEvent ue = null;
 		
-		int nUserState = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getState();
+		int nUserState = CMInteractionInfo.getInstance().getMyself().getState();
 		if(nUserState != CMInfo.CM_LOGIN && nUserState != CMInfo.CM_SESSION_JOIN)
 		{
 			System.out.println("You must log in to the default server.");
@@ -1915,7 +1915,7 @@ public class CMClientApp {
 		}
 		
 		nEventRange = (int) (nEventTypeNum * fForwardRate); // number of event types which must be forwarded
-		strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+		strUserName = CMInteractionInfo.getInstance().getMyself().getName();
 		Random rnd = new Random();
 		ue = new CMUserEvent();
 		
@@ -1969,7 +1969,7 @@ public class CMClientApp {
 		long lSendTime = 0;
 		CMUserEvent ue = null;
 
-		int nUserState = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getState();
+		int nUserState = CMInteractionInfo.getInstance().getMyself().getState();
 		if(nUserState != CMInfo.CM_LOGIN && nUserState != CMInfo.CM_SESSION_JOIN)
 		{
 			System.out.println("You must log in to the default server.");
@@ -1991,7 +1991,7 @@ public class CMClientApp {
 			return;
 		}
 
-		strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+		strUserName = CMInteractionInfo.getInstance().getMyself().getName();
 
 		for(int i=0; i < nSendNum; i++)
 		{
@@ -2045,7 +2045,7 @@ public class CMClientApp {
 		String strWriterName = null;
 		String strInput = null;
 		int nContentOffset = 0;
-		String strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+		String strUserName = CMInteractionInfo.getInstance().getMyself().getName();
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		try {
@@ -2189,7 +2189,7 @@ public class CMClientApp {
 			return;
 		}
 		
-		String strUser = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+		String strUser = CMInteractionInfo.getInstance().getMyself().getName();
 		m_clientStub.requestSNSContentUpload(strUser, strMessage, nNumAttachedFiles, nReplyOf, nLevelOfDisclosure, 
 				filePathList);
 
@@ -2420,7 +2420,7 @@ public class CMClientApp {
 			}
 			else // use the login info for the default server
 			{
-				CMUser myself = m_clientStub.getCMInfo().getInteractionInfo().getMyself();
+				CMUser myself = CMInteractionInfo.getInstance().getMyself();
 				user = myself.getName();
 				password = myself.getPasswd();
 				m_clientStub.loginCM(strServerName, user, password);
@@ -2502,7 +2502,7 @@ public class CMClientApp {
 	
 	public void testPrintGroupInfoOfServer()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		
 		String strServerName = null;
@@ -2712,7 +2712,7 @@ public class CMClientApp {
 	
 	public void testDistFileProc()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		//CMFileTransferInfo fileInfo = m_clientStub.getCMInfo().getFileTransferInfo();
 		String strFile = null;
 		long lFileSize = 0;
@@ -2861,7 +2861,7 @@ public class CMClientApp {
 	
 	public void testMulticastChat()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.println("====== test multicast chat in current group");
 
@@ -2912,7 +2912,7 @@ public class CMClientApp {
 		SocketChannel sc = null;
 		DatagramChannel dc = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean isSocketChannel = false;
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
@@ -3621,7 +3621,7 @@ public class CMClientApp {
 		System.out.println("========== send a CMDummyEvent with wrong # bytes to default server");
 		
 		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 
 		String strServer = JOptionPane.showInputDialog("server name: ").trim();

@@ -344,7 +344,7 @@ public class CMServerApp {
 		System.out.format("%-20s%-20s%-10s%-10s%n", "session name", "session addr", "port", "#users");
 		System.out.println("------------------------------------------------------");
 		
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		Iterator<CMSession> iter = interInfo.getSessionList().iterator();
 		while(iter.hasNext())
 		{
@@ -368,7 +368,7 @@ public class CMServerApp {
 			e.printStackTrace();
 		}
 		
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = interInfo.findSession(strSessionName);
 		if(session == null)
 		{
@@ -923,7 +923,7 @@ public class CMServerApp {
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
 		String strBlock = null;
 		boolean isBlock = false;
@@ -1148,7 +1148,7 @@ public class CMServerApp {
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean result = false;
 		String strBlock = null;
 		boolean isBlock = false;
@@ -1461,7 +1461,7 @@ public class CMServerApp {
 		System.out.println("========== send a CMDummyEvent with wrong # bytes to a client");
 		
 		CMCommInfo commInfo = m_serverStub.getCMInfo().getCommInfo();
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
 		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();

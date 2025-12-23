@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartFileBlockChecks
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncUpdateMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -295,7 +296,7 @@ public class CMFileSyncGenerator implements Runnable {
 
         // create a START_FILE_BLOCK_CHECKSUM event
         CMFileSyncEventStartFileBlockChecksum fse = new CMFileSyncEventStartFileBlockChecksum();
-        fse.setSender(cmInfo.getInteractionInfo().getMyself().getName());
+        fse.setSender(CMInteractionInfo.getInstance().getMyself().getName());
         fse.setReceiver(userName);
         fse.setFileEntryIndex(clientFileEntryIndex);
         fse.setTotalNumBlocks(checksumArray.length);
@@ -503,7 +504,7 @@ public class CMFileSyncGenerator implements Runnable {
         while (numRequestsCompleted < newFileEntryList.size()) {
             // create a request event
             CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
-            String serverName = cmInfo.getInteractionInfo().getMyself().getName();
+            String serverName = CMInteractionInfo.getInstance().getMyself().getName();
             fse.setSender(serverName);   // server
             fse.setReceiver(userName);
             fse.setRequesterName(serverName); // server

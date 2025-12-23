@@ -14,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -41,7 +42,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		int i = 0;
 		
 		// for each login user
-		CMMember loginMembers = m_cmInfo.getInteractionInfo().getLoginUsers();
+		CMMember loginMembers = CMInteractionInfo.getInstance().getLoginUsers();
 		Vector<CMUser> loginUsersVector = loginMembers.getAllMembers();
 		for(i = loginUsersVector.size()-1; i >= 0; i--)
 		{
@@ -94,7 +95,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		if(CMConfigurator.isDServer(m_cmInfo))
 		{
 			// for each additional server
-			Vector<CMServer> addServerVector = m_cmInfo.getInteractionInfo()
+			Vector<CMServer> addServerVector = CMInteractionInfo.getInstance()
 					.getAddServerList();
 			for(i = addServerVector.size()-1; i >= 0; i--)
 			{
@@ -119,10 +120,10 @@ public class CMServerKeepAliveTask implements Runnable {
 		}
 		else	// process of an additional server
 		{
-			CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+			CMUser myself = CMInteractionInfo.getInstance().getMyself();
 			if(myself.getState() >= CMInfo.CM_LOGIN)
 			{
-				String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+				String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 						.getServerName();
 				long lMyLastEventTransTime = myself.getMyLastEventTransTimeHashtable()
 						.get(strDefServer);
