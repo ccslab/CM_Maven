@@ -77,7 +77,7 @@ public class CMMqttManager extends CMServiceManager {
 	{
 		// client -> server
 		// check if the client has logged in to the default server.
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.connect(), the system type is SERVER!");
@@ -210,7 +210,7 @@ public class CMMqttManager extends CMServiceManager {
 	{
 		// client -> server or server -> client
 		boolean bRet = false;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		if(strSysType.equals("SERVER"))
 			bRet = publishFromServer(strTopic, strMsg, qos, bDupFlag, bRetainFlag);
@@ -629,7 +629,7 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean subscribe(CMList<CMMqttTopicQoS> topicQoSList)
 	{
 		// to check the CM system type
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.subscribe(), the system type is SERVER!");
@@ -716,7 +716,7 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean unsubscribe(CMList<String> topicList)
 	{
 		// to check the CM system type
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.unsubscribe(), the system type is SERVER!");
@@ -810,7 +810,7 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean disconnect()
 	{
 		// to check the CM system type
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.disconnect(), the system type is SERVER!");
@@ -873,7 +873,7 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getMySessionInfo()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getMySessionInfo(), the system type is SERVER!");
@@ -901,7 +901,7 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getSessionInfo(String strUserName)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getSessionInfo(), the system type is not SERVER!");
@@ -930,7 +930,7 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getAllSessionInfo()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getAllSessionInfo(), the system type is not SERVER!");
@@ -958,7 +958,7 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getAllRetainInfo()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getAllRetainInfo(), the system type is not SERVER!");

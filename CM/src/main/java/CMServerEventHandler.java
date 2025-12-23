@@ -77,7 +77,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 	
 	private void processSessionEvent(CMEvent cme)
 	{
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSessionEvent se = (CMSessionEvent) cme;
 		switch(se.getID())
 		{
@@ -401,7 +401,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 	
 	private void processFile(String strSender, String strFile)
 	{
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strFullSrcFilePath = null;
 		String strModifiedFile = null;
 		FileInputStream fis = null;
@@ -513,7 +513,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 	
 	private void processMultiServerEvent(CMEvent cme)
 	{
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMMultiServerEvent mse = (CMMultiServerEvent) cme;
 		switch(mse.getID())
 		{

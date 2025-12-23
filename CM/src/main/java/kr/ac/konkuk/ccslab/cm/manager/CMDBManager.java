@@ -20,7 +20,7 @@ public class CMDBManager {
 	// initialize DB url
 	public static void init(CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMDBInfo dbInfo = cmInfo.getDBInfo();
 		
 		// this will load the MySQL driver, each DB has its own driver
@@ -44,7 +44,7 @@ public class CMDBManager {
 		Connection connect = null;
 		Statement st = null;
 		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String url = dbInfo.getDBURL();
 		String user = confInfo.getDBUser();
 		String pass = confInfo.getDBPass();

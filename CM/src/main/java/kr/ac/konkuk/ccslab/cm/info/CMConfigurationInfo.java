@@ -9,6 +9,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class CMConfigurationInfo {
+
+	private static CMConfigurationInfo instance;
+
 	private Path m_confFileHome;
 	
 	private int m_nMulticastPort;
@@ -85,7 +88,7 @@ public class CMConfigurationInfo {
 	// file modification ratio threshold (for HYBRID mode of file-sync update) (0~1)
 	private double fileModRatioThreshold;
 	
-	public CMConfigurationInfo()
+	private CMConfigurationInfo()
 	{
 		m_confFileHome = Paths.get(".");
 		m_strSystemType = "";
@@ -140,6 +143,14 @@ public class CMConfigurationInfo {
 		fileSyncUpdateMode = CMFileSyncUpdateMode.DELTA;
 		fileSizeThreshold = 0;
 		fileModRatioThreshold = 1;	// always DELTA
+	}
+
+	// getInstance
+	public static synchronized CMConfigurationInfo getInstance() {
+		if(instance == null) {
+			instance = new CMConfigurationInfo();
+		}
+		return instance;
 	}
 
 	// set/get methods

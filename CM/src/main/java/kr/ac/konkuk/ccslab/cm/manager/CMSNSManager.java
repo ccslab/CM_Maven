@@ -36,7 +36,7 @@ public class CMSNSManager {
 	// get the list of users whom the user, 'strUserName', adds as his/her friends 
 	public static ArrayList<String> getFriendList(String strUserName, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
 		if(!CMConfigurator.isDServer(cmInfo))
@@ -61,7 +61,7 @@ public class CMSNSManager {
 	// get the list of users who added the user, 'strUserName', as their friend, but the user has not add them yet
 	public static ArrayList<String> getFriendRequesterList(String strUserName, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
 		if(!CMConfigurator.isDServer(cmInfo))
@@ -110,7 +110,7 @@ public class CMSNSManager {
 	// get the list of users who added the user, 'strUserName', as their friend, and the user added them as well
 	public static ArrayList<String> getBiFriendList(String strUserName, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
 		if(!CMConfigurator.isDServer(cmInfo))
@@ -158,7 +158,7 @@ public class CMSNSManager {
 	// check the completion of receiving attached file of SNS content
 	protected static void checkCompleteRecvAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMSNSAttachList attachList = null;
 		CMSNSAttach attach = null;
@@ -267,7 +267,7 @@ public class CMSNSManager {
 		int nContentID = fe.getContentID();
 		String strFileName = fe.getFileName();
 		String strReceiverName = fe.getFileReceiver();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -413,7 +413,7 @@ public class CMSNSManager {
 		// set a starting and ending dates for loading access history 
 		Calendar endDate = user.getLastLoginDate();
 
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int amount = -(confInfo.getAttachAccessInterval()); // change to a negative number
 
 		Calendar startDate = Calendar.getInstance();
@@ -603,7 +603,7 @@ public class CMSNSManager {
 	{
 		CMSNSEvent seAck = null;
 		int nReturnCode = -1;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strUser = se.getUserName();
 
 		if(CMInfo._CM_DEBUG)
@@ -705,7 +705,7 @@ public class CMSNSManager {
 		int nForStart = -1;
 		int nForEnd = -1;
 		
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nDefDownloadNum = confInfo.getDownloadNum();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
@@ -1053,7 +1053,7 @@ public class CMSNSManager {
 		double dAccessRate = 0.0;
 		
 		// get prefetching threshold
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		double dThreshold = confInfo.getAttachPrefetchThreshold();
 		
 		// get access history of 'strUserName' during specified dates (already retrieved at the login time)
@@ -1103,7 +1103,7 @@ public class CMSNSManager {
 	{
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		
 		if(se.getNumAttachedFiles() > 0 && confInfo.getAttachDownloadScheme() != CMInfo.SNS_ATTACH_NONE)
@@ -1183,7 +1183,7 @@ public class CMSNSManager {
 		}
 		
 		// check whether prefetching starts or not
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
 			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
@@ -1212,7 +1212,7 @@ public class CMSNSManager {
 	// for server
 	private static void processCONTENT_UPLOAD_REQUEST(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
@@ -1338,7 +1338,7 @@ public class CMSNSManager {
 	
 	private static void processADD_NEW_FRIEND(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nReturnCode = 0;	// 0: error, 1: succeeded
 		
 		// check if DB is used or not
@@ -1403,7 +1403,7 @@ public class CMSNSManager {
 	
 	private static void processREMOVE_FRIEND(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nReturnCode = 0;	// 0: error, 1: succeeded
 		
 		// check if DB is used or not
@@ -1447,7 +1447,7 @@ public class CMSNSManager {
 	
 	private static void processREQUEST_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nTotalNumFriends = 0;
 		ArrayList<String> friendList = null;
 		CMSNSEvent seAck = null;
@@ -1565,7 +1565,7 @@ public class CMSNSManager {
 	
 	private static void processREQUEST_FRIEND_REQUESTER_LIST(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		ArrayList<String> requesterList = new ArrayList<String>();
 		int nNumRequesters = 0;
 		CMSNSEvent seAck = null;
@@ -1714,7 +1714,7 @@ public class CMSNSManager {
 	
 	private static void processREQUEST_BI_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		ArrayList<String> biFriendList = new ArrayList<String>();
 		int nNumBiFriends = 0;
 		CMSNSEvent seAck = null;
@@ -1864,7 +1864,7 @@ public class CMSNSManager {
 	
 	private static void processREQUEST_ATTACHED_FILES(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMSNSAttach sendAttach = null;
 		CMSNSAttachList attachList = null;
@@ -1958,7 +1958,7 @@ public class CMSNSManager {
 	
 	private static void processATTACHED_FILES_NOT_FOUND(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
 				.getServerName();
@@ -2030,7 +2030,7 @@ public class CMSNSManager {
 	
 	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
 		String strRequester = se.getUserName();
@@ -2157,7 +2157,7 @@ public class CMSNSManager {
 	
 	private static void processCHANGE_ATTACH_DOWNLOAD_SCHEME(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
 		//CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		//CMUser myself = interInfo.getMyself();

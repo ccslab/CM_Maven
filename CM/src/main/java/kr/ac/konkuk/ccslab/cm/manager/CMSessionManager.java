@@ -20,7 +20,7 @@ public class CMSessionManager {
 
 	public static void init(CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			return;
@@ -36,7 +36,7 @@ public class CMSessionManager {
 	private static void configureGroups(CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		Iterator<CMSession> iter = interInfo.getSessionList().iterator();
 		
 		while(iter.hasNext())
@@ -133,7 +133,7 @@ public class CMSessionManager {
 	
 	private static void processJOIN_SESSION(CMMessage msg, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
@@ -218,7 +218,7 @@ public class CMSessionManager {
 	
 	private static void processJOIN_SESSION_ACK(CMMessage msg, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
@@ -286,7 +286,7 @@ public class CMSessionManager {
 	
 	private static void processLEAVE_SESSION(CMMessage msg, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))

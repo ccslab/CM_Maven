@@ -810,7 +810,7 @@ public class CMClientApp {
 	public void testDatagram()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -1230,7 +1230,7 @@ public class CMClientApp {
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMUser myself = interInfo.getMyself();
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.println("------ for the default server");
 		System.out.println("name("+myself.getName()+"), session("+myself.getCurrentSession()+"), group("
 				+myself.getCurrentGroup()+"), udp port("+myself.getUDPPort()+"), state("
@@ -1298,7 +1298,7 @@ public class CMClientApp {
 		int nChPort = -1;
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean bResult = false;
 		String strBlock = null;
@@ -1526,7 +1526,7 @@ public class CMClientApp {
 		String strServerName = null;
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
 		String strBlock = null;
@@ -2862,7 +2862,7 @@ public class CMClientApp {
 	public void testMulticastChat()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.println("====== test multicast chat in current group");
 
 		// check user state
@@ -2911,7 +2911,7 @@ public class CMClientApp {
 		String strServerName = null;
 		SocketChannel sc = null;
 		DatagramChannel dc = null;
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean isSocketChannel = false;
 		
@@ -3042,7 +3042,7 @@ public class CMClientApp {
 		}
 		
 		System.out.print("------- conf info not in the "+confPath.toString()+"\n");
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.print("Local address list: ");
 		for(String addr : confInfo.getMyAddressList()) {
 			System.out.print(addr+" ");

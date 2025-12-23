@@ -37,13 +37,13 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     public Path getClientSyncHome() {
-        CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
         return confInfo.getTransferedFileHome().resolve(CMFileSyncInfo.SYNC_HOME)
                 .toAbsolutePath().normalize();
     }
 
     public Path getServerSyncHome(String userName) {
-        CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
         return confInfo.getTransferedFileHome().resolve(userName)
                 .resolve(CMFileSyncInfo.SYNC_HOME).toAbsolutePath().normalize();
     }
@@ -209,7 +209,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         if (foundPath != null) {
             // get the file-transfer home
-            Path transferFileHome = m_cmInfo.getConfigurationInfo().getTransferedFileHome().resolve(fileSender);
+            Path transferFileHome = CMConfigurationInfo.getInstance().getTransferedFileHome().resolve(fileSender);
             // get the server sync home
             Path serverSyncHome = getServerSyncHome(fileSender);
             // move the transferred file to the sync home (including sub-directories)
@@ -1226,7 +1226,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get transferred file info
         String fileName = fe.getFileName();
         String fileSender = fe.getFileSender();
-        Path transferFileHome = Objects.requireNonNull(m_cmInfo.getConfigurationInfo().getTransferedFileHome());
+        Path transferFileHome = Objects.requireNonNull(CMConfigurationInfo.getInstance().getTransferedFileHome());
 
         // get local-mode-request queue
         CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
@@ -1399,7 +1399,7 @@ public class CMFileSyncManager extends CMServiceManager {
         ScheduledExecutorService ses = m_cmInfo.getThreadInfo().getScheduledExecutorService();
         Objects.requireNonNull(ses);
         // get directory-activation-monitoring-period
-        CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
         long period = confInfo.getDirActivationMonitoringPeriod();
         TimeUnit unit = confInfo.getDirActivationMonitoringPeriodUnit();
         // create a scheduled proactive mode task
@@ -1956,7 +1956,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get duration-since-last-access threshold (DSLAT)
-        CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
         Objects.requireNonNull(confInfo);
         long durationSinceLastAccessThreshold = confInfo.getDurationSinceLastAccessThreshold();
         // get the unit of duration since last access threshold (DSLATU)
@@ -2023,7 +2023,7 @@ public class CMFileSyncManager extends CMServiceManager {
         long totalSpace = root.toFile().getTotalSpace();
         ///// get total space for file-sync
         // get file-sync storage ratio
-        CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
         long fileSyncStorage = confInfo.getFileSyncStorage() * 1024 * 1024; // MB to Bytes
         if (fileSyncStorage == 0) {
             System.err.println("File-sync storage is 0! It must be greater than 0!");
@@ -2176,7 +2176,7 @@ public class CMFileSyncManager extends CMServiceManager {
         long totalSpace = root.toFile().getTotalSpace();
         ///// get total space for file-sync
         // get file-sync storage ratio
-        CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
         long fileSyncStorage = confInfo.getFileSyncStorage() * 1024 * 1024; // MB to Bytes
         if (fileSyncStorage == 0) {
             System.err.println("File-sync storage is 0! It must be greater than 0!");
@@ -2371,7 +2371,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
-        final CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        final CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 
         try (BufferedWriter bw = Files.newBufferedWriter(resultPath);
              PrintWriter pw = new PrintWriter(bw)) {
@@ -2587,7 +2587,7 @@ public class CMFileSyncManager extends CMServiceManager {
         final int DEACTIVATION_PERIOD = 3 * 24;
 
         // check the existence of the test-file directory
-        final CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        final CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
         final Path testFileDir = confInfo.getTransferedFileHome().resolve(TEST_FILE_DIR_NAME)
                 .toAbsolutePath().normalize();
         if (!Files.exists(testFileDir)) {
@@ -2695,7 +2695,7 @@ public class CMFileSyncManager extends CMServiceManager {
         final int DEACTIVATION_PERIOD = 3 * 24;
 
         // check the existence of the test-file directory
-        final CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+        final CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
         final Path testFileDir = confInfo.getTransferedFileHome().resolve(TEST_FILE_DIR_NAME)
                 .toAbsolutePath().normalize();
         if (!Files.exists(testFileDir)) {

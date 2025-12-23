@@ -31,7 +31,7 @@ public class CMServerKeepAliveTask implements Runnable {
 	@Override
 	public void run()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getLogLevel() == 0)
 			LOG.setLevel(Level.SEVERE);
 
@@ -70,7 +70,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		{
 			CMUnknownChannelInfo unch = iter.next();
 			lElapsedTime = lCurTime - unch.getLastEventTransTime();
-			nKeepAliveTime = m_cmInfo.getConfigurationInfo().getKeepAliveTime();
+			nKeepAliveTime = CMConfigurationInfo.getInstance().getKeepAliveTime();
 			if(lElapsedTime/1000.0 > nKeepAliveTime*1.5)
 			{
 				LOG.info("for unknown-channel, elapsed time("+(lElapsedTime/1000.0)
@@ -127,7 +127,7 @@ public class CMServerKeepAliveTask implements Runnable {
 				long lMyLastEventTransTime = myself.getMyLastEventTransTimeHashtable()
 						.get(strDefServer);
 				lElapsedTime = lCurTime - lMyLastEventTransTime;
-				nKeepAliveTime = m_cmInfo.getConfigurationInfo().getKeepAliveTime();
+				nKeepAliveTime = CMConfigurationInfo.getInstance().getKeepAliveTime();
 				
 				if(lElapsedTime/1000.0 > nKeepAliveTime)
 				{

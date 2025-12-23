@@ -682,7 +682,7 @@ public class CMCommManager {
 		CMEventInfo eInfo = cmInfo.getEventInfo();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMFileEvent replyEvent = null;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
 				target, CMInfo.FILE_OVERWRITE, cmInfo);
@@ -753,7 +753,7 @@ public class CMCommManager {
 		CMEventInfo eInfo = cmInfo.getEventInfo();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMFileEvent replyEvent = null;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + CMInfo.THROUGHPUT_TEST_FILE;
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);

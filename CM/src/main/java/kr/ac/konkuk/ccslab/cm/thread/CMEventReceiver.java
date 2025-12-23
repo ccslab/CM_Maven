@@ -163,7 +163,7 @@ public class CMEventReceiver implements Runnable {
 	// handle unexpected disconnection with the server or the client
 	private void processUnexpectedDisconnection(SelectableChannel ch)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		

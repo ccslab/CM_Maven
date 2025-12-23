@@ -332,7 +332,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 			return 4;
 		}
 		// authenticate user name and password
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if( confInfo.isLoginScheme() && !CMDBManager.authenticateUser(strUserName, strPassword, m_cmInfo) )
 		{
 			System.err.println("CMMqttEventHandler.validateCONNECT(), user authentication failed! "
@@ -432,7 +432,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		// if CM is server, it forwards the event to the subscribers
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			if(!bDuplicate)
@@ -511,7 +511,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	{
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		if(strSysType.equals("CLIENT"))
@@ -544,7 +544,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	{
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		if(strSysType.equals("CLIENT"))
@@ -644,7 +644,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		
@@ -700,7 +700,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		
@@ -792,7 +792,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		
@@ -870,7 +870,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
 		

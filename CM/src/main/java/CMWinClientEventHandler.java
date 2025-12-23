@@ -898,7 +898,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				processFile(fe.getFileName());
 			if(m_bReqAttachedFile)
 			{
-				confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+				confInfo = CMConfigurationInfo.getInstance();
 				String strPath = confInfo.getTransferedFileHome().toString() + File.separator + fe.getFileName();
 				File file = new File(strPath);
 				try {
@@ -1002,7 +1002,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processFile(String strFile)
 	{
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strMergeName = null;
 
 		// add file name to list and increase index
@@ -1208,7 +1208,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processCONTENT_DOWNLOAD_END(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nAttachScheme = confInfo.getAttachDownloadScheme();
 		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();

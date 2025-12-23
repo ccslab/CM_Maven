@@ -922,7 +922,7 @@ public class CMServerApp {
 		int nChPort = -1;
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
 		boolean bResult = false;
 		String strBlock = null;
@@ -1147,7 +1147,7 @@ public class CMServerApp {
 		String strServerName = null;
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
 		String strBlock = null;
@@ -1371,7 +1371,7 @@ public class CMServerApp {
 		}
 		
 		System.out.print("------- conf info not in the "+confPath.toString()+"\n");
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.print("Local address list: ");
 		for(String addr : confInfo.getMyAddressList()) {
 			System.out.print(addr+" ");

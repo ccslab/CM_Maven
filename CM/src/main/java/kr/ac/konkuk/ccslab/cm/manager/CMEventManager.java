@@ -286,7 +286,7 @@ public class CMEventManager {
 		else if(opt == CMInfo.CM_DATAGRAM)
 		{
 			//search for the udp port number of the local default datagram channel
-			CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+			CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 			bReturn = unicastEvent(cme, strReceiver, opt, confInfo.getUDPPort(), false, cmInfo);
 		}
 		else
@@ -329,7 +329,7 @@ public class CMEventManager {
 		// get the sending queue
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		//// find a destination channel
 		
@@ -979,7 +979,7 @@ public class CMEventManager {
 
 	private static void sleepForSimTransDelay(CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nSimTransDelay = confInfo.getSimTransDelay();
 
 		if(nSimTransDelay > 0)
