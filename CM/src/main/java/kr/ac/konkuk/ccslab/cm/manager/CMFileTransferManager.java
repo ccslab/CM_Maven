@@ -44,7 +44,7 @@ public class CMFileTransferManager {
 
 	public static void init(CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strPath = confInfo.getTransferedFileHome().toString();
 		
 		// if the default directory does not exist, create it.
@@ -106,7 +106,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
 			byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		boolean bReturn = false;
@@ -215,7 +215,7 @@ public class CMFileTransferManager {
 	public static boolean isP2PFileTransfer(CMFileEvent fe, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strFileSender = fe.getFileSender();
 		String strFileReceiver = fe.getFileReceiver();
@@ -260,7 +260,7 @@ public class CMFileTransferManager {
 	public static boolean replyPermitForPullFile(CMFileEvent fe, int nReturnCode, 
 			CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		boolean bRet = false;
 		CMFileEvent feAck = new CMFileEvent();
@@ -336,7 +336,7 @@ public class CMFileTransferManager {
 	public static boolean cancelPullFile(String strFileSender, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.isFileTransferScheme())
 			bReturn = cancelPullFileWithSepChannel(strFileSender, cmInfo);
 		else
@@ -383,7 +383,7 @@ public class CMFileTransferManager {
 		Future<CMRecvFileInfo> recvTask = null;
 		CMFileEvent fe = null;
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> blockSCInfo = null;
 		SocketChannel defaultBlockSC = null;
 		boolean bP2PFileTransfer = false;
@@ -706,7 +706,7 @@ public class CMFileTransferManager {
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String myName = interInfo.getMyself().getName();
 		boolean bRet = false;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 				
 		CMFileEvent feAck = new CMFileEvent();
@@ -807,7 +807,7 @@ public class CMFileTransferManager {
 			int nContentID, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		
 		fInfo.setStartSendTime(System.currentTimeMillis());
@@ -927,7 +927,7 @@ public class CMFileTransferManager {
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strMyName = interInfo.getMyself().getName();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		// check the creation of the default blocking TCP socket channel
 		CMChannelInfo<Integer> blockChannelList = null;
@@ -1173,7 +1173,7 @@ public class CMFileTransferManager {
 	public static boolean cancelPushFile(String strFileReceiver, CMInfo cmInfo)
 	{
 		boolean bReturn = false;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.isFileTransferScheme())
 			bReturn = cancelPushFileWithSepChannel(strFileReceiver, cmInfo);
 		else
@@ -1383,7 +1383,7 @@ public class CMFileTransferManager {
 		Future<CMSendFileInfo> sendTask = null;
 		CMFileEvent fe = null;
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> blockSCInfo = null;
 		SocketChannel defaultBlockSC = null;
 		boolean bP2PFileTransfer = false;
@@ -1855,7 +1855,7 @@ public class CMFileTransferManager {
 	private static boolean processREQUEST_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
 		boolean bForward = true;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		String strMyName = interInfo.getMyself().getName();
@@ -1909,7 +1909,7 @@ public class CMFileTransferManager {
 		CMEventInfo eInfo = cmInfo.getEventInfo();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		String strMyName = interInfo.getMyself().getName();
 		boolean bForward = true;
@@ -2000,7 +2000,7 @@ public class CMFileTransferManager {
 		fInfo.setStartRequestTime(System.currentTimeMillis());
 		
 		// check PERMIT_FILE_TRANSFER field
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		boolean bPermit = confInfo.isPermitFileTransferRequest();
 		String strFileName = getFileNameFromPath(fe.getFilePath());
 		if(bPermit || strFileName.contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
@@ -2017,7 +2017,7 @@ public class CMFileTransferManager {
 		boolean bForward = true;
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strMyName = interInfo.getMyself().getName();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -2071,7 +2071,7 @@ public class CMFileTransferManager {
 	private static boolean processSTART_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		boolean bForward = true;
 		String strMyName = interInfo.getMyself().getName();
@@ -2722,7 +2722,7 @@ public class CMFileTransferManager {
 	private static boolean processSTART_FILE_TRANSFER_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		String strMyName = interInfo.getMyself().getName();
 		boolean bForward = true;
@@ -3428,7 +3428,7 @@ public class CMFileTransferManager {
 		Future<CMRecvFileInfo> recvTask = null;
 		CMFileEvent feAck = null;
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> blockSCInfo = null;
 		SocketChannel defaultBlockSC = null;
 		boolean bReturn = false;
@@ -3758,7 +3758,7 @@ public class CMFileTransferManager {
 		Future<CMSendFileInfo> sendTask = null;
 		CMFileEvent feAck = null;
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> blockSCInfo = null;
 		SocketChannel defaultBlockSC = null;
 		boolean bReturn = false;

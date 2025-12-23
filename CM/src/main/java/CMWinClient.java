@@ -1457,7 +1457,7 @@ public class CMWinClient extends JFrame {
 	private void testDatagram()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -1913,7 +1913,7 @@ public class CMWinClient extends JFrame {
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		CMUser myself = interInfo.getMyself();
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		printMessage("------ for the default server\n");
 		printMessage("name("+myself.getName()+"), session("+myself.getCurrentSession()+"), group("
@@ -1978,7 +1978,7 @@ public class CMWinClient extends JFrame {
 		int nChPort = -1; // the channel key for the datagram socket channel, or the multicast port number
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
 		boolean isBlock = false;
@@ -2226,7 +2226,7 @@ public class CMWinClient extends JFrame {
 		String strServerName = null;
 		String strSessionName = null;
 		String strGroupName = null;
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		boolean result = false;
 		boolean isBlock = false;
@@ -2564,7 +2564,7 @@ public class CMWinClient extends JFrame {
 		
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		File curDir = new File(confInfo.getTransferedFileHome().toString());
 		fc.setCurrentDirectory(curDir);
 		int fcRet = fc.showOpenDialog(this);
@@ -2959,7 +2959,7 @@ public class CMWinClient extends JFrame {
 			{
 				JFileChooser fc = new JFileChooser();
 				fc.setMultiSelectionEnabled(true);
-				CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+				CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 				File curDir = new File(confInfo.getTransferedFileHome().toString());
 				fc.setCurrentDirectory(curDir);
 				int fcRet = fc.showOpenDialog(this);
@@ -3588,7 +3588,7 @@ public class CMWinClient extends JFrame {
 	private void testMulticastChat()
 	{
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		//System.out.println("====== test multicast chat in current group");
 		printMessage("====== test multicast chat in current group\n");
 
@@ -3634,7 +3634,7 @@ public class CMWinClient extends JFrame {
 		String strServerName = null;
 		SocketChannel sc = null;
 		DatagramChannel dc = null;
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
@@ -3791,7 +3791,7 @@ public class CMWinClient extends JFrame {
 		}
 		
 		printMessage("------- conf info not in the "+confPath.toString()+"\n");
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		printMessage("Local address list: ");
 		for(String addr : confInfo.getMyAddressList()) {
 			printMessage(addr+" ");
@@ -4418,7 +4418,7 @@ public class CMWinClient extends JFrame {
 		
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		File curDir = new File(confInfo.getTransferedFileHome().toString());
 		fc.setCurrentDirectory(curDir);
 		int fcRet = fc.showOpenDialog(this);
@@ -4510,7 +4510,7 @@ public class CMWinClient extends JFrame {
 		
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		File curDir = new File(confInfo.getTransferedFileHome().toString());
 		fc.setCurrentDirectory(curDir);
 		int fcRet = fc.showOpenDialog(this);

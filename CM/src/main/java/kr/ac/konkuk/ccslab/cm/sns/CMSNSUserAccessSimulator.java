@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import org.apache.commons.math3.distribution.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -463,7 +464,7 @@ public class CMSNSUserAccessSimulator {
 	public boolean writeRecentAccHistoryToDB(CMInfo cmInfo)
 	{
 		boolean bRet = true;
-		int nPrefInterval = cmInfo.getConfigurationInfo().getAttachAccessInterval();
+		int nPrefInterval = CMConfigurationInfo.getInstance().getAttachAccessInterval();
 		Calendar startDate = null;
 		int nIndex = -1;
 		ArrayList<CMSNSAttachAccessHistory> historyList = null;

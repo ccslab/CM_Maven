@@ -81,7 +81,7 @@ public class CMClientStub extends CMStub {
 	public boolean setTransferedFileHome(Path dir)
 	{
 		// to set in the CMConfigurationInfo class.
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setTransferedFileHome(dir);
 		// to set in the CM configuration file.
 		boolean bRet = false;
@@ -266,7 +266,7 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		
 		// initialize CMConfigurator
-		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-client.conf").toString();
+		String strConfPath = CMConfigurationInfo.getInstance().getConfFileHome().resolve("cm-client.conf").toString();
 		
 		Callable<Boolean> task = new Callable<Boolean>() {
 			@Override
@@ -471,7 +471,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean loginCM(String strUserName, String strPassword)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		boolean bRequestResult = false;
 		String strEncPassword = null;
 		
@@ -2705,7 +2705,7 @@ public class CMClientStub extends CMStub {
 	public boolean loginCM(String strServer, String strUser, String strPasswd)
 	{
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMServer tserver = null;
 		String myAddress = null;
 		int myUDPPort = -1;
@@ -3709,7 +3709,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("mode = " + mode);
 		}
 		// check the system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
@@ -3754,7 +3754,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.stopFileSync() called..");
 		}
 		// check the system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
@@ -3810,7 +3810,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.requestFileSyncOnlineMode() called..");
 		}
 		// check system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
@@ -3869,7 +3869,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.requestFileSyncLocalMode() called..");
 		}
 		// check system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
@@ -3917,7 +3917,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getOnlineModeFiles() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;
@@ -3948,7 +3948,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getLocalModeFiles() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;
@@ -3981,7 +3981,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getCurrentFileSyncMode() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;
@@ -4019,7 +4019,7 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getFileSyncHome() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;

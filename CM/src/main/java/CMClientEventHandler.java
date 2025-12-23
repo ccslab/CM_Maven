@@ -647,7 +647,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	
 	private void processFile(String strFile)
 	{
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strMergeName = null;
 
 		// add file name to list and increase index
@@ -822,7 +822,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	private void processCONTENT_DOWNLOAD_END(CMSNSEvent se)
 	{
 		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Iterator<CMSNSContent> iter = null;
 		

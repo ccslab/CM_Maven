@@ -770,7 +770,7 @@ public class CMWinServer extends JFrame {
 		
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		File curDir = new File(confInfo.getTransferedFileHome().toString());
 		fc.setCurrentDirectory(curDir);
 		int fcRet = fc.showOpenDialog(this);
@@ -1727,7 +1727,7 @@ public class CMWinServer extends JFrame {
 			printMessage(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
 		}
 		printMessage("------- conf info not in the "+confPath.toString()+"\n");
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		printMessage("Local address list: ");
 		for(String addr : confInfo.getMyAddressList()) {
 			printMessage(addr+" ");

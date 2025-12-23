@@ -254,7 +254,7 @@ public class CMStub {
 	 */
 	public <T extends CMServiceManager> T findServiceManager(Class<T> type)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("CLIENT")) {
 			int clientState = m_cmInfo.getInteractionInfo().getMyself().getState();
 			if(clientState != CMInfo.CM_LOGIN && clientState != CMInfo.CM_SESSION_JOIN) {
@@ -314,7 +314,7 @@ public class CMStub {
 	 */
 	public String getDefaultServerName()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		String strDefServer = null;
 		
@@ -411,7 +411,7 @@ public class CMStub {
 	public DatagramChannel addNonBlockDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> nonBlockDCInfo = commInfo.getNonBlockDatagramChannelInfo();
 		DatagramChannel dc = null;
 		boolean result = false;
@@ -522,7 +522,7 @@ public class CMStub {
 	public DatagramChannel addBlockDatagramChannel(int nChPort)
 	{
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> blockDCInfo = commInfo.getBlockDatagramChannelInfo();
 		DatagramChannel dc = null;
 		boolean result = false;
@@ -849,7 +849,7 @@ public class CMStub {
 		if(opt == CMInfo.CM_STREAM)
 			bReturn = send(cme, strTarget, opt, 0, false);
 		else if(opt == CMInfo.CM_DATAGRAM)
-			bReturn = send(cme, strTarget, opt, m_cmInfo.getConfigurationInfo().getUDPPort(), false);
+			bReturn = send(cme, strTarget, opt, CMConfigurationInfo.getInstance().getUDPPort(), false);
 		else
 		{
 			System.err.println("CMStub.send(), invalid option !");
@@ -933,7 +933,7 @@ public class CMStub {
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum, boolean isBlock)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		String strDefServer = null;
 		boolean ret = false;
@@ -1306,7 +1306,7 @@ public class CMStub {
 		if(opt == CMInfo.CM_STREAM)
 			cast(cme, sessionName, groupName, opt, 0);
 		else if(opt == CMInfo.CM_DATAGRAM)
-			cast(cme, sessionName, groupName, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+			cast(cme, sessionName, groupName, opt, CMConfigurationInfo.getInstance().getUDPPort());
 		else
 		{
 			System.err.println("CMStub.cast(), invalid option!");
@@ -1368,7 +1368,7 @@ public class CMStub {
 	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName, int opt, int nChNum)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMSession session = null;
@@ -1607,7 +1607,7 @@ public class CMStub {
 		if(opt == CMInfo.CM_STREAM)
 			broadcast(cme, opt, 0);
 		else if(opt == CMInfo.CM_DATAGRAM)
-			broadcast(cme, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+			broadcast(cme, opt, CMConfigurationInfo.getInstance().getUDPPort());
 		else
 		{
 			System.err.println("CMStub.broadcast(), invalid option!");
@@ -1643,7 +1643,7 @@ public class CMStub {
 	 */
 	public boolean broadcast(CMEvent cme, int opt, int nChNum)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		boolean ret = false;
 		
@@ -1734,7 +1734,7 @@ public class CMStub {
 		if(opt == CMInfo.CM_STREAM)
 			send(cme, serverName, userName, opt, 0);
 		else if(opt == CMInfo.CM_DATAGRAM)
-			send(cme, serverName, userName, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+			send(cme, serverName, userName, opt, CMConfigurationInfo.getInstance().getUDPPort());
 		else
 		{
 			System.err.println("CMStub.send(), invalid option!");
@@ -1776,7 +1776,7 @@ public class CMStub {
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		boolean ret = false;
 		
@@ -1890,7 +1890,7 @@ public class CMStub {
 		if(opt == CMInfo.CM_STREAM)
 			cast(cme, serverName, sessionName, groupName, opt, 0);
 		else if(opt == CMInfo.CM_DATAGRAM)
-			cast(cme, serverName, sessionName, groupName, opt, m_cmInfo.getConfigurationInfo().getUDPPort());
+			cast(cme, serverName, sessionName, groupName, opt, CMConfigurationInfo.getInstance().getUDPPort());
 		else
 		{
 			System.err.println("CMStub.cast(), invalid option!");
@@ -1934,7 +1934,7 @@ public class CMStub {
 	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt, int nChNum)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		boolean ret = false;
 
@@ -1991,7 +1991,7 @@ public class CMStub {
 	 */
 	public Path getTransferedFileHome()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		return confInfo.getTransferedFileHome();
 	}
 	
@@ -2079,7 +2079,7 @@ public class CMStub {
 	public boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend)
 	{
 		boolean bReturn = false;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
 		
 		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
@@ -2178,7 +2178,7 @@ public class CMStub {
 	public boolean pushFile(String strFilePath, String strReceiver, byte byteFileAppend)
 	{
 		boolean bReturn = false;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
 		
 		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
@@ -2348,7 +2348,7 @@ public class CMStub {
 	 */
 	public void setConfigurationHome(Path homePath)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setConfFileHome(homePath);
 	}
 	
@@ -2367,7 +2367,7 @@ public class CMStub {
 	 */
 	public Path getConfigurationHome()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		return confInfo.getConfFileHome();
 	}

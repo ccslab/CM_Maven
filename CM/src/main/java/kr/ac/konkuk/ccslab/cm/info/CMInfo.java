@@ -133,7 +133,6 @@ public class CMInfo {
 	public static final String SETTINGS_DIR = ".cm-settings";
 
 	// repository
-	private CMConfigurationInfo m_confInfo;
 	private CMSNSInfo m_snsInfo;
 	private CMFileTransferInfo m_fileTransferInfo;
 	private CMDBInfo m_dbInfo;
@@ -156,7 +155,6 @@ public class CMInfo {
 	
 	public CMInfo()
 	{
-		m_confInfo = new CMConfigurationInfo();
 		m_snsInfo = new CMSNSInfo();
 		m_fileTransferInfo = new CMFileTransferInfo();
 		m_dbInfo = new CMDBInfo();
@@ -181,11 +179,6 @@ public class CMInfo {
 	public synchronized <T extends CMServiceManager> T getServiceManager(Class<T> type) {
 		T manager = type.cast(serviceManagerHashtable.get(type));
 		return manager;
-	}
-	
-	public synchronized CMConfigurationInfo getConfigurationInfo()
-	{
-		return m_confInfo;
 	}
 	
 	public synchronized CMSNSInfo getSNSInfo()

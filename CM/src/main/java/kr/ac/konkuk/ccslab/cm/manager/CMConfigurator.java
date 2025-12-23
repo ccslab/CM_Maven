@@ -17,7 +17,7 @@ public class CMConfigurator {
 	// set field values of the given configuration file to the CMConfigurationInfo object.
 	public static boolean init(String strConfFilePath, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		List<String> myAddressList = null;
 		
 		File confFile = new File(strConfFilePath);
@@ -433,7 +433,7 @@ public class CMConfigurator {
 	// check whether the server info in the CMConfigurationInfo object is the default server or not.
 	public synchronized static boolean isDServer(CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		boolean ret = false;
 		String strServerAddress = confInfo.getServerAddress();
 		int nServerPort = confInfo.getServerPort();

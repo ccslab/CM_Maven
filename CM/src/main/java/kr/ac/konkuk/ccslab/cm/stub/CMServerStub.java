@@ -72,7 +72,7 @@ public class CMServerStub extends CMStub {
 	public boolean setTransferedFileHome(Path dir)
 	{
 		// to set in the CMConfigurationInfo class.
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setTransferedFileHome(dir);
 		// to set in the CM configuration file.
 		boolean bRet = false;
@@ -246,7 +246,7 @@ public class CMServerStub extends CMStub {
 		}
 		*/
 
-		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-server.conf").toString();
+		String strConfPath = CMConfigurationInfo.getInstance().getConfFileHome().resolve("cm-server.conf").toString();
 		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
 		if(!bRet)
 			return false;
@@ -260,7 +260,7 @@ public class CMServerStub extends CMStub {
 		CMCommManager.startReceivingMessage(m_cmInfo);
 		CMCommManager.startSendingMessage(m_cmInfo);
 		
-		int nKeepAliveTime = m_cmInfo.getConfigurationInfo().getKeepAliveTime();
+		int nKeepAliveTime = CMConfigurationInfo.getInstance().getKeepAliveTime();
 		if(nKeepAliveTime > 0)
 		{
 			// start keep-alive task
@@ -341,7 +341,7 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean requestServerReg(String server)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
 		CMUser myself = interInfo.getMyself();
 		
@@ -567,7 +567,7 @@ public class CMServerStub extends CMStub {
 	{
 		// set the scheme for the user
 		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMMember loginUsers = interInfo.getLoginUsers();
 		CMUser tuser = null;
 		int nPrevScheme = -1;

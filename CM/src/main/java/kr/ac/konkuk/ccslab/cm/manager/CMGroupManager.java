@@ -31,7 +31,7 @@ public class CMGroupManager {
 
 	public static void init(CMInfo cmInfo) // for server
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getCommArch().equals("CM_PS"))
 		{
 			return;
@@ -77,7 +77,7 @@ public class CMGroupManager {
 	
 	public static void init(String strSession, String strGroup, CMInfo cmInfo)	// for client
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getCommArch().equals("CM_PS"))
 		{
 			return;
@@ -125,7 +125,7 @@ public class CMGroupManager {
 	
 	public static void terminate(String strSession, String strGroup, CMInfo cmInfo) // for client
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
 		CMSession session = interInfo.findSession(strSession);
 		if(session == null)
@@ -346,7 +346,7 @@ public class CMGroupManager {
 	private static void processUSER_ENTER(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
@@ -410,7 +410,7 @@ public class CMGroupManager {
 	
 	private static void processUSER_LEAVE(CMMessage msg, CMInfo cmInfo)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			return;
@@ -664,7 +664,7 @@ public class CMGroupManager {
 			de = null;
 
 			// get file-sync mode
-			CMConfigurationInfo confInfo = Objects.requireNonNull(cmInfo.getConfigurationInfo());
+			CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 			CMFileSyncMode fileSyncMode = confInfo.getFileSyncMode();
 			if(CMInfo._CM_DEBUG) {
 				System.out.println("file-sync mode: "+fileSyncMode);
