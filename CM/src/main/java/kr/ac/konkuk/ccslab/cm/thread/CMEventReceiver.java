@@ -73,13 +73,6 @@ public class CMEventReceiver implements Runnable {
 			
 			if(msg.m_buf == null)
 			{
-				/*
-				String strUserName = CMEventManager.findUserWithChannel(msg.m_ch, m_cmInfo.getInteractionInfo().getLoginUsers());
-				if(strUserName == null)
-					System.out.println("CMEventReceiver.run(), user not found.");
-				else
-					System.out.println("CMEventRecevier.run(), user: "+strUserName);
-				*/
 				if(CMInfo._CM_DEBUG_2)
 					System.out.println("CMEventRecevier.run(), ByteBuffer is null.");
 				
@@ -164,7 +157,7 @@ public class CMEventReceiver implements Runnable {
 	private void processUnexpectedDisconnection(SelectableChannel ch)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
@@ -217,7 +210,7 @@ public class CMEventReceiver implements Runnable {
 	
 	private void processDisconnectionFromServerAtClient(SelectableChannel ch)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMChannelInfo<Integer> chInfo = null;
 		Integer chKey = null;
 		Iterator<CMServer> iterAddServer = null;
@@ -327,7 +320,7 @@ public class CMEventReceiver implements Runnable {
 	
 	private void processDisconnectionFromClientAtServer(String strUser, SelectableChannel ch)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		Integer chKey = null;
 
 		CMUser user = interInfo.getLoginUsers().findMember(strUser);
@@ -365,7 +358,7 @@ public class CMEventReceiver implements Runnable {
 	private void processDisconnectionFromAddServerAtDefaultServer(SelectableChannel ch)
 	{
 		Iterator<CMServer> iterAddServer = null;
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bFound = false;
 		CMChannelInfo<Integer> chInfo = null;
 		Integer chKey = null;
@@ -411,7 +404,7 @@ public class CMEventReceiver implements Runnable {
 	
 	private void processDisconnectionFromDefaultServerAtAddServer(SelectableChannel ch)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMChannelInfo<Integer> chInfo = null;
 		Integer chKey = null;
 

@@ -60,7 +60,7 @@ public class CMInteractionManager {
 		}
 		
 		// open a server socket channel in the case of a server
-		CMUser myself = cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		if(strSysType.equals("SERVER"))
 		{
 			if(CMConfigurator.isDServer(cmInfo))
@@ -125,7 +125,7 @@ public class CMInteractionManager {
 	
 	public static boolean connectDefaultServer(CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		SocketChannel sc = null;
@@ -171,7 +171,7 @@ public class CMInteractionManager {
 	public static boolean disconnectFromDefaultServer(CMInfo cmInfo)
 	{
 		// check user's state
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMUser myself = interInfo.getMyself();
@@ -208,7 +208,7 @@ public class CMInteractionManager {
 	public static int getNumLoginServers(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().contentEquals("CLIENT"))
 		{
@@ -233,7 +233,7 @@ public class CMInteractionManager {
 	// connect to an additional server
 	public static boolean connectAddServer(String strName, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 
 		tserver = interInfo.findAddServer(strName);
@@ -283,7 +283,7 @@ public class CMInteractionManager {
 	// disconnect from an additional server
 	public static boolean disconnectFromAddServer(String strName, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMServer tserver = interInfo.findAddServer(strName);
 		if( tserver == null )
@@ -332,7 +332,7 @@ public class CMInteractionManager {
 	
 	private static boolean disconnectBadNodeByServer(SocketChannel badSC, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		boolean bRet = false;
 		
@@ -424,7 +424,7 @@ public class CMInteractionManager {
 		fInfo.removeSendFileList(addServer.getServerName());
 		
 		// remove add-server info
-		cmInfo.getInteractionInfo().removeAddServer(addServer.getServerName());
+		CMInteractionInfo.getInstance().removeAddServer(addServer.getServerName());
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -449,7 +449,7 @@ public class CMInteractionManager {
 	
 	private static boolean disconnectBadDefaultServerByAddServer(CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		defServer.getNonBlockSocketChannelInfo().removeAllChannels();
@@ -508,7 +508,7 @@ public class CMInteractionManager {
 	
 	private static boolean disconnectBadNodeByClient(SocketChannel badSC, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMServer defServer = interInfo.getDefaultServerInfo();
@@ -849,7 +849,7 @@ public class CMInteractionManager {
 	// find group member with the session name, group name, and member name (called only by the server)
 	public synchronized static CMUser findGroupMemberOfServer(String strSession, String strGroup, String strUser, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = interInfo.findSession(strSession);
 		if(session == null)
 		{
@@ -878,7 +878,7 @@ public class CMInteractionManager {
 	// find my group member (called only by the client)
 	public synchronized static CMUser findGroupMemberOfClient(String strUser, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strSession = interInfo.getMyself().getCurrentSession();
 		String strGroup = interInfo.getMyself().getCurrentGroup();
 		
@@ -910,7 +910,7 @@ public class CMInteractionManager {
 	// find my group member with channel (called only by the client)
 	public synchronized static CMUser findGroupMemberOfClientWithSocketChannel(SelectableChannel ch, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strSession = interInfo.getMyself().getCurrentSession();
 		String strGroup = interInfo.getMyself().getCurrentGroup();
 		
@@ -967,7 +967,7 @@ public class CMInteractionManager {
 	// find (default or additional) server info
 	public synchronized static CMServer findServer(String strTarget, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMServer serverInfo = null;
 		
@@ -1086,7 +1086,7 @@ public class CMInteractionManager {
 	public synchronized static void updateMyLastEventTransTime(SelectableChannel ch, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		CMServer addServer = null;
@@ -1181,7 +1181,7 @@ public class CMInteractionManager {
 	private static void updateLastEventTransTime(SelectableChannel ch, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		CMServer addServer = null;
@@ -1281,7 +1281,7 @@ public class CMInteractionManager {
 	private static void createSession(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
@@ -1405,7 +1405,7 @@ public class CMInteractionManager {
 	{
 		boolean bForward = true;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMMember loginUsers = null;
 		
 		if(confInfo.getSystemType().equals("SERVER"))
@@ -1465,7 +1465,7 @@ public class CMInteractionManager {
 
 	public static boolean replyToLOGIN(CMSessionEvent se, int nValidUser, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMSessionEvent seAck = new CMSessionEvent();
@@ -1606,7 +1606,7 @@ public class CMInteractionManager {
 	
 	private static void distributeLoginUsers(String targetUser, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSessionEvent tse = null;
 		CMUser loginUser = null;
 		
@@ -1631,7 +1631,7 @@ public class CMInteractionManager {
 	private static void processLOGIN_ACK(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		SocketChannel sc = null;
 		CMServer serverInfo = null;
 		
@@ -1805,7 +1805,7 @@ public class CMInteractionManager {
 	private static void processLOGOUT(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
@@ -1898,7 +1898,7 @@ public class CMInteractionManager {
 	private static void processREQUEST_SESSION_INFO(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
@@ -1938,7 +1938,7 @@ public class CMInteractionManager {
 	private static void processRESPONSE_SESSION_INFO(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		if(!confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1999,7 +1999,7 @@ public class CMInteractionManager {
 	
 	private static void processADD_NONBLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
@@ -2054,7 +2054,7 @@ public class CMInteractionManager {
 	
 	private static void processADD_NONBLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		
@@ -2087,7 +2087,7 @@ public class CMInteractionManager {
 	
 	private static void processADD_BLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
@@ -2252,7 +2252,7 @@ public class CMInteractionManager {
 	
 	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		String strMyName = interInfo.getMyself().getName();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
@@ -2321,7 +2321,7 @@ public class CMInteractionManager {
 	
 	private static void processREMOVE_BLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = null;
 		CMChannelInfo<Integer> scInfo = null;
 		SocketChannel sc = null;
@@ -2469,7 +2469,7 @@ public class CMInteractionManager {
 	
 	private static void processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> scInfo = null;
@@ -2885,7 +2885,7 @@ public class CMInteractionManager {
 	
 	private static void processREQ_SERVER_REG(CMMessage msg, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strServerName = null;
 		String strServerAddress = null;
 		int nServerPort = -1;
@@ -2964,7 +2964,7 @@ public class CMInteractionManager {
 	
 	private static void processRES_SERVER_REG(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		interInfo.getDefaultServerInfo().setServerName(mse.getSender());
 		
 		if(mse.getReturnCode() == 1)
@@ -2990,7 +2990,7 @@ public class CMInteractionManager {
 	
 	private static void processREQ_SERVER_DEREG(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		boolean bRet = false;
 
@@ -3070,7 +3070,7 @@ public class CMInteractionManager {
 	private static void processNOTIFY_SERVER_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		//A client must receive this event
 		if( confInfo.getSystemType().equals("SERVER") )
@@ -3114,7 +3114,7 @@ public class CMInteractionManager {
 	private static void processNOTIFY_SERVER_LEAVE(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		//A client must receive this event
 		if( confInfo.getSystemType().equals("SERVER") )
@@ -3140,7 +3140,7 @@ public class CMInteractionManager {
 	
 	private static void processREQ_SERVER_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		// send the list of server info
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
@@ -3165,7 +3165,7 @@ public class CMInteractionManager {
 	private static void processADD_LOGIN(CMMessage msg, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
@@ -3200,7 +3200,7 @@ public class CMInteractionManager {
 	
 	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, int nValidUser, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName());
@@ -3289,7 +3289,7 @@ public class CMInteractionManager {
 	
 	private static void distributeAddLoginUsers(String strUser, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		Iterator<CMUser> iter = interInfo.getLoginUsers().getAllMembers().iterator();
 		CMMultiServerEvent tmse = null;
 		
@@ -3315,7 +3315,7 @@ public class CMInteractionManager {
 	private static void processADD_LOGIN_ACK(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMMultiServerEvent tmse = null;
 		
@@ -3399,7 +3399,7 @@ public class CMInteractionManager {
 	private static void processADD_LOGOUT(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		boolean bRet = false;
 		
@@ -3490,7 +3490,7 @@ public class CMInteractionManager {
 	private static void processADD_REQUEST_SESSION_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 			return;
@@ -3529,7 +3529,7 @@ public class CMInteractionManager {
 	private static void processADD_RESPONSE_SESSION_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer server = null;
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
@@ -3583,7 +3583,7 @@ public class CMInteractionManager {
 	private static void processADD_JOIN_SESSION(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = null;
 		CMSession session = null;
 		CMGroup group = null;
@@ -3641,7 +3641,7 @@ public class CMInteractionManager {
 	private static void processADD_JOIN_SESSION_ACK(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer server = null;
 		CMSession session = null;
@@ -3710,7 +3710,7 @@ public class CMInteractionManager {
 	private static void processADD_LEAVE_SESSION(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		CMUser user = null;
 		
@@ -3768,7 +3768,7 @@ public class CMInteractionManager {
 	
 	private static void processADD_JOIN_GROUP(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		CMGroup group = null;
 		CMUser user = null;
@@ -3827,7 +3827,7 @@ public class CMInteractionManager {
 	private static void processADD_GROUP_INHABITANT(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMSession tsession = null;
 		CMGroup tgroup = null;
@@ -3901,7 +3901,7 @@ public class CMInteractionManager {
 	private static void processADD_NEW_GROUP_USER(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMSession tsession = null;
 		CMGroup tgroup = null;
@@ -3975,7 +3975,7 @@ public class CMInteractionManager {
 	// distribute an event to members according to session/group specifier in the event header
 	private static void distributeEvent(String strDistSession, String strDistGroup, CMEvent cme, int opt, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser tuser = null;
 		CMSession tSession = null;
 		CMMember tMember = null;

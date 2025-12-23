@@ -278,7 +278,7 @@ public class CMSNSManager {
 			checkServerCompleteSendAttachedFiles(strReceiverName, nContentID, strFileName, cmInfo);
 			
 			// check the completion of prefetching process
-			CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+			CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName);
 			if(user != null && user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 			{
@@ -669,7 +669,7 @@ public class CMSNSManager {
 		seAck.setServerTime( se.getServerTime() );
 
 		// send the ready event
-		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMEventManager.unicastEvent(seAck, strDefServer, cmInfo);
 
@@ -708,7 +708,7 @@ public class CMSNSManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nDefDownloadNum = confInfo.getDownloadNum();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
 		int nAttachDownloadScheme = user.getAttachDownloadScheme();
 
@@ -1057,7 +1057,7 @@ public class CMSNSManager {
 		double dThreshold = confInfo.getAttachPrefetchThreshold();
 		
 		// get access history of 'strUserName' during specified dates (already retrieved at the login time)
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = interInfo.getLoginUsers().findMember(strUserName);
 		if(user == null)
 		{
@@ -1102,7 +1102,7 @@ public class CMSNSManager {
 	private static void processCONTENT_DOWNLOAD(CMSNSEvent se, CMInfo cmInfo)
 	{
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		
@@ -1165,7 +1165,7 @@ public class CMSNSManager {
 		sevent.setReturnCode( nReturnCode );	// 1 for ok, 0 for error
 
 		// send a response event
-		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMEventManager.unicastEvent(sevent, strDefServer, cmInfo);
 
@@ -1215,7 +1215,7 @@ public class CMSNSManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		// initialize nReturnCode, seqNum and creationTime
 		int nReturnCode = 0;
@@ -1960,7 +1960,7 @@ public class CMSNSManager {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMSNSAttach attach = null;
 		CMSNSAttachList attachList = null;
@@ -2031,7 +2031,7 @@ public class CMSNSManager {
 	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		String strRequester = se.getUserName();
 		int nContentID = se.getContentID();
@@ -2159,9 +2159,6 @@ public class CMSNSManager {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
-		//CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		//CMUser myself = interInfo.getMyself();
-		//myself.setAttachDownloadScheme(se.getAttachDownloadScheme());
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMSNSManager.processEvent(), server changes the scheme for "
@@ -2172,7 +2169,7 @@ public class CMSNSManager {
 	
 	private static void processACCESS_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		String strRequester = se.getUserName();
 		//int nContentID = se.getContentID();

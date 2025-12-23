@@ -138,7 +138,6 @@ public class CMInfo {
 	private CMDBInfo m_dbInfo;
 	private CMCommInfo m_commInfo;
 	private CMEventInfo m_eventInfo;
-	private CMInteractionInfo m_interactionInfo;
 	private CMThreadInfo m_threadInfo;
 	private CMMqttInfo m_mqttInfo;
 	private CMFileSyncInfo m_fileSyncInfo;
@@ -160,7 +159,6 @@ public class CMInfo {
 		m_dbInfo = new CMDBInfo();
 		m_commInfo = new CMCommInfo();
 		m_eventInfo = new CMEventInfo();
-		m_interactionInfo = new CMInteractionInfo();
 		m_threadInfo = new CMThreadInfo();
 		m_mqttInfo = new CMMqttInfo();
 		m_fileSyncInfo = new CMFileSyncInfo();
@@ -204,11 +202,6 @@ public class CMInfo {
 	public synchronized CMEventInfo getEventInfo()
 	{
 		return m_eventInfo;
-	}
-	
-	public synchronized CMInteractionInfo getInteractionInfo()
-	{
-		return m_interactionInfo;
 	}
 	
 	public synchronized CMThreadInfo getThreadInfo()

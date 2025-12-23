@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
@@ -152,10 +153,10 @@ public class CMFileSyncManager extends CMServiceManager {
         // create START_FILE_LIST event.
         CMFileSyncEventStartFileList fse = new CMFileSyncEventStartFileList();
         // get my name
-        userName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        userName = CMInteractionInfo.getInstance().getMyself().getName();
         fse.setSender(userName);
         // get default server name
-        serverName = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         fse.setReceiver(serverName);
 
         fse.setUserName(userName);
@@ -270,7 +271,7 @@ public class CMFileSyncManager extends CMServiceManager {
         syncGenerator.setNumNewFilesCompleted(numNewFilesCompleted);
 
         // create a COMPLETE_NEW_FILE event
-        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventCompleteNewFile fse = new CMFileSyncEventCompleteNewFile();
         fse.setSender(serverName);
         fse.setReceiver(userName);
@@ -305,7 +306,7 @@ public class CMFileSyncManager extends CMServiceManager {
         syncGenerator.setNumUpdateFilesCompleted(numUpdateFilesCompleted);
 
         // create a SKIP_UPDATE_FILE event
-        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventSkipUpdateFile fse = new CMFileSyncEventSkipUpdateFile();
         fse.setSender(serverName);
         fse.setReceiver(userName);
@@ -338,7 +339,7 @@ public class CMFileSyncManager extends CMServiceManager {
         syncGenerator.setNumUpdateFilesCompleted(numUpdateFilesCompleted);
 
         // create a COMPLETE_UPDATE_FILE event
-        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventCompleteUpdateFile fse = new CMFileSyncEventCompleteUpdateFile();
         fse.setSender(serverName);
         fse.setReceiver(userName);
@@ -475,7 +476,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // create a COMPLETE_FILE_SYNC event
-        String serverName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         int numFilesCompleted = syncGenerator.getNumNewFilesCompleted() + syncGenerator.getNumUpdateFilesCompleted();
 
         CMFileSyncEventCompleteFileSync fse = new CMFileSyncEventCompleteFileSync();
@@ -958,9 +959,9 @@ public class CMFileSyncManager extends CMServiceManager {
         //// create and send an online-mode-list event
 
         // get the user and server names
-        String userName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        String userName = CMInteractionInfo.getInstance().getMyself().getName();
         Objects.requireNonNull(userName);
-        String serverName = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        String serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         Objects.requireNonNull(serverName);
         // event transmission loop
         int listIndex = 0;
@@ -1138,9 +1139,9 @@ public class CMFileSyncManager extends CMServiceManager {
         //// create and send a local-mode-list event
 
         // get the user and server names
-        String userName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        String userName = CMInteractionInfo.getInstance().getMyself().getName();
         Objects.requireNonNull(userName);
-        String serverName = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        String serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         Objects.requireNonNull(serverName);
         // event transmission loop
         int listIndex = 0;
@@ -2218,7 +2219,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("maxAccessDelayThreshold = " + maxAccessDelayThreshold + " ms.");
         }
         // get input throughput from the server
-        String defaultServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo().getServerName();
+        String defaultServer = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         // get input throughput (MBps)
         double inputThroughput = CMCommManager.measureInputThroughput(defaultServer, m_cmInfo);
         // calculate minimum size (Bytes) of a file to be local mode

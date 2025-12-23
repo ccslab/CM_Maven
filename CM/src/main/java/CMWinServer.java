@@ -599,7 +599,7 @@ public class CMWinServer extends JFrame {
 		printMessage(String.format("%-20s%-20s%-10s%-10s%n", "session name", "session addr", "port", "#users"));
 		printMessage("------------------------------------------------------\n");
 		
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		Iterator<CMSession> iter = interInfo.getSessionList().iterator();
 		while(iter.hasNext())
 		{
@@ -621,7 +621,7 @@ public class CMWinServer extends JFrame {
 			return;
 		}
 		
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = interInfo.findSession(strSessionName);
 		if(session == null)
 		{
@@ -1825,7 +1825,7 @@ public class CMWinServer extends JFrame {
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a client\n");
 		
 		CMCommInfo commInfo = m_serverStub.getCMInfo().getCommInfo();
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
 		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();

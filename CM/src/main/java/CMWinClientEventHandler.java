@@ -410,7 +410,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			else
 			{
 				printMessage("This client successfully logs in to the default server.\n");
-				CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+				CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 				
 				// Change the title of the client window
 				m_client.setTitle("CM Client ["+interInfo.getMyself().getName()+"]");
@@ -750,7 +750,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processUserEvent_end_csc_ftp_session(CMUserEvent ue)
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		boolean bReturn = false;

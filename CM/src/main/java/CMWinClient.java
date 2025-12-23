@@ -570,7 +570,7 @@ public class CMWinClient extends JFrame {
 	public void setButtonsAccordingToClientState()
 	{
 		int nClientState;
-		nClientState = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getState();
+		nClientState = CMInteractionInfo.getInstance().getMyself().getState();
 		
 		// nclientState: CMInfo.CM_INIT, CMInfo.CM_CONNECT, CMInfo.CM_LOGIN, CMInfo.CM_SESSION_JOIN
 		switch(nClientState)
@@ -1148,7 +1148,7 @@ public class CMWinClient extends JFrame {
 				{
 					printMessage("return delay: "+lDelay+" ms.\n");
 					printMessage("This client successfully logs in to the default server.\n");
-					CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+					CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 					
 					// Change the title of the client window
 					setTitle("CM Client ("+interInfo.getMyself().getName()+")");
@@ -1428,7 +1428,7 @@ public class CMWinClient extends JFrame {
 
 	private void testDummyEvent()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		String strInput = null;
 		
@@ -1456,7 +1456,7 @@ public class CMWinClient extends JFrame {
 
 	private void testDatagram()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 
@@ -1536,7 +1536,7 @@ public class CMWinClient extends JFrame {
 	{
 		String strReceiver = null;
 		int nValueByteNum = -1;
-		CMUser myself = m_clientStub.getCMInfo().getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
 		{
@@ -1884,7 +1884,7 @@ public class CMWinClient extends JFrame {
 	private void testPrintGroupInfo()
 	{
 		// check local state
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -1911,7 +1911,7 @@ public class CMWinClient extends JFrame {
 	
 	private void testCurrentUserStatus()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
@@ -1979,7 +1979,7 @@ public class CMWinClient extends JFrame {
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean result = false;
 		boolean isBlock = false;
 		SocketChannel sc = null;
@@ -2227,7 +2227,7 @@ public class CMWinClient extends JFrame {
 		String strSessionName = null;
 		String strGroupName = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean result = false;
 		boolean isBlock = false;
 		boolean isSyncCall = false;
@@ -2463,7 +2463,7 @@ public class CMWinClient extends JFrame {
 		String strFileName = null;
 		String strFileOwner = null;
 		byte byteFileAppendMode = -1;
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		printMessage("====== request a file\n");
 
@@ -2521,7 +2521,7 @@ public class CMWinClient extends JFrame {
 		File[] files = null;
 		String strReceiver = null;
 		byte byteFileAppendMode = -1;
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bReturn = false;
 
 		printMessage("====== push a file\n");
@@ -2667,7 +2667,7 @@ public class CMWinClient extends JFrame {
 		String strUserName = null;
 		CMUserEvent ue = null;
 		
-		int nUserState = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getState();
+		int nUserState = CMInteractionInfo.getInstance().getMyself().getState();
 		if(nUserState != CMInfo.CM_LOGIN && nUserState != CMInfo.CM_SESSION_JOIN)
 		{
 			printMessage("You must log in to the default server.\n");
@@ -2692,7 +2692,7 @@ public class CMWinClient extends JFrame {
 		nSimNum = Integer.parseInt(simnumField.getText());
 		
 		nEventRange = (int) (nEventTypeNum * fForwardRate); // number of event types which must be forwarded
-		strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+		strUserName = CMInteractionInfo.getInstance().getMyself().getName();
 		Random rnd = new Random();
 		ue = new CMUserEvent();
 		
@@ -2746,7 +2746,7 @@ public class CMWinClient extends JFrame {
 		long lSendTime = 0;
 		CMUserEvent ue = null;
 
-		int nUserState = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getState();
+		int nUserState = CMInteractionInfo.getInstance().getMyself().getState();
 		if(nUserState != CMInfo.CM_LOGIN && nUserState != CMInfo.CM_SESSION_JOIN)
 		{
 			printMessage("You must log in to the default server.\n");
@@ -2767,7 +2767,7 @@ public class CMWinClient extends JFrame {
 		nForwardType = forwardTypeBox.getSelectedIndex();
 		nSendNum = Integer.parseInt(sendNumField.getText());
 
-		strUserName = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+		strUserName = CMInteractionInfo.getInstance().getMyself().getName();
 
 		for(int i=0; i < nSendNum; i++)
 		{
@@ -2979,7 +2979,7 @@ public class CMWinClient extends JFrame {
 				}
 			}			
 			
-			String strUser = m_clientStub.getCMInfo().getInteractionInfo().getMyself().getName();
+			String strUser = CMInteractionInfo.getInstance().getMyself().getName();
 			m_clientStub.requestSNSContentUpload(strUser, strMessage, nNumAttachedFiles, nReplyOf, nLevelOfDisclosure, 
 					filePathList);
 		}
@@ -3164,7 +3164,7 @@ public class CMWinClient extends JFrame {
 		}
 		else // use the login info for the default server
 		{
-			CMUser myself = m_clientStub.getCMInfo().getInteractionInfo().getMyself();
+			CMUser myself = CMInteractionInfo.getInstance().getMyself();
 			user = myself.getName();
 			password = myself.getPasswd();
 			m_clientStub.loginCM(strServerName, user, password);
@@ -3241,7 +3241,7 @@ public class CMWinClient extends JFrame {
 
 	private void testPrintGroupInfoOfServer()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		
 		String strServerName = null;
@@ -3444,7 +3444,7 @@ public class CMWinClient extends JFrame {
 
 	private void testDistFileProc()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strFile = null;
 		long lFileSize = 0;
 		CMFileEvent fe = null;
@@ -3587,7 +3587,7 @@ public class CMWinClient extends JFrame {
 
 	private void testMulticastChat()
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		//System.out.println("====== test multicast chat in current group");
 		printMessage("====== test multicast chat in current group\n");
@@ -3635,7 +3635,7 @@ public class CMWinClient extends JFrame {
 		SocketChannel sc = null;
 		DatagramChannel dc = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -4335,7 +4335,7 @@ public class CMWinClient extends JFrame {
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
 		
 		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
 		String strServer = JOptionPane.showInputDialog("server name: ").trim();
@@ -4427,7 +4427,7 @@ public class CMWinClient extends JFrame {
 		if(files.length < 1) return;
 		
 		// send start_csc_ftp_session to the server
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMUserEvent userEvent = new CMUserEvent();
@@ -4519,7 +4519,7 @@ public class CMWinClient extends JFrame {
 		if(files.length < 1) return;
 		
 		// store information in the event handler
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		
 		m_eventHandler.setFileSender(strMyName);

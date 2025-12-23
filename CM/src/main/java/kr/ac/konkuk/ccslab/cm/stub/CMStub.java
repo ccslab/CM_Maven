@@ -120,8 +120,8 @@ public class CMStub {
 		ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
 		ses = Executors.newScheduledThreadPool(1);
 		threadInfo.setScheduledExecutorService(ses);
-		
-		m_cmInfo.getInteractionInfo().getMyself().setState(CMInfo.CM_INIT);
+
+		CMInteractionInfo.getInstance().getMyself().setState(CMInfo.CM_INIT);
 		return true;
 	}
 
@@ -256,7 +256,7 @@ public class CMStub {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("CLIENT")) {
-			int clientState = m_cmInfo.getInteractionInfo().getMyself().getState();
+			int clientState = CMInteractionInfo.getInstance().getMyself().getState();
 			if(clientState != CMInfo.CM_LOGIN && clientState != CMInfo.CM_SESSION_JOIN) {
 				System.err.println("CMStub.findServiceManager(), you should log in to the server!");
 				return null;
@@ -303,7 +303,7 @@ public class CMStub {
 	 */
 	public CMUser getMyself()
 	{
-		CMUser user = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser user = CMInteractionInfo.getInstance().getMyself();
 		return user;
 	}
 	
@@ -315,7 +315,7 @@ public class CMStub {
 	public String getDefaultServerName()
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = null;
 		
 		if(confInfo.getSystemType().contentEquals("SERVER"))
@@ -652,7 +652,7 @@ public class CMStub {
 	 */
 	public boolean addMulticastChannel(String strSession, String strGroup, String strChAddress, int nChPort)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		DatagramChannel mc = null;
 		InetSocketAddress sockAddress = new InetSocketAddress(strChAddress, nChPort);
 		boolean result = false;
@@ -734,7 +734,7 @@ public class CMStub {
 	 */
 	public boolean removeAdditionalMulticastChannel(String strSession, String strGroup, String strChAddress, int nChPort)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		InetSocketAddress sockAddress = null;
 		boolean result = false;
 		
@@ -934,7 +934,7 @@ public class CMStub {
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum, boolean isBlock)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = null;
 		boolean ret = false;
 		
@@ -1369,7 +1369,7 @@ public class CMStub {
 	public boolean cast(CMEvent cme, String sessionName, String groupName, int opt, int nChNum)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMSession session = null;
 		CMGroup group = null;
@@ -1644,7 +1644,7 @@ public class CMStub {
 	public boolean broadcast(CMEvent cme, int opt, int nChNum)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
 		
 		// set sender
@@ -1777,7 +1777,7 @@ public class CMStub {
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
 		
 		String strDefServer = null;
@@ -1935,7 +1935,7 @@ public class CMStub {
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt, int nChNum)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
 
 		// check server validity
@@ -2080,7 +2080,7 @@ public class CMStub {
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		
 		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
 		{
@@ -2179,7 +2179,7 @@ public class CMStub {
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		
 		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN) 
 		{

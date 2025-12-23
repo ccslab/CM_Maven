@@ -342,7 +342,7 @@ public class CMServerStub extends CMStub {
 	public boolean requestServerReg(String server)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		
 		if(server == null)
@@ -431,7 +431,7 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean requestServerDereg()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		if( CMConfigurator.isDServer(m_cmInfo) )
 		{
@@ -473,7 +473,7 @@ public class CMServerStub extends CMStub {
 	public boolean connectToServer()
 	{
 		boolean result = false;
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		if( CMConfigurator.isDServer(m_cmInfo) )
 		{
 			System.out.println("CMServerStub.connectToServer(), this is the default server!");
@@ -500,7 +500,7 @@ public class CMServerStub extends CMStub {
 	public boolean disconnectFromServer()
 	{
 		boolean result = false;
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		if( CMConfigurator.isDServer(m_cmInfo) )
 		{
 			System.out.println("CMServerStub.disconnectFromServer(), this is the default server!");
@@ -566,7 +566,7 @@ public class CMServerStub extends CMStub {
 	public void setAttachDownloadScheme(String strUserName, int nScheme)
 	{
 		// set the scheme for the user
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMMember loginUsers = interInfo.getLoginUsers();
 		CMUser tuser = null;
@@ -647,7 +647,7 @@ public class CMServerStub extends CMStub {
 	public SocketChannel getBlockSocketChannel(int nChKey, String strUserName)
 	{
 		SocketChannel sc = null;
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMMember loginUsers = interInfo.getLoginUsers();
 		CMUser user = loginUsers.findMember(strUserName);
 		if(user == null)
@@ -676,7 +676,7 @@ public class CMServerStub extends CMStub {
 	public String getCurrentChannelInfo()
 	{
 		StringBuffer sb = new StringBuffer();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = m_cmInfo.getCommInfo();
 		String strChInfo = null;
 		
@@ -761,7 +761,7 @@ public class CMServerStub extends CMStub {
 	public CMMember getLoginUsers()
 	{
 		CMMember loginUsers = null;
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		loginUsers = interInfo.getLoginUsers();
 		
 		return loginUsers;

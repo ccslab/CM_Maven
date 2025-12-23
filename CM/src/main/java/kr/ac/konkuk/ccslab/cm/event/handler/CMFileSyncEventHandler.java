@@ -6,6 +6,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
@@ -1339,7 +1340,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // repeat to create and send FILE_BLOCK_CHECKSUM events
         int totalNumBlocks = startAckEvent.getTotalNumBlocks();
         int curIndex = 0;
-        String myName = m_cmInfo.getInteractionInfo().getMyself().getName();
+        String myName = CMInteractionInfo.getInstance().getMyself().getName();
         int remainingEventBytes = 0;
         int checksumBytes = 0;
         int numCurrentBlocks = 0;
@@ -1377,7 +1378,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create and send END_FILE_BLOCK_CHECKSUM event
         CMFileSyncEventEndFileBlockChecksum endChecksumEvent = new CMFileSyncEventEndFileBlockChecksum();
-        endChecksumEvent.setSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+        endChecksumEvent.setSender(CMInteractionInfo.getInstance().getMyself().getName());
         endChecksumEvent.setReceiver(userName);
         endChecksumEvent.setFileEntryIndex(fileEntryIndex);
         endChecksumEvent.setTotalNumBlocks(totalNumBlocks); // checksumArrays.length
@@ -1426,7 +1427,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create an ack event
         CMFileSyncEventStartFileBlockChecksumAck ackEvent = new CMFileSyncEventStartFileBlockChecksumAck();
-        ackEvent.setSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+        ackEvent.setSender(CMInteractionInfo.getInstance().getMyself().getName());
         ackEvent.setReceiver(startChecksumEvent.getSender());
         // set fields as they are in the received event
         ackEvent.setBlockSize(startChecksumEvent.getBlockSize());

@@ -55,7 +55,7 @@ public class CMCommManager {
 		CMChannelInfo<Integer> dcInfo = commInfo.getNonBlockDatagramChannelInfo();
 		dcInfo.removeAllChannels();
 		
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		// socket channels to the default server (client, additional server)
 		CMChannelInfo<Integer> scInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
 		scInfo.removeAllChannels();
@@ -335,7 +335,7 @@ public class CMCommManager {
 	
 	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
@@ -436,7 +436,7 @@ public class CMCommManager {
 	
 	public static boolean removeBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;

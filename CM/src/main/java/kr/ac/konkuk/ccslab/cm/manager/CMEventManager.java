@@ -328,7 +328,7 @@ public class CMEventManager {
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		// get the sending queue
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		//// find a destination channel
@@ -513,7 +513,7 @@ public class CMEventManager {
 	
 	public synchronized static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName, CMInfo cmInfo)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = cmInfo.getCommInfo();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMSession session = interInfo.findSession(strSessionName);
@@ -635,7 +635,7 @@ public class CMEventManager {
 			return false;
 		}
 		
-		Iterator<CMUser> iter = cmInfo.getInteractionInfo().getLoginUsers().getAllMembers().iterator();
+		Iterator<CMUser> iter = CMInteractionInfo.getInstance().getLoginUsers().getAllMembers().iterator();
 		CMUser tuser = null;
 		
 		switch(opt)
@@ -695,7 +695,7 @@ public class CMEventManager {
 
 		if(CMInfo._CM_DEBUG_2)
 		{
-			int nUserNum = cmInfo.getInteractionInfo().getLoginUsers().getMemberNum();
+			int nUserNum = CMInteractionInfo.getInstance().getLoginUsers().getMemberNum();
 			System.out.println("CMEventManager.broadcastEvent(), succeeded to ("+nUserNum
 					+") users: opt("+opt+"), ch#("+nChNum+").");
 			System.out.println("event(type: "+cme.getType()+", id: "+cme.getID()+").");

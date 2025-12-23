@@ -20,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 
 /**
@@ -84,7 +85,7 @@ public class CMMqttManager extends CMServiceManager {
 			return false;
 		}
 		
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -133,7 +134,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// send CONNECT event
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		boolean bRet = false;
 		bRet = CMEventManager.unicastEvent(conEvent, strDefServer, m_cmInfo);
@@ -226,7 +227,7 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		
 		// check whether the client is a log-in user.
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		if(myself.getState() == CMInfo.CM_INIT || myself.getState() == CMInfo.CM_CONNECT)
 		{
 			System.err.println("CMMqttManager.publishFromClient(): "
@@ -269,7 +270,7 @@ public class CMMqttManager extends CMServiceManager {
 		pubEvent.setAppMessage(strMsg);
 		
 		// send PUBLISH event
-		String strReceiver = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strReceiver = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, m_cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
@@ -375,7 +376,7 @@ public class CMMqttManager extends CMServiceManager {
 		// make PUBLISH event
 		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		pubEvent.setSender(myself.getName());
 		// set fixed header
 		pubEvent.setDupFlag(bDupFlag);
@@ -546,7 +547,7 @@ public class CMMqttManager extends CMServiceManager {
 			int nPacketID = unackEvent.getPacketID();
 			// make a corresponding PUBREL event
 			CMMqttEventPUBREL relEvent =  new CMMqttEventPUBREL();
-			CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+			CMUser myself = CMInteractionInfo.getInstance().getMyself();
 			// set sender (CM event header)
 			relEvent.setSender(myself.getName());
 			// set fixed header in the CMMqttEventPUBREL constructor
@@ -637,7 +638,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// to check if the user completes to log in to the default server, or not
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -676,7 +677,7 @@ public class CMMqttManager extends CMServiceManager {
 		subEvent.setTopicQoSList(topicQoSList);
 				
 		boolean bRet = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRet = CMEventManager.unicastEvent(subEvent, strDefServer, m_cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
@@ -724,7 +725,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// to check if the user completes to log in to the default server, or not
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -774,7 +775,7 @@ public class CMMqttManager extends CMServiceManager {
 		unsubEvent.setTopicList(topicList);
 		
 		boolean bRet = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer, m_cmInfo);
 
@@ -818,7 +819,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// to check if the user completes to log in to the default server, or not
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -847,7 +848,7 @@ public class CMMqttManager extends CMServiceManager {
 		// set fixed header in DISCONNECT constructor
 		
 		boolean bRet = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer, m_cmInfo);
 		
