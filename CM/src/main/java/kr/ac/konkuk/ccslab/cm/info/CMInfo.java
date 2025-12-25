@@ -133,7 +133,6 @@ public class CMInfo {
 	public static final String SETTINGS_DIR = ".cm-settings";
 
 	// repository
-	private CMDBInfo m_dbInfo;
 	private CMEventInfo m_eventInfo;
 	private CMThreadInfo m_threadInfo;
 
@@ -149,7 +148,6 @@ public class CMInfo {
 	
 	public CMInfo()
 	{
-		m_dbInfo = new CMDBInfo();
 		m_eventInfo = new CMEventInfo();
 		m_threadInfo = new CMThreadInfo();
 
@@ -169,11 +167,6 @@ public class CMInfo {
 		return manager;
 	}
 
-	public synchronized CMDBInfo getDBInfo()
-	{
-		return m_dbInfo;
-	}
-	
 	public synchronized CMEventInfo getEventInfo()
 	{
 		return m_eventInfo;

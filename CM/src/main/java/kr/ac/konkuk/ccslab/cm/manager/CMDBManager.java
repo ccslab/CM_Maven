@@ -21,7 +21,7 @@ public class CMDBManager {
 	public static void init(CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		
 		// this will load the MySQL driver, each DB has its own driver
 		try {
@@ -43,7 +43,7 @@ public class CMDBManager {
 	{
 		Connection connect = null;
 		Statement st = null;
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String url = dbInfo.getDBURL();
 		String user = confInfo.getDBUser();
@@ -78,7 +78,7 @@ public class CMDBManager {
 	// close DB
 	public static void closeDB(CMInfo cmInfo)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		Connection connect = dbInfo.getConnection();
 		Statement st = dbInfo.getStatement();
 		
@@ -118,7 +118,7 @@ public class CMDBManager {
 	// The caller of this method should close the ResultSet object after it completes to use!
 	public static ResultSet sendSelectQuery(String strQuery, CMInfo cmInfo)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		ResultSet rs = null;
 		
 		if(!connectDB(cmInfo))
@@ -146,7 +146,7 @@ public class CMDBManager {
 	
 	public static int sendUpdateQuery(String strQuery, CMInfo cmInfo, boolean bCloseDB)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		int ret = -1;
 		
 		if(!connectDB(cmInfo))

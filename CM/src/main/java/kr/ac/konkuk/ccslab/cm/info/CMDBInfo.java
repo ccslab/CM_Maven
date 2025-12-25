@@ -2,15 +2,24 @@ package kr.ac.konkuk.ccslab.cm.info;
 import java.sql.*;
 
 public class CMDBInfo {
+	private static CMDBInfo instance;
+
 	private Connection m_connection;
 	private Statement m_statement;
 	private String m_strDBURL;
 	
-	public CMDBInfo()
+	private CMDBInfo()
 	{
 		m_connection = null;
 		m_statement = null;
 		m_strDBURL = null;
+	}
+
+	public static synchronized CMDBInfo getInstance() {
+		if(instance == null) {
+			instance = new CMDBInfo();
+		}
+		return instance;
 	}
 	
 	public synchronized void setConnection(Connection conn)
