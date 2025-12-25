@@ -2081,7 +2081,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public void requestNextSNSContent()
 	{
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
 		int nOffset = snsInfo.getLastlyReqOffset();
@@ -2110,7 +2110,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public void requestPreviousSNSContent()
 	{
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
 		int nOffset = snsInfo.getLastlyReqOffset();
@@ -2220,7 +2220,7 @@ public class CMClientStub extends CMStub {
 			}
 			
 			// store the file path list in the CMSNSInfo class (CMSNSAttach object)
-			CMSNSInfo sInfo = m_cmInfo.getSNSInfo();
+			CMSNSInfo sInfo = CMSNSInfo.getInstance();
 			CMSNSAttach sendAttach = sInfo.getSendSNSAttach();
 			sendAttach.setFilePathList(filePathList);
 			
@@ -2313,7 +2313,7 @@ public class CMClientStub extends CMStub {
 		String strThumbnail = strFileName.substring(0, index) + "-thumbnail"
 				+ strFileName.substring(index, strFileName.length());
 		// search for content ID and writer name
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Vector<CMSNSContent> contentVector = contentList.getContentList();
 		Iterator<CMSNSContent> iter = contentVector.iterator();
@@ -2429,7 +2429,7 @@ public class CMClientStub extends CMStub {
 		String strThumbnail = strFileName.substring(0, index) + "-thumbnail"
 				+ strFileName.substring(index, strFileName.length());
 		// search for content ID and writer name
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Vector<CMSNSContent> contentVector = contentList.getContentList();
 		Iterator<CMSNSContent> iter = contentVector.iterator();

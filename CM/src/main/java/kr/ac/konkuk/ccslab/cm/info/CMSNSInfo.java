@@ -7,6 +7,8 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchHashMap;
 
 public class CMSNSInfo {
+	private static CMSNSInfo instance;
+
 	private CMSNSContentList m_contentList;	// downloaded content for client, global content list for server
 											// if DB is not used
 	private CMSNSAttach m_sendAttach;	// by client for content upload
@@ -19,7 +21,7 @@ public class CMSNSInfo {
 	private int m_nLastlyReqOffset;			// by client for saving the information on the last content download request
 	private int m_nLastlyDownContentNum;	// by client for saving the information on the last content download request
 	
-	public CMSNSInfo()
+	private CMSNSInfo()
 	{
 		m_contentList = new CMSNSContentList();
 		m_sendAttach = new CMSNSAttach();
@@ -30,6 +32,14 @@ public class CMSNSInfo {
 		m_strLastlyReqWriter = ""; // initial (or default) writer is an empty string
 		m_nLastlyReqOffset = 0;		// initial (or default) offset is 0 (the most recent content)
 		m_nLastlyDownContentNum = 0;
+	}
+
+	// getInstance()
+	public static CMSNSInfo getInstance() {
+		if(instance == null) {
+			instance = new CMSNSInfo();
+		}
+		return instance;
 	}
 	
 	/////////////////////////////////////////////////////////////

@@ -173,7 +173,7 @@ public class CMInteractionManager {
 		// check user's state
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		if(myself.getState() == CMInfo.CM_INIT)
 		{
@@ -519,7 +519,7 @@ public class CMInteractionManager {
 			// ch belongs to the default server
 
 			CMChannelInfo<Integer> chInfo = defServer.getNonBlockSocketChannelInfo();
-			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			
 			// remove all non-blocking channels
 			chInfo.removeAllChannels();
@@ -1807,7 +1807,7 @@ public class CMInteractionManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		

@@ -1054,7 +1054,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processSNSEvent(CMEvent cme)
 	{
-		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		CMSNSEvent se = (CMSNSEvent) cme;
 		int i = 0;
@@ -1210,7 +1210,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nAttachScheme = confInfo.getAttachDownloadScheme();
-		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Iterator<CMSNSContent> iter = null;
 		boolean bShowLink = true;
