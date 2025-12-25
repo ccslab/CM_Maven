@@ -114,7 +114,7 @@ public class CMMqttManager extends CMServiceManager {
 		conEvent.setPassword(myself.getPasswd());
 		
 		// process the clean-session flag
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession mqttSession = mqttInfo.getMqttSession();
 		if(mqttSession == null)
 		{
@@ -237,7 +237,7 @@ public class CMMqttManager extends CMServiceManager {
 
 		// to get session information
 		CMMqttSession session = null;
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		session = mqttInfo.getMqttSession();
 		
 		if(session == null)
@@ -312,7 +312,7 @@ public class CMMqttManager extends CMServiceManager {
 		// server -> client
 		
 		// find subscribers and send the PUBLISH event
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable =	mqttInfo.getMqttSessionHashtable();
 		Set<String> keys = sessionHashtable.keySet();
 		for(String key : keys)
@@ -656,7 +656,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// temporarily store the requested topic/qos list at the client session
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -742,7 +742,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// remove the local topic filters matched with the requested topics
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -829,7 +829,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 
 		// get the client session
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -881,7 +881,7 @@ public class CMMqttManager extends CMServiceManager {
 			return null;
 		}
 		
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -909,7 +909,7 @@ public class CMMqttManager extends CMServiceManager {
 			return null;
 		}
 		
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUserName);
 		if(session == null)
 		{
@@ -939,7 +939,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		StringBuffer strBuf = new StringBuffer();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		strBuf.append("# All MQTT session list: "+sessionHashtable.size()+"\n");
 		for(String strUser : sessionHashtable.keySet())
@@ -967,7 +967,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		StringBuffer strBuf = new StringBuffer();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = mqttInfo.getMqttRetainHashtable();
 		strBuf.append("# All MQTT retained events: "+retainHashtable.size()+"\n");
 		for(String strTopic : retainHashtable.keySet())
@@ -982,7 +982,7 @@ public class CMMqttManager extends CMServiceManager {
 	// send MQTT will event if the disconnected client has will information
 	public boolean sendMqttWill(String strUser)
 	{
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUser);
 		if(session == null) return false;
 		CMMqttWill mqttWill = session.getMqttWill();
