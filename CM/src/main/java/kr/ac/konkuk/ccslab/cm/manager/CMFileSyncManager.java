@@ -55,7 +55,7 @@ public class CMFileSyncManager extends CMServiceManager {
         if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.startFileSync() called..");
 
-        CMFileSyncInfo fsInfo = m_cmInfo.getFileSyncInfo();
+        CMFileSyncInfo fsInfo = CMFileSyncInfo.getInstance();
 
         if (fsInfo.isSyncInProgress()) {
             System.err.println("The file sync is in progress!");
@@ -161,7 +161,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         fse.setUserName(userName);
         // get path list
-        pathList = m_cmInfo.getFileSyncInfo().getPathList();
+        pathList = CMFileSyncInfo.getInstance().getPathList();
         if (pathList == null)
             fse.setNumTotalFiles(0);
         else
@@ -188,13 +188,13 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileName = fe.getFileName();
         // get the new file list
         String fileSender = fe.getFileSender();
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(fileSender);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(fileSender);
         if (syncGenerator == null) {
             if(CMInfo._CM_DEBUG)
                 System.err.println("The sync generator for (" + fileSender + ") is null!");
             return;
         }
-        List<CMFileSyncEntry> newClientPathEntryList = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap()
+        List<CMFileSyncEntry> newClientPathEntryList = CMFileSyncInfo.getInstance().getSyncGeneratorMap()
                 .get(fileSender).getNewClientPathEntryList();
         Objects.requireNonNull(newClientPathEntryList);
 
@@ -258,7 +258,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -296,7 +296,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("basisFile = " + basisFile);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
         Objects.requireNonNull(syncGenerator);
         // set the isUpdateFileCompletedMap element
         syncGenerator.getIsUpdateFileCompletedMap().put(basisFile, true);
@@ -329,7 +329,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
         Objects.requireNonNull(syncGenerator);
         // set the isUpdateFileCompletedMap element
         syncGenerator.getIsUpdateFileCompletedMap().put(path, true);
@@ -373,7 +373,7 @@ public class CMFileSyncManager extends CMServiceManager {
         Map<Path, Boolean> isUpdateFileCompletedMap = null;
 
         // get CMFileSyncGenerator object
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -390,7 +390,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // get basis file list
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(userName);
         // compare the number of updated files to the size of the basis-file list
         numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
@@ -402,7 +402,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
-        fileEntryList = m_cmInfo.getFileSyncInfo().getClientPathEntryListMap().get(userName);
+        fileEntryList = CMFileSyncInfo.getInstance().getClientPathEntryListMap().get(userName);
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
         if (fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
             System.err.println("numFilesCompleted = " + numFilesCompleted);
@@ -469,7 +469,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get the CMFileSyncGenerator reference
-        CMFileSyncGenerator syncGenerator = m_cmInfo.getFileSyncInfo().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -496,27 +496,12 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("userName = " + userName);
         }
         // get CMFileSyncInfo reference
-        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         // remove element in fileEntryListMap
         syncInfo.getClientPathEntryListMap().remove(userName);
         // remove element in syncGeneratorMap
         syncInfo.getSyncGeneratorMap().remove(userName);
     }
-
-    // called by the client
-/*
-    public void deleteFileSyncInfo() {
-        if(CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncManager.deleteFileSyncInfo() called..");
-        }
-        // get CMFileSyncInfo reference
-        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
-        // initialize the pathList
-        syncInfo.setPathList(null);
-        // clear the isFileSyncCompletedMap
-        syncInfo.getIsFileSyncCompletedMap().clear();
-    }
-*/
 
     // called by the server
     public int calculateWeakChecksum(ByteBuffer buffer) {
@@ -759,7 +744,7 @@ public class CMFileSyncManager extends CMServiceManager {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.startWatchService() called..");
         }
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         // check if the WatchService is already started
         if (!syncInfo.isWatchServiceTaskDone()) {
             System.out.println("The watch service is already running..");
@@ -809,7 +794,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get syncInfo
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
 
         // check if the watch service is already done
         if (syncInfo.isWatchServiceTaskDone()) {
@@ -866,7 +851,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("pathList = " + pathList);
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         // check current file-sync mode
         if (syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
             System.err.println("Current file-sync mode is OFF!");
@@ -1044,7 +1029,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("pathList = " + pathList);
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         // check current file-sync mode
         if (syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
             System.err.println("Current file-sync mode is OFF!");
@@ -1230,7 +1215,7 @@ public class CMFileSyncManager extends CMServiceManager {
         Path transferFileHome = Objects.requireNonNull(CMConfigurationInfo.getInstance().getTransferedFileHome());
 
         // get local-mode-request queue
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         ConcurrentLinkedQueue<Path> localModeRequestQueue = syncInfo.getLocalModeRequestQueue();
         Objects.requireNonNull(localModeRequestQueue);
 
@@ -1322,7 +1307,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get CMFileSyncInfo reference
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
 
         // check the current file-sync mode
         if (syncInfo.getCurrentMode() != CMFileSyncMode.OFF) {
@@ -1390,7 +1375,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("=== CMFileSyncManager.startProactiveMode() called..");
         }
         // check if a proactive mode task is already running
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         if (!syncInfo.isProactiveModeTaskDone()) {
             System.err.println("A proactive mode task is already running!");
             return false;
@@ -1423,7 +1408,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("=== CMFileSyncManager.stopProactiveMode() called..");
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         // check if the proactive-mode task has already done
         if (syncInfo.isProactiveModeTaskDone()) {
             System.out.println("The proactive-mode task has already done.");
@@ -1530,7 +1515,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("=== CMFileSyncManager.stopFileSync() called..");
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
 
         // check current file-sync mode
         if (syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
@@ -1572,73 +1557,12 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the client
-/*    public boolean saveOnlineModeListToFile() {
-        if (CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncManager.saveOnlineModeListToFile() called..");
-        }
-
-        // get the online-mode-path list
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
-        List<Path> onlineModeList = Objects.requireNonNull(syncInfo.getOnlineModePathList());
-        // get the online-mode-list file path
-        Path storedPath = Paths.get(CMInfo.SETTINGS_DIR, CMFileSyncInfo.ONLINE_MODE_LIST_FILE_NAME);
-
-        // save the list to the file
-        boolean ret = savePathListToFile(onlineModeList, storedPath);
-        if (!ret) {
-            System.err.println("error to save the online-mode-path list to file!");
-            return false;
-        }
-
-        return true;
-    }
-
-    // called at the client
-    private boolean savePathListToFile(List<Path> pathList, Path storedPath) {
-        if (CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncManager.savePathListToFile() called..");
-            System.out.println("pathList = " + pathList);
-            System.out.println("storedPath = " + storedPath);
-        }
-
-        if (pathList == null || storedPath == null) {
-            System.err.println("The path list or path is null!");
-            return false;
-        }
-
-        if (!Files.exists(storedPath)) {
-            try {
-                Path parentPath = storedPath.getParent();
-                if (parentPath != null)
-                    Files.createDirectories(parentPath);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
-
-        // create or open file
-        try (BufferedWriter writer = Files.newBufferedWriter(storedPath)) {
-            // write lists to the file
-            for (Path path : pathList) {
-                writer.write(path.toString());
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }*/
-
-    // called at the client
     public boolean saveOnlineModePathSizeMapToFile() {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.saveOnlineModePathSizeMapToFile() called..");
         }
         // get online-mode-map
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
         Objects.requireNonNull(onlineModePathSizeMap);
         // get online-mode-map file path
@@ -2063,7 +1987,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         ///// get a list of local-mode files sorted by ascending order of last-access-time
         // get local-mode file list
-        CMFileSyncInfo syncInfo = m_cmInfo.getFileSyncInfo();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Objects.requireNonNull(syncInfo);
         List<Path> pathList = syncInfo.getPathList();
         List<Path> onlineModePathList = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
@@ -2230,7 +2154,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("minFileSizeForLocalMode = " + minFileSizeForLocalMode + " Bytes.");
         }
         // get online-mode file list
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         List<Path> onlineModePathList = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
         if (onlineModePathList.isEmpty()) {
             System.err.println("The online-mode-path list is empty!");
@@ -2351,7 +2275,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get online-mode path-size map
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
         Objects.requireNonNull(onlineModePathSizeMap);
         final Long size = onlineModePathSizeMap.get(path);
@@ -2371,7 +2295,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("resultPath = " + resultPath);
         }
 
-        final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        final CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         final CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 
         try (BufferedWriter bw = Files.newBufferedWriter(resultPath);
@@ -2604,7 +2528,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // check if the sync-home directory is empty
-        final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        final CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         final Path syncHome = getClientSyncHome();
         if (!syncInfo.getPathList().isEmpty()) {
             System.err.println("The sync home must be empty to start the file-access test!");
@@ -2712,7 +2636,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // check if the sync-home directory is empty
-        final CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        final CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         final Path syncHome = getClientSyncHome();
         if (!syncInfo.getPathList().isEmpty()) {
             System.err.println("The sync home must be empty to start the file-access test!");
@@ -2834,7 +2758,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("=== CMFileSyncManager.getOnlineModeFiles() called..");
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         if(syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
             System.err.println("Current file sync mode is OFF!");
             System.err.println("You should start file sync to get the updated online mode file list.");
@@ -2857,7 +2781,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("=== CMFileSyncManager.getLocalModeFiles() called..");
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         if(syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
             System.err.println("Current file sync mode is OFF!");
             System.err.println("You should start file sync to get the updated local mode file list.");

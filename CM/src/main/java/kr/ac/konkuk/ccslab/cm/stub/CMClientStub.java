@@ -3993,7 +3993,7 @@ public class CMClientStub extends CMStub {
 			return null;
 		}
 
-		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+		CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
 		return syncInfo.getCurrentMode();
 	}
 

@@ -3542,7 +3542,7 @@ public class CMClientApp {
 		int selectedTestTypeIndex = testTypeComboBox.getSelectedIndex();
 
 		// check current file-sync mode
-		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_clientStub.getCMInfo().getFileSyncInfo());
+		CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
 		CMFileSyncMode currentFileSyncMode = syncInfo.getCurrentMode();
 		if(currentFileSyncMode != CMFileSyncMode.OFF) {
 			boolean ret = m_clientStub.stopFileSync();
