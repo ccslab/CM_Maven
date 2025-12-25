@@ -76,7 +76,7 @@ public class CMCommInfo {
 	}
 
 	// getInstance()
-	public static CMCommInfo getInstance() {
+	public static synchronized CMCommInfo getInstance() {
 		if(instance == null) {
 			instance = new CMCommInfo();
 		}

@@ -73,7 +73,7 @@ public class CMFileSyncInfo {
     }
 
     // getInstance()
-    public static CMFileSyncInfo getInstance() {
+    public static synchronized CMFileSyncInfo getInstance() {
         if(instance == null) {
             instance = new CMFileSyncInfo();
         }
