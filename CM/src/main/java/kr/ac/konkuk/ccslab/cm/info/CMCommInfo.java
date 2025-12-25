@@ -11,6 +11,8 @@ import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 
 public class CMCommInfo {
+	private static CMCommInfo instance;
+
 	private ServerSocketChannel m_nonBlockServerSocketChannel; // nonblocking server socket channel
 	private ServerSocketChannel m_blockServerSocketChannel; // blocking server socket channel
 	private CMChannelInfo<Integer> m_nonBlockDCInfo;	// nonblocking datagram channel list
@@ -40,7 +42,7 @@ public class CMCommInfo {
 	private long m_lRecvCount;
 	private long m_lTotalByte;
 	
-	public CMCommInfo()
+	private CMCommInfo()
 	{
 		m_nonBlockServerSocketChannel = null;
 		m_blockServerSocketChannel = null;
@@ -71,6 +73,14 @@ public class CMCommInfo {
 		}
 		m_recvQueue = new CMBlockingEventQueue();
 		m_sendQueue = new CMBlockingEventQueue();
+	}
+
+	// getInstance()
+	public static CMCommInfo getInstance() {
+		if(instance == null) {
+			instance = new CMCommInfo();
+		}
+		return instance;
 	}
 	
 	// set/get methods

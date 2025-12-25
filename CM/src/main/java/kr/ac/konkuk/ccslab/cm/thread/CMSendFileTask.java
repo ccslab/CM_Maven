@@ -11,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 //import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
@@ -27,7 +28,7 @@ public class CMSendFileTask implements Runnable {
 	{
 		m_sendFileInfo = sendFileInfo;
 		m_cmInfo = cmInfo;
-		m_sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
+		m_sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
 	}
 	
 	@Override
@@ -214,7 +215,7 @@ public class CMSendFileTask implements Runnable {
 		fe.setContentID(m_sendFileInfo.getContentID());
 		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);
 		
-		CMBlockingEventQueue recvQueue = m_cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		CMBlockingEventQueue recvQueue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 		recvQueue.push(new CMMessage(byteBuf, null));
 	}
 

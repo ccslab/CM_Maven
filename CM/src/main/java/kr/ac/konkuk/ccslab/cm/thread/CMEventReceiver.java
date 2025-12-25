@@ -40,7 +40,7 @@ public class CMEventReceiver implements Runnable {
 	public CMEventReceiver(CMInfo cmInfo)
 	{
 		m_cmInfo = cmInfo;
-		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		m_queue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class CMEventReceiver implements Runnable {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{

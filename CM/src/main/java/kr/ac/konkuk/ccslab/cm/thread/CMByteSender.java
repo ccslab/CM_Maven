@@ -9,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -20,7 +21,7 @@ public class CMByteSender implements Runnable {
 	
 	public CMByteSender(CMInfo cmInfo)
 	{
-		m_sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
+		m_sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
 		m_cmInfo = cmInfo;
 	}
 

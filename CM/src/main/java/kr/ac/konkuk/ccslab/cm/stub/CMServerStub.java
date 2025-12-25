@@ -677,7 +677,7 @@ public class CMServerStub extends CMStub {
 	{
 		StringBuffer sb = new StringBuffer();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strChInfo = null;
 		
 		// add datagram channel info of the CMStub class

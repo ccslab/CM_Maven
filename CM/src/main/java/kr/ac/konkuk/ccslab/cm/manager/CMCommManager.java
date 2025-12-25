@@ -28,7 +28,7 @@ public class CMCommManager {
 	{
 		// close all channels in CM
 		
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		//nonblocking serversocket channel (server)
 		ServerSocketChannel ssc = commInfo.getNonBlockServerSocketChannel();
@@ -218,7 +218,7 @@ public class CMCommManager {
 	public static SelectableChannel openNonBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
 	{
 		SelectableChannel ch = null;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		Selector sel = commInfo.getSelector();
 		
 		switch(channelType)
@@ -565,8 +565,8 @@ public class CMCommManager {
 		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
 		//byteReceiver.start();
 		Future<?> future = es.submit(byteReceiver);
-		cmInfo.getCommInfo().setByteReceiver(byteReceiver);
-		cmInfo.getCommInfo().setByteReceiverFuture(future);
+		CMCommInfo.getInstance().setByteReceiver(byteReceiver);
+		CMCommInfo.getInstance().setByteReceiverFuture(future);
 		
 		return byteReceiver;
 	}
@@ -577,8 +577,8 @@ public class CMCommManager {
 		CMByteSender byteSender = new CMByteSender(cmInfo);
 		//byteSender.start();
 		Future<?> future = es.submit(byteSender);
-		cmInfo.getCommInfo().setByteSender(byteSender);
-		cmInfo.getCommInfo().setByteSenderFuture(future);
+		CMCommInfo.getInstance().setByteSender(byteSender);
+		CMCommInfo.getInstance().setByteSenderFuture(future);
 		
 		return byteSender;
 	}

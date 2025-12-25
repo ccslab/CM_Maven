@@ -12,6 +12,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -63,7 +64,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		}
 		
 		// for each unknown channel
-		CMList<CMUnknownChannelInfo> unchList = m_cmInfo.getCommInfo()
+		CMList<CMUnknownChannelInfo> unchList = CMCommInfo.getInstance()
 				.getUnknownChannelInfoList();
 		Vector<CMUnknownChannelInfo> unchVector = unchList.getList();
 		Iterator<CMUnknownChannelInfo> iter = unchVector.iterator();

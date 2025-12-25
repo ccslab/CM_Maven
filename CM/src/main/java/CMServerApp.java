@@ -1460,7 +1460,7 @@ public class CMServerApp {
 	{
 		System.out.println("========== send a CMDummyEvent with wrong # bytes to a client");
 		
-		CMCommInfo commInfo = m_serverStub.getCMInfo().getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		

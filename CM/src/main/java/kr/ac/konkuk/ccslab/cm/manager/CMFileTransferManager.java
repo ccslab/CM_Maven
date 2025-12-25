@@ -107,7 +107,7 @@ public class CMFileTransferManager {
 			byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		boolean bReturn = false;
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
@@ -707,7 +707,7 @@ public class CMFileTransferManager {
 		String myName = interInfo.getMyself().getName();
 		boolean bRet = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 				
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.REPLY_PERMIT_PUSH_FILE);
@@ -1910,7 +1910,7 @@ public class CMFileTransferManager {
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		boolean bForward = true;
 		
@@ -3088,31 +3088,7 @@ public class CMFileTransferManager {
 		{
 			sendSTART_FILE_TRANSFER_CHAN_ACK(nextRecvInfo, cmInfo);
 		}
-		/*
-		else
-		{
-			// if P2P file-transfer, the blocking channel to the file sender (client) 
-			// and the server socket channel should be closed.
-			if(isP2PFileTransfer(feAck, cmInfo))
-			{
-				// remove blocking socket channel
-				CMCommManager.removeBlockSocketChannel(0, fe.getFileSender(), cmInfo);
-				
-				// close and initialize the server socket channel
-				CMCommInfo commInfo = cmInfo.getCommInfo();
-				ServerSocketChannel ssc = commInfo.getNonBlockServerSocketChannel();
-				if(ssc != null && ssc.isOpen())
-				{
-					try {
-						ssc.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					commInfo.setNonBlockServerSocketChannel(null);
-				}
-			}
-		}
-		*/
+
 		return bForward;
 	}
 	
@@ -3573,7 +3549,7 @@ public class CMFileTransferManager {
 				}
 				
 				// close and initialize the server socket channel
-				CMCommInfo commInfo = cmInfo.getCommInfo();
+				CMCommInfo commInfo = CMCommInfo.getInstance();
 				ServerSocketChannel ssc = commInfo.getNonBlockServerSocketChannel();
 				if(ssc != null && ssc.isOpen())
 				{

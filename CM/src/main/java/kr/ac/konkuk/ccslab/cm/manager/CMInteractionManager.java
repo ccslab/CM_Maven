@@ -42,7 +42,7 @@ public class CMInteractionManager {
 	// initialize the interaction info object in cmInfo
 	public static boolean init(CMInfo cmInfo)
 	{
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		// initialize DB
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -333,7 +333,7 @@ public class CMInteractionManager {
 	private static boolean disconnectBadNodeByServer(SocketChannel badSC, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
 		if(CMConfigurator.isDServer(cmInfo))
@@ -510,7 +510,7 @@ public class CMInteractionManager {
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		boolean bRet = false;
 		
@@ -1182,7 +1182,7 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		CMServer addServer = null;
 		
@@ -1467,7 +1467,7 @@ public class CMInteractionManager {
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMSessionEvent seAck = new CMSessionEvent();
 		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
 		boolean bRet = false;
@@ -1808,7 +1808,7 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
@@ -2000,7 +2000,7 @@ public class CMInteractionManager {
 	private static void processADD_NONBLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
 		int nChIndex = se.getChannelNum();
@@ -2088,7 +2088,7 @@ public class CMInteractionManager {
 	private static void processADD_BLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
 		int nChKey = se.getChannelNum();
@@ -2253,7 +2253,7 @@ public class CMInteractionManager {
 	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
 		CMServer targetServer = null;
@@ -2891,7 +2891,7 @@ public class CMInteractionManager {
 		int nServerPort = -1;
 		int nServerUDPPort = -1;
 		boolean bRet = false;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		CMMultiServerEvent mse = new CMMultiServerEvent(msg.m_buf);
 
@@ -2991,7 +2991,7 @@ public class CMInteractionManager {
 	private static void processREQ_SERVER_DEREG(CMMultiServerEvent mse, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 
 		// delete a server info
@@ -3202,7 +3202,7 @@ public class CMInteractionManager {
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName());
 		boolean bRet = false;
 		
@@ -3400,7 +3400,7 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
 		if(!confInfo.getSystemType().equals("SERVER"))

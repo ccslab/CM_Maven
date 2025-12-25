@@ -4334,7 +4334,7 @@ public class CMWinClient extends JFrame {
 	{
 		printMessage("========== send a CMDummyEvent with wrong # bytes to a server\n");
 		
-		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		

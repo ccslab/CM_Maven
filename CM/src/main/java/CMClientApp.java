@@ -3620,7 +3620,7 @@ public class CMClientApp {
 	{
 		System.out.println("========== send a CMDummyEvent with wrong # bytes to default server");
 		
-		CMCommInfo commInfo = m_clientStub.getCMInfo().getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 
