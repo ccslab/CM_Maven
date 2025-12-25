@@ -134,7 +134,6 @@ public class CMInfo {
 
 	// repository
 	private CMSNSInfo m_snsInfo;
-	private CMFileTransferInfo m_fileTransferInfo;
 	private CMDBInfo m_dbInfo;
 	private CMEventInfo m_eventInfo;
 	private CMThreadInfo m_threadInfo;
@@ -154,7 +153,6 @@ public class CMInfo {
 	public CMInfo()
 	{
 		m_snsInfo = new CMSNSInfo();
-		m_fileTransferInfo = new CMFileTransferInfo();
 		m_dbInfo = new CMDBInfo();
 		m_eventInfo = new CMEventInfo();
 		m_threadInfo = new CMThreadInfo();
@@ -181,12 +179,7 @@ public class CMInfo {
 	{
 		return m_snsInfo;
 	}
-	
-	public synchronized CMFileTransferInfo getFileTransferInfo()
-	{
-		return m_fileTransferInfo;
-	}
-	
+
 	public synchronized CMDBInfo getDBInfo()
 	{
 		return m_dbInfo;

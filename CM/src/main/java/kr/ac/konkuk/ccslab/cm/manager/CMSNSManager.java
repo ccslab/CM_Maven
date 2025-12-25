@@ -390,7 +390,7 @@ public class CMSNSManager {
 		if(prefetchList == null) return false;
 		
 		// find the ongoing file sending info
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName);
 		if(sendFileInfo != null)
 		{
