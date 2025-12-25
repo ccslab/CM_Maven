@@ -40,7 +40,7 @@ public class CMFileTransferInfo {
 	}
 
 	// getInstance()
-	public static CMFileTransferInfo getInstance() {
+	public static synchronized CMFileTransferInfo getInstance() {
 		if(instance == null) {
 			instance = new CMFileTransferInfo();
 		}

@@ -35,7 +35,7 @@ public class CMSNSInfo {
 	}
 
 	// getInstance()
-	public static CMSNSInfo getInstance() {
+	public static synchronized CMSNSInfo getInstance() {
 		if(instance == null) {
 			instance = new CMSNSInfo();
 		}
