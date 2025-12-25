@@ -788,7 +788,7 @@ public class CMGroupManager {
 		}
 		
 		// check whether the p2p file-transfer with the user is ongoing or not
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMList<CMSendFileInfo> sendList = fInfo.getSendFileList(strUser);
 		if(sendList != null)
 		{

@@ -813,7 +813,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
 		CMConfigurationInfo confInfo = null;
-		CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		int nOption = -1;
 		long lTotalDelay = 0;
 		long lTransferDelay = 0;

@@ -837,7 +837,7 @@ public class CMWinServer extends JFrame {
 
 	public void printSendRecvFileInfo()
 	{
-		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
 		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
 		Set<String> sendKeySet = sendHashtable.keySet();

@@ -172,7 +172,7 @@ public class CMInteractionManager {
 	{
 		// check user's state
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMUser myself = interInfo.getMyself();
 		if(myself.getState() == CMInfo.CM_INIT)
@@ -284,7 +284,7 @@ public class CMInteractionManager {
 	public static boolean disconnectFromAddServer(String strName, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMServer tserver = interInfo.findAddServer(strName);
 		if( tserver == null )
 		{
@@ -406,7 +406,7 @@ public class CMInteractionManager {
 	
 	public synchronized static boolean disconnectBadAddServerByDefaultServer(CMServer addServer, CMInfo cmInfo)
 	{
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		String strAddServerName = addServer.getServerName();
 		
 		// notify clients of the deregistration
@@ -450,7 +450,7 @@ public class CMInteractionManager {
 	private static boolean disconnectBadDefaultServerByAddServer(CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		defServer.getNonBlockSocketChannelInfo().removeAllChannels();
 		defServer.getBlockSocketChannelInfo().removeAllChannels();
@@ -509,7 +509,7 @@ public class CMInteractionManager {
 	private static boolean disconnectBadNodeByClient(SocketChannel badSC, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		boolean bRet = false;
@@ -1806,7 +1806,7 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
@@ -2255,7 +2255,7 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMServer targetServer = null;
 		CMUser targetUser = null;
 		CMChannelInfo<Integer> scList = null;

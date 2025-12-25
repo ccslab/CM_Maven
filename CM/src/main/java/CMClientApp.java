@@ -1857,7 +1857,7 @@ public class CMClientApp {
 	
 	public void printSendRecvFileInfo()
 	{
-		CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
 		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
 		Set<String> sendKeySet = sendHashtable.keySet();
@@ -2713,7 +2713,6 @@ public class CMClientApp {
 	public void testDistFileProc()
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		//CMFileTransferInfo fileInfo = m_clientStub.getCMInfo().getFileTransferInfo();
 		String strFile = null;
 		long lFileSize = 0;
 		CMFileEvent fe = null;

@@ -8,6 +8,8 @@ import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 import java.io.*;
 
 public class CMFileTransferInfo {
+	private static CMFileTransferInfo instance;
+
 	// key is the receiver name
 	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable;
 	// key is the sender name
@@ -25,7 +27,7 @@ public class CMFileTransferInfo {
 	// ending time of receiving a file (receiving completion event)
 	private long m_lEndRecvTime;
 	
-	public CMFileTransferInfo()
+	private CMFileTransferInfo()
 	{
 		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
 		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
@@ -35,6 +37,14 @@ public class CMFileTransferInfo {
 		m_lEndSendTime = 0;
 		m_lStartRecvTime = 0;
 		m_lEndRecvTime = 0;
+	}
+
+	// getInstance()
+	public static CMFileTransferInfo getInstance() {
+		if(instance == null) {
+			instance = new CMFileTransferInfo();
+		}
+		return instance;
 	}
 	
 	////////// set/get methods

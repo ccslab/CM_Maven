@@ -216,7 +216,7 @@ public class CMEventReceiver implements Runnable {
 		Iterator<CMServer> iterAddServer = null;
 		boolean bFound = false;
 		CMServer tserver = null;
-		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();		
 		
 		// find channel from default server

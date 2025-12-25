@@ -415,7 +415,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 
 	private void processFileEvent(CMEvent cme)
 	{
-		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		long lTotalDelay = 0;
 		long lTransferDelay = 0;
 		boolean bRet = false;
