@@ -1429,7 +1429,7 @@ public class CMClientStub extends CMStub {
 	public boolean addBlockSocketChannel(int nChKey, String strTarget)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
 		SocketChannel sc = null;
@@ -1537,7 +1537,7 @@ public class CMClientStub extends CMStub {
 	public SocketChannel syncAddBlockSocketChannel(int nChKey, String strTarget)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
 		SocketChannel sc = null;

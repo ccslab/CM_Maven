@@ -325,7 +325,7 @@ public class CMEventManager {
 		CMChannelInfo<Integer> chInfo = null;
 		String strTargetAddress = null;
 		int nTargetPort = -1;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		// get the sending queue
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -484,7 +484,7 @@ public class CMEventManager {
 	{
 		//int nSentBytes = -1;
 		CMMessage msg = null;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
@@ -514,7 +514,7 @@ public class CMEventManager {
 	public synchronized static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName, CMInfo cmInfo)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMSession session = interInfo.findSession(strSessionName);
 		CMGroup group = null;
@@ -580,7 +580,7 @@ public class CMEventManager {
 	public synchronized static boolean multicastEvent(CMEvent cme, DatagramChannel dc, String strMA, int nPort, CMInfo cmInfo)
 	{
 		//int nSentBytes = -1;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMMessage msg = null;
 		
@@ -623,7 +623,7 @@ public class CMEventManager {
 	// send an event to all login users (server)
 	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, int nChNum, CMInfo cmInfo)
 	{
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMMessage msg = null;
 		
@@ -666,7 +666,7 @@ public class CMEventManager {
 			}
 			break;
 		case CMInfo.CM_DATAGRAM:
-			CMChannelInfo<Integer> dcInfo = cmInfo.getCommInfo().getNonBlockDatagramChannelInfo();
+			CMChannelInfo<Integer> dcInfo = CMCommInfo.getInstance().getNonBlockDatagramChannelInfo();
 			DatagramChannel dc = (DatagramChannel) dcInfo.findChannel(nChNum);
 			if(dc == null)
 			{
@@ -718,7 +718,7 @@ public class CMEventManager {
 	// send an event to a specific user group with multiple unicast transmissions
 	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, int nChNum, CMInfo cmInfo)
 	{
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMMessage msg = null;
 		
@@ -761,7 +761,7 @@ public class CMEventManager {
 			}
 			break;
 		case CMInfo.CM_DATAGRAM:
-			CMChannelInfo<Integer> dcInfo = cmInfo.getCommInfo().getNonBlockDatagramChannelInfo();
+			CMChannelInfo<Integer> dcInfo = CMCommInfo.getInstance().getNonBlockDatagramChannelInfo();
 			DatagramChannel dc = (DatagramChannel) dcInfo.findChannel(nChNum);
 			if(dc == null)
 			{

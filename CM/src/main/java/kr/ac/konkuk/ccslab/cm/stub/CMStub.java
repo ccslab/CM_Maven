@@ -165,9 +165,9 @@ public class CMStub {
 		
 		// terminate threads
 		CMEventInfo eventInfo = m_cmInfo.getEventInfo();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
-		CMBlockingEventQueue recvQueue = m_cmInfo.getCommInfo().getRecvBlockingEventQueue();
-		CMBlockingEventQueue sendQueue = m_cmInfo.getCommInfo().getSendBlockingEventQueue();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
+		CMBlockingEventQueue recvQueue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
+		CMBlockingEventQueue sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
 
 		recvQueue.push(null);
 		Future<?> eventReceiverFuture = eventInfo.getEventReceiverFuture();
@@ -410,7 +410,7 @@ public class CMStub {
 	 */
 	public DatagramChannel addNonBlockDatagramChannel(int nChPort)
 	{
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> nonBlockDCInfo = commInfo.getNonBlockDatagramChannelInfo();
 		DatagramChannel dc = null;
@@ -476,7 +476,7 @@ public class CMStub {
 	 */
 	public boolean removeNonBlockDatagramChannel(int nChPort)
 	{
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMChannelInfo<Integer> dcInfo = commInfo.getNonBlockDatagramChannelInfo();
 		boolean result = false;
 
@@ -521,7 +521,7 @@ public class CMStub {
 	 */
 	public DatagramChannel addBlockDatagramChannel(int nChPort)
 	{
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> blockDCInfo = commInfo.getBlockDatagramChannelInfo();
 		DatagramChannel dc = null;
@@ -583,7 +583,7 @@ public class CMStub {
 	 */
 	public boolean removeBlockDatagramChannel(int nChPort)
 	{
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMChannelInfo<Integer> dcInfo = commInfo.getBlockDatagramChannelInfo();
 		boolean result = false;
 
@@ -624,7 +624,7 @@ public class CMStub {
 	 */
 	public DatagramChannel getBlockDatagramChannel(int nChPort)
 	{
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMChannelInfo<Integer> dcInfo = commInfo.getBlockDatagramChannelInfo();
 		DatagramChannel dc = null;
 		
@@ -2297,7 +2297,7 @@ public class CMStub {
 	 */
 	public String getCurrentChannelInfo()
 	{
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		StringBuffer sb = null;
 		String strNonBlockDCMap = null;
 		String strBlockDCMap = null;

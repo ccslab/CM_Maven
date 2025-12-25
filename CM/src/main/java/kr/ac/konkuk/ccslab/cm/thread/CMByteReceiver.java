@@ -10,6 +10,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -26,9 +27,9 @@ public class CMByteReceiver implements Runnable {
 	public CMByteReceiver(CMInfo cmInfo)
 	{
 		m_cmInfo = cmInfo;
-		m_selector = cmInfo.getCommInfo().getSelector();
-		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
-		m_unknownChannelList = cmInfo.getCommInfo().getUnknownChannelInfoList();
+		m_selector = CMCommInfo.getInstance().getSelector();
+		m_queue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
+		m_unknownChannelList = CMCommInfo.getInstance().getUnknownChannelInfoList();
 	}
 
 	@Override
