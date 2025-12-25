@@ -1455,23 +1455,6 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			/*
-			CMDBInfo dbInfo = cmInfo.getDBInfo();
-			ResultSet rs = null;
-			// get users whom I added as friends
-			CMDBManager.queryGetFriendsList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					friendList.add(rs.getString("friendName"));
-					nTotalNumFriends++;
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			*/
 			friendList = CMSNSManager.getFriendList(se.getUserName(), cmInfo);
 			if(friendList != null)
 				nTotalNumFriends = friendList.size();
@@ -1573,54 +1556,6 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			/*
-			int nNumCandidates = 0;
-			ArrayList<String> candidateList = new ArrayList<String>();
-			ArrayList<String> myFriendList = new ArrayList<String>();
-
-			CMDBInfo dbInfo = cmInfo.getDBInfo();
-			ResultSet rs = null;
-			int i = 0;
-			
-			// get users who added me as a friend
-			CMDBManager.queryGetRequestersList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					candidateList.add(rs.getString("userName"));
-					nNumCandidates++;
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// get users whom I added as friends
-			CMDBManager.queryGetFriendsList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					myFriendList.add(rs.getString("friendName"));
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// If users in the list are not my friends, add them to a new list
-			// because current 'candidateList' includes users whom I added as friends as well. 
-			for(i = 0; i < nNumCandidates; i++)
-			{
-				String strUser = candidateList.get(i);
-				if(!myFriendList.contains(strUser))
-				{
-					requesterList.add(strUser);
-					nNumRequesters++;
-				}
-			}
-			*/
 			requesterList = CMSNSManager.getFriendRequesterList(se.getUserName(), cmInfo);
 			if(requesterList != null)
 				nNumRequesters = requesterList.size();
@@ -1722,55 +1657,6 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			/*
-			int nNumCandidates = 0;
-			ArrayList<String> candidateList = new ArrayList<String>();
-			ArrayList<String> myFriendList = new ArrayList<String>();
-			ArrayList<String> requesterList = new ArrayList<String>();
-
-			CMDBInfo dbInfo = cmInfo.getDBInfo();
-			ResultSet rs = null;
-			int i = 0;
-			
-			// get users who added me as a friend
-			CMDBManager.queryGetRequestersList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					candidateList.add(rs.getString("userName"));
-					nNumCandidates++;
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// get users whom I added as friends
-			CMDBManager.queryGetFriendsList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					myFriendList.add(rs.getString("friendName"));
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// If users in the list are not my friends, add them to a new list
-			// because current 'candidateList' includes users whom I added as friends as well. 
-			for(i = 0; i < nNumCandidates; i++)
-			{
-				String strUser = candidateList.get(i);
-				if(myFriendList.contains(strUser))
-				{
-					requesterList.add(strUser);
-					nNumBiFriends++;
-				}
-			}
-			*/
 			biFriendList = CMSNSManager.getBiFriendList(se.getUserName(), cmInfo);
 			if(biFriendList != null)
 				nNumBiFriends = biFriendList.size();
