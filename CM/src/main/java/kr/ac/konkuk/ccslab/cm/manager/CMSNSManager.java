@@ -159,7 +159,7 @@ public class CMSNSManager {
 	protected static void checkCompleteRecvAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttachList attachList = null;
 		CMSNSAttach attach = null;
 		int nContentID = -1;
@@ -292,7 +292,7 @@ public class CMSNSManager {
 	// called when a client completes its file transfer
 	private static void checkClientCompleteSendAttachedFiles(int nContentID, String strFileName, CMInfo cmInfo)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach attach = null;
 		int nCompleted = 0;
 
@@ -312,7 +312,7 @@ public class CMSNSManager {
 	private static void checkServerCompleteSendAttachedFiles(String strUserName, int nContentID, String strFileName, 
 			CMInfo cmInfo)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach attach = null;
 		int nCompleted = 0;
 
@@ -356,7 +356,7 @@ public class CMSNSManager {
 	// called when a server completes its file transfer
 	private static void checkServerCompletePrefetch(String strUserName, String strFileName, CMInfo cmInfo)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
 		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
 		if(prefetchList == null) return;
@@ -384,7 +384,7 @@ public class CMSNSManager {
 	{
 		boolean bFound = false;
 		// find the prefetch list of the client
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSPrefetchHashMap  prefetchMap = snsInfo.getPrefetchMap();
 		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
 		if(prefetchList == null) return false;
@@ -615,7 +615,7 @@ public class CMSNSManager {
 		// If the sns attachment download scheme is the prefetch mode, the incomplete prefetch should be canceled
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
-			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			
 			// check for the ongoing prefetch to the user, and cancel the prefetched file transfer
 			if(isServerPrefetchOngoing(strUser, cmInfo))
@@ -707,7 +707,7 @@ public class CMSNSManager {
 		
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nDefDownloadNum = confInfo.getDownloadNum();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
 		int nAttachDownloadScheme = user.getAttachDownloadScheme();
@@ -1101,7 +1101,7 @@ public class CMSNSManager {
 	// for client
 	private static void processCONTENT_DOWNLOAD(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
@@ -1130,7 +1130,7 @@ public class CMSNSManager {
 	// for client
 	private static void processCONTENT_DOWNLOAD_END(CMSNSEvent se, CMInfo cmInfo)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		int nReturnCode = -1;
 		
 		if(CMInfo._CM_DEBUG)
@@ -1186,7 +1186,7 @@ public class CMSNSManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
-			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
 			CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName());
 			if(prefetchList == null) return;
@@ -1213,7 +1213,7 @@ public class CMSNSManager {
 	private static void processCONTENT_UPLOAD_REQUEST(CMSNSEvent se, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -1865,7 +1865,7 @@ public class CMSNSManager {
 	private static void processREQUEST_ATTACHED_FILES(CMSNSEvent se, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach sendAttach = null;
 		CMSNSAttachList attachList = null;
 		CMSNSAttach attach = null;
@@ -1959,7 +1959,7 @@ public class CMSNSManager {
 	private static void processATTACHED_FILES_NOT_FOUND(CMSNSEvent se, CMInfo cmInfo)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMSNSAttach attach = null;

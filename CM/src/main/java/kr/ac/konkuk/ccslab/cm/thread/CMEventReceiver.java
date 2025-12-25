@@ -217,7 +217,7 @@ public class CMEventReceiver implements Runnable {
 		boolean bFound = false;
 		CMServer tserver = null;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();		
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		
 		// find channel from default server
 		chInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();

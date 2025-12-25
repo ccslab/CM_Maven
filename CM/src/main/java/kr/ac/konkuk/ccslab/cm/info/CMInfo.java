@@ -133,7 +133,6 @@ public class CMInfo {
 	public static final String SETTINGS_DIR = ".cm-settings";
 
 	// repository
-	private CMSNSInfo m_snsInfo;
 	private CMDBInfo m_dbInfo;
 	private CMEventInfo m_eventInfo;
 	private CMThreadInfo m_threadInfo;
@@ -151,7 +150,6 @@ public class CMInfo {
 	
 	public CMInfo()
 	{
-		m_snsInfo = new CMSNSInfo();
 		m_dbInfo = new CMDBInfo();
 		m_eventInfo = new CMEventInfo();
 		m_threadInfo = new CMThreadInfo();
@@ -171,11 +169,6 @@ public class CMInfo {
 	public synchronized <T extends CMServiceManager> T getServiceManager(Class<T> type) {
 		T manager = type.cast(serviceManagerHashtable.get(type));
 		return manager;
-	}
-	
-	public synchronized CMSNSInfo getSNSInfo()
-	{
-		return m_snsInfo;
 	}
 
 	public synchronized CMDBInfo getDBInfo()

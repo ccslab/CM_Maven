@@ -697,7 +697,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	
 	private void processSNSEvent(CMEvent cme)
 	{
-		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		CMSNSEvent se = (CMSNSEvent) cme;
 		int i = 0;
@@ -821,7 +821,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 	
 	private void processCONTENT_DOWNLOAD_END(CMSNSEvent se)
 	{
-		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Iterator<CMSNSContent> iter = null;
