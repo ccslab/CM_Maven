@@ -13,6 +13,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 
 public class CMFileSyncInfo {
+    private static CMFileSyncInfo instance;
 
     public static final String SYNC_HOME = "FileSyncHome";
     public static final int BLOCK_SIZE = 700;   // Bytes, from rsync
@@ -44,7 +45,7 @@ public class CMFileSyncInfo {
 
     private ScheduledFuture<?> proactiveModeTaskFuture;
 
-    public CMFileSyncInfo() {
+    private CMFileSyncInfo() {
 
         currentMode = CMFileSyncMode.OFF;
         syncInProgress = false;
@@ -71,6 +72,15 @@ public class CMFileSyncInfo {
         proactiveModeTaskFuture = null;
     }
 
+    // getInstance()
+    public static CMFileSyncInfo getInstance() {
+        if(instance == null) {
+            instance = new CMFileSyncInfo();
+        }
+        return instance;
+    }
+
+    ///////////// getter/setter
     public CMFileSyncMode getCurrentMode() {
         return currentMode;
     }
