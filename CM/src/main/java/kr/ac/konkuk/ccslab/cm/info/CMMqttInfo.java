@@ -13,6 +13,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBLISH;
  *
  */
 public class CMMqttInfo {
+	private static CMMqttInfo instance;
 
 	// mqtt session information (4 client)
 	CMMqttSession m_mqttSession;
@@ -21,11 +22,19 @@ public class CMMqttInfo {
 	// mqtt retain event (4 server) (topic, PUBLISH event) pair
 	Hashtable<String, CMMqttEventPUBLISH> m_mqttRetainHashtable;
 	
-	public CMMqttInfo()
+	private CMMqttInfo()
 	{
 		m_mqttSession = null;
 		m_mqttSessionHashtable = new Hashtable<String, CMMqttSession>();
 		m_mqttRetainHashtable = new Hashtable<String, CMMqttEventPUBLISH>();
+	}
+
+	// getInstance()
+	public static synchronized CMMqttInfo getInstance() {
+		if(instance == null) {
+			instance = new CMMqttInfo();
+		}
+		return instance;
 	}
 	
 	// setter/getter

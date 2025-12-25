@@ -136,7 +136,6 @@ public class CMInfo {
 	private CMDBInfo m_dbInfo;
 	private CMEventInfo m_eventInfo;
 	private CMThreadInfo m_threadInfo;
-	private CMMqttInfo m_mqttInfo;
 
 	// CM service manager table
 	private Hashtable<Class<? extends CMServiceManager>, Object> serviceManagerHashtable;
@@ -153,7 +152,6 @@ public class CMInfo {
 		m_dbInfo = new CMDBInfo();
 		m_eventInfo = new CMEventInfo();
 		m_threadInfo = new CMThreadInfo();
-		m_mqttInfo = new CMMqttInfo();
 
 		serviceManagerHashtable = new Hashtable<>();
 		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
@@ -186,11 +184,6 @@ public class CMInfo {
 		return m_threadInfo;
 	}
 	
-	public synchronized CMMqttInfo getMqttInfo()
-	{
-		return m_mqttInfo;
-	}
-
 	public synchronized Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
 	{
 		return m_eventHandlerHashtable;

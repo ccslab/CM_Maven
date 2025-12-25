@@ -111,7 +111,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// initialization
 		CMMqttEventCONNECT conEvent = (CMMqttEventCONNECT)event;
 		String strClient = conEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttEventCONNACK ackEvent = new CMMqttEventCONNACK();
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		boolean bConnAckFlag = false;
@@ -356,7 +356,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// if the MQTT connect request is successful,
 		if(connackEvent.getReturnCode() == (byte)0)
 		{
-			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+			CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 			CMMqttSession session = mqttInfo.getMqttSession();
 			if(session == null)
 			{
@@ -457,7 +457,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	private void processRetainEvent(CMMqttEventPUBLISH pubEvent)
 	{
 		// get retain-event hash table
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = 
 				mqttInfo.getMqttRetainHashtable();
 		CMMqttEventPUBLISH oldEvent = null;
@@ -514,7 +514,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttSession session = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		if(strSysType.equals("CLIENT"))
 		{
 			session = mqttInfo.getMqttSession();
@@ -547,7 +547,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttSession session = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		if(strSysType.equals("CLIENT"))
 		{
 			session = mqttInfo.getMqttSession();
@@ -647,7 +647,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttSession session = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -703,7 +703,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttSession session = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -795,7 +795,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttSession session = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -873,7 +873,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		CMMqttSession session = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -934,7 +934,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get client session information
 		String strClient = subEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		CMMqttSession session = sessionHashtable.get(strClient);
 		if(session == null)
@@ -998,7 +998,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	private void sendRetainedEvents(String strClient, CMList<CMMqttTopicQoS> topicQoSList)
 	{
 		// get retain event list
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = mqttInfo.getMqttRetainHashtable();
 		// get client session
 		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strClient);
@@ -1034,7 +1034,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		// add approved subscription to the subscription list
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -1090,7 +1090,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get client session information
 		String strClient = unsubEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		CMMqttSession session = sessionHashtable.get(strClient);
 		if(session == null)
@@ -1198,7 +1198,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get client session information
 		String strClient = disconEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		CMMqttSession session = sessionHashtable.get(strClient);
 		if(session == null)
