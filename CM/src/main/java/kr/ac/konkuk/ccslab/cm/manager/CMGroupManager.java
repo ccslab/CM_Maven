@@ -31,6 +31,7 @@ public class CMGroupManager {
 
 	public static void init(CMInfo cmInfo) // for server
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getCommArch().equals("CM_PS"))
 		{
@@ -77,6 +78,7 @@ public class CMGroupManager {
 	
 	public static void init(String strSession, String strGroup, CMInfo cmInfo)	// for client
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getCommArch().equals("CM_PS"))
 		{
@@ -161,6 +163,7 @@ public class CMGroupManager {
 	
 	public static void leaveGroup(CMUser user, CMInfo cmInfo)	// for server
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		// find current session and group
@@ -208,6 +211,7 @@ public class CMGroupManager {
 	
 	public static void changeGroup(String gName, CMInfo cmInfo) // for client
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMUser myself = interInfo.getMyself();
@@ -265,6 +269,7 @@ public class CMGroupManager {
 	
 	public static void processEvent(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMEvent cmEvent = null;
 
 		// unmarshall an event
@@ -345,6 +350,7 @@ public class CMGroupManager {
 	
 	private static void processUSER_ENTER(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
@@ -410,6 +416,7 @@ public class CMGroupManager {
 	
 	private static void processUSER_LEAVE(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
@@ -461,6 +468,7 @@ public class CMGroupManager {
 	
 	private static void distributeGroupUsers(CMUser targetUser, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		CMSession session = interInfo.findSession(targetUser.getCurrentSession());
@@ -500,6 +508,7 @@ public class CMGroupManager {
 	
 	private static void notifyGroupUsersOfNewUser(CMUser newUser, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		CMSession session = interInfo.findSession(newUser.getCurrentSession());
@@ -654,6 +663,7 @@ public class CMGroupManager {
 	
 	private static void processNEW_USER(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMDataEvent de = new CMDataEvent(msg.m_buf);
 		
@@ -715,6 +725,7 @@ public class CMGroupManager {
 	
 	private static void notifyGroupUsersOfRemovedUser(CMUser user, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		CMSession session = interInfo.findSession(user.getCurrentSession());
@@ -840,6 +851,7 @@ public class CMGroupManager {
 	
 	public static void addDistributeGroupUsers(CMUser targetUser, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		CMSession session = interInfo.findSession(targetUser.getCurrentSession());
@@ -882,6 +894,7 @@ public class CMGroupManager {
 
 	public static void addNotifyGroupUsersOfNewUser(CMUser newUser, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		CMSession session = interInfo.findSession(newUser.getCurrentSession());

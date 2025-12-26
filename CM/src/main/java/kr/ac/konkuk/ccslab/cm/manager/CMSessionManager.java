@@ -20,6 +20,7 @@ public class CMSessionManager {
 
 	public static void init(CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
@@ -89,6 +90,7 @@ public class CMSessionManager {
 	
 	public static void processEvent(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMEvent cmEvent = null;
 		
 		// unmarshall an event
@@ -133,6 +135,7 @@ public class CMSessionManager {
 	
 	private static void processJOIN_SESSION(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -169,6 +172,7 @@ public class CMSessionManager {
 	// join session of the default server
 	private static boolean joinSession(CMUser user, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
 		
@@ -218,6 +222,7 @@ public class CMSessionManager {
 	
 	private static void processJOIN_SESSION_ACK(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -286,6 +291,7 @@ public class CMSessionManager {
 	
 	private static void processLEAVE_SESSION(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -327,6 +333,7 @@ public class CMSessionManager {
 	// leave current session of the default server
 	public static void leaveSession(CMUser user, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strCurrentSession = user.getCurrentSession();
 		
@@ -374,6 +381,7 @@ public class CMSessionManager {
 	// join a session of an additional server
 	public static boolean addJoinSession(CMUser user, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		boolean ret = false;
@@ -415,6 +423,7 @@ public class CMSessionManager {
 	// leave a session of an additional server
 	public static void addLeaveSession(CMUser user, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strCurrentSession = user.getCurrentSession();
 		
