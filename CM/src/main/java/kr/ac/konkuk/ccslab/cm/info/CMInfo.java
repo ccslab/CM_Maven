@@ -133,7 +133,6 @@ public class CMInfo {
 	public static final String SETTINGS_DIR = ".cm-settings";
 
 	// repository
-	private CMEventInfo m_eventInfo;
 	private CMThreadInfo m_threadInfo;
 
 	// CM service manager table
@@ -148,7 +147,6 @@ public class CMInfo {
 	
 	public CMInfo()
 	{
-		m_eventInfo = new CMEventInfo();
 		m_threadInfo = new CMThreadInfo();
 
 		serviceManagerHashtable = new Hashtable<>();
@@ -167,11 +165,6 @@ public class CMInfo {
 		return manager;
 	}
 
-	public synchronized CMEventInfo getEventInfo()
-	{
-		return m_eventInfo;
-	}
-	
 	public synchronized CMThreadInfo getThreadInfo()
 	{
 		return m_threadInfo;

@@ -1906,7 +1906,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processREPLY_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
-		CMEventInfo eInfo = cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();

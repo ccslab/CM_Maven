@@ -53,7 +53,7 @@ public class CMEventManager {
 
 	public synchronized static CMEventReceiver startReceivingEvent(CMInfo cmInfo)
 	{
-		CMEventInfo eventInfo = cmInfo.getEventInfo();
+		CMEventInfo eventInfo = CMEventInfo.getInstance();
 		ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
 		CMEventReceiver eventReceiver = new CMEventReceiver(cmInfo);
 		//eventReceiver.start();

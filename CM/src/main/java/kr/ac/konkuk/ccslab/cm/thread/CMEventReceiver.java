@@ -20,14 +20,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -48,7 +41,7 @@ public class CMEventReceiver implements Runnable {
 	{
 		CMMessage msg = null;
 		boolean bForwardToApp = true;
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 
 		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
 		Objects.requireNonNull(threadInfo);

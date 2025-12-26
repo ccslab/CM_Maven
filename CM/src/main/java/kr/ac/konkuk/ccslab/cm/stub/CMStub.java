@@ -164,7 +164,7 @@ public class CMStub {
 		//////////
 		
 		// terminate threads
-		CMEventInfo eventInfo = m_cmInfo.getEventInfo();
+		CMEventInfo eventInfo = CMEventInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue recvQueue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 		CMBlockingEventQueue sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
@@ -1226,7 +1226,7 @@ public class CMStub {
 	public CMEvent sendrecv(CMEvent cme, String strReceiver, int nWaitEventType, int nWaitEventID, 
 			int nTimeout)
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMEvent replyEvent = null;
 
 		eventSync.init();
@@ -1495,7 +1495,7 @@ public class CMStub {
 	public CMEvent[] castrecv(CMEvent event, String strSessionName, String strGroupName, 
 			int nWaitedEventType, int nWaitedEventID, int nMinNumWaitedEvents, int nTimeout)
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMEvent[] eventArray = null;
 		
 		eventSync.init();

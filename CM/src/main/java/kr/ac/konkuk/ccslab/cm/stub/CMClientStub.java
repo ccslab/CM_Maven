@@ -544,7 +544,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMSessionEvent syncLoginCM(String strUserName, String strPassword)
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMSessionEvent loginAckEvent = null;
 		boolean bRequestResult = false;
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
@@ -703,7 +703,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMSessionEvent syncRequestSessionInfo()
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		boolean bRequestResult = false;
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
@@ -841,7 +841,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMSessionEvent syncJoinSession(String sname)
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		boolean bRequestResult = false;
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
@@ -1218,7 +1218,7 @@ public class CMClientStub extends CMStub {
 		CMServer serverInfo = null;
 		SocketChannel sc = null;
 		CMChannelInfo<Integer> scInfo = null;
-		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
@@ -1544,7 +1544,7 @@ public class CMClientStub extends CMStub {
 		String strTargetSSCAddress = null;
 		int nTargetSSCPort = -1;
 		CMChannelInfo<Integer> scInfo = null;
-		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
@@ -1787,7 +1787,7 @@ public class CMClientStub extends CMStub {
 		boolean result = false;
 		SocketChannel sc = null;
 		CMSessionEvent se = null;
-		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;

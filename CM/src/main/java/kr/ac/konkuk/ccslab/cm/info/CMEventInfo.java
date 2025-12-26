@@ -6,15 +6,25 @@ import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 import java.util.concurrent.Future;
 
 public class CMEventInfo {
+	private static CMEventInfo instance;
+
 	private CMEventReceiver m_eventReceiver;
 	private Future<?> eventReceiverFuture;
 	private CMEventSynchronizer m_eventSynchronizer;
 	
-	public CMEventInfo()
+	private CMEventInfo()
 	{
 		m_eventReceiver = null;
 		eventReceiverFuture = null;
 		m_eventSynchronizer = new CMEventSynchronizer();		
+	}
+
+	// getInstance()
+	public static synchronized CMEventInfo getInstance() {
+		if(instance == null) {
+			instance = new CMEventInfo();
+		}
+		return instance;
 	}
 	
 	// set/get methods
