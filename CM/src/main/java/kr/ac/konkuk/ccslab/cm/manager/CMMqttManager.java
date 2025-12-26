@@ -137,7 +137,8 @@ public class CMMqttManager extends CMServiceManager {
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		boolean bRet = false;
-		bRet = CMEventManager.unicastEvent(conEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(conEvent, strDefServer, cmInfo);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -272,7 +273,8 @@ public class CMMqttManager extends CMServiceManager {
 		// send PUBLISH event
 		String strReceiver = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.publishFromClient(), sent "
@@ -410,8 +412,9 @@ public class CMMqttManager extends CMServiceManager {
 				return false;				
 			}
 		}
-			
-		bRet = CMEventManager.unicastEvent(pubEvent, strClient, m_cmInfo);
+
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(pubEvent, strClient, cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.publishFromServerToOneClient(), sent ("
@@ -472,7 +475,8 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		for(CMMqttEvent pendingEvent : session.getPendingTransPublishList().getList())
 		{
-			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver, m_cmInfo);
+			CMInfo cmInfo = CMInfo.getInstance();
+			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver, cmInfo);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.sendAndClearPendingTransEvents(), error: receiver ("
@@ -508,8 +512,9 @@ public class CMMqttManager extends CMServiceManager {
 		{
 			// set DUP flag
 			unackEvent.setDupFlag(true);
-			
-			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver, m_cmInfo);
+
+			CMInfo cmInfo = CMInfo.getInstance();
+			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver, cmInfo);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.resendSentUnAckPublish(), error: "
@@ -555,7 +560,8 @@ public class CMMqttManager extends CMServiceManager {
 			relEvent.setPacketID(nPacketID);
 
 			// send the PUBREL event
-			bRet = CMEventManager.unicastEvent(relEvent, strReceiver, m_cmInfo);
+			CMInfo cmInfo = CMInfo.getInstance();
+			bRet = CMEventManager.unicastEvent(relEvent, strReceiver, cmInfo);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.resendSentUnAckPubrel(), error: "
@@ -679,7 +685,8 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(subEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(subEvent, strDefServer, cmInfo);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.subscribe(), sent "+subEvent.toString());
@@ -777,7 +784,8 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer, cmInfo);
 
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -850,7 +858,8 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer, cmInfo);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -987,8 +996,9 @@ public class CMMqttManager extends CMServiceManager {
 		if(session == null) return false;
 		CMMqttWill mqttWill = session.getMqttWill();
 		if(mqttWill == null) return false;
-		
-		CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
+
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
 		boolean bRet = false;
 		bRet = mqttManager.publish(mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
 				mqttWill.getWillQoS());

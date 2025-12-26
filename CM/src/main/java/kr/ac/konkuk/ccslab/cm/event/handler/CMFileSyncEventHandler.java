@@ -118,7 +118,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 */
         // save the online-mode-map to file
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         boolean ret = syncManager.saveOnlineModePathSizeMapToFile();
         if(!ret) {
@@ -163,7 +164,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(1);
 
         // send the ack event
-        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), cmInfo);
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
@@ -199,7 +201,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         String requester = listEvent.getRequester();
 
         // get sync home of requester
-        CMFileSyncManager syncManager = Objects.requireNonNull(m_cmInfo.getServiceManager(CMFileSyncManager.class));
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = Objects.requireNonNull(cmInfo.getServiceManager(CMFileSyncManager.class));
         Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(requester));
 
         // start push-file for all paths in the event
@@ -208,7 +211,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // get the absolute path
             Path absPath = serverSyncHome.resolve(relativePath);
             // start push-file
-            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester, m_cmInfo);
+            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester, cmInfo);
             if(!ret) {
                 System.err.println("push error: "+absPath);
                 return false;
@@ -232,7 +235,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if(ret) ackEvent.setReturnCode(1);
         else ackEvent.setReturnCode(0);
 
-        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), m_cmInfo);
+        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), cmInfo);
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
@@ -266,7 +269,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("---");
         }
 
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
 /*
         // save the online-mode-path list to file
@@ -326,7 +330,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             ackEvent.setReturnCode(0);
 */
 
-        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), cmInfo);
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
@@ -366,7 +371,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Map<Path,Long> onlineModePathSizeMap = Objects.requireNonNull(syncInfo.getOnlineModePathSizeMap());
         List<Path> onlineModeList = onlineModePathSizeMap.keySet().stream().toList();
         // get info of sync home path
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         Path clientSyncHome = Objects.requireNonNull(syncManager.getClientSyncHome());
         int startPathIndex = clientSyncHome.getNameCount();
@@ -452,7 +458,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             //endEvent.setNumOnlineModeFiles(onlineModeList.size());
             endEvent.setNumOnlineModeFiles(onlineModePathSizeMap.size());
 
-            boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender(), m_cmInfo);
+            boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender(), cmInfo);
             if(!ret) {
                 System.err.println("send error: "+endEvent);
                 return false;
@@ -484,7 +490,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         else ackEvent.setReturnCode(0);
 */
 
-        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), cmInfo);
         if(!ret) {
             System.err.println("send error : "+ackEvent);
             return false;
@@ -568,7 +575,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // get the temp file path
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         Path tempFilePath = syncManager.getTempPathOfBasisFile(basisFilePath);
         if(CMInfo._CM_DEBUG) {
@@ -651,7 +659,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // get the server sync home
         String userName = updateEvent.getSender();
-        CMFileSyncManager syncManager = Objects.requireNonNull(m_cmInfo.getServiceManager(CMFileSyncManager.class));
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = Objects.requireNonNull(cmInfo.getServiceManager(CMFileSyncManager.class));
         Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(userName));
 
         // get the basis file path
@@ -780,7 +789,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int blockSize = endChecksumEvent.getBlockSize();
         String sender = endChecksumEvent.getReceiver();
         String receiver = endChecksumEvent.getSender();
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         // get the local path list
         List<Path> pathList = Objects.requireNonNull(CMFileSyncInfo.getInstance().getPathList());
@@ -813,7 +823,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         byte[] fileChecksum = syncManager.calculateFileChecksum(path);
         ackEvent.setFileChecksum(fileChecksum);
         // send the ack event
-        ret = CMEventManager.unicastEvent(ackEvent, receiver, m_cmInfo);
+        ret = CMEventManager.unicastEvent(ackEvent, receiver, cmInfo);
         if(!ret) return false;
 
         return true;
@@ -841,7 +851,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Path path = Objects.requireNonNull(pathList.get(fileEntryIndex));
 
         // get the file sync manager
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         // create a ByteBuffer to read a block from the file channel
         // ByteBuffer buffer = ByteBuffer.allocate(blockSize);
         // create a ByteBuffer to read a block from the memory-mapped file (MappedByteBuffer)
@@ -1097,7 +1108,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set matching block index
         updateEvent.setMatchBlockIndex(matchBlockIndex);
         // send the event
-        boolean ret = CMEventManager.unicastEvent(updateEvent, receiver, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean ret = CMEventManager.unicastEvent(updateEvent, receiver, cmInfo);
         if(!ret) {
             System.err.println("send error, updateEvent = "+updateEvent);
             return false;
@@ -1117,7 +1129,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("weakChecksum = " + weakChecksum);
         }
 
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         byte[] strongChecksum;
         if(weakChecksum == checksumArray[sortedBlockIndex].getWeakChecksum()) {
@@ -1292,6 +1305,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int checksumBytes = 0;
         int numCurrentBlocks = 0;
         boolean ret = false;
+        CMInfo cmInfo = CMInfo.getInstance();
         while(curIndex < checksumArray.length) {
             // create FILE_BLOCK_CHECKSUM event
             CMFileSyncEventFileBlockChecksum checksumEvent = new CMFileSyncEventFileBlockChecksum();
@@ -1316,7 +1330,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             checksumEvent.setChecksumArray(partialChecksumArray);
 
             // send the event
-            ret = CMEventManager.unicastEvent(checksumEvent, startAckEvent.getSender(), m_cmInfo);
+            ret = CMEventManager.unicastEvent(checksumEvent, startAckEvent.getSender(), cmInfo);
             if(!ret) return false;
 
             // update the curIndex
@@ -1330,7 +1344,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         endChecksumEvent.setFileEntryIndex(fileEntryIndex);
         endChecksumEvent.setTotalNumBlocks(totalNumBlocks); // checksumArrays.length
         endChecksumEvent.setBlockSize(startAckEvent.getBlockSize());
-        ret = CMEventManager.unicastEvent(endChecksumEvent, userName, m_cmInfo);
+        ret = CMEventManager.unicastEvent(endChecksumEvent, userName, cmInfo);
         if(!ret) return false;
 
         return true;
@@ -1384,7 +1398,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(returnCode);
 
         // send the ack event
-        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender(), m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender(), cmInfo);
     }
 
     // called at the client
@@ -1398,7 +1413,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         //// to use the CMFileTransferManager service to push new files to the server
 
         // get CMFileSyncManager
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         // get the client sync home
         Path clientSyncHome = syncManager.getClientSyncHome();
         // get the requester name
@@ -1417,7 +1433,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         boolean sendResult = true;
         for(Path path : requestedFileList) {
             Path syncPath = clientSyncHome.resolve(path);   // adjust the path with the sync home
-            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, m_cmInfo) )
+            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, cmInfo) )
                 sendResult = false;
         }
 
@@ -1439,7 +1455,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         String userName = fse_sfl.getUserName();
         // get the file-sync manager
-        CMFileSyncManager fsManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager fsManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         // get server sync home for userName
         Path serverSyncHome = fsManager.getServerSyncHome(userName);
         // check and create the server sync home
@@ -1462,7 +1479,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the ack event to the client
 
-        return CMEventManager.unicastEvent(ackFse, userName, m_cmInfo);
+        return CMEventManager.unicastEvent(ackFse, userName, cmInfo);
     }
 
     // called at the client
@@ -1485,7 +1502,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set numFiles and fileEntryList
         setNumFilesAndEntryList(newfse, 0);
 
-        return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(newfse, server, cmInfo);
     }
 
     // called at the client
@@ -1502,7 +1520,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         List<Path> subList = new ArrayList<>();
         int index = startListIndex;
         int numFiles = 0;
-        CMFileSyncManager fsManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager fsManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Path clientSyncHome = fsManager.getClientSyncHome();
         int startPathIndex = clientSyncHome.getNameCount();
         // create sub-list that will be added as the file-entry-list to the event
@@ -1629,7 +1648,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         fseAck.setReturnCode(returnCode);
 
         // send the ack event
-        return CMEventManager.unicastEvent(fseAck, userName, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(fseAck, userName, cmInfo);
     }
 
     // called at the client
@@ -1682,7 +1702,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         newfse.setNumFilesCompleted(fse.getNumFilesCompleted());
 
         // send the event to the server
-        return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(newfse, server, cmInfo);
     }
 
     // called at the client
@@ -1707,7 +1728,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         setNumFilesAndEntryList(newfse, startListIndex);
 
         // send FILE_ENTRIES event
-        return CMEventManager.unicastEvent(newfse, server, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(newfse, server, cmInfo);
     }
 
     // called at the server
@@ -1748,14 +1770,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         fseAck.setReturnCode(returnCode);
 
         // send the ack event
-        boolean result = CMEventManager.unicastEvent(fseAck, userName, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean result = CMEventManager.unicastEvent(fseAck, userName, cmInfo);
         if (!result) {
             System.err.println("send END_FILE_LIST_ACK error!");
             return false;
         }
 
         // start CMFileSyncGeneratorTask
-        CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName, m_cmInfo);
+        CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName, cmInfo);
         ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
         es.submit(fileSyncGenerator);
         // set the generator in the CMFileSyncInfo
@@ -1861,7 +1884,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // delete(initialize) isFileSyncCompletedMap for client in CMFileSyncInfo
-        CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         syncInfo.getIsFileSyncCompletedMap().clear();
 
         // change the file-sync state to stop
