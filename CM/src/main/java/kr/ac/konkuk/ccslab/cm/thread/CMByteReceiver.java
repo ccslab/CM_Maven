@@ -18,7 +18,6 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import java.net.*;
 
 public class CMByteReceiver implements Runnable {
-	private CMInfo m_cmInfo;
 	private Selector m_selector;
 	private CMBlockingEventQueue m_queue;
 	private CMList<CMUnknownChannelInfo> m_unknownChannelList;
@@ -26,7 +25,6 @@ public class CMByteReceiver implements Runnable {
 	
 	public CMByteReceiver(CMInfo cmInfo)
 	{
-		m_cmInfo = cmInfo;
 		m_selector = CMCommInfo.getInstance().getSelector();
 		m_queue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 		m_unknownChannelList = CMCommInfo.getInstance().getUnknownChannelInfoList();
@@ -156,6 +154,7 @@ public class CMByteReceiver implements Runnable {
 		}
 		else
 		{
+			CMInfo cmInfo = CMInfo.getInstance();
 			// create a main ByteBuffer
 			bufByteNum.flip();
 			nByteNum = bufByteNum.getInt();
@@ -165,14 +164,14 @@ public class CMByteReceiver implements Runnable {
 			{
 				LOG.severe("nByteNum("+nByteNum+") is greater than the maximum event size("
 						+CMInfo.MAX_EVENT_SIZE+")!");
-				CMInteractionManager.disconnectBadNode(sc, m_cmInfo);
+				CMInteractionManager.disconnectBadNode(sc, cmInfo);
 				return;
 			}
 			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
 			{
 				LOG.severe("nByteNum("+nByteNum+") is less than the minimum event size("
 						+CMInfo.MIN_EVENT_SIZE+")!");
-				CMInteractionManager.disconnectBadNode(sc, m_cmInfo);
+				CMInteractionManager.disconnectBadNode(sc, cmInfo);
 				return;
 			}
 			//bufEvent = ByteBuffer.allocateDirect(nByteNum);

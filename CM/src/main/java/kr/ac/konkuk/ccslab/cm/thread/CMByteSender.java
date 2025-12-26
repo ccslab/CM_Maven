@@ -17,12 +17,10 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 public class CMByteSender implements Runnable {
 
 	private CMBlockingEventQueue m_sendQueue = null;
-	private CMInfo m_cmInfo;
-	
+
 	public CMByteSender(CMInfo cmInfo)
 	{
 		m_sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
-		m_cmInfo = cmInfo;
 	}
 
 	@Override
@@ -47,7 +45,8 @@ public class CMByteSender implements Runnable {
 			{
 				CMCommManager.sendMessage(msg.m_buf, (SocketChannel)msg.m_ch);
 				// update last event-transmission time of myself (client or server)
-				CMInteractionManager.updateMyLastEventTransTime(msg.m_ch, m_cmInfo);
+				CMInfo cmInfo = CMInfo.getInstance();
+				CMInteractionManager.updateMyLastEventTransTime(msg.m_ch, cmInfo);
 			}
 			else if(msg.m_ch instanceof DatagramChannel)
 			{
