@@ -72,7 +72,7 @@ public class CMInteractionManager {
 			ServerSocketChannel ssc = null;
 			try {
 				ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, 
-						confInfo.getMyCurrentAddress(), confInfo.getMyPort(), cmInfo);
+						confInfo.getMyCurrentAddress(), confInfo.getMyPort());
 				commInfo.setNonBlockServerSocketChannel(ssc);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -96,7 +96,7 @@ public class CMInteractionManager {
 		DatagramChannel dc = null;
 		try {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
-					confInfo.getMyCurrentAddress(), confInfo.getUDPPort(), cmInfo);
+					confInfo.getMyCurrentAddress(), confInfo.getUDPPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -144,7 +144,7 @@ public class CMInteractionManager {
 		// connection establishment to the default server
 		try {
 			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-					confInfo.getServerAddress(), confInfo.getServerPort(), cmInfo);
+					confInfo.getServerAddress(), confInfo.getServerPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -257,7 +257,7 @@ public class CMInteractionManager {
 		SelectableChannel sc = null;
 		try {
 			sc = CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, tserver.getServerAddress(), 
-										tserver.getServerPort(), cmInfo);
+										tserver.getServerPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -1714,7 +1714,7 @@ public class CMInteractionManager {
 				se = null;
 				*/
 				
-				sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName(), cmInfo);
+				sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName());
 
 				if(sc != null && CMInfo._CM_DEBUG)
 				{

@@ -50,7 +50,7 @@ public class CMGroupManager {
 				DatagramChannel dc = null;
 				try {
 					dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, 
-							group.getGroupAddress(), group.getGroupPort(), cmInfo);
+							group.getGroupAddress(), group.getGroupPort());
 					if(dc == null)
 					{
 						System.out.println("CMGroupManager.init(), multicast channel open error!"
@@ -103,7 +103,7 @@ public class CMGroupManager {
 		DatagramChannel dc = null;
 		try {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_MULTICAST_CHANNEL, 
-					group.getGroupAddress(), group.getGroupPort(), cmInfo);
+					group.getGroupAddress(), group.getGroupPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;

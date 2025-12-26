@@ -1,7 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
-import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.*;
@@ -12,7 +11,6 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -2151,7 +2149,7 @@ public class CMFileSyncManager extends CMServiceManager {
         String defaultServer = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         // get input throughput (MBps)
         CMInfo cmInfo = CMInfo.getInstance();
-        double inputThroughput = CMCommManager.measureInputThroughput(defaultServer, cmInfo);
+        double inputThroughput = CMCommManager.measureInputThroughput(defaultServer);
         // calculate minimum size (Bytes) of a file to be local mode
         long minFileSizeForLocalMode = (long) (inputThroughput * 1000000 * maxAccessDelayThreshold / 1000);
         if (CMInfo._CM_DEBUG) {

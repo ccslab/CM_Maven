@@ -2,7 +2,6 @@ package kr.ac.konkuk.ccslab.cm.thread;
 
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.SocketChannel;
 import java.util.concurrent.Callable;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -30,9 +29,9 @@ public class CMOpenChannelTask implements Callable<SelectableChannel> {
 		SelectableChannel sc = null;
 		try {
 			if(m_isBlocking)
-				sc = CMCommManager.openBlockChannel(m_nChType, m_strAddress, m_nPort, cmInfo);
+				sc = CMCommManager.openBlockChannel(m_nChType, m_strAddress, m_nPort);
 			else
-				sc = CMCommManager.openNonBlockChannel(m_nChType, m_strAddress, m_nPort, cmInfo);
+				sc = CMCommManager.openNonBlockChannel(m_nChType, m_strAddress, m_nPort);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

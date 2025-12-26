@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -24,7 +23,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 
 public class CMCommManager {
 	
-	public static void terminate(CMInfo cmInfo)
+	public static void terminate()
 	{
 		// close all channels in CM
 		
@@ -215,7 +214,7 @@ public class CMCommManager {
 		return myInetAddressStrList;
 	}
 	
-	public static SelectableChannel openNonBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
+	public static SelectableChannel openNonBlockChannel(int channelType, String address, int port) throws IOException
 	{
 		SelectableChannel ch = null;
 		CMCommInfo commInfo = CMCommInfo.getInstance();
@@ -279,7 +278,7 @@ public class CMCommManager {
 		return ch;
 	}
 	
-	public static SelectableChannel openBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
+	public static SelectableChannel openBlockChannel(int channelType, String address, int port) throws IOException
 	{
 		SelectableChannel ch = null;
 		
@@ -333,9 +332,9 @@ public class CMCommManager {
 		return ch;		
 	}
 	
-	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
+	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -385,7 +384,7 @@ public class CMCommManager {
 
 		try {
 			sc = (SocketChannel) openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, strTargetSSCAddress, 
-					nTargetSSCPort, cmInfo);
+					nTargetSSCPort);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -417,9 +416,9 @@ public class CMCommManager {
 		return sc;
 	}
 	
-	public static boolean removeBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
+	public static boolean removeBlockSocketChannel(int nChKey, String strTarget)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -543,9 +542,9 @@ public class CMCommManager {
 		return key;
 	}
 	
-	public static CMByteReceiver startReceivingMessage(CMInfo cmInfo)
+	public static CMByteReceiver startReceivingMessage()
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
 		//byteReceiver.start();
@@ -556,9 +555,9 @@ public class CMCommManager {
 		return byteReceiver;
 	}
 	
-	public static CMByteSender startSendingMessage(CMInfo cmInfo)
+	public static CMByteSender startSendingMessage()
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMByteSender byteSender = new CMByteSender(cmInfo);
 		//byteSender.start();
@@ -646,13 +645,13 @@ public class CMCommManager {
 		return nTotalSentByteNum;
 	}
 
-	public static double measureInputThroughput(String target, CMInfo cmInfo) {
+	public static double measureInputThroughput(String target) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureInputThroughput() called..");
 			System.out.println("target = " + target);
 		}
 
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
@@ -719,13 +718,13 @@ public class CMCommManager {
 		return speed;
 	}
 
-	public static double measureOutputThroughput(String target, CMInfo cmInfo) {
+	public static double measureOutputThroughput(String target) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureOutputThroughput() called..");
 			System.out.println("target = " + target);
 		}
 
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();

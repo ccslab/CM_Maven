@@ -1,15 +1,10 @@
 package kr.ac.konkuk.ccslab.cm.stub;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -224,8 +219,8 @@ public class CMServerStub extends CMStub {
 			return false;
 
 		CMEventManager.startReceivingEvent(cmInfo);
-		CMCommManager.startReceivingMessage(cmInfo);
-		CMCommManager.startSendingMessage(cmInfo);
+		CMCommManager.startReceivingMessage();
+		CMCommManager.startSendingMessage();
 		
 		int nKeepAliveTime = CMConfigurationInfo.getInstance().getKeepAliveTime();
 		if(nKeepAliveTime > 0)

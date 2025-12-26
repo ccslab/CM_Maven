@@ -581,7 +581,7 @@ public class CMFileTransferManager {
 			CMServer serverInfo = interInfo.getDefaultServerInfo();
 			try {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
+						serverInfo.getServerAddress(), serverInfo.getServerPort());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return false;
@@ -737,7 +737,7 @@ public class CMFileTransferManager {
 			{
 				try {
 					ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, 
-							interInfo.getMyself().getHost(), 0, cmInfo);
+							interInfo.getMyself().getHost(), 0);
 					commInfo.setNonBlockServerSocketChannel(ssc);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -1068,7 +1068,7 @@ public class CMFileTransferManager {
 					+ "default blocking TCP socket channel not found!");
 			
 			// open and add a new blocking socket channel to the file receiver
-			sc = CMCommManager.addBlockSocketChannel(0, strFileReceiver, cmInfo);
+			sc = CMCommManager.addBlockSocketChannel(0, strFileReceiver);
 			if(sc == null)
 			{
 				/*
@@ -1600,7 +1600,7 @@ public class CMFileTransferManager {
 			CMServer serverInfo = interInfo.getDefaultServerInfo();
 			try {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
+						serverInfo.getServerAddress(), serverInfo.getServerPort());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return false;
@@ -3692,7 +3692,7 @@ public class CMFileTransferManager {
 			CMServer serverInfo = interInfo.getDefaultServerInfo();
 			try {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
+						serverInfo.getServerAddress(), serverInfo.getServerPort());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return bForward;
@@ -3995,7 +3995,7 @@ public class CMFileTransferManager {
 			CMServer serverInfo = interInfo.getDefaultServerInfo();
 			try {
 				defaultBlockSC = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-						serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
+						serverInfo.getServerAddress(), serverInfo.getServerPort());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return bForward;

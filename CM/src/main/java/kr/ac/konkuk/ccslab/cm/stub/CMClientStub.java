@@ -280,8 +280,8 @@ public class CMClientStub extends CMStub {
 
 		// start processing, sending, and receiving threads
 		CMEventManager.startReceivingEvent(cmInfo);
-		CMCommManager.startReceivingMessage(cmInfo);
-		CMCommManager.startSendingMessage(cmInfo);
+		CMCommManager.startReceivingMessage();
+		CMCommManager.startSendingMessage();
 		
 		cmInfo.setStarted(true);
 		

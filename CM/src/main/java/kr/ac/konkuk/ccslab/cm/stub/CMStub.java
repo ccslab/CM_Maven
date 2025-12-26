@@ -20,24 +20,17 @@ import kr.ac.konkuk.ccslab.cm.event.handler.CMMqttEventHandler;
 import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.manager.*;
-import kr.ac.konkuk.ccslab.cm.thread.CMByteReceiver;
-import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
-import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 import kr.ac.konkuk.ccslab.cm.thread.CMOpenChannelTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMRemoveChannelTask;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 /**
@@ -193,7 +186,7 @@ public class CMStub {
 		task = new Runnable() {
 			@Override
 			public void run() {
-				CMCommManager.terminate(cmInfo);
+				CMCommManager.terminate();
 			}
 		};
 		future = es.submit(task);
@@ -2287,7 +2280,7 @@ public class CMStub {
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureInputThroughput(strTarget, cmInfo);
+		double speed = CMCommManager.measureInputThroughput(strTarget);
 		return speed;
 	}
 	
@@ -2308,7 +2301,7 @@ public class CMStub {
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureOutputThroughput(strTarget, cmInfo);
+		double speed = CMCommManager.measureOutputThroughput(strTarget);
 		return speed;
 	}
 	
