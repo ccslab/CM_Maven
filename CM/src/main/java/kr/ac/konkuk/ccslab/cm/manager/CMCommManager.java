@@ -335,6 +335,7 @@ public class CMCommManager {
 	
 	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -418,6 +419,7 @@ public class CMCommManager {
 	
 	public static boolean removeBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -543,6 +545,7 @@ public class CMCommManager {
 	
 	public static CMByteReceiver startReceivingMessage(CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
 		//byteReceiver.start();
@@ -555,6 +558,7 @@ public class CMCommManager {
 	
 	public static CMByteSender startSendingMessage(CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMByteSender byteSender = new CMByteSender(cmInfo);
 		//byteSender.start();
@@ -648,6 +652,8 @@ public class CMCommManager {
 			System.out.println("target = " + target);
 		}
 
+		cmInfo = CMInfo.getInstance();
+
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
 		CMThreadInfo threadInfo = Objects.requireNonNull(CMThreadInfo.getInstance());
@@ -718,6 +724,8 @@ public class CMCommManager {
 			System.out.println("=== CMCommManager.measureOutputThroughput() called..");
 			System.out.println("target = " + target);
 		}
+
+		cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();

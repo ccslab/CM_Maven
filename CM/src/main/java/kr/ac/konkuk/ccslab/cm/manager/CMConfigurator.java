@@ -17,6 +17,7 @@ public class CMConfigurator {
 	// set field values of the given configuration file to the CMConfigurationInfo object.
 	public static boolean init(String strConfFilePath, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		List<String> myAddressList = null;
 		

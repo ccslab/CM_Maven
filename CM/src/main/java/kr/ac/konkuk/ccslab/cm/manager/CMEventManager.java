@@ -49,6 +49,7 @@ public class CMEventManager {
 
 	public synchronized static CMEventReceiver startReceivingEvent(CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMEventInfo eventInfo = CMEventInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMEventReceiver eventReceiver = new CMEventReceiver(cmInfo);
@@ -270,11 +271,13 @@ public class CMEventManager {
 	
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		return unicastEvent(cme, strReceiver, CMInfo.CM_STREAM, 0, false, cmInfo);
 	}
 	
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		
 		if(opt == CMInfo.CM_STREAM)
@@ -296,11 +299,13 @@ public class CMEventManager {
 	
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		return unicastEvent(cme, strReceiver, opt, nKey, false, cmInfo);
 	}
 	
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		return unicastEvent(cme, strReceiver, opt, nKey, 0, isBlock, cmInfo);
 	}
 	
@@ -310,6 +315,7 @@ public class CMEventManager {
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, 
 			int nKey, int nRecvPort, boolean isBlock, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMMember loginUsers = null;
 		ByteBuffer bufEvent = null;
 		CMMessage msg = null;
@@ -509,6 +515,7 @@ public class CMEventManager {
 	
 	public synchronized static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
@@ -608,17 +615,20 @@ public class CMEventManager {
 	
 	public synchronized static boolean broadcastEvent(CMEvent cme, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		return broadcastEvent(cme, CMInfo.CM_STREAM, 0, cmInfo);
 	}
 	
 	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		return broadcastEvent(cme, opt, 0, cmInfo);
 	}
 	
 	// send an event to all login users (server)
 	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, int nChNum, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMMessage msg = null;
@@ -703,17 +713,20 @@ public class CMEventManager {
 	
 	public synchronized static boolean castEvent(CMEvent cme, CMMember users, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		return castEvent(cme, users, CMInfo.CM_STREAM, 0, cmInfo);
 	}
 	
 	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		return castEvent(cme, users, opt, 0, cmInfo);
 	}
 	
 	// send an event to a specific user group with multiple unicast transmissions
 	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, int nChNum, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		CMMessage msg = null;
