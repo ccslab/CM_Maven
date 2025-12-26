@@ -88,6 +88,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
 			CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		bReturn = requestPermitForPullFile(strFileName, strFileOwner, CMInfo.FILE_DEFAULT, 
 				-1, cmInfo);
@@ -97,6 +98,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
 			byte byteFileAppend, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		bReturn = requestPermitForPullFile(strFileName, strFileOwner, byteFileAppend, -1, 
 				cmInfo);
@@ -106,6 +108,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
 			byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
@@ -260,6 +263,7 @@ public class CMFileTransferManager {
 	public static boolean replyPermitForPullFile(CMFileEvent fe, int nReturnCode, 
 			CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bRet = false;
@@ -335,6 +339,7 @@ public class CMFileTransferManager {
 		
 	public static boolean cancelPullFile(String strFileSender, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.isFileTransferScheme())
@@ -350,6 +355,7 @@ public class CMFileTransferManager {
 	// cancel the receiving file task with separate channels and threads
 	private static boolean cancelPullFileWithSepChannel(String strFileSender, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 
@@ -376,6 +382,7 @@ public class CMFileTransferManager {
 	// cancel the receiving file task from one sender with a separate channel and thread
 	private static boolean cancelPullFileWithSepChannelForOneSender(String strFileSender, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMList<CMRecvFileInfo> recvList = null;
 		CMRecvFileInfo rInfo = null;
@@ -619,6 +626,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPushFile(String strFilePath, 
 			String strFileReceiver,	CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bRet = requestPermitForPushFile(strFilePath, strFileReceiver, 
 				CMInfo.FILE_DEFAULT, -1, cmInfo);
 		return bRet;
@@ -627,6 +635,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPushFile(String strFilePath, 
 			String strFileReceiver,	byte byteFileAppend, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bRet = requestPermitForPushFile(strFilePath, strFileReceiver, 
 				byteFileAppend, -1, cmInfo);
 		return bRet;
@@ -635,6 +644,7 @@ public class CMFileTransferManager {
 	public static boolean requestPermitForPushFile(String strFilePath, 
 			String strFileReceiver, byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		boolean bReturn = false;
 		
@@ -703,6 +713,7 @@ public class CMFileTransferManager {
 	public static boolean replyPermitForPushFile(CMFileEvent fe, int nReturnCode, 
 			CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String myName = interInfo.getMyself().getName();
 		boolean bRet = false;
@@ -791,6 +802,7 @@ public class CMFileTransferManager {
 	
 	public static boolean pushFile(String strFilePath, String strReceiver, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		bReturn = pushFile(strFilePath, strReceiver, CMInfo.FILE_DEFAULT, -1, cmInfo);
 		return bReturn;
@@ -798,6 +810,7 @@ public class CMFileTransferManager {
 
 	public static boolean pushFile(String strFilePath, String strReceiver, byte byteFileAppend, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		bReturn = pushFile(strFilePath, strReceiver, byteFileAppend, -1, cmInfo);
 		return bReturn;
@@ -806,6 +819,7 @@ public class CMFileTransferManager {
 	public static boolean pushFile(String strFilePath, String strReceiver, byte byteFileAppend, 
 			int nContentID, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
@@ -823,6 +837,7 @@ public class CMFileTransferManager {
 	private static boolean pushFileWithDefChannel(String strFilePath, String strFileReceiver, 
 			byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -923,6 +938,7 @@ public class CMFileTransferManager {
 	private static boolean pushFileWithSepChannel(String strFilePath, String strFileReceiver, 
 			byte byteFileAppend, int nContentID, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -1104,6 +1120,7 @@ public class CMFileTransferManager {
 	
 	public static boolean sendSTART_FILE_TRANSFER_CHAN(CMSendFileInfo sfInfo, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		String strFilePath = sfInfo.getFilePath();
@@ -1172,6 +1189,7 @@ public class CMFileTransferManager {
 	
 	public static boolean cancelPushFile(String strFileReceiver, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.isFileTransferScheme())
@@ -1184,6 +1202,7 @@ public class CMFileTransferManager {
 	
 	private static boolean cancelPushFileWithDefChannel(String strFileReceiver, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -1350,6 +1369,7 @@ public class CMFileTransferManager {
 	// cancel the sending file task with separate channels and threads
 	private static boolean cancelPushFileWithSepChannel(String strFileReceiver, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 
@@ -1376,6 +1396,7 @@ public class CMFileTransferManager {
 	// cancel the sending file task to one receiver with a separate channel and thread
 	private static boolean cancelPushFileWithSepChannelForOneReceiver(String strFileReceiver, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMList<CMSendFileInfo> sendList = null;
 		CMSendFileInfo sInfo = null;
@@ -1770,6 +1791,7 @@ public class CMFileTransferManager {
 	
 	public static boolean processEvent(CMMessage msg, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bForward = true;
 		CMFileEvent fe = new CMFileEvent(msg.m_buf);
 		
@@ -1854,6 +1876,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processREQUEST_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bForward = true;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -1906,6 +1929,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processREPLY_PERMIT_PULL_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -1972,6 +1996,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processREQUEST_PERMIT_PUSH_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bForward = true;
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
@@ -2014,6 +2039,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processREPLY_PERMIT_PUSH_FILE(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		boolean bForward = true;
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
@@ -2070,6 +2096,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processSTART_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -2232,6 +2259,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processSTART_FILE_TRANSFER_ACK(CMFileEvent recvFileEvent, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		String strFileReceiver = null;
 		String strFileName = null;
 		String strFullFileName = null;
@@ -2512,6 +2540,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processEND_FILE_TRANSFER(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
@@ -2631,6 +2660,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processEND_FILE_TRANSFER_ACK(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		String strFileReceiver = fe.getFileReceiver();
 		String strFileName = fe.getFileName();
@@ -2719,6 +2749,7 @@ public class CMFileTransferManager {
 			
 	private static boolean processSTART_FILE_TRANSFER_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -2894,6 +2925,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processSTART_FILE_TRANSFER_CHAN_ACK(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		long lRecvSize = -1;	// received size by the receiver
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
@@ -2954,6 +2986,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processEND_FILE_TRANSFER_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
@@ -3094,6 +3127,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processEND_FILE_TRANSFER_CHAN_ACK(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
@@ -3155,6 +3189,7 @@ public class CMFileTransferManager {
 	
 	private static void sendSTART_FILE_TRANSFER_CHAN_ACK(CMRecvFileInfo rfInfo, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
@@ -3211,6 +3246,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processCANCEL_FILE_SEND(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bForward = true;
@@ -3396,6 +3432,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processCANCEL_FILE_SEND_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMList<CMRecvFileInfo> recvList = null;
 		CMRecvFileInfo rInfo = null;
@@ -3726,6 +3763,7 @@ public class CMFileTransferManager {
 	
 	private static boolean processCANCEL_FILE_RECV_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMList<CMSendFileInfo> sendList = null;
 		CMSendFileInfo sInfo = null;
@@ -4028,11 +4066,13 @@ public class CMFileTransferManager {
 	
 	private static void processERR_RECV_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		cancelPullFile(fe.getFileSender(), cmInfo);
 	}
 	
 	private static void processERR_SEND_FILE_CHAN(CMFileEvent fe, CMInfo cmInfo)
 	{
+		cmInfo = CMInfo.getInstance();
 		cancelPushFile(fe.getFileReceiver(), cmInfo);
 	}
 }
