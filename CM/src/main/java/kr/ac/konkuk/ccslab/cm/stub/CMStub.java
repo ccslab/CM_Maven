@@ -51,8 +51,7 @@ import java.nio.file.Path;
  * @see CMServerStub
  */
 public class CMStub {
-	protected CMInfo m_cmInfo;
-	
+
 	/**
 	 * Creates an instance of the CMStub class.
 	 * 
@@ -60,25 +59,27 @@ public class CMStub {
 	 */
 	public CMStub()
 	{
-		m_cmInfo = new CMInfo();
+
 	}
 	
 	public boolean init()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
+
 		//Hashtable<Integer, CMServiceManager> managerHashtable = m_cmInfo.getServiceManagerHashtable();
-		Hashtable<Integer, CMEventHandler> handlerHashtable = m_cmInfo.getEventHandlerHashtable();
+		Hashtable<Integer, CMEventHandler> handlerHashtable = cmInfo.getEventHandlerHashtable();
 		
 		// add cm service managers
 		//managerHashtable.put(CMInfo.CM_MQTT_MANAGER, new CMMqttManager(m_cmInfo));
 		//managerHashtable.put(CMInfo.CM_FILE_SYNC_MANAGER, new CMFileSyncManager(m_cmInfo));
-		m_cmInfo.addServiceManager(CMMqttManager.class, new CMMqttManager(m_cmInfo));
-		m_cmInfo.addServiceManager(CMFileSyncManager.class, new CMFileSyncManager(m_cmInfo));
+		cmInfo.addServiceManager(CMMqttManager.class, new CMMqttManager(cmInfo));
+		cmInfo.addServiceManager(CMFileSyncManager.class, new CMFileSyncManager(cmInfo));
 		
 		// add cm event handlers
-		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(m_cmInfo));
-		handlerHashtable.put(CMInfo.CM_FILE_SYNC_EVENT, new CMFileSyncEventHandler(m_cmInfo));
+		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(cmInfo));
+		handlerHashtable.put(CMInfo.CM_FILE_SYNC_EVENT, new CMFileSyncEventHandler(cmInfo));
 		
-		if(m_cmInfo.isStarted())
+		if(cmInfo.isStarted())
 		{
 			System.err.println("CMStub.init(), already started!");
 			return false;
@@ -133,7 +134,9 @@ public class CMStub {
 	 */
 	public void terminateCM()
 	{
-		if(!m_cmInfo.isStarted())
+		CMInfo cmInfo = CMInfo.getInstance();
+
+		if(!cmInfo.isStarted())
 		{
 			System.err.println("CMStub.terminate(), CM is not started yet!");
 			return;
@@ -148,7 +151,7 @@ public class CMStub {
 			@Override
 			public void run()
 			{
-				CMInteractionManager.terminate(m_cmInfo);
+				CMInteractionManager.terminate(cmInfo);
 			}
 		};
 		Future<?> future = es.submit(task);
@@ -190,7 +193,7 @@ public class CMStub {
 		task = new Runnable() {
 			@Override
 			public void run() {
-				CMCommManager.terminate(m_cmInfo);
+				CMCommManager.terminate(cmInfo);
 			}
 		};
 		future = es.submit(task);
@@ -219,12 +222,16 @@ public class CMStub {
 		ScheduledExecutorService ses = CMThreadInfo.getInstance().getScheduledExecutorService();
 		ses.shutdownNow();
 		
-		m_cmInfo.setStarted(false);
+		cmInfo.setStarted(false);
 	}
 	
 	// set/get methods
 
 	/**
+	 * @deprecated
+	 * CMInfo is now a singleton.
+	 * Please use {@link CMInfo#getInstance()} instead.
+	 *
 	 * Returns a reference to the CMInfo object that the CMStub object has created.
 	 * 
 	 * <p> The CMInfo object includes all kinds of state information on the current CM.
@@ -232,9 +239,10 @@ public class CMStub {
 	 * @return a reference to the CMInfo object.
 	 * @see CMInfo
 	 */
+	@Deprecated
 	public CMInfo getCMInfo()
 	{
-		return m_cmInfo;
+		return CMInfo.getInstance();
 	}
 
 	///////////////////////// service manager
@@ -254,6 +262,7 @@ public class CMStub {
 	 */
 	public <T extends CMServiceManager> T findServiceManager(Class<T> type)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("CLIENT")) {
 			int clientState = CMInteractionInfo.getInstance().getMyself().getState();
@@ -263,7 +272,7 @@ public class CMStub {
 			}
 		}
 
-		return m_cmInfo.getServiceManager(type);
+		return cmInfo.getServiceManager(type);
 	}
 
 	/////////////////////////// event handler
@@ -280,7 +289,7 @@ public class CMStub {
 	 */
 	public void setAppEventHandler(CMAppEventHandler handler)
 	{
-		m_cmInfo.setAppEventHandler(handler);
+		CMInfo.getInstance().setAppEventHandler(handler);
 	}
 	
 	/**
@@ -290,7 +299,7 @@ public class CMStub {
 	 */
 	public CMAppEventHandler getAppEventHandler()
 	{
-		return m_cmInfo.getAppEventHandler();
+		return CMInfo.getInstance().getAppEventHandler();
 	}
 	
 	/**
@@ -314,13 +323,14 @@ public class CMStub {
 	 */
 	public String getDefaultServerName()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = null;
 		
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			if(CMConfigurator.isDServer(m_cmInfo))
+			if(CMConfigurator.isDServer(cmInfo))
 			{
 				strDefServer = getMyself().getName();
 			}
@@ -364,6 +374,7 @@ public class CMStub {
 	 */
 	public boolean replyEvent(CMEvent event, int nReturnCode)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		int nType = event.getType();
 		int nID = event.getID();
 		boolean bRet = false;
@@ -371,22 +382,22 @@ public class CMStub {
 		if(nType == CMInfo.CM_SESSION_EVENT && nID == CMSessionEvent.LOGIN)
 		{
 			CMSessionEvent se = (CMSessionEvent)event;
-			bRet = CMInteractionManager.replyToLOGIN(se, nReturnCode, m_cmInfo);
+			bRet = CMInteractionManager.replyToLOGIN(se, nReturnCode, cmInfo);
 		}
 		else if(nType == CMInfo.CM_MULTI_SERVER_EVENT && nID == CMMultiServerEvent.ADD_LOGIN)
 		{
 			CMMultiServerEvent mse = (CMMultiServerEvent)event;
-			bRet = CMInteractionManager.replyToADD_LOGIN(mse, nReturnCode, m_cmInfo);
+			bRet = CMInteractionManager.replyToADD_LOGIN(mse, nReturnCode, cmInfo);
 		}
 		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PUSH_FILE)
 		{
 			CMFileEvent fe = (CMFileEvent)event;
-			bRet = CMFileTransferManager.replyPermitForPushFile(fe, nReturnCode, m_cmInfo);
+			bRet = CMFileTransferManager.replyPermitForPushFile(fe, nReturnCode, cmInfo);
 		}
 		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PULL_FILE)
 		{
 			CMFileEvent fe = (CMFileEvent)event;
-			bRet = CMFileTransferManager.replyPermitForPullFile(fe, nReturnCode, m_cmInfo);
+			bRet = CMFileTransferManager.replyPermitForPullFile(fe, nReturnCode, cmInfo);
 		}
 		
 		return bRet;
@@ -410,6 +421,7 @@ public class CMStub {
 	 */
 	public DatagramChannel addNonBlockDatagramChannel(int nChPort)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> nonBlockDCInfo = commInfo.getNonBlockDatagramChannelInfo();
@@ -426,7 +438,7 @@ public class CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
-				confInfo.getMyCurrentAddress(), nChPort, false, m_cmInfo);
+				confInfo.getMyCurrentAddress(), nChPort, false, cmInfo);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -521,6 +533,7 @@ public class CMStub {
 	 */
 	public DatagramChannel addBlockDatagramChannel(int nChPort)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMChannelInfo<Integer> blockDCInfo = commInfo.getBlockDatagramChannelInfo();
@@ -533,7 +546,7 @@ public class CMStub {
 			return null;
 		}
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
-				confInfo.getMyCurrentAddress(), nChPort, true, m_cmInfo);
+				confInfo.getMyCurrentAddress(), nChPort, true, cmInfo);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -652,6 +665,7 @@ public class CMStub {
 	 */
 	public boolean addMulticastChannel(String strSession, String strGroup, String strChAddress, int nChPort)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		DatagramChannel mc = null;
 		InetSocketAddress sockAddress = new InetSocketAddress(strChAddress, nChPort);
@@ -680,7 +694,7 @@ public class CMStub {
 		////////// rather than the MainActivity thread
 
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_MULTICAST_CHANNEL,
-				strChAddress, nChPort, false, m_cmInfo);
+				strChAddress, nChPort, false, cmInfo);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -933,6 +947,7 @@ public class CMStub {
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum, boolean isBlock)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = null;
@@ -944,7 +959,7 @@ public class CMStub {
 
 		if(confInfo.getSystemType().contentEquals("CLIENT") 
 				|| (confInfo.getSystemType().contentEquals("SERVER") 
-						&& !CMConfigurator.isDServer(m_cmInfo)))
+						&& !CMConfigurator.isDServer(cmInfo)))
 		{
 			strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		}
@@ -959,13 +974,13 @@ public class CMStub {
 		{
 			cme.setDistributionSession("CM_ONE_USER");
 			cme.setDistributionGroup(strTarget);
-			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, cmInfo);
 			cme.setDistributionSession("");
 			cme.setDistributionGroup("");
 		}
 		else
 		{
-			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, isBlock, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, isBlock, cmInfo);
 		}
 
 		return ret;
@@ -1010,13 +1025,14 @@ public class CMStub {
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nSendPort, int nRecvPort, boolean isBlock)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean ret = false;
 
 		// set sender and receiver
 		cme.setSender(getMyself().getName());
 		cme.setReceiver(strTarget);
 
-		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock, m_cmInfo);
+		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock, cmInfo);
 		return ret;
 	}
 	
@@ -1368,6 +1384,7 @@ public class CMStub {
 	 */
 	public boolean cast(CMEvent cme, String sessionName, String groupName, int opt, int nChNum)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
@@ -1403,14 +1420,14 @@ public class CMStub {
 				cme.setDistributionGroup(groupName);
 			}
 			
-			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, cmInfo);
 		}
 		else	// if a server,
 		{
 			// if the sessionName is null, broadcast
 			if(sessionName == null)
 			{
-				ret = CMEventManager.broadcastEvent(cme, opt, nChNum, m_cmInfo);
+				ret = CMEventManager.broadcastEvent(cme, opt, nChNum, cmInfo);
 			}
 			// if the sessionName is not null, and the groupName is null, cast to all session members
 			else if(groupName == null)
@@ -1427,7 +1444,7 @@ public class CMStub {
 					System.out.println("CCMStub.cast(), session("+sessionName+") member is null.");
 					return false;
 				}
-				ret = CMEventManager.castEvent(cme, member, opt, nChNum, m_cmInfo);
+				ret = CMEventManager.castEvent(cme, member, opt, nChNum, cmInfo);
 			}
 			// if both the sessionName and groupName is not null, cast to group members
 			else
@@ -1451,7 +1468,7 @@ public class CMStub {
 										+groupName+") member is null");
 					return false;
 				}
-				ret = CMEventManager.castEvent(cme, member, opt, nChNum, m_cmInfo);
+				ret = CMEventManager.castEvent(cme, member, opt, nChNum, cmInfo);
 			}
 			
 		}
@@ -1554,11 +1571,12 @@ public class CMStub {
 	 */
 	public boolean multicast(CMEvent cme, String sessionName, String groupName)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		// set sender
 		cme.setSender(getMyself().getName());
 
 		boolean ret = false;
-		ret = CMEventManager.multicastEvent(cme, sessionName, groupName, m_cmInfo);
+		ret = CMEventManager.multicastEvent(cme, sessionName, groupName, cmInfo);
 		return ret;
 	}
 	
@@ -1643,6 +1661,7 @@ public class CMStub {
 	 */
 	public boolean broadcast(CMEvent cme, int opt, int nChNum)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
@@ -1658,19 +1677,19 @@ public class CMStub {
 			cme.setDistributionSession("CM_ALL_SESSION");
 			cme.setDistributionGroup("CM_ALL_GROUP");
 			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, cmInfo);
 			
 			// if there are additional servers connected
 			Iterator<CMServer> iterAddServer = interInfo.getAddServerList().iterator();
 			for(int i = 0; i < interInfo.getAddServerList().size(); i++)
 			{
 				CMServer tServer = iterAddServer.next();
-				CMEventManager.unicastEvent(cme, tServer.getServerName(), opt, nChNum, m_cmInfo);
+				CMEventManager.unicastEvent(cme, tServer.getServerName(), opt, nChNum, cmInfo);
 			}
 		}
 		else	// if a server
 		{
-			ret = CMEventManager.broadcastEvent(cme, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.broadcastEvent(cme, opt, nChNum, cmInfo);
 		}
 
 		return ret;
@@ -1776,6 +1795,7 @@ public class CMStub {
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
@@ -1783,7 +1803,7 @@ public class CMStub {
 		String strDefServer = null;
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			if(CMConfigurator.isDServer(m_cmInfo))
+			if(CMConfigurator.isDServer(cmInfo))
 				strDefServer = getMyself().getName();
 			else
 			{
@@ -1816,7 +1836,7 @@ public class CMStub {
 
 			cme.setDistributionSession("CM_ONE_USER");
 			cme.setDistributionGroup(userName);
-			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, cmInfo);
 			cme.setDistributionSession("");
 			cme.setDistributionGroup("");
 		}
@@ -1825,7 +1845,7 @@ public class CMStub {
 			// set receiver
 			cme.setReceiver(serverName);
 
-			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, cmInfo);
 		}
 		
 		return ret;
@@ -1934,6 +1954,7 @@ public class CMStub {
 	 */
 	public 	boolean cast(CMEvent cme, String serverName, String sessionName, String groupName, int opt, int nChNum)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
@@ -1972,7 +1993,7 @@ public class CMStub {
 				cme.setDistributionGroup(groupName);
 			}
 
-			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, m_cmInfo);
+			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, cmInfo);
 		}
 
 		return ret;
@@ -2078,6 +2099,7 @@ public class CMStub {
 	 */
 	public boolean requestFile(String strFileName, String strFileOwner, byte byteFileAppend)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
@@ -2089,7 +2111,7 @@ public class CMStub {
 		}
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, 
-				byteFileAppend, m_cmInfo);
+				byteFileAppend, cmInfo);
 		return bReturn;
 	}
 	
@@ -2177,6 +2199,7 @@ public class CMStub {
 	 */
 	public boolean pushFile(String strFilePath, String strReceiver, byte byteFileAppend)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
@@ -2190,7 +2213,7 @@ public class CMStub {
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, 
-				byteFileAppend, m_cmInfo);
+				byteFileAppend, cmInfo);
 		return bReturn;
 	}
 	
@@ -2210,8 +2233,9 @@ public class CMStub {
 	 */
 	public boolean cancelPushFile(String strReceiver)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
-		bReturn = CMFileTransferManager.cancelPushFile(strReceiver, m_cmInfo);
+		bReturn = CMFileTransferManager.cancelPushFile(strReceiver, cmInfo);
 		return bReturn;
 	}
 	
@@ -2231,8 +2255,9 @@ public class CMStub {
 	 */
 	public boolean cancelPullFile(String strSender)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
-		bReturn = CMFileTransferManager.cancelPullFile(strSender, m_cmInfo);
+		bReturn = CMFileTransferManager.cancelPullFile(strSender, cmInfo);
 		return bReturn;
 	}
 
@@ -2255,12 +2280,14 @@ public class CMStub {
 	 * @see CMStub#measureOutputThroughput(String)
 	 */
 	public double measureInputThroughput(String strTarget) {
+		CMInfo cmInfo = CMInfo.getInstance();
+
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureInputThroughput() called..");
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureInputThroughput(strTarget, m_cmInfo);
+		double speed = CMCommManager.measureInputThroughput(strTarget, cmInfo);
 		return speed;
 	}
 	
@@ -2274,12 +2301,14 @@ public class CMStub {
 	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
 	public double measureOutputThroughput(String strTarget) {
+		CMInfo cmInfo = CMInfo.getInstance();
+
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureOutputThroughput() called..");
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureOutputThroughput(strTarget, m_cmInfo);
+		double speed = CMCommManager.measureOutputThroughput(strTarget, cmInfo);
 		return speed;
 	}
 	
