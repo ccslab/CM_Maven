@@ -141,14 +141,25 @@ public class CMInfo {
 	private CMAppEventHandler m_appEventHandler;
 	// status info
 	private boolean m_bStarted;
+
+	// instance
+	private static CMInfo instance;
 	
-	public CMInfo()
+	private CMInfo()
 	{
 		serviceManagerHashtable = new Hashtable<>();
 		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
 		
 		m_appEventHandler = null;
 		m_bStarted = false;
+	}
+
+	// getInstance()
+	public static synchronized CMInfo getInstance() {
+		if(instance == null) {
+			instance = new CMInfo();
+		}
+		return instance;
 	}
 
 	public synchronized <T extends CMServiceManager> void addServiceManager(Class<T> type, T manager) {
