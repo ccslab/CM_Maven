@@ -22,12 +22,10 @@ public class CMSendFileTask implements Runnable {
 
 	CMSendFileInfo m_sendFileInfo;
 	CMBlockingEventQueue m_sendQueue;
-	CMInfo m_cmInfo;
-	
+
 	public CMSendFileTask(CMSendFileInfo sendFileInfo, CMInfo cmInfo)
 	{
 		m_sendFileInfo = sendFileInfo;
-		m_cmInfo = cmInfo;
 		m_sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
 	}
 	
@@ -157,8 +155,9 @@ public class CMSendFileTask implements Runnable {
 			fe.setFileName(m_sendFileInfo.getFileName());
 			fe.setFileSize(m_sendFileInfo.getFileSize());
 			fe.setContentID(m_sendFileInfo.getContentID());
-			
-			if(CMFileTransferManager.isP2PFileTransfer(fe, m_cmInfo))
+
+			CMInfo cmInfo = CMInfo.getInstance();
+			if(CMFileTransferManager.isP2PFileTransfer(fe, cmInfo))
 			{
 				if(CMInfo._CM_DEBUG)
 				{
