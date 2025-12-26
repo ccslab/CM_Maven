@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 public class CMFileSyncGenerator implements Runnable {
     private String userName;
-    private CMInfo cmInfo;
     private List<CMFileSyncEntry> newClientPathEntryList;
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumArrayMap;
     private Map<Integer, Integer> basisFileIndexMap;    // key: client entry index, value: basis index
@@ -42,7 +41,6 @@ public class CMFileSyncGenerator implements Runnable {
 
     public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
         this.userName = userName;
-        this.cmInfo = cmInfo;
         newClientPathEntryList = null;
         blockChecksumArrayMap = new Hashtable<>();
         basisFileIndexMap = new Hashtable<>();
@@ -155,6 +153,7 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // check if the file-sync task is completed. (both client and server sync home are empty)
+        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         if (syncManager.isCompleteFileSync(userName)) {
             syncManager.completeFileSync(userName);
@@ -183,6 +182,7 @@ public class CMFileSyncGenerator implements Runnable {
         boolean sendResult;
 
         // get CMFileSyncManager object
+        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         // get the server sync home
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
@@ -305,6 +305,7 @@ public class CMFileSyncGenerator implements Runnable {
         // get block size with the basis file index
         fse.setBlockSize(blockSizeOfBasisFileMap.get(basisFileIndex));
         // send the event
+        CMInfo cmInfo = CMInfo.getInstance();
         boolean ret = CMEventManager.unicastEvent(fse, userName, cmInfo);
         if (!ret) {
             System.err.println("send error, fse: " + fse);
@@ -344,6 +345,7 @@ public class CMFileSyncGenerator implements Runnable {
         // create a block-checksum array
         CMFileSyncBlockChecksum[] checksumArray = new CMFileSyncBlockChecksum[numBlocks];
         // get the file-sync manager
+        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
 
@@ -453,6 +455,7 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // get sync home
+        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         Path syncHome = syncManager.getServerSyncHome(userName);
@@ -564,6 +567,7 @@ public class CMFileSyncGenerator implements Runnable {
         Objects.requireNonNull(basisFileList);
 
         // get the basis file list with relative path
+        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         Path serverSyncHome = syncManager.getServerSyncHome(userName);
@@ -644,6 +648,7 @@ public class CMFileSyncGenerator implements Runnable {
                     .collect(Collectors.toList());
         }
         // get the CMFileSyncManager object
+        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
 
@@ -715,6 +720,7 @@ public class CMFileSyncGenerator implements Runnable {
             System.out.println("=== CMFileSyncGenerator.createBasisFileList() called..");
         }
         // get the file sync manager
+        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         if (syncManager == null) {
             System.err.println("CMFileSyncGenerator.createBasisFileList(), file-sync manager is null!");
