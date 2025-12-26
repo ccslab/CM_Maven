@@ -132,9 +132,6 @@ public class CMInfo {
 	// directory name to maintain internal files
 	public static final String SETTINGS_DIR = ".cm-settings";
 
-	// repository
-	private CMThreadInfo m_threadInfo;
-
 	// CM service manager table
 	private Hashtable<Class<? extends CMServiceManager>, Object> serviceManagerHashtable;
 	// CM event handler hash table
@@ -147,8 +144,6 @@ public class CMInfo {
 	
 	public CMInfo()
 	{
-		m_threadInfo = new CMThreadInfo();
-
 		serviceManagerHashtable = new Hashtable<>();
 		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
 		
@@ -165,11 +160,6 @@ public class CMInfo {
 		return manager;
 	}
 
-	public synchronized CMThreadInfo getThreadInfo()
-	{
-		return m_threadInfo;
-	}
-	
 	public synchronized Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
 	{
 		return m_eventHandlerHashtable;

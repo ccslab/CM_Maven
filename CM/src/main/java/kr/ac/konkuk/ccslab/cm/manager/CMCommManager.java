@@ -381,25 +381,7 @@ public class CMCommManager {
 					+nChKey+") to the target("+strTarget+") already exists!");
 			return null;
 		}
-		
-		/*
-		////////// for Android client where network-related methods must be called in a separate thread
-		////////// rather than the MainActivity thread
-		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				strTargetSSCAddress, nTargetSSCPort, true, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
-		Future<SelectableChannel> future = es.submit(task);
-		try {
-			sc = (SocketChannel) future.get();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
 
-		//////////
-		*/
-		
 		try {
 			sc = (SocketChannel) openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, strTargetSSCAddress, 
 					nTargetSSCPort, cmInfo);
@@ -561,7 +543,7 @@ public class CMCommManager {
 	
 	public static CMByteReceiver startReceivingMessage(CMInfo cmInfo)
 	{
-		ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
 		//byteReceiver.start();
 		Future<?> future = es.submit(byteReceiver);
@@ -573,7 +555,7 @@ public class CMCommManager {
 	
 	public static CMByteSender startSendingMessage(CMInfo cmInfo)
 	{
-		ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMByteSender byteSender = new CMByteSender(cmInfo);
 		//byteSender.start();
 		Future<?> future = es.submit(byteSender);
@@ -668,7 +650,7 @@ public class CMCommManager {
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
-		CMThreadInfo threadInfo = Objects.requireNonNull(cmInfo.getThreadInfo());
+		CMThreadInfo threadInfo = Objects.requireNonNull(CMThreadInfo.getInstance());
 		if(threadId == threadInfo.getEventReceiverId()) {
 			System.err.println("The current thread is the event-receiver thread ("+threadId+")!");
 			return -1;
@@ -739,7 +721,7 @@ public class CMCommManager {
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
-		CMThreadInfo threadInfo = Objects.requireNonNull(cmInfo.getThreadInfo());
+		CMThreadInfo threadInfo = Objects.requireNonNull(CMThreadInfo.getInstance());
 		if(threadId == threadInfo.getEventReceiverId()) {
 			System.err.println("The current thread is the event-receiver thread ("+threadId+")!");
 			return -1;

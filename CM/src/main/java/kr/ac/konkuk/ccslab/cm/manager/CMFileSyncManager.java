@@ -4,10 +4,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
@@ -752,7 +749,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get ExecutorService reference
-        ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+        ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
         Objects.requireNonNull(es);
         // create WatchService and store the reference
         final WatchService watchService;
@@ -1382,7 +1379,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // get the scheduled-executor-service reference
-        ScheduledExecutorService ses = m_cmInfo.getThreadInfo().getScheduledExecutorService();
+        ScheduledExecutorService ses = CMThreadInfo.getInstance().getScheduledExecutorService();
         Objects.requireNonNull(ses);
         // get directory-activation-monitoring-period
         CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());

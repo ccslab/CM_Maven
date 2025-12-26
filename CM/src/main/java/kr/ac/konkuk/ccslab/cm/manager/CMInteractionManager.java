@@ -552,7 +552,7 @@ public class CMInteractionManager {
 			// check and stop the scheduled keep-alive task
 			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
 			{
-				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				if(future != null)
 				{
@@ -594,7 +594,7 @@ public class CMInteractionManager {
 			// check and stop the scheduled keep-alive task
 			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
 			{
-				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				future.cancel(true);
 				
@@ -1708,7 +1708,7 @@ public class CMInteractionManager {
 			int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
 			if(nKeepAlive > 0 && getNumLoginServers(cmInfo) == 1)
 			{
-				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
 				CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask(cmInfo);
 				ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask, 

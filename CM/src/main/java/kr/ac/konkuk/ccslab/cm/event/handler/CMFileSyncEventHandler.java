@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
@@ -1755,7 +1756,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // start CMFileSyncGeneratorTask
         CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName, m_cmInfo);
-        ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+        ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
         es.submit(fileSyncGenerator);
         // set the generator in the CMFileSyncInfo
         CMFileSyncInfo.getInstance().getSyncGeneratorMap().put(userName, fileSyncGenerator);

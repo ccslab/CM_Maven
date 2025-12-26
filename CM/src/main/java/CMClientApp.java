@@ -3660,7 +3660,7 @@ public class CMClientApp {
 	}
 
 	private void printThreadInfo() {
-		String threadInfo = m_clientStub.getThreadInfo();
+		String threadInfo = CMThreadInfo.getInstance().toString();
 		System.out.println(threadInfo);
 	}
 

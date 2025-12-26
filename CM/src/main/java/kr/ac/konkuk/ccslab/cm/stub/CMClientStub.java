@@ -223,44 +223,8 @@ public class CMClientStub extends CMStub {
 	public boolean startCM()
 	{
 		super.init();	// initialize CMStub
-		
 		boolean bRet = false;
-		
-		/*
-		if(m_cmInfo.isStarted())
-		{
-			System.err.println("CMClientStub.startCM(), already started!");
-			return false;
-		}
-
-		// Korean encoding
-		System.setProperty("file.encoding", "UTF-8");
-		Field charset;
-		try {
-			charset = Charset.class.getDeclaredField("defaultCharset");
-			charset.setAccessible(true);
-			try {
-				charset.set(null, null);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		} catch (NoSuchFieldException | SecurityException e1) {
-			e1.printStackTrace();
-		}
-
-		// create an executor service object
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
-		ExecutorService es = threadInfo.getExecutorService();
-		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
-		es = Executors.newFixedThreadPool(nAvailableProcessors);
-		threadInfo.setExecutorService(es);
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMClientStub.startCM(), executor service created; # available processors("
-					+nAvailableProcessors+").");
-		}
-		*/
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
@@ -334,14 +298,7 @@ public class CMClientStub extends CMStub {
 	public void terminateCM()
 	{
 		disconnectFromServer();
-		
 		super.terminateCM();
-
-		/*
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
-		ExecutorService es = threadInfo.getExecutorService();
-		es.shutdown();	// need to check
-		*/
 
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMClientStub.terminateCM(), succeeded.");
@@ -381,7 +338,7 @@ public class CMClientStub extends CMStub {
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -421,7 +378,7 @@ public class CMClientStub extends CMStub {
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -625,7 +582,7 @@ public class CMClientStub extends CMStub {
 		// check and stop the scheduled keep-alive task
 		if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
 		{
-			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 			if(future != null){
 				future.cancel(true);
@@ -1154,7 +1111,7 @@ public class CMClientStub extends CMStub {
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
 				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			sc = (SocketChannel) future.get();
@@ -1250,7 +1207,7 @@ public class CMClientStub extends CMStub {
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
 				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			sc = (SocketChannel) future.get();
@@ -1368,7 +1325,7 @@ public class CMClientStub extends CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
 		try {
 			result = future.get();
@@ -1480,7 +1437,7 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
 				strTargetSSCAddress, nTargetSSCPort, true, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			sc = (SocketChannel) future.get();
@@ -1592,7 +1549,7 @@ public class CMClientStub extends CMStub {
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
 				strTargetSSCAddress, nTargetSSCPort, true, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			sc = (SocketChannel) future.get();
@@ -2617,7 +2574,7 @@ public class CMClientStub extends CMStub {
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -2667,7 +2624,7 @@ public class CMClientStub extends CMStub {
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -2842,7 +2799,7 @@ public class CMClientStub extends CMStub {
 		// check and stop the scheduled keep-alive task
 		if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
 		{
-			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 			future.cancel(true);
 			
