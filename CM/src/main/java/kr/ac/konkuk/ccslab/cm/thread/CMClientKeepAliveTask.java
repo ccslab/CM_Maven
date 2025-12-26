@@ -15,17 +15,17 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 
 public class CMClientKeepAliveTask implements Runnable {
 
-	private CMInfo m_cmInfo;
 	private static final Logger LOG = Logger.getLogger(CMClientKeepAliveTask.class.getName());
 	
 	public CMClientKeepAliveTask(CMInfo cmInfo)
 	{
-		m_cmInfo = cmInfo;
+
 	}
 	
 	@Override
 	public void run()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getLogLevel() == 0)
 			LOG.setLevel(Level.SEVERE);
@@ -55,7 +55,7 @@ public class CMClientKeepAliveTask implements Runnable {
 
 			CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 			reqPingEvent.setSender(myself.getName());
-			CMEventManager.unicastEvent(reqPingEvent, defServer.getServerName(), m_cmInfo);
+			CMEventManager.unicastEvent(reqPingEvent, defServer.getServerName(), cmInfo);
 		}
 		
 		Vector<CMServer> addServerList = CMInteractionInfo.getInstance().getAddServerList();
@@ -83,7 +83,7 @@ public class CMClientKeepAliveTask implements Runnable {
 
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
-					CMEventManager.unicastEvent(reqPingEvent, addServer.getServerName(), m_cmInfo);
+					CMEventManager.unicastEvent(reqPingEvent, addServer.getServerName(), cmInfo);
 				}
 			}
 		}
