@@ -679,7 +679,7 @@ public class CMCommManager {
 		long lFileSize = -1;	// the size of a file to measure the transmission delay
 		long lTransDelay = -1;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMEventInfo eInfo = cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMFileEvent replyEvent = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -750,7 +750,7 @@ public class CMCommManager {
 		long lFileSize = -1;	// the size of a file to measure the transmission delay
 		long lTransDelay = -1;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMEventInfo eInfo = cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMFileEvent replyEvent = null;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
