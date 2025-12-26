@@ -43,7 +43,7 @@ public class CMEventReceiver implements Runnable {
 		boolean bForwardToApp = true;
 		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		Objects.requireNonNull(threadInfo);
 		long threadId = Thread.currentThread().getId();
 		threadInfo.setEventReceiverId(threadId);
@@ -293,7 +293,7 @@ public class CMEventReceiver implements Runnable {
 			// check and stop the scheduled keep-alive task
 			if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
 			{
-				CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				if(future != null)
 				{

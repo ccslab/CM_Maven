@@ -209,48 +209,12 @@ public class CMServerStub extends CMStub {
 	public boolean startCM()
 	{
 		super.init();	// initialize CMStub
-		
 		boolean bRet = false;
-		
-		/*
-		if(m_cmInfo.isStarted())
-		{
-			System.err.println("CMServerStub.startCM(), already started!");
-			return false;
-		}
-		// Korean encoding
-		System.setProperty("file.encoding", "UTF-8");
-		Field charset;
-		try {
-			charset = Charset.class.getDeclaredField("defaultCharset");
-			charset.setAccessible(true);
-			try {
-				charset.set(null, null);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		} catch (NoSuchFieldException | SecurityException e1) {
-			e1.printStackTrace();
-		}
-
-		// create an executor service object
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
-		ExecutorService es = threadInfo.getExecutorService();
-		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
-		es = Executors.newFixedThreadPool(nAvailableProcessors);
-		threadInfo.setExecutorService(es);
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMClientStub.startCM(), executor service created; # available processors("
-					+nAvailableProcessors+").");
-		}
-		*/
 
 		String strConfPath = CMConfigurationInfo.getInstance().getConfFileHome().resolve("cm-server.conf").toString();
 		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
 		if(!bRet)
 			return false;
-		
 
 		bRet = CMInteractionManager.init(m_cmInfo);
 		if(!bRet)
@@ -264,7 +228,7 @@ public class CMServerStub extends CMStub {
 		if(nKeepAliveTime > 0)
 		{
 			// start keep-alive task
-			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
 			CMServerKeepAliveTask keepAliveTask = new CMServerKeepAliveTask(m_cmInfo);
 			ScheduledFuture<?> future = ses.scheduleWithFixedDelay(keepAliveTask, 

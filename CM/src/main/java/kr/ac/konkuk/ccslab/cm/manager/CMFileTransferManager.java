@@ -141,7 +141,7 @@ public class CMFileTransferManager {
 				////////// rather than the MainActivity thread
 				CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SERVER_CHANNEL,
 						myself.getHost(), 0, false, cmInfo);
-				ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
+				ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 				Future<SelectableChannel> future = es.submit(task);
 				try {
 					ssc = (ServerSocketChannel) future.get();
@@ -2896,7 +2896,7 @@ public class CMFileTransferManager {
 	{
 		long lRecvSize = -1;	// received size by the receiver
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		CMSendFileInfo sInfo = null;
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
@@ -3155,7 +3155,7 @@ public class CMFileTransferManager {
 	
 	private static void sendSTART_FILE_TRANSFER_CHAN_ACK(CMRecvFileInfo rfInfo, CMInfo cmInfo)
 	{
-		CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		// start a dedicated thread to receive the file

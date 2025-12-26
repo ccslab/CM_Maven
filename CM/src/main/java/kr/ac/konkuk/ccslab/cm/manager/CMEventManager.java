@@ -42,11 +42,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMEventInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 public class CMEventManager {
@@ -54,7 +50,7 @@ public class CMEventManager {
 	public synchronized static CMEventReceiver startReceivingEvent(CMInfo cmInfo)
 	{
 		CMEventInfo eventInfo = CMEventInfo.getInstance();
-		ExecutorService es = cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		CMEventReceiver eventReceiver = new CMEventReceiver(cmInfo);
 		//eventReceiver.start();
 		Future<?> future = es.submit(eventReceiver);

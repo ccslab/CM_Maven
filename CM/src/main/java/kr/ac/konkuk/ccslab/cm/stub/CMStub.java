@@ -100,7 +100,7 @@ public class CMStub {
 //		}
 
 		// create an executor service object
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		ExecutorService es = threadInfo.getExecutorService();
 		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
 		if(nAvailableProcessors < CMInfo.MIN_NUM_THREADS) {
@@ -143,7 +143,7 @@ public class CMStub {
 		////////// rather than the MainActivity thread
 		
 		// terminate the interaction manager
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Runnable task = new Runnable() {
 			@Override
 			public void run()
@@ -216,7 +216,7 @@ public class CMStub {
 		
 		// terminate executor service
 		es.shutdownNow();
-		ScheduledExecutorService ses = m_cmInfo.getThreadInfo().getScheduledExecutorService();
+		ScheduledExecutorService ses = CMThreadInfo.getInstance().getScheduledExecutorService();
 		ses.shutdownNow();
 		
 		m_cmInfo.setStarted(false);
@@ -427,7 +427,7 @@ public class CMStub {
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
 				confInfo.getMyCurrentAddress(), nChPort, false, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			dc = (DatagramChannel) future.get();
@@ -483,7 +483,7 @@ public class CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(new CMRemoveChannelTask(dcInfo, nChPort));
 		try {
 			result = future.get();
@@ -534,7 +534,7 @@ public class CMStub {
 		}
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
 				confInfo.getMyCurrentAddress(), nChPort, true, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			dc = (DatagramChannel) future.get();
@@ -590,7 +590,7 @@ public class CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(new CMRemoveChannelTask(dcInfo, nChPort));
 		try {
 			result = future.get();
@@ -681,7 +681,7 @@ public class CMStub {
 
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_MULTICAST_CHANNEL,
 				strChAddress, nChPort, false, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			mc = (DatagramChannel) future.get();
@@ -756,7 +756,7 @@ public class CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(new CMRemoveChannelTask(mcInfo, sockAddress));
 		try {
 			result = future.get();
@@ -2378,7 +2378,7 @@ public class CMStub {
 	 * @return the current thread pool information string
 	 */
 	public String getThreadInfo() {
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		return threadInfo.toString();
 	}
 }
