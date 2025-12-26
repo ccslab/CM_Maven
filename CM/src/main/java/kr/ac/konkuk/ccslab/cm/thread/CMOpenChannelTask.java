@@ -13,8 +13,7 @@ public class CMOpenChannelTask implements Callable<SelectableChannel> {
 	private String m_strAddress;
 	private int m_nPort;
 	private boolean m_isBlocking;
-	private CMInfo m_cmInfo;
-	
+
 	public CMOpenChannelTask(int nChType, String strServerAddress, int nServerPort, 
 			boolean isBlocking, CMInfo cmInfo)
 	{
@@ -22,18 +21,18 @@ public class CMOpenChannelTask implements Callable<SelectableChannel> {
 		m_strAddress = strServerAddress;
 		m_nPort = nServerPort;
 		m_isBlocking = isBlocking;
-		m_cmInfo = cmInfo;
 	}
 	
 	@Override
 	public SelectableChannel call()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		SelectableChannel sc = null;
 		try {
 			if(m_isBlocking)
-				sc = CMCommManager.openBlockChannel(m_nChType, m_strAddress, m_nPort, m_cmInfo);
+				sc = CMCommManager.openBlockChannel(m_nChType, m_strAddress, m_nPort, cmInfo);
 			else
-				sc = CMCommManager.openNonBlockChannel(m_nChType, m_strAddress, m_nPort, m_cmInfo);
+				sc = CMCommManager.openNonBlockChannel(m_nChType, m_strAddress, m_nPort, cmInfo);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -79,15 +78,5 @@ public class CMOpenChannelTask implements Callable<SelectableChannel> {
 	public boolean getIsBlocking()
 	{
 		return m_isBlocking;
-	}
-	
-	public void setCMInfo(CMInfo cmInfo)
-	{
-		m_cmInfo = cmInfo;
-	}
-	
-	public CMInfo getCMInfo()
-	{
-		return m_cmInfo;
 	}
 }
