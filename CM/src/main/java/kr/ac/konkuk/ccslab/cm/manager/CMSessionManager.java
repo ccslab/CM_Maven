@@ -27,7 +27,7 @@ public class CMSessionManager {
 		}
 		
 		configureGroups(cmInfo);
-		CMGroupManager.init(cmInfo);
+		CMGroupManager.init();
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMSessionManager.init(), succeeded.");
@@ -262,7 +262,7 @@ public class CMSessionManager {
 		tGroup = session.getGroupList().elementAt(0);	// first group
 		interInfo.getMyself().setCurrentGroup(tGroup.getGroupName());
 		// initialize current group
-		CMGroupManager.init(session.getSessionName(), tGroup.getGroupName(), cmInfo);
+		CMGroupManager.init(session.getSessionName(), tGroup.getGroupName());
 		
 		// update user's state
 		interInfo.getMyself().setState(CMInfo.CM_SESSION_JOIN);
@@ -337,7 +337,7 @@ public class CMSessionManager {
 		String strCurrentSession = user.getCurrentSession();
 		
 		// leave from the current group and notify group members
-		CMGroupManager.leaveGroup(user, cmInfo);
+		CMGroupManager.leaveGroup(user);
 		
 		// leave from the current session
 		CMSession session = interInfo.findSession(strCurrentSession);
@@ -427,7 +427,7 @@ public class CMSessionManager {
 		String strCurrentSession = user.getCurrentSession();
 		
 		// leave from the current group and notify group members
-		CMGroupManager.leaveGroup(user, cmInfo);
+		CMGroupManager.leaveGroup(user);
 		
 		// leave from the current session
 		CMSession session = interInfo.findSession(strCurrentSession);

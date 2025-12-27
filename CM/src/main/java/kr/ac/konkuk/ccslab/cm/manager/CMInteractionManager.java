@@ -711,7 +711,7 @@ public class CMInteractionManager {
 			// deliver msg to session manager
 
 			if(strHandlerGroup != null && !strHandlerGroup.equals(""))
-				CMGroupManager.processEvent(msg, cmInfo);
+				CMGroupManager.processEvent(msg);
 			else
 				CMSessionManager.processEvent(msg, cmInfo);
 			
@@ -3711,7 +3711,7 @@ public class CMInteractionManager {
 		// set current group name of the server
 		server.setCurrentGroupName( group.getGroupName() );
 		// initialize current group
-		CMGroupManager.init(session.getSessionName(), group.getGroupName(), cmInfo);
+		CMGroupManager.init(session.getSessionName(), group.getGroupName());
 		// update client state of the server
 		server.setClientState(CMInfo.CM_SESSION_JOIN);
 
@@ -3842,10 +3842,10 @@ public class CMInteractionManager {
 		}
 
 		// send the new user existing group member information
-		CMGroupManager.addDistributeGroupUsers(user, cmInfo);
+		CMGroupManager.addDistributeGroupUsers(user);
 		
 		// send group members the new user information
-		CMGroupManager.addNotifyGroupUsersOfNewUser(user, cmInfo);
+		CMGroupManager.addNotifyGroupUsersOfNewUser(user);
 
 		return;
 	}

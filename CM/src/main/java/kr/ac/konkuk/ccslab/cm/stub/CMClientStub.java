@@ -563,7 +563,7 @@ public class CMClientStub extends CMStub {
 		}
 		
 		// terminate current group info (multicast channel, group member, Membership key)
-		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup(), cmInfo);
+		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup());
 
 		// close and remove all additional channels to the default server
 		interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
@@ -874,7 +874,7 @@ public class CMClientStub extends CMStub {
 		}
 		
 		// terminate current group info (multicast channel, group member, Membership key)
-		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup(), cmInfo);
+		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup());
 		
 		// send the leave request to the default server
 		CMSessionEvent se = new CMSessionEvent();
@@ -1055,7 +1055,7 @@ public class CMClientStub extends CMStub {
 	public void changeGroup(String gName)
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
-		CMGroupManager.changeGroup(gName, cmInfo);
+		CMGroupManager.changeGroup(gName);
 		return;
 	}
 	
@@ -3038,7 +3038,7 @@ public class CMClientStub extends CMStub {
 		}
 
 		// terminate current group info (multicast channel, group member, Membership key)
-		CMGroupManager.terminate(tserver.getCurrentSessionName(), tserver.getCurrentGroupName(), cmInfo);
+		CMGroupManager.terminate(tserver.getCurrentSessionName(), tserver.getCurrentGroupName());
 
 		// make and send event
 		CMMultiServerEvent mse = new CMMultiServerEvent();
