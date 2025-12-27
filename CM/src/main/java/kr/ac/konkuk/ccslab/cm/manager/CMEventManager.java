@@ -52,7 +52,7 @@ public class CMEventManager {
 		CMInfo cmInfo = CMInfo.getInstance();
 		CMEventInfo eventInfo = CMEventInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
-		CMEventReceiver eventReceiver = new CMEventReceiver(cmInfo);
+		CMEventReceiver eventReceiver = new CMEventReceiver();
 		//eventReceiver.start();
 		Future<?> future = es.submit(eventReceiver);
 		eventInfo.setEventReceiver(eventReceiver);

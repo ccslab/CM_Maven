@@ -1723,7 +1723,7 @@ public class CMInteractionManager {
 			{
 				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
-				CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask(cmInfo);
+				CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask();
 				ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask, 
 						nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
 				threadInfo.setScheduledFuture(future);

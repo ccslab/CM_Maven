@@ -17,7 +17,7 @@ public class CMClientKeepAliveTask implements Runnable {
 
 	private static final Logger LOG = Logger.getLogger(CMClientKeepAliveTask.class.getName());
 	
-	public CMClientKeepAliveTask(CMInfo cmInfo)
+	public CMClientKeepAliveTask()
 	{
 
 	}

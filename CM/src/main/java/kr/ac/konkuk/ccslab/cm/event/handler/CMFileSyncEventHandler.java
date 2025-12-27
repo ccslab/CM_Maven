@@ -1777,7 +1777,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // start CMFileSyncGeneratorTask
-        CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName, cmInfo);
+        CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName);
         ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
         es.submit(fileSyncGenerator);
         // set the generator in the CMFileSyncInfo

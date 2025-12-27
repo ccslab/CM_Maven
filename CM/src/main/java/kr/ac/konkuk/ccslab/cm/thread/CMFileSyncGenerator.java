@@ -38,7 +38,7 @@ public class CMFileSyncGenerator implements Runnable {
     private int numNewFilesCompleted;
     private int numUpdateFilesCompleted;
 
-    public CMFileSyncGenerator(String userName, CMInfo cmInfo) {
+    public CMFileSyncGenerator(String userName) {
         this.userName = userName;
         newClientPathEntryList = null;
         blockChecksumArrayMap = new Hashtable<>();

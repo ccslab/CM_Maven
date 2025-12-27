@@ -26,7 +26,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 public class CMEventReceiver implements Runnable {
 	private CMBlockingEventQueue m_queue;
 
-	public CMEventReceiver(CMInfo cmInfo)
+	public CMEventReceiver()
 	{
 		m_queue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 	}
