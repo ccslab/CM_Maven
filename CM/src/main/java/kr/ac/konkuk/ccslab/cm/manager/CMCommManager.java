@@ -559,7 +559,7 @@ public class CMCommManager {
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
-		CMByteSender byteSender = new CMByteSender(cmInfo);
+		CMByteSender byteSender = new CMByteSender();
 		//byteSender.start();
 		Future<?> future = es.submit(byteSender);
 		CMCommInfo.getInstance().setByteSender(byteSender);

@@ -15,7 +15,7 @@ public class CMByteSender implements Runnable {
 
 	private CMBlockingEventQueue m_sendQueue = null;
 
-	public CMByteSender(CMInfo cmInfo)
+	public CMByteSender()
 	{
 		m_sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
 	}
