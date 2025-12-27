@@ -288,7 +288,7 @@ public class CMFileTransferManager {
 			if(nReturnCode == 1 && confInfo.isFileTransferScheme())
 			{
 				// set ssc port number of the file receiver to the receiver client info
-				CMUser fileReceiver = CMInteractionManager.findGroupMemberOfClient(fe.getFileReceiver(), cmInfo);
+				CMUser fileReceiver = CMInteractionManager.findGroupMemberOfClient(fe.getFileReceiver());
 				if(fileReceiver == null)
 				{
 					System.err.println("file receiver("+fe.getFileReceiver()+") not found in session("
@@ -466,7 +466,7 @@ public class CMFileTransferManager {
 		}
 		*/
 
-		CMServer targetServer = CMInteractionManager.findServer(strFileSender, cmInfo);
+		CMServer targetServer = CMInteractionManager.findServer(strFileSender);
 		if(targetServer != null)
 		{
 			blockSCInfo = targetServer.getBlockSocketChannelInfo();
@@ -476,8 +476,8 @@ public class CMFileTransferManager {
 			CMUser targetUser = null;
 			if(confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileSender, 
-						cmInfo);
+				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileSender
+				);
 			}
 			else
 			{
@@ -987,7 +987,7 @@ public class CMFileTransferManager {
 		}
 		*/
 
-		CMServer targetServer = CMInteractionManager.findServer(strFileReceiver, cmInfo);
+		CMServer targetServer = CMInteractionManager.findServer(strFileReceiver);
 		if(targetServer != null)
 		{
 			blockChannelList = targetServer.getBlockSocketChannelInfo();
@@ -998,7 +998,7 @@ public class CMFileTransferManager {
 			CMUser targetUser = null;
 			if(confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, cmInfo);
+				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver);
 				nonBlockChannelList = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
 			}
 			else
@@ -1488,7 +1488,7 @@ public class CMFileTransferManager {
 
 		}
 		*/
-		CMServer targetServer = CMInteractionManager.findServer(strFileReceiver, cmInfo);
+		CMServer targetServer = CMInteractionManager.findServer(strFileReceiver);
 		if(targetServer != null)
 		{
 			blockSCInfo = targetServer.getBlockSocketChannelInfo();
@@ -1498,8 +1498,8 @@ public class CMFileTransferManager {
 			CMUser targetUser = null;
 			if(confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, 
-						cmInfo);
+				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver
+				);
 			}
 			else
 			{
@@ -2075,7 +2075,7 @@ public class CMFileTransferManager {
 			if(confInfo.isFileTransferScheme() && isP2PFileTransfer(fe, cmInfo))
 			{
 				// set ssc port number of the file receiver to the receiver client info
-				CMUser fileReceiver = CMInteractionManager.findGroupMemberOfClient(fe.getFileReceiver(), cmInfo);
+				CMUser fileReceiver = CMInteractionManager.findGroupMemberOfClient(fe.getFileReceiver());
 				if(fileReceiver == null)
 				{
 					System.err.println("file receiver("+fe.getFileReceiver()+") not found in session("
@@ -2823,7 +2823,7 @@ public class CMFileTransferManager {
 		SocketChannel dsc = null;
 		if(confInfo.getSystemType().equals("CLIENT"))	// CLIENT
 		{
-			CMServer serverInfo = CMInteractionManager.findServer(fe.getFileSender(), cmInfo);
+			CMServer serverInfo = CMInteractionManager.findServer(fe.getFileSender());
 			if(serverInfo != null)
 			{
 				// socket channel to the file receiver (server)
@@ -2833,7 +2833,7 @@ public class CMFileTransferManager {
 			}
 			else
 			{
-				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(fe.getFileSender(), cmInfo);
+				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(fe.getFileSender());
 				if(targetUser == null)
 				{
 					System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER_CHAN(), file sender("
@@ -3573,7 +3573,7 @@ public class CMFileTransferManager {
 			{
 				// get the file sender (client)
 				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(
-						strFileSender, cmInfo);
+						strFileSender);
 				if(targetUser == null)
 				{
 					System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN()"
@@ -3601,8 +3601,8 @@ public class CMFileTransferManager {
 			else
 			{
 				// get the file sender (server)
-				CMServer server = CMInteractionManager.findServer(strFileSender, 
-						cmInfo);
+				CMServer server = CMInteractionManager.findServer(strFileSender
+				);
 				if(server == null)
 				{
 					System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN()"
@@ -3898,7 +3898,7 @@ public class CMFileTransferManager {
 			{
 				// get the file receiver (client)
 				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(
-						strFileReceiver, cmInfo);
+						strFileReceiver);
 				if(targetUser == null)
 				{
 					System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN()"
@@ -3910,7 +3910,7 @@ public class CMFileTransferManager {
 			else
 			{
 				// get the file receiver (server)
-				CMServer server = CMInteractionManager.findServer(strFileReceiver, cmInfo);
+				CMServer server = CMInteractionManager.findServer(strFileReceiver);
 				if(server == null)
 				{
 					System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN()"

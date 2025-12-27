@@ -260,7 +260,7 @@ public class CMClientStub extends CMStub {
 			@Override
 			public Boolean call()
 			{
-				boolean ret = CMInteractionManager.init(cmInfo);
+				boolean ret = CMInteractionManager.init();
 				return ret;
 			}
 		};
@@ -337,7 +337,7 @@ public class CMClientStub extends CMStub {
 			@Override
 			public Boolean call()
 			{
-				Boolean bRet = CMInteractionManager.connectDefaultServer(cmInfo);
+				Boolean bRet = CMInteractionManager.connectDefaultServer();
 				return bRet;
 			}
 		};
@@ -378,7 +378,7 @@ public class CMClientStub extends CMStub {
 			@Override
 			public Boolean call()
 			{
-				Boolean bRet = CMInteractionManager.disconnectFromDefaultServer(cmInfo);
+				Boolean bRet = CMInteractionManager.disconnectFromDefaultServer();
 				return bRet;
 			}
 		};
@@ -586,7 +586,7 @@ public class CMClientStub extends CMStub {
 			System.err.println("["+myself.getName()+"] failed the logout request!");
 
 		// check and stop the scheduled keep-alive task
-		if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
+		if(CMInteractionManager.getNumLoginServers() == 0)
 		{
 			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
@@ -1099,7 +1099,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strServer, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.addNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1196,7 +1196,7 @@ public class CMClientStub extends CMStub {
 			return null;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strServer, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1324,7 +1324,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strServer, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.removeNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1415,7 +1415,7 @@ public class CMClientStub extends CMStub {
 		
 		commInfo.setStartTime(System.currentTimeMillis());
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if( serverInfo != null )
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
@@ -1424,7 +1424,7 @@ public class CMClientStub extends CMStub {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, cmInfo);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
 			if(targetUser == null)
 			{
 				System.err.println("CMClientStub.addBlockSocketChannel(), target user("
@@ -1527,7 +1527,7 @@ public class CMClientStub extends CMStub {
 		
 		commInfo.setStartTime(System.currentTimeMillis());
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if( serverInfo != null )
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
@@ -1536,7 +1536,7 @@ public class CMClientStub extends CMStub {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, cmInfo);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
 			if(targetUser == null)
 			{
 				System.err.println("CMClientStub.syncAddBlockSocketChannel(), target user("
@@ -1692,14 +1692,14 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();			
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, cmInfo);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
 			if(targetUser == null)
 			{
 				System.err.println("CMClientStub.removeBlockSocketChannel(), target user("
@@ -1770,14 +1770,14 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();			
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, cmInfo);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
 			if(targetUser == null)
 			{
 				System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), target user("
@@ -2581,11 +2581,11 @@ public class CMClientStub extends CMStub {
 				Boolean ret = false;
 				if( strServerName.equals(strDefServer) )	// if a default server
 				{
-					ret = CMInteractionManager.connectDefaultServer(cmInfo);
+					ret = CMInteractionManager.connectDefaultServer();
 					return ret;
 				}
 				
-				ret = CMInteractionManager.connectAddServer(strServerName, cmInfo);
+				ret = CMInteractionManager.connectAddServer(strServerName);
 				return ret;
 			}
 		};
@@ -2632,11 +2632,11 @@ public class CMClientStub extends CMStub {
 				Boolean ret = false;
 				if( strServerName.equals(strDefServer) )	// if a default server
 				{
-					ret = CMInteractionManager.disconnectFromDefaultServer(cmInfo);
+					ret = CMInteractionManager.disconnectFromDefaultServer();
 					return ret;
 				}
 
-				ret = CMInteractionManager.disconnectFromAddServer(strServerName, cmInfo);
+				ret = CMInteractionManager.disconnectFromAddServer(strServerName);
 				return ret;
 			}
 		};
@@ -2815,7 +2815,7 @@ public class CMClientStub extends CMStub {
 			tserver.setClientState(CMInfo.CM_CONNECT);
 
 		// check and stop the scheduled keep-alive task
-		if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
+		if(CMInteractionManager.getNumLoginServers() == 0)
 		{
 			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledFuture<?> future = threadInfo.getScheduledFuture();

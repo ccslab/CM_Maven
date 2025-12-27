@@ -164,14 +164,14 @@ public class CMByteReceiver implements Runnable {
 			{
 				LOG.severe("nByteNum("+nByteNum+") is greater than the maximum event size("
 						+CMInfo.MAX_EVENT_SIZE+")!");
-				CMInteractionManager.disconnectBadNode(sc, cmInfo);
+				CMInteractionManager.disconnectBadNode(sc);
 				return;
 			}
 			else if(nByteNum < CMInfo.MIN_EVENT_SIZE)
 			{
 				LOG.severe("nByteNum("+nByteNum+") is less than the minimum event size("
 						+CMInfo.MIN_EVENT_SIZE+")!");
-				CMInteractionManager.disconnectBadNode(sc, cmInfo);
+				CMInteractionManager.disconnectBadNode(sc);
 				return;
 			}
 			//bufEvent = ByteBuffer.allocateDirect(nByteNum);

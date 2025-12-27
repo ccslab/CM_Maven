@@ -144,7 +144,7 @@ public class CMStub {
 			@Override
 			public void run()
 			{
-				CMInteractionManager.terminate(cmInfo);
+				CMInteractionManager.terminate();
 			}
 		};
 		Future<?> future = es.submit(task);
@@ -375,12 +375,12 @@ public class CMStub {
 		if(nType == CMInfo.CM_SESSION_EVENT && nID == CMSessionEvent.LOGIN)
 		{
 			CMSessionEvent se = (CMSessionEvent)event;
-			bRet = CMInteractionManager.replyToLOGIN(se, nReturnCode, cmInfo);
+			bRet = CMInteractionManager.replyToLOGIN(se, nReturnCode);
 		}
 		else if(nType == CMInfo.CM_MULTI_SERVER_EVENT && nID == CMMultiServerEvent.ADD_LOGIN)
 		{
 			CMMultiServerEvent mse = (CMMultiServerEvent)event;
-			bRet = CMInteractionManager.replyToADD_LOGIN(mse, nReturnCode, cmInfo);
+			bRet = CMInteractionManager.replyToADD_LOGIN(mse, nReturnCode);
 		}
 		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PUSH_FILE)
 		{

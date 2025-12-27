@@ -214,7 +214,7 @@ public class CMServerStub extends CMStub {
 		if(!bRet)
 			return false;
 
-		bRet = CMInteractionManager.init(cmInfo);
+		bRet = CMInteractionManager.init();
 		if(!bRet)
 			return false;
 
@@ -444,7 +444,7 @@ public class CMServerStub extends CMStub {
 			System.out.println("CMServerStub.connectToServer(), this is the default server!");
 			return false;
 		}
-		result = CMInteractionManager.connectDefaultServer(cmInfo);
+		result = CMInteractionManager.connectDefaultServer();
 		if(result)
 		{
 			myself.setState(CMInfo.CM_CONNECT);
@@ -472,7 +472,7 @@ public class CMServerStub extends CMStub {
 			System.out.println("CMServerStub.disconnectFromServer(), this is the default server!");
 			return false;
 		}
-		result = CMInteractionManager.disconnectFromDefaultServer(cmInfo);
+		result = CMInteractionManager.disconnectFromDefaultServer();
 		if(result)
 		{
 			myself.setState(CMInfo.CM_INIT);

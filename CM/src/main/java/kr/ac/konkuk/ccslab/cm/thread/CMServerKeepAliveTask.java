@@ -56,7 +56,7 @@ public class CMServerKeepAliveTask implements Runnable {
 						+(lElapsedTime/1000.0)+"), keep-alive time*1.5("
 						+(nKeepAliveTime*1.5)+").");
 				
-				CMInteractionManager.disconnectBadClientByServer(user, cmInfo);
+				CMInteractionManager.disconnectBadClientByServer(user);
 
 				LOG.info("disconnect user("+user.getName()+"), # login users: "
 						+loginUsersVector.size());
@@ -111,8 +111,8 @@ public class CMServerKeepAliveTask implements Runnable {
 							+"elapsed time("+(lElapsedTime/1000.0)+"), keep-alive time("
 							+nKeepAliveTime+").");
 
-					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer, 
-							cmInfo);
+					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer
+					);
 					
 					LOG.info("disconnected add-server("+addServer.getServerName()+").\n"
 							+"# add-servers: "+addServerVector.size());

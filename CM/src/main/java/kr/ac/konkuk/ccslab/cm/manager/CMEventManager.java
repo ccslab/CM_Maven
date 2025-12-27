@@ -382,7 +382,7 @@ public class CMEventManager {
 			}
 			else
 			{
-				user = CMInteractionManager.findGroupMemberOfClient(strReceiver, cmInfo);
+				user = CMInteractionManager.findGroupMemberOfClient(strReceiver);
 			}
 			
 			if( user == null )

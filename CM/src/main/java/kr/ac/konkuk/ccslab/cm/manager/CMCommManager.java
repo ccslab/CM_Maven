@@ -352,7 +352,7 @@ public class CMCommManager {
 			return null;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
@@ -361,7 +361,7 @@ public class CMCommManager {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, cmInfo);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
 			if(targetUser == null)
 			{
 				System.err.println("CMCommManager.addBlockSocketChannel(), target user("

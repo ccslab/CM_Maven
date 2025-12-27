@@ -70,7 +70,7 @@ public class CMEventReceiver implements Runnable {
 			}
 			
 			// deliver msg to interaction manager
-			bForwardToApp = CMInteractionManager.processEvent(msg, cmInfo);
+			bForwardToApp = CMInteractionManager.processEvent(msg);
 
 			// check whether the main thread is waiting for an event
 			CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
@@ -289,7 +289,7 @@ public class CMEventReceiver implements Runnable {
 			cmInfo.getAppEventHandler().processEvent(se);
 			
 			// check and stop the scheduled keep-alive task
-			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
+			if(CMInteractionManager.getNumLoginServers() == 0)
 			{
 				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
@@ -335,7 +335,7 @@ public class CMEventReceiver implements Runnable {
 			tse.setUserName(user.getName());
 			CMMessage msg = new CMMessage();
 			msg.m_buf = CMEventManager.marshallEvent(tse);
-			CMInteractionManager.processEvent(msg, cmInfo);
+			CMInteractionManager.processEvent(msg);
 			cmInfo.getAppEventHandler().processEvent(tse);
 			tse = null;
 			msg.m_buf = null;
