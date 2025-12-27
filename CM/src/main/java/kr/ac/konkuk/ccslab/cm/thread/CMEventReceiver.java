@@ -1,14 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
-import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
-import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -379,7 +376,7 @@ public class CMEventReceiver implements Runnable {
 				CMMultiServerEvent mse = new CMMultiServerEvent();
 				mse.setID(CMMultiServerEvent.NOTIFY_SERVER_LEAVE);
 				mse.setServerName(tserver.getServerName());
-				CMEventManager.broadcastEvent(mse, cmInfo);
+				CMEventManager.broadcastEvent(mse);
 
 				chInfo.removeAllChannels();
 				interInfo.removeAddServer(tserver.getServerName());

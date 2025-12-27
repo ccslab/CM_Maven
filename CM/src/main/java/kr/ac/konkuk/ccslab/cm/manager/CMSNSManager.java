@@ -229,7 +229,7 @@ public class CMSNSManager {
 			se.setContentID(attach.getContentID());
 			se.setDate(attach.getCreationTime());
 			se.setUserName(attach.getRequesterName());
-			CMEventManager.unicastEvent(se, fe.getFileSender(), cmInfo);
+			CMEventManager.unicastEvent(se, fe.getFileSender());
 			se = null;
 			
 			// remove the completed attachment info
@@ -347,7 +347,7 @@ public class CMSNSManager {
 			sevent.setNumContents( attachList.getNumContents() );
 
 			// send the end event
-			CMEventManager.unicastEvent(sevent, strUserName, cmInfo);
+			CMEventManager.unicastEvent(sevent, strUserName);
 			sevent = null;
 			
 			// remove the completed attachment list info
@@ -380,7 +380,7 @@ public class CMSNSManager {
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.PREFETCH_COMPLETED);
 		se.setUserName(strUserName);
-		CMEventManager.unicastEvent(se, strUserName, cmInfo);
+		CMEventManager.unicastEvent(se, strUserName);
 		se = null;
 		
 		return;
@@ -661,7 +661,7 @@ public class CMSNSManager {
 		}
 	
 		// send the response event
-		CMEventManager.unicastEvent(seAck, strUser, cmInfo);
+		CMEventManager.unicastEvent(seAck, strUser);
 		
 		seAck = null;
 		return;
@@ -683,7 +683,7 @@ public class CMSNSManager {
 		// send the ready event
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		CMEventManager.unicastEvent(seAck, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(seAck, strDefServer);
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -960,7 +960,7 @@ public class CMSNSManager {
 				}
 				*/
 		
-				CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(sevent, se.getUserName());
 				sevent = null;
 				nameList = null;
 			}
@@ -1019,7 +1019,7 @@ public class CMSNSManager {
 				}
 				*/
 		
-				CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(sevent, se.getUserName());
 				sevent = null;
 			}
 		}
@@ -1035,7 +1035,7 @@ public class CMSNSManager {
 			sevent.setNumContents( contentList.getSNSContentNum() );
 
 			// send the end event
-			CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(sevent, se.getUserName());
 			sevent = null;
 		}
 		
@@ -1137,7 +1137,7 @@ public class CMSNSManager {
 			seReq.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
 			seReq.setUserName(interInfo.getMyself().getName());
 			seReq.setContentID(se.getContentID());
-			CMEventManager.unicastEvent(seReq, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(seReq, strDefServer);
 		}
 	}
 	
@@ -1182,7 +1182,7 @@ public class CMSNSManager {
 		// send a response event
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		CMEventManager.unicastEvent(sevent, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(sevent, strDefServer);
 
 		sevent = null;
 		return;
@@ -1317,7 +1317,7 @@ public class CMSNSManager {
 			tse.setContentID(nSeqNum);
 			tse.setDate(strCreationTime);
 			tse.setUserName(se.getUserName());
-			CMEventManager.unicastEvent(tse, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(tse, se.getUserName());
 			tse = null;
 		}
 		else	// if there is attachment
@@ -1335,7 +1335,7 @@ public class CMSNSManager {
 			tse.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
 			tse.setUserName(interInfo.getMyself().getName());	// requester is default server
 			tse.setContentID(nSeqNum);
-			CMEventManager.unicastEvent(tse, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(tse, se.getUserName());
 			tse = null;
 		}
 		
@@ -1402,7 +1402,7 @@ public class CMSNSManager {
 		seAck.setUserName(se.getUserName());
 		seAck.setFriendName(se.getFriendName());
 		
-		CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(seAck, se.getUserName());
 		
 		seAck = null;
 		return;
@@ -1447,7 +1447,7 @@ public class CMSNSManager {
 		seAck.setUserName(se.getUserName());
 		seAck.setFriendName(se.getFriendName());
 		
-		CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(seAck, se.getUserName());
 		
 		seAck = null;
 		return;
@@ -1492,7 +1492,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName());
 				seAck = null;
 			}
 			
@@ -1509,7 +1509,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nTotalNumFriends);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+					CMEventManager.unicastEvent(seAck, se.getUserName());
 
 					seAck = null;
 					i = 0;
@@ -1524,7 +1524,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nTotalNumFriends);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName());
 
 				seAck = null;
 			}
@@ -1540,7 +1540,7 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(seAck, se.getUserName());
 			seAck = null;
 		}
 		
@@ -1594,7 +1594,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName());
 				seAck = null;
 			}
 			
@@ -1611,7 +1611,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nNumRequesters);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+					CMEventManager.unicastEvent(seAck, se.getUserName());
 
 					seAck = null;
 					i = 0;
@@ -1626,7 +1626,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nNumRequesters);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName());
 
 				seAck = null;
 			}
@@ -1643,7 +1643,7 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(seAck, se.getUserName());
 			seAck = null;
 		}
 
@@ -1696,7 +1696,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName());
 				seAck = null;
 			}
 			
@@ -1713,7 +1713,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nNumBiFriends);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+					CMEventManager.unicastEvent(seAck, se.getUserName());
 
 					seAck = null;
 					i = 0;
@@ -1728,7 +1728,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nNumBiFriends);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName());
 
 				seAck = null;
 			}
@@ -1745,7 +1745,7 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(seAck, se.getUserName());
 			seAck = null;
 		}
 
@@ -1854,7 +1854,7 @@ public class CMSNSManager {
 				seAck.setContentID(se.getContentID());
 				seAck.setNumAttachedFiles(naFileNameList.size());
 				seAck.setFileNameList(naFileNameList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName());
 				seAck = null;
 			}
 			naFileNameList = null;
@@ -1896,7 +1896,7 @@ public class CMSNSManager {
 			fe.setFileName(strFileNameList.get(i));
 			fe.setReturnCode(0);	// the file is not received
 			fe.setContentID(se.getContentID());
-			CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(fe, strDefServer);
 			fe = null;
 		}
 		
@@ -1967,7 +1967,7 @@ public class CMSNSManager {
 					+"file("+strFilePath+") not found!");
 			nReturnCode = 0;
 			seAck.setReturnCode(nReturnCode);
-			CMEventManager.unicastEvent(seAck, strRequester, cmInfo);
+			CMEventManager.unicastEvent(seAck, strRequester);
 			seAck = null;
 			file = null;
 			return;
@@ -1992,7 +1992,7 @@ public class CMSNSManager {
 					+") is not the attachment of content ID("+nContentID+")!");
 			nReturnCode = 0;
 			seAck.setReturnCode(nReturnCode);
-			CMEventManager.unicastEvent(seAck, strRequester, cmInfo);
+			CMEventManager.unicastEvent(seAck, strRequester);
 			seAck = null;
 			file = null;
 			return;			
@@ -2047,7 +2047,7 @@ public class CMSNSManager {
 		// send the response event
 		nReturnCode = 1;
 		seAck.setReturnCode(nReturnCode);
-		CMEventManager.unicastEvent(seAck, strRequester, cmInfo);
+		CMEventManager.unicastEvent(seAck, strRequester);
 		seAck = null;
 		file = null;
 		

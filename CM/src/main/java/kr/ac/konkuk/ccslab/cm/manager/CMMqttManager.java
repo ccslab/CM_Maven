@@ -3,7 +3,6 @@ package kr.ac.konkuk.ccslab.cm.manager;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.Vector;
-import java.util.PrimitiveIterator.OfDouble;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
@@ -138,7 +137,7 @@ public class CMMqttManager extends CMServiceManager {
 				.getServerName();
 		boolean bRet = false;
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(conEvent, strDefServer, cmInfo);
+		bRet = CMEventManager.unicastEvent(conEvent, strDefServer);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -274,7 +273,7 @@ public class CMMqttManager extends CMServiceManager {
 		String strReceiver = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, cmInfo);
+		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.publishFromClient(), sent "
@@ -414,7 +413,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(pubEvent, strClient, cmInfo);
+		bRet = CMEventManager.unicastEvent(pubEvent, strClient);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.publishFromServerToOneClient(), sent ("
@@ -476,7 +475,7 @@ public class CMMqttManager extends CMServiceManager {
 		for(CMMqttEvent pendingEvent : session.getPendingTransPublishList().getList())
 		{
 			CMInfo cmInfo = CMInfo.getInstance();
-			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver, cmInfo);
+			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.sendAndClearPendingTransEvents(), error: receiver ("
@@ -514,7 +513,7 @@ public class CMMqttManager extends CMServiceManager {
 			unackEvent.setDupFlag(true);
 
 			CMInfo cmInfo = CMInfo.getInstance();
-			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver, cmInfo);
+			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.resendSentUnAckPublish(), error: "
@@ -561,7 +560,7 @@ public class CMMqttManager extends CMServiceManager {
 
 			// send the PUBREL event
 			CMInfo cmInfo = CMInfo.getInstance();
-			bRet = CMEventManager.unicastEvent(relEvent, strReceiver, cmInfo);
+			bRet = CMEventManager.unicastEvent(relEvent, strReceiver);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.resendSentUnAckPubrel(), error: "
@@ -686,7 +685,7 @@ public class CMMqttManager extends CMServiceManager {
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(subEvent, strDefServer, cmInfo);
+		bRet = CMEventManager.unicastEvent(subEvent, strDefServer);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.subscribe(), sent "+subEvent.toString());
@@ -785,7 +784,7 @@ public class CMMqttManager extends CMServiceManager {
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer, cmInfo);
+		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer);
 
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -859,7 +858,7 @@ public class CMMqttManager extends CMServiceManager {
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer, cmInfo);
+		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{

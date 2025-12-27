@@ -1,5 +1,4 @@
 package kr.ac.konkuk.ccslab.cm.manager;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -163,7 +162,7 @@ public class CMSessionManager {
 		tse.setID(CMSessionEvent.CHANGE_SESSION);
 		tse.setUserName(se.getUserName());
 		tse.setSessionName(se.getSessionName());
-		CMEventManager.broadcastEvent(tse, cmInfo);
+		CMEventManager.broadcastEvent(tse);
 
 		tse = null;
 		se = null;
@@ -213,7 +212,7 @@ public class CMSessionManager {
 			seAck.addGroupInfo(gInfo);
 		}
 		
-		ret = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+		ret = CMEventManager.unicastEvent(seAck, user.getName());
 		
 		seAck.removeAllGroupInfoObjects();
 		seAck = null;
@@ -278,7 +277,7 @@ public class CMSessionManager {
 		ie.setUDPPort(interInfo.getMyself().getUDPPort());
 		ie.setCurrentGroup(interInfo.getMyself().getCurrentGroup());
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		CMEventManager.unicastEvent(ie, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(ie, strDefServer);
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMSessionManager.processJOIN_SESSION_ACK() succeeded.");
@@ -321,7 +320,7 @@ public class CMSessionManager {
 		tse.setID(CMSessionEvent.CHANGE_SESSION);
 		tse.setUserName(user.getName());
 		tse.setSessionName("");
-		CMEventManager.broadcastEvent(tse, cmInfo);
+		CMEventManager.broadcastEvent(tse);
 		
 		//// do not send LEAVE_SESSION_ACK (?)
 		
@@ -413,7 +412,7 @@ public class CMSessionManager {
 			mseAck.addGroupInfo(gi);
 		}
 
-		CMEventManager.unicastEvent(mseAck, user.getName(), cmInfo);
+		CMEventManager.unicastEvent(mseAck, user.getName());
 
 		mseAck.removeAllGroupInfoObjects();
 		mseAck = null;

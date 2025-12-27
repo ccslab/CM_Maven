@@ -244,7 +244,7 @@ public class CMGroupManager {
 		ie.setHandlerSession(myself.getCurrentSession());
 		ie.setHandlerGroup(myself.getCurrentGroup());
 		ie.setUserName(myself.getName());
-		CMEventManager.unicastEvent(ie, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(ie, strDefServer);
 		ie = null;
 		// leave the user from local information of the current group
 		curGroup.getGroupUsers().removeMember(myself.getName());
@@ -262,7 +262,7 @@ public class CMGroupManager {
 		ie.setHostAddress(myself.getHost());
 		ie.setUDPPort(myself.getUDPPort());
 		ie.setCurrentGroup(myself.getCurrentGroup());
-		CMEventManager.unicastEvent(ie, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(ie, strDefServer);
 		
 		return;
 	}
@@ -496,7 +496,7 @@ public class CMGroupManager {
 			de.setUserName(tUser.getName());
 			de.setHostAddress(tUser.getHost());
 			de.setUDPPort(tUser.getUDPPort());
-			CMEventManager.unicastEvent(de, targetUser.getName(), cmInfo);
+			CMEventManager.unicastEvent(de, targetUser.getName());
 			de = null;
 		}
 		
@@ -534,7 +534,7 @@ public class CMGroupManager {
 		de.setUDPPort(newUser.getUDPPort());
 		
 		CMMember gMember = group.getGroupUsers();
-		CMEventManager.castEvent(de, gMember, cmInfo);
+		CMEventManager.castEvent(de, gMember);
 
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMGroupManager.notifyGroupUsersOfNewUser(), session("+session.getSessionName()
@@ -749,7 +749,7 @@ public class CMGroupManager {
 		de.setHandlerSession(session.getSessionName());
 		de.setHandlerGroup(group.getGroupName());
 		de.setUserName(user.getName());
-		CMEventManager.castEvent(de,  group.getGroupUsers(), cmInfo);
+		CMEventManager.castEvent(de,  group.getGroupUsers());
 		
 		de = null;
 		return;
@@ -882,7 +882,7 @@ public class CMGroupManager {
 			mse.setUDPPort(tUser.getUDPPort());
 			mse.setSessionName(tUser.getCurrentSession());
 			mse.setGroupName(tUser.getCurrentGroup());
-			CMEventManager.unicastEvent(mse, targetUser.getName(), cmInfo);
+			CMEventManager.unicastEvent(mse, targetUser.getName());
 			mse = null;
 		}
 		
@@ -923,7 +923,7 @@ public class CMGroupManager {
 		mse.setGroupName(newUser.getCurrentGroup());
 		
 		CMMember gMember = group.getGroupUsers();
-		CMEventManager.castEvent(mse, gMember, cmInfo);
+		CMEventManager.castEvent(mse, gMember);
 
 		if(CMInfo._CM_DEBUG)
 		{

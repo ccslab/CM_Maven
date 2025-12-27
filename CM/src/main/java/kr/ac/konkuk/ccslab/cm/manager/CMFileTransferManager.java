@@ -195,7 +195,7 @@ public class CMFileTransferManager {
 			fe.setDistributionGroup(strFileOwner);
 			
 			// send the event to the default server
-			bReturn = CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
 		{
@@ -209,7 +209,7 @@ public class CMFileTransferManager {
 			fe.setSender(myself.getName());
 			fe.setReceiver(strFileOwner);
 			
-			bReturn = CMEventManager.unicastEvent(fe, strFileOwner, cmInfo);			
+			bReturn = CMEventManager.unicastEvent(fe, strFileOwner);
 		}
 		
 		return bReturn;
@@ -310,7 +310,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(fe.getFileReceiver());
 			
 			// send the event to the default server
-			bRet = CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			bRet = CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -323,7 +323,7 @@ public class CMFileTransferManager {
 			feAck.setSender(myself.getName());
 			feAck.setReceiver(fe.getFileReceiver());
 			// send the event to the file receiver
-			bRet = CMEventManager.unicastEvent(feAck, fe.getFileReceiver(), cmInfo);			
+			bRet = CMEventManager.unicastEvent(feAck, fe.getFileReceiver());
 		}		
 		
 		if(bRet && nReturnCode == 1)
@@ -551,7 +551,7 @@ public class CMFileTransferManager {
 			fe.setDistributionGroup(strFileSender);
 			
 			// send the event to the default server
-			bReturn = CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
 		{
@@ -564,7 +564,7 @@ public class CMFileTransferManager {
 			fe.setSender(interInfo.getMyself().getName());
 			fe.setReceiver(strFileSender);
 			// send the event to the file sender
-			bReturn = CMEventManager.unicastEvent(fe, strFileSender, cmInfo);			
+			bReturn = CMEventManager.unicastEvent(fe, strFileSender);
 		}
 		
 		if(!bReturn)
@@ -602,7 +602,7 @@ public class CMFileTransferManager {
 				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 				se.setChannelName(interInfo.getMyself().getName());
 				se.setChannelNum(0);
-				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true);
 				se = null;
 
 				if(bReturn)
@@ -691,7 +691,7 @@ public class CMFileTransferManager {
 			fe.setDistributionGroup(strFileReceiver);
 			
 			// send the event to the default server
-			bReturn = CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
 		{
@@ -704,7 +704,7 @@ public class CMFileTransferManager {
 			fe.setSender(strMyName);
 			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver, cmInfo);			
+			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver);
 		}
 		
 		return bReturn;
@@ -781,7 +781,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(fe.getFileSender());
 			
 			// send event to the default server
-			bRet = CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			bRet = CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -794,7 +794,7 @@ public class CMFileTransferManager {
 			feAck.setSender(myName);
 			feAck.setReceiver(fe.getFileSender());
 			// send the event to the file sender
-			bRet = CMEventManager.unicastEvent(feAck, fe.getFileSender(), cmInfo);			
+			bRet = CMEventManager.unicastEvent(feAck, fe.getFileSender());
 		}
 		
 		return bRet;
@@ -907,7 +907,7 @@ public class CMFileTransferManager {
 			fe.setDistributionGroup(strFileReceiver);
 			
 			// send the event to the default server
-			bReturn = CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
 		{
@@ -920,7 +920,7 @@ public class CMFileTransferManager {
 			fe.setSender(strMyName);
 			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver, cmInfo);			
+			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver);
 		}
 		
 		if(!bReturn)
@@ -1162,7 +1162,7 @@ public class CMFileTransferManager {
 			fe.setDistributionGroup(strFileReceiver);
 			
 			// send the event to the default server
-			bReturn = CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
 		{
@@ -1175,7 +1175,7 @@ public class CMFileTransferManager {
 			fe.setSender(strMyName);
 			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver, cmInfo);			
+			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver);
 		}
 
 		if(!bReturn)
@@ -1253,7 +1253,7 @@ public class CMFileTransferManager {
 				fe.setDistributionGroup(strFileReceiver);
 				
 				// send the event to the default server
-				CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+				CMEventManager.unicastEvent(fe, strDefServer);
 			}
 			else
 			{
@@ -1266,7 +1266,7 @@ public class CMFileTransferManager {
 				fe.setSender(interInfo.getMyself().getName());
 				fe.setReceiver(strFileReceiver);
 				// send the event to the file receiver
-				CMEventManager.unicastEvent(fe, strFileReceiver, cmInfo);				
+				CMEventManager.unicastEvent(fe, strFileReceiver);
 			}
 			
 			// close the RandomAccessFile
@@ -1315,7 +1315,7 @@ public class CMFileTransferManager {
 					fe.setDistributionGroup(iterFileReceiver);
 					
 					// send the event to the default server
-					CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+					CMEventManager.unicastEvent(fe, strDefServer);
 				}
 				else
 				{
@@ -1328,7 +1328,7 @@ public class CMFileTransferManager {
 					fe.setSender(interInfo.getMyself().getName());
 					fe.setReceiver(iterFileReceiver);
 					// send the event to file receiver
-					CMEventManager.unicastEvent(fe, iterFileReceiver, cmInfo);					
+					CMEventManager.unicastEvent(fe, iterFileReceiver);
 				}
 				
 				// close the RandomAccessFile
@@ -1573,7 +1573,7 @@ public class CMFileTransferManager {
 			fe.setDistributionGroup(strFileReceiver);
 			
 			// send the event to the default server
-			bReturn = CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
 		{
@@ -1586,7 +1586,7 @@ public class CMFileTransferManager {
 			fe.setSender(interInfo.getMyself().getName());
 			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver, cmInfo);			
+			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver);
 		}
 		
 		if(!bReturn)
@@ -1621,7 +1621,7 @@ public class CMFileTransferManager {
 				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 				se.setChannelName(interInfo.getMyself().getName());
 				se.setChannelNum(0);
-				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true);
 				se = null;
 
 				if(bReturn)
@@ -2237,7 +2237,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(fe.getFileSender());
 			
 			// send the event to the default server
-			CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -2250,7 +2250,7 @@ public class CMFileTransferManager {
 			feAck.setSender(strMyName);
 			feAck.setReceiver(fe.getFileSender());
 			// send the event to the file sender
-			CMEventManager.unicastEvent(feAck, fe.getFileSender(), cmInfo);			
+			CMEventManager.unicastEvent(feAck, fe.getFileSender());
 		}
 
 		feAck = null;
@@ -2387,7 +2387,7 @@ public class CMFileTransferManager {
 				fe.setDistributionGroup(strFileReceiver);
 				
 				// send the event to the default server
-				CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+				CMEventManager.unicastEvent(fe, strDefServer);
 			}
 			else
 			{
@@ -2395,7 +2395,7 @@ public class CMFileTransferManager {
 				fe.setSender(interInfo.getMyself().getName());
 				fe.setReceiver(strFileReceiver);
 				// send the event to the file receiver
-				CMEventManager.unicastEvent(fe, strFileReceiver, cmInfo);				
+				CMEventManager.unicastEvent(fe, strFileReceiver);
 			}
 			
 			lRemainBytes -= nReadBytes;
@@ -2458,7 +2458,7 @@ public class CMFileTransferManager {
 			fe.setDistributionGroup(strFileReceiver);
 			
 			// send the event to the default server
-			CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
 		{
@@ -2472,7 +2472,7 @@ public class CMFileTransferManager {
 			fe.setSender(interInfo.getMyself().getName());
 			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			CMEventManager.unicastEvent(fe, strFileReceiver, cmInfo);			
+			CMEventManager.unicastEvent(fe, strFileReceiver);
 		}
 		
 		fileBlock = null;
@@ -2630,7 +2630,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(fe.getFileSender());
 			
 			// send the even to the default server
-			CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -2643,7 +2643,7 @@ public class CMFileTransferManager {
 			feAck.setSender(strMyName);
 			feAck.setReceiver(fe.getFileSender());
 			// send the event to the file file sender
-			CMEventManager.unicastEvent(feAck, fe.getFileSender(), cmInfo);			
+			CMEventManager.unicastEvent(feAck, fe.getFileSender());
 		}
 		feAck = null;
 		
@@ -3089,7 +3089,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(fe.getFileSender());
 			
 			// send the event to the default server
-			CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -3102,7 +3102,7 @@ public class CMFileTransferManager {
 			feAck.setSender(strMyName);
 			feAck.setReceiver(fe.getFileSender());
 			// send the event to the file sender
-			CMEventManager.unicastEvent(feAck, fe.getFileSender(), cmInfo);
+			CMEventManager.unicastEvent(feAck, fe.getFileSender());
 		}
 		//feAck = null;
 
@@ -3225,7 +3225,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(rfInfo.getFileSender());
 			
 			// send the event to the default server
-			CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -3238,7 +3238,7 @@ public class CMFileTransferManager {
 			feAck.setSender(interInfo.getMyself().getName());
 			feAck.setReceiver(rfInfo.getFileSender());
 			// send the event to the file sender
-			CMEventManager.unicastEvent(feAck, rfInfo.getFileSender(), cmInfo);			
+			CMEventManager.unicastEvent(feAck, rfInfo.getFileSender());
 		}
 
 		feAck = null;
@@ -3310,7 +3310,7 @@ public class CMFileTransferManager {
 				feAck.setDistributionGroup(strFileSender);
 				
 				// send the event to the default server
-				CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+				CMEventManager.unicastEvent(feAck, strDefServer);
 			}
 			else
 			{
@@ -3323,7 +3323,7 @@ public class CMFileTransferManager {
 				feAck.setSender(strMyName);
 				feAck.setReceiver(strFileSender);
 				// send the event to the file sender
-				CMEventManager.unicastEvent(feAck, strFileSender, cmInfo);				
+				CMEventManager.unicastEvent(feAck, strFileSender);
 			}
 			return bForward;
 		}
@@ -3373,7 +3373,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(strFileSender);
 			
 			// send the event to the default server
-			bReturn = CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			bReturn = CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -3386,7 +3386,7 @@ public class CMFileTransferManager {
 			feAck.setSender(strMyName);
 			feAck.setReceiver(strFileSender);
 			// send the event to the file sender
-			bReturn = CMEventManager.unicastEvent(feAck, strFileSender, cmInfo);			
+			bReturn = CMEventManager.unicastEvent(feAck, strFileSender);
 		}
 		
 		if(bReturn)
@@ -3549,7 +3549,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(strFileSender);
 			
 			// send the event to the default server
-			CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -3562,7 +3562,7 @@ public class CMFileTransferManager {
 			feAck.setSender(interInfo.getMyself().getName());
 			feAck.setReceiver(strFileSender);
 			// send the event to the file sender
-			CMEventManager.unicastEvent(feAck, strFileSender, cmInfo);			
+			CMEventManager.unicastEvent(feAck, strFileSender);
 		}
 
 		//////////////////// the management of the closed default blocking socket channel
@@ -3713,7 +3713,7 @@ public class CMFileTransferManager {
 				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 				se.setChannelName(interInfo.getMyself().getName());
 				se.setChannelNum(0);
-				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true);
 				se = null;
 
 				if(bReturn)
@@ -3874,7 +3874,7 @@ public class CMFileTransferManager {
 			feAck.setDistributionGroup(strFileReceiver);
 			
 			// send the event to the default server
-			CMEventManager.unicastEvent(feAck, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
 		{
@@ -3887,7 +3887,7 @@ public class CMFileTransferManager {
 			feAck.setSender(interInfo.getMyself().getName());
 			feAck.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			CMEventManager.unicastEvent(feAck, strFileReceiver, cmInfo);			
+			CMEventManager.unicastEvent(feAck, strFileReceiver);
 		}
 
 		//////////////////// the management of the closed default blocking socket channel
@@ -4016,7 +4016,7 @@ public class CMFileTransferManager {
 				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 				se.setChannelName(interInfo.getMyself().getName());
 				se.setChannelNum(0);
-				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true);
 				se = null;
 
 				if(bReturn)

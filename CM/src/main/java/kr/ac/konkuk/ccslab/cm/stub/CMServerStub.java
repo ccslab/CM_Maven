@@ -218,7 +218,7 @@ public class CMServerStub extends CMStub {
 		if(!bRet)
 			return false;
 
-		CMEventManager.startReceivingEvent(cmInfo);
+		CMEventManager.startReceivingEvent();
 		CMCommManager.startReceivingMessage();
 		CMCommManager.startSendingMessage();
 		
@@ -347,7 +347,7 @@ public class CMServerStub extends CMStub {
 		}
 
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer, cmInfo);
+		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer);
 		if(bRet)
 			myself.setName(server);	// to set my server name
 
@@ -416,7 +416,7 @@ public class CMServerStub extends CMStub {
 		mse.setServerName( myself.getName() );
 
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer, cmInfo);
+		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer);
 		if(bRet)
 		{
 			myself.setState(CMInfo.CM_CONNECT);

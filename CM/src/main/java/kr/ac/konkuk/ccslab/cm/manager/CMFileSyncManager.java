@@ -164,7 +164,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // send the event
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean sendResult = CMEventManager.unicastEvent(fse, serverName, cmInfo);
+        boolean sendResult = CMEventManager.unicastEvent(fse, serverName);
         if (!sendResult) {
             System.err.println("CMFileSyncManager.sendFileList(), send error!");
             System.err.println(fse);
@@ -276,7 +276,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // send the event
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(fse, userName, cmInfo);
+        boolean ret = CMEventManager.unicastEvent(fse, userName);
         if (!ret) {
             System.err.println("send error: " + fse);
             return false;
@@ -316,7 +316,7 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setSkippedPath(relativePath);
 
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, userName, cmInfo);
+        return CMEventManager.unicastEvent(fse, userName);
     }
 
     // called by the server
@@ -350,7 +350,7 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setCompletedPath(relativePath);
 
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, userName, cmInfo);
+        return CMEventManager.unicastEvent(fse, userName);
     }
 
     // called by the server
@@ -486,7 +486,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // send the event
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, userName, cmInfo);
+        return CMEventManager.unicastEvent(fse, userName);
     }
 
     // called by the server
@@ -966,7 +966,7 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setRelativePathList(subList);
             // send the event
             CMInfo cmInfo = CMInfo.getInstance();
-            sendResult = CMEventManager.unicastEvent(listEvent, serverName, cmInfo);
+            sendResult = CMEventManager.unicastEvent(listEvent, serverName);
             if (!sendResult) {
                 System.err.println("send error: " + listEvent);
                 return false;
@@ -1147,7 +1147,7 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setRelativePathList(subList);
             // send the event
             CMInfo cmInfo = CMInfo.getInstance();
-            sendResult = CMEventManager.unicastEvent(listEvent, serverName, cmInfo);
+            sendResult = CMEventManager.unicastEvent(listEvent, serverName);
             if (!sendResult) {
                 System.err.println("send error: " + listEvent);
                 return false;
@@ -1288,7 +1288,7 @@ public class CMFileSyncManager extends CMServiceManager {
         endEvent.setNumLocalModeFiles(numLocalModeFiles);
 
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(endEvent, fileSender, cmInfo);
+        boolean ret = CMEventManager.unicastEvent(endEvent, fileSender);
         if (!ret) {
             System.err.println("send error: " + endEvent);
         }

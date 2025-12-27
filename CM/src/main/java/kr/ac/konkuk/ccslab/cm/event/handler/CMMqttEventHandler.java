@@ -1,7 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
 import java.util.Hashtable;
-import java.util.Set;
 import java.util.Vector;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
@@ -31,7 +30,6 @@ import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 
 /**
@@ -134,7 +132,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 			ackEvent.setSender(myself.getName());
 			ackEvent.setReturnCode((byte)6);
 			CMInfo cmInfo = CMInfo.getInstance();
-			bRet = CMEventManager.unicastEvent(ackEvent, strClient, cmInfo);
+			bRet = CMEventManager.unicastEvent(ackEvent, strClient);
 			return bRet;
 		}
 		
@@ -181,7 +179,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		ackEvent.setConnAckFlag(bConnAckFlag);
 		ackEvent.setReturnCode(returnCode);
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(ackEvent, strClient, cmInfo);
+		bRet = CMEventManager.unicastEvent(ackEvent, strClient);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -597,7 +595,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		boolean bRet = false;
 		String strPubSender = pubEvent.getSender();
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(pubackEvent, strPubSender, cmInfo);
+		bRet = CMEventManager.unicastEvent(pubackEvent, strPubSender);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.sendPUBACK(): Ok "+pubackEvent.toString());
@@ -626,7 +624,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		boolean bRet = false;
 		String strPubSender = pubEvent.getSender();
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(recEvent, strPubSender, cmInfo);
+		bRet = CMEventManager.unicastEvent(recEvent, strPubSender);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.sendPUBREC(): Ok "+recEvent.toString());
@@ -773,7 +771,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		relEvent.setPacketID(nPacketID);
 
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(relEvent, recEvent.getSender(), cmInfo);
+		bRet = CMEventManager.unicastEvent(relEvent, recEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBREC(), sent "
@@ -852,7 +850,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		compEvent.setPacketID(nPacketID);
 
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(compEvent, relEvent.getSender(), cmInfo);
+		bRet = CMEventManager.unicastEvent(compEvent, relEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBREL(), sent "
@@ -986,7 +984,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// send SUBACK event
 		CMInfo cmInfo = CMInfo.getInstance();
-		boolean bRet = CMEventManager.unicastEvent(ackEvent, subEvent.getSender(), cmInfo);
+		boolean bRet = CMEventManager.unicastEvent(ackEvent, subEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processSUBSCRIBE(), sent "
@@ -1133,7 +1131,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		boolean bRet = false;
 		CMInfo cmInfo = CMInfo.getInstance();
-		bRet = CMEventManager.unicastEvent(unsubAckEvent, strClient, cmInfo);
+		bRet = CMEventManager.unicastEvent(unsubAckEvent, strClient);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processUNSUBSCRIBE(), sent "
@@ -1174,7 +1172,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		resPingEvent.setSender(strMyName);
 
 		CMInfo cmInfo = CMInfo.getInstance();
-		boolean bRet = CMEventManager.unicastEvent(resPingEvent, reqPingEvent.getSender(), cmInfo);
+		boolean bRet = CMEventManager.unicastEvent(resPingEvent, reqPingEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPINGREQ(), sent PINGRESP to ("

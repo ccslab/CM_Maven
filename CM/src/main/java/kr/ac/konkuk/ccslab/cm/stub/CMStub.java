@@ -967,13 +967,13 @@ public class CMStub {
 		{
 			cme.setDistributionSession("CM_ONE_USER");
 			cme.setDistributionGroup(strTarget);
-			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum);
 			cme.setDistributionSession("");
 			cme.setDistributionGroup("");
 		}
 		else
 		{
-			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, isBlock, cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, isBlock);
 		}
 
 		return ret;
@@ -1025,7 +1025,7 @@ public class CMStub {
 		cme.setSender(getMyself().getName());
 		cme.setReceiver(strTarget);
 
-		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock, cmInfo);
+		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock);
 		return ret;
 	}
 	
@@ -1413,14 +1413,14 @@ public class CMStub {
 				cme.setDistributionGroup(groupName);
 			}
 			
-			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum);
 		}
 		else	// if a server,
 		{
 			// if the sessionName is null, broadcast
 			if(sessionName == null)
 			{
-				ret = CMEventManager.broadcastEvent(cme, opt, nChNum, cmInfo);
+				ret = CMEventManager.broadcastEvent(cme, opt, nChNum);
 			}
 			// if the sessionName is not null, and the groupName is null, cast to all session members
 			else if(groupName == null)
@@ -1437,7 +1437,7 @@ public class CMStub {
 					System.out.println("CCMStub.cast(), session("+sessionName+") member is null.");
 					return false;
 				}
-				ret = CMEventManager.castEvent(cme, member, opt, nChNum, cmInfo);
+				ret = CMEventManager.castEvent(cme, member, opt, nChNum);
 			}
 			// if both the sessionName and groupName is not null, cast to group members
 			else
@@ -1461,7 +1461,7 @@ public class CMStub {
 										+groupName+") member is null");
 					return false;
 				}
-				ret = CMEventManager.castEvent(cme, member, opt, nChNum, cmInfo);
+				ret = CMEventManager.castEvent(cme, member, opt, nChNum);
 			}
 			
 		}
@@ -1569,7 +1569,7 @@ public class CMStub {
 		cme.setSender(getMyself().getName());
 
 		boolean ret = false;
-		ret = CMEventManager.multicastEvent(cme, sessionName, groupName, cmInfo);
+		ret = CMEventManager.multicastEvent(cme, sessionName, groupName);
 		return ret;
 	}
 	
@@ -1670,19 +1670,19 @@ public class CMStub {
 			cme.setDistributionSession("CM_ALL_SESSION");
 			cme.setDistributionGroup("CM_ALL_GROUP");
 			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum, cmInfo);
+			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum);
 			
 			// if there are additional servers connected
 			Iterator<CMServer> iterAddServer = interInfo.getAddServerList().iterator();
 			for(int i = 0; i < interInfo.getAddServerList().size(); i++)
 			{
 				CMServer tServer = iterAddServer.next();
-				CMEventManager.unicastEvent(cme, tServer.getServerName(), opt, nChNum, cmInfo);
+				CMEventManager.unicastEvent(cme, tServer.getServerName(), opt, nChNum);
 			}
 		}
 		else	// if a server
 		{
-			ret = CMEventManager.broadcastEvent(cme, opt, nChNum, cmInfo);
+			ret = CMEventManager.broadcastEvent(cme, opt, nChNum);
 		}
 
 		return ret;
@@ -1829,7 +1829,7 @@ public class CMStub {
 
 			cme.setDistributionSession("CM_ONE_USER");
 			cme.setDistributionGroup(userName);
-			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, cmInfo);
+			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum);
 			cme.setDistributionSession("");
 			cme.setDistributionGroup("");
 		}
@@ -1838,7 +1838,7 @@ public class CMStub {
 			// set receiver
 			cme.setReceiver(serverName);
 
-			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, cmInfo);
+			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum);
 		}
 		
 		return ret;
@@ -1986,7 +1986,7 @@ public class CMStub {
 				cme.setDistributionGroup(groupName);
 			}
 
-			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum, cmInfo);
+			ret = CMEventManager.unicastEvent(cme, serverName, opt, nChNum);
 		}
 
 		return ret;

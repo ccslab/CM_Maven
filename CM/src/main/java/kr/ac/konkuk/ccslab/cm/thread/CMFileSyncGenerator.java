@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
@@ -306,7 +305,7 @@ public class CMFileSyncGenerator implements Runnable {
         fse.setBlockSize(blockSizeOfBasisFileMap.get(basisFileIndex));
         // send the event
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(fse, userName, cmInfo);
+        boolean ret = CMEventManager.unicastEvent(fse, userName);
         if (!ret) {
             System.err.println("send error, fse: " + fse);
             return false;
@@ -534,7 +533,7 @@ public class CMFileSyncGenerator implements Runnable {
             fse.setNumRequestedFiles(numRequestedFiles);
             fse.setRequestedFileList(requestedFileList);
             // send the request event
-            sendResult = CMEventManager.unicastEvent(fse, userName, cmInfo);
+            sendResult = CMEventManager.unicastEvent(fse, userName);
             if (!sendResult) {
                 System.err.println("CMFileSyncGenerator.requestTransferOfNewFiles(), send error!");
                 return false;

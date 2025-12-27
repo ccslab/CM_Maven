@@ -140,7 +140,7 @@ public class CMServerKeepAliveTask implements Runnable {
 
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
-					CMEventManager.unicastEvent(reqPingEvent, strDefServer, cmInfo);
+					CMEventManager.unicastEvent(reqPingEvent, strDefServer);
 				}
 			}
 		} // else

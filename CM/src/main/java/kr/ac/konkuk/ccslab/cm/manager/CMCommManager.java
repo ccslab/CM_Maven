@@ -404,7 +404,7 @@ public class CMCommManager {
 		se.setReceiver(strTarget);
 		se.setChannelName(myself.getName());
 		se.setChannelNum(nChKey);
-		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true, cmInfo);
+		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
 		se = null;
 
 		if(bRet && CMInfo._CM_DEBUG)
@@ -500,12 +500,12 @@ public class CMCommManager {
 			se.setDistributionGroup(strTarget);
 			
 			// send the event to the default server
-			result = CMEventManager.unicastEvent(se, strDefServer, cmInfo);
+			result = CMEventManager.unicastEvent(se, strDefServer);
 		}
 		else
 		{
 			// send the event to the target
-			result = CMEventManager.unicastEvent(se, strTarget, cmInfo);
+			result = CMEventManager.unicastEvent(se, strTarget);
 		}
 		se = null;
 		

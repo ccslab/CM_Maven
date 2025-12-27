@@ -279,7 +279,7 @@ public class CMClientStub extends CMStub {
 		//////////
 
 		// start processing, sending, and receiving threads
-		CMEventManager.startReceivingEvent(cmInfo);
+		CMEventManager.startReceivingEvent();
 		CMCommManager.startReceivingMessage();
 		CMCommManager.startSendingMessage();
 		
@@ -1475,7 +1475,7 @@ public class CMClientStub extends CMStub {
 		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nChKey);
 		//send(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true, cmInfo);
+		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
 		se = null;
 
 		if(bRet && CMInfo._CM_DEBUG)
@@ -1598,7 +1598,7 @@ public class CMClientStub extends CMStub {
 		// so that the target can be informed which channel should be changed its mode 
 		// from non-blocking to blocking mode.
 		boolean bRequestResult = CMEventManager.unicastEvent(se, strTarget, 
-				CMInfo.CM_STREAM, nChKey, true, cmInfo);
+				CMInfo.CM_STREAM, nChKey, true);
 		if(!bRequestResult)
 			return null;
 		

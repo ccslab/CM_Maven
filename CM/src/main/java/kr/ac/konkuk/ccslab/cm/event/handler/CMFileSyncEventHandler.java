@@ -26,7 +26,6 @@ import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 public class CMFileSyncEventHandler extends CMEventHandler {
 
@@ -165,7 +164,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the ack event
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), cmInfo);
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender());
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
@@ -235,7 +234,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if(ret) ackEvent.setReturnCode(1);
         else ackEvent.setReturnCode(0);
 
-        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), cmInfo);
+        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender());
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
@@ -331,7 +330,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 */
 
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), cmInfo);
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender());
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
@@ -458,7 +457,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             //endEvent.setNumOnlineModeFiles(onlineModeList.size());
             endEvent.setNumOnlineModeFiles(onlineModePathSizeMap.size());
 
-            boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender(), cmInfo);
+            boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender());
             if(!ret) {
                 System.err.println("send error: "+endEvent);
                 return false;
@@ -491,7 +490,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 */
 
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), cmInfo);
+        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender());
         if(!ret) {
             System.err.println("send error : "+ackEvent);
             return false;
@@ -823,7 +822,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         byte[] fileChecksum = syncManager.calculateFileChecksum(path);
         ackEvent.setFileChecksum(fileChecksum);
         // send the ack event
-        ret = CMEventManager.unicastEvent(ackEvent, receiver, cmInfo);
+        ret = CMEventManager.unicastEvent(ackEvent, receiver);
         if(!ret) return false;
 
         return true;
@@ -1109,7 +1108,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         updateEvent.setMatchBlockIndex(matchBlockIndex);
         // send the event
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(updateEvent, receiver, cmInfo);
+        boolean ret = CMEventManager.unicastEvent(updateEvent, receiver);
         if(!ret) {
             System.err.println("send error, updateEvent = "+updateEvent);
             return false;
@@ -1330,7 +1329,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             checksumEvent.setChecksumArray(partialChecksumArray);
 
             // send the event
-            ret = CMEventManager.unicastEvent(checksumEvent, startAckEvent.getSender(), cmInfo);
+            ret = CMEventManager.unicastEvent(checksumEvent, startAckEvent.getSender());
             if(!ret) return false;
 
             // update the curIndex
@@ -1344,7 +1343,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         endChecksumEvent.setFileEntryIndex(fileEntryIndex);
         endChecksumEvent.setTotalNumBlocks(totalNumBlocks); // checksumArrays.length
         endChecksumEvent.setBlockSize(startAckEvent.getBlockSize());
-        ret = CMEventManager.unicastEvent(endChecksumEvent, userName, cmInfo);
+        ret = CMEventManager.unicastEvent(endChecksumEvent, userName);
         if(!ret) return false;
 
         return true;
@@ -1399,7 +1398,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the ack event
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender(), cmInfo);
+        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender());
     }
 
     // called at the client
@@ -1479,7 +1478,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the ack event to the client
 
-        return CMEventManager.unicastEvent(ackFse, userName, cmInfo);
+        return CMEventManager.unicastEvent(ackFse, userName);
     }
 
     // called at the client
@@ -1503,7 +1502,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         setNumFilesAndEntryList(newfse, 0);
 
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(newfse, server, cmInfo);
+        return CMEventManager.unicastEvent(newfse, server);
     }
 
     // called at the client
@@ -1649,7 +1648,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the ack event
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fseAck, userName, cmInfo);
+        return CMEventManager.unicastEvent(fseAck, userName);
     }
 
     // called at the client
@@ -1703,7 +1702,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the event to the server
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(newfse, server, cmInfo);
+        return CMEventManager.unicastEvent(newfse, server);
     }
 
     // called at the client
@@ -1729,7 +1728,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send FILE_ENTRIES event
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(newfse, server, cmInfo);
+        return CMEventManager.unicastEvent(newfse, server);
     }
 
     // called at the server
@@ -1771,7 +1770,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the ack event
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean result = CMEventManager.unicastEvent(fseAck, userName, cmInfo);
+        boolean result = CMEventManager.unicastEvent(fseAck, userName);
         if (!result) {
             System.err.println("send END_FILE_LIST_ACK error!");
             return false;

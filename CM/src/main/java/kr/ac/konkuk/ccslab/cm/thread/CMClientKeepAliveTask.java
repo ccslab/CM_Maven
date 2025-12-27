@@ -55,7 +55,7 @@ public class CMClientKeepAliveTask implements Runnable {
 
 			CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 			reqPingEvent.setSender(myself.getName());
-			CMEventManager.unicastEvent(reqPingEvent, defServer.getServerName(), cmInfo);
+			CMEventManager.unicastEvent(reqPingEvent, defServer.getServerName());
 		}
 		
 		Vector<CMServer> addServerList = CMInteractionInfo.getInstance().getAddServerList();
@@ -83,7 +83,7 @@ public class CMClientKeepAliveTask implements Runnable {
 
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
-					CMEventManager.unicastEvent(reqPingEvent, addServer.getServerName(), cmInfo);
+					CMEventManager.unicastEvent(reqPingEvent, addServer.getServerName());
 				}
 			}
 		}
