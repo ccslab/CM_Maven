@@ -89,6 +89,7 @@ public class CMConfigurator {
 			confInfo.setCommArch(CMConfigurator.getConfiguration(strConfFilePath, "COMM_ARCH"));
 			confInfo.setFileTransferScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "FILE_TRANSFER_SCHEME")));
 			confInfo.setLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "LOGIN_SCHEME")));
+			confInfo.setMultiLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MULTI_LOGIN_SCHEME")));
 			confInfo.setMaxLoginFailure(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MAX_LOGIN_FAILURE")));
 			confInfo.setSessionScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SESSION_SCHEME")));
 			confInfo.setDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DOWNLOAD_SCHEME")));
@@ -185,6 +186,7 @@ public class CMConfigurator {
 				System.out.println("COMM_ARCH: "+confInfo.getCommArch());
 				System.out.println("FILE_TRANSFER_SCHEME: "+confInfo.isFileTransferScheme());
 				System.out.println("LOGIN_SCHEME: "+confInfo.isLoginScheme());
+				System.out.println("MULTI_LOGIN_SCHEME: "+confInfo.isMultiLoginScheme());
 				System.out.println("MAX_LOGIN_FAILURE: "+confInfo.getMaxLoginFailure());
 				System.out.println("SESSION_SCHEME: "+confInfo.isSessionScheme());
 				System.out.println("DOWNLOAD_SCHEME: "+confInfo.isDownloadScheme());

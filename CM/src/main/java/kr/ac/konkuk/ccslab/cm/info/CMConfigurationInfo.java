@@ -24,6 +24,7 @@ public class CMConfigurationInfo {
 	private String m_strSystemType;
 	private String m_strCommArch;
 	private int m_bLoginScheme;
+	private int m_nMultiLoginScheme;
 	private int m_nMaxLoginFailure;
 	private int m_nKeepAliveTime;
 	private int m_bSessionScheme;
@@ -103,6 +104,7 @@ public class CMConfigurationInfo {
 		m_strMulticastAddress = "";
 		m_nSessionNumber = 0;
 		m_bLoginScheme = 0;
+		m_nMultiLoginScheme = 0;
 		m_nMaxLoginFailure = 0;
 		m_nKeepAliveTime = 0;
 		m_bSessionScheme = 0;
@@ -277,7 +279,23 @@ public class CMConfigurationInfo {
 		
 		return bScheme;
 	}
-	
+
+	public synchronized void setMultiLoginScheme(int m_nMultiLoginScheme) {
+		this.m_nMultiLoginScheme = m_nMultiLoginScheme;
+	}
+
+	public synchronized int getMultiLoginScheme() {
+		return m_nMultiLoginScheme;
+	}
+
+	public synchronized boolean isMultiLoginScheme() {
+		boolean bScheme = false;
+		if(m_nMultiLoginScheme == 0)
+			bScheme = false;
+		else bScheme = true;
+		return bScheme;
+	}
+
 	public synchronized void setMaxLoginFailure(int nCount)
 	{
 		m_nMaxLoginFailure = nCount;
