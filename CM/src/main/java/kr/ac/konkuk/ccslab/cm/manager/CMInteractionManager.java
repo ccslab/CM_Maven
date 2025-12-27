@@ -108,7 +108,7 @@ public class CMInteractionManager {
 		createSession();
 	
 		// initialize sessions
-		CMSessionManager.init(cmInfo);
+		CMSessionManager.init();
 		
 		// initialize file manager
 		CMFileTransferManager.init(cmInfo);
@@ -713,7 +713,7 @@ public class CMInteractionManager {
 			if(strHandlerGroup != null && !strHandlerGroup.equals(""))
 				CMGroupManager.processEvent(msg);
 			else
-				CMSessionManager.processEvent(msg, cmInfo);
+				CMSessionManager.processEvent(msg);
 			
 			bProcessed = true;
 		}
@@ -1857,7 +1857,7 @@ public class CMInteractionManager {
 		}
 		
 		// leave session and group
-		CMSessionManager.leaveSession(user, cmInfo);
+		CMSessionManager.leaveSession(user);
 		
 		// close and remove all additional nonblocking socket channels of the user
 		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
@@ -3444,7 +3444,7 @@ public class CMInteractionManager {
 				System.out.println("CMInteractionManager.processADD_LOGOUT(), user("
 						+mse.getUserName()+") should leave session("+user.getCurrentSession()+").");
 			}
-			CMSessionManager.leaveSession(user, cmInfo);
+			CMSessionManager.leaveSession(user);
 		}
 		
 		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0); // main channel remained
@@ -3646,7 +3646,7 @@ public class CMInteractionManager {
 		user.setCurrentGroup(group.getGroupName());
 		
 		// request join process to the SM
-		CMSessionManager.addJoinSession(user, cmInfo);
+		CMSessionManager.addJoinSession(user);
 
 		// notify that a user changes session to all other users
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
@@ -3762,7 +3762,7 @@ public class CMInteractionManager {
 			return;
 		}
 		
-		CMSessionManager.addLeaveSession(user, cmInfo);
+		CMSessionManager.addLeaveSession(user);
 		
 		// notify login users of the session leave
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
