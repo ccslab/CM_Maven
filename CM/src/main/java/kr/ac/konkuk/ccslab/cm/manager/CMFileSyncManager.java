@@ -775,7 +775,7 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
         // create a WatchServiceTask
-        CMWatchServiceTask watchTask = new CMWatchServiceTask(syncHome, watchService, this, syncInfo);
+        CMWatchServiceTask watchTask = new CMWatchServiceTask(syncHome);
         // start the WatchServiceTask
         Future<?> future = es.submit(watchTask);
         if (future == null) {
