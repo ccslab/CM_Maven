@@ -29,8 +29,8 @@ import java.util.concurrent.ExecutorService;
 
 public class CMFileSyncEventHandler extends CMEventHandler {
 
-    public CMFileSyncEventHandler(CMInfo cmInfo) {
-        super(cmInfo);
+    public CMFileSyncEventHandler() {
+        super();
         m_nType = CMInfo.CM_FILE_SYNC_EVENT_HANDLER;
     }
 
@@ -163,7 +163,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(1);
 
         // send the ack event
-        CMInfo cmInfo = CMInfo.getInstance();
         boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender());
         if(!ret) {
             System.err.println("send error: "+ackEvent);
@@ -329,7 +328,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             ackEvent.setReturnCode(0);
 */
 
-        CMInfo cmInfo = CMInfo.getInstance();
         boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender());
         if(!ret) {
             System.err.println("send error: "+ackEvent);
@@ -489,7 +487,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         else ackEvent.setReturnCode(0);
 */
 
-        CMInfo cmInfo = CMInfo.getInstance();
         boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender());
         if(!ret) {
             System.err.println("send error : "+ackEvent);
@@ -1107,7 +1104,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set matching block index
         updateEvent.setMatchBlockIndex(matchBlockIndex);
         // send the event
-        CMInfo cmInfo = CMInfo.getInstance();
         boolean ret = CMEventManager.unicastEvent(updateEvent, receiver);
         if(!ret) {
             System.err.println("send error, updateEvent = "+updateEvent);
@@ -1304,7 +1300,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int checksumBytes = 0;
         int numCurrentBlocks = 0;
         boolean ret = false;
-        CMInfo cmInfo = CMInfo.getInstance();
         while(curIndex < checksumArray.length) {
             // create FILE_BLOCK_CHECKSUM event
             CMFileSyncEventFileBlockChecksum checksumEvent = new CMFileSyncEventFileBlockChecksum();
@@ -1397,7 +1392,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(returnCode);
 
         // send the ack event
-        CMInfo cmInfo = CMInfo.getInstance();
         return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender());
     }
 
@@ -1501,7 +1495,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set numFiles and fileEntryList
         setNumFilesAndEntryList(newfse, 0);
 
-        CMInfo cmInfo = CMInfo.getInstance();
         return CMEventManager.unicastEvent(newfse, server);
     }
 
@@ -1647,7 +1640,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         fseAck.setReturnCode(returnCode);
 
         // send the ack event
-        CMInfo cmInfo = CMInfo.getInstance();
         return CMEventManager.unicastEvent(fseAck, userName);
     }
 
@@ -1701,7 +1693,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         newfse.setNumFilesCompleted(fse.getNumFilesCompleted());
 
         // send the event to the server
-        CMInfo cmInfo = CMInfo.getInstance();
         return CMEventManager.unicastEvent(newfse, server);
     }
 
@@ -1727,7 +1718,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         setNumFilesAndEntryList(newfse, startListIndex);
 
         // send FILE_ENTRIES event
-        CMInfo cmInfo = CMInfo.getInstance();
         return CMEventManager.unicastEvent(newfse, server);
     }
 
@@ -1769,7 +1759,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         fseAck.setReturnCode(returnCode);
 
         // send the ack event
-        CMInfo cmInfo = CMInfo.getInstance();
         boolean result = CMEventManager.unicastEvent(fseAck, userName);
         if (!result) {
             System.err.println("send END_FILE_LIST_ACK error!");

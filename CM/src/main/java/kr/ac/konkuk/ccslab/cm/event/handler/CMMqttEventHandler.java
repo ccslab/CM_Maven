@@ -40,9 +40,9 @@ import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
  */
 public class CMMqttEventHandler extends CMEventHandler {
 
-	public CMMqttEventHandler(CMInfo cmInfo)
+	public CMMqttEventHandler()
 	{
-		super(cmInfo);
+		super();
 		m_nType = CMInfo.CM_MQTT_EVENT_HANDLER;
 	}
 	
@@ -334,7 +334,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		// authenticate user name and password
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMInfo cmInfo = CMInfo.getInstance();
 		if( confInfo.isLoginScheme() && !CMDBManager.authenticateUser(strUserName, strPassword) )
 		{
 			System.err.println("CMMqttEventHandler.validateCONNECT(), user authentication failed! "
@@ -594,7 +593,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// send ack to the PUBLISH sender
 		boolean bRet = false;
 		String strPubSender = pubEvent.getSender();
-		CMInfo cmInfo = CMInfo.getInstance();
 		bRet = CMEventManager.unicastEvent(pubackEvent, strPubSender);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -623,7 +621,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// send to the PUBLISH sender
 		boolean bRet = false;
 		String strPubSender = pubEvent.getSender();
-		CMInfo cmInfo = CMInfo.getInstance();
 		bRet = CMEventManager.unicastEvent(recEvent, strPubSender);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -770,7 +767,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// set variable header
 		relEvent.setPacketID(nPacketID);
 
-		CMInfo cmInfo = CMInfo.getInstance();
 		bRet = CMEventManager.unicastEvent(relEvent, recEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -849,7 +845,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// set variable header
 		compEvent.setPacketID(nPacketID);
 
-		CMInfo cmInfo = CMInfo.getInstance();
 		bRet = CMEventManager.unicastEvent(compEvent, relEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -983,7 +978,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		// send SUBACK event
-		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = CMEventManager.unicastEvent(ackEvent, subEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -1130,7 +1124,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		unsubAckEvent.setPacketID(unsubEvent.getPacketID());
 		
 		boolean bRet = false;
-		CMInfo cmInfo = CMInfo.getInstance();
 		bRet = CMEventManager.unicastEvent(unsubAckEvent, strClient);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -1171,7 +1164,6 @@ public class CMMqttEventHandler extends CMEventHandler {
 		String strMyName = CMInteractionInfo.getInstance().getMyself().getName();
 		resPingEvent.setSender(strMyName);
 
-		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = CMEventManager.unicastEvent(resPingEvent, reqPingEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
