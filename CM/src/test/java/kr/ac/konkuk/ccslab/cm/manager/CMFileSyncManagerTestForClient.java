@@ -1,12 +1,9 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -21,7 +18,7 @@ public class CMFileSyncManagerTestForClient {
     public void setUp() {
         System.out.println("===== called setUp()");
         cmInfo = new CMInfo();
-        CMConfigurator.init("cm-client.conf", cmInfo);
+        CMConfigurator.init("cm-client.conf");
         fileSyncManager = new CMFileSyncManager(cmInfo);
     }
 

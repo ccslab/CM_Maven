@@ -15,9 +15,8 @@ public class CMConfigurator {
 	
 	// initialize field values of server configuration or client configuration.
 	// set field values of the given configuration file to the CMConfigurationInfo object.
-	public static boolean init(String strConfFilePath, CMInfo cmInfo)
+	public static boolean init(String strConfFilePath)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		List<String> myAddressList = null;
 		
@@ -222,7 +221,7 @@ public class CMConfigurator {
 				System.out.println("FILE_SIZE_THRESHOLD: "+confInfo.getFileSizeThreshold());
 				System.out.println("FILE_MOD_RATIO_THRESHOLD: "+confInfo.getFileModRatioThreshold());
 
-				if( CMConfigurator.isDServer(cmInfo) )
+				if( CMConfigurator.isDServer() )
 					System.out.println("This server is a default server!!");
 				else
 					System.out.println("This server is NOT a default server!!");
@@ -432,7 +431,7 @@ public class CMConfigurator {
 	}
 
 	// check whether the server info in the CMConfigurationInfo object is the default server or not.
-	public synchronized static boolean isDServer(CMInfo cmInfo)
+	public synchronized static boolean isDServer()
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		boolean ret = false;

@@ -93,7 +93,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		}
 		
 		// process of the default server
-		if(CMConfigurator.isDServer(cmInfo))
+		if(CMConfigurator.isDServer())
 		{
 			// for each additional server
 			Vector<CMServer> addServerVector = CMInteractionInfo.getInstance()

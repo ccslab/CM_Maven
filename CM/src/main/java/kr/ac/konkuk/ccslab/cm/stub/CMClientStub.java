@@ -239,7 +239,7 @@ public class CMClientStub extends CMStub {
 			@Override
 			public Boolean call()
 			{
-				boolean ret = CMConfigurator.init(strConfPath, cmInfo);
+				boolean ret = CMConfigurator.init(strConfPath);
 				return ret;
 			}
 		};

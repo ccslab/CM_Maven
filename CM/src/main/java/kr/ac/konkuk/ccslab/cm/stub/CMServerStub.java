@@ -210,7 +210,7 @@ public class CMServerStub extends CMStub {
 		boolean bRet = false;
 
 		String strConfPath = CMConfigurationInfo.getInstance().getConfFileHome().resolve("cm-server.conf").toString();
-		bRet = CMConfigurator.init(strConfPath, cmInfo);
+		bRet = CMConfigurator.init(strConfPath);
 		if(!bRet)
 			return false;
 
@@ -313,7 +313,7 @@ public class CMServerStub extends CMStub {
 			System.err.println("CMServerStub.requestServerReg(), the requesting server name is null.");
 			return false;
 		}
-		if(CMConfigurator.isDServer(cmInfo))
+		if(CMConfigurator.isDServer())
 		{
 			System.err.println("CMServerStub.requestServerReg(), This is the default server!");
 			return false;
@@ -397,7 +397,7 @@ public class CMServerStub extends CMStub {
 		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
-		if( CMConfigurator.isDServer(cmInfo) )
+		if( CMConfigurator.isDServer() )
 		{
 			System.out.println("CMServerStub.requestServerDereg(), this server is the default "
 					+ "server!");
@@ -439,7 +439,7 @@ public class CMServerStub extends CMStub {
 		CMInfo cmInfo = CMInfo.getInstance();
 		boolean result = false;
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
-		if( CMConfigurator.isDServer(cmInfo) )
+		if( CMConfigurator.isDServer() )
 		{
 			System.out.println("CMServerStub.connectToServer(), this is the default server!");
 			return false;
@@ -467,7 +467,7 @@ public class CMServerStub extends CMStub {
 		CMInfo cmInfo = CMInfo.getInstance();
 		boolean result = false;
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
-		if( CMConfigurator.isDServer(cmInfo) )
+		if( CMConfigurator.isDServer() )
 		{
 			System.out.println("CMServerStub.disconnectFromServer(), this is the default server!");
 			return false;

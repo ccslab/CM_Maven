@@ -323,7 +323,7 @@ public class CMStub {
 		
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			if(CMConfigurator.isDServer(cmInfo))
+			if(CMConfigurator.isDServer())
 			{
 				strDefServer = getMyself().getName();
 			}
@@ -952,7 +952,7 @@ public class CMStub {
 
 		if(confInfo.getSystemType().contentEquals("CLIENT") 
 				|| (confInfo.getSystemType().contentEquals("SERVER") 
-						&& !CMConfigurator.isDServer(cmInfo)))
+						&& !CMConfigurator.isDServer()))
 		{
 			strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		}
@@ -1796,7 +1796,7 @@ public class CMStub {
 		String strDefServer = null;
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			if(CMConfigurator.isDServer(cmInfo))
+			if(CMConfigurator.isDServer())
 				strDefServer = getMyself().getName();
 			else
 			{

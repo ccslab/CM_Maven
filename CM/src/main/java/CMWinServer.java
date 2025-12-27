@@ -30,7 +30,6 @@ import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
@@ -447,7 +446,7 @@ public class CMWinServer extends JFrame {
 	public void updateTitle()
 	{
 		CMUser myself = m_serverStub.getMyself();
-		if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
+		if(CMConfigurator.isDServer())
 		{
 			setTitle("CM Default Server [\""+myself.getName()+"\"]");
 		}
@@ -1965,7 +1964,7 @@ public class CMWinServer extends JFrame {
 					button.setText("Stop Server CM");
 				}
 				// check if default server or not
-				if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
+				if(CMConfigurator.isDServer())
 				{
 					setTitle("CM Default Server (\"SERVER\")");
 				}

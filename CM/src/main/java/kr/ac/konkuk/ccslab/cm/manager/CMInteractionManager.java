@@ -47,7 +47,7 @@ public class CMInteractionManager {
 		
 		// initialize DB
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		if(confInfo.isDBUse() && CMConfigurator.isDServer(cmInfo))
+		if(confInfo.isDBUse() && CMConfigurator.isDServer())
 		{
 			CMDBManager.init(cmInfo);
 		}
@@ -64,7 +64,7 @@ public class CMInteractionManager {
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		if(strSysType.equals("SERVER"))
 		{
-			if(CMConfigurator.isDServer(cmInfo))
+			if(CMConfigurator.isDServer())
 			{
 				myself.setName("SERVER");				
 			}
@@ -82,7 +82,7 @@ public class CMInteractionManager {
 		}
 		
 		// open a stream socket channel in the case of a client or a server which is not a default server
-		if(strSysType.equals("CLIENT") || (strSysType.equals("SERVER") && !CMConfigurator.isDServer(cmInfo)))
+		if(strSysType.equals("CLIENT") || (strSysType.equals("SERVER") && !CMConfigurator.isDServer()))
 		{
 			boolean ret = connectDefaultServer(cmInfo);
 			if(!ret)
@@ -342,7 +342,7 @@ public class CMInteractionManager {
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
-		if(CMConfigurator.isDServer(cmInfo))
+		if(CMConfigurator.isDServer())
 		{
 			CMServer addServer = findAddServerWithSocketChannel(badSC, interInfo.getAddServerList());
 			if(addServer != null)
@@ -1136,7 +1136,7 @@ public class CMInteractionManager {
 			
 			// if this server is not the default server, it checks whether ch belongs to 
 			// the default server
-			if(!CMConfigurator.isDServer(cmInfo))
+			if(!CMConfigurator.isDServer())
 			{
 				if(isChannelBelongsToServer(ch, defServer))
 				{
@@ -1246,7 +1246,7 @@ public class CMInteractionManager {
 			
 			// if this server is not the default server, it also check whether ch is for
 			// the default server
-			if(!CMConfigurator.isDServer(cmInfo))
+			if(!CMConfigurator.isDServer())
 			{
 				if(isChannelBelongsToServer(ch, defServer))
 				{

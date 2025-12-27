@@ -185,7 +185,7 @@ public class CMEventReceiver implements Runnable {
 			{
 				processDisconnectionFromClientAtServer(user.getName(), ch);
 			}
-			else if(CMConfigurator.isDServer(cmInfo))
+			else if(CMConfigurator.isDServer())
 			{
 				processDisconnectionFromAddServerAtDefaultServer(ch);
 			}

@@ -40,7 +40,7 @@ public class CMSNSManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
-		if(!CMConfigurator.isDServer(cmInfo))
+		if(!CMConfigurator.isDServer())
 		{
 			System.err.println("CMSNSManager.getFriendList(), this is not the default server!");
 			return null;
@@ -66,7 +66,7 @@ public class CMSNSManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
-		if(!CMConfigurator.isDServer(cmInfo))
+		if(!CMConfigurator.isDServer())
 		{
 			System.err.println("CMSNSManager.getFriendRequesterList(), this is not the default server!");
 			return null;
@@ -116,7 +116,7 @@ public class CMSNSManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
-		if(!CMConfigurator.isDServer(cmInfo))
+		if(!CMConfigurator.isDServer())
 		{
 			System.err.println("CMSNSManager.getBiFriendList(), this is not the default server!");
 			return null;
