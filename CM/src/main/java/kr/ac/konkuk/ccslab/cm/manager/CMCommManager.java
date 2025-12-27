@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -24,7 +23,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMByteSender;
 
 public class CMCommManager {
 	
-	public static void terminate(CMInfo cmInfo)
+	public static void terminate()
 	{
 		// close all channels in CM
 		
@@ -215,7 +214,7 @@ public class CMCommManager {
 		return myInetAddressStrList;
 	}
 	
-	public static SelectableChannel openNonBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
+	public static SelectableChannel openNonBlockChannel(int channelType, String address, int port) throws IOException
 	{
 		SelectableChannel ch = null;
 		CMCommInfo commInfo = CMCommInfo.getInstance();
@@ -279,7 +278,7 @@ public class CMCommManager {
 		return ch;
 	}
 	
-	public static SelectableChannel openBlockChannel(int channelType, String address, int port, CMInfo cmInfo) throws IOException
+	public static SelectableChannel openBlockChannel(int channelType, String address, int port) throws IOException
 	{
 		SelectableChannel ch = null;
 		
@@ -333,8 +332,9 @@ public class CMCommManager {
 		return ch;		
 	}
 	
-	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
+	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -352,7 +352,7 @@ public class CMCommManager {
 			return null;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
@@ -361,7 +361,7 @@ public class CMCommManager {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, cmInfo);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
 			if(targetUser == null)
 			{
 				System.err.println("CMCommManager.addBlockSocketChannel(), target user("
@@ -384,7 +384,7 @@ public class CMCommManager {
 
 		try {
 			sc = (SocketChannel) openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, strTargetSSCAddress, 
-					nTargetSSCPort, cmInfo);
+					nTargetSSCPort);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -404,7 +404,7 @@ public class CMCommManager {
 		se.setReceiver(strTarget);
 		se.setChannelName(myself.getName());
 		se.setChannelNum(nChKey);
-		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true, cmInfo);
+		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
 		se = null;
 
 		if(bRet && CMInfo._CM_DEBUG)
@@ -416,8 +416,9 @@ public class CMCommManager {
 		return sc;
 	}
 	
-	public static boolean removeBlockSocketChannel(int nChKey, String strTarget, CMInfo cmInfo)
+	public static boolean removeBlockSocketChannel(int nChKey, String strTarget)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -499,12 +500,12 @@ public class CMCommManager {
 			se.setDistributionGroup(strTarget);
 			
 			// send the event to the default server
-			result = CMEventManager.unicastEvent(se, strDefServer, cmInfo);
+			result = CMEventManager.unicastEvent(se, strDefServer);
 		}
 		else
 		{
 			// send the event to the target
-			result = CMEventManager.unicastEvent(se, strTarget, cmInfo);
+			result = CMEventManager.unicastEvent(se, strTarget);
 		}
 		se = null;
 		
@@ -541,10 +542,11 @@ public class CMCommManager {
 		return key;
 	}
 	
-	public static CMByteReceiver startReceivingMessage(CMInfo cmInfo)
+	public static CMByteReceiver startReceivingMessage()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
-		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
+		CMByteReceiver byteReceiver = new CMByteReceiver();
 		//byteReceiver.start();
 		Future<?> future = es.submit(byteReceiver);
 		CMCommInfo.getInstance().setByteReceiver(byteReceiver);
@@ -553,10 +555,11 @@ public class CMCommManager {
 		return byteReceiver;
 	}
 	
-	public static CMByteSender startSendingMessage(CMInfo cmInfo)
+	public static CMByteSender startSendingMessage()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
-		CMByteSender byteSender = new CMByteSender(cmInfo);
+		CMByteSender byteSender = new CMByteSender();
 		//byteSender.start();
 		Future<?> future = es.submit(byteSender);
 		CMCommInfo.getInstance().setByteSender(byteSender);
@@ -642,11 +645,13 @@ public class CMCommManager {
 		return nTotalSentByteNum;
 	}
 
-	public static double measureInputThroughput(String target, CMInfo cmInfo) {
+	public static double measureInputThroughput(String target) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureInputThroughput() called..");
 			System.out.println("target = " + target);
 		}
+
+		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
@@ -667,7 +672,7 @@ public class CMCommManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
-				target, CMInfo.FILE_OVERWRITE, cmInfo);
+				target, CMInfo.FILE_OVERWRITE);
 
 		if(!bReturn)
 			return -1;
@@ -689,7 +694,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMCommManager.measureInputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPullFile(target, cmInfo);
+				CMFileTransferManager.cancelPullFile(target);
 				return -1;
 			}
 
@@ -713,11 +718,13 @@ public class CMCommManager {
 		return speed;
 	}
 
-	public static double measureOutputThroughput(String target, CMInfo cmInfo) {
+	public static double measureOutputThroughput(String target) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureOutputThroughput() called..");
 			System.out.println("target = " + target);
 		}
+
+		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
@@ -740,7 +747,7 @@ public class CMCommManager {
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, target,
-				CMInfo.FILE_OVERWRITE, -1, cmInfo);
+				CMInfo.FILE_OVERWRITE, -1);
 
 		if(!bReturn)
 			return -1;
@@ -762,7 +769,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPushFile(target, cmInfo);
+				CMFileTransferManager.cancelPushFile(target);
 				return -1;
 			}
 

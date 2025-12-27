@@ -1,15 +1,10 @@
 package kr.ac.konkuk.ccslab.cm.stub;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Vector;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -98,10 +93,11 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean setServerAddress(String strAddress)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = false;
 		
 		// check the current CM state
-		if(m_cmInfo.isStarted())
+		if(cmInfo.isStarted())
 		{
 			System.err.println("CMServerStub.setServerAddress(), CM already has started!");
 			return false;
@@ -143,10 +139,11 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean setServerPort(int nPort)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = false;
 		
 		// check the current CM state
-		if(m_cmInfo.isStarted())
+		if(cmInfo.isStarted())
 		{
 			System.err.println("CMServerStub.setServerPort(), CM already has started!");
 			return false;
@@ -209,20 +206,21 @@ public class CMServerStub extends CMStub {
 	public boolean startCM()
 	{
 		super.init();	// initialize CMStub
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = false;
 
 		String strConfPath = CMConfigurationInfo.getInstance().getConfFileHome().resolve("cm-server.conf").toString();
-		bRet = CMConfigurator.init(strConfPath, m_cmInfo);
+		bRet = CMConfigurator.init(strConfPath);
 		if(!bRet)
 			return false;
 
-		bRet = CMInteractionManager.init(m_cmInfo);
+		bRet = CMInteractionManager.init();
 		if(!bRet)
 			return false;
 
-		CMEventManager.startReceivingEvent(m_cmInfo);
-		CMCommManager.startReceivingMessage(m_cmInfo);
-		CMCommManager.startSendingMessage(m_cmInfo);
+		CMEventManager.startReceivingEvent();
+		CMCommManager.startReceivingMessage();
+		CMCommManager.startSendingMessage();
 		
 		int nKeepAliveTime = CMConfigurationInfo.getInstance().getKeepAliveTime();
 		if(nKeepAliveTime > 0)
@@ -230,7 +228,7 @@ public class CMServerStub extends CMStub {
 			// start keep-alive task
 			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
-			CMServerKeepAliveTask keepAliveTask = new CMServerKeepAliveTask(m_cmInfo);
+			CMServerKeepAliveTask keepAliveTask = new CMServerKeepAliveTask();
 			ScheduledFuture<?> future = ses.scheduleWithFixedDelay(keepAliveTask, 
 					1, 1, TimeUnit.SECONDS);
 			threadInfo.setScheduledFuture(future);
@@ -241,7 +239,7 @@ public class CMServerStub extends CMStub {
 			}
 		}
 		
-		m_cmInfo.setStarted(true);
+		cmInfo.setStarted(true);
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMServerStub.startCM(), succeeded.");
@@ -305,6 +303,7 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean requestServerReg(String server)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
@@ -314,7 +313,7 @@ public class CMServerStub extends CMStub {
 			System.err.println("CMServerStub.requestServerReg(), the requesting server name is null.");
 			return false;
 		}
-		if(CMConfigurator.isDServer(m_cmInfo))
+		if(CMConfigurator.isDServer())
 		{
 			System.err.println("CMServerStub.requestServerReg(), This is the default server!");
 			return false;
@@ -348,7 +347,7 @@ public class CMServerStub extends CMStub {
 		}
 
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
+		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer);
 		if(bRet)
 			myself.setName(server);	// to set my server name
 
@@ -395,9 +394,10 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean requestServerDereg()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
-		if( CMConfigurator.isDServer(m_cmInfo) )
+		if( CMConfigurator.isDServer() )
 		{
 			System.out.println("CMServerStub.requestServerDereg(), this server is the default "
 					+ "server!");
@@ -416,7 +416,7 @@ public class CMServerStub extends CMStub {
 		mse.setServerName( myself.getName() );
 
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer, m_cmInfo);
+		boolean bRet = CMEventManager.unicastEvent(mse, strDefServer);
 		if(bRet)
 		{
 			myself.setState(CMInfo.CM_CONNECT);
@@ -436,14 +436,15 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean connectToServer()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean result = false;
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
-		if( CMConfigurator.isDServer(m_cmInfo) )
+		if( CMConfigurator.isDServer() )
 		{
 			System.out.println("CMServerStub.connectToServer(), this is the default server!");
 			return false;
 		}
-		result = CMInteractionManager.connectDefaultServer(m_cmInfo);
+		result = CMInteractionManager.connectDefaultServer();
 		if(result)
 		{
 			myself.setState(CMInfo.CM_CONNECT);
@@ -463,14 +464,15 @@ public class CMServerStub extends CMStub {
 	 */
 	public boolean disconnectFromServer()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean result = false;
 		CMUser myself = CMInteractionInfo.getInstance().getMyself();
-		if( CMConfigurator.isDServer(m_cmInfo) )
+		if( CMConfigurator.isDServer() )
 		{
 			System.out.println("CMServerStub.disconnectFromServer(), this is the default server!");
 			return false;
 		}
-		result = CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+		result = CMInteractionManager.disconnectFromDefaultServer();
 		if(result)
 		{
 			myself.setState(CMInfo.CM_INIT);
@@ -530,6 +532,7 @@ public class CMServerStub extends CMStub {
 	public void setAttachDownloadScheme(String strUserName, int nScheme)
 	{
 		// set the scheme for the user
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMMember loginUsers = interInfo.getLoginUsers();
@@ -554,12 +557,12 @@ public class CMServerStub extends CMStub {
 				if(nPrevScheme != CMInfo.SNS_ATTACH_PREFETCH && nScheme == CMInfo.SNS_ATTACH_PREFETCH)
 				{
 					// load history info for attachment access of this user
-					CMSNSManager.loadAccessHistory(tuser, m_cmInfo);
+					CMSNSManager.loadAccessHistory(tuser);
 				}
 				else if(nPrevScheme == CMInfo.SNS_ATTACH_PREFETCH && nScheme != CMInfo.SNS_ATTACH_PREFETCH)
 				{
 					// save the updated or newly added history info for attachment access of this user
-					CMSNSManager.saveAccessHistory(tuser, m_cmInfo);
+					CMSNSManager.saveAccessHistory(tuser);
 				}
 
 			}
@@ -580,12 +583,12 @@ public class CMServerStub extends CMStub {
 			if(nPrevScheme != CMInfo.SNS_ATTACH_PREFETCH && nScheme == CMInfo.SNS_ATTACH_PREFETCH)
 			{
 				// load history info for attachment access of this user
-				CMSNSManager.loadAccessHistory(tuser, m_cmInfo);
+				CMSNSManager.loadAccessHistory(tuser);
 			}
 			else if(nPrevScheme == CMInfo.SNS_ATTACH_PREFETCH && nScheme != CMInfo.SNS_ATTACH_PREFETCH)
 			{
 				// save the updated or newly added history info for attachment access of this user
-				CMSNSManager.saveAccessHistory(tuser, m_cmInfo);
+				CMSNSManager.saveAccessHistory(tuser);
 			}
 
 			send(se, strUserName);

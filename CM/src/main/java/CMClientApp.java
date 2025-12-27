@@ -2597,10 +2597,10 @@ public class CMClientApp {
 			switch(nMode)
 			{
 			case 1: // push
-				CMFileTransferManager.pushFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
+				CMFileTransferManager.pushFile(strFiles[i], strTarget);
 				break;
 			case 2: // pull
-				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
+				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget);
 				break;
 			}
 		}
@@ -2816,7 +2816,7 @@ public class CMClientApp {
 			
 			m_clientStub.send(fe, strAddServer);
 			
-			CMFileTransferManager.pushFile(strPieceName, strAddServer, m_clientStub.getCMInfo());
+			CMFileTransferManager.pushFile(strPieceName, strAddServer);
 		}
 		// for the last piece
 		if( i == 0 )
@@ -2837,8 +2837,8 @@ public class CMClientApp {
 		fe.setFileReceiver(m_clientStub.getDefaultServerName());
 		m_clientStub.send(fe, m_clientStub.getDefaultServerName());
 		
-		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName(), 
-				m_clientStub.getCMInfo());
+		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName()
+        );
 		
 		try {
 			raf.close();

@@ -9,7 +9,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 
 /**
  * @author mlim
@@ -44,7 +43,7 @@ public class CMConfiguratorTest {
 	public void testInit() {
 		System.out.println("===== called testInit().");
 		String confFilePath = "cm-server.conf";
-		boolean ret = CMConfigurator.init(confFilePath, cmInfo);
+		boolean ret = CMConfigurator.init(confFilePath);
 		assertTrue(ret);
 	}
 

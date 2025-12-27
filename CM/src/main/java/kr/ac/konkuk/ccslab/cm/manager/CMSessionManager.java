@@ -1,5 +1,4 @@
 package kr.ac.konkuk.ccslab.cm.manager;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -18,22 +17,23 @@ import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 
 public class CMSessionManager {
 
-	public static void init(CMInfo cmInfo)
+	public static void init()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			return;
 		}
 		
-		configureGroups(cmInfo);
-		CMGroupManager.init(cmInfo);
+		configureGroups();
+		CMGroupManager.init();
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMSessionManager.init(), succeeded.");
 	}
 	
-	private static void configureGroups(CMInfo cmInfo)
+	private static void configureGroups()
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -87,7 +87,7 @@ public class CMSessionManager {
 		}				
 	}
 	
-	public static void processEvent(CMMessage msg, CMInfo cmInfo)
+	public static void processEvent(CMMessage msg)
 	{
 		CMEvent cmEvent = null;
 		
@@ -110,16 +110,16 @@ public class CMSessionManager {
 		switch(nEventID)
 		{
 		case CMSessionEvent.JOIN_SESSION:
-			processJOIN_SESSION(msg, cmInfo);
+			processJOIN_SESSION(msg);
 			break;
 		case CMSessionEvent.JOIN_SESSION_ACK:
-			processJOIN_SESSION_ACK(msg, cmInfo);
+			processJOIN_SESSION_ACK(msg);
 			break;
 		case CMSessionEvent.LEAVE_SESSION:
-			processLEAVE_SESSION(msg, cmInfo);
+			processLEAVE_SESSION(msg);
 			break;
 		case CMSessionEvent.SESSION_TALK:
-			processSESSION_TALK(msg, cmInfo);
+			processSESSION_TALK(msg);
 			break;
 		default:
 			System.out.println("CMSessionManager.processEvent(), unknown event(type: "+nEventType+", id:"+nEventID+").");
@@ -131,8 +131,9 @@ public class CMSessionManager {
 		return;
 	}
 	
-	private static void processJOIN_SESSION(CMMessage msg, CMInfo cmInfo)
+	private static void processJOIN_SESSION(CMMessage msg)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -153,21 +154,21 @@ public class CMSessionManager {
 		user.setCurrentSession(se.getSessionName());
 		user.setCurrentGroup("g1");	// default group name
 		
-		joinSession(user, cmInfo);
+		joinSession(user);
 		
 		// notify all users of the fact that a user changes a session
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.CHANGE_SESSION);
 		tse.setUserName(se.getUserName());
 		tse.setSessionName(se.getSessionName());
-		CMEventManager.broadcastEvent(tse, cmInfo);
+		CMEventManager.broadcastEvent(tse);
 
 		tse = null;
 		se = null;
 	}
 
 	// join session of the default server
-	private static boolean joinSession(CMUser user, CMInfo cmInfo)
+	private static boolean joinSession(CMUser user)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
@@ -209,14 +210,14 @@ public class CMSessionManager {
 			seAck.addGroupInfo(gInfo);
 		}
 		
-		ret = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
+		ret = CMEventManager.unicastEvent(seAck, user.getName());
 		
 		seAck.removeAllGroupInfoObjects();
 		seAck = null;
 		return ret;
 	}
 	
-	private static void processJOIN_SESSION_ACK(CMMessage msg, CMInfo cmInfo)
+	private static void processJOIN_SESSION_ACK(CMMessage msg)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -258,7 +259,7 @@ public class CMSessionManager {
 		tGroup = session.getGroupList().elementAt(0);	// first group
 		interInfo.getMyself().setCurrentGroup(tGroup.getGroupName());
 		// initialize current group
-		CMGroupManager.init(session.getSessionName(), tGroup.getGroupName(), cmInfo);
+		CMGroupManager.init(session.getSessionName(), tGroup.getGroupName());
 		
 		// update user's state
 		interInfo.getMyself().setState(CMInfo.CM_SESSION_JOIN);
@@ -273,7 +274,7 @@ public class CMSessionManager {
 		ie.setUDPPort(interInfo.getMyself().getUDPPort());
 		ie.setCurrentGroup(interInfo.getMyself().getCurrentGroup());
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		CMEventManager.unicastEvent(ie, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(ie, strDefServer);
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMSessionManager.processJOIN_SESSION_ACK() succeeded.");
@@ -284,8 +285,9 @@ public class CMSessionManager {
 		return;
 	}
 	
-	private static void processLEAVE_SESSION(CMMessage msg, CMInfo cmInfo)
+	private static void processLEAVE_SESSION(CMMessage msg)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -308,14 +310,14 @@ public class CMSessionManager {
 			return;
 		}
 		
-		leaveSession(user, cmInfo);
+		leaveSession(user);
 		
 		// notify login users of the session leave
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.CHANGE_SESSION);
 		tse.setUserName(user.getName());
 		tse.setSessionName("");
-		CMEventManager.broadcastEvent(tse, cmInfo);
+		CMEventManager.broadcastEvent(tse);
 		
 		//// do not send LEAVE_SESSION_ACK (?)
 		
@@ -325,13 +327,13 @@ public class CMSessionManager {
 	}
 	
 	// leave current session of the default server
-	public static void leaveSession(CMUser user, CMInfo cmInfo)
+	public static void leaveSession(CMUser user)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strCurrentSession = user.getCurrentSession();
 		
 		// leave from the current group and notify group members
-		CMGroupManager.leaveGroup(user, cmInfo);
+		CMGroupManager.leaveGroup(user);
 		
 		// leave from the current session
 		CMSession session = interInfo.findSession(strCurrentSession);
@@ -355,7 +357,7 @@ public class CMSessionManager {
 		return;
 	}
 	
-	private static void processSESSION_TALK(CMMessage msg, CMInfo cmInfo)
+	private static void processSESSION_TALK(CMMessage msg)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -372,7 +374,7 @@ public class CMSessionManager {
 	////////////////////////////////////////////////////////////////////////////////
 	
 	// join a session of an additional server
-	public static boolean addJoinSession(CMUser user, CMInfo cmInfo)
+	public static boolean addJoinSession(CMUser user)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
@@ -405,7 +407,7 @@ public class CMSessionManager {
 			mseAck.addGroupInfo(gi);
 		}
 
-		CMEventManager.unicastEvent(mseAck, user.getName(), cmInfo);
+		CMEventManager.unicastEvent(mseAck, user.getName());
 
 		mseAck.removeAllGroupInfoObjects();
 		mseAck = null;
@@ -413,13 +415,13 @@ public class CMSessionManager {
 	}
 	
 	// leave a session of an additional server
-	public static void addLeaveSession(CMUser user, CMInfo cmInfo)
+	public static void addLeaveSession(CMUser user)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strCurrentSession = user.getCurrentSession();
 		
 		// leave from the current group and notify group members
-		CMGroupManager.leaveGroup(user, cmInfo);
+		CMGroupManager.leaveGroup(user);
 		
 		// leave from the current session
 		CMSession session = interInfo.findSession(strCurrentSession);

@@ -22,17 +22,17 @@ import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
 public class CMServerKeepAliveTask implements Runnable {
 
-	private CMInfo m_cmInfo;
 	private static final Logger LOG = Logger.getLogger(CMServerKeepAliveTask.class.getName());
 	
-	public CMServerKeepAliveTask(CMInfo cmInfo)
+	public CMServerKeepAliveTask()
 	{
-		m_cmInfo = cmInfo;
+
 	}
 	
 	@Override
 	public void run()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getLogLevel() == 0)
 			LOG.setLevel(Level.SEVERE);
@@ -56,7 +56,7 @@ public class CMServerKeepAliveTask implements Runnable {
 						+(lElapsedTime/1000.0)+"), keep-alive time*1.5("
 						+(nKeepAliveTime*1.5)+").");
 				
-				CMInteractionManager.disconnectBadClientByServer(user, m_cmInfo);
+				CMInteractionManager.disconnectBadClientByServer(user);
 
 				LOG.info("disconnect user("+user.getName()+"), # login users: "
 						+loginUsersVector.size());
@@ -93,7 +93,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		}
 		
 		// process of the default server
-		if(CMConfigurator.isDServer(m_cmInfo))
+		if(CMConfigurator.isDServer())
 		{
 			// for each additional server
 			Vector<CMServer> addServerVector = CMInteractionInfo.getInstance()
@@ -111,8 +111,8 @@ public class CMServerKeepAliveTask implements Runnable {
 							+"elapsed time("+(lElapsedTime/1000.0)+"), keep-alive time("
 							+nKeepAliveTime+").");
 
-					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer, 
-							m_cmInfo);
+					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer
+					);
 					
 					LOG.info("disconnected add-server("+addServer.getServerName()+").\n"
 							+"# add-servers: "+addServerVector.size());
@@ -140,7 +140,7 @@ public class CMServerKeepAliveTask implements Runnable {
 
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
-					CMEventManager.unicastEvent(reqPingEvent, strDefServer, m_cmInfo);
+					CMEventManager.unicastEvent(reqPingEvent, strDefServer);
 				}
 			}
 		} // else

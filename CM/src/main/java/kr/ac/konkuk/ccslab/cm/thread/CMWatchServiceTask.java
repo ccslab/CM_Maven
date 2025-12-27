@@ -19,12 +19,11 @@ public class CMWatchServiceTask implements Runnable {
     private final Map<WatchKey, Path> directoryMap;
     private final Map<WatchEvent.Kind<?>, List<Path>> detectedPathMap;
 
-    public CMWatchServiceTask(Path syncPath, WatchService watchService, CMFileSyncManager syncManager,
-                              CMFileSyncInfo syncInfo) {
+    public CMWatchServiceTask(Path syncPath) {
         this.syncPath = syncPath;
-        this.watchService = watchService;
-        this.syncManager = syncManager;
-        this.syncInfo = syncInfo;
+        this.syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        this.syncInfo = CMFileSyncInfo.getInstance();
+        this.watchService = syncInfo.getWatchService();
 
         directoryMap = new HashMap<>();
         detectedPathMap = new HashMap<>();

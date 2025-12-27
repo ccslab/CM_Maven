@@ -19,12 +19,10 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 public class CMRecvFileTask implements Runnable {
 
 	CMRecvFileInfo m_recvFileInfo;
-	CMInfo m_cmInfo;
-	
-	public CMRecvFileTask(CMRecvFileInfo recvFileInfo, CMInfo cmInfo)
+
+	public CMRecvFileTask(CMRecvFileInfo recvFileInfo)
 	{
 		m_recvFileInfo = recvFileInfo;
-		m_cmInfo = cmInfo;
 	}
 	
 	@Override

@@ -87,8 +87,8 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			{
 				// user authentication...
 				// CM DB must be used in the following authentication..
-				boolean ret = CMDBManager.authenticateUser(se.getUserName(), se.getPassword(), 
-						m_serverStub.getCMInfo());
+				boolean ret = CMDBManager.authenticateUser(se.getUserName(), se.getPassword()
+				);
 				if(!ret)
 				{
 					System.out.println("["+se.getUserName()+"] authentication fails!");
@@ -471,7 +471,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		System.out.println("processing delay: "+(lEndTime-lStartTime)+" ms");
 
 		// send the modified file to the sender
-		CMFileTransferManager.pushFile(strModifiedFile, strSender, m_serverStub.getCMInfo());
+		CMFileTransferManager.pushFile(strModifiedFile, strSender);
 
 		return;
 	}

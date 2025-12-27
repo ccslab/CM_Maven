@@ -1,7 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
-import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.*;
@@ -12,7 +11,6 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -29,8 +27,8 @@ import java.util.stream.Collectors;
 
 public class CMFileSyncManager extends CMServiceManager {
 
-    public CMFileSyncManager(CMInfo cmInfo) {
-        super(cmInfo);
+    public CMFileSyncManager() {
+        super();
         m_nType = CMInfo.CM_FILE_SYNC_MANAGER;
     }
 
@@ -165,7 +163,8 @@ public class CMFileSyncManager extends CMServiceManager {
             fse.setNumTotalFiles(pathList.size());
 
         // send the event
-        boolean sendResult = CMEventManager.unicastEvent(fse, serverName, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean sendResult = CMEventManager.unicastEvent(fse, serverName);
         if (!sendResult) {
             System.err.println("CMFileSyncManager.sendFileList(), send error!");
             System.err.println(fse);
@@ -276,7 +275,8 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setCompletedPath(path);
 
         // send the event
-        boolean ret = CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean ret = CMEventManager.unicastEvent(fse, userName);
         if (!ret) {
             System.err.println("send error: " + fse);
             return false;
@@ -315,7 +315,8 @@ public class CMFileSyncManager extends CMServiceManager {
         // set the relative path to the event
         fse.setSkippedPath(relativePath);
 
-        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(fse, userName);
     }
 
     // called by the server
@@ -348,7 +349,8 @@ public class CMFileSyncManager extends CMServiceManager {
         // set the relative path to the event
         fse.setCompletedPath(relativePath);
 
-        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(fse, userName);
     }
 
     // called by the server
@@ -483,7 +485,8 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setNumFilesCompleted(numFilesCompleted);
 
         // send the event
-        return CMEventManager.unicastEvent(fse, userName, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        return CMEventManager.unicastEvent(fse, userName);
     }
 
     // called by the server
@@ -772,7 +775,7 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
         // create a WatchServiceTask
-        CMWatchServiceTask watchTask = new CMWatchServiceTask(syncHome, watchService, this, syncInfo);
+        CMWatchServiceTask watchTask = new CMWatchServiceTask(syncHome);
         // start the WatchServiceTask
         Future<?> future = es.submit(watchTask);
         if (future == null) {
@@ -962,7 +965,8 @@ public class CMFileSyncManager extends CMServiceManager {
             // set the sublist to the event
             listEvent.setRelativePathList(subList);
             // send the event
-            sendResult = CMEventManager.unicastEvent(listEvent, serverName, m_cmInfo);
+            CMInfo cmInfo = CMInfo.getInstance();
+            sendResult = CMEventManager.unicastEvent(listEvent, serverName);
             if (!sendResult) {
                 System.err.println("send error: " + listEvent);
                 return false;
@@ -1142,7 +1146,8 @@ public class CMFileSyncManager extends CMServiceManager {
             // set the sublist to the event
             listEvent.setRelativePathList(subList);
             // send the event
-            sendResult = CMEventManager.unicastEvent(listEvent, serverName, m_cmInfo);
+            CMInfo cmInfo = CMInfo.getInstance();
+            sendResult = CMEventManager.unicastEvent(listEvent, serverName);
             if (!sendResult) {
                 System.err.println("send error: " + listEvent);
                 return false;
@@ -1282,7 +1287,8 @@ public class CMFileSyncManager extends CMServiceManager {
         int numLocalModeFiles = filteredPathList.size() - syncInfo.getOnlineModePathSizeMap().size();
         endEvent.setNumLocalModeFiles(numLocalModeFiles);
 
-        boolean ret = CMEventManager.unicastEvent(endEvent, fileSender, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        boolean ret = CMEventManager.unicastEvent(endEvent, fileSender);
         if (!ret) {
             System.err.println("send error: " + endEvent);
         }
@@ -1386,8 +1392,8 @@ public class CMFileSyncManager extends CMServiceManager {
         long period = confInfo.getDirActivationMonitoringPeriod();
         TimeUnit unit = confInfo.getDirActivationMonitoringPeriodUnit();
         // create a scheduled proactive mode task
-        CMFileSyncProactiveModeTask proactiveModeTask = new CMFileSyncProactiveModeTask(this,
-                syncInfo, confInfo);
+        CMFileSyncProactiveModeTask proactiveModeTask = new CMFileSyncProactiveModeTask(
+        );
         ScheduledFuture<?> scheduledFuture = ses.scheduleWithFixedDelay(proactiveModeTask, period, period, unit);
         if (scheduledFuture == null) {
             System.err.println("error to call scheduleWithFixedDelay()!");
@@ -2142,7 +2148,8 @@ public class CMFileSyncManager extends CMServiceManager {
         // get input throughput from the server
         String defaultServer = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         // get input throughput (MBps)
-        double inputThroughput = CMCommManager.measureInputThroughput(defaultServer, m_cmInfo);
+        CMInfo cmInfo = CMInfo.getInstance();
+        double inputThroughput = CMCommManager.measureInputThroughput(defaultServer);
         // calculate minimum size (Bytes) of a file to be local mode
         long minFileSizeForLocalMode = (long) (inputThroughput * 1000000 * maxAccessDelayThreshold / 1000);
         if (CMInfo._CM_DEBUG) {

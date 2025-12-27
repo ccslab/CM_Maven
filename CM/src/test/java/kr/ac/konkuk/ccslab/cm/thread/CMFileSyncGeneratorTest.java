@@ -25,7 +25,7 @@ public class CMFileSyncGeneratorTest {
     @Test
     public void calculateBlockSize() {
         System.out.println("===== called calculateBlockSize()..");
-        CMFileSyncGenerator syncGenerator = new CMFileSyncGenerator(userName, cmInfo);
+        CMFileSyncGenerator syncGenerator = new CMFileSyncGenerator(userName);
         try {
             Method method = syncGenerator.getClass().getDeclaredMethod("calculateBlockSize", long.class);
             method.setAccessible(true);

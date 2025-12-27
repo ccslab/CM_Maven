@@ -47,11 +47,12 @@ import kr.ac.konkuk.ccslab.cm.thread.CMEventReceiver;
 
 public class CMEventManager {
 
-	public synchronized static CMEventReceiver startReceivingEvent(CMInfo cmInfo)
+	public synchronized static CMEventReceiver startReceivingEvent()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMEventInfo eventInfo = CMEventInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
-		CMEventReceiver eventReceiver = new CMEventReceiver(cmInfo);
+		CMEventReceiver eventReceiver = new CMEventReceiver();
 		//eventReceiver.start();
 		Future<?> future = es.submit(eventReceiver);
 		eventInfo.setEventReceiver(eventReceiver);
@@ -268,22 +269,22 @@ public class CMEventManager {
 	///////////////////////////////////////////////////////////////
 	// event transmission methods
 	
-	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver)
 	{
-		return unicastEvent(cme, strReceiver, CMInfo.CM_STREAM, 0, false, cmInfo);
+		return unicastEvent(cme, strReceiver, CMInfo.CM_STREAM, 0, false);
 	}
 	
-	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt)
 	{
 		boolean bReturn = false;
 		
 		if(opt == CMInfo.CM_STREAM)
-			bReturn = unicastEvent(cme, strReceiver, opt, 0, false, cmInfo);
+			bReturn = unicastEvent(cme, strReceiver, opt, 0, false);
 		else if(opt == CMInfo.CM_DATAGRAM)
 		{
 			//search for the udp port number of the local default datagram channel
 			CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-			bReturn = unicastEvent(cme, strReceiver, opt, confInfo.getUDPPort(), false, cmInfo);
+			bReturn = unicastEvent(cme, strReceiver, opt, confInfo.getUDPPort(), false);
 		}
 		else
 		{
@@ -294,22 +295,23 @@ public class CMEventManager {
 		return bReturn;
 	}
 	
-	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey)
 	{
-		return unicastEvent(cme, strReceiver, opt, nKey, false, cmInfo);
+		return unicastEvent(cme, strReceiver, opt, nKey, false);
 	}
 	
-	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock)
 	{
-		return unicastEvent(cme, strReceiver, opt, nKey, 0, isBlock, cmInfo);
+		return unicastEvent(cme, strReceiver, opt, nKey, 0, isBlock);
 	}
 	
 	// nKey: the channel key. For the stream channel, nKey is an integer greater than or equal to 0.
 	// For the datagram channel, nKey is an integer that is a port number of this channel.
 	// nRecvPort: if this value is 0, the default receiver port number is used.
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, 
-			int nKey, int nRecvPort, boolean isBlock, CMInfo cmInfo)
+			int nKey, int nRecvPort, boolean isBlock)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMMember loginUsers = null;
 		ByteBuffer bufEvent = null;
 		CMMessage msg = null;
@@ -380,7 +382,7 @@ public class CMEventManager {
 			}
 			else
 			{
-				user = CMInteractionManager.findGroupMemberOfClient(strReceiver, cmInfo);
+				user = CMInteractionManager.findGroupMemberOfClient(strReceiver);
 			}
 			
 			if( user == null )
@@ -419,7 +421,7 @@ public class CMEventManager {
 			}
 		}
 
-		sleepForSimTransDelay(cmInfo);
+		sleepForSimTransDelay();
 
 		// marshall event
 		bufEvent = CMEventManager.marshallEvent(cme);
@@ -476,7 +478,7 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public synchronized static boolean unicastEvent(CMEvent cme, SocketChannel sc, CMInfo cmInfo)
+	public synchronized static boolean unicastEvent(CMEvent cme, SocketChannel sc)
 	{
 		//int nSentBytes = -1;
 		CMMessage msg = null;
@@ -507,7 +509,7 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public synchronized static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName, CMInfo cmInfo)
+	public synchronized static boolean multicastEvent(CMEvent cme, String strSessionName, String strGroupName)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
@@ -543,7 +545,7 @@ public class CMEventManager {
 			return false;
 		}
 
-		sleepForSimTransDelay(cmInfo);
+		sleepForSimTransDelay();
 
 		bufEvent = CMEventManager.marshallEvent(cme);
 		
@@ -573,7 +575,7 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public synchronized static boolean multicastEvent(CMEvent cme, DatagramChannel dc, String strMA, int nPort, CMInfo cmInfo)
+	public synchronized static boolean multicastEvent(CMEvent cme, DatagramChannel dc, String strMA, int nPort)
 	{
 		//int nSentBytes = -1;
 		CMCommInfo commInfo = CMCommInfo.getInstance();
@@ -606,18 +608,18 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public synchronized static boolean broadcastEvent(CMEvent cme, CMInfo cmInfo)
+	public synchronized static boolean broadcastEvent(CMEvent cme)
 	{
-		return broadcastEvent(cme, CMInfo.CM_STREAM, 0, cmInfo);
+		return broadcastEvent(cme, CMInfo.CM_STREAM, 0);
 	}
 	
-	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, CMInfo cmInfo)
+	public synchronized static boolean broadcastEvent(CMEvent cme, int opt)
 	{
-		return broadcastEvent(cme, opt, 0, cmInfo);
+		return broadcastEvent(cme, opt, 0);
 	}
 	
 	// send an event to all login users (server)
-	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, int nChNum, CMInfo cmInfo)
+	public synchronized static boolean broadcastEvent(CMEvent cme, int opt, int nChNum)
 	{
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
@@ -654,7 +656,7 @@ public class CMEventManager {
 					continue;
 				}
 
-				sleepForSimTransDelay(cmInfo);
+				sleepForSimTransDelay();
 
 				msg = new CMMessage(bufEvent, sc);
 				sendQueue.push(msg);
@@ -675,7 +677,7 @@ public class CMEventManager {
 			{
 				tuser = iter.next();
 
-				sleepForSimTransDelay(cmInfo);
+				sleepForSimTransDelay();
 
 				InetSocketAddress sockAddr = new InetSocketAddress(tuser.getHost(), tuser.getUDPPort());
 				msg = new CMMessage(bufEvent, dc, sockAddr);
@@ -701,18 +703,18 @@ public class CMEventManager {
 		return true;
 	}
 	
-	public synchronized static boolean castEvent(CMEvent cme, CMMember users, CMInfo cmInfo)
+	public synchronized static boolean castEvent(CMEvent cme, CMMember users)
 	{
-		return castEvent(cme, users, CMInfo.CM_STREAM, 0, cmInfo);
+		return castEvent(cme, users, CMInfo.CM_STREAM, 0);
 	}
 	
-	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, CMInfo cmInfo)
+	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt)
 	{
-		return castEvent(cme, users, opt, 0, cmInfo);
+		return castEvent(cme, users, opt, 0);
 	}
 	
 	// send an event to a specific user group with multiple unicast transmissions
-	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, int nChNum, CMInfo cmInfo)
+	public synchronized static boolean castEvent(CMEvent cme, CMMember users, int opt, int nChNum)
 	{
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
@@ -749,7 +751,7 @@ public class CMEventManager {
 					continue;
 				}
 
-				sleepForSimTransDelay(cmInfo);
+				sleepForSimTransDelay();
 
 				msg = new CMMessage(bufEvent, sc);
 				sendQueue.push(msg);
@@ -770,7 +772,7 @@ public class CMEventManager {
 			{
 				tuser = iter.next();
 				
-				sleepForSimTransDelay(cmInfo);
+				sleepForSimTransDelay();
 
 				InetSocketAddress sockAddr = new InetSocketAddress(tuser.getHost(), tuser.getUDPPort());
 				msg = new CMMessage(bufEvent, dc, sockAddr);
@@ -973,7 +975,7 @@ public class CMEventManager {
 	//////////////////////////////////////
 	// add some sleep in order to simulate transmission delay
 
-	private static void sleepForSimTransDelay(CMInfo cmInfo)
+	private static void sleepForSimTransDelay()
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nSimTransDelay = confInfo.getSimTransDelay();
