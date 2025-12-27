@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 
 public class CMFileSyncManager extends CMServiceManager {
 
-    public CMFileSyncManager(CMInfo cmInfo) {
-        super(cmInfo);
+    public CMFileSyncManager() {
+        super();
         m_nType = CMInfo.CM_FILE_SYNC_MANAGER;
     }
 

@@ -15,7 +15,7 @@ public abstract class CMEventHandler extends CMServiceManager {
 	
 	public CMEventHandler(CMInfo cmInfo)
 	{
-		super(cmInfo);
+		super();
 	}
 	
 	/**

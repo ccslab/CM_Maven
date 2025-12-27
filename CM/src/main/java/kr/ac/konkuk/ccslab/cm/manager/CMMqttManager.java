@@ -37,7 +37,7 @@ public class CMMqttManager extends CMServiceManager {
 
 	public CMMqttManager(CMInfo cmInfo)
 	{
-		super(cmInfo);
+		super();
 		m_nType = CMInfo.CM_MQTT_MANAGER;
 	}
 	

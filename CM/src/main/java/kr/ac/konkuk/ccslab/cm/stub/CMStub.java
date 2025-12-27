@@ -66,7 +66,7 @@ public class CMStub {
 		//managerHashtable.put(CMInfo.CM_MQTT_MANAGER, new CMMqttManager(m_cmInfo));
 		//managerHashtable.put(CMInfo.CM_FILE_SYNC_MANAGER, new CMFileSyncManager(m_cmInfo));
 		cmInfo.addServiceManager(CMMqttManager.class, new CMMqttManager(cmInfo));
-		cmInfo.addServiceManager(CMFileSyncManager.class, new CMFileSyncManager(cmInfo));
+		cmInfo.addServiceManager(CMFileSyncManager.class, new CMFileSyncManager());
 		
 		// add cm event handlers
 		handlerHashtable.put(CMInfo.CM_MQTT_EVENT, new CMMqttEventHandler(cmInfo));

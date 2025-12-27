@@ -1,7 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMObject;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
  * The CMServiceManager class represents a CM service object.
@@ -13,7 +12,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
  */
 public abstract class CMServiceManager extends CMObject {
 
-	public CMServiceManager(CMInfo cmInfo)
+	public CMServiceManager()
 	{
 		m_nType = -1;
 	}
