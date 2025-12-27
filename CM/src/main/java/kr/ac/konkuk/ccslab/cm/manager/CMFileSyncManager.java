@@ -1392,8 +1392,8 @@ public class CMFileSyncManager extends CMServiceManager {
         long period = confInfo.getDirActivationMonitoringPeriod();
         TimeUnit unit = confInfo.getDirActivationMonitoringPeriodUnit();
         // create a scheduled proactive mode task
-        CMFileSyncProactiveModeTask proactiveModeTask = new CMFileSyncProactiveModeTask(this,
-                syncInfo, confInfo);
+        CMFileSyncProactiveModeTask proactiveModeTask = new CMFileSyncProactiveModeTask(
+        );
         ScheduledFuture<?> scheduledFuture = ses.scheduleWithFixedDelay(proactiveModeTask, period, period, unit);
         if (scheduledFuture == null) {
             System.err.println("error to call scheduleWithFixedDelay()!");
