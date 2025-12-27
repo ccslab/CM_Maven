@@ -228,7 +228,7 @@ public class CMServerStub extends CMStub {
 			// start keep-alive task
 			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
-			CMServerKeepAliveTask keepAliveTask = new CMServerKeepAliveTask(cmInfo);
+			CMServerKeepAliveTask keepAliveTask = new CMServerKeepAliveTask();
 			ScheduledFuture<?> future = ses.scheduleWithFixedDelay(keepAliveTask, 
 					1, 1, TimeUnit.SECONDS);
 			threadInfo.setScheduledFuture(future);

@@ -140,7 +140,7 @@ public class CMFileTransferManager {
 				////////// for Android client where network-related methods must be called in a separate thread
 				////////// rather than the MainActivity thread
 				CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SERVER_CHANNEL,
-						myself.getHost(), 0, false, cmInfo);
+						myself.getHost(), 0, false);
 				ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 				Future<SelectableChannel> future = es.submit(task);
 				try {
@@ -2949,7 +2949,7 @@ public class CMFileTransferManager {
 					
 		// start a dedicated sending thread
 		Future<CMSendFileInfo> future = null;
-		CMSendFileTask sendFileTask = new CMSendFileTask(sInfo, cmInfo);
+		CMSendFileTask sendFileTask = new CMSendFileTask(sInfo);
 		future = threadInfo.getExecutorService().submit(sendFileTask, sInfo);
 		sInfo.setSendTaskResult(future);		
 
@@ -3167,7 +3167,7 @@ public class CMFileTransferManager {
 
 		// start a dedicated thread to receive the file
 		Future<CMRecvFileInfo> future = null;
-		CMRecvFileTask recvFileTask = new CMRecvFileTask(rfInfo, cmInfo);
+		CMRecvFileTask recvFileTask = new CMRecvFileTask(rfInfo);
 		future = threadInfo.getExecutorService().submit(recvFileTask, rfInfo);
 		rfInfo.setRecvTaskResult(future);
 		

@@ -431,7 +431,7 @@ public class CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
-				confInfo.getMyCurrentAddress(), nChPort, false, cmInfo);
+				confInfo.getMyCurrentAddress(), nChPort, false);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -539,7 +539,7 @@ public class CMStub {
 			return null;
 		}
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_DATAGRAM_CHANNEL,
-				confInfo.getMyCurrentAddress(), nChPort, true, cmInfo);
+				confInfo.getMyCurrentAddress(), nChPort, true);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -687,7 +687,7 @@ public class CMStub {
 		////////// rather than the MainActivity thread
 
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_MULTICAST_CHANNEL,
-				strChAddress, nChPort, false, cmInfo);
+				strChAddress, nChPort, false);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {

@@ -20,7 +20,7 @@ public class CMRecvFileTask implements Runnable {
 
 	CMRecvFileInfo m_recvFileInfo;
 
-	public CMRecvFileTask(CMRecvFileInfo recvFileInfo, CMInfo cmInfo)
+	public CMRecvFileTask(CMRecvFileInfo recvFileInfo)
 	{
 		m_recvFileInfo = recvFileInfo;
 	}

@@ -23,7 +23,7 @@ public class CMSendFileTask implements Runnable {
 	CMSendFileInfo m_sendFileInfo;
 	CMBlockingEventQueue m_sendQueue;
 
-	public CMSendFileTask(CMSendFileInfo sendFileInfo, CMInfo cmInfo)
+	public CMSendFileTask(CMSendFileInfo sendFileInfo)
 	{
 		m_sendFileInfo = sendFileInfo;
 		m_sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();

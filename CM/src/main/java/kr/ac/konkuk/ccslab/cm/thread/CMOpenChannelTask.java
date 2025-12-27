@@ -14,7 +14,7 @@ public class CMOpenChannelTask implements Callable<SelectableChannel> {
 	private boolean m_isBlocking;
 
 	public CMOpenChannelTask(int nChType, String strServerAddress, int nServerPort, 
-			boolean isBlocking, CMInfo cmInfo)
+			boolean isBlocking)
 	{
 		m_nChType = nChType;
 		m_strAddress = strServerAddress;

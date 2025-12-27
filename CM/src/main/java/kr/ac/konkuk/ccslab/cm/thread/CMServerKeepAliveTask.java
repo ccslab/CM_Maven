@@ -24,7 +24,7 @@ public class CMServerKeepAliveTask implements Runnable {
 
 	private static final Logger LOG = Logger.getLogger(CMServerKeepAliveTask.class.getName());
 	
-	public CMServerKeepAliveTask(CMInfo cmInfo)
+	public CMServerKeepAliveTask()
 	{
 
 	}

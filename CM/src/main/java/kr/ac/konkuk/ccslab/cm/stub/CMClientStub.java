@@ -1119,7 +1119,7 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, cmInfo);
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), false);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -1216,7 +1216,7 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, cmInfo);
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), false);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -1448,7 +1448,7 @@ public class CMClientStub extends CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				strTargetSSCAddress, nTargetSSCPort, true, cmInfo);
+				strTargetSSCAddress, nTargetSSCPort, true);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
@@ -1561,7 +1561,7 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				strTargetSSCAddress, nTargetSSCPort, true, cmInfo);
+				strTargetSSCAddress, nTargetSSCPort, true);
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
