@@ -546,7 +546,7 @@ public class CMCommManager {
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
 		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
-		CMByteReceiver byteReceiver = new CMByteReceiver(cmInfo);
+		CMByteReceiver byteReceiver = new CMByteReceiver();
 		//byteReceiver.start();
 		Future<?> future = es.submit(byteReceiver);
 		CMCommInfo.getInstance().setByteReceiver(byteReceiver);

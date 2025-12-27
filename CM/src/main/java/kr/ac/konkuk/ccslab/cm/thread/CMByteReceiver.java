@@ -22,8 +22,8 @@ public class CMByteReceiver implements Runnable {
 	private CMBlockingEventQueue m_queue;
 	private CMList<CMUnknownChannelInfo> m_unknownChannelList;
 	private static final Logger LOG = Logger.getLogger(CMByteReceiver.class.getName());
-	
-	public CMByteReceiver(CMInfo cmInfo)
+
+	public CMByteReceiver()
 	{
 		m_selector = CMCommInfo.getInstance().getSelector();
 		m_queue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
