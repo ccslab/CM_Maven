@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.util.Calendar;
 import java.util.Hashtable;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
@@ -13,22 +14,22 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
  *
  */
 public class CMUser extends CMObject {
-	
-	private int m_nID;
+
+	// from here
 	private String m_strName;
+	private UUID m_uuid;
 	private String m_strPasswd;
 	private String m_strHost;
 	private int m_nUDPPort;
 	private int m_nSSCPort;	// port number for server socket channel (4 p2p file-transfer)
-	private CMPosition m_pq;
 	private String m_strCurrentSession;
 	private String m_strCurrentGroup;
 	private int m_nState;
 	private CMChannelInfo<Integer> m_nonBlockSocketChannelInfo;
 	private CMChannelInfo<Integer> m_blockSocketChannelInfo;
 	private int m_nAttachDownloadScheme;	// 4 SERVER
-	private CMSNSAttachAccessHistoryList m_historyList;	// 4 SERVER
-	private Calendar m_lastLoginDate;		// 4 SERVER
+	//private CMSNSAttachAccessHistoryList m_historyList;	// 4 SERVER
+	//private Calendar m_lastLoginDate;		// 4 SERVER
 	// 4 server (last event-transmission time of this object(client))
 	private long m_lLastEventTransTime;
 	// 4 myself (client or server) (last event-transmission time per receiver)
@@ -41,8 +42,8 @@ public class CMUser extends CMObject {
 	public CMUser()
 	{
 		m_nType = CMInfo.CM_USER;
-		m_nID = -1;
 		m_strName = "";
+		m_uuid = null;
 		m_strPasswd = "?";
 		m_strHost = "?";
 		m_nUDPPort = -1;
@@ -53,8 +54,6 @@ public class CMUser extends CMObject {
 		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_nAttachDownloadScheme = -1;
-		m_historyList = new CMSNSAttachAccessHistoryList();
-		m_lastLoginDate = null;
 		m_lLastEventTransTime = -1;
 		m_myLastEventTransTimeHashtable = new Hashtable<String, Long>();
 		m_nKeepAliveTime = 0;
@@ -70,8 +69,8 @@ public class CMUser extends CMObject {
 	public CMUser(String name, String passwd, String host)
 	{
 		m_nType = CMInfo.CM_USER;
-		m_nID = -1;
 		m_strName = name;
+		m_uuid = null;
 		m_strPasswd = passwd;
 		m_strHost = host;
 		m_nUDPPort = -1;
@@ -82,23 +81,18 @@ public class CMUser extends CMObject {
 		m_nonBlockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_blockSocketChannelInfo = new CMChannelInfo<Integer>();
 		m_nAttachDownloadScheme = -1;
-		m_historyList = new CMSNSAttachAccessHistoryList();
-		m_lastLoginDate = null;
 		m_lLastEventTransTime = -1;
 		m_myLastEventTransTimeHashtable = new Hashtable<String, Long>();
 		m_nKeepAliveTime = 0;
 	}
 	
 	// set methods
-	public synchronized void setID(int id)
-	{
-		m_nID = id;
-	}
-	
 	public synchronized void setName(String name)
 	{
 		m_strName = name;
 	}
+
+	public synchronized void setUuid(UUID uuid) { m_uuid = uuid; }
 	
 	public synchronized void setPasswd(String passwd)
 	{
@@ -118,11 +112,6 @@ public class CMUser extends CMObject {
 	public synchronized void setSSCPort(int port)
 	{
 		m_nSSCPort = port;
-	}
-	
-	public synchronized void setPosition(CMPosition pq)
-	{
-		m_pq = pq;
 	}
 	
 	public synchronized void setCurrentSession(String sName)
@@ -168,16 +157,6 @@ public class CMUser extends CMObject {
 		m_nAttachDownloadScheme = scheme;
 	}
 	
-	public synchronized void setAttachAccessHistoryList(CMSNSAttachAccessHistoryList list)
-	{
-		m_historyList = list;
-	}
-	
-	public synchronized void setLastLoginDate(Calendar date)
-	{
-		m_lastLoginDate = date;
-	}
-	
 	public synchronized void setLastEventTransTime(long lTime)
 	{
 		m_lLastEventTransTime = lTime;
@@ -194,11 +173,6 @@ public class CMUser extends CMObject {
 	}
 	
 	// get methods
-	public synchronized int getID()
-	{
-		return m_nID;
-	}
-	
 	/**
 	 * Returns user name.
 	 * 
@@ -208,7 +182,14 @@ public class CMUser extends CMObject {
 	{
 		return m_strName;
 	}
-	
+
+	/**
+	 * Returns user uuid.
+	 *
+	 * @return the user uuid.
+	 */
+	public synchronized UUID getUuid() { return m_uuid; }
+
 	/**
 	 * Returns user login password.
 	 * 
@@ -255,11 +236,6 @@ public class CMUser extends CMObject {
 	public synchronized int getSSCPort()
 	{
 		return m_nSSCPort;
-	}
-	
-	public synchronized CMPosition getPosition()
-	{
-		return m_pq;
 	}
 	
 	/**
@@ -327,16 +303,6 @@ public class CMUser extends CMObject {
 	public synchronized int getAttachDownloadScheme()
 	{
 		return m_nAttachDownloadScheme;
-	}
-	
-	public synchronized CMSNSAttachAccessHistoryList getAttachAccessHistoryList()
-	{
-		return m_historyList;
-	}
-	
-	public synchronized Calendar getLastLoginDate()
-	{
-		return m_lastLoginDate;
 	}
 	
 	public synchronized long getLastEventTransTime()
