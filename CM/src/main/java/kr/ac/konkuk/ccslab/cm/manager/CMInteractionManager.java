@@ -49,7 +49,7 @@ public class CMInteractionManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.isDBUse() && CMConfigurator.isDServer())
 		{
-			CMDBManager.init(cmInfo);
+			CMDBManager.init();
 		}
 		
 		// check the system type
@@ -2591,7 +2591,7 @@ public class CMInteractionManager {
 		{
 			// find if the user name already exists or not
 			strQuery = "select * from  user_table where userName='"+se.getUserName()+"';";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 			try {
 				if( rs != null && rs.next() )
 				{
@@ -2602,13 +2602,13 @@ public class CMInteractionManager {
 				else
 				{
 					// insert a new user
-					ret = CMDBManager.queryInsertUser(se.getUserName(), se.getPassword(), cmInfo);
+					ret = CMDBManager.queryInsertUser(se.getUserName(), se.getPassword());
 					if( ret == 1 )	// not clear
 					{
 						// get the inserted creationTime from DB
 						strQuery = "select creationTime from user_table where userName='"
 								+se.getUserName()+"';";
-						rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+						rs = CMDBManager.sendSelectQuery(strQuery);
 						rs.next();
 						strCreationTime = rs.getString("creationTime");
 						nReturnCode = 1;
@@ -2617,7 +2617,7 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 
@@ -2679,7 +2679,7 @@ public class CMInteractionManager {
 			// check the user authentication (if user name and password are correct or not)
 			strQuery = "select * from user_table where userName='"+se.getUserName()+"' and "
 					+"password=PASSWORD('"+se.getPassword()+"');";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 			try {
 				if( rs != null && !rs.next() )
 				{
@@ -2690,7 +2690,7 @@ public class CMInteractionManager {
 				else
 				{
 					// delete a user from DB
-					ret = CMDBManager.queryDeleteUser(se.getUserName(), cmInfo);
+					ret = CMDBManager.queryDeleteUser(se.getUserName());
 					if( ret == 1 ) // not clear
 					{
 						nReturnCode = 1;
@@ -2699,7 +2699,7 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 
@@ -2759,7 +2759,7 @@ public class CMInteractionManager {
 
 			// make a search query
 			strQuery = "select * from user_table where userName='"+se.getUserName()+"';";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 
 			try {
 				if( rs != null && !rs.next() )
@@ -2779,7 +2779,7 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 		}

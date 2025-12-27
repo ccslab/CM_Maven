@@ -335,7 +335,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// authenticate user name and password
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInfo cmInfo = CMInfo.getInstance();
-		if( confInfo.isLoginScheme() && !CMDBManager.authenticateUser(strUserName, strPassword, cmInfo) )
+		if( confInfo.isLoginScheme() && !CMDBManager.authenticateUser(strUserName, strPassword) )
 		{
 			System.err.println("CMMqttEventHandler.validateCONNECT(), user authentication failed! "
 					+"user("+strUserName+"), password("+strPassword+")");

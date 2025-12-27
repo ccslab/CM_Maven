@@ -103,8 +103,8 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			{
 				// user authentication...
 				// CM DB must be used in the following authentication..
-				boolean ret = CMDBManager.authenticateUser(se.getUserName(), se.getPassword(), 
-						m_serverStub.getCMInfo());
+				boolean ret = CMDBManager.authenticateUser(se.getUserName(), se.getPassword()
+				);
 				if(!ret)
 				{
 					printMessage("["+se.getUserName()+"] authentication fails!\n");

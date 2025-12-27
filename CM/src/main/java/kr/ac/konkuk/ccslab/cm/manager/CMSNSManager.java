@@ -54,7 +54,7 @@ public class CMSNSManager {
 		
 		ArrayList<String> friendList = null;
 		// get users whom I added as friends
-		friendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
+		friendList = CMDBManager.queryGetFriendsList(strUserName);
 
 		return friendList;
 	}
@@ -83,10 +83,10 @@ public class CMSNSManager {
 		ArrayList<String> requesterList = null;
 		
 		// get users who added me as a friend
-		candidateList = CMDBManager.queryGetRequestersList(strUserName, cmInfo);
+		candidateList = CMDBManager.queryGetRequestersList(strUserName);
 		
 		// get users whom I added as friends
-		myFriendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
+		myFriendList = CMDBManager.queryGetFriendsList(strUserName);
 		
 		// If users in the list are not my friends, add them to a new list
 		// because current 'candidateList' includes users whom I added as friends as well.
@@ -133,9 +133,9 @@ public class CMSNSManager {
 		ArrayList<String> biFriendList = null;
 
 		// get users who added me as a friend
-		candidateList = CMDBManager.queryGetRequestersList(strUserName, cmInfo);		
+		candidateList = CMDBManager.queryGetRequestersList(strUserName);
 		// get users whom I added as friends
-		myFriendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
+		myFriendList = CMDBManager.queryGetFriendsList(strUserName);
 		
 		// If users in the list are not my friends, add them to a new list
 		// because current 'candidateList' includes users whom I added as friends as well.
@@ -202,7 +202,7 @@ public class CMSNSManager {
 			
 			if(confInfo.isDBUse())
 			{
-				CMDBManager.queryInsertSNSAttachedFile(nContentID, strFilePath, strFileName, cmInfo);
+				CMDBManager.queryInsertSNSAttachedFile(nContentID, strFilePath, strFileName);
 			}
 			else
 			{
@@ -429,7 +429,7 @@ public class CMSNSManager {
 		
 		// load access history of the user from DB
 		CMSNSAttachAccessHistoryList historyList = null;
-		historyList = CMDBManager.queryGetAccessHistory(strUserName, startDate, endDate, null, cmInfo);
+		historyList = CMDBManager.queryGetAccessHistory(strUserName, startDate, endDate, null);
 		
 		// store history to the history list of the user
 		user.setAttachAccessHistoryList(historyList);
@@ -488,7 +488,7 @@ public class CMSNSManager {
 			if(tempHistory.isAdded())
 			{				
 				// add new access history since login time
-				nRet = CMDBManager.queryInsertAccessHistory(strUserName, date, strWriterName, nAccessCount, cmInfo);
+				nRet = CMDBManager.queryInsertAccessHistory(strUserName, date, strWriterName, nAccessCount);
 				if(nRet == 1) // DB query succeeded
 				{
 					nAdded++;
@@ -497,7 +497,7 @@ public class CMSNSManager {
 			else if(tempHistory.isUpdated())
 			{
 				// update existing access history since login time
-				nRet = CMDBManager.queryUpdateAccessCount(strUserName, date, strWriterName, nAccessCount, cmInfo);
+				nRet = CMDBManager.queryUpdateAccessCount(strUserName, date, strWriterName, nAccessCount);
 				if(nRet == 1) // DB query succeeded
 				{
 					nUpdated++;
@@ -798,7 +798,7 @@ public class CMSNSManager {
 			CMDBManager.queryGetSNSContent(nOffset, nContNum, cmInfo);
 			*/
 			
-			contentList = CMDBManager.queryGetSNSContent(se.getUserName(), se.getWriterName(), nOffset, nContNum, cmInfo);
+			contentList = CMDBManager.queryGetSNSContent(se.getUserName(), se.getWriterName(), nOffset, nContNum);
 			contentVector = contentList.getContentList();
 			snsInfo.setSNSContentList(contentList);
 
@@ -838,7 +838,7 @@ public class CMSNSManager {
 					
 					// get the names of attached files
 					ArrayList<String> attachFileList = null;
-					attachFileList = CMDBManager.queryGetSNSAttachedFile(nContID, cmInfo);
+					attachFileList = CMDBManager.queryGetSNSAttachedFile(nContID);
 					nameList = new ArrayList<String>();
 					pathList = new ArrayList<String>();
 					prefetchPathList = new ArrayList<String>();
@@ -1238,12 +1238,12 @@ public class CMSNSManager {
 		{
 			// insert sns content to DB
 			ret = CMDBManager.queryInsertSNSContent(se.getUserName(), se.getMessage(), se.getNumAttachedFiles(), 
-					se.getReplyOf(), se.getLevelOfDisclosure(), cmInfo);
+					se.getReplyOf(), se.getLevelOfDisclosure());
 			if( ret == 1 )
 			{
 				// get the last insert ID
 				String strQuery = "select last_insert_id() from sns_content_table;";
-				ResultSet rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+				ResultSet rs = CMDBManager.sendSelectQuery(strQuery);
 				try {
 					if(rs != null && rs.next())
 					{
@@ -1251,7 +1251,7 @@ public class CMSNSManager {
 					}
 					// get seq number, creation time from DB
 					strQuery = "select creationTime from sns_content_table where seqNum="+nSeqNum+";";
-					rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+					rs = CMDBManager.sendSelectQuery(strQuery);
 
 					if(rs != null && rs.next())
 					{
@@ -1268,7 +1268,7 @@ public class CMSNSManager {
 				} catch (SQLException e) {
 					e.printStackTrace();
 				} finally {
-					CMDBManager.closeDB(cmInfo);
+					CMDBManager.closeDB();
 					CMDBManager.closeRS(rs);
 				}
 			}
@@ -1359,12 +1359,12 @@ public class CMSNSManager {
 			
 			// check if the friend is registered user or not
 			strQuery = "select * from user_table where userName='"+se.getFriendName()+"';";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 			try {
 				if(rs != null && rs.next())
 				{
 					// insert (user, friend)
-					ret = CMDBManager.queryInsertFriend(se.getUserName(), se.getFriendName(), cmInfo);
+					ret = CMDBManager.queryInsertFriend(se.getUserName(), se.getFriendName());
 					if(ret == 1) // not clear
 					{
 						nReturnCode = 1;
@@ -1378,7 +1378,7 @@ public class CMSNSManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 		}
@@ -1421,7 +1421,7 @@ public class CMSNSManager {
 		{
 			int ret = -1;
 			
-			ret = CMDBManager.queryDeleteFriend(se.getUserName(), se.getFriendName(), cmInfo);
+			ret = CMDBManager.queryDeleteFriend(se.getUserName(), se.getFriendName());
 			if(ret == 1) // not clear
 			{
 				nReturnCode = 1;
@@ -1961,7 +1961,7 @@ public class CMSNSManager {
 		
 		// check whether the requested file is the attachment of the given content ID or not
 		ArrayList<String> attachFileList = null;
-		attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID, cmInfo);
+		attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID);
 		boolean bFound = false;
 		
 		for(int i = 0; attachFileList != null && i < attachFileList.size(); i++)
