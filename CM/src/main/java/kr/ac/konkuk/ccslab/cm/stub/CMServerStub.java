@@ -557,12 +557,12 @@ public class CMServerStub extends CMStub {
 				if(nPrevScheme != CMInfo.SNS_ATTACH_PREFETCH && nScheme == CMInfo.SNS_ATTACH_PREFETCH)
 				{
 					// load history info for attachment access of this user
-					CMSNSManager.loadAccessHistory(tuser, cmInfo);
+					CMSNSManager.loadAccessHistory(tuser);
 				}
 				else if(nPrevScheme == CMInfo.SNS_ATTACH_PREFETCH && nScheme != CMInfo.SNS_ATTACH_PREFETCH)
 				{
 					// save the updated or newly added history info for attachment access of this user
-					CMSNSManager.saveAccessHistory(tuser, cmInfo);
+					CMSNSManager.saveAccessHistory(tuser);
 				}
 
 			}
@@ -583,12 +583,12 @@ public class CMServerStub extends CMStub {
 			if(nPrevScheme != CMInfo.SNS_ATTACH_PREFETCH && nScheme == CMInfo.SNS_ATTACH_PREFETCH)
 			{
 				// load history info for attachment access of this user
-				CMSNSManager.loadAccessHistory(tuser, cmInfo);
+				CMSNSManager.loadAccessHistory(tuser);
 			}
 			else if(nPrevScheme == CMInfo.SNS_ATTACH_PREFETCH && nScheme != CMInfo.SNS_ATTACH_PREFETCH)
 			{
 				// save the updated or newly added history info for attachment access of this user
-				CMSNSManager.saveAccessHistory(tuser, cmInfo);
+				CMSNSManager.saveAccessHistory(tuser);
 			}
 
 			send(se, strUserName);

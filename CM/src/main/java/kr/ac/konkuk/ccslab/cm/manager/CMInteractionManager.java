@@ -727,7 +727,7 @@ public class CMInteractionManager {
 				bProcessed = true;
 				break;
 			case CMInfo.CM_SNS_EVENT:
-				CMSNSManager.processEvent(msg, cmInfo);
+				CMSNSManager.processEvent(msg);
 				bProcessed = true;
 				break;
 			case CMInfo.CM_SESSION_EVENT:
@@ -1528,7 +1528,7 @@ public class CMInteractionManager {
 			if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 			{
 				// load history info for attachment access of this user
-				CMSNSManager.loadAccessHistory(user, cmInfo);
+				CMSNSManager.loadAccessHistory(user);
 			}
 			
 			// set last event transmission time
@@ -1853,7 +1853,7 @@ public class CMInteractionManager {
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 		{
 			// save newly added or updated access history for the attachment of SNS content
-			CMSNSManager.saveAccessHistory(user, cmInfo);
+			CMSNSManager.saveAccessHistory(user);
 		}
 		
 		// leave session and group

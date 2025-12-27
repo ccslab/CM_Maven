@@ -2619,7 +2619,7 @@ public class CMFileTransferManager {
 		}
 		feAck = null;
 		
-		CMSNSManager.checkCompleteRecvAttachedFiles(fe, cmInfo);
+		CMSNSManager.checkCompleteRecvAttachedFiles(fe);
 
 		// check if the transfer is for sync a new file
 		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
@@ -2686,7 +2686,7 @@ public class CMFileTransferManager {
 			
 		//////////////////// check the completion of sending attached file of SNS content
 		//////////////////// and check the completion of prefetching an attached file of SNS content
-		CMSNSManager.checkCompleteSendAttachedFiles(fe, cmInfo);
+		CMSNSManager.checkCompleteSendAttachedFiles(fe);
 
 		return bForward;
 	}
@@ -3079,7 +3079,7 @@ public class CMFileTransferManager {
 		//feAck = null;
 
 		if(bResult)
-			CMSNSManager.checkCompleteRecvAttachedFiles(fe, cmInfo);
+			CMSNSManager.checkCompleteRecvAttachedFiles(fe);
 
 		// check if the transfer is for sync a new file
 		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
@@ -3154,7 +3154,7 @@ public class CMFileTransferManager {
 	
 		//////////////////// check the completion of sending attached file of SNS content
 		//////////////////// and check the completion of prefetching an attached file of SNS content
-		CMSNSManager.checkCompleteSendAttachedFiles(fe, cmInfo);
+		CMSNSManager.checkCompleteSendAttachedFiles(fe);
 
 		return bForward;	
 	}

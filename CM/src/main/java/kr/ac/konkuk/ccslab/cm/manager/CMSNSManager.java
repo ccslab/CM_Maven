@@ -34,9 +34,9 @@ public class CMSNSManager {
 	private static final int MAX_CONTENT_NUM = 100;
 	
 	// get the list of users whom the user, 'strUserName', adds as his/her friends 
-	public static ArrayList<String> getFriendList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> getFriendList(String strUserName)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
@@ -60,9 +60,9 @@ public class CMSNSManager {
 	}
 	
 	// get the list of users who added the user, 'strUserName', as their friend, but the user has not add them yet
-	public static ArrayList<String> getFriendRequesterList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> getFriendRequesterList(String strUserName)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
@@ -110,9 +110,9 @@ public class CMSNSManager {
 	}
 	
 	// get the list of users who added the user, 'strUserName', as their friend, and the user added them as well
-	public static ArrayList<String> getBiFriendList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> getBiFriendList(String strUserName)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
@@ -159,9 +159,9 @@ public class CMSNSManager {
 	}
 	
 	// check the completion of receiving attached file of SNS content
-	protected static void checkCompleteRecvAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
+	protected static void checkCompleteRecvAttachedFiles(CMFileEvent fe)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttachList attachList = null;
@@ -266,9 +266,9 @@ public class CMSNSManager {
 	
 	//////////////////// check the completion of sending attached file of SNS content
 	//////////////////// and check the completion of prefetching an attached file of SNS content
-	protected static void checkCompleteSendAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
+	protected static void checkCompleteSendAttachedFiles(CMFileEvent fe)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		int nContentID = fe.getContentID();
 		String strFileName = fe.getFileName();
 		String strReceiverName = fe.getFileReceiver();
@@ -276,18 +276,18 @@ public class CMSNSManager {
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
-			checkClientCompleteSendAttachedFiles(nContentID, strFileName, cmInfo);
+			checkClientCompleteSendAttachedFiles(nContentID, strFileName);
 		}
 		else	// SERVER
 		{
-			checkServerCompleteSendAttachedFiles(strReceiverName, nContentID, strFileName, cmInfo);
+			checkServerCompleteSendAttachedFiles(strReceiverName, nContentID, strFileName);
 			
 			// check the completion of prefetching process
 			CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName);
 			if(user != null && user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 			{
-				checkServerCompletePrefetch(strReceiverName, strFileName, cmInfo);
+				checkServerCompletePrefetch(strReceiverName, strFileName);
 			}			
 		}
 		return;
@@ -295,7 +295,7 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a client is completed to be transferred or not
 	// called when a client completes its file transfer
-	private static void checkClientCompleteSendAttachedFiles(int nContentID, String strFileName, CMInfo cmInfo)
+	private static void checkClientCompleteSendAttachedFiles(int nContentID, String strFileName)
 	{
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach attach = null;
@@ -314,10 +314,8 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be transferred or not
 	// called when a server completes its file transfer
-	private static void checkServerCompleteSendAttachedFiles(String strUserName, int nContentID, String strFileName, 
-			CMInfo cmInfo)
+	private static void checkServerCompleteSendAttachedFiles(String strUserName, int nContentID, String strFileName)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach attach = null;
 		int nCompleted = 0;
@@ -360,9 +358,8 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be prefetched or not
 	// called when a server completes its file transfer
-	private static void checkServerCompletePrefetch(String strUserName, String strFileName, CMInfo cmInfo)
+	private static void checkServerCompletePrefetch(String strUserName, String strFileName)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
 		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
@@ -387,7 +384,7 @@ public class CMSNSManager {
 	}
 	
 	// check whether the original files are currently being prefetched to the client or not
-	private static boolean isServerPrefetchOngoing(String strUserName, CMInfo cmInfo)
+	private static boolean isServerPrefetchOngoing(String strUserName)
 	{
 		boolean bFound = false;
 		// find the prefetch list of the client
@@ -413,9 +410,9 @@ public class CMSNSManager {
 	}
 	
 	// load access history of this user from DB from a specified date to his/her last login date
-	public static void loadAccessHistory(CMUser user, CMInfo cmInfo)
+	public static void loadAccessHistory(CMUser user)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		String strUserName = user.getName();
 		
 		// set a starting and ending dates for loading access history 
@@ -458,9 +455,9 @@ public class CMSNSManager {
 	}
 	
 	// save the updated or newly added access history in DB since the login date
-	public static void saveAccessHistory(CMUser user, CMInfo cmInfo)
+	public static void saveAccessHistory(CMUser user)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMSNSAttachAccessHistoryList historyList = null;
 		ArrayList<CMSNSAttachAccessHistory> arrayList = null;
 		String strUserName = null;
@@ -517,86 +514,85 @@ public class CMSNSManager {
 		return;
 	}
 	
-	public static void processEvent(CMMessage msg, CMInfo cmInfo)
+	public static void processEvent(CMMessage msg)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMSNSEvent se = new CMSNSEvent(msg.m_buf);
 		switch(se.getID())
 		{
 		case CMSNSEvent.CONTENT_DOWNLOAD_REQUEST:	// c -> s
-			processCONTENT_DOWNLOAD_REQUEST(se, cmInfo);
+			processCONTENT_DOWNLOAD_REQUEST(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_RESPONSE:	// s -> c
-			processCONTENT_DOWNLOAD_RESPONSE(se, cmInfo);
+			processCONTENT_DOWNLOAD_RESPONSE(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_READY:		// c -> s
-			processCONTENT_DOWNLOAD_READY(se, cmInfo);
+			processCONTENT_DOWNLOAD_READY(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD:			// s -> c
-			processCONTENT_DOWNLOAD(se, cmInfo);
+			processCONTENT_DOWNLOAD(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END:		// s -> c
-			processCONTENT_DOWNLOAD_END(se, cmInfo);
+			processCONTENT_DOWNLOAD_END(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END_RESPONSE:	// c -> s
-			processCONTENT_DOWNLOAD_END_RESPONSE(se, cmInfo);
+			processCONTENT_DOWNLOAD_END_RESPONSE(se);
 			break;
 		case CMSNSEvent.CONTENT_UPLOAD_REQUEST:		// c -> s
-			processCONTENT_UPLOAD_REQUEST(se, cmInfo);
+			processCONTENT_UPLOAD_REQUEST(se);
 			break;
 		case CMSNSEvent.CONTENT_UPLOAD_RESPONSE:	// s -> c
-			processCONTENT_UPLOAD_RESPONSE(se, cmInfo);
+			processCONTENT_UPLOAD_RESPONSE(se);
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND:	// c -> s
-			processADD_NEW_FRIEND(se, cmInfo);
+			processADD_NEW_FRIEND(se);
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND_ACK:	// s -> c
-			processADD_NEW_FRIEND_ACK(se, cmInfo);
+			processADD_NEW_FRIEND_ACK(se);
 			break;
 		case CMSNSEvent.REMOVE_FRIEND:	// c -> s
-			processREMOVE_FRIEND(se, cmInfo);
+			processREMOVE_FRIEND(se);
 			break;
 		case CMSNSEvent.REMOVE_FRIEND_ACK:	// s -> c
-			processREMOVE_FRIEND_ACK(se, cmInfo);
+			processREMOVE_FRIEND_ACK(se);
 			break;
 		case CMSNSEvent.REQUEST_FRIEND_LIST:	// c -> s
-			processREQUEST_FRIEND_LIST(se, cmInfo);
+			processREQUEST_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.RESPONSE_FRIEND_LIST:	// s -> c
-			processRESPONSE_FRIEND_LIST(se, cmInfo);
+			processRESPONSE_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST:	// c -> s
-			processREQUEST_FRIEND_REQUESTER_LIST(se, cmInfo);
+			processREQUEST_FRIEND_REQUESTER_LIST(se);
 			break;
 		case CMSNSEvent.RESPONSE_FRIEND_REQUESTER_LIST:	// s -> c
-			processRESPONSE_FRIEND_REQUESTER_LIST(se, cmInfo);
+			processRESPONSE_FRIEND_REQUESTER_LIST(se);
 			break;
 		case CMSNSEvent.REQUEST_BI_FRIEND_LIST:	// c -> s
-			processREQUEST_BI_FRIEND_LIST(se, cmInfo);
+			processREQUEST_BI_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.RESPONSE_BI_FRIEND_LIST:	// s -> c
-			processRESPONSE_BI_FRIEND_LIST(se, cmInfo);
+			processRESPONSE_BI_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILES:		// s <-> c
-			processREQUEST_ATTACHED_FILES(se, cmInfo);
+			processREQUEST_ATTACHED_FILES(se);
 			break;
 		case CMSNSEvent.ATTACHED_FILES_NOT_FOUND:	// s -> c
-			processATTACHED_FILES_NOT_FOUND(se, cmInfo);
+			processATTACHED_FILES_NOT_FOUND(se);
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILE:		// c -> s
-			processREQUEST_ATTACHED_FILE(se, cmInfo);
+			processREQUEST_ATTACHED_FILE(se);
 			break;
 		case CMSNSEvent.RESPONSE_ATTACHED_FILE:		// s -> c
-			processRESPONSE_ATTACHED_FILE(se, cmInfo);
+			processRESPONSE_ATTACHED_FILE(se);
 			break;
 		case CMSNSEvent.CHANGE_ATTACH_DOWNLOAD_SCHEME:	// s -> c
-			processCHANGE_ATTACH_DOWNLOAD_SCHEME(se, cmInfo);
+			processCHANGE_ATTACH_DOWNLOAD_SCHEME(se);
 			break;
 		case CMSNSEvent.ACCESS_ATTACHED_FILE:		// c -> s
-			processACCESS_ATTACHED_FILE(se, cmInfo);
+			processACCESS_ATTACHED_FILE(se);
 			break;
 		case CMSNSEvent.PREFETCH_COMPLETED:			// s -> c
-			processPREFETCH_COMPLETED(se, cmInfo);
+			processPREFETCH_COMPLETED(se);
 			break;
 		default:
 			System.out.println("CMSNSManager.processEvent(), unknown event ID("+se.getID()+").");
@@ -609,9 +605,8 @@ public class CMSNSManager {
 	}
 
 	// for server
-	private static void processCONTENT_DOWNLOAD_REQUEST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_REQUEST(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMSNSEvent seAck = null;
 		int nReturnCode = -1;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -629,7 +624,7 @@ public class CMSNSManager {
 			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			
 			// check for the ongoing prefetch to the user, and cancel the prefetched file transfer
-			if(isServerPrefetchOngoing(strUser, cmInfo))
+			if(isServerPrefetchOngoing(strUser))
 			{
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
@@ -668,9 +663,8 @@ public class CMSNSManager {
 	}
 	
 	// for client
-	private static void processCONTENT_DOWNLOAD_RESPONSE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_RESPONSE(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMSNSEvent seAck = new CMSNSEvent();
 
 		// create a ready event
@@ -695,9 +689,9 @@ public class CMSNSManager {
 	}
 	
 	// for server
-	private static void processCONTENT_DOWNLOAD_READY(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_READY(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMSNSEvent sevent = null;
 		long lDelay = 0;
 		int nContNum = 0;
@@ -879,7 +873,7 @@ public class CMSNSManager {
 											+ "call isPrefetchEnabled() for content("+nContID+").");
 								}
 								// check prefetch threshold (interest of a user in a writer)
-								if(isPrefetchEnabled(se.getUserName(), strWriter, cmInfo))
+								if(isPrefetchEnabled(se.getUserName(), strWriter))
 								{
 									// add a file path to the prefetching list
 									// avoid duplicate path
@@ -1058,7 +1052,7 @@ public class CMSNSManager {
 	*/
 	
 	// check how much 'strUserName' has interest in 'strWriterName' in terms of access count during specified dates  
-	private static boolean isPrefetchEnabled(String strUserName, String strWriterName, CMInfo cmInfo)
+	private static boolean isPrefetchEnabled(String strUserName, String strWriterName)
 	{
 		boolean bEnable = false;
 		int nTotalAccessCount = 0;
@@ -1112,9 +1106,8 @@ public class CMSNSManager {
 	}
 	
 	// for client
-	private static void processCONTENT_DOWNLOAD(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -1142,9 +1135,8 @@ public class CMSNSManager {
 	}
 	
 	// for client
-	private static void processCONTENT_DOWNLOAD_END(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_END(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		int nReturnCode = -1;
 		
@@ -1188,7 +1180,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processCONTENT_DOWNLOAD_END_RESPONSE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_END_RESPONSE(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1198,7 +1190,6 @@ public class CMSNSManager {
 		}
 		
 		// check whether prefetching starts or not
-		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
@@ -1226,9 +1217,9 @@ public class CMSNSManager {
 	}
 	
 	// for server
-	private static void processCONTENT_UPLOAD_REQUEST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_UPLOAD_REQUEST(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
@@ -1342,7 +1333,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processCONTENT_UPLOAD_RESPONSE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_UPLOAD_RESPONSE(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1353,9 +1344,9 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processADD_NEW_FRIEND(CMSNSEvent se, CMInfo cmInfo)
+	private static void processADD_NEW_FRIEND(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nReturnCode = 0;	// 0: error, 1: succeeded
 		
@@ -1408,7 +1399,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processADD_NEW_FRIEND_ACK(CMSNSEvent se, CMInfo cmInfo)
+	private static void processADD_NEW_FRIEND_ACK(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1419,9 +1410,9 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREMOVE_FRIEND(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREMOVE_FRIEND(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nReturnCode = 0;	// 0: error, 1: succeeded
 		
@@ -1453,7 +1444,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREMOVE_FRIEND_ACK(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREMOVE_FRIEND_ACK(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1464,9 +1455,8 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_FRIEND_LIST(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nTotalNumFriends = 0;
 		ArrayList<String> friendList = null;
@@ -1475,7 +1465,7 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			friendList = CMSNSManager.getFriendList(se.getUserName(), cmInfo);
+			friendList = CMSNSManager.getFriendList(se.getUserName());
 			if(friendList != null)
 				nTotalNumFriends = friendList.size();
 			else
@@ -1548,7 +1538,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processRESPONSE_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_FRIEND_LIST(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1566,9 +1556,8 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_FRIEND_REQUESTER_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_FRIEND_REQUESTER_LIST(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		ArrayList<String> requesterList = new ArrayList<String>();
 		int nNumRequesters = 0;
@@ -1577,7 +1566,7 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			requesterList = CMSNSManager.getFriendRequesterList(se.getUserName(), cmInfo);
+			requesterList = CMSNSManager.getFriendRequesterList(se.getUserName());
 			if(requesterList != null)
 				nNumRequesters = requesterList.size();
 			else
@@ -1650,7 +1639,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processRESPONSE_FRIEND_REQUESTER_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_FRIEND_REQUESTER_LIST(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1668,9 +1657,8 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_BI_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_BI_FRIEND_LIST(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		ArrayList<String> biFriendList = new ArrayList<String>();
 		int nNumBiFriends = 0;
@@ -1679,7 +1667,7 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			biFriendList = CMSNSManager.getBiFriendList(se.getUserName(), cmInfo);
+			biFriendList = CMSNSManager.getBiFriendList(se.getUserName());
 			if(biFriendList != null)
 				nNumBiFriends = biFriendList.size();
 			else
@@ -1752,7 +1740,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processRESPONSE_BI_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_BI_FRIEND_LIST(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1770,9 +1758,8 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_ATTACHED_FILES(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_ATTACHED_FILES(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach sendAttach = null;
@@ -1865,9 +1852,8 @@ public class CMSNSManager {
 		}
 	}
 	
-	private static void processATTACHED_FILES_NOT_FOUND(CMSNSEvent se, CMInfo cmInfo)
+	private static void processATTACHED_FILES_NOT_FOUND(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
@@ -1938,9 +1924,9 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se)
 	{
-		cmInfo = CMInfo.getInstance();
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -2054,7 +2040,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processRESPONSE_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_ATTACHED_FILE(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -2066,7 +2052,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processCHANGE_ATTACH_DOWNLOAD_SCHEME(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCHANGE_ATTACH_DOWNLOAD_SCHEME(CMSNSEvent se)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
@@ -2078,7 +2064,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processACCESS_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processACCESS_ATTACHED_FILE(CMSNSEvent se)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
@@ -2132,7 +2118,7 @@ public class CMSNSManager {
 
 	}
 	
-	private static void processPREFETCH_COMPLETED(CMSNSEvent se, CMInfo cmInfo)
+	private static void processPREFETCH_COMPLETED(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
