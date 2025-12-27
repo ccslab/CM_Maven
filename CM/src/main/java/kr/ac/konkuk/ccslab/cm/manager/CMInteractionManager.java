@@ -111,7 +111,7 @@ public class CMInteractionManager {
 		CMSessionManager.init();
 		
 		// initialize file manager
-		CMFileTransferManager.init(cmInfo);
+		CMFileTransferManager.init();
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMInteractionManager.init(), succeeded.");
@@ -122,7 +122,7 @@ public class CMInteractionManager {
 	public static void terminate()
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
-		CMFileTransferManager.terminate(cmInfo);
+		CMFileTransferManager.terminate();
 	}
 	
 	public static boolean connectDefaultServer()
@@ -723,7 +723,7 @@ public class CMInteractionManager {
 			switch(nEventType)
 			{
 			case CMInfo.CM_FILE_EVENT:
-				bReturn = CMFileTransferManager.processEvent(msg, cmInfo);
+				bReturn = CMFileTransferManager.processEvent(msg);
 				bProcessed = true;
 				break;
 			case CMInfo.CM_SNS_EVENT:
@@ -2328,7 +2328,7 @@ public class CMInteractionManager {
 			// set the dedicated channel to the sending file info
 			sfInfo.setSendChannel((SocketChannel)scList.findChannel(nChKey));
 			// resume the file-transfer by calling sendSTART_FILE_TRANSFER_CHAN() method
-			CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN(sfInfo, cmInfo);
+			CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN(sfInfo);
 		}
 		se = null;
 		return;

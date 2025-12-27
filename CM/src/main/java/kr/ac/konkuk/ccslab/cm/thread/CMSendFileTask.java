@@ -157,7 +157,7 @@ public class CMSendFileTask implements Runnable {
 			fe.setContentID(m_sendFileInfo.getContentID());
 
 			CMInfo cmInfo = CMInfo.getInstance();
-			if(CMFileTransferManager.isP2PFileTransfer(fe, cmInfo))
+			if(CMFileTransferManager.isP2PFileTransfer(fe))
 			{
 				if(CMInfo._CM_DEBUG)
 				{

@@ -210,7 +210,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // get the absolute path
             Path absPath = serverSyncHome.resolve(relativePath);
             // start push-file
-            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester, cmInfo);
+            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester);
             if(!ret) {
                 System.err.println("push error: "+absPath);
                 return false;
@@ -1432,7 +1432,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         boolean sendResult = true;
         for(Path path : requestedFileList) {
             Path syncPath = clientSyncHome.resolve(path);   // adjust the path with the sync home
-            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, cmInfo) )
+            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName) )
                 sendResult = false;
         }
 

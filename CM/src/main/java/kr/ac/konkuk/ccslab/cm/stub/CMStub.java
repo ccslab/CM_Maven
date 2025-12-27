@@ -385,12 +385,12 @@ public class CMStub {
 		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PUSH_FILE)
 		{
 			CMFileEvent fe = (CMFileEvent)event;
-			bRet = CMFileTransferManager.replyPermitForPushFile(fe, nReturnCode, cmInfo);
+			bRet = CMFileTransferManager.replyPermitForPushFile(fe, nReturnCode);
 		}
 		else if(nType == CMInfo.CM_FILE_EVENT && nID == CMFileEvent.REQUEST_PERMIT_PULL_FILE)
 		{
 			CMFileEvent fe = (CMFileEvent)event;
-			bRet = CMFileTransferManager.replyPermitForPullFile(fe, nReturnCode, cmInfo);
+			bRet = CMFileTransferManager.replyPermitForPullFile(fe, nReturnCode);
 		}
 		
 		return bRet;
@@ -2104,7 +2104,7 @@ public class CMStub {
 		}
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, 
-				byteFileAppend, cmInfo);
+				byteFileAppend);
 		return bReturn;
 	}
 	
@@ -2206,7 +2206,7 @@ public class CMStub {
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, 
-				byteFileAppend, cmInfo);
+				byteFileAppend);
 		return bReturn;
 	}
 	
@@ -2228,7 +2228,7 @@ public class CMStub {
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
-		bReturn = CMFileTransferManager.cancelPushFile(strReceiver, cmInfo);
+		bReturn = CMFileTransferManager.cancelPushFile(strReceiver);
 		return bReturn;
 	}
 	
@@ -2250,7 +2250,7 @@ public class CMStub {
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bReturn = false;
-		bReturn = CMFileTransferManager.cancelPullFile(strSender, cmInfo);
+		bReturn = CMFileTransferManager.cancelPullFile(strSender);
 		return bReturn;
 	}
 

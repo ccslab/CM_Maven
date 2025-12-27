@@ -3325,10 +3325,10 @@ public class CMWinClient extends JFrame {
 			switch(nMode)
 			{
 			case 0: // push
-				CMFileTransferManager.pushFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
+				CMFileTransferManager.pushFile(strFiles[i], strTarget);
 				break;
 			case 1: // pull
-				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget, m_clientStub.getCMInfo());
+				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget);
 				break;
 			}
 		}
@@ -3543,7 +3543,7 @@ public class CMWinClient extends JFrame {
 			
 			m_clientStub.send(fe, strAddServer);
 			
-			CMFileTransferManager.pushFile(strPieceName, strAddServer, m_clientStub.getCMInfo());
+			CMFileTransferManager.pushFile(strPieceName, strAddServer);
 		}
 		// for the last piece
 		if( i == 0 )
@@ -3564,8 +3564,8 @@ public class CMWinClient extends JFrame {
 		// send the last piece to the default server
 		fe.setFileReceiver(m_clientStub.getDefaultServerName());
 		m_clientStub.send(fe, m_clientStub.getDefaultServerName());
-		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName(), 
-				m_clientStub.getCMInfo());
+		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName()
+		);
 		
 		try {
 			raf.close();

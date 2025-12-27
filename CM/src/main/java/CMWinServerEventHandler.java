@@ -636,7 +636,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		printMessage("processing delay: "+(lEndTime-lStartTime)+" ms\n");
 
 		// send the modified file to the sender
-		CMFileTransferManager.pushFile(strModifiedFile, strSender, m_serverStub.getCMInfo());
+		CMFileTransferManager.pushFile(strModifiedFile, strSender);
 
 		return;
 	}

@@ -634,7 +634,7 @@ public class CMSNSManager {
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
 							+ "to the user("+strUser+")");
-				CMFileTransferManager.cancelPushFile(strUser, cmInfo);	// not clear
+				CMFileTransferManager.cancelPushFile(strUser);	// not clear
 			}
 			
 			// clear the prefetch list of the user
@@ -1218,7 +1218,7 @@ public class CMSNSManager {
 			// start prefetching to the user
 			for(int i = 0; i < preArrayList.size(); i++)
 			{
-				CMFileTransferManager.pushFile(preArrayList.get(i), se.getUserName(), cmInfo);
+				CMFileTransferManager.pushFile(preArrayList.get(i), se.getUserName());
 			}
 		}
 		
@@ -1798,7 +1798,7 @@ public class CMSNSManager {
 			for(i = 0; i < filePathList.size(); i++)
 			{				
 				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), CMInfo.FILE_DEFAULT, 
-						se.getContentID(), cmInfo);
+						se.getContentID());
 			}
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
@@ -1840,7 +1840,7 @@ public class CMSNSManager {
 				else
 				{
 					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), CMInfo.FILE_DEFAULT, 
-							se.getContentID(), cmInfo);
+							se.getContentID());
 				}
 				file = null;
 			}
@@ -2042,7 +2042,7 @@ public class CMSNSManager {
 		}
 		
 		// send the requested file
-		CMFileTransferManager.pushFile(strFilePath, strRequester, cmInfo);
+		CMFileTransferManager.pushFile(strFilePath, strRequester);
 		
 		// send the response event
 		nReturnCode = 1;

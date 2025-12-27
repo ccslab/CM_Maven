@@ -471,7 +471,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		System.out.println("processing delay: "+(lEndTime-lStartTime)+" ms");
 
 		// send the modified file to the sender
-		CMFileTransferManager.pushFile(strModifiedFile, strSender, m_serverStub.getCMInfo());
+		CMFileTransferManager.pushFile(strModifiedFile, strSender);
 
 		return;
 	}

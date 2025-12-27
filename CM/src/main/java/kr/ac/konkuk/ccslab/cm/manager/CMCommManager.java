@@ -672,7 +672,7 @@ public class CMCommManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
-				target, CMInfo.FILE_OVERWRITE, cmInfo);
+				target, CMInfo.FILE_OVERWRITE);
 
 		if(!bReturn)
 			return -1;
@@ -694,7 +694,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMCommManager.measureInputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPullFile(target, cmInfo);
+				CMFileTransferManager.cancelPullFile(target);
 				return -1;
 			}
 
@@ -747,7 +747,7 @@ public class CMCommManager {
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, target,
-				CMInfo.FILE_OVERWRITE, -1, cmInfo);
+				CMInfo.FILE_OVERWRITE, -1);
 
 		if(!bReturn)
 			return -1;
@@ -769,7 +769,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPushFile(target, cmInfo);
+				CMFileTransferManager.cancelPushFile(target);
 				return -1;
 			}
 
