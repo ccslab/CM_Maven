@@ -35,7 +35,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
  */
 public class CMMqttManager extends CMServiceManager {
 
-	public CMMqttManager(CMInfo cmInfo)
+	public CMMqttManager()
 	{
 		super();
 		m_nType = CMInfo.CM_MQTT_MANAGER;
