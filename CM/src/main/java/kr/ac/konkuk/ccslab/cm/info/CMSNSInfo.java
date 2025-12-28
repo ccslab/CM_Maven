@@ -1,10 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashtable;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchHashMap;
+import kr.ac.konkuk.ccslab.cm.sns.*;
+import java.util.Hashtable;
 
 public class CMSNSInfo {
 	private static CMSNSInfo instance;
@@ -16,6 +13,7 @@ public class CMSNSInfo {
 	private CMSNSAttachHashtable m_sendAttachHashtable;	// by server for content download
 	private CMSNSAttachList m_recvAttachList;	// by client for content download	
 	private CMSNSPrefetchHashMap m_prefetchMap;		// by server for prefetching attached files
+	private Hashtable<String, CMSNSUserInfo> m_snsUserInfoTable;
 	
 	private String m_strLastlyReqWriter;	// by client for saving the information on the last content download request
 	private int m_nLastlyReqOffset;			// by client for saving the information on the last content download request
@@ -29,6 +27,7 @@ public class CMSNSInfo {
 		m_sendAttachHashtable = new CMSNSAttachHashtable();
 		m_recvAttachList = new CMSNSAttachList();
 		m_prefetchMap = new CMSNSPrefetchHashMap();
+		m_snsUserInfoTable = new Hashtable<String, CMSNSUserInfo>();
 		m_strLastlyReqWriter = ""; // initial (or default) writer is an empty string
 		m_nLastlyReqOffset = 0;		// initial (or default) offset is 0 (the most recent content)
 		m_nLastlyDownContentNum = 0;
@@ -103,6 +102,10 @@ public class CMSNSInfo {
 	public synchronized CMSNSPrefetchHashMap getPrefetchMap()
 	{
 		return m_prefetchMap;
+	}
+
+	public Hashtable<String, CMSNSUserInfo> getSNSUserInfoTable() {
+		return m_snsUserInfoTable;
 	}
 	
 	public synchronized void setLastlyReqWriter(String strWriter)
