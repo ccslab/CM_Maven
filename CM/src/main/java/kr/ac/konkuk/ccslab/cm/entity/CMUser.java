@@ -15,7 +15,6 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
  */
 public class CMUser extends CMObject {
 
-	// from here
 	private String m_strName;
 	private UUID m_uuid;
 	private String m_strPasswd;
