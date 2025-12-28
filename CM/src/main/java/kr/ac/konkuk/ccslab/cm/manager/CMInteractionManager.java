@@ -33,6 +33,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMClientKeepAliveTask;
 
 import java.sql.*;
@@ -1523,8 +1524,13 @@ public class CMInteractionManager {
 		{
 			// set default scheme for attachment download
 			user.setAttachDownloadScheme(confInfo.getAttachDownloadScheme());
-			// set login date
-			user.setLastLoginDate(Calendar.getInstance());
+
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSUserInfo snsUserInfo = new CMSNSUserInfo();
+			snsInfo.getSNSUserInfoTable().put(user.getName(), snsUserInfo);
+			// Last Login Date 설정
+			snsUserInfo.setLastLoginDate(Calendar.getInstance());
+
 			if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 			{
 				// load history info for attachment access of this user
@@ -1849,7 +1855,8 @@ public class CMInteractionManager {
 		snsInfo.getPrefetchMap().removePrefetchList(user.getName());
 		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName());
 		snsInfo.getSendSNSAttachHashtable().removeSNSAttachList(user.getName());
-		
+		// [신규 추가] 로그아웃 시 SNS 사용자 정보 테이블에서 엔트리 삭제
+		snsInfo.getSNSUserInfoTable().remove(user.getName());
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 		{
 			// save newly added or updated access history for the attachment of SNS content

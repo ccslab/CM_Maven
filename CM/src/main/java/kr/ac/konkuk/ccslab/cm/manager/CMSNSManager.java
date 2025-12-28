@@ -14,15 +14,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistory;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashtable;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchHashMap;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchList;
+import kr.ac.konkuk.ccslab.cm.sns.*;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import java.text.*;
@@ -412,11 +404,17 @@ public class CMSNSManager {
 	// load access history of this user from DB from a specified date to his/her last login date
 	public static void loadAccessHistory(CMUser user)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		String strUserName = user.getName();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+		if( snsUserInfo == null ) {
+			System.err.println("CMSNSManager.loadAccessHistory(), sns user info not found for user("
+					+user.getName()+")!");
+			return;
+		}
 		
 		// set a starting and ending dates for loading access history 
-		Calendar endDate = user.getLastLoginDate();
+		Calendar endDate = snsUserInfo.getLastLoginDate();
 
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int amount = -(confInfo.getAttachAccessInterval()); // change to a negative number
@@ -432,7 +430,7 @@ public class CMSNSManager {
 		historyList = CMDBManager.queryGetAccessHistory(strUserName, startDate, endDate, null);
 		
 		// store history to the history list of the user
-		user.setAttachAccessHistoryList(historyList);
+		snsUserInfo.setSNSAttachAccessHistoryList(historyList);
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -474,7 +472,14 @@ public class CMSNSManager {
 			return;
 		}
 
-		historyList = user.getAttachAccessHistoryList();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+		if( snsUserInfo == null ) {
+			System.err.println("CMSNSManager.saveAccessHistory(), sns user info not found for user("
+					+user.getName()+")!");
+			return;
+		}
+		historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 		arrayList = historyList.getAllAccessHistory();
 
 		for(int i = 0; i < arrayList.size(); i++)
@@ -1071,7 +1076,15 @@ public class CMSNSManager {
 			System.err.println("CMSNSManager.isPrefetchEnabled(), the requesting user is null!");
 			return false;
 		}
-		CMSNSAttachAccessHistoryList historyList = user.getAttachAccessHistoryList();
+
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+		if( snsUserInfo == null ) {
+			System.err.println("CMSNSManager.isPrefetchEnabled(), sns user info not found for user("
+					+user.getName()+")!");
+			return false;
+		}
+		CMSNSAttachAccessHistoryList historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 		ArrayList<CMSNSAttachAccessHistory> historyArrayList = historyList.getAllAccessHistory();
 		// calculate access counts for 'strWriterName' and total access counts
 		for(int i = 0; i < historyArrayList.size(); i++)
@@ -1994,7 +2007,14 @@ public class CMSNSManager {
 		if(user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
 			Calendar date = Calendar.getInstance();
-			CMSNSAttachAccessHistoryList historyList = user.getAttachAccessHistoryList();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+			if( snsUserInfo == null ) {
+				System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILE(), sns user info not found for user("
+						+user.getName()+")!");
+				return;
+			}
+			CMSNSAttachAccessHistoryList historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 			CMSNSAttachAccessHistory history = null;
 			history = historyList.findAccessHistory(strRequester, date, strWriter);
 			if(history != null)
@@ -2083,7 +2103,14 @@ public class CMSNSManager {
 		if(user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
 			Calendar date = Calendar.getInstance();
-			CMSNSAttachAccessHistoryList historyList = user.getAttachAccessHistoryList();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+			if( snsUserInfo == null ) {
+				System.err.println("CMSNSManager.processACCESS_ATTACHED_FILE(), sns user info not found for user("
+						+user.getName()+")!");
+				return;
+			}
+			CMSNSAttachAccessHistoryList historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 			CMSNSAttachAccessHistory history = null;
 			history = historyList.findAccessHistory(strRequester, date, strWriter);
 			if(history != null)
