@@ -2,7 +2,12 @@ package kr.ac.konkuk.ccslab.cm.util;
 
 import java.util.UUID;
 
-public class CMUUIDConverter {
+public final class CMUUIDConverter {
+
+    private CMUUIDConverter() {
+        // utility class
+    }
+
     // Converts UUID to String
     public static String uuidToString(UUID uuid) {
         // If uuid is null, return empty string
