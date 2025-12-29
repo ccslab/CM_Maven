@@ -1475,6 +1475,49 @@ public class CMInteractionManager {
 		return false;
 	}
 
+	// [New Method] Check if the user has already logged in according to the multi-login scheme
+	private static boolean isLoginUser(CMMember members, CMSessionEvent se) {
+		if (members == null || se == null) {
+			System.err.println("CMInteractionManager.isLoginUser(), null argument!");
+			return false;
+		}
+
+		String userName = se.getUserName();
+		if (userName == null || userName.isEmpty()) {
+			System.err.println("CMInteractionManager.isLoginUser(), empty userName!");
+			return false;
+		}
+
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		int nMultiLoginScheme = confInfo.getMultiLoginScheme();
+
+		// 1. Common: Retrieve the list of current login users with the same name
+		List<CMUser> userList = members.findMemberList(userName);
+
+		// If there is no record, login is allowed in any scheme (not a duplicate)
+		if (userList == null || userList.isEmpty()) {
+			return false;
+		}
+
+		// 2. Check logic per scheme (Only 0 and 1 are supported)
+		switch (nMultiLoginScheme) {
+			case 0:
+				// Scheme 0: Only a single login is allowed.
+				// Since userList exists, it is unconditionally a duplicate login.
+				return true;
+
+			case 1:
+				// Scheme 1: Same ID + Different Host (IP) is allowed.
+				// If there is any record with the same host address, it is a duplicate (block).
+				return userList.stream()
+						.anyMatch(user -> user.getHost().equals(se.getHostAddress()));
+
+			default:
+				System.err.println("CMInteractionManager.isLoginUser(), Invalid multi-login-scheme: " + nMultiLoginScheme);
+				return false;
+		}
+	}
+
 	public static boolean replyToLOGIN(CMSessionEvent se, int nValidUser)
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
