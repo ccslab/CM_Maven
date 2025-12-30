@@ -1425,14 +1425,16 @@ public class CMInteractionManager {
 			// check if the user already has logged in or not
 			CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 			loginUsers = interInfo.getLoginUsers();
-			if(loginUsers.isMember(se.getUserName()))
+			boolean isLogin = isLoginUser(loginUsers, se);
+			if(isLogin)
 			{
 				// send LOGIN_ACK event saying that the user already has logged into the server
 				bForward = false;
 				if(CMInfo._CM_DEBUG)
 				{
 					System.err.println("CMInteractionManager.processLOGIN(), user("+
-							se.getUserName()+") already has logged into the server!");
+							se.getUserName()+") already has logged into the server " +
+							"in the multi-login-scheme("+ confInfo.getMultiLoginScheme()+")!");
 				}
 				
 				CMSessionEvent seAck = new CMSessionEvent();
@@ -1442,26 +1444,45 @@ public class CMInteractionManager {
 			}
 			else
 			{
-				CMUser tuser = new CMUser();
+				////// Process new login user
 
+				// 1. Generate a new UUID for the login user
+				UUID uuid = UUID.randomUUID();
+
+				// 2. Create a temporary CMUser and set information (including UUID)
+				CMUser tuser = new CMUser();
 				tuser.setName(se.getUserName());
+				tuser.setUuid(uuid);
 				tuser.setPasswd(se.getPassword());
 				tuser.setHost(se.getHostAddress());
 				tuser.setUDPPort(se.getUDPPort());
 				tuser.setLastEventTransTime(System.currentTimeMillis());
 				tuser.setKeepAliveTime(confInfo.getKeepAliveTime());
-				
+				// Add the channel to the user information
 				tuser.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);
+				// Add the user to the login users table
 				loginUsers.addMember(tuser);
-				
+
 				if(CMInfo._CM_DEBUG)
 				{
 					System.out.println("CMInteractionManager.processLOGIN(), add new user("+
 							se.getUserName()+"), # longin users("+loginUsers.getMemberNum()+").");
 				}
 
-				if(!confInfo.isLoginScheme())
+				// 3. Set the UUID in the session event
+				se.setUuid(uuid);
+
+				// 4. Handle based on login scheme
+				if(confInfo.isLoginScheme()) {
+					// If login scheme is used, marshall the event (with UUID) back to the message buffer
+					// so that the server application can receive the UUID.
+					ByteBuffer buf = CMEventManager.marshallEvent(se);
+					msg.m_buf = buf;
+				}
+				else {
+					// If login scheme is not used, CM handles the login reply directly.
 					replyToLOGIN(se, 1);
+				}
 			}
 
 			se = null;
