@@ -5,6 +5,7 @@ import java.util.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 /**
  * This class represents CM events that are used for session related tasks.
@@ -453,6 +454,7 @@ public class CMSessionEvent extends CMEvent {
 	public static final int INTENTIONALLY_DISCONNECT = 100;
 
 	private String m_strUserName;
+	private UUID m_uuid;
 	private String m_strPasswd;
 	private String m_strHostAddr;
 	private int m_nUDPPort;
@@ -472,6 +474,7 @@ public class CMSessionEvent extends CMEvent {
 	private String m_strCommArch;
 	private int m_bFileTransferScheme;
 	private int m_bLoginScheme;
+	private int m_bMultiLoginScheme;
 	private int m_bSessionScheme;
 	private int m_nAttachDownloadScheme;
 	private int m_nReturnCode;
@@ -490,6 +493,7 @@ public class CMSessionEvent extends CMEvent {
 		m_strHostAddr = "?";
 		m_strPasswd = "?";
 		m_strUserName = "?";
+		m_uuid = null;
 		m_nUDPPort = -1;
 		m_bValidUser = -1;
 		m_strSessionName = "?";
@@ -500,7 +504,8 @@ public class CMSessionEvent extends CMEvent {
 		m_nGroupNum = -1;
 		m_strCommArch = "?";
 		m_bFileTransferScheme = -1;
-		m_bLoginScheme = -1;
+		m_bLoginScheme = 0;
+		m_bMultiLoginScheme = 0;
 		m_bSessionScheme = -1;
 		m_nAttachDownloadScheme = -1;
 		m_nReturnCode = -1;
@@ -583,7 +588,24 @@ public class CMSessionEvent extends CMEvent {
 	{
 		return m_strUserName;
 	}
-	
+
+	/**
+	 * Sets the user UUID.
+	 * @param uuid
+	 */
+	public void setUuid(UUID uuid)
+	{
+		m_uuid = uuid;
+	}
+
+	/**
+	 * Returns user UUID.
+	 * @return user UUID.
+	 */
+	public UUID getUuid() {
+		return m_uuid;
+	}
+
 	public void setValidUser(int bValid)
 	{
 		m_bValidUser = bValid;
@@ -631,7 +653,11 @@ public class CMSessionEvent extends CMEvent {
 	{
 		return m_strCommArch;
 	}
-	
+
+	/**
+	 * Sets the file-transfer scheme.
+	 * @param bFileTransferScheme
+	 */
 	public void setFileTransferScheme(int bFileTransferScheme)
 	{
 		m_bFileTransferScheme = bFileTransferScheme;
@@ -646,7 +672,11 @@ public class CMSessionEvent extends CMEvent {
 	{
 		return m_bFileTransferScheme;
 	}
-	
+
+	/**
+	 * Sets the login scheme.
+	 * @param bLoginScheme
+	 */
 	public void setLoginScheme(int bLoginScheme)
 	{
 		m_bLoginScheme = bLoginScheme;
@@ -660,6 +690,22 @@ public class CMSessionEvent extends CMEvent {
 	public int isLoginScheme()
 	{
 		return m_bLoginScheme;
+	}
+
+	/**
+	 * Sets the multi-login scheme.
+	 * @param bMultiLoginScheme
+	 */
+	public void setMultiLoginScheme(int bMultiLoginScheme) {
+		m_bMultiLoginScheme = bMultiLoginScheme;
+	}
+
+	/**
+	 * Returns the multi-login scheme.
+	 * @return 1 if the multi-login scheme is used; 0 otherwise.
+	 */
+	public int getMultiLoginScheme() {
+		return m_bMultiLoginScheme;
 	}
 	
 	public void setSessionScheme(int bSessionScheme)
@@ -1107,6 +1153,9 @@ public class CMSessionEvent extends CMEvent {
 		case LOGIN_ACK:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strCommArch.getBytes().length;
 			nByteNum += 6*Integer.BYTES;
+			// bMultiLoginScheme, uuid
+			nByteNum += Integer.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case REQUEST_SESSION_INFO:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
@@ -1227,9 +1276,11 @@ public class CMSessionEvent extends CMEvent {
 			break;
 		case LOGIN_ACK:
 			m_bytes.putInt(m_bValidUser);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strCommArch);
 			m_bytes.putInt(m_bFileTransferScheme);
 			m_bytes.putInt(m_bLoginScheme);
+			m_bytes.putInt(m_bMultiLoginScheme);
 			m_bytes.putInt(m_bSessionScheme);
 			m_bytes.putInt(m_nAttachDownloadScheme);
 			m_bytes.putInt(m_nUDPPort);			// server udp port
@@ -1366,9 +1417,11 @@ public class CMSessionEvent extends CMEvent {
 			break;
 		case LOGIN_ACK:
 			m_bValidUser = msg.getInt();
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strCommArch = getStringFromByteBuffer(msg);
 			m_bFileTransferScheme = msg.getInt();
 			m_bLoginScheme = msg.getInt();
+			m_bMultiLoginScheme = msg.getInt();
 			m_bSessionScheme = msg.getInt();
 			m_nAttachDownloadScheme = msg.getInt();
 			m_nUDPPort = msg.getInt();
