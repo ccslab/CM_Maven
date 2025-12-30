@@ -1541,48 +1541,49 @@ public class CMInteractionManager {
 
 	public static boolean replyToLOGIN(CMSessionEvent se, int nValidUser)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
-		CMSessionEvent seAck = new CMSessionEvent();
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
 		boolean bRet = false;
-		
+
+		// get the UUID from the session event
+		UUID uuid = se.getUuid();
+		// find the user with the user name and the UUID
+		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName(), uuid);
+
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.replyToLOGIN(), user("+se.getUserName()
-					+") not found.");
+					+"), uuid("+uuid+") not found!");
 			return false;
 		}
 
+		// create a LOGIN_ACK event
+		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.LOGIN_ACK);
-		seAck.setSender(interInfo.getMyself().getName());
-		seAck.setReceiver(se.getSender());
+		//seAck.setSender(interInfo.getMyself().getName());
+		//seAck.setReceiver(se.getSender());
 		seAck.setValidUser(nValidUser);
+		seAck.setUuid(uuid);	// set uuid of the login user
 		seAck.setCommArch(confInfo.getCommArch());
-		
-		if(confInfo.isFileTransferScheme())
-			seAck.setFileTransferScheme(1);
-		else
-			seAck.setFileTransferScheme(0);
-		
-		if(confInfo.isLoginScheme())
-			seAck.setLoginScheme(1);
-		else
-			seAck.setLoginScheme(0);
-		
-		if(confInfo.isSessionScheme())
-			seAck.setSessionScheme(1);
-		else
-			seAck.setSessionScheme(0);
-		
+
+		seAck.setFileTransferScheme(confInfo.isFileTransferScheme() ? 1 : 0);
+		seAck.setLoginScheme(confInfo.isLoginScheme() ? 1 : 0);
+		seAck.setMultiLoginScheme(confInfo.getMultiLoginScheme());
+		seAck.setSessionScheme(confInfo.isSessionScheme() ? 1 : 0);
 		seAck.setAttachDownloadScheme(confInfo.getAttachDownloadScheme());	// default value
-		
 		seAck.setUDPPort(confInfo.getUDPPort());
-		
-		bRet = CMEventManager.unicastEvent(seAck, user.getName());
-		seAck = null;
+
+		// find the default socket channel of the user
+		SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
+		if(sc != null) {
+			bRet = CMEventManager.unicastEvent(seAck, sc);
+		}
+		else {
+			System.err.println("CMInteractionManager.replyToLogin(), Socket channel not found for user ("
+				+ user.getName() + "), uuid(" + uuid + ")!");
+			return false;
+		}
 		
 		if(nValidUser == 1)
 		{
@@ -1612,7 +1613,6 @@ public class CMInteractionManager {
 			}
 			
 			// remove from unknown-channel list
-			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
 			CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
 			bRet = unknownChInfoList.removeElement(new CMUnknownChannelInfo(sc));
 			if(bRet && CMInfo._CM_DEBUG)
@@ -1629,12 +1629,13 @@ public class CMInteractionManager {
 			}
 
 			// send inhabitants who already logged on the system to the new user
-			distributeLoginUsers(user.getName());
+			distributeLoginUsers(sc);
 			
 			// notify info. on new user who logged in
 			CMSessionEvent tse = new CMSessionEvent();
 			tse.setID(CMSessionEvent.SESSION_ADD_USER);
 			tse.setUserName(user.getName());
+			tse.setUuid(user.getUuid());
 			tse.setHostAddress(user.getHost());
 			tse.setSessionName(user.getCurrentSession());
 			CMEventManager.broadcastEvent(tse);
@@ -1644,10 +1645,9 @@ public class CMInteractionManager {
 			// remove temporary user information
 			user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
 			user.getBlockSocketChannelInfo().removeAllChannels();
-			interInfo.getLoginUsers().removeMember(user.getName());
+			interInfo.getLoginUsers().removeMember(user);
 			
 			// update login failure count of this channel
-			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
 			CMUnknownChannelInfo unchInfo = commInfo.getUnknownChannelInfoList()
 					.findElement(new CMUnknownChannelInfo(sc));
 			if(unchInfo == null)
@@ -1686,28 +1686,24 @@ public class CMInteractionManager {
 		return bRet;
 	}
 	
-	private static void distributeLoginUsers(String targetUser)
+	private static void distributeLoginUsers(SocketChannel sc)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMSessionEvent tse = null;
-		CMUser loginUser = null;
-		
-		Iterator<CMUser> iterUser = interInfo.getLoginUsers().getAllMembers().iterator();
-		while(iterUser.hasNext())
-		{
-			loginUser = iterUser.next();
-			if(!targetUser.equals(loginUser.getName()))
-			{
-				tse = new CMSessionEvent();
+		CMMember loginUsers = interInfo.getLoginUsers();
+
+		// iterate all the authorized users and send their info to the new user
+		for(List<CMUser> userList : loginUsers.getAllMembers().values()) {
+			for(CMUser user : userList) {
+				CMSessionEvent tse = new CMSessionEvent();
 				tse.setID(CMSessionEvent.SESSION_ADD_USER);
-				tse.setUserName(loginUser.getName());
-				tse.setHostAddress(loginUser.getHost());
-				tse.setSessionName(loginUser.getCurrentSession());
-				CMEventManager.unicastEvent(tse, targetUser);
-				tse = null;
+				tse.setUserName(user.getName());
+				tse.setUuid(user.getUuid());
+				tse.setHostAddress(user.getHost());
+				tse.setSessionName(user.getCurrentSession());
+				// send the event to the socket channel of the new user
+				CMEventManager.unicastEvent(tse, sc);
 			}
 		}
-		
 	}
 	
 	private static void processLOGIN_ACK(CMMessage msg)
