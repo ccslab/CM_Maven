@@ -1718,115 +1718,104 @@ public class CMInteractionManager {
 			return;
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+
+		// check authentication result
+		if(se.isValidUser() == 0)
+		{
+			System.err.println("CMInteractionManager.processLOGIN_ACK(), authentication failed!");
+			return;
+		}
+		else if(se.isValidUser() == -1)
+		{
+			System.err.println("CMInteractionManager.processLOGIN_ACK(), already logged in!");
+			return;
+		}
+
+		// set configuration info from the server
 		confInfo.setCommArch(se.getCommArch());
 		confInfo.setFileTransferScheme(se.isFileTransferScheme());
 		confInfo.setLoginScheme(se.isLoginScheme());
+		confInfo.setMultiLoginScheme(se.getMultiLoginScheme());
 		confInfo.setSessionScheme(se.isSessionScheme());
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
-		interInfo.getDefaultServerInfo().setServerName(se.getSender());
-		interInfo.getDefaultServerInfo().setServerUDPPort(se.getUDPPort());
-		
+
+		// set my info
+		CMUser myself = interInfo.getMyself();
+		// set my name (although it is already set before sending LOGIN event)
+		myself.setName(se.getUserName());
+		// [New] set my UUID received from the server
+		myself.setUuid(se.getUuid());
+
+		// set default server info
+		serverInfo = interInfo.getDefaultServerInfo();
+		serverInfo.setServerName(se.getSender());
+		serverInfo.setServerUDPPort(se.getUDPPort());
+
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processLOGIN_ACK(), received.");
-			System.out.println("bValidUser("+se.isValidUser()+"), comm arch("+se.getCommArch()
-					+"), bFileTransferScheme("+se.isFileTransferScheme()+"), bLoginScheme("
-					+se.isLoginScheme()+"), bSessionScheme("+se.isSessionScheme()
-					+"), nAttachDwonloadScheme("+se.getAttachDownloadScheme()+"), server udp port("
-					+se.getUDPPort()+").");
+			System.out.println("bValidUser("+se.isValidUser()
+					+"), comm arch("+se.getCommArch()
+					+"), bFileTransferScheme("+se.isFileTransferScheme()
+					+"), bLoginScheme("+se.isLoginScheme()
+					+"), nMultiLoginScheme("+se.getMultiLoginScheme()
+					+"), bSessionScheme("+se.isSessionScheme()
+					+"), nAttachDownloadScheme("+se.getAttachDownloadScheme()
+					+"), server udp port("+se.getUDPPort()+").");
 		}
-		
-		if(se.isValidUser() == 1)
+
+		// update client's state
+		myself.setState(CMInfo.CM_LOGIN);
+		// set client's attachment download scheme
+		myself.setAttachDownloadScheme(se.getAttachDownloadScheme());
+		// set client's keep-alive time
+		myself.setKeepAliveTime(confInfo.getKeepAliveTime());
+
+		// if the file transfer scheme is set, create a blocking TCP socket channel
+		serverInfo = interInfo.getDefaultServerInfo();
+		if(confInfo.isFileTransferScheme())
 		{
-			// update client's state
-			interInfo.getMyself().setState(CMInfo.CM_LOGIN);
-			// set client's attachment download scheme
-			interInfo.getMyself().setAttachDownloadScheme(se.getAttachDownloadScheme());
-			// set client's keep-alive time
-			interInfo.getMyself().setKeepAliveTime(confInfo.getKeepAliveTime());
-			// if the file trasnfer scheme is set, create a blocking TCP socket channel
-			serverInfo = interInfo.getDefaultServerInfo();
-			if(confInfo.isFileTransferScheme())
-			{
-				/*
-				scInfo = serverInfo.getBlockSocketChannelInfo();
-				try {
-					sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-							serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
-				} catch (IOException e) {
-					e.printStackTrace();
-					return;
-				}
-				
-				if(sc == null)
-				{
-					System.err.println("CMInteractionMaanger.processLOGIN_ACK(), failed to create a blocking "
-							+ "TCP socket channel to the default server!");
-					return;
-				}
-				scInfo.addChannel(0, sc); // key for the default blocking TCP socket channel is 1
+			sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName());
 
-				CMSessionEvent tse = new CMSessionEvent();
-				tse.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-				tse.setChannelName(interInfo.getMyself().getName());
-				tse.setChannelNum(0);
-				CMEventManager.unicastEvent(tse, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
-				se = null;
-				*/
-				
-				sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName());
-
-				if(sc != null && CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
-							+ "the channel with the key(0) to the default server.");
-				}				
-			}
-			
-			// check whether the keep-alive scheduler should start or not
-			int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
-			if(nKeepAlive > 0 && getNumLoginServers() == 1)
+			if(sc != null && CMInfo._CM_DEBUG)
 			{
-				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
-				ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
-				CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask();
-				ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask, 
-						nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
-				threadInfo.setScheduledFuture(future);
-				
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMInteractionManager.processLOGIN_ACK(), "
-							+"# logins("+getNumLoginServers()+"), start "
-							+"keep-alive task.");
-				}
-			}
-
-			// request session information if session scheme is not used.
-			if(!confInfo.isSessionScheme())
-			{
-				// set session name as default name (session1)
-				//CMSession tsession = interInfo.getSessionList().elementAt(0);
-				//tsession.setSessionName("session1");
-				
-				CMSessionEvent tse = new CMSessionEvent();
-				tse.setID(CMSessionEvent.JOIN_SESSION);
-				tse.setHandlerSession("session1");
-				tse.setUserName(interInfo.getMyself().getName());
-				tse.setSessionName("session1");
-				
-				CMEventManager.unicastEvent(tse, serverInfo.getServerName());
-				interInfo.getMyself().setCurrentSession("session1");
-				tse = null;
+				System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
+						+ "the channel with the key(0) to the default server.");
 			}
 		}
-		else
+
+		// check whether the keep-alive scheduler should start or not
+		int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
+		if(nKeepAlive > 0 && getNumLoginServers() == 1)
 		{
-			System.out.println("CMInteractionManager.processLOGIN_ACK(), invalid user.");
+			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
+			ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
+			CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask();
+			ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask,
+					nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
+			threadInfo.setScheduledFuture(future);
+
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.processLOGIN_ACK(), "
+						+"# logins("+getNumLoginServers()+"), start "
+						+"keep-alive task.");
+			}
 		}
-		
-		se = null;
-		return;
+
+		// request session information if session scheme is not used.
+		if(!confInfo.isSessionScheme())
+		{
+			// set session name as default name (session1)
+			CMSessionEvent tse = new CMSessionEvent();
+			tse.setID(CMSessionEvent.JOIN_SESSION);
+			tse.setHandlerSession("session1");
+			tse.setUserName(interInfo.getMyself().getName());
+			tse.setSessionName("session1");
+
+			CMEventManager.unicastEvent(tse, serverInfo.getServerName());
+			myself.setCurrentSession("session1");
+		}
 	}
 	
 	private static void processSESSION_ADD_USER(CMMessage msg)
