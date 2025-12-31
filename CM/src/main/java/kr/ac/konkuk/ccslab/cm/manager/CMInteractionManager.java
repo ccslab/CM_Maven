@@ -1995,12 +1995,9 @@ public class CMInteractionManager {
 									confInfo.getServerPort(), tsession.getSessionUsers().getMemberNum());
 			seAck.addSessionInfo(tInfo);
 		}
-		CMEventManager.unicastEvent(seAck, se.getUserName());
+		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
 
 		seAck.removeAllGroupInfoObjects();
-		seAck = null;
-		se = null;
-		return;
 	}
 	
 	private static void processRESPONSE_SESSION_INFO(CMMessage msg)
@@ -2047,8 +2044,6 @@ public class CMInteractionManager {
 		}
 		
 		se.removeAllSessionInfoObjects();
-		se = null;
-		return;
 	}
 	
 	private static void processSESSION_TALK(CMMessage msg)
