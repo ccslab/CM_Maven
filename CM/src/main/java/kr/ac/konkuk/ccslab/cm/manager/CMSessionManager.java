@@ -276,11 +276,7 @@ public class CMSessionManager {
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMSessionManager.processJOIN_SESSION_ACK() succeeded.");
-		
-		se.removeAllGroupInfoObjects();
-		se = null;
-		ie = null;
-		return;
+
 	}
 	
 	private static void processLEAVE_SESSION(CMMessage msg)
