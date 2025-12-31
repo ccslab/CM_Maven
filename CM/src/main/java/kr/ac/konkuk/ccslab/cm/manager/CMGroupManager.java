@@ -345,7 +345,6 @@ public class CMGroupManager {
 	
 	private static void processUSER_ENTER(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
@@ -359,7 +358,6 @@ public class CMGroupManager {
 		if(session == null)
 		{
 			System.out.println("CMGroupManager.processUSER_ENTER(), session("+ie.getHandlerSession()+") not found.");
-			ie = null;
 			return;
 		}
 		CMGroup group = session.findGroup(ie.getHandlerGroup());
@@ -367,16 +365,14 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processUSER_ENTER(), session("+ie.getHandlerSession()
 					+") found, group("+ie.getHandlerGroup()+") NOT found.");
-			ie = null;
 			return;
 		}
-		// find user in the loginUser list
-		CMUser user = interInfo.getLoginUsers().findMember(ie.getUserName());
+		// find user in the loginUser table using sender and sender uuid in the event header
+		CMUser user = interInfo.getLoginUsers().findMember(ie.getSender(), ie.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMGroupManager.processUSER_ENTER() for session("+ie.getHandlerSession()
 					+"), group("+ie.getHandlerGroup()+"), user("+ie.getUserName()+") not found in the login user list.");
-			ie = null;
 			return;
 		}
 		
@@ -388,7 +384,6 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processUSER_ENTER(), failed for user("
 					+user.getName()+").");
-			ie = null;
 			return;
 		}
 		
@@ -404,9 +399,6 @@ public class CMGroupManager {
 		
 		// send group members the new user information
 		notifyGroupUsersOfNewUser(user);
-		
-		ie = null;
-		return;
 	}
 	
 	private static void processUSER_LEAVE(CMMessage msg)
@@ -477,26 +469,35 @@ public class CMGroupManager {
 					+") found, group("+targetUser.getCurrentGroup()+") NOT found.");
 			return;
 		}
-		
-		Iterator<CMUser> iterUser = group.getGroupUsers().getAllMembers().iterator();
-		while(iterUser.hasNext())
+
+		// get the socket channel of the target user
+		SocketChannel sc = (SocketChannel) targetUser.getNonBlockSocketChannelInfo().findChannel(0);
+		if(sc == null)
 		{
-			CMUser tUser = iterUser.next();
-			CMDataEvent de = new CMDataEvent();
-			de.setID(CMDataEvent.INHABITANT);
-			de.setHandlerSession(session.getSessionName());
-			de.setHandlerGroup(group.getGroupName());
-			de.setUserName(tUser.getName());
-			de.setHostAddress(tUser.getHost());
-			de.setUDPPort(tUser.getUDPPort());
-			CMEventManager.unicastEvent(de, targetUser.getName());
-			de = null;
+			System.err.println("CMGroupManager.distributeGroupUsers(), socket channel of user("
+					+ targetUser.getName() + "), uuid(" + targetUser.getUuid() + ") not found!");
+			return;
 		}
-		
+
+		// iterate the group members and send the event
+		// CMMember is changed to Hashtable<String, List<CMUser>>
+		group.getGroupUsers().getAllMembers().values().stream()
+				.flatMap(List::stream)
+				.forEach( user -> {
+					CMDataEvent de = new CMDataEvent();
+					de.setID(CMDataEvent.INHABITANT);
+					de.setHandlerSession(session.getSessionName());
+					de.setHandlerGroup(group.getGroupName());
+					de.setUserName(user.getName());
+                	de.setUuid(user.getUuid()); // add UUID of the inhabitant user
+					de.setHostAddress(user.getHost());
+					de.setUDPPort(user.getUDPPort());
+					CMEventManager.unicastEvent(de, sc);
+				});
+
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMGroupManager.distributeGroupUsers(), session("+session.getSessionName()
 					+"), group("+group.getGroupName()+") info to user("+targetUser.getName()+").");
-		return;
 	}
 	
 	private static void notifyGroupUsersOfNewUser(CMUser newUser)
@@ -521,6 +522,7 @@ public class CMGroupManager {
 		de.setHandlerSession(newUser.getCurrentSession());
 		de.setHandlerGroup(newUser.getCurrentGroup());
 		de.setUserName(newUser.getName());
+		de.setUuid(newUser.getUuid()); // add UUID of the new user
 		de.setHostAddress(newUser.getHost());
 		de.setUDPPort(newUser.getUDPPort());
 		
@@ -531,8 +533,6 @@ public class CMGroupManager {
 			System.out.println("CMGroupManager.notifyGroupUsersOfNewUser(), session("+session.getSessionName()
 					+"), group("+group.getGroupName()+") new user("+newUser.getName()+").");
 		
-		de = null;
-		return;
 	}
 	
 	private static void processUSER_MOVE(CMMessage msg)

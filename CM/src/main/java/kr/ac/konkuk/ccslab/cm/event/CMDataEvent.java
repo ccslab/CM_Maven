@@ -1,8 +1,10 @@
 package kr.ac.konkuk.ccslab.cm.event;
 import java.nio.*;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 /**
  * This class represents CM events that are used for notifying a new group user or 
@@ -61,6 +63,7 @@ public class CMDataEvent extends CMEvent{
 	public static final int REQUEST_INHABITANT = 4;
 	
 	private String m_strUserName;
+	private UUID m_uuid;
 	private String m_strPasswd;
 	private String m_strHostAddr;
 	private int m_nUDPPort;
@@ -70,6 +73,7 @@ public class CMDataEvent extends CMEvent{
 	{
 		m_nType = CMInfo.CM_DATA_EVENT;
 		m_strUserName = "?";
+		m_uuid = null;
 		m_strPasswd = "?";
 		m_strHostAddr = "?";
 		m_nUDPPort = -1;
@@ -99,7 +103,24 @@ public class CMDataEvent extends CMEvent{
 	{
 		return m_strUserName;
 	}
-	
+
+	/**
+	 * Sets the user UUID.
+	 * @param uuid
+	 */
+	public void setUuid(UUID uuid)
+	{
+		m_uuid = uuid;
+	}
+
+	/**
+	 * Returns user UUID.
+	 * @return user UUID.
+	 */
+	public UUID getUuid() {
+		return m_uuid;
+	}
+
 	public void setPassword(String passwd)
 	{
 		if(passwd != null)
@@ -173,14 +194,17 @@ public class CMDataEvent extends CMEvent{
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
 				+ m_strHostAddr.getBytes().length;
 			nByteNum += Integer.BYTES + 7*Float.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case CMDataEvent.NEW_USER:
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
 			+ m_strHostAddr.getBytes().length;
 			nByteNum += Integer.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case CMDataEvent.REMOVE_USER:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case CMDataEvent.REQUEST_INHABITANT:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
@@ -199,6 +223,7 @@ public class CMDataEvent extends CMEvent{
 		{
 		case CMDataEvent.INHABITANT:
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
 			m_bytes.putFloat(m_pq.m_p.m_x);
@@ -211,11 +236,13 @@ public class CMDataEvent extends CMEvent{
 			break;
 		case CMDataEvent.NEW_USER:
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
 			break;
 		case CMDataEvent.REMOVE_USER:
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			break;
 		case CMDataEvent.REQUEST_INHABITANT:
 			putStringToByteBuffer(m_strUserName);
@@ -234,6 +261,7 @@ public class CMDataEvent extends CMEvent{
 		{
 		case CMDataEvent.INHABITANT:
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_nUDPPort = msg.getInt();
 			m_pq.m_p.m_x = msg.getFloat();
@@ -246,11 +274,13 @@ public class CMDataEvent extends CMEvent{
 			break;
 		case CMDataEvent.NEW_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_nUDPPort = msg.getInt();
 			break;
 		case CMDataEvent.REMOVE_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			break;
 		case CMDataEvent.REQUEST_INHABITANT:
 			m_strUserName = getStringFromByteBuffer(msg);
