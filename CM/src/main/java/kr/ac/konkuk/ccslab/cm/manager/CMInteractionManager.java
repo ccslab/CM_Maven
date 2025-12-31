@@ -1827,11 +1827,9 @@ public class CMInteractionManager {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.processSESSION_ADD_USER(), user("+se.getUserName()
-						+"), host("+se.getHostAddress()+"), session("+se.getSessionName()+").");
+						+"), uuid("+se.getUuid()+"), host("+se.getHostAddress()+"), session("+se.getSessionName()+").");
 			}
 		}
-		se = null;
-		return;
 	}
 	
 	private static void processSESSION_REMOVE_USER(CMMessage msg)
