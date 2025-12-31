@@ -1,4 +1,5 @@
 package kr.ac.konkuk.ccslab.cm.manager;
+import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -189,7 +190,7 @@ public class CMSessionManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMSessionManager.joinSession(), add user("+user.getName()+"), "
-					+"# session users("+session.getSessionUsers().getMemberNum()+").");
+					+"uuid("+user.getUuid()+"), # session users("+session.getSessionUsers().getMemberNum()+").");
 		}
 		
 		// send JOIN_SESSION_ACK
@@ -206,11 +207,11 @@ public class CMSessionManager {
 			CMGroupInfo gInfo = new CMGroupInfo(tGroup.getGroupName(), tGroup.getGroupAddress(), tGroup.getGroupPort());
 			seAck.addGroupInfo(gInfo);
 		}
-		
-		ret = CMEventManager.unicastEvent(seAck, user.getName());
-		
-		seAck.removeAllGroupInfoObjects();
-		seAck = null;
+
+		// Send the event to the specific socket channel of the user
+		SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
+		ret = CMEventManager.unicastEvent(seAck, sc);
+
 		return ret;
 	}
 	
