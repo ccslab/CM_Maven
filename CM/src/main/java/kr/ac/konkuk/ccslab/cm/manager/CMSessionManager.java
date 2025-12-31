@@ -142,13 +142,12 @@ public class CMSessionManager {
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		
-		//find login user
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
+		//find login user using sender name and UUID in the event header
+		CMUser user = interInfo.getLoginUsers().findMember(se.getSender(), se.getSenderUuid());
 		if(user == null)
 		{
-			System.out.println("CMSessionManager.processJOIN_SESSION(), user("+se.getUserName()+") "
-					+ "not found in the login user list.");
-			se = null;
+			System.out.println("CMSessionManager.processJOIN_SESSION(), user("+se.getSender()
+					+"), uuid("+se.getSenderUuid()+") not found in the login user list.");
 			return;
 		}
 		user.setCurrentSession(se.getSessionName());
@@ -159,12 +158,10 @@ public class CMSessionManager {
 		// notify all users of the fact that a user changes a session
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.CHANGE_SESSION);
-		tse.setUserName(se.getUserName());
+		tse.setUserName(se.getSender());
+		tse.setUuid(se.getSenderUuid());
 		tse.setSessionName(se.getSessionName());
 		CMEventManager.broadcastEvent(tse);
-
-		tse = null;
-		se = null;
 	}
 
 	// join session of the default server
