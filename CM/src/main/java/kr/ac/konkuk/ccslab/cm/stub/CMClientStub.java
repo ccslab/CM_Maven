@@ -548,7 +548,6 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean logoutCM()
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bRequestResult = false;
 		
@@ -600,7 +599,6 @@ public class CMClientStub extends CMStub {
 			}
 		}
 		
-		se = null;
 		return bRequestResult;
 	}
 	
