@@ -161,28 +161,29 @@ public class CMGroupManager {
 	
 	public static void leaveGroup(CMUser user)	// for server
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		// find current session and group
 		CMSession session = interInfo.findSession(user.getCurrentSession());
 		if(session == null)
 		{
-			System.out.println("CMGroupManager.leaveGroup(), user("+user.getName()+")'s current "
+			System.out.println("CMGroupManager.leaveGroup(), user("+user.getName()
+					+"), uuid("+user.getUuid()+")'s current "
 					+" session("+user.getCurrentSession()+") not found.");
 			return;
 		}
 		CMGroup group = session.findGroup(user.getCurrentGroup());
 		if(group == null)
 		{
-			System.out.println("CMGroupManager.leaveGroup(), user("+user.getName()+")'s current "
+			System.out.println("CMGroupManager.leaveGroup(), user("+user.getName()
+					+"), uuid("+user.getUuid()+")'s current "
 					+" session("+user.getCurrentSession()+") found, but current group("
 					+user.getCurrentGroup()+") NOT FOUND.");
 			return;
 		}
 		
 		// remove the user from the group member
-		boolean ret = group.getGroupUsers().removeMember(user.getName());
+		boolean ret = group.getGroupUsers().removeMember(user.getName(), user.getUuid());
 		
 		if(ret)
 		{
@@ -192,19 +193,17 @@ public class CMGroupManager {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMGroupManager.leaveGroup(), succeeded. user("+user.getName()
-						+"), session("+user.getCurrentSession()+"), group("+user.getCurrentGroup()
-						+"), # remaining members("+group.getGroupUsers().getMemberNum()+").");
+						+"), uuid("+user.getUuid()+"), session("+user.getCurrentSession()
+						+"), group("+user.getCurrentGroup() +"), # remaining members("
+						+group.getGroupUsers().getMemberNum()+").");
 			}
-			
 			user.setCurrentGroup("");
 		}
 		else
 		{
 			System.out.println("CMGroupManager.leaveGroup(), failed for user("+user.getName()
-					+"), group("+group.getGroupName()+").");
+					+"), uuid("+user.getUuid()+"), group("+group.getGroupName()+").");
 		}
-		
-		return;
 	}
 	
 	public static void changeGroup(String gName) // for client
