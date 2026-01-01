@@ -337,18 +337,17 @@ public class CMSessionManager {
 					+") not found for leaving user("+user.getName()+").");
 			return;
 		}
-		session.getSessionUsers().removeMember(user.getName());
+		session.getSessionUsers().removeMember(user.getName(), user.getUuid());
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSessionManager.leaveSession(), user("+user.getName()+"), session("
+			System.out.println("CMSessionManager.leaveSession(), user("+user.getName()
+					+"), uuid("+user.getUuid()+"), session("
 					+strCurrentSession+"), # remaining session member ("
 					+session.getSessionUsers().getMemberNum()+").");
 		}
 		
 		user.setCurrentSession("");
-
-		return;
 	}
 	
 	private static void processSESSION_TALK(CMMessage msg)
