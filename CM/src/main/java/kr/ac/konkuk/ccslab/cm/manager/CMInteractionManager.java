@@ -1883,7 +1883,7 @@ public class CMInteractionManager {
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		// find the user in the login user list
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
+		CMUser user = interInfo.getLoginUsers().findMember(se.getSender(), se.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processLOGOUT, user("+se.getUserName()
@@ -1920,12 +1920,13 @@ public class CMInteractionManager {
 		// remove the user from login user list
 		//interInfo.getLoginUsers().removeMember(user);
 		//user = null;
-		interInfo.getLoginUsers().removeMemberObject(user);
+		interInfo.getLoginUsers().removeMember(user);
 		
 		// notify login users of the logout user
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.SESSION_REMOVE_USER);
 		tse.setUserName(se.getUserName());
+		tse.setUuid(user.getUuid());
 		CMEventManager.broadcastEvent(tse);
 		
 		if(CMInfo._CM_DEBUG)
@@ -1958,9 +1959,6 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processLOGOUT(), the client channel is also closed.");
 		}
 		
-		se = null;
-		tse = null;
-		return;
 	}
 	
 	private static void processREQUEST_SESSION_INFO(CMMessage msg)
