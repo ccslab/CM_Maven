@@ -1826,8 +1826,9 @@ public class CMInteractionManager {
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMInteractionManager.processSESSION_ADD_USER(), user("+se.getUserName()
-						+"), uuid("+se.getUuid()+"), host("+se.getHostAddress()+"), session("+se.getSessionName()+").");
+				System.out.println("CMInteractionManager.processSESSION_ADD_USER(), user("
+						+se.getUserName() +"), uuid("+se.getUuid()+"), host("+se.getHostAddress()
+						+"), session("+se.getSessionName()+").");
 			}
 		}
 	}
@@ -1841,11 +1842,9 @@ public class CMInteractionManager {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.processSESSION_REMOVE_USER(), user("
-						+se.getUserName()+").");
+						+se.getUserName()+"), uuid("+se.getUuid()+").");
 			}
 		}
-		se = null;
-		return;
 	}
 	
 	private static void processCHANGE_SESSION(CMMessage msg)
