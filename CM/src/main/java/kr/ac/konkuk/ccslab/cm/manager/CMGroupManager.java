@@ -611,12 +611,12 @@ public class CMGroupManager {
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMDataEvent de = new CMDataEvent(msg.m_buf);
-		
-		if(de.getUserName().equals(interInfo.getMyself().getName()))
+
+		CMUser myself = interInfo.getMyself();
+		if(de.getUserName().equals(myself.getName()) && Objects.equals(de.getUuid(), myself.getUuid()))
 		{
 			if(CMInfo._CM_DEBUG)
 				System.out.println("CMGroupManager.processINHABITNAT(), the inhabitant is myself.");
-			de = null;
 			return;
 		}
 		
@@ -624,7 +624,6 @@ public class CMGroupManager {
 		if(session == null)
 		{
 			System.out.println("CMGroupManager.processINHABITANT(), session("+de.getHandlerSession()+") not found.");
-			de = null;
 			return;
 		}
 		CMGroup group = session.findGroup(de.getHandlerGroup());
@@ -632,24 +631,25 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processINHABITANT(), session("+de.getHandlerSession()
 					+") found, group("+de.getHandlerGroup()+") NOT found.");
-			de = null;
 			return;
 		}
 		
 		CMUser tuser = new CMUser();
 		tuser.setName(de.getUserName());
+		tuser.setUuid(de.getUuid()); // add UUID of the inhabitant user
 		tuser.setHost(de.getHostAddress());
 		tuser.setUDPPort(de.getUDPPort());
 		tuser.setCurrentSession(de.getHandlerSession());
 		tuser.setCurrentGroup(de.getHandlerGroup());
-		group.getGroupUsers().addMember(tuser);			// Currently, at the client, login user list and session member list is not maintained..(not clear)
+		group.getGroupUsers().addMember(tuser);
+		// Currently, at the client, login user list and session member list is not maintained..(not clear)
 		
-		if(CMInfo._CM_DEBUG)
-			System.out.println("CMGroupManager.processINHABITNAT(), session("+de.getHandlerSession()
-					+"), group("+de.getHandlerGroup()+"), inhabitant("+de.getUserName()+") added.");
-		
-		de = null;
-		return;
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("CMGroupManager.processINHABITANT(), session("+de.getHandlerSession()
+					+"), group("+de.getHandlerGroup()+"), inhabitant("+de.getUserName()
+					+"), uuid("+de.getUuid()+") added.");
+		}
+
 	}
 	
 	private static void processNEW_USER(CMMessage msg)
