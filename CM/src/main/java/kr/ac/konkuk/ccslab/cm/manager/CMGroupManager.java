@@ -657,15 +657,15 @@ public class CMGroupManager {
 		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMDataEvent de = new CMDataEvent(msg.m_buf);
-		
-		if(de.getUserName().equals(interInfo.getMyself().getName()))
+
+		CMUser myself = interInfo.getMyself();
+		if(de.getUserName().equals(myself.getName()) && Objects.equals(de.getUuid(), myself.getUuid()))
 		{
 			if(CMInfo._CM_DEBUG)
 				System.out.println("CMGroupManager.processNEW_USER(), the new user is myself.");
-			de = null;
 
 			// get file-sync mode
-			CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
+			CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 			CMFileSyncMode fileSyncMode = confInfo.getFileSyncMode();
 			if(CMInfo._CM_DEBUG) {
 				System.out.println("file-sync mode: "+fileSyncMode);
@@ -675,8 +675,7 @@ public class CMGroupManager {
 				CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
 				Objects.requireNonNull(syncManager);
 				// start file-sync
-				boolean ret;
-				ret = syncManager.startFileSync(fileSyncMode);
+				syncManager.startFileSync(fileSyncMode);
 			}
 			return;
 		}
@@ -685,7 +684,6 @@ public class CMGroupManager {
 		if(session == null)
 		{
 			System.out.println("CMGroupManager.processNEW_USER(), session("+de.getHandlerSession()+") not found.");
-			de = null;
 			return;
 		}
 		CMGroup group = session.findGroup(de.getHandlerGroup());
@@ -693,12 +691,12 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processNEW_USER(), session("+de.getHandlerSession()
 					+") found, group("+de.getHandlerGroup()+") NOT found.");
-			de = null;
 			return;
 		}
 		
 		CMUser tuser = new CMUser();
 		tuser.setName(de.getUserName());
+		tuser.setUuid(de.getUuid()); // add UUID of the new user
 		tuser.setHost(de.getHostAddress());
 		tuser.setUDPPort(de.getUDPPort());
 		tuser.setCurrentSession(de.getHandlerSession());
@@ -706,12 +704,12 @@ public class CMGroupManager {
 		group.getGroupUsers().addMember(tuser);			
 		// Currently, at the client, login user list and session member list is not maintained..(not clear)
 		
-		if(CMInfo._CM_DEBUG)
+		if(CMInfo._CM_DEBUG) {
 			System.out.println("CMGroupManager.processNEW_USER(), session("+de.getHandlerSession()
-					+"), group("+de.getHandlerGroup()+"), new user("+de.getUserName()+") added.");
-		
-		de = null;
-		return;
+					+"), group("+de.getHandlerGroup()+"), new user("+de.getUserName()
+					+"), uuid("+de.getUuid()+") added.");
+		}
+
 	}
 	
 	private static void notifyGroupUsersOfRemovedUser(CMUser user)
