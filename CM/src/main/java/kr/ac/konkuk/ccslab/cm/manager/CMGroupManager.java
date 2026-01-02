@@ -735,10 +735,9 @@ public class CMGroupManager {
 		de.setHandlerSession(session.getSessionName());
 		de.setHandlerGroup(group.getGroupName());
 		de.setUserName(user.getName());
+		de.setUuid(user.getUuid()); // add UUID of the removed user
 		CMEventManager.castEvent(de,  group.getGroupUsers());
 		
-		de = null;
-		return;
 	}
 	
 	private static void processREMOVE_USER(CMMessage msg)
