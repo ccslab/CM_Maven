@@ -183,7 +183,7 @@ public class CMEventReceiver implements Runnable {
 			
 			if(user != null)
 			{
-				processDisconnectionFromClientAtServer(user.getName(), ch);
+				processDisconnectionFromClientAtServer(user, ch);
 			}
 			else if(CMConfigurator.isDServer())
 			{
@@ -309,13 +309,11 @@ public class CMEventReceiver implements Runnable {
 
 	}
 	
-	private void processDisconnectionFromClientAtServer(String strUser, SelectableChannel ch)
+	private void processDisconnectionFromClientAtServer(CMUser user, SelectableChannel ch)
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
-		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		Integer chKey = null;
+		Integer chKey;
 
-		CMUser user = interInfo.getLoginUsers().findMember(strUser);
 		// find channel index
 		chKey = user.getNonBlockSocketChannelInfo().findChannelKey(ch);
 		if(chKey == null)
@@ -327,17 +325,18 @@ public class CMEventReceiver implements Runnable {
 		{
 			// send MQTT will event
 			CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
-			mqttManager.sendMqttWill(strUser);
+			mqttManager.sendMqttWill(user.getName());
 			
 			// if the removed channel is default channel (#ch:0), process logout of the user
 			CMSessionEvent tse = new CMSessionEvent();
 			tse.setID(CMSessionEvent.LOGOUT);
+			tse.setSender(user.getName());
+			tse.setSenderUuid(user.getUuid());
 			tse.setUserName(user.getName());
 			CMMessage msg = new CMMessage();
 			msg.m_buf = CMEventManager.marshallEvent(tse);
 			CMInteractionManager.processEvent(msg);
 			cmInfo.getAppEventHandler().processEvent(tse);
-			tse = null;
 			msg.m_buf = null;
 		}
 		else if(chKey.intValue() > 0)
