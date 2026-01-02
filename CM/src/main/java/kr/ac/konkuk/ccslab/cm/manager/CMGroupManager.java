@@ -745,6 +745,7 @@ public class CMGroupManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMDataEvent de = new CMDataEvent(msg.m_buf);
 		String strUser = de.getUserName();
+		UUID userUuid = de.getUuid();
 		String strHandlerSession = de.getHandlerSession();
 		String strHandlerGroup = de.getHandlerGroup();
 		
@@ -752,7 +753,6 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processREMOVE_USER(), the removed user("
 					+strUser+") is myself.");
-			de = null;
 			return;
 		}
 		
@@ -760,7 +760,6 @@ public class CMGroupManager {
 		if(session == null)
 		{
 			System.out.println("CMGroupManager.processREMOVE_USER(), session("+strHandlerSession+") not found.");
-			de = null;
 			return;
 		}
 		CMGroup group = session.findGroup(strHandlerGroup);
@@ -768,36 +767,24 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processREMOVE_USER(), session("+strHandlerSession
 					+") found, group("+strHandlerGroup+") NOT found.");
-			de = null;
 			return;
 		}
 
 		//boolean ret = group.getGroupUsers().removeMember(de.getUserName());
-		boolean ret = group.getGroupUsers().removeMemberObject(strUser);
+		boolean ret = group.getGroupUsers().removeMember(strUser, userUuid);
 		if(ret)
 		{
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMGroupManager.processREMOVE_USER(), session("+strHandlerSession
-						+"), group("+strHandlerGroup+"), user("+strUser+") removed.");
+						+"), group("+strHandlerGroup+"), user("+strUser+"), uuid("+userUuid+") removed.");
 			}
 		}
 		
 		// check whether the p2p file-transfer with the user is ongoing or not
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMList<CMSendFileInfo> sendList = fInfo.getSendFileList(strUser);
-		if(sendList != null)
-		{
-			fInfo.removeSendFileList(strUser);
-		}
-		CMList<CMRecvFileInfo> recvList = fInfo.getRecvFileList(strUser);
-		if(recvList != null)
-		{
-			fInfo.removeRecvFileList(strUser);
-		}
-
-		de = null;
-		return;
+		fInfo.removeSendFileList(strUser, userUuid);
+		fInfo.removeRecvFileList(strUser, userUuid);
 	}
 	
 	private static void processDummyEvent(CMMessage msg)
