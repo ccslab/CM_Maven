@@ -856,37 +856,8 @@ public class CMInteractionManager {
 			return null;
 	}
 	
-	// find group member with the session name, group name, and member name (called only by the server)
-	public synchronized static CMUser findGroupMemberOfServer(String strSession, String strGroup, String strUser)
-	{
-		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMSession session = interInfo.findSession(strSession);
-		if(session == null)
-		{
-			System.err.println("CMInteractionManager.findGroupMemberOfServer(), session("
-					+strSession+") not found!");
-			return null;
-		}
-		CMGroup group = session.findGroup(strGroup);
-		if(group == null)
-		{
-			System.err.println("CMInteractionManager.findGroupMemberOfServer(), group("
-					+strGroup+") not found!");
-			return null;
-		}
-		CMUser user = group.getGroupUsers().findMember(strUser);
-		if(user == null)
-		{
-			System.err.println("CMInteractionManager.findGroupMemberOfServer(, user("
-					+strUser+") not found!");
-			return null;
-		}
-		
-		return user;
-	}
-	
-	// find my group member (called only by the client)
-	public synchronized static CMUser findGroupMemberOfClient(String strUser)
+	// find my group member list (called only by the client)
+	public synchronized static List<CMUser> findGroupMemberOfClient(String strUser)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strSession = interInfo.getMyself().getCurrentSession();
@@ -906,15 +877,17 @@ public class CMInteractionManager {
 					+strGroup+") not found!");
 			return null;
 		}
-		CMUser user = group.getGroupUsers().findMember(strUser);
-		if(user == null)
+
+		List<CMUser> userList = group.getGroupUsers().findMemberList(strUser);
+
+		if(userList == null || userList.isEmpty())
 		{
 			System.err.println("CMInteractionManager.findGroupMemberOfClient(), user("
 					+strUser+") not found!");
 			return null;
 		}
-		
-		return user;
+
+		return userList;
 	}
 	
 	// find my group member with channel (called only by the client)
