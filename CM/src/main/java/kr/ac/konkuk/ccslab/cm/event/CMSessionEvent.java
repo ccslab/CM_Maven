@@ -53,7 +53,10 @@ public class CMSessionEvent extends CMEvent {
 	 * <ul>
 	 * <li>response code: {@link CMSessionEvent#isValidUser()}
 	 * <br>1: valid user, 0: invalid user</li>
-	 * 
+	 *
+	 * <li>uuid: {@link CMSessionEvent#getUuid()}
+	 * <br>The newly created uuid of the login user</li>
+	 *
 	 * <li>communication architecture: {@link CMSessionEvent#getCommArch()}
 	 * <br>CM_CS: This CM network is client-server model
 	 * <br>CM_PS: This CM network is peer-server model</li>
@@ -275,9 +278,11 @@ public class CMSessionEvent extends CMEvent {
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
-	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <br>The name of itself (a server or client) to which the client establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
 	 * <br>the index(&gt;=0) for the socket channel.</li>
+	 * <li>channel uuid: {@link CMSessionEvent#getChannelUuid()}
+	 * <br>the uuid of itself</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: channel addition at the server has completed.
 	 * <br>other value: channel addition at the server has failed.</li>
@@ -455,6 +460,7 @@ public class CMSessionEvent extends CMEvent {
 
 	private String m_strUserName;
 	private UUID m_uuid;
+	private UUID m_channelUuid;
 	private String m_strPasswd;
 	private String m_strHostAddr;
 	private int m_nUDPPort;
@@ -494,6 +500,7 @@ public class CMSessionEvent extends CMEvent {
 		m_strPasswd = "?";
 		m_strUserName = "?";
 		m_uuid = null;
+		m_channelUuid = null;
 		m_nUDPPort = -1;
 		m_bValidUser = -1;
 		m_strSessionName = "?";
@@ -603,6 +610,23 @@ public class CMSessionEvent extends CMEvent {
 	 * @return user UUID.
 	 */
 	public UUID getUuid() {
+		return m_uuid;
+	}
+
+	/**
+	 * Sets the channel UUID.
+	 * @param uuid
+	 */
+	public void setChannelUuid(UUID uuid)
+	{
+		m_uuid = uuid;
+	}
+
+	/**
+	 * Returns channel UUID.
+	 * @return channel UUID.
+	 */
+	public UUID getChannelUuid() {
 		return m_uuid;
 	}
 
@@ -1219,10 +1243,14 @@ public class CMSessionEvent extends CMEvent {
 			nByteNum += Integer.BYTES;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
-		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
 		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
 			nByteNum += 2*Integer.BYTES;
+			break;
+		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_channelUuid).getBytes().length;
 			break;
 		case REGISTER_USER:
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
@@ -1361,10 +1389,15 @@ public class CMSessionEvent extends CMEvent {
 			m_bytes.putInt(m_nChannelNum);
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
-		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
 		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			putStringToByteBuffer(m_strChannelName);
 			m_bytes.putInt(m_nChannelNum);
+			m_bytes.putInt(m_nReturnCode);
+			break;
+		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			putStringToByteBuffer(m_strChannelName);
+			m_bytes.putInt(m_nChannelNum);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_channelUuid));
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case REGISTER_USER:
@@ -1488,10 +1521,15 @@ public class CMSessionEvent extends CMEvent {
 			m_nChannelNum = msg.getInt();
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
-		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
 		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
+			m_nReturnCode = msg.getInt();
+			break;
+		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			m_strChannelName = getStringFromByteBuffer(msg);
+			m_nChannelNum = msg.getInt();
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_nReturnCode = msg.getInt();
 			break;
 		case REGISTER_USER:

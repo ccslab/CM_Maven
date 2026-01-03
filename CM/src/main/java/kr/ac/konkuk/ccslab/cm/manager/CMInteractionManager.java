@@ -2174,52 +2174,33 @@ public class CMInteractionManager {
 
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			user = interInfo.getLoginUsers().findMember(strChannelName);
+			user = interInfo.getLoginUsers().findMember(strChannelName, se.getSenderUuid());
 			if(user == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
-						+"user("+strChannelName+") not found in the login user list!");
+						+"user("+strChannelName+"), uuid("+se.getSenderUuid()
+						+") not found in the login user list!");
 				
 				return;
 			}			
 		}
-		else
+		else	// CLIENT
 		{
-			/*
-			String strCurrentSession = interInfo.getMyself().getCurrentSession();
-			String strCurrentGroup = interInfo.getMyself().getCurrentGroup();
-			
-			CMSession session = interInfo.findSession(strCurrentSession);
-			if(session == null)
-			{
-				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"session("+strCurrentSession+") not found!");
-				return;
-			}
-			CMGroup group = session.findGroup(strCurrentGroup);
-			if(group == null)
-			{
-				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"group("+strCurrentGroup+") not found!");
-				return;
-			}
-			user = group.getGroupUsers().findMember(strChannelName);
-			*/
-			user = findGroupMemberOfClient(strChannelName);
+			user = findGroupMemberOfClient(strChannelName, se.getSenderUuid());
 			if(user == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"user("+strChannelName+") not found!");
+						+"user("+strChannelName+"), uuid("+se.getSenderUuid()
+						+") not found in the group member table!");
 				return;
 			}
 		}
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(strMyName);
-		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChKey);
+		seAck.setChannelUuid(interInfo.getMyself().getUuid());
 
 		// The receiving channel is included in the Selector with the nonblocking mode.
 		// This channel must be taken out from the Selector and changed to the blocking mode.
@@ -2263,15 +2244,14 @@ public class CMInteractionManager {
 				// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
+				seAck.setDistributionUuid(se.getSenderUuid());
 				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
 						.getServerName());
 			}
 			else
 			{
-				CMEventManager.unicastEvent(seAck, user.getName());
+				CMEventManager.unicastEvent(seAck, user.getName(), se.getSenderUuid());
 			}
-			seAck = null;
-			se = null;
 			return;
 		}
 		
@@ -2305,17 +2285,15 @@ public class CMInteractionManager {
 			// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
-			ret = CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
+			seAck.setDistributionUuid(se.getSenderUuid());
+			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
 					.getServerName());
 		}
 		else
 		{
-			ret = CMEventManager.unicastEvent(seAck, user.getName());
+			CMEventManager.unicastEvent(seAck, user.getName(), se.getSenderUuid());
 		}
 		
-		se = null;
-		seAck = null;
-		return;
 	}
 	
 	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg)
