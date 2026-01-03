@@ -889,6 +889,41 @@ public class CMInteractionManager {
 
 		return userList;
 	}
+
+	public synchronized static CMUser findGroupMemberOfClient(String strUser, UUID uuid) {
+		// Modification: Use Singleton instance for CMInteractionInfo
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		String strSession = interInfo.getMyself().getCurrentSession();
+		String strGroup = interInfo.getMyself().getCurrentGroup();
+
+		CMSession session = interInfo.findSession(strSession);
+		if(session == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), session("
+					+strSession+") not found!");
+			return null;
+		}
+
+		CMGroup group = session.findGroup(strGroup);
+		if(group == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), group("
+					+strGroup+") not found!");
+			return null;
+		}
+
+		// Modification: Use findMember(strUser, uuid) to retrieve the specific login session
+		CMUser user = group.getGroupUsers().findMember(strUser, uuid);
+
+		if(user == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), user("
+					+strUser+"), uuid("+uuid.toString()+") not found!");
+			return null;
+		}
+
+		return user;
+	}
 	
 	// find my group member with channel (called only by the client)
 	public synchronized static CMUser findGroupMemberOfClientWithSocketChannel(SelectableChannel ch)

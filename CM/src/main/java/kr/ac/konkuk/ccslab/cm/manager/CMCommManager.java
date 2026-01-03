@@ -332,7 +332,7 @@ public class CMCommManager {
 		return ch;		
 	}
 	
-	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget)
+	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, UUID targetUuid)
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -361,11 +361,11 @@ public class CMCommManager {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, targetUuid);
 			if(targetUser == null)
 			{
 				System.err.println("CMCommManager.addBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+						+strTarget+") with UUID("+targetUuid+") not found!");
 				return null;
 			}
 			
@@ -377,8 +377,8 @@ public class CMCommManager {
 		sc = (SocketChannel) scInfo.findChannel(nChKey);
 		if(sc != null)
 		{
-			System.err.println("CMCommManager.addBlockSocketChannel(), channel key("
-					+nChKey+") to the target("+strTarget+") already exists!");
+			System.err.println("CMCommManager.addBlockSocketChannel(), failed!: key("
+					+nChKey+"), target("+strTarget+"), UUID("+targetUuid+")");
 			return null;
 		}
 
@@ -400,19 +400,16 @@ public class CMCommManager {
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-		se.setSender(myself.getName());
-		se.setReceiver(strTarget);
 		se.setChannelName(myself.getName());
 		se.setChannelNum(nChKey);
-		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		se = null;
+		bRet = CMEventManager.unicastEvent(se, strTarget, targetUuid, CMInfo.CM_STREAM, nChKey, true);
 
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMCommManager.addBlockSocketChannel(),successfully requested to add the channel "
-					+ "with the key("+nChKey+") to the target("+strTarget+")");
+					+ "with the key("+nChKey+") to the target("+strTarget+") with UUID("+targetUuid+")");
 		}
-				
+
 		return sc;
 	}
 	
