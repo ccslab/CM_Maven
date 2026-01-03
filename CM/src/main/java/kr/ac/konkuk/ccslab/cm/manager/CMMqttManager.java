@@ -76,16 +76,7 @@ public class CMMqttManager extends CMServiceManager {
 			byte willQoS, boolean bWillFlag, boolean bCleanSession)
 	{
 		// client -> server
-
-		// [Safety Guard] Check Multi-login Scheme
-		// 0: Single Login (Allowed), 1: Multi-login (Blocked for MQTT)
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		if (confInfo.isMultiLoginScheme()) {
-			System.err.println("CMMqttManager.connect(), MQTT service is disabled in Multi-login mode (scheme "
-					+ confInfo.isMultiLoginScheme() + ").");
-			return false;
-		}
-
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.connect(), the system type is SERVER!");
@@ -101,7 +92,15 @@ public class CMMqttManager extends CMServiceManager {
 					+ "server!");
 			return false;
 		}
-		
+
+		// [Safety Guard] Check Multi-login Scheme
+		// 0: Single Login (Allowed), 1: Multi-login (Blocked for MQTT)
+		if (confInfo.isMultiLoginScheme()) {
+			System.err.println("CMMqttManager.connect(), MQTT service is disabled in Multi-login mode (scheme "
+					+ confInfo.isMultiLoginScheme() + ").");
+			return false;
+		}
+
 		// make CONNECT event
 		CMMqttEventCONNECT conEvent = new CMMqttEventCONNECT();
 		// set CM event header
