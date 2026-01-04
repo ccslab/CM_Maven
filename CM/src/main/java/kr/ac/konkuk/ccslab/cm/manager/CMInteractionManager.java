@@ -2298,7 +2298,6 @@ public class CMInteractionManager {
 	
 	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
@@ -2308,6 +2307,7 @@ public class CMInteractionManager {
 		CMChannelInfo<Integer> scList = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannel = se.getChannelName();
+		UUID channelUuid = se.getChannelUuid();
 		int nChKey = se.getChannelNum();
 		CMSendFileInfo sfInfo = null;
 		
@@ -2327,7 +2327,7 @@ public class CMInteractionManager {
 		}
 		else
 		{
-			targetUser = findGroupMemberOfClient(strChannel);
+			targetUser = findGroupMemberOfClient(strChannel, channelUuid);
 			if(targetUser == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
@@ -2340,7 +2340,7 @@ public class CMInteractionManager {
 		if(se.getReturnCode() == 0)
 		{
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
-					+"server("+strChannel+"), channel key("+nChKey+").");
+					+"name ("+strChannel+"), uuid( "+channelUuid+"), channel key("+nChKey+").");
 			
 			scList.removeChannel(nChKey);
 			return;
@@ -2348,22 +2348,20 @@ public class CMInteractionManager {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
-					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
+			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for name("
+					+strChannel+"), uuid("+channelUuid+"), channel key("+se.getChannelNum()+").");
 			System.out.println("delay: "+(System.currentTimeMillis()-commInfo.getStartTime()));
 		}
 
 		// check whether there is sending file information that is not started to be sent
-		sfInfo = fInfo.findSendFileInfoNotStarted(strChannel);
-		if(sfInfo != null && (fInfo.findSendFileInfoOngoing(strChannel) == null))
+		sfInfo = fInfo.findSendFileInfoNotStarted(strChannel, channelUuid);
+		if(sfInfo != null && (fInfo.findSendFileInfoOngoing(strChannel, channelUuid) == null))
 		{
 			// set the dedicated channel to the sending file info
 			sfInfo.setSendChannel((SocketChannel)scList.findChannel(nChKey));
 			// resume the file-transfer by calling sendSTART_FILE_TRANSFER_CHAN() method
 			CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN(sfInfo);
 		}
-		se = null;
-		return;
 	}
 	
 	private static void processREMOVE_BLOCK_SOCKET_CHANNEL(CMMessage msg)
