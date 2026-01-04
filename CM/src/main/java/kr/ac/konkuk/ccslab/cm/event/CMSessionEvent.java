@@ -262,9 +262,11 @@ public class CMSessionEvent extends CMEvent {
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
-	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <br>The name of sender (a server or client) to which the target establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
 	 * <br>the index(&gt;=0) for the socket channel.</li>
+	 * <li>channel uuid: {@link CMSessionEvent#getChannelUuid()}
+	 * <br>the uuid of channel</li>
 	 * </ul>
 	 */
 	public static final int ADD_BLOCK_SOCKET_CHANNEL = 22;
@@ -278,11 +280,11 @@ public class CMSessionEvent extends CMEvent {
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
-	 * <br>The name of itself (a server or client) to which the client establishes a connection.</li>
+	 * <br>The name of sender (a server or client) to which the target establishes a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
 	 * <br>the index(&gt;=0) for the socket channel.</li>
 	 * <li>channel uuid: {@link CMSessionEvent#getChannelUuid()}
-	 * <br>the uuid of itself</li>
+	 * <br>the uuid of channel</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: channel addition at the server has completed.
 	 * <br>other value: channel addition at the server has failed.</li>
