@@ -2377,13 +2377,16 @@ public class CMInteractionManager {
 		ByteBuffer recvBuf = null;
 		int nRecvBytes = -1;
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// If this node is not the receiver of the received event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && !Objects.equals(myUuid, se.getReceiverUuid())))
 		{
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL(), "
-					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+					+"receiver("+se.getReceiver()+"), uuid("+se.getReceiverUuid()+") is not me("+strMyName
+					+", "+myUuid+").");
 			return;
 		}
 
@@ -2487,38 +2490,28 @@ public class CMInteractionManager {
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> scInfo = null;
 		SocketChannel sc = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		int nChKey = se.getChannelNum();
 		String strTarget = se.getChannelName();
+		UUID targetUuid = se.getChannelUuid();
 		boolean result = false;
 		
 		// If this node is not the receiver of the received event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && !Objects.equals(myUuid, se.getReceiverUuid())))
 		{
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), "
-					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+					+"receiver("+se.getReceiver()+"), uuid("+se.getReceiverUuid()+") is not me("+strMyName
+					+", "+myUuid+").");
 			return;
 		}
 
 		if(se.getReturnCode() == 1)
 		{
-			/*
-			if(strServer.equals(interInfo.getDefaultServerInfo().getServerName()))
-				serverInfo = interInfo.getDefaultServerInfo();
-			else
-				serverInfo = interInfo.findAddServer(strServer);
-				
-			if(serverInfo == null)
-			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"server information not found: server("+strServer+"), channel key("+nChKey+")");
-					
-				return;
-			}
-			*/
 			serverInfo = CMInteractionManager.findServer(strTarget);
 			if(serverInfo != null)
 			{
@@ -2526,12 +2519,11 @@ public class CMInteractionManager {
 			}
 			else
 			{
-				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget
-				);
+				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, targetUuid);
 				if(targetUser == null)
 				{
 					System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-							+" target("+strTarget+") not found!");
+							+" target("+strTarget+"), uuid("+targetUuid+") not found!");
 					return;
 				}
 				scInfo = targetUser.getBlockSocketChannelInfo();
@@ -2544,8 +2536,7 @@ public class CMInteractionManager {
 			{
 				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
 						+"the socket channel not found: channel key("
-						+nChKey+"), target("+strTarget+")");
-				
+						+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 				return;
 			}
 			
@@ -2554,23 +2545,21 @@ public class CMInteractionManager {
 			{
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-							+"succeeded : channel key("+nChKey+"), target("+strTarget+")");
+							+"succeeded : channel key("+nChKey+"), target("
+							+strTarget+"), uuid("+targetUuid+").");
 			}
 			else
 			{
 				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
 						+"failed to remove the channel : channel key("
-						+nChKey+"), target("+strTarget+")");
+						+nChKey+"), target("+strTarget+"), uuid("+targetUuid+").");
 			}
-			
-			return;
-		}
+		}	// return code = 1
 		else
 		{
-			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails to accept "
-					+" the removal request of the channel: key("
-					+nChKey+"), target("+strTarget+")");
-			return;			
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails " +
+					"to accept the removal request of the channel: key("+nChKey+"), target("+strTarget
+					+"), uuid("+targetUuid+")");
 		}
 			
 	}
