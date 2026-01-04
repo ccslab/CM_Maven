@@ -306,9 +306,11 @@ public class CMSessionEvent extends CMEvent {
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()} 
-	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <br>The name of sender(a server or a client) which disconnects a connection.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
 	 * <br>the index(&gt;=0) for the socket channel.</li>
+	 * <li>channel uuid: {@link CMSessionEvent#getChannelUuid()}
+	 * <br>the uuid of channel</li>
 	 * </ul>
 	 */
 	public static final int REMOVE_BLOCK_SOCKET_CHANNEL = 24;
@@ -322,9 +324,11 @@ public class CMSessionEvent extends CMEvent {
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>channel name: {@link CMSessionEvent#getChannelName()}
-	 * <br>The name of a server to which the client establishes a connection.</li>
+	 * <br>The name of sender(a server or a client) from which the connection is disconnected.</li>
 	 * <li>channel index: {@link CMSessionEvent#getChannelNum()}
 	 * <br>the index(&gt;=0) for the socket channel.</li>
+	 * <li>channel uuid: {@link CMSessionEvent#getChannelUuid()}
+	 * <br>the uuid of sender channel</li>
 	 * <li>return code: {@link CMSessionEvent#getReturnCode()}
 	 * <br>0: the channel has been removed successfully.
 	 * <br>other value: channel removal at the server has failed.</li>
@@ -1238,16 +1242,24 @@ public class CMSessionEvent extends CMEvent {
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 		case ADD_BLOCK_SOCKET_CHANNEL:
-		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
 			nByteNum += Integer.BYTES;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
-		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
 			nByteNum += 2*Integer.BYTES;
 			break;
 		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
+			nByteNum += 2*Integer.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_channelUuid).getBytes().length;
+			break;
+		case REMOVE_BLOCK_SOCKET_CHANNEL:
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
+			nByteNum += Integer.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_channelUuid).getBytes().length;
+			break;
+		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
 			nByteNum += 2*Integer.BYTES;
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_channelUuid).getBytes().length;
@@ -1384,14 +1396,23 @@ public class CMSessionEvent extends CMEvent {
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 		case ADD_BLOCK_SOCKET_CHANNEL:
-		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			putStringToByteBuffer(m_strChannelName);
 			m_bytes.putInt(m_nChannelNum);
 			break;
+		case REMOVE_BLOCK_SOCKET_CHANNEL:
+			putStringToByteBuffer(m_strChannelName);
+			m_bytes.putInt(m_nChannelNum);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_channelUuid));
+			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
+			putStringToByteBuffer(m_strChannelName);
+			m_bytes.putInt(m_nChannelNum);
+			m_bytes.putInt(m_nReturnCode);
+			break;
 		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			putStringToByteBuffer(m_strChannelName);
 			m_bytes.putInt(m_nChannelNum);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_channelUuid));
 			m_bytes.putInt(m_nReturnCode);
 			break;
 		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
@@ -1516,20 +1537,29 @@ public class CMSessionEvent extends CMEvent {
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 		case ADD_BLOCK_SOCKET_CHANNEL:
-		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
 			break;
+		case REMOVE_BLOCK_SOCKET_CHANNEL:
+			m_strChannelName = getStringFromByteBuffer(msg);
+			m_nChannelNum = msg.getInt();
+			m_channelUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
+			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
+			m_strChannelName = getStringFromByteBuffer(msg);
+			m_nChannelNum = msg.getInt();
+			m_nReturnCode = msg.getInt();
+			break;
 		case REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
+			m_channelUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_nReturnCode = msg.getInt();
 			break;
 		case ADD_BLOCK_SOCKET_CHANNEL_ACK:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
-			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
+			m_channelUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_nReturnCode = msg.getInt();
 			break;
 		case REGISTER_USER:
