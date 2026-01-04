@@ -1394,15 +1394,14 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean addBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer serverInfo = null;
-		CMUser targetUser = null;
 		SocketChannel sc = null;
-		String strTargetSSCAddress = null;
-		int nTargetSSCPort = -1;
-		CMChannelInfo<Integer> scInfo = null;
+		List<CMUser> targetUserList = null;
+		List<String> targetSSCAddressList = new ArrayList<>();
+		List<Integer> targetSSCPortList = new ArrayList<>();
+		List<CMChannelInfo<Integer>> scInfoList = new ArrayList<>();
 		boolean bRet = false;
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
@@ -1416,70 +1415,93 @@ public class CMClientStub extends CMStub {
 		serverInfo = CMInteractionManager.findServer(strTarget);
 		if( serverInfo != null )
 		{
-			scInfo = serverInfo.getBlockSocketChannelInfo();
-			strTargetSSCAddress = serverInfo.getServerAddress();
-			nTargetSSCPort = serverInfo.getServerPort();			
+			scInfoList.add(serverInfo.getBlockSocketChannelInfo());
+			targetSSCAddressList.add(serverInfo.getServerAddress());
+			targetSSCPortList.add(serverInfo.getServerPort());
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
-			if(targetUser == null)
+			// [Modified] If target is client, find all login members (devices)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null || targetUserList.isEmpty())
 			{
-				System.err.println("CMClientStub.addBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+				System.err.println("CMClientStub.addBlockSocketChannel(), the list of target user("
+						+strTarget+") not found or empty!");
 				return false;
 			}
-			
-			scInfo = targetUser.getBlockSocketChannelInfo();
-			strTargetSSCAddress = targetUser.getHost();
-			nTargetSSCPort = targetUser.getSSCPort();
-		}		
-	
-		sc = (SocketChannel) scInfo.findChannel(nChKey);
-		if(sc != null)
-		{
-			System.err.println("CMClientStub.addBlockSocketChannel(), channel key("
-					+nChKey+") to the target("+strTarget+") already exists!");
-			return false;
-		}
-		
-		////////// for Android client where network-related methods must be called in a separate thread
-		////////// rather than the MainActivity thread
-		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				strTargetSSCAddress, nTargetSSCPort, true);
-		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
-		Future<SelectableChannel> future = es.submit(task);
-		try {
-			sc = (SocketChannel) future.get();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-		//////////
-		
-		if(sc == null)
-		{
-			System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("
-					+nChKey+"), target("+strTarget+")");
-			return false;
-		}
-		scInfo.addChannel(nChKey, sc);
-		
-		CMSessionEvent se = new CMSessionEvent();
-		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-		se.setSender(interInfo.getMyself().getName());
-		se.setReceiver(strTarget);
-		se.setChannelName(getMyself().getName());
-		se.setChannelNum(nChKey);
-		//send(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		se = null;
 
-		if(bRet && CMInfo._CM_DEBUG)
+			// [Modified] Add all found users' info to lists
+			for(CMUser targetUser : targetUserList)
+			{
+				scInfoList.add(targetUser.getBlockSocketChannelInfo());
+				targetSSCAddressList.add(targetUser.getHost());
+				targetSSCPortList.add(targetUser.getSSCPort());
+			}
+		}
+
+		// [Modified] Iterate through all targets (server or multiple client devices)
+		for(int i = 0; i < scInfoList.size(); i++)
 		{
-			System.out.println("CMClientStub.addBlockSocketChannel(),successfully requested to add the channel "
-					+ "with the key("+nChKey+") to the target("+strTarget+")");
+			CMUser targetUser = null;
+			if(targetUserList != null) targetUser = targetUserList.get(i);
+
+			CMChannelInfo<Integer> scInfo = scInfoList.get(i);
+			String strTargetSSCAddress = targetSSCAddressList.get(i);
+			int nTargetSSCPort = targetSSCPortList.get(i);
+
+			sc = (SocketChannel) scInfo.findChannel(nChKey);
+			if(sc != null)
+			{
+				System.err.println("CMClientStub.addBlockSocketChannel(), channel key("
+						+nChKey+") already exists.");
+				continue; // [Modified] Continue to next target instead of returning false
+			}
+
+			// [Modified] Use ExecutorService for channel opening task
+			CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+					strTargetSSCAddress, nTargetSSCPort, true);
+			ExecutorService es = CMThreadInfo.getInstance().getExecutorService(); // [Modified] Singleton access
+			Future<SelectableChannel> future = es.submit(task);
+			try {
+				sc = (SocketChannel) future.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
+
+			if(sc == null)
+			{
+				System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("
+						+nChKey+"), target("+strTarget+")");
+				continue;
+			}
+
+			scInfo.addChannel(nChKey, sc);
+
+			CMSessionEvent se = new CMSessionEvent();
+			se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
+			se.setChannelName(interInfo.getMyself().getName());
+			se.setChannelNum(nChKey);
+       		// [Modified] Set channel UUID to my UUID [cite: 51]
+			se.setChannelUuid(interInfo.getMyself().getUuid());
+
+			// [Modified] Determine target UUID
+			UUID targetUuid = null;
+			if(targetUser != null) targetUuid = targetUser.getUuid();
+
+        	// [Modified] Send Unicast Event with target UUID [cite: 53]
+			// se.setSender() and se.setReceiver() are omitted (set in unicastEvent)
+			bRet = CMEventManager.unicastEvent(se, strTarget, targetUuid, CMInfo.CM_STREAM,
+					nChKey, 0, true);
+
+			if(bRet)
+			{
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMClientStub.addBlockSocketChannel(), successfully requested to add "
+							+ "the channel with the key("+nChKey+") to the target("+strTarget+")"
+							+ (targetUuid != null ? ", uuid("+targetUuid+")" : "") );
+				}
+			}
 		}
 				
 		return true;				
