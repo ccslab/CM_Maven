@@ -2159,13 +2159,16 @@ public class CMInteractionManager {
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
+		UUID channelUuid = se.getChannelUuid();
 		int nChKey = se.getChannelNum();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser user = null;
 		
 		// If this node is not the receiver of this event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && Objects.equals(se.getReceiverUuid(), myUuid)))
 		{
 			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
 					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
@@ -2174,11 +2177,12 @@ public class CMInteractionManager {
 
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			user = interInfo.getLoginUsers().findMember(strChannelName, se.getSenderUuid());
+			//user = interInfo.getLoginUsers().findMember(strChannelName, se.getSenderUuid());
+			user = interInfo.getLoginUsers().findMember(strChannelName, channelUuid);
 			if(user == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
-						+"user("+strChannelName+"), uuid("+se.getSenderUuid()
+						+"user("+strChannelName+"), uuid("+channelUuid
 						+") not found in the login user list!");
 				
 				return;
@@ -2186,11 +2190,12 @@ public class CMInteractionManager {
 		}
 		else	// CLIENT
 		{
-			user = findGroupMemberOfClient(strChannelName, se.getSenderUuid());
+			//user = findGroupMemberOfClient(strChannelName, se.getSenderUuid());
+			user = findGroupMemberOfClient(strChannelName, channelUuid);
 			if(user == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"user("+strChannelName+"), uuid("+se.getSenderUuid()
+						+"user("+strChannelName+"), uuid("+channelUuid
 						+") not found in the group member table!");
 				return;
 			}
@@ -2244,13 +2249,13 @@ public class CMInteractionManager {
 				// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
-				seAck.setDistributionUuid(se.getSenderUuid());
+				seAck.setDistributionUuid(channelUuid);
 				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
 						.getServerName());
 			}
 			else
 			{
-				CMEventManager.unicastEvent(seAck, user.getName(), se.getSenderUuid());
+				CMEventManager.unicastEvent(seAck, user.getName(), channelUuid);
 			}
 			return;
 		}
@@ -2285,13 +2290,13 @@ public class CMInteractionManager {
 			// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
-			seAck.setDistributionUuid(se.getSenderUuid());
+			seAck.setDistributionUuid(channelUuid);
 			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
 					.getServerName());
 		}
 		else
 		{
-			CMEventManager.unicastEvent(seAck, user.getName(), se.getSenderUuid());
+			CMEventManager.unicastEvent(seAck, user.getName(), channelUuid);
 		}
 		
 	}
@@ -2301,6 +2306,7 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMServer targetServer = null;
 		CMUser targetUser = null;
@@ -2312,7 +2318,8 @@ public class CMInteractionManager {
 		CMSendFileInfo sfInfo = null;
 		
 		// If this node is not the receiver of this event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && !Objects.equals(myUuid, se.getReceiverUuid())))
 		{
 			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
 					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");

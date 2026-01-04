@@ -1241,9 +1241,13 @@ public class CMSessionEvent extends CMEvent {
 				+ m_strSessionName.getBytes().length;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
+			nByteNum += Integer.BYTES;
+			break;
 		case ADD_BLOCK_SOCKET_CHANNEL:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
 			nByteNum += Integer.BYTES;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_channelUuid).getBytes().length;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
@@ -1395,9 +1399,13 @@ public class CMSessionEvent extends CMEvent {
 			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
+			putStringToByteBuffer(m_strChannelName);
+			m_bytes.putInt(m_nChannelNum);
+			break;
 		case ADD_BLOCK_SOCKET_CHANNEL:
 			putStringToByteBuffer(m_strChannelName);
 			m_bytes.putInt(m_nChannelNum);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_channelUuid));
 			break;
 		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			putStringToByteBuffer(m_strChannelName);
@@ -1536,9 +1544,13 @@ public class CMSessionEvent extends CMEvent {
 			m_strSessionName = getStringFromByteBuffer(msg);
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
+			m_strChannelName = getStringFromByteBuffer(msg);
+			m_nChannelNum = msg.getInt();
+			break;
 		case ADD_BLOCK_SOCKET_CHANNEL:
 			m_strChannelName = getStringFromByteBuffer(msg);
 			m_nChannelNum = msg.getInt();
+			m_channelUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			break;
 		case REMOVE_BLOCK_SOCKET_CHANNEL:
 			m_strChannelName = getStringFromByteBuffer(msg);
