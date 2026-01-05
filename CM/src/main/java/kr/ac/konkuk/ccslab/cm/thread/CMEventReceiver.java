@@ -82,6 +82,7 @@ public class CMEventReceiver implements Runnable {
 
 			if(eventSync.isWaiting() && !cme.getSender().isEmpty() && 
 					cme.getSender().equals(eventSync.getWaitedReceiver()) &&
+					Objects.equals(cme.getSenderUuid(), eventSync.getWaitedReceiverUuid()) &&
 					cme.getType() == eventSync.getWaitedEventType() && 
 					cme.getID() == eventSync.getWaitedEventID())
 			{
@@ -92,7 +93,7 @@ public class CMEventReceiver implements Runnable {
 					eventSync.notify();
 				}
 				// initialize waited event info
-				eventSync.setWaitedEvent(-1, -1, null);
+				eventSync.setWaitedEvent(-1, -1, null, null);
 			}
 			else if(eventSync.isWaiting() && 
 					eventSync.getWaitedEventType() == cme.getType() &&
@@ -107,7 +108,7 @@ public class CMEventReceiver implements Runnable {
 					{
 						eventSync.notify();
 						// initialize waited event info
-						eventSync.setWaitedEvent(-1, -1, null);
+						eventSync.setWaitedEvent(-1, -1, null, null);
 						eventSync.setMinNumWaitedEvents(0);
 					}
 				}
