@@ -2312,14 +2312,32 @@ public class CMStub {
 	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
 	public double measureOutputThroughput(String strTarget) {
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureOutputThroughput() called..");
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureOutputThroughput(strTarget);
+		// [Modified] Find the UUID list of the target
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+
+		// [Modified] Check if the target exists
+		if(uuidList == null || uuidList.isEmpty()) {
+			System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget + ") not found!");
+			return -1;
+		}
+
+		// [Modified] Check if the target has multiple logins
+		if(uuidList.size() > 1) {
+			System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget +
+					") has multiple active logins! The throughput measurement is not supported for multiple logins.");
+			return -1;
+		}
+
+		// [Modified] Get the target UUID (0-th member)
+		UUID targetUuid = uuidList.get(0);
+
+		double speed = CMCommManager.measureOutputThroughput(strTarget, targetUuid);
 		return speed;
 	}
 	
