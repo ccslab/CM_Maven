@@ -642,13 +642,11 @@ public class CMCommManager {
 		return nTotalSentByteNum;
 	}
 
-	public static double measureInputThroughput(String target) {
+	public static double measureInputThroughput(String target, UUID targetUuid) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureInputThroughput() called..");
-			System.out.println("target = " + target);
+			System.out.println("target (" + target + ", target uuid(" + targetUuid + ").");
 		}
-
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
@@ -669,16 +667,16 @@ public class CMCommManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
-				target, CMInfo.FILE_OVERWRITE);
+				target, targetUuid, CMInfo.FILE_OVERWRITE);
 
 		if(!bReturn)
 			return -1;
 
 		eventSync.init();
 		if(confInfo.isFileTransferScheme())
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN, target, targetUuid);
 		else
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER, target, targetUuid);
 
 		synchronized(eventSync)
 		{
@@ -715,13 +713,12 @@ public class CMCommManager {
 		return speed;
 	}
 
-	public static double measureOutputThroughput(String target) {
+	public static double measureOutputThroughput(String target, UUID targetUuid) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureOutputThroughput() called..");
 			System.out.println("target = " + target);
+			System.out.println("target (" + target + ", target uuid(" + targetUuid + ").");
 		}
-
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
@@ -743,7 +740,7 @@ public class CMCommManager {
 		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + CMInfo.THROUGHPUT_TEST_FILE;
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
-		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, target,
+		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, target, targetUuid,
 				CMInfo.FILE_OVERWRITE, -1);
 
 		if(!bReturn)
@@ -751,9 +748,9 @@ public class CMCommManager {
 
 		eventSync.init();
 		if(confInfo.isFileTransferScheme())
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, target, targetUuid);
 		else
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK, target, targetUuid);
 
 		synchronized(eventSync)
 		{
