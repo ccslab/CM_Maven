@@ -1525,14 +1525,17 @@ public class CMClientStub extends CMStub {
 	 */
 	public SocketChannel syncAddBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer serverInfo = null;
-		CMUser targetUser = null;
 		SocketChannel sc = null;
 		String strTargetSSCAddress = null;
 		int nTargetSSCPort = -1;
+
+		List<CMUser> targetUserList = null;
+		CMUser targetUser = null;
+		UUID targetUuid = null;
+
 		CMChannelInfo<Integer> scInfo = null;
 		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
@@ -1556,14 +1559,27 @@ public class CMClientStub extends CMStub {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
-			if(targetUser == null)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null  || targetUserList.isEmpty())
 			{
 				System.err.println("CMClientStub.syncAddBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+						+strTarget+") list not found!");
 				return null;
 			}
-			
+
+			// [Modified] Check if the target user has multiple active logins
+			// Synchronous addition is not supported for multiple logins
+			if(targetUserList.size() > 1)
+			{
+				System.err.println("CMClientStub.syncAddBlockSocketChannel(), cannot synchronously add "
+						+ "a blocking socket channel to target user("+strTarget+") while the user has "
+						+ "multiple active logins!");
+				return null;
+			}
+
+			// [Modified] Proceed with the single target device
+			targetUser = targetUserList.get(0);
+			targetUuid = targetUser.getUuid();
 			scInfo = targetUser.getBlockSocketChannelInfo();
 			strTargetSSCAddress = targetUser.getHost();
 			nTargetSSCPort = targetUser.getSSCPort();
@@ -1597,64 +1613,48 @@ public class CMClientStub extends CMStub {
 		if(sc == null)
 		{
 			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed!: key("
-					+nChKey+"), target("+strTarget+")");
+					+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 			return null;
 		}
 		scInfo.addChannel(nChKey, sc);
 
+		// [Modified] Use CMEventSynchronizer with UUID
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, 
-				CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK, strTarget);			
+				CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK, strTarget, targetUuid);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-		se.setSender(interInfo.getMyself().getName());
-		se.setReceiver(strTarget);
 		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nChKey);
-		//boolean bRequestResult = send(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		
+		se.setChannelUuid(getMyself().getUuid());
+
 		// The ADD_BLOCK_SOCKET_CHANNEL event is directly sent to the target node 
 		// so that the target can be informed which channel should be changed its mode 
 		// from non-blocking to blocking mode.
-		boolean bRequestResult = CMEventManager.unicastEvent(se, strTarget, 
-				CMInfo.CM_STREAM, nChKey, true);
-		if(!bRequestResult)
+		boolean bRequestResult = CMEventManager.unicastEvent(se, strTarget, targetUuid,
+				CMInfo.CM_STREAM, nChKey, 0, true);
+		if(!bRequestResult) {
+			// [Modified] Reset waited event on failure
+			eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, -1, null, null);
 			return null;
-		
-		se = null;
+		}
 
+		// wait for the ack event
 		synchronized(eventSync)
 		{
 			try {
-				eventSync.wait(30000);  // timeout 30s
+				eventSync.wait(20000);  // timeout 20s
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
 
-		nReturnCode = replyEvent.getReturnCode();
-		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
+		replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+		if(replyEvent == null)
 		{
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMClientStub.syncAddBlockSocketChannel(), "
-						+ "successfully add the channel info at the target("+strTarget
-						+"), key("+nChKey+")");
-			}
-		}
-		else if(nReturnCode == 0) // failed to add the new channel info (key, channel) at the server
-		{
-			System.err.println("CMClientStub.syncAddBlockSocketChannel(), "
-					+ "failed to add the channel info at the target("+strTarget
-					+"), key("+nChKey+")");
-			sc = null;	// the new socket channel is closed and removed at the CMInteractionManager
-		}
-		else
-		{
-			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed: "
-					+ "return code("+nReturnCode+")");
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed to receive the ack event!");
+			// remove the temporary channel
 			////////// for Android client where network-related methods must be called in a separate thread
 			////////// rather than the MainActivity thread
 			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
@@ -1665,11 +1665,49 @@ public class CMClientStub extends CMStub {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
-			
-			//scInfo.removeChannel(nChKey);
 			//////////
-			
-			sc = null;
+			return null;
+		}
+
+		// [Modified] Check return code from reply event
+		nReturnCode = replyEvent.getReturnCode();
+		boolean isFailed = false;
+		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMClientStub.syncAddBlockSocketChannel(), "
+						+ "successfully add the channel info at the target("+strTarget
+						+"), uuid("+targetUuid+"), key("+nChKey+")");
+			}
+		}
+		else if(nReturnCode == 0) // failed to add the new channel info (key, channel) at the server
+		{
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), "
+					+ "failed to add the channel info at the target("+strTarget
+					+"), uuid("+targetUuid+"), key("+nChKey+")");
+			isFailed = true;
+		}
+		else {
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed: "
+					+ "return code("+nReturnCode+")");
+			isFailed = true;
+		}
+
+		if(isFailed)
+		{
+			////////// for Android client where network-related methods must be called in a separate thread
+			////////// rather than the MainActivity thread
+			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
+			try {
+				futureRemoveChannel.get();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+			//////////
+			return null;
 		}
 
 		return sc;		
