@@ -1068,7 +1068,7 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		List<UUID> uuidList = null;
+		List<UUID> uuidList = new ArrayList<>();
 		CMUser myself = interInfo.getMyself();
 		boolean isServer = confInfo.getSystemType().equals("SERVER");
 

@@ -517,7 +517,7 @@ public class CMClientStub extends CMStub {
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.LOGIN_ACK, 
-				strDefServer);
+				strDefServer, null);
 		synchronized(eventSync)
 		{
 			try {
@@ -675,7 +675,7 @@ public class CMClientStub extends CMStub {
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, 
-				CMSessionEvent.RESPONSE_SESSION_INFO, strDefServer);
+				CMSessionEvent.RESPONSE_SESSION_INFO, strDefServer, null);
 		synchronized(eventSync)
 		{
 			try {
@@ -813,7 +813,7 @@ public class CMClientStub extends CMStub {
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.JOIN_SESSION_ACK, 
-				strDefServer);
+				strDefServer, null);
 		synchronized(eventSync)
 		{
 			try {
@@ -1239,7 +1239,8 @@ public class CMClientStub extends CMStub {
 		scInfo.addChannel(nChKey, sc);
 
 		eventSync.init();
-		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK, strServer);
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK,
+				strServer, null);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
@@ -1764,7 +1765,7 @@ public class CMClientStub extends CMStub {
 						+strTarget+") not found!");
 				return false;
 			}
-			
+
 			scInfo = targetUser.getBlockSocketChannelInfo();		
 		}
 				
@@ -1809,10 +1810,11 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean syncRemoveBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
+		UUID targetUuid = null;
+		List<CMUser> targetUserList = null;
 		CMChannelInfo<Integer> scInfo = null;
 		boolean result = false;
 		SocketChannel sc = null;
@@ -1835,14 +1837,27 @@ public class CMClientStub extends CMStub {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
-			if(targetUser == null)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null || targetUserList.isEmpty())
 			{
 				System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), target user("
 						+strTarget+") not found!");
 				return false;
 			}
-			
+
+			// Check if the target user has multiple login devices.
+			// The synchronous removal of a blocking socket channel is not supported
+			// if the target user has multiple login devices.
+			if(targetUserList.size() > 1)
+			{
+				System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), cannot synchronously "
+						+ "remove a blocking socket channel from target user("+strTarget
+						+") while the user has multiple active logins!");
+				return false;
+			}
+
+			targetUser = targetUserList.get(0);
+			targetUuid = targetUser.getUuid();
 			scInfo = targetUser.getBlockSocketChannelInfo();			
 		}
 				
@@ -1856,17 +1871,16 @@ public class CMClientStub extends CMStub {
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, 
-				CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK, strTarget);
+				CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK, strTarget, targetUuid);
 		
 		se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
 		se.setChannelNum(nChKey);
 		se.setChannelName(interInfo.getMyself().getName());
-		result = send(se, strTarget);	// send the event with the default nonblocking socket channel
+		se.setChannelUuid(interInfo.getMyself().getUuid());
+		result = CMEventManager.unicastEvent(se, strTarget, targetUuid);
 		if(!result)
 			return false;
-		
-		se = null;
 		
 		synchronized(eventSync)
 		{
@@ -1884,13 +1898,13 @@ public class CMClientStub extends CMStub {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMClientStub.syncRemoveBlockSocketChannel(), successfully removed the channel "
-						+ "info at the server: "+"key("+nChKey+"), server("+strTarget+")");
+						+ "info at the target: "+"key("+nChKey+"), target("+strTarget+"), uuid("+targetUuid+").");
 			}
 		}
 		else if(nReturnCode == 0) // failed to remove the new channel info (key, channel) at the server
 		{
 			System.err.println("CMClientStub.syncRemoveBlockSocketChannel(),failed to remove the channel info "
-					+ "at the server: key("+nChKey+"), server("+strTarget+")");
+					+ "at the target: key("+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 			result = false;
 		}
 		else

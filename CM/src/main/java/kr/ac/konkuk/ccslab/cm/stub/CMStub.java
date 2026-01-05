@@ -1235,13 +1235,43 @@ public class CMStub {
 	public CMEvent sendrecv(CMEvent cme, String strReceiver, int nWaitEventType, int nWaitEventID, 
 			int nTimeout)
 	{
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.sendrecv() called..");
+			System.out.println("receiver = " + strReceiver);
+		}
+
+		// [Modified] Find the UUID list of the receiver
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
+		UUID receiverUuid = null;
+
+		// [Modified] Check valid target (Server or Single Login Client)
+		if(uuidList == null) {
+			// Case 1: Target is a Server (uuidList is null) -> Proceed with receiverUuid = null
+		}
+		else {
+			// Case 2: Target is a Client
+			if(uuidList.isEmpty()) {
+				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver + ") not found!");
+				return null;
+			}
+
+			if(uuidList.size() > 1) {
+				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver +
+						") has multiple active logins! The sendrecv service is not supported for multiple logins.");
+				return null;
+			}
+
+			// Single login found
+			receiverUuid = uuidList.get(0);
+		}
+
 		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMEvent replyEvent = null;
 
 		eventSync.init();
-		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver);
+		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver, receiverUuid);
 
-		boolean bSendResult = send(cme, strReceiver);
+		boolean bSendResult = CMEventManager.unicastEvent(cme, strReceiver, receiverUuid);
 		if(!bSendResult) return null;
 
 		synchronized(eventSync)
@@ -2283,20 +2313,25 @@ public class CMStub {
 		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
 
 		// [Modified] Check if the target exists
-		if(uuidList == null || uuidList.isEmpty()) {
-			System.err.println("CMStub.measureInputThroughput(), target(" + strTarget + ") not found!");
-			return -1;
-		}
+		UUID targetUuid = null;
+		if(uuidList == null) {
+			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
+		} else {
+			// Case 2: Target is a Client
+			if(uuidList.isEmpty()) {
+				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget + ") not found!");
+				return -1;
+			}
+			// [Modified] Check if the target has multiple logins
+			if(uuidList.size() > 1) {
+				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget +
+						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
+				return -1;
+			}
 
-		// [Modified] Check if the target has multiple logins
-		if(uuidList.size() > 1) {
-			System.err.println("CMStub.measureInputThroughput(), target(" + strTarget +
-					") has multiple active logins! The throughput measurement is not supported for multiple logins.");
-			return -1;
+			// [Modified] Get the target UUID (0-th member)
+			targetUuid = uuidList.get(0);
 		}
-
-		// [Modified] Get the target UUID (0-th member)
-		UUID targetUuid = uuidList.get(0);
 
 		double speed = CMCommManager.measureInputThroughput(strTarget, targetUuid);
 		return speed;
@@ -2322,20 +2357,25 @@ public class CMStub {
 		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
 
 		// [Modified] Check if the target exists
-		if(uuidList == null || uuidList.isEmpty()) {
-			System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget + ") not found!");
-			return -1;
-		}
+		UUID targetUuid = null;
+		if(uuidList == null) {
+			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
+		} else {
+			// Case 2: Target is a Client
+			if(uuidList.isEmpty()) {
+				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget + ") not found!");
+				return -1;
+			}
+			// [Modified] Check if the target has multiple logins
+			if(uuidList.size() > 1) {
+				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget +
+						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
+				return -1;
+			}
 
-		// [Modified] Check if the target has multiple logins
-		if(uuidList.size() > 1) {
-			System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget +
-					") has multiple active logins! The throughput measurement is not supported for multiple logins.");
-			return -1;
+			// [Modified] Get the target UUID (0-th member)
+			targetUuid = uuidList.get(0);
 		}
-
-		// [Modified] Get the target UUID (0-th member)
-		UUID targetUuid = uuidList.get(0);
 
 		double speed = CMCommManager.measureOutputThroughput(strTarget, targetUuid);
 		return speed;
