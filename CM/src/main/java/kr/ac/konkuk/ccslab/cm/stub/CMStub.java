@@ -2273,14 +2273,32 @@ public class CMStub {
 	 * @see CMStub#measureOutputThroughput(String)
 	 */
 	public double measureInputThroughput(String strTarget) {
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureInputThroughput() called..");
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureInputThroughput(strTarget);
+		// [Modified] Find the UUID list of the target
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+
+		// [Modified] Check if the target exists
+		if(uuidList == null || uuidList.isEmpty()) {
+			System.err.println("CMStub.measureInputThroughput(), target(" + strTarget + ") not found!");
+			return -1;
+		}
+
+		// [Modified] Check if the target has multiple logins
+		if(uuidList.size() > 1) {
+			System.err.println("CMStub.measureInputThroughput(), target(" + strTarget +
+					") has multiple active logins! The throughput measurement is not supported for multiple logins.");
+			return -1;
+		}
+
+		// [Modified] Get the target UUID (0-th member)
+		UUID targetUuid = uuidList.get(0);
+
+		double speed = CMCommManager.measureInputThroughput(strTarget, targetUuid);
 		return speed;
 	}
 	

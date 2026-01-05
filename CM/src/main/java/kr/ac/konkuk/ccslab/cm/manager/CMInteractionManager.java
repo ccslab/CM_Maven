@@ -37,6 +37,7 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMClientKeepAliveTask;
 
 import java.sql.*;
+import java.util.stream.Collectors;
 
 public class CMInteractionManager {
 
@@ -1055,6 +1056,76 @@ public class CMInteractionManager {
 			return tServer;
 		else
 			return null;
+	}
+
+	/*
+	 * [Added Method]
+	 * Returns the list of UUIDs for the target user.
+	 * If the target is a server, it returns null because the server does not have a UUID.
+	 * If the target is a client, it returns the list of UUIDs based on the system type and login status.
+	 */
+	public static List<UUID> findUuidList(String strTarget)
+	{
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		List<UUID> uuidList = null;
+		CMUser myself = interInfo.getMyself();
+		boolean isServer = confInfo.getSystemType().equals("SERVER");
+
+		// [Modified] Check if the target is a server.
+		// Whether I am a server or a client, if the target is a server, return null.
+		// Servers do not manage their own UUIDs in this design.
+		boolean isTargetServer = false;
+
+		// 1. Check if the target is myself and I am a server
+		if (isServer && strTarget.equals(myself.getName()))
+		{
+			isTargetServer = true;
+		}
+		// 2. Check default server
+		else
+		{
+			CMServer serverInfo = interInfo.getDefaultServerInfo();
+			if (serverInfo != null && strTarget.equals(serverInfo.getServerName()))
+			{
+				isTargetServer = true;
+			}
+			// 3. Check additional servers
+			else if (interInfo.findAddServer(strTarget) != null)
+			{
+				isTargetServer = true;
+			}
+		}
+
+		// If target is a server, return null immediately.
+		if (isTargetServer)
+		{
+			return null;
+		}
+
+		// Process when the target is a client
+		List<CMUser> targetList;
+		if (isServer)
+		{
+			// Case: I am a server, and the target is a client.
+			// Find UUIDs from the login users.
+			targetList = interInfo.getLoginUsers().findMemberList(strTarget);
+		}
+		else
+		{
+			// Case: I am a client, and the target is a client (myself or another group member).
+			// If strTarget is equal to my name (client), the list has the other concurrent-login user with my name.
+			targetList = findGroupMemberOfClient(strTarget);
+		}
+
+		if (targetList != null && !targetList.isEmpty())
+		{
+			uuidList = targetList.stream()
+					.map(CMUser::getUuid)
+					.collect(Collectors.toList());
+		}
+
+		return uuidList;
 	}
 	
 	public synchronized static boolean isChannelBelongsToServer(SelectableChannel ch, CMServer server)
