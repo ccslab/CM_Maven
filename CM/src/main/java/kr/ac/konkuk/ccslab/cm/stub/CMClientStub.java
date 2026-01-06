@@ -1736,14 +1736,13 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean removeBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
-		CMUser targetUser = null;
-		CMChannelInfo<Integer> scInfo = null;
-		boolean result = false;
-		SocketChannel sc = null;
-		CMSessionEvent se = null;
+		// [Modified] List for target users (to support multiple logins) [cite: 78]
+		List<CMUser> targetUserList = null;
+		// [Modified] List for channel info (to support multiple logins) [cite: 78]
+		List<CMChannelInfo<Integer>> scInfoList = new ArrayList<>();
+		boolean result = true;
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
 		{
@@ -1754,38 +1753,77 @@ public class CMClientStub extends CMStub {
 		serverInfo = CMInteractionManager.findServer(strTarget);
 		if(serverInfo != null)
 		{
-			scInfo = serverInfo.getBlockSocketChannelInfo();			
+			// Target is a server
+			scInfoList.add(serverInfo.getBlockSocketChannelInfo());
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
-			if(targetUser == null)
+			// Target is a client (find all login devices)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null || targetUserList.isEmpty())
 			{
 				System.err.println("CMClientStub.removeBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+						+strTarget+") list not found!");
 				return false;
 			}
 
-			scInfo = targetUser.getBlockSocketChannelInfo();		
+			// Add block socket channel info of all login devices
+			for(CMUser targetUser : targetUserList)
+			{
+				scInfoList.add(targetUser.getBlockSocketChannelInfo());
+			}
 		}
-				
-		sc = (SocketChannel) scInfo.findChannel(nChKey);
-		if(sc == null)
+
+		// [Modified] Iterate through the list of targets [cite: 83]
+		for(int i = 0; i < scInfoList.size(); i++)
 		{
-			System.err.println("CMClientStub.removeBlockSocketChannel(), "
-					+ "socket channel not found! key("+nChKey+"), target("+strTarget+").");
-			return false;
+			CMUser targetUser = null;
+			UUID targetUuid = null;
+
+			// [Modified] Get target UUID if it's a client [cite: 84]
+			if(targetUserList != null)
+			{
+				targetUser = targetUserList.get(i);
+				targetUuid = targetUser.getUuid();
+			}
+
+			CMChannelInfo<Integer> scInfo = scInfoList.get(i);
+			SocketChannel sc = (SocketChannel) scInfo.findChannel(nChKey);
+
+			// [Modified] Check if the socket channel exists [cite: 85, 86]
+			if(sc == null)
+			{
+				System.err.println("CMClientStub.removeBlockSocketChannel(), socket channel not found! Key("
+						+nChKey+"), target("+strTarget+"), target uuid("+targetUuid+").");
+				continue;
+			}
+
+			// [Modified] Send REMOVE_BLOCK_SOCKET_CHANNEL event with UUID [cite: 102]
+			CMSessionEvent se = new CMSessionEvent();
+			se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
+			se.setChannelName(interInfo.getMyself().getName());
+			se.setChannelNum(nChKey);
+			// [Modified] Set Channel UUID (Myself) [cite: 102]
+			se.setChannelUuid(interInfo.getMyself().getUuid());
+
+			// [Modified] Send event with target UUID (unicastEvent handles sender/receiver setup) [cite: 102]
+			boolean bRet = CMEventManager.unicastEvent(se, strTarget, targetUuid);
+			result &= bRet;
+
+			if(bRet) {
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMClientStub.removeBlockSocketChannel(), succeeded. key("+nChKey
+							+"), target ("+strTarget+"), target uuid("+targetUuid+").");
+				}
+			}
+			else {
+				System.err.println("CMClientStub.removeBlockSocketChannel(), failed to send event! key("
+						+nChKey+"), target ("+strTarget+"), target uuid("+targetUuid+").");
+			}
 		}
-		
-		se = new CMSessionEvent();
-		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
-		se.setChannelNum(nChKey);
-		se.setChannelName(interInfo.getMyself().getName());
-		result = send(se, strTarget);	// send the event with the default nonblocking socket channel
-		se = null;
-		
+
 		// The channel will be closed and removed after the client receives the ACK event at the event handler.
-		
 		return result;
 	}
 	
