@@ -748,8 +748,18 @@ public class CMEventManager {
 	{
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMMessage msg = null;
-		
+
+		// [Added] Set the sender and sender UUID if they are not set (initial state)
+		if(cme.getSender().equals(""))
+		{
+			String strMyName = interInfo.getMyself().getName();
+			UUID myUuid = interInfo.getMyself().getUuid();
+			cme.setSender(strMyName);
+			cme.setSenderUuid(myUuid);
+		}
+
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
 		if(bufEvent == null)
 		{
@@ -757,35 +767,40 @@ public class CMEventManager {
 					+cme.getType()+", id: "+cme.getID()+").");
 			return false;
 		}
-		
-		Iterator<CMUser> iter = CMInteractionInfo.getInstance().getLoginUsers().getAllMembers().iterator();
-		CMUser tuser = null;
-		
+
+		// [Modified] Structure of CMMember changed to Hashtable<String, List<CMUser>>.
+		// Previous iterator logic is replaced with nested for-loops to traverse all devices of all users.
+		CMMember loginUsers = interInfo.getLoginUsers();
+
 		switch(opt)
 		{
 		case CMInfo.CM_STREAM:
-			while(iter.hasNext())
+			// [Modified] Iterate over all values(user lists) in the hashtable
+			for(List<CMUser> userList : loginUsers.getAllMembers().values())
 			{
-				tuser = iter.next();
-				SocketChannel sc = (SocketChannel) tuser.getNonBlockSocketChannelInfo().findChannel(nChNum);
-				if( sc == null )
+				// [Modified] Iterate over each device(CMUser) in the list
+				for(CMUser tuser : userList)
 				{
-					System.err.println("CMEventManager.broadcastEvent(), SocketChannel of user("
-							+tuser.getName()+") not found.");
-					continue;
-				}
-				if( !sc.isOpen() )
-				{
-					System.err.println("CMEventManager.broadcastEvent(), SocketChannel of user("
-							+tuser.getName()+") is closed.");
-					continue;
-				}
+					SocketChannel sc = (SocketChannel) tuser.getNonBlockSocketChannelInfo().findChannel(nChNum);
+					if( sc == null )
+					{
+						System.err.println("CMEventManager.broadcastEvent(), SocketChannel of user("
+								+tuser.getName()+"), uuid("+tuser.getUuid()+") not found.");
+						continue;
+					}
+					if( !sc.isOpen() )
+					{
+						System.err.println("CMEventManager.broadcastEvent(), SocketChannel of user("
+								+tuser.getName()+"), uuid("+tuser.getUuid()+") is closed.");
+						continue;
+					}
 
-				sleepForSimTransDelay();
+					sleepForSimTransDelay();
 
-				msg = new CMMessage(bufEvent, sc);
-				sendQueue.push(msg);
-				//CMCommManager.sendMessage(bufEvent, sc);
+					msg = new CMMessage(bufEvent, sc);
+					sendQueue.push(msg);
+					//CMCommManager.sendMessage(bufEvent, sc);
+				}
 			}
 			break;
 		case CMInfo.CM_DATAGRAM:
@@ -795,24 +810,25 @@ public class CMEventManager {
 			{
 				System.err.println("CMEventManager.broadcastEvent(), DatagramChannel("+nChNum
 						+") not found.");
-				bufEvent = null;
 				return false;
 			}
-			while(iter.hasNext())
+			// [Modified] Iterate over all values(user lists) in the hashtable
+			for(List<CMUser> userList : loginUsers.getAllMembers().values())
 			{
-				tuser = iter.next();
+				// [Modified] Iterate over each device(CMUser) in the list
+				for(CMUser tuser : userList)
+				{
+					sleepForSimTransDelay();
 
-				sleepForSimTransDelay();
-
-				InetSocketAddress sockAddr = new InetSocketAddress(tuser.getHost(), tuser.getUDPPort());
-				msg = new CMMessage(bufEvent, dc, sockAddr);
-				sendQueue.push(msg);
-				//CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
+					InetSocketAddress sockAddr = new InetSocketAddress(tuser.getHost(), tuser.getUDPPort());
+					msg = new CMMessage(bufEvent, dc, sockAddr);
+					sendQueue.push(msg);
+					//CMCommManager.sendMessage(bufEvent, dc, tuser.getHost(), tuser.getUDPPort());
+				}
 			}
 			break;
 		default:
 			System.err.println("CMEventManager.broadcastEvent(), incorrect option: "+opt);
-			bufEvent = null;
 			return false;
 		}
 
@@ -824,7 +840,6 @@ public class CMEventManager {
 			System.out.println("event(type: "+cme.getType()+", id: "+cme.getID()+").");
 		}
 		
-		//bufEvent = null;
 		return true;
 	}
 	
