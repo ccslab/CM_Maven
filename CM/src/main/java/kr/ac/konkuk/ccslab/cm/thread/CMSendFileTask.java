@@ -142,7 +142,8 @@ public class CMSendFileTask implements Runnable {
 		{
 			if(lSentSize > lFileSize)
 			{
-				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getFileReceiver()+") already has "
+				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getFileReceiver()
+						+"), receiver uuid("+m_sendFileInfo.getReceiverUuid()+") already has "
 						+ "a bigger size file("+m_sendFileInfo.getFileName()+"); sender size("+lFileSize
 						+ "), receiver size("+lSentSize+")");
 			}
@@ -151,12 +152,13 @@ public class CMSendFileTask implements Runnable {
 			fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);			
 			fe.setFileSender(m_sendFileInfo.getFileSender());
+			fe.setFileSenderUuid(m_sendFileInfo.getFileSenderUuid());
 			fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
+			fe.setFileReceiverUuid(m_sendFileInfo.getFileReceiverUuid());
 			fe.setFileName(m_sendFileInfo.getFileName());
 			fe.setFileSize(m_sendFileInfo.getFileSize());
 			fe.setContentID(m_sendFileInfo.getContentID());
 
-			CMInfo cmInfo = CMInfo.getInstance();
 			if(CMFileTransferManager.isP2PFileTransfer(fe))
 			{
 				if(CMInfo._CM_DEBUG)
@@ -164,13 +166,16 @@ public class CMSendFileTask implements Runnable {
 					System.out.println("CMSendFileTask.run(), isP2PFileTransfer() "
 							+ "returns true.");
 				}
+				// Sender/Receiver is set by unicastEvent if not specified
 				// set event sender and receiver
-				fe.setSender(interInfo.getMyself().getName());
 				String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-				fe.setReceiver(strDefServer);
 				// set distribution fields
 				fe.setDistributionSession("CM_ONE_USER");
 				fe.setDistributionGroup(m_sendFileInfo.getFileReceiver());
+				fe.setDistributionUuid(m_sendFileInfo.getReceiverUuid());
+
+				// Target is the default server
+				CMEventManager.unicastEvent(fe, strDefServer);
 			}
 			else
 			{
@@ -179,20 +184,16 @@ public class CMSendFileTask implements Runnable {
 					System.out.println("CMSendFileTask.run(), isP2PFileTransfer() "
 							+ "returns false.");
 				}
-				// set event sender and receiver
-				fe.setSender(interInfo.getMyself().getName()); // event sender
-				fe.setReceiver(m_sendFileInfo.getFileReceiver()); // event receiver
+				// Sender/Receiver is set by unicastEvent if not specified
+				// Use the method that accepts UUID to support multi-device delivery if needed (or specific target)
+				CMEventManager.unicastEvent(fe, m_sendFileInfo.getFileReceiver(), m_sendFileInfo.getReceiverUuid());
 			}
 			
-			CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
-			m_sendQueue.push(msg);
-			//CMCommManager.sendMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
-			//fe = null;
+			/*CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
+			m_sendQueue.push(msg);*/
 		}
 
 		closeRandomAccessFile(raf);
-		
-		return;
 	}
 	
 	private void closeRandomAccessFile(RandomAccessFile raf)
