@@ -597,6 +597,19 @@ public class CMEventManager {
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 
+		// [Mod] Get CMInteractionInfo instance to access 'myself' object
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+		// [Mod] Set sender and sender UUID if the sender field is empty (initial value)
+		// According to Design Doc 06 (lines 16-19, 250-251)
+		if(cme.getSender().equals(""))
+		{
+			cme.setSender(interInfo.getMyself().getName());
+			cme.setSenderUuid(interInfo.getMyself().getUuid());
+		}
+		// [Mod] Note: Receiver is not set here (n/a) as per Design Doc 06 (line 19),
+		// because this method sends directly to a specific SocketChannel.
+
 		ByteBuffer bufEvent = CMEventManager.marshallEvent(cme);
 		if(bufEvent == null)
 		{
