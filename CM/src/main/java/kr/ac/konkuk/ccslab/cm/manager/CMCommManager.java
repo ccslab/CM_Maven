@@ -413,9 +413,8 @@ public class CMCommManager {
 		return sc;
 	}
 	
-	public static boolean removeBlockSocketChannel(int nChKey, String strTarget)
+	public static boolean removeBlockSocketChannel(int nChKey, String strTarget, UUID targetUuid)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -443,24 +442,7 @@ public class CMCommManager {
 		}
 		else
 		{
-			String strCurrentSession = myself.getCurrentSession();
-			String strCurrentGroup = myself.getCurrentGroup();
-			
-			CMSession session = interInfo.findSession(strCurrentSession);
-			if(session == null)
-			{
-				System.err.println("CMCommManager.removeBlockSocketChannel(), session("
-						+strCurrentSession+") not found!");
-				return false;
-			}
-			CMGroup group = session.findGroup(strCurrentGroup);
-			if(group == null)
-			{
-				System.err.println("CMCommManager.removeBlockSocketChannel(), group("
-						+strCurrentGroup+") not found!");
-				return false;
-			}
-			targetUser = group.getGroupUsers().findMember(strTarget);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, targetUuid);
 			if(targetUser == null)
 			{
 				System.err.println("CMCommManager.removeBlockSocketChannel(), target user("
@@ -475,7 +457,7 @@ public class CMCommManager {
 		if(sc == null)
 		{
 			System.err.println("CMCommManager.removeBlockSocketChannel(), "
-					+ "socket channel not found! key("+nChKey+"), target("+strTarget+").");
+					+ "socket channel not found! key("+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 			return false;
 		}
 		
@@ -483,31 +465,27 @@ public class CMCommManager {
 		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
 		se.setChannelNum(nChKey);
 		se.setChannelName(myself.getName());
+		se.setChannelUuid(myself.getUuid());
 		
-		//result = send(se, strTarget);	// send the event with the default nonblocking socket channel
-
 		// If targetUser is not null, (that is, if the target is a client instead of a server,)
 		// the request event should be forwarded by the default server (internal forwarding of CM).
-		se.setSender(myself.getName());
-		se.setReceiver(strTarget);		
 		if(targetUser != null)
 		{
 			// set distribution fields
 			se.setDistributionSession("CM_ONE_USER");
 			se.setDistributionGroup(strTarget);
-			
+			se.setDistributionUuid(targetUuid);
+
 			// send the event to the default server
 			result = CMEventManager.unicastEvent(se, strDefServer);
 		}
 		else
 		{
 			// send the event to the target
-			result = CMEventManager.unicastEvent(se, strTarget);
+			result = CMEventManager.unicastEvent(se, strTarget, targetUuid);
 		}
-		se = null;
-		
+
 		// The channel will be closed and removed after the client receives the ACK event at the event handler.
-		
 		return result;
 	}
 	
