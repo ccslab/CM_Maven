@@ -2486,8 +2486,6 @@ public class CMInteractionManager {
 
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(strMyName);	// will be set in unicastEvent()
-		seAck.setReceiver(se.getSender());	// will be set in unicastEvent()
 		seAck.setChannelName(strMyName);
 		seAck.setChannelNum(nChKey);
 		seAck.setChannelUuid(interInfo.getMyself().getUuid());
