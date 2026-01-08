@@ -2239,7 +2239,7 @@ public class CMInteractionManager {
 		
 		// If this node is not the receiver of this event,
 		if(!se.getReceiver().contentEquals(strMyName) ||
-				(se.getReceiverUuid() != null && Objects.equals(se.getReceiverUuid(), myUuid)))
+				(se.getReceiverUuid() != null && !Objects.equals(se.getReceiverUuid(), myUuid)))
 		{
 			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
 					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
