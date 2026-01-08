@@ -790,13 +790,13 @@ public class CMInteractionManager {
 		{
 			if(msg.m_ch instanceof SocketChannel)
 			{
-				distributeEvent(cmEvent.getDistributionSession(), cmEvent.getDistributionGroup(), 
-						cmEvent, CMInfo.CM_STREAM);
+				distributeEvent(cmEvent.getDistributionSession(), cmEvent.getDistributionGroup(),
+						cmEvent.getDistributionUuid(), cmEvent, CMInfo.CM_STREAM);
 			}
 			else if(msg.m_ch instanceof DatagramChannel)
 			{
 				distributeEvent(cmEvent.getDistributionSession(), cmEvent.getDistributionGroup(),
-						cmEvent, CMInfo.CM_DATAGRAM);
+						cmEvent.getDistributionUuid(), cmEvent, CMInfo.CM_DATAGRAM);
 			}
 		}
 		
@@ -4067,73 +4067,96 @@ public class CMInteractionManager {
 	}
 
 	// distribute an event to members according to session/group specifier in the event header
-	private static void distributeEvent(String strDistSession, String strDistGroup, CMEvent cme, int opt)
+	private static void distributeEvent(String strDistSession, String strDistGroup, UUID distUuid, CMEvent cme,
+										int opt)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser tuser = null;
+		List<CMUser> tuserList = null;
 		CMSession tSession = null;
 		CMMember tMember = null;
 		CMGroup tGroup = null;
-		
-		if(strDistSession != null && !strDistSession.equals(""))
+
+		// [Added] Check if strDistSession is null or empty
+		if(strDistSession == null || strDistSession.isEmpty())
 		{
-			if(strDistSession.equals("CM_ONE_USER"))	// distribute to one user
+			System.err.println("CMInteractionManager.distributeEvent(), strDistSession is null or empty!");
+			return;
+		}
+
+		// Case 1: Target is a single user (CM_ONE_USER)
+		if(strDistSession.equals("CM_ONE_USER"))
+		{
+			// [Modified] Check if distUuid is provided
+			if( distUuid == null )
 			{
-				tuser = interInfo.getLoginUsers().findMember(strDistGroup);
-				if(tuser == null)
+				// If UUID is null, send to all login devices of the target user
+				tuserList = interInfo.getLoginUsers().findMemberList(strDistGroup);
+				if(tuserList == null || tuserList.isEmpty())
 				{
-					System.out.println("CMInteractionManager.distributeEvent(), target user("
-							+strDistGroup+") not found.");
-					return;
-				}
-				CMEventManager.unicastEvent(cme, strDistGroup, opt);
-			}
-			else if(strDistSession.equals("CM_ALL_SESSION")) // distribute to all session members
-			{
-				Iterator<CMSession> iterSession = interInfo.getSessionList().iterator();
-				while(iterSession.hasNext())
-				{
-					tSession = iterSession.next();
-					tMember = tSession.getSessionUsers();
-					CMEventManager.castEvent(cme, tMember, opt);
-				}
-			}
-			else
-			{
-				tSession = interInfo.findSession(strDistSession);
-				if(tSession == null)
-				{
-					System.out.println("CMInteractionManager.distributeEvent(), session("
-							+strDistSession+") not found.");
+					System.err.println("CMInteractionManager.distributeEvent(), the list of target user("
+							+strDistGroup+") not found or empty!");
 					return;
 				}
 
-				if(strDistGroup.equals("CM_ALL_GROUP"))	// distribute to all group members of a session
+				// Send to all devices (handled by CMEventManager or requires iteration depending on implementation)
+				CMEventManager.unicastEvent(cme, strDistGroup, opt);
+			}
+			else
+			{
+				// If UUID is not null, send to the specific device matching the UUID
+				tuser = interInfo.getLoginUsers().findMember(strDistGroup, distUuid);
+				if( tuser == null )
 				{
-					Iterator<CMGroup> iterGroup = tSession.getGroupList().iterator();
-					while(iterGroup.hasNext())
-					{
-						tGroup = iterGroup.next();
-						tMember = tGroup.getGroupUsers();
-						CMEventManager.castEvent(cme, tMember, opt);
-					}
+					System.err.println("CMInteractionManager.distributeEvent(), target user("+strDistGroup
+							+") with UUID("+distUuid+") not found!");
+					return;
 				}
-				else	// distribute to specific group members
+
+				// [Modified] Send event to the specific user/device
+				CMEventManager.unicastEvent(cme, strDistGroup, distUuid, opt);
+			}
+		}
+		// Case 2: Broadcast to all session managers (Servers)
+		else if(strDistSession.equals("CM_ALL_SESSION_MANAGERS"))
+		{
+			// [Modified] Use broadcastEvent instead of castEvent for clarity and efficiency
+			CMEventManager.broadcastEvent(cme, opt);
+		}
+		// Case 3: cast to a specific session and group
+		else
+		{
+			tSession = interInfo.findSession(strDistSession);
+			if(tSession == null)
+			{
+				System.out.println("CMInteractionManager.distributeEvent(), session("
+						+strDistSession+") not found.");
+				return;
+			}
+
+			if(strDistGroup.equals("CM_ALL_GROUP"))	// distribute to all group members of a session
+			{
+				Iterator<CMGroup> iterGroup = tSession.getGroupList().iterator();
+				while(iterGroup.hasNext())
 				{
-					tGroup = tSession.findGroup(strDistGroup);
-					if(tGroup == null)
-					{
-						System.out.println("CMInteractionManager.distributeEvent(), group("
-								+strDistGroup+") not found.");
-						return;
-					}
+					tGroup = iterGroup.next();
 					tMember = tGroup.getGroupUsers();
 					CMEventManager.castEvent(cme, tMember, opt);
 				}
 			}
+			else	// distribute to specific group members
+			{
+				tGroup = tSession.findGroup(strDistGroup);
+				if(tGroup == null)
+				{
+					System.out.println("CMInteractionManager.distributeEvent(), group("
+							+strDistGroup+") not found.");
+					return;
+				}
+				tMember = tGroup.getGroupUsers();
+				CMEventManager.castEvent(cme, tMember, opt);
+			}
 		}
-		
-		return;
 	}
 	
 }
