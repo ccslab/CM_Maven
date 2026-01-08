@@ -273,6 +273,10 @@ public class CMEventManager {
 	{
 		return unicastEvent(cme, strReceiver, CMInfo.CM_STREAM, 0, false);
 	}
+
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, UUID receiverUuid) {
+		return unicastEvent(cme, strReceiver, receiverUuid, CMInfo.CM_STREAM, 0, false);
+	}
 	
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt)
 	{
@@ -294,15 +298,41 @@ public class CMEventManager {
 		
 		return bReturn;
 	}
+
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, UUID receiverUuid, int opt) {
+		boolean bReturn = false;
+
+		if(opt == CMInfo.CM_STREAM)
+			bReturn = unicastEvent(cme, strReceiver, receiverUuid, opt, 0, false);
+		else if(opt == CMInfo.CM_DATAGRAM)
+		{
+			//search for the udp port number of the local default datagram channel
+			CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+			bReturn = unicastEvent(cme, strReceiver, receiverUuid, opt, confInfo.getUDPPort(), false);
+		}
+		else
+		{
+			System.err.println("CMEventManager.unicastEvent(), invalid option!");
+			return false;
+		}
+
+		return bReturn;
+	}
 	
 	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey)
 	{
 		return unicastEvent(cme, strReceiver, opt, nKey, false);
 	}
 	
-	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey, boolean isBlock)
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, int opt, int nKey,
+													boolean isBlock)
 	{
-		return unicastEvent(cme, strReceiver, opt, nKey, 0, isBlock);
+		return unicastEvent(cme, strReceiver, null, opt, nKey, 0, isBlock);
+	}
+
+	public synchronized static boolean unicastEvent(CMEvent cme, String strReceiver, UUID receiverUuid,
+													int opt, int nKey, boolean isBlock) {
+		return unicastEvent(cme, strReceiver, receiverUuid, opt, nKey, 0, isBlock);
 	}
 	
 	// nKey: the channel key. For the stream channel, nKey is an integer greater than or equal to 0.
@@ -411,7 +441,8 @@ public class CMEventManager {
 			if( (receiverUuid == null && (userList == null || userList.isEmpty()))
 					|| (receiverUuid != null && user == null) )
 			{
-				System.err.println("CMEventManager.unicastEvent(), user (list) of target("+strReceiver+") with UUID("+receiverUuid+") not found.");
+				System.err.println("CMEventManager.unicastEvent(), user (list) of target("+strReceiver
+						+") with UUID("+receiverUuid+") not found.");
 				return false;
 			}
 
