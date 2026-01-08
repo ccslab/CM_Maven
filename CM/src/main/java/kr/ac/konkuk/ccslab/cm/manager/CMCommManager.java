@@ -334,7 +334,6 @@ public class CMCommManager {
 	
 	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, UUID targetUuid)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -402,6 +401,7 @@ public class CMCommManager {
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 		se.setChannelName(myself.getName());
 		se.setChannelNum(nChKey);
+		se.setChannelUuid(myself.getUuid());
 		bRet = CMEventManager.unicastEvent(se, strTarget, targetUuid, CMInfo.CM_STREAM, nChKey, true);
 
 		if(bRet && CMInfo._CM_DEBUG)
