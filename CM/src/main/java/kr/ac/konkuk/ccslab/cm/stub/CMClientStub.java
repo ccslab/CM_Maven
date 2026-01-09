@@ -905,10 +905,21 @@ public class CMClientStub extends CMStub {
 	 * the rotation axis and the rotation angle.  
 	 * @param pq - the new position and orientation of the client
 	 * @see CMPosition
+	 * @deprecated This method is no longer supported because the position member in CMUser has been removed.
+	 * This method will be removed in a future release.
 	 */
 	// send position info to the group members
 	public void sendUserPosition(CMPosition pq)
 	{
+		// [Modification] The position member (m_pq) in CMUser has been removed.
+		// Therefore, this method can no longer update the user's position or send valid events based on it.
+		// A warning log is added to notify the developer.
+
+		System.err.println("CMClientStub.sendUserPosition() is deprecated and does nothing due to " +
+				"the removal of position info in CMUser.");
+
+		/* // The following original logic is removed:
+
 		CMUser myself = getMyself();
 		// check user's local state
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -934,6 +945,8 @@ public class CMClientStub extends CMStub {
 		// update user's current pq
 		myself.setPosition(pq);
 		return;
+
+		*/
 	}
 	
 	/**
