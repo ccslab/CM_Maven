@@ -1526,7 +1526,6 @@ public class CMClientStub extends CMStub {
 	 */
 	public SocketChannel syncAddBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer serverInfo = null;
 		SocketChannel sc = null;
@@ -1589,8 +1588,8 @@ public class CMClientStub extends CMStub {
 		sc = (SocketChannel) scInfo.findChannel(nChKey);
 		if(sc != null)
 		{
-			System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("
-					+nChKey+") to the target("+strTarget+") already exists!");
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("+nChKey
+					+") to the target("+strTarget+"), target uuid("+targetUuid+") already exists!");
 			return null;
 		}
 		
