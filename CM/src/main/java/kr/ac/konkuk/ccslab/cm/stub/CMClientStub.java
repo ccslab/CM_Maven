@@ -3725,24 +3725,23 @@ public class CMClientStub extends CMStub {
 					
 					// add socket channel of group members
 					CMMember groupMember = curGroup.getGroupUsers();
-					Vector<CMUser> groupVector = groupMember.getAllMembers();
-					Iterator<CMUser> iter = groupVector.iterator();
-					while(iter.hasNext())
-					{
-						CMUser groupUser = iter.next();
-						strChInfo = groupUser.getNonBlockSocketChannelInfo().toString();
-						if(strChInfo != null)
-						{
-							sb.append("--- non-blocking socket channel of group user("
-									+groupUser.getName()+")\n");
-							sb.append(strChInfo);
-						}
-						strChInfo = groupUser.getBlockSocketChannelInfo().toString();
-						if(strChInfo != null)
-						{
-							sb.append("--- blocking socket channel of group user("
-									+groupUser.getName()+")\n");
-							sb.append(strChInfo);
+					Hashtable<String, List<CMUser>> groupTable = groupMember.getAllMembers();
+					for(List<CMUser> userList : groupTable.values()) {
+						for(CMUser user : userList) {
+							strChInfo = user.getNonBlockSocketChannelInfo().toString();
+							if(strChInfo != null)
+							{
+								sb.append("--- non-blocking socket channel of group user("
+										+user.getName()+"), uuid("+user.getUuid()+")\n");
+								sb.append(strChInfo);
+							}
+							strChInfo = user.getBlockSocketChannelInfo().toString();
+							if(strChInfo != null)
+							{
+								sb.append("--- blocking socket channel of group user("
+										+user.getName()+"), uuid("+user.getUuid()+")\n");
+								sb.append(strChInfo);
+							}
 						}
 					}
 				}
