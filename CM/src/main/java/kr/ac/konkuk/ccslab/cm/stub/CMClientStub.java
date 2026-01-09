@@ -1806,7 +1806,7 @@ public class CMClientStub extends CMStub {
 			se.setChannelUuid(interInfo.getMyself().getUuid());
 
 			// [Modified] Send event with target UUID (unicastEvent handles sender/receiver setup) [cite: 102]
-			boolean bRet = CMEventManager.unicastEvent(se, strTarget, targetUuid);
+			boolean bRet = send(se, strTarget, targetUuid);
 			result &= bRet;
 
 			if(bRet) {
@@ -1902,7 +1902,7 @@ public class CMClientStub extends CMStub {
 		if(sc == null)
 		{
 			System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), socket channel not found! key("
-					+nChKey+"), server ("+strTarget+").");
+					+nChKey+"), target("+strTarget+"), target uuid("+targetUuid+")!");
 			return false;
 		}
 
@@ -1915,7 +1915,7 @@ public class CMClientStub extends CMStub {
 		se.setChannelNum(nChKey);
 		se.setChannelName(interInfo.getMyself().getName());
 		se.setChannelUuid(interInfo.getMyself().getUuid());
-		result = CMEventManager.unicastEvent(se, strTarget, targetUuid);
+		result = send(se, strTarget, targetUuid);
 		if(!result)
 			return false;
 		
