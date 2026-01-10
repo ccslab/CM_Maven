@@ -1234,13 +1234,16 @@ public class CMSessionEvent extends CMEvent {
 		case SESSION_ADD_USER:
 			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
 				+ m_strHostAddr.getBytes().length + m_strSessionName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case SESSION_REMOVE_USER:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case CHANGE_SESSION:
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length
 				+ m_strSessionName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strChannelName.getBytes().length;
@@ -1390,14 +1393,17 @@ public class CMSessionEvent extends CMEvent {
 			break;
 		case SESSION_ADD_USER:
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strHostAddr);
 			putStringToByteBuffer(m_strSessionName);
 			break;
 		case SESSION_REMOVE_USER:
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			break;
 		case CHANGE_SESSION:
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
@@ -1535,14 +1541,17 @@ public class CMSessionEvent extends CMEvent {
 			break;
 		case SESSION_ADD_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_strSessionName = getStringFromByteBuffer(msg);
 			break;
 		case SESSION_REMOVE_USER:
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			break;
 		case CHANGE_SESSION:
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strSessionName = getStringFromByteBuffer(msg);
 			break;
 		case ADD_NONBLOCK_SOCKET_CHANNEL:
