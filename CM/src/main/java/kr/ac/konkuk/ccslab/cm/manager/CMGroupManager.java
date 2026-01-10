@@ -498,7 +498,8 @@ public class CMGroupManager {
 
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMGroupManager.distributeGroupUsers(), session("+session.getSessionName()
-					+"), group("+group.getGroupName()+") info to user("+targetUser.getName()+").");
+					+"), group("+group.getGroupName()+") info to user("+targetUser.getName()
+					+"), uuid("+targetUser.getUuid()+") sent.");
 	}
 	
 	private static void notifyGroupUsersOfNewUser(CMUser newUser)
