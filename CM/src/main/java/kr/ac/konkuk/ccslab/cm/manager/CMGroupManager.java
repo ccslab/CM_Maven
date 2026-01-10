@@ -243,7 +243,7 @@ public class CMGroupManager {
 		CMEventManager.unicastEvent(ie, strDefServer);
 		ie = null;
 		// leave the user from local information of the current group
-		curGroup.getGroupUsers().removeMember(myself.getName());
+		curGroup.getGroupUsers().removeMember(myself.getName(), myself.getUuid());
 		
 		// enter the user to local information of the target group
 		myself.setCurrentGroup(gName);
@@ -260,7 +260,6 @@ public class CMGroupManager {
 		ie.setCurrentGroup(myself.getCurrentGroup());
 		CMEventManager.unicastEvent(ie, strDefServer);
 		
-		return;
 	}
 	
 	public static void processEvent(CMMessage msg)
