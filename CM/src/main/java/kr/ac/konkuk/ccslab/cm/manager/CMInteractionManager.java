@@ -1946,7 +1946,6 @@ public class CMInteractionManager {
 	
 	private static void processLOGOUT(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
@@ -1954,8 +1953,10 @@ public class CMInteractionManager {
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processLOGOUT(), system type is not SERVER!");
 			return;
+		}
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		// find the user in the login user list
@@ -1963,17 +1964,14 @@ public class CMInteractionManager {
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processLOGOUT, user("+se.getUserName()
-					+") not found.");
+					+"), uuid("+se.getSenderUuid()+") not found!");
 			return;
 		}
 		
 		// stop all the file-transfer threads
-		//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();	// wrong
-		//if(CMInfo._CM_DEBUG)
-		//	System.out.println("CMInteractionManager.processLOGOUT(); # shutdown threads: "+ftList.size());
 		// remove all the ongoing file-transfer info with the user
-		fInfo.removeRecvFileList(user.getName());
-		fInfo.removeSendFileList(user.getName());
+		fInfo.removeRecvFileList(user.getName(), user.getUuid());
+		fInfo.removeSendFileList(user.getName(), user.getUuid());
 		// remove all the ongoing sns related file-transfer info about the user
 		snsInfo.getPrefetchMap().removePrefetchList(user.getName());
 		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName());
@@ -2008,7 +2006,7 @@ public class CMInteractionManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processLOGOUT(), user("+se.getUserName()
-					+"), # login users("+interInfo.getLoginUsers().getMemberNum()+").");
+					+"), uuid("+se.getSenderUuid()+"), # login users("+interInfo.getLoginUsers().getMemberNum()+").");
 		}
 		
 		// move the default channel to the unknown-channel list
