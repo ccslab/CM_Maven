@@ -134,12 +134,13 @@ public class CMSessionManager {
 	
 	private static void processJOIN_SESSION(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMSessionManager.processJOIN_SESSION(), system type is not SERVER!");
 			return;
+		}
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		
