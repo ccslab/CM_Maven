@@ -406,6 +406,7 @@ public class CMGroupManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
+			System.err.println("CMGroupManager.processUSER_LEAVE(), system type is not SERVER!");
 			return;
 		}
 		
@@ -416,7 +417,6 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processUSER_LEAVE(), session("+ie.getHandlerSession()
 					+") not found.");
-			ie = null;
 			return;
 		}
 		CMGroup group = session.findGroup(ie.getHandlerGroup());
@@ -424,16 +424,14 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processUSER_LEAVE(), session("+ie.getHandlerSession()
 					+") found, but group("+ie.getHandlerGroup()+") NOT FOUND.");
-			ie = null;
 			return;
 		}
-		CMUser user = group.getGroupUsers().findMember(ie.getUserName());
+		CMUser user = group.getGroupUsers().findMember(ie.getUserName(), ie.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMGroupManager.processUSER_LEAVE(), session("+ie.getHandlerSession()
 					+") group("+ie.getHandlerGroup()+") found, but user("+ie.getUserName()
-					+") NOT FOUND.");
-			ie = null;
+					+"), uuid("+ie.getSenderUuid()+") NOT FOUND.");
 			return;
 		}
 		
@@ -442,14 +440,10 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.processUSER_LEAVE(), user session(or group)"
 					+"and requested session(or group) are different!");
-			ie = null;
 			return;
 		}
 		
 		leaveGroup(user);
-		
-		ie = null;
-		return;
 	}
 	
 	private static void distributeGroupUsers(CMUser targetUser)
