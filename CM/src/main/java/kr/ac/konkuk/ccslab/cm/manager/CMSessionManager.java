@@ -221,6 +221,7 @@ public class CMSessionManager {
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
 		{
+			System.err.println("CMSessionManager.processJOIN_SESSION_ACK(), system type is not CLIENT!");
 			return;
 		}
 		
@@ -228,7 +229,6 @@ public class CMSessionManager {
 		if(se.getGroupInfoList().size() < 1)
 		{
 			System.out.println("CMSessionManager.processJOIN_SESSION_ACK(), group information is empty.");
-			se = null;
 			return;
 		}
 		
@@ -275,7 +275,6 @@ public class CMSessionManager {
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMSessionManager.processJOIN_SESSION_ACK() succeeded.");
-
 	}
 	
 	private static void processLEAVE_SESSION(CMMessage msg)
