@@ -279,19 +279,20 @@ public class CMSessionManager {
 	
 	private static void processLEAVE_SESSION(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMSessionManager.processLEAVE_SESSION(), system type is not SERVER!")
 			return;
+		}
 
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
+		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName(), se.getSenderUuid());
 		if(user == null)
 		{
-			System.out.println("CMSessionManager.leaveSession(), user("+se.getUserName()+") not found "
-					+ "in the login user list.");
+			System.out.println("CMSessionManager.leaveSession(), user("+se.getUserName()+"), uuid("
+					+se.getReceiverUuid()+") not found in the login user table.");
 			return;
 		}
 		
@@ -308,14 +309,11 @@ public class CMSessionManager {
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.CHANGE_SESSION);
 		tse.setUserName(user.getName());
+		tse.setUuid(user.getUuid());
 		tse.setSessionName("");
 		CMEventManager.broadcastEvent(tse);
 		
 		//// do not send LEAVE_SESSION_ACK (?)
-		
-		se = null;
-		tse = null;
-		return;
 	}
 	
 	// leave current session of the default server
