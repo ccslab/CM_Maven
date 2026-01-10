@@ -349,6 +349,7 @@ public class CMGroupManager {
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
+			System.err.println("CMGroupManager.processUSER_ENTER(), system type is not SERVER!");
 			return;
 		}
 		
@@ -371,7 +372,8 @@ public class CMGroupManager {
 		if(user == null)
 		{
 			System.out.println("CMGroupManager.processUSER_ENTER() for session("+ie.getHandlerSession()
-					+"), group("+ie.getHandlerGroup()+"), user("+ie.getUserName()+") not found in the login user list.");
+					+"), group("+ie.getHandlerGroup()+"), user("+ie.getUserName()
+					+"), uuid("+ie.getSenderUuid()+") not found in the login user list.");
 			return;
 		}
 		
@@ -382,14 +384,14 @@ public class CMGroupManager {
 		if(!ret)
 		{
 			System.out.println("CMGroupManager.processUSER_ENTER(), failed for user("
-					+user.getName()+").");
+					+user.getName()+"), uuid("+ie.getSenderUuid()+").");
 			return;
 		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMGroupManager.processUSER_ENTER(), add user("+ie.getUserName()
-					+") to group("+group.getGroupName()+"), # group users("
+					+"), uuid("+ie.getSenderUuid()+") to group("+group.getGroupName()+"), # group users("
 					+group.getGroupUsers().getMemberNum()+").");
 		}
 
