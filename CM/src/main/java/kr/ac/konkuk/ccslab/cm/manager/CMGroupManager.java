@@ -537,9 +537,20 @@ public class CMGroupManager {
 					+newUser.getUuid()+") sent to group members.");
 		
 	}
-	
+
+	// [Modified] processUSER_MOVE is deprecated as CMPosition is removed from CMUser.
+	@Deprecated
 	private static void processUSER_MOVE(CMMessage msg)
 	{
+		// The CMPosition field has been removed from the CMUser class.
+		// Therefore, this method no longer performs any logic related to user movement.
+
+		if(CMInfo._CM_DEBUG)
+		{
+			System.out.println("CMGroupManager.processUSER_MOVE(), this method is deprecated and does nothing.");
+		}
+
+		/*
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMInterestEvent ie = new CMInterestEvent(msg.m_buf);
 		
@@ -593,6 +604,7 @@ public class CMGroupManager {
 
 		ie = null;
 		return;
+		 */
 	}
 	
 	private static void processUSER_TALK(CMMessage msg)
