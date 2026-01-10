@@ -332,7 +332,7 @@ public class CMSessionManager {
 		if(session == null)
 		{
 			System.out.println("CMSessionManager.leaveSession(), session("+strCurrentSession
-					+") not found for leaving user("+user.getName()+").");
+					+") not found for leaving user("+user.getName()+"), uuid("+user.getUuid()+").");
 			return;
 		}
 		session.getSessionUsers().removeMember(user.getName(), user.getUuid());
