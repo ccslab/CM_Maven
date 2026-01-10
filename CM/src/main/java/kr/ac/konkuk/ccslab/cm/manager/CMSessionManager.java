@@ -176,8 +176,8 @@ public class CMSessionManager {
 		CMSession session = interInfo.findSession(user.getCurrentSession());
 		if(session == null)
 		{
-			System.out.println("CMSessionManager.joinSession(), session("+user.getCurrentSession()
-					+") not found, for user("+user.getName()+").");
+			System.err.println("CMSessionManager.joinSession(), session("+user.getCurrentSession()
+					+") not found, for user("+user.getName()+"), uuid("+user.getUuid()+")!");
 			return false;
 		}
 		
@@ -197,8 +197,6 @@ public class CMSessionManager {
 		// send JOIN_SESSION_ACK
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.JOIN_SESSION_ACK);
-		seAck.setSender(interInfo.getMyself().getName());
-		seAck.setReceiver(user.getName());
 		seAck.setHandlerSession(user.getCurrentSession());
 		seAck.setGroupNum(session.getGroupList().size());
 		Iterator<CMGroup> iterGroup = session.getGroupList().iterator();
