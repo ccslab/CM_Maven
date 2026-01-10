@@ -1493,7 +1493,6 @@ public class CMInteractionManager {
 
 	private static boolean processLOGIN(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bForward = true;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
