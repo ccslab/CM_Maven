@@ -44,7 +44,6 @@ public class CMInteractionManager {
 	// initialize the interaction info object in cmInfo
 	public static boolean init()
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		// initialize DB
@@ -123,13 +122,11 @@ public class CMInteractionManager {
 	
 	public static void terminate()
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMFileTransferManager.terminate();
 	}
 	
 	public static boolean connectDefaultServer()
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
@@ -328,7 +325,6 @@ public class CMInteractionManager {
 	
 	public synchronized static boolean disconnectBadNode(SocketChannel badSC)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 			return disconnectBadNodeByServer(badSC);
@@ -338,7 +334,6 @@ public class CMInteractionManager {
 	
 	private static boolean disconnectBadNodeByServer(SocketChannel badSC)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
@@ -413,7 +408,6 @@ public class CMInteractionManager {
 	
 	public synchronized static boolean disconnectBadAddServerByDefaultServer(CMServer addServer)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		String strAddServerName = addServer.getServerName();
 		
@@ -517,7 +511,6 @@ public class CMInteractionManager {
 	
 	private static boolean disconnectBadNodeByClient(SocketChannel badSC)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
