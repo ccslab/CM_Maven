@@ -508,7 +508,8 @@ public class CMGroupManager {
 		CMSession session = interInfo.findSession(newUser.getCurrentSession());
 		if(session == null)
 		{
-			System.out.println("CMGroupManager.notifyGroupUsersOfNewUser(), session("+newUser.getCurrentSession()+") not found.");
+			System.out.println("CMGroupManager.notifyGroupUsersOfNewUser(), session("+newUser.getCurrentSession()
+					+") not found.");
 			return;
 		}
 		CMGroup group = session.findGroup(newUser.getCurrentGroup());
@@ -533,7 +534,8 @@ public class CMGroupManager {
 
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMGroupManager.notifyGroupUsersOfNewUser(), session("+session.getSessionName()
-					+"), group("+group.getGroupName()+") new user("+newUser.getName()+").");
+					+"), group("+group.getGroupName()+") new user("+newUser.getName()+"), uuid("
+					+newUser.getUuid()+") sent to group members.");
 		
 	}
 	
