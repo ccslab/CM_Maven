@@ -1786,7 +1786,6 @@ public class CMInteractionManager {
 	
 	private static void processLOGIN_ACK(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		SocketChannel sc = null;
@@ -1853,7 +1852,7 @@ public class CMInteractionManager {
 		serverInfo = interInfo.getDefaultServerInfo();
 		if(confInfo.isFileTransferScheme())
 		{
-			sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName());
+			sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName(), null);
 
 			if(sc != null && CMInfo._CM_DEBUG)
 			{
