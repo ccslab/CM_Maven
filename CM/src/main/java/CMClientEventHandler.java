@@ -368,7 +368,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			break;
 		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
 			System.err.println("Intentionally disconnected all channels from ["
-					+se.getChannelName()+"]!");
+					+se.getChannelName()+"], uuid["+se.getChannelUuid()+"]!");
 			break;
 		default:
 			return;

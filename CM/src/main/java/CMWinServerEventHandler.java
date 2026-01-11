@@ -161,7 +161,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			break;
 		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
 			m_server.printStyledMessage("Intentionally disconnected all channels from ["
-					+se.getChannelName()+"]!\n", "bold");
+					+se.getChannelName()+"], uuid["+se.getChannelUuid()+"]!\n", "bold");
 			break;
 		default:
 			return;

@@ -435,17 +435,18 @@ public class CMInteractionManager {
 		}
 		
 		// notify the app event handler
-		notifyAppEventHandlerOfIntentionalDisconnection(strAddServerName);
+		notifyAppEventHandlerOfIntentionalDisconnection(strAddServerName, null);
 		
 		return true;
 	}
 	
-	private static void notifyAppEventHandlerOfIntentionalDisconnection(String strChannelName)
+	private static void notifyAppEventHandlerOfIntentionalDisconnection(String strChannelName, UUID channelUuid)
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
 		se.setChannelName(strChannelName);
+		se.setChannelUuid(channelUuid);
 		cmInfo.getAppEventHandler().processEvent(se);
 	}
 	
@@ -467,7 +468,7 @@ public class CMInteractionManager {
 		}
 
 		// notify the app event handler
-		notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName());
+		notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), null);
 
 		return true;
 	}
@@ -476,10 +477,11 @@ public class CMInteractionManager {
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
 		String strUser = user.getName();
+		UUID userUuid = user.getUuid();
 		
 		// send MQTT will event
 		CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
-		mqttManager.sendMqttWill(user.getName());
+		mqttManager.sendMqttWill(strUser);
 
 		SocketChannel sc = (SocketChannel)user.getNonBlockSocketChannelInfo().findChannel(0);
 		try {
@@ -491,7 +493,9 @@ public class CMInteractionManager {
 		// trigger the logout process
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.LOGOUT);
-		tse.setUserName(user.getName());
+		tse.setSender(strUser);
+		tse.setSenderUuid(userUuid);
+		tse.setUserName(strUser);
 		CMMessage msg = new CMMessage();
 		msg.m_buf = CMEventManager.marshallEvent(tse);
 		CMInteractionManager.processEvent(msg);
@@ -500,11 +504,11 @@ public class CMInteractionManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMIntearctionManager.disconnectBadClientByServer()"
-					+"intentionally disconnected from client ("+strUser+").");
+					+"intentionally disconnected from client ("+strUser+"), uuid("+userUuid+").");
 		}
 
 		// notify the app event handler
-		notifyAppEventHandlerOfIntentionalDisconnection(strUser);
+		notifyAppEventHandlerOfIntentionalDisconnection(strUser, userUuid);
 
 		return true;
 	}
@@ -550,7 +554,7 @@ public class CMInteractionManager {
 			}
 
 			// notify the app event handler
-			notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName());
+			notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), null);
 
 			// check and stop the scheduled keep-alive task
 			if(CMInteractionManager.getNumLoginServers() == 0)
@@ -592,7 +596,7 @@ public class CMInteractionManager {
 			}
 			
 			// notify the app event handler
-			notifyAppEventHandlerOfIntentionalDisconnection(strAddServer);
+			notifyAppEventHandlerOfIntentionalDisconnection(strAddServer, null);
 
 			// check and stop the scheduled keep-alive task
 			if(CMInteractionManager.getNumLoginServers() == 0)
@@ -660,7 +664,7 @@ public class CMInteractionManager {
 			// remove file-transfer info
 
 			// notify the app event handler
-			notifyAppEventHandlerOfIntentionalDisconnection(strGroupUserName);
+			notifyAppEventHandlerOfIntentionalDisconnection(strGroupUserName, groupUser.getUuid());
 		}
 		
 		System.err.println("CMInteractionManager.disconnectBadNodeByClient(): "+badSC);

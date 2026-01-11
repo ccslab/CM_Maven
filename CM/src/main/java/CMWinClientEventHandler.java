@@ -527,7 +527,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
 			m_client.printStyledMessage("Intentionally disconnected all channels from ["
-					+se.getChannelName()+"]!\n", "bold");
+					+se.getChannelName()+"], uuid["+se.getChannelUuid()+"]!\n", "bold");
 			m_client.setButtonsAccordingToClientState();
 			m_client.setTitle("CM Client");
 			break;
