@@ -753,13 +753,6 @@ public class CMInteractionManager {
 				break;
 			default:
 				bProcessed = false;
-				/*
-				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
-						+nEventType);
-				cmEvent = null;
-				return true;
-				*/
-				
 			}
 		}
 		
@@ -775,7 +768,6 @@ public class CMInteractionManager {
 			else {
 				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
 						+cmEvent.getType());
-				cmEvent = null;
 				return true;
 			}
 			
@@ -799,10 +791,7 @@ public class CMInteractionManager {
 		
 		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMInteractionManager.processEvent() ends.");
-		
-		// clear event object (message object is cleared at the EventReceiver)
-		cmEvent = null;
-		
+
 		return bReturn;
 	}
 	
