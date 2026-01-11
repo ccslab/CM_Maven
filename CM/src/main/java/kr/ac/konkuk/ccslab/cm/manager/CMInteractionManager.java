@@ -798,9 +798,7 @@ public class CMInteractionManager {
 	// find a user who connects with a socket channel in loginUsers.
 	public synchronized static CMUser findUserWithSocketChannel(SelectableChannel ch, CMMember loginUsers)
 	{
-		String strUserName = null;
 		boolean isBlock = false;
-		boolean bFound = false;
 		Integer returnKey = null;
 		
 		if(ch == null)
@@ -817,30 +815,31 @@ public class CMInteractionManager {
 		}
 		
 		isBlock = ch.isBlocking();
-		
-		Iterator<CMUser> iter = loginUsers.getAllMembers().iterator();
-		CMUser tuser = null;
-		while(iter.hasNext() && !bFound)
+
+		// [Modified] Changed from double while-loop (Iterator) to double for-each loop
+		// It improves readability and eliminates the need for 'bFound' flag.
+		// Iterate through all user lists in the hashtable (CMMember structure: Hashtable<String, List<CMUser>>)
+		for (List<CMUser> userList : loginUsers.getAllMembers().values())
 		{
-			tuser = iter.next();
-			if(isBlock)
-				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
-			else
-				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
-			
-			if(returnKey != null)
+			for (CMUser tuser : userList)
 			{
-				strUserName = tuser.getName();
-				bFound = true;
-				if(CMInfo._CM_DEBUG_2)
-					System.out.println("CMInteractionManager.findUserWithSocketChannel(), user("+strUserName+") found.");
+				if(isBlock)
+					returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+				else
+					returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+
+				if(returnKey != null)
+				{
+					if(CMInfo._CM_DEBUG_2) {
+						System.out.println("CMInteractionManager.findUserWithSocketChannel(), user("
+								+ tuser.getName() + "), uuid("+tuser.getUuid()+") found.");
+					}
+					return tuser; // Return immediately when found
+				}
 			}
 		}
-		
-		if(bFound)
-			return tuser;
-		else
-			return null;
+
+		return null; // Return null if not found after checking all users
 	}
 	
 	// find my group member list (called only by the client)
