@@ -2116,20 +2116,16 @@ public class CMInteractionManager {
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(interInfo.getMyself().getName());
-		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChIndex);
 
-		CMUser user = interInfo.getLoginUsers().findMember(strChannelName);
+		CMUser user = interInfo.getLoginUsers().findMember(strChannelName, se.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL(), user("+strChannelName
-					+") not found in the login user list.");
+					+"), uuid("+se.getSenderUuid()+") not found in the login user list.");
 			seAck.setReturnCode(0);
 			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
-			seAck = null;
-			se = null;
 			return;
 		}
 		boolean ret = user.getNonBlockSocketChannelInfo().addChannel(nChIndex, msg.m_ch);
@@ -2154,11 +2150,7 @@ public class CMInteractionManager {
 			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 		}
 		
-		CMEventManager.unicastEvent(seAck, user.getName());
-		
-		se = null;
-		seAck = null;
-		return;
+		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
 	}
 	
 	private static void processADD_NONBLOCK_SOCKET_CHANNEL_ACK(CMMessage msg)
