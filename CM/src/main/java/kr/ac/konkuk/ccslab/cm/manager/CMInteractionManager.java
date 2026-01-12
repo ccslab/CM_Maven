@@ -918,9 +918,7 @@ public class CMInteractionManager {
 		String strSession = interInfo.getMyself().getCurrentSession();
 		String strGroup = interInfo.getMyself().getCurrentGroup();
 		
-		String strUserName = null;
 		boolean isBlock = false;
-		boolean bFound = false;
 		Integer returnKey = null;
 		
 		CMSession session = interInfo.findSession(strSession);
@@ -939,33 +937,33 @@ public class CMInteractionManager {
 		}
 
 		isBlock = ch.isBlocking();
-		Iterator<CMUser> iter = group.getGroupUsers().getAllMembers().iterator();
-		CMUser tuser = null;
-		while(iter.hasNext() && !bFound)
+
+		// [Modified] Iteration logic changed due to CMMember structure change (Vector -> Hashtable<String, List<CMUser>>)
+		// Use double for-each loop for better readability
+		for(List<CMUser> userList : group.getGroupUsers().getAllMembers().values())
 		{
-			tuser = iter.next();
-			if(isBlock)
-				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
-			else
-				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
-			
-			if(returnKey != null)
+			for(CMUser tuser : userList)
 			{
-				strUserName = tuser.getName();
-				bFound = true;
-				if(CMInfo._CM_DEBUG_2)
+				if(isBlock)
+					returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+				else
+					returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+
+				if(returnKey != null)
 				{
-					System.out.println("CMInteractionManager."
-							+ "findGroupMemberOfClientWithSocketChannel(), user("
-							+strUserName+") found.");
+					if(CMInfo._CM_DEBUG_2)
+					{
+						System.out.println("CMInteractionManager."
+								+ "findGroupMemberOfClientWithSocketChannel(), user("
+								+tuser.getName()+"), uuid("+tuser.getUuid()+") found.");
+					}
+
+					return tuser; // Return immediately when found
 				}
 			}
 		}
-		
-		if(bFound)
-			return tuser;
-		else
-			return null;
+
+		return null; // Return null if not found after checking all group members
 	}
 	
 	// find (default or additional) server info
