@@ -283,7 +283,7 @@ public class CMSessionManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("SERVER")) {
-			System.err.println("CMSessionManager.processLEAVE_SESSION(), system type is not SERVER!")
+			System.err.println("CMSessionManager.processLEAVE_SESSION(), system type is not SERVER!");
 			return;
 		}
 
