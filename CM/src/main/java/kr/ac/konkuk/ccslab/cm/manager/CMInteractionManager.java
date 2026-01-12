@@ -2825,7 +2825,6 @@ public class CMInteractionManager {
 	
 	private static void processMultiServerEvent(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMMultiServerEvent mse = new CMMultiServerEvent(msg.m_buf);
 		int nEventID = mse.getID();
 		switch(nEventID)
@@ -2896,12 +2895,8 @@ public class CMInteractionManager {
 		default:
 			System.out.println("CMInteractionManager.processMultiServerEvent(), unknown event ID: "
 					+nEventID);
-			mse = null;
 			return;
 		}
-		
-		mse = null;
-		return;
 	}
 	
 	private static void processREQ_SERVER_REG(CMMessage msg)
