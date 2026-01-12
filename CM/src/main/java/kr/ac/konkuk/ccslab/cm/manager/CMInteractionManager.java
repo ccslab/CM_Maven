@@ -2598,7 +2598,6 @@ public class CMInteractionManager {
 	
 	private static void processREGISTER_USER(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strQuery = null;
 		ResultSet rs = null;
@@ -2656,10 +2655,6 @@ public class CMInteractionManager {
 		seAck.setUserName(se.getUserName());
 		seAck.setCreationTime(strCreationTime);
 		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
-
-		se = null;
-		seAck = null;
-		return;
 	}
 
 	private static void processREGISTER_USER_ACK(CMSessionEvent se)
@@ -2680,8 +2675,6 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processREGISTER_USER_ACK(), FAILED for user("
 					+se.getUserName()+")!");
 		}
-		
-		return;
 	}
 	
 	private static void processDEREGISTER_USER(CMMessage msg)
