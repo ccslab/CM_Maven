@@ -1913,16 +1913,13 @@ public class CMInteractionManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processCHANGE_SESSION(), user("+se.getUserName()
-					+"), session("+se.getSessionName()+").");
+					+"), uuid("+se.getUuid()+"), session("+se.getSessionName()+").");
 		}
 
 		if(confInfo.getSystemType().equals("SERVER"))	// Currently, this event is sent only to users (not servers) (not clear)
 		{
 			CMEventManager.broadcastEvent(se);
 		}
-		
-		se = null;
-		return;
 	}
 	
 	private static void processLOGOUT(CMMessage msg)
