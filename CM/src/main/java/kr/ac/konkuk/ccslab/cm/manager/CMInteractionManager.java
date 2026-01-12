@@ -2994,8 +2994,6 @@ public class CMInteractionManager {
 						+mse.getServerName()+") was not registered to the default server.");
 			}
 		}
-
-		return;
 	}
 	
 	private static void processREQ_SERVER_DEREG(CMMultiServerEvent mse)
