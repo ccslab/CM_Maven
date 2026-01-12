@@ -2087,7 +2087,8 @@ public class CMInteractionManager {
 			
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), tInfo.getPort(), tInfo.getUserNum());
+				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(),
+						tInfo.getPort(), tInfo.getUserNum());
 			}
 		}
 		
@@ -2102,10 +2103,7 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processSESSION_TALK(), broadcasted by user("
 					+se.getUserName()+")");
 			System.out.println("chat: "+se.getTalk());
-			se = null;
 		}
-		
-		return;
 	}
 	
 	private static void processADD_NONBLOCK_SOCKET_CHANNEL(CMMessage msg)
