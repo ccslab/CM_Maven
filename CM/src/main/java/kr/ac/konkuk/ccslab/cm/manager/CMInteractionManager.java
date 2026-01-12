@@ -1523,8 +1523,8 @@ public class CMInteractionManager {
 
 				if(CMInfo._CM_DEBUG)
 				{
-					System.out.println("CMInteractionManager.processLOGIN(), add new user("+
-							se.getUserName()+"), # longin users("+loginUsers.getMemberNum()+").");
+					System.out.println("CMInteractionManager.processLOGIN(), add new user("+se.getUserName()
+							+"), uuid("+uuid+"), # longin users("+loginUsers.getMemberNum()+").");
 				}
 
 				// 3. Set the UUID in the session event
@@ -1543,7 +1543,6 @@ public class CMInteractionManager {
 				}
 			}
 
-			se = null;
 			return bForward;
 		}
 		
