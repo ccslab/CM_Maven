@@ -2181,9 +2181,6 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
 		}
-				
-		se = null;
-		return;
 	}
 	
 	private static void processADD_BLOCK_SOCKET_CHANNEL(CMMessage msg)
