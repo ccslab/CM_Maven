@@ -3048,9 +3048,6 @@ public class CMInteractionManager {
 			mseAck.setServerName(serverName);
 			CMEventManager.broadcastEvent(mseAck);
 		}
-
-		mseAck = null;
-		return;
 	}
 
 	private static void processRES_SERVER_DEREG(CMMultiServerEvent mse)
@@ -3071,8 +3068,6 @@ public class CMInteractionManager {
 						+mse.getServerName()+") was not deregistered from the default server.");
 			}
 		}
-
-		return;
 	}
 	
 	private static void processNOTIFY_SERVER_INFO(CMMultiServerEvent mse)
