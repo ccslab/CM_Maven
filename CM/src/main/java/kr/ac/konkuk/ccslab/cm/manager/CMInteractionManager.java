@@ -2945,7 +2945,6 @@ public class CMInteractionManager {
 		// send response event
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
 		mseAck.setID( CMMultiServerEvent.RES_SERVER_REG );
-		mseAck.setSender(interInfo.getMyself().getName());
 		mseAck.setServerName( strServerName );
 		if(bRet)
 			mseAck.setReturnCode(1);
@@ -2971,11 +2970,6 @@ public class CMInteractionManager {
 		mseAck.setServerNum(1);
 		mseAck.addServerInfo(sinfo);
 		CMEventManager.broadcastEvent(mseAck);
-
-		mse = null;
-		sinfo = null;
-		mseAck = null;
-		return;
 	}
 	
 	private static void processRES_SERVER_REG(CMMultiServerEvent mse)
