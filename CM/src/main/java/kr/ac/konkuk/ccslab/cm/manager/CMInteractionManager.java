@@ -3100,7 +3100,6 @@ public class CMInteractionManager {
 			{
 				System.out.println("CMInteractionManager.processNOTIFY_SERVER_INFO(), additional"
 						+"server ("+si.getServerName()+") already exists!");
-				continue;
 			}
 			else
 			{
@@ -3111,7 +3110,6 @@ public class CMInteractionManager {
 		}
 
 		mse.removeAllServerInfoObjects();
-		return;
 	}
 	
 	private static void processNOTIFY_SERVER_LEAVE(CMMultiServerEvent mse)
@@ -3137,8 +3135,6 @@ public class CMInteractionManager {
 		}
 		
 		interInfo.removeAddServer(serverName);
-
-		return;
 	}
 	
 	private static void processREQ_SERVER_INFO(CMMultiServerEvent mse)
