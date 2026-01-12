@@ -168,32 +168,6 @@ public class CMMember extends CMObject{
 	}
 
 	/**
-	 * Checks if a given user is in this member table.
-	 * 
-	 * <p> The given user is regarded as a member if the list has a member with the same name.
-	 * 
-	 * @param user - a given user.
-	 * @return true if the user is a member, or false.
-	 */
-	public synchronized boolean isMember(CMUser user)
-	{
-		return m_memberTable.containsKey(user.getName());
-	}
-	
-	/**
-	 * Checks if a given name is in this member table.
-	 * 
-	 * <p> The given name is regarded as a member if the list has a member with the same name.
-	 * 
-	 * @param name - a given name.
-	 * @return true if the name is a member, or false.
-	 */
-	public synchronized boolean isMember(String name)
-	{
-		return m_memberTable.containsKey(name);
-	}
-	
-	/**
 	 * Checks if the member table is empty or not.
 	 * 
 	 * @return true if the member table is empty, or false.
