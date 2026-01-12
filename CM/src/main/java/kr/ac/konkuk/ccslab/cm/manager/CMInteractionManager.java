@@ -1810,7 +1810,9 @@ public class CMInteractionManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processLOGIN_ACK(), received.");
-			System.out.println("bValidUser("+se.isValidUser()
+			System.out.println("user name("+se.getUserName()
+					+"), uuid("+se.getUuid()
+					+"), bValidUser("+se.isValidUser()
 					+"), comm arch("+se.getCommArch()
 					+"), bFileTransferScheme("+se.isFileTransferScheme()
 					+"), bLoginScheme("+se.isLoginScheme()
