@@ -2465,8 +2465,7 @@ public class CMInteractionManager {
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
 				seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
-				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-						.getServerName());
+				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 			}
 			else
 			{
@@ -2488,8 +2487,7 @@ public class CMInteractionManager {
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
 			seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
-			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-					.getServerName());
+			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 		}
 		else
 		{
