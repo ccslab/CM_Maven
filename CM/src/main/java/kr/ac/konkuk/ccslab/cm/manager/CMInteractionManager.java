@@ -2024,18 +2024,16 @@ public class CMInteractionManager {
 		}
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
-		if(!interInfo.getLoginUsers().isMember(se.getUserName()))
+		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName(), se.getSenderUuid());
+		if(user == null)
 		{
 			System.out.println("CMInteractinManager.processREQUEST_SESSION_INFO(), user("+se.getUserName()
-					+") not found in the login user list.");
-			se = null;
+					+"), uuid("+se.getSenderUuid()+") not found in the login user list.");
 			return;
 		}
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.RESPONSE_SESSION_INFO);
-		seAck.setSender(interInfo.getMyself().getName());
-		seAck.setReceiver(se.getSender());
 		seAck.setSessionNum(confInfo.getSessionNumber());
 		Iterator<CMSession> iterSession = interInfo.getSessionList().iterator();
 		while(iterSession.hasNext())
