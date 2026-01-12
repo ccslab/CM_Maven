@@ -2280,8 +2280,7 @@ public class CMInteractionManager {
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
 				seAck.setDistributionUuid(channelUuid);
-				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-						.getServerName());
+				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 			}
 			else
 			{
@@ -2321,8 +2320,7 @@ public class CMInteractionManager {
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
 			seAck.setDistributionUuid(channelUuid);
-			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-					.getServerName());
+			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 		}
 		else
 		{
@@ -2352,7 +2350,8 @@ public class CMInteractionManager {
 				(se.getReceiverUuid() != null && !Objects.equals(myUuid, se.getReceiverUuid())))
 		{
 			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
-					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+					+"receiver("+se.getReceiver()+") receiver uuid("+se.getReceiverUuid()+") is not me("
+					+strMyName+") my uuid("+myUuid+"!");
 			return;
 		}
 
@@ -2368,7 +2367,7 @@ public class CMInteractionManager {
 			if(targetUser == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"target("+strChannel+") not found!");
+						+"target("+strChannel+"), uuid("+channelUuid+") not found!");
 				return;
 			}
 			scList = targetUser.getBlockSocketChannelInfo();
