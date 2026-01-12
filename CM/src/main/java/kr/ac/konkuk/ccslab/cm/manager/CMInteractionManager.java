@@ -1394,7 +1394,6 @@ public class CMInteractionManager {
 
 	private static boolean processSessionEvent(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bForward = true;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		int nEventID = se.getID();
@@ -1466,11 +1465,9 @@ public class CMInteractionManager {
 		default:
 			System.out.println("CMInteractionManager.processSessionEvent(), unknown event ID: "
 					+nEventID);
-			se = null;
 			return false;
 		}
 		
-		se = null;
 		return bForward;
 	}
 
