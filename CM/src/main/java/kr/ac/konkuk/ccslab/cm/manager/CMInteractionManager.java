@@ -3307,6 +3307,7 @@ public class CMInteractionManager {
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
 		{
+			System.err.println("CMInteractionManager.processADD_LOGIN_ACK(), system type is not CLIENT!");
 			return;
 		}
 		
@@ -3321,22 +3322,17 @@ public class CMInteractionManager {
 
 		// set other info on the server in the server info instance
 		tserver.setCommArch(mse.getCommArch());
-		if(mse.isLoginScheme() == 1)
-			tserver.setLoginScheme(true);
-		else
-			tserver.setLoginScheme(false);
-		if(mse.isSessionScheme() == 1)
-			tserver.setSessionScheme(true);
-		else
-			tserver.setSessionScheme(false);
+		tserver.setLoginScheme(mse.isLoginScheme() == 1 ? true : false);
+		tserver.setMultiLoginScheme(mse.isMultiLoginScheme() == 1 ? true : false);
+		tserver.setSessionScheme(mse.isSessionScheme() == 1 ? true : false);
 		tserver.setServerUDPPort(mse.getServerUDPPort());
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_LOGIN_ACK(),");
 			System.out.println("bValidUser("+mse.isValidUser()+"), commArch("+mse.getCommArch()
-					+"), bLoginScheme("+mse.isLoginScheme()+"), bSessionScheme("+mse.isSessionScheme()
-					+"), server udp port("+mse.getServerUDPPort()+").");
+					+"), bLoginScheme("+mse.isLoginScheme()+") bMultiLoginScheme("+mse.isMultiLoginScheme()
+					+"), bSessionScheme("+mse.isSessionScheme() +"), server udp port("+mse.getServerUDPPort()+").");
 		}
 
 		// update peer's state in the server info instance
@@ -3355,15 +3351,12 @@ public class CMInteractionManager {
 
 				CMEventManager.unicastEvent(tmse, mse.getServerName());
 				tserver.setCurrentSessionName("session1");
-				tmse = null;
 			}
 		}
 		else
 		{
 			System.out.println("CMInteractionManager.processADD_LOGIN_ACK(), invalid user.");
 		}
-
-		return;
 	}
 	
 	private static void processADD_SESSION_ADD_USER(CMMultiServerEvent mse)
