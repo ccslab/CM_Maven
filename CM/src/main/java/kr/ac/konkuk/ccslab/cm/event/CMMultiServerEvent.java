@@ -6,6 +6,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMServerInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 /**
  * This class represents CM events that are related to additional servers.
@@ -728,15 +729,18 @@ public class CMMultiServerEvent extends CMEvent{
 		case ADD_CHANGE_SESSION:
 			nByteNum += 3*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
 				+ m_strUserName.getBytes().length + m_strSessionName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case ADD_SESSION_ADD_USER:
 			nByteNum += 4*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
 				+ m_strUserName.getBytes().length + m_strHostAddress.getBytes().length
 				+ m_strSessionName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case ADD_SESSION_REMOVE_USER:
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
 				+ m_strUserName.getBytes().length;
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case ADD_JOIN_GROUP:
 			nByteNum += 5*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
@@ -899,17 +903,20 @@ public class CMMultiServerEvent extends CMEvent{
 		case ADD_CHANGE_SESSION:
 			putStringToByteBuffer(m_strServerName);
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_SESSION_ADD_USER:
 			putStringToByteBuffer(m_strServerName);
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strHostAddress);
 			putStringToByteBuffer(m_strSessionName);
 			break;
 		case ADD_SESSION_REMOVE_USER:
 			putStringToByteBuffer(m_strServerName);
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			break;
 		case ADD_JOIN_GROUP:
 			putStringToByteBuffer(m_strServerName);
@@ -1072,17 +1079,20 @@ public class CMMultiServerEvent extends CMEvent{
 		case ADD_CHANGE_SESSION:
 			m_strServerName = getStringFromByteBuffer(msg);
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strSessionName = getStringFromByteBuffer(msg);
 			break;
 		case ADD_SESSION_ADD_USER:
 			m_strServerName = getStringFromByteBuffer(msg);
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strHostAddress = getStringFromByteBuffer(msg);
 			m_strSessionName = getStringFromByteBuffer(msg);
 			break;
 		case ADD_SESSION_REMOVE_USER:
 			m_strServerName = getStringFromByteBuffer(msg);
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			break;
 		case ADD_JOIN_GROUP:
 			m_strServerName = getStringFromByteBuffer(msg);
