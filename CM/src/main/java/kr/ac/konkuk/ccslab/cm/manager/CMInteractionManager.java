@@ -3195,11 +3195,10 @@ public class CMInteractionManager {
 	
 	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, int nValidUser)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
-		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		boolean bRet = false;
 		
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
@@ -3209,14 +3208,9 @@ public class CMInteractionManager {
 		{
 			mseAck.setValidUser(1);
 			mseAck.setCommArch(confInfo.getCommArch());
-			if(confInfo.isLoginScheme())
-				mseAck.setLoginScheme(1);
-			else
-				mseAck.setLoginScheme(0);
-			if(confInfo.isSessionScheme())
-				mseAck.setSessionScheme(1);
-			else
-				mseAck.setSessionScheme(0);
+			mseAck.setLoginScheme(confInfo.isLoginScheme() ? 1 : 0);
+			mseAck.setMultiLoginScheme(confInfo.isMultiLoginScheme() ? 1 : 0);
+			mseAck.setSessionScheme(confInfo.isSessionScheme() ? 1 : 0);
 			mseAck.setServerUDPPort(confInfo.getUDPPort());
 		}
 		else
@@ -3224,11 +3218,12 @@ public class CMInteractionManager {
 			mseAck.setValidUser(0);
 			mseAck.setCommArch("");
 			mseAck.setLoginScheme(-1);
+			mseAck.setMultiLoginScheme(-1);
 			mseAck.setSessionScheme(-1);
 			mseAck.setUDPPort(-1);
 		}
 		
-		bRet = CMEventManager.unicastEvent(mseAck, mse.getUserName());
+		bRet = CMEventManager.unicastEvent(mseAck, mse.getUserName(), mse.getSenderUuid());
 
 		if(nValidUser == 1)
 		{
@@ -3260,52 +3255,47 @@ public class CMInteractionManager {
 			}
 			
 			// send inhabitants who already logged on the system
-			distributeAddLoginUsers(mse.getUserName());
+			distributeAddLoginUsers(mse.getUserName(), mse.getSenderUuid());
 
 			// notify info. on new user who logged in
 			CMMultiServerEvent tmse = new CMMultiServerEvent();
 			tmse.setID(CMMultiServerEvent.ADD_SESSION_ADD_USER);
 			tmse.setServerName(mse.getServerName());
 			tmse.setUserName( mse.getUserName() );
+			tmse.setUuid(mse.getSenderUuid());
 			tmse.setHostAddress( mse.getHostAddress() );
 			tmse.setSessionName("?");
 			CMEventManager.broadcastEvent(tmse);
-			tmse = null;
 		}
 		else
 		{
 			user.getNonBlockSocketChannelInfo().removeAllChannels();
 			user.getBlockSocketChannelInfo().removeAllChannels();
-			interInfo.getLoginUsers().removeMember(mse.getUserName());
+			interInfo.getLoginUsers().removeMember(mse.getUserName(), mse.getSenderUuid());
 		}
-		
-		mseAck = null;
 		return bRet;
 	}
 	
-	private static void distributeAddLoginUsers(String strUser)
+	private static void distributeAddLoginUsers(String strUser, UUID userUuid)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		Iterator<CMUser> iter = interInfo.getLoginUsers().getAllMembers().iterator();
 		CMMultiServerEvent tmse = null;
-		
-		while(iter.hasNext())
-		{
-			CMUser tuser = iter.next();
-			if(!strUser.equals(tuser.getName()))
-			{
-				tmse = new CMMultiServerEvent();
-				tmse.setID(CMMultiServerEvent.ADD_SESSION_ADD_USER);
-				tmse.setServerName(interInfo.getMyself().getName());
-				tmse.setUserName(tuser.getName());
-				tmse.setHostAddress(tuser.getHost());
-				tmse.setSessionName(tuser.getCurrentSession());
-				CMEventManager.unicastEvent(tmse, strUser);
+
+		for(List<CMUser> userList : interInfo.getLoginUsers().getAllMembers().values()) {
+			for(CMUser tuser : userList) {
+				if(!Objects.equals(userUuid, tuser.getUuid()))
+				{
+					tmse = new CMMultiServerEvent();
+					tmse.setID(CMMultiServerEvent.ADD_SESSION_ADD_USER);
+					tmse.setServerName(interInfo.getMyself().getName());
+					tmse.setUserName(tuser.getName());
+					tmse.setUuid(tuser.getUuid());
+					tmse.setHostAddress(tuser.getHost());
+					tmse.setSessionName(tuser.getCurrentSession());
+					CMEventManager.unicastEvent(tmse, strUser, userUuid);
+				}
 			}
 		}
-
-		tmse = null;
-		return;
 	}
 	
 	private static void processADD_LOGIN_ACK(CMMultiServerEvent mse)

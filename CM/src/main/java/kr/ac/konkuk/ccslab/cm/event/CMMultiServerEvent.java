@@ -50,6 +50,7 @@ public class CMMultiServerEvent extends CMEvent{
 	Vector<CMSessionInfo> m_sessionList;
 
 	String m_strUserName;
+	UUID m_uuid;
 	String m_strPassword;
 	String m_strHostAddress;
 	int m_nUDPPort;
@@ -57,6 +58,7 @@ public class CMMultiServerEvent extends CMEvent{
 	int m_nUserID;
 	String m_strCommArch;
 	int m_bLoginScheme;		// 0: false, 1: true
+	int m_bMultiLoginScheme;	// 0: false, 1: true
 	int m_bSessionScheme;	// 0: false, 1: true
 	String m_strSessionName;
 	int m_nGroupNum;
@@ -78,6 +80,7 @@ public class CMMultiServerEvent extends CMEvent{
 		m_nSessionNum = -1;
 
 		m_strUserName = "";
+		m_uuid = null;
 		m_strPassword = "";
 		m_strHostAddress = "";
 		m_nUDPPort = -1;
@@ -85,6 +88,7 @@ public class CMMultiServerEvent extends CMEvent{
 		m_nUserID = -1;
 		m_strCommArch = "";
 		m_bLoginScheme = -1;
+		m_bMultiLoginScheme = -1;
 		m_bSessionScheme = -1;
 		m_strSessionName = "";
 		m_nGroupNum = -1;
@@ -186,7 +190,15 @@ public class CMMultiServerEvent extends CMEvent{
 	{
 		return m_strUserName;
 	}
-	
+
+	public void setUuid(UUID uuid) {
+		m_uuid = uuid;
+	}
+
+	public UUID getUuid() {
+		return m_uuid;
+	}
+
 	public void setPassword(String passwd)
 	{
 		if(passwd != null)
@@ -248,6 +260,14 @@ public class CMMultiServerEvent extends CMEvent{
 	public int isLoginScheme()
 	{
 		return m_bLoginScheme;
+	}
+
+	public void setMultiLoginScheme(int b) {
+		m_bMultiLoginScheme = b;
+	}
+
+	public int isMultiLoginScheme() {
+		return m_bMultiLoginScheme;
 	}
 	
 	public void setSessionScheme(int b)
@@ -673,6 +693,7 @@ public class CMMultiServerEvent extends CMEvent{
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
 				+ m_strCommArch.getBytes().length;
 			nByteNum += 4*Integer.BYTES;
+			nByteNum += Integer.BYTES;	// 4 multi-login-scheme
 			break;
 		case ADD_LOGOUT:
 			nByteNum += 2*CMInfo.STRING_LEN_BYTES_LEN + m_strServerName.getBytes().length
@@ -834,6 +855,7 @@ public class CMMultiServerEvent extends CMEvent{
 			m_bytes.putInt(m_bValidUser);
 			putStringToByteBuffer(m_strCommArch);
 			m_bytes.putInt(m_bLoginScheme);
+			m_bytes.putInt(m_bMultiLoginScheme);
 			m_bytes.putInt(m_bSessionScheme);
 			m_bytes.putInt(m_nServerUDPPort);
 			break;
@@ -1012,6 +1034,7 @@ public class CMMultiServerEvent extends CMEvent{
 			m_bValidUser = msg.getInt();
 			m_strCommArch = getStringFromByteBuffer(msg);
 			m_bLoginScheme = msg.getInt();
+			m_bMultiLoginScheme = msg.getInt();
 			m_bSessionScheme = msg.getInt();
 			m_nServerUDPPort = msg.getInt();
 			break;
