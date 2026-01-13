@@ -3154,11 +3154,8 @@ public class CMInteractionManager {
 					tserver.getServerPort(), tserver.getServerUDPPort());
 			mseAck.addServerInfo(si);
 		}
-		CMEventManager.unicastEvent(mseAck, mse.getUserName());
-
+		CMEventManager.unicastEvent(mseAck, mse.getUserName(), mse.getSenderUuid());
 		mseAck.removeAllServerInfoObjects();
-		mseAck = null;
-		return;
 	}
 	
 	private static void processADD_LOGIN(CMMessage msg)
