@@ -3378,20 +3378,21 @@ public class CMInteractionManager {
 	
 	private static void processADD_LOGOUT(CMMultiServerEvent mse)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_LOGOUT(), system type is not SERVER!");
 			return;
+		}
 		
-		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processADD_LOGOUT(), user("
-					+mse.getUserName()+") not found in the login user list!");
+					+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") not found in the login user list!");
 			return;
 		}
 		
@@ -3401,19 +3402,20 @@ public class CMInteractionManager {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.processADD_LOGOUT(), user("
-						+mse.getUserName()+") should leave session("+user.getCurrentSession()+").");
+						+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") should leave session("
+						+user.getCurrentSession()+").");
 			}
 			CMSessionManager.leaveSession(user);
 		}
 		
 		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0); // main channel remained
 		user.getBlockSocketChannelInfo().removeAllChannels();
-		interInfo.getLoginUsers().removeMemberObject(mse.getUserName());
+		interInfo.getLoginUsers().removeMember(mse.getUserName(), mse.getSenderUuid());
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_LOGOUT(), user("
-					+mse.getUserName()+") removed from the login user list, member num(" 
+			System.out.println("CMInteractionManager.processADD_LOGOUT(), user("+mse.getUserName()+"), uuid("
+					+mse.getSenderUuid()+") removed from the login user list, member num("
 					+interInfo.getLoginUsers().getMemberNum()+").");
 		}
 
@@ -3421,7 +3423,8 @@ public class CMInteractionManager {
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
 		tmse.setID(CMMultiServerEvent.ADD_SESSION_REMOVE_USER);
 		tmse.setServerName(mse.getServerName());
-		tmse.setUserName( mse.getUserName() );
+		tmse.setUserName(mse.getUserName());
+		tmse.setUuid(mse.getSenderUuid());
 
 		CMEventManager.broadcastEvent(tmse);
 
@@ -3448,9 +3451,6 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.processADD_LOGOUT(), the client channel is also closed.");
 		}
-
-		tmse = null;
-		return;
 	}
 	
 	private static void processADD_SESSION_REMOVE_USER(CMMultiServerEvent mse)
