@@ -3160,12 +3160,12 @@ public class CMInteractionManager {
 	
 	private static void processADD_LOGIN(CMMessage msg)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
+			System.err.println("CMInteractionManager.processADD_LOGIN(), system type is not SERVER!");
 			return;
 		}
 		
@@ -3175,6 +3175,7 @@ public class CMInteractionManager {
 
 		CMUser user = new CMUser();
 		user.setName(mse.getUserName());
+		user.setUuid(mse.getSenderUuid());
 		user.setPasswd(mse.getPassword());
 		user.setHost(mse.getHostAddress());
 		user.setUDPPort(mse.getUDPPort());
@@ -3185,14 +3186,11 @@ public class CMInteractionManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_LOGIN(), add new user("
-								+user.getName()+").");
+								+user.getName()+"), uuid("+user.getUuid()+").");
 		}
 
 		if( !confInfo.isLoginScheme() )
 			replyToADD_LOGIN(mse, 1);
-
-		mse = null;
-		return;
 	}
 	
 	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, int nValidUser)
