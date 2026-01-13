@@ -3566,22 +3566,23 @@ public class CMInteractionManager {
 	
 	private static void processADD_JOIN_SESSION(CMMultiServerEvent mse)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = null;
 		CMSession session = null;
 		CMGroup group = null;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_JOIN_SESSION(), system type is not SERVER!");
 			return;
+		}
 		
 		// find login user info
-		user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), user("
-					+mse.getUserName()+") not found in the login user list of server("
+			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), user("+mse.getUserName()
+					+"), uuid("+mse.getSenderUuid()+") not found in the login user list of server("
 					+mse.getServerName()+").");
 			return;
 		}
@@ -3589,8 +3590,8 @@ public class CMInteractionManager {
 		session = interInfo.findSession(mse.getSessionName());
 		if(session == null)
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), session("
-					+mse.getSessionName()+") not found, user("+mse.getUserName()+"), server("
+			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), session("+mse.getSessionName()
+					+") not found, user("+mse.getUserName()+"), uuid("+mse.getSenderUuid()+"), server("
 					+mse.getServerName()+").");
 			return;
 		}
@@ -3615,12 +3616,10 @@ public class CMInteractionManager {
 		tmse.setID(CMMultiServerEvent.ADD_CHANGE_SESSION);
 		tmse.setServerName( mse.getServerName() );
 		tmse.setUserName( mse.getUserName() );
+		tmse.setUuid( mse.getSenderUuid() );
 		tmse.setSessionName( mse.getSessionName() );
 
 		CMEventManager.broadcastEvent(tmse);
-
-		tmse = null;
-		return;
 	}
 	
 	private static void processADD_JOIN_SESSION_ACK(CMMultiServerEvent mse)
