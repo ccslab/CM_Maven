@@ -3624,7 +3624,6 @@ public class CMInteractionManager {
 	
 	private static void processADD_JOIN_SESSION_ACK(CMMultiServerEvent mse)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
@@ -3632,8 +3631,10 @@ public class CMInteractionManager {
 		CMSession session = null;
 		CMGroup group = null;
 		
-		if(!confInfo.getSystemType().equals("CLIENT"))
+		if(!confInfo.getSystemType().equals("CLIENT")) {
+			System.err.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), system type is not CLIENT!"");
 			return;
+		}
 		
 		server = interInfo.findAddServer(mse.getServerName());
 		if(server == null)
@@ -3643,10 +3644,9 @@ public class CMInteractionManager {
 			return;
 		}
 		
-		if( mse.getGroupInfoList().size() < 1 )
+		if(mse.getGroupInfoList().isEmpty())
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), group info "
-					+ "empty.");
+			System.out.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), group info list is empty.");
 			return;
 		}
 		
@@ -3687,9 +3687,6 @@ public class CMInteractionManager {
 		tmse.setGroupName( server.getCurrentGroupName() );
 
 		CMEventManager.unicastEvent(tmse, mse.getServerName());
-
-		tmse = null;
-		return;
 	}
 	
 	private static void processADD_LEAVE_SESSION(CMMultiServerEvent mse)
