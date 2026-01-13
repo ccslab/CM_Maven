@@ -3475,14 +3475,16 @@ public class CMInteractionManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_REQUEST_SESSION_INFO(), system type is not SERVER!");
 			return;
+		}
 		
-		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName()); 
+		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if( user == null )
 		{
-			System.out.println("CMInteractionManager.processADD_REQUEST_SESSION_INFO(), "
-					+ "user("+mse.getUserName()+") not found in the login user list!");
+			System.out.println("CMInteractionManager.processADD_REQUEST_SESSION_INFO(), user("
+					+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") not found in the login user list!");
 			return;
 		}
 		
@@ -3502,11 +3504,8 @@ public class CMInteractionManager {
 			si.setUserNum(session.getSessionUsers().getMemberNum());
 			tmse.addSessionInfo(si);
 		}
-		CMEventManager.unicastEvent(tmse, mse.getUserName());
-
+		CMEventManager.unicastEvent(tmse, mse.getUserName(), mse.getSenderUuid());
 		tmse.removeAllSessionInfoObjects();
-		tmse = null;
-		return;
 	}
 	
 	private static void processADD_RESPONSE_SESSION_INFO(CMMultiServerEvent mse)
