@@ -3514,8 +3514,10 @@ public class CMInteractionManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer server = null;
 		
-		if(!confInfo.getSystemType().equals("CLIENT"))
+		if(!confInfo.getSystemType().equals("CLIENT")) {
+			System.err.println("CMInteractionManager.processADD_RESPONSE_SESSION_INFO(), system type is not CLIENT!");
 			return;
+		}
 		
 		// find server info of the client
 		server = interInfo.findAddServer(mse.getServerName());
@@ -3554,12 +3556,12 @@ public class CMInteractionManager {
 			
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), tInfo.getPort(), tInfo.getUserNum());
+				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(),
+						tInfo.getPort(), tInfo.getUserNum());
 			}
 		}
 		
 		mse.removeAllSessionInfoObjects();
-		return;
 	}
 	
 	private static void processADD_JOIN_SESSION(CMMultiServerEvent mse)
