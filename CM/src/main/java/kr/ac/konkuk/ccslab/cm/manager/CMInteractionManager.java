@@ -3363,16 +3363,17 @@ public class CMInteractionManager {
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
-		if(!confInfo.getSystemType().equals("CLIENT"))
+		if(!confInfo.getSystemType().equals("CLIENT")) {
+			System.err.println("CMInteractionManager.processADD_SESSION_ADD_USER(), system type is not CLIENT!");
 			return;
+		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_SESSION_ADD_USER(), nothing to do at CM");
-			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()+"), host("
-					+mse.getHostAddress()+"), session("+mse.getSessionName()+").");
+			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()
+					+"), uuid("+mse.getUuid()+"), host("+mse.getHostAddress()+"), session("+mse.getSessionName()+").");
 		}
-		return;
 	}
 	
 	private static void processADD_LOGOUT(CMMultiServerEvent mse)
