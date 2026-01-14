@@ -902,6 +902,7 @@ public class CMGroupManager {
 		mse.setID(CMMultiServerEvent.ADD_NEW_GROUP_USER);
 		mse.setServerName(interInfo.getMyself().getName());
 		mse.setUserName(newUser.getName());
+		mse.setUuid(newUser.getUuid());
 		mse.setHostAddress(newUser.getHost());
 		mse.setUDPPort(newUser.getUDPPort());
 		mse.setSessionName(newUser.getCurrentSession());
@@ -914,11 +915,8 @@ public class CMGroupManager {
 		{
 			System.out.println("CMGroupManager.addNotifyGroupUsersOfNewUser(), session("
 					+session.getSessionName()+"), group("+group.getGroupName()+") new user("
-					+newUser.getName()+").");
+					+newUser.getName()+"), uuid("+newUser.getUuid()+") sent to group members.");
 		}
-		
-		mse = null;
-		return;
 	}
 
 }
