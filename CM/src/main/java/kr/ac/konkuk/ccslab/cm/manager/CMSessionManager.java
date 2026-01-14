@@ -415,20 +415,17 @@ public class CMSessionManager {
 		if(session == null)
 		{
 			System.out.println("CMSessionManager.addLeaveSession(), session("+strCurrentSession
-					+") not found for leaving user("+user.getName()+")!");
+					+") not found for leaving user("+user.getName()+"), uuid("+user.getUuid()+")!");
 			return;
 		}
-		session.getSessionUsers().removeMember(user.getName());
+		session.getSessionUsers().removeMember(user);
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMSessionManager.addLeaveSession(), user("+user.getName()+"), session("
-					+strCurrentSession+"), # remaining session member ("
-					+session.getSessionUsers().getMemberNum()+").");
+					+strCurrentSession+"), # remaining session member ("+session.getSessionUsers().getMemberNum()+").");
 		}
 		
 		user.setCurrentSession("");
-		
-		return;
 	}
 }
