@@ -73,16 +73,22 @@ public class CMCommManager {
 		}
 		
 		// socket channel of users (server)
-		Iterator<CMUser> iterUser = interInfo.getLoginUsers().getAllMembers().iterator();
-		while(iterUser.hasNext())
+		// [MODIFIED START]
+		// Adapted iteration logic to support the change in CMMember structure (Hashtable<String, List<CMUser>>)
+		// for multi-login.
+		// The getAllMembers() now returns a Hashtable, so we iterate through the values (List<CMUser>).
+		Hashtable<String, List<CMUser>> loginUserTable = interInfo.getLoginUsers().getAllMembers();
+		for(List<CMUser> userList : loginUserTable.values())
 		{
-			CMUser tUser = iterUser.next();
-			CMChannelInfo<Integer> chInfo = tUser.getNonBlockSocketChannelInfo();
-			chInfo.removeAllChannels();
-			chInfo = tUser.getBlockSocketChannelInfo();
-			chInfo.removeAllChannels();
+			for(CMUser tUser : userList)
+			{
+				CMChannelInfo<Integer> chInfo = tUser.getNonBlockSocketChannelInfo();
+				chInfo.removeAllChannels();
+				chInfo = tUser.getBlockSocketChannelInfo();
+				chInfo.removeAllChannels();
+			}
 		}
-		
+
 		// multicast channel
 		Iterator<CMSession> iterSession = interInfo.getSessionList().iterator();
 		while(iterSession.hasNext())
