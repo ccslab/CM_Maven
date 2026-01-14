@@ -1,7 +1,9 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 
 import java.io.IOException;
+import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +46,15 @@ public class CMServerKeepAliveTask implements Runnable {
 		
 		// for each login user
 		CMMember loginMembers = CMInteractionInfo.getInstance().getLoginUsers();
-		Vector<CMUser> loginUsersVector = loginMembers.getAllMembers();
+		// [Modified] CMMember now manages users with Hashtable<String, List<CMUser>>.
+		// To safely iterate and remove users (which modifies the underlying collection),
+		// we first copy all users into a temporary Vector.
+		Hashtable<String, List<CMUser>> loginUsersHashtable = loginMembers.getAllMembers();
+		Vector<CMUser> loginUsersVector = new Vector<>();
+		for(List<CMUser> list : loginUsersHashtable.values()) {
+			loginUsersVector.addAll(list);
+		}
+		// Iterate in reverse order to safely handle removals (same rationale as original code)
 		for(i = loginUsersVector.size()-1; i >= 0; i--)
 		{
 			CMUser user = loginUsersVector.elementAt(i);
@@ -55,7 +65,7 @@ public class CMServerKeepAliveTask implements Runnable {
 				LOG.info("for user("+user.getName()+"), elapsed time("
 						+(lElapsedTime/1000.0)+"), keep-alive time*1.5("
 						+(nKeepAliveTime*1.5)+").");
-				
+				// This method will remove the user from the original loginMembers
 				CMInteractionManager.disconnectBadClientByServer(user);
 
 				LOG.info("disconnect user("+user.getName()+"), # login users: "
