@@ -851,27 +851,32 @@ public class CMGroupManager {
 					+targetUser.getCurrentGroup()+") NOT found.");
 			return;
 		}
-		
-		Iterator<CMUser> iterUser = group.getGroupUsers().getAllMembers().iterator();
-		while(iterUser.hasNext())
+
+		// [Modified] Handle multi-login: Iterate through the Hashtable of group members
+		// CMMember.getAllMembers() now returns Hashtable<String, List<CMUser>>
+		Hashtable<String, List<CMUser>> userTable = group.getGroupUsers().getAllMembers();
+		for( List<CMUser> userList : userTable.values() )
 		{
-			CMUser tUser = iterUser.next();
-			CMMultiServerEvent mse = new CMMultiServerEvent();
-			mse.setID(CMMultiServerEvent.ADD_GROUP_INHABITANT);
-			mse.setServerName(interInfo.getMyself().getName());
-			mse.setUserName(tUser.getName());
-			mse.setHostAddress(tUser.getHost());
-			mse.setUDPPort(tUser.getUDPPort());
-			mse.setSessionName(tUser.getCurrentSession());
-			mse.setGroupName(tUser.getCurrentGroup());
-			CMEventManager.unicastEvent(mse, targetUser.getName());
-			mse = null;
+			for (CMUser tUser : userList)
+			{
+				CMMultiServerEvent mse = new CMMultiServerEvent();
+				mse.setID(CMMultiServerEvent.ADD_GROUP_INHABITANT);
+				mse.setServerName(interInfo.getMyself().getName());
+				mse.setUserName(tUser.getName());
+				mse.setUuid(tUser.getUuid());
+				mse.setHostAddress(tUser.getHost());
+				mse.setUDPPort(tUser.getUDPPort());
+				mse.setSessionName(tUser.getCurrentSession());
+				mse.setGroupName(tUser.getCurrentGroup());
+				CMEventManager.unicastEvent(mse, targetUser.getName(), targetUser.getUuid());
+			}
 		}
 		
-		if(CMInfo._CM_DEBUG)
-			System.out.println("CMGroupManager.addDistributeGroupUsers(), session("+session.getSessionName()
-					+"), group("+group.getGroupName()+") inhabitants to user("+targetUser.getName()+").");
-		return;
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("CMGroupManager.addDistributeGroupUsers(), session(" + session.getSessionName()
+					+ "), group(" + group.getGroupName() + ") inhabitants to user(" + targetUser.getName()
+					+ "), uuid(" + targetUser.getUuid() + ") sent.");
+		}
 	}
 
 	public static void addNotifyGroupUsersOfNewUser(CMUser newUser)
