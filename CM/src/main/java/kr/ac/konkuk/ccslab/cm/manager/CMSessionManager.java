@@ -375,8 +375,8 @@ public class CMSessionManager {
 		
 		if(!ret)
 		{
-			System.out.println("CMSessionManager.addJoinSession(), fail to add user("+user.getName()+") "
-					+ "to session("+user.getCurrentSession()+").");
+			System.out.println("CMSessionManager.addJoinSession(), fail to add user("+user.getName()
+					+"), uuid("+user.getUuid()+") to session("+user.getCurrentSession()+")!");
 			return false;
 		}
 		
@@ -396,10 +396,8 @@ public class CMSessionManager {
 			mseAck.addGroupInfo(gi);
 		}
 
-		CMEventManager.unicastEvent(mseAck, user.getName());
-
+		CMEventManager.unicastEvent(mseAck, user.getName(), user.getUuid());
 		mseAck.removeAllGroupInfoObjects();
-		mseAck = null;
 		return true;
 	}
 	
