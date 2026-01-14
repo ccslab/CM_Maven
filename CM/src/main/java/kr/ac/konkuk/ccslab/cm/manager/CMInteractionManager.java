@@ -3844,17 +3844,18 @@ public class CMInteractionManager {
 		}
 
 		CMUser myself = interInfo.getMyself();
-		if(myself.getName().equals(mse.getUserName()))
+		if(myself.getName().equals(mse.getUserName()) && Objects.equals(myself.getUuid(), mse.getUuid()))
 		{
 			System.out.println("CMInteractionManager.processADD_GROUP_INHABITANT(), user("
-					+mse.getUserName()+") is myself. group("+tgroup.getGroupName()+"), session("
-					+tsession.getSessionName()+"), server("+tserver.getServerName()+").");
+					+mse.getUserName()+"), uuid("+mse.getUuid()+") is myself. group("+tgroup.getGroupName()
+					+"), session("+tsession.getSessionName()+"), server("+tserver.getServerName()+").");
 			return;
 		}
 		
 		// add the existing group member to the group of session of the server
 		CMUser user = new CMUser();
 		user.setName(mse.getUserName());
+		user.setUuid(mse.getUuid());
 		user.setHost(mse.getHostAddress());
 		user.setUDPPort(mse.getUDPPort());
 		user.setCurrentSession(mse.getSessionName());
@@ -3864,13 +3865,10 @@ public class CMInteractionManager {
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_GROUP_INHABITANT(), user("
-					+user.getName()+"), host("+user.getHost()+"), udpport("+user.getUDPPort()
-					+"), current session("+user.getCurrentSession()+"), current group("
-					+user.getCurrentGroup()+").");
+			System.out.println("CMInteractionManager.processADD_GROUP_INHABITANT(), user("+user.getName()
+					+"), uuid("+user.getUuid()+"), host("+user.getHost()+"), udpport("+user.getUDPPort()
+					+"), current session("+user.getCurrentSession()+"), current group("+user.getCurrentGroup()+").");
 		}
-		
-		return;
 	}
 	
 	private static void processADD_NEW_GROUP_USER(CMMultiServerEvent mse)
