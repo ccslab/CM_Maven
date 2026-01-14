@@ -3691,14 +3691,15 @@ public class CMInteractionManager {
 	
 	private static void processADD_LEAVE_SESSION(CMMultiServerEvent mse)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		CMUser user = null;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_LEAVE_SESSION(), system type is not SERVER");
 			return;
+		}
 		
 		// find a session
 		session = interInfo.findSession(mse.getSessionName());
@@ -3711,11 +3712,11 @@ public class CMInteractionManager {
 		}
 		
 		// find a session user
-		user = session.getSessionUsers().findMember(mse.getUserName());
+		user = session.getSessionUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
-			System.out.println("CMIntractionManager.processADD_LEAVE_SESSION(), user("
-					+mse.getUserName()+") not found in session("+session.getSessionName()
+			System.out.println("CMIntractionManager.processADD_LEAVE_SESSION(), user("+mse.getUserName()
+					+"), uuid("+mse.getSenderUuid()+") not found in session("+session.getSessionName()
 					+") of this server("+interInfo.getMyself().getName()+")!");
 			return;
 		}
@@ -3727,13 +3728,9 @@ public class CMInteractionManager {
 		tmse.setID(CMMultiServerEvent.ADD_CHANGE_SESSION);
 		tmse.setServerName(interInfo.getMyself().getName());
 		tmse.setUserName(user.getName());
+		tmse.setUuid(user.getUuid());	// same as mse.getSenderUuid()
 		tmse.setSessionName("");
 		CMEventManager.broadcastEvent(tmse);
-		
-		//// do not send LEAVE_SESSION_ACK (?)
-
-		tmse = null;
-		return;
 	}
 	
 	private static void processADD_CHANGE_SESSION(CMMultiServerEvent mse)
