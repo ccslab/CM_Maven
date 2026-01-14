@@ -89,31 +89,6 @@ public class CMMember extends CMObject{
 	}
 
 	/**
-	 * Removes all users with the given name from this member table.
-	 * 
-	 * @param name - the name of a removed user.
-	 * @return true if the user is successfully removed, or false.
-	 */
-	public synchronized boolean removeMember(String name)
-	{
-		List<CMUser> userList = m_memberTable.get(name);
-
-		if( userList == null ) {
-			System.err.println("CMMember.removeMember(name), no user list with name ("+name+") found!");
-			return false;
-		}
-
-		userList.clear();
-		m_memberTable.remove(name);
-
-		if(CMInfo._CM_DEBUG) {
-			System.out.println("CMMember.removeMember(), user list ("+name+") deleted.");
-		}
-
-		return true;
-	}
-
-	/**
 	 * Removes a specific user with the given name and UUID.
 	 * * @param name - the user name
 	 * @param uuid - the user UUID
