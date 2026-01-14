@@ -3741,9 +3741,8 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_CHANGE_SESSION(), nothing to do "
 					+"in the CM.");
 			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()+
-					"), session("+mse.getSessionName()+").");
+					"), uuid("+mse.getUuid()+"), session("+mse.getSessionName()+").");
 		}
-		return;
 	}
 	
 	private static void processADD_JOIN_GROUP(CMMultiServerEvent mse)
