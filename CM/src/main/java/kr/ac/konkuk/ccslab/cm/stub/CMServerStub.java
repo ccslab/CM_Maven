@@ -2,9 +2,7 @@ package kr.ac.konkuk.ccslab.cm.stub;
 
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -656,24 +654,27 @@ public class CMServerStub extends CMStub {
 		CMMember loginUsers = interInfo.getLoginUsers();
 		if(!loginUsers.isEmpty())
 		{
-			Vector<CMUser> loginUserList = loginUsers.getAllMembers();
-			Iterator<CMUser> iter = loginUserList.iterator();
-
-			while(iter.hasNext())
-			{
-				CMUser user = iter.next();
-				sb.append("==== user: "+user.getName()+"\n");
-				strChInfo = user.getNonBlockSocketChannelInfo().toString();
-				if(strChInfo != null)
-				{
-					sb.append("-- non-blocking socket channel\n");
-					sb.append(strChInfo);
-				}
-				strChInfo = user.getBlockSocketChannelInfo().toString();
-				if(strChInfo != null)
-				{
-					sb.append("-- blocking socket channel\n");
-					sb.append(strChInfo);
+			/*
+			 * [Modification Start]
+			 * The return type of getAllMembers() has been changed from Vector<CMUser> to
+			 * Hashtable<String, List<CMUser>> to support multiple logins.
+			 * The iteration logic is updated to traverse the values of the Hashtable.
+			 */
+			// Iterate through the list of users for each key in the hashtable [cite: 509]
+			Hashtable<String, List<CMUser>> loginUserTable = loginUsers.getAllMembers();
+			for(List<CMUser> userList : loginUserTable.values()) {
+				for(CMUser user : userList) {
+					sb.append("==== user: " + user.getName() + ", uuid: "+user.getUuid()+"\n");
+					strChInfo = user.getNonBlockSocketChannelInfo().toString();
+					if (strChInfo != null) {
+						sb.append("-- non-blocking socket channel\n");
+						sb.append(strChInfo);
+					}
+					strChInfo = user.getBlockSocketChannelInfo().toString();
+					if (strChInfo != null) {
+						sb.append("-- blocking socket channel\n");
+						sb.append(strChInfo);
+					}
 				}
 			}
 		}
