@@ -3747,7 +3747,6 @@ public class CMInteractionManager {
 	
 	private static void processADD_JOIN_GROUP(CMMultiServerEvent mse)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		CMGroup group = null;
@@ -3770,11 +3769,11 @@ public class CMInteractionManager {
 			return;
 		}
 		// find a user
-		user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), user("
-					+mse.getUserName()+") not found in the login user list.");
+					+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") not found in the login user list.");
 			return;
 		}
 		user.setCurrentGroup(mse.getGroupName());
@@ -3782,26 +3781,22 @@ public class CMInteractionManager {
 		if(!ret)
 		{
 			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), fail to add user("
-					+user.getName()+") to group("+group.getGroupName()+") of session("
+					+user.getName()+"), uuid("+user.getUuid()+") to group("+group.getGroupName()+") of session("
 					+session.getSessionName()+").");
 			return;
 		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), add user("
-					+mse.getUserName()+") to group("+group.getGroupName()+") of session("
-					+session.getSessionName()+"), # group users("
-					+group.getGroupUsers().getMemberNum()+").");
+			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), add user("+mse.getUserName()
+					+"), uuid("+mse.getSenderUuid()+") to group("+group.getGroupName()+") of session("
+					+session.getSessionName()+"), # group users("+group.getGroupUsers().getMemberNum()+").");
 		}
 
 		// send the new user existing group member information
 		CMGroupManager.addDistributeGroupUsers(user);
-		
 		// send group members the new user information
 		CMGroupManager.addNotifyGroupUsersOfNewUser(user);
-
-		return;
 	}
 	
 	private static void processADD_GROUP_INHABITANT(CMMultiServerEvent mse)
