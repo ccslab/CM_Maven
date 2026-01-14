@@ -3632,7 +3632,7 @@ public class CMInteractionManager {
 		CMGroup group = null;
 		
 		if(!confInfo.getSystemType().equals("CLIENT")) {
-			System.err.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), system type is not CLIENT!"");
+			System.err.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), system type is not CLIENT!");
 			return;
 		}
 		
