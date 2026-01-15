@@ -1456,23 +1456,45 @@ public class CMServerApp {
 	
 	public void sendEventWithWrongByteNum()
 	{
-		System.out.println("========== send a CMDummyEvent with wrong # bytes to a client");
+		System.out.println("========== send a CMDummyEvent with wrong # bytes to a target");
 		
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
 		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();
+
+		// [Modification Start]
+		// Prepare the event first to send it to multiple targets (devices) if necessary.
+		CMDummyEvent due = new CMDummyEvent();
+		ByteBuffer buf = due.marshall();
+
+		// 1. Try to find the user list (for multiple logins)
+		List<CMUser> userList = interInfo.getLoginUsers().findMemberList(strTarget);
+
+		if(userList != null && !userList.isEmpty())
+		{
+			// Iterate over all active sessions (devices) of the user
+			for(CMUser user : userList)
+			{
+				SelectableChannel ch = user.getNonBlockSocketChannelInfo().findChannel(0);
+				if(ch != null)
+				{
+					CMMessage msg = new CMMessage(buf, ch);
+					sendQueue.push(msg);
+				}
+			}
+			// Completed sending to the user(s). Return to avoid executing server logic.
+			return;
+		}
+		// [Modification End]
+
+		// 2. If not a user, check if it is a server
 		SelectableChannel ch = null;
-		CMUser user = interInfo.getLoginUsers().findMember(strTarget);
 		CMServer server = null;
 
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		if(user != null)
-		{
-			ch = user.getNonBlockSocketChannelInfo().findChannel(0);
-		}
-		else if(strTarget.contentEquals(strDefServer))
+		if(strTarget.contentEquals(strDefServer))
 		{
 			ch = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().findChannel(0);
 		}
@@ -1488,12 +1510,11 @@ public class CMServerApp {
 				return;
 			}
 		}
-		
-		CMDummyEvent due = new CMDummyEvent();
-		ByteBuffer buf = due.marshall();
-		CMMessage msg = new CMMessage(buf, ch);
-		sendQueue.push(msg);
 
+		if(ch != null) {
+			CMMessage msg = new CMMessage(buf, ch);
+			sendQueue.push(msg);
+		}
 	}
 	
 	public void sendEventWithWrongEventType()
