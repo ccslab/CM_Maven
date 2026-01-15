@@ -1,25 +1,32 @@
 package kr.ac.konkuk.ccslab.cm.sns;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMObject;
+import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMSNSPrefetchHashMap extends CMObject {
-	private HashMap<String, CMSNSPrefetchList> m_prefetchMap;
+	private HashMap<CMUserLoginKey, CMSNSPrefetchList> m_prefetchMap;
 	
 	public CMSNSPrefetchHashMap()
 	{
-		m_prefetchMap = new HashMap<String, CMSNSPrefetchList>();
+		m_prefetchMap = new HashMap<>();
 	}
 
-	public CMSNSPrefetchList findPrefetchList(String strUserName)
+	public CMSNSPrefetchList findPrefetchList(String strUserName, UUID uuid)
 	{
-		CMSNSPrefetchList prefetchList = m_prefetchMap.get(strUserName);
-		return prefetchList;
+		if(strUserName == null) {
+			System.err.println("CMSNSPrefetchHashMap.findPrefetchList(), the user name is null!");
+			return null;
+		}
+
+		CMUserLoginKey key = new CMUserLoginKey(strUserName, uuid);
+		return m_prefetchMap.get(key);
 	}
 
-	public boolean addPrefetchList(String strUserName, CMSNSPrefetchList prefetchList)
+	public boolean addPrefetchList(String strUserName, UUID uuid, CMSNSPrefetchList prefetchList)
 	{
 		// check if parameters are null or not
 		if(strUserName == null)
@@ -33,60 +40,53 @@ public class CMSNSPrefetchHashMap extends CMObject {
 			System.err.println("CMSNSPrefetchHashMap.addPrefetchList(), prefetch list is null!");
 			return false;
 		}
-		
+
+		CMUserLoginKey key = new CMUserLoginKey(strUserName, uuid);
+
 		// check if the key already exists or not
-		if(m_prefetchMap.containsKey(strUserName))
+		if(m_prefetchMap.containsKey(key))
 		{
-			System.err.println("CMSNSPrefetchHashMap.addPrefetchList(), key("+strUserName+") already exists!");
+			System.err.println("CMSNSPrefetchHashMap.addPrefetchList(), key("+strUserName+"), uuid("
+					+uuid+") already exists!");
 			return false;
 		}
 		
-		m_prefetchMap.put(strUserName, prefetchList);
+		m_prefetchMap.put(key, prefetchList);
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSNSPrefetchHashMap.addPrefetchList(), succeeded for user("+strUserName+").");
+			System.out.println("CMSNSPrefetchHashMap.addPrefetchList(), succeeded for user("+strUserName
+					+"), uuid("+uuid+").");
 		}
 		return true;
 	}
 	
-	public boolean removePrefetchList(String strUserName)
+	public boolean removePrefetchList(String strUserName, UUID uuid)
 	{
-		//CMSNSPrefetchList prefetchList = null;
-		
-		if(!m_prefetchMap.containsKey(strUserName))
-		{
-			if(CMInfo._CM_DEBUG)
-				System.err.println("CMSNSPrefetchHashMap.removePrefetchList(), key("+strUserName+") not found!");
+		if(strUserName == null) {
+			System.err.println("CMSNSPrefetchHashMap.removePrefetchList(), the user name is null!");
 			return false;
 		}
-		
-		//prefetchList = m_prefetchMap.get(strUserName);
-		m_prefetchMap.remove(strUserName);
-		//prefetchList = null;
-		
+		CMUserLoginKey key = new CMUserLoginKey(strUserName, uuid);
+
+		if(!m_prefetchMap.containsKey(key))
+		{
+			if(CMInfo._CM_DEBUG)
+				System.err.println("CMSNSPrefetchHashMap.removePrefetchList(), key("+key+") not found!");
+			return false;
+		}
+		m_prefetchMap.remove(key);
+
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSNSPrefetchHashMap.removePrefetchList(), succeeded for key("+strUserName+").");
+			System.out.println("CMSNSPrefetchHashMap.removePrefetchList(), succeeded for key("+key+").");
 		}
-		
 		return true;
 	}
 	
 	public void removeAllPrefetchList()
 	{
-		/*
-		CMSNSPrefetchList prefetchList = null;
-		Iterator<Entry<String, CMSNSPrefetchList>> iter = m_prefetchMap.entrySet().iterator();
-		while(iter.hasNext())
-		{
-			Map.Entry<String, CMSNSPrefetchList> e = (Map.Entry<String, CMSNSPrefetchList>) iter.next();
-			prefetchList = e.getValue();
-			prefetchList = null;
-		}
-		*/
 		m_prefetchMap.clear();
-		return;
 	}
 
 }
