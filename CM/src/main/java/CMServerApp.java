@@ -1468,6 +1468,8 @@ public class CMServerApp {
 		// Prepare the event first to send it to multiple targets (devices) if necessary.
 		CMDummyEvent due = new CMDummyEvent();
 		ByteBuffer buf = due.marshall();
+		buf.clear();
+		buf.putInt(-1).clear();
 
 		// 1. Try to find the user list (for multiple logins)
 		List<CMUser> userList = interInfo.getLoginUsers().findMemberList(strTarget);
