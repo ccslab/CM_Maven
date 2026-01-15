@@ -617,7 +617,7 @@ public class CMServerApp {
 			return;
 		}
 		
-		m_serverStub.setAttachDownloadScheme(strUserName, nScheme);
+		m_serverStub.setAttachDownloadScheme(strUserName, null, nScheme);
 		return;
 	}
 	

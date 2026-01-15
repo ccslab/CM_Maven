@@ -919,7 +919,7 @@ public class CMWinServer extends JFrame {
 					+"] is set to ["+lodBox.getItemAt(nScheme)+"].\n");
 			if(strUserName.isEmpty())
 				strUserName = null;
-			m_serverStub.setAttachDownloadScheme(strUserName, nScheme);
+			m_serverStub.setAttachDownloadScheme(strUserName, null, nScheme);
 		}
 		
 		return;
