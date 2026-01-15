@@ -167,7 +167,7 @@ public class CMSNSManager {
 		{
 			// find attachment info to be received
 			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
-			attachList = attachHashtable.findSNSAttachList(fe.getFileSender());
+			attachList = attachHashtable.findSNSAttachList(fe.getFileSender(), fe.getFileSenderUuid());
 			if(attachList == null) return;
 			attach = attachList.findSNSAttach(fe.getContentID());
 			if(attach == null) return;
@@ -221,7 +221,7 @@ public class CMSNSManager {
 			se.setContentID(attach.getContentID());
 			se.setDate(attach.getCreationTime());
 			se.setUserName(attach.getRequesterName());
-			CMEventManager.unicastEvent(se, fe.getFileSender());
+			CMEventManager.unicastEvent(se, fe.getFileSender(), fe.getFileSenderUuid());
 			se = null;
 			
 			// remove the completed attachment info
@@ -229,7 +229,7 @@ public class CMSNSManager {
 			attach = null;
 			if(attachList.getSNSAttachList().isEmpty())
 			{
-				attachHashtable.removeSNSAttachList(fe.getFileSender());
+				attachHashtable.removeSNSAttachList(fe.getFileSender(), fe.getFileSenderUuid());
 				attachList = null;
 			}
 
@@ -264,6 +264,7 @@ public class CMSNSManager {
 		int nContentID = fe.getContentID();
 		String strFileName = fe.getFileName();
 		String strReceiverName = fe.getFileReceiver();
+		UUID fileReceiverUuid = fe.getFileReceiverUuid();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
@@ -272,11 +273,11 @@ public class CMSNSManager {
 		}
 		else	// SERVER
 		{
-			checkServerCompleteSendAttachedFiles(strReceiverName, nContentID, strFileName);
+			checkServerCompleteSendAttachedFiles(strReceiverName, fileReceiverUuid, nContentID, strFileName);
 			
 			// check the completion of prefetching process
 			CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName);
+			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName, fileReceiverUuid);
 			if(user != null && user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 			{
 				checkServerCompletePrefetch(strReceiverName, strFileName);
@@ -306,7 +307,8 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be transferred or not
 	// called when a server completes its file transfer
-	private static void checkServerCompleteSendAttachedFiles(String strUserName, int nContentID, String strFileName)
+	private static void checkServerCompleteSendAttachedFiles(String strUserName, UUID uuid, int nContentID,
+															 String strFileName)
 	{
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach attach = null;
@@ -314,7 +316,7 @@ public class CMSNSManager {
 
 		// find and update the completed attachment info
 		CMSNSAttachHashtable attachHashtable = snsInfo.getSendSNSAttachHashtable();
-		CMSNSAttachList attachList = attachHashtable.findSNSAttachList(strUserName);
+		CMSNSAttachList attachList = attachHashtable.findSNSAttachList(strUserName, uuid);
 		if(attachList == null) return;
 		attach = attachList.findSNSAttach(nContentID);
 		if(attach == null) return;
@@ -337,11 +339,11 @@ public class CMSNSManager {
 			sevent.setNumContents( attachList.getNumContents() );
 
 			// send the end event
-			CMEventManager.unicastEvent(sevent, strUserName);
+			CMEventManager.unicastEvent(sevent, strUserName, uuid);
 			sevent = null;
 			
 			// remove the completed attachment list info
-			attachHashtable.removeSNSAttachList(strUserName);
+			attachHashtable.removeSNSAttachList(strUserName, uuid);
 			attachList = null;
 		}
 		
@@ -721,7 +723,7 @@ public class CMSNSManager {
 		int nDefDownloadNum = confInfo.getDownloadNum();
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
+		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName(), se.getSenderUuid());
 		int nAttachDownloadScheme = user.getAttachDownloadScheme();
 
 		if(confInfo.isDownloadScheme())
@@ -911,7 +913,8 @@ public class CMSNSManager {
 						CMSNSAttach attach = new CMSNSAttach();
 						attach.setContentID(nContID);
 						attach.setFilePathList(pathList);
-						CMSNSAttachList attachList = sendAttachHashtable.findSNSAttachList(se.getUserName());
+						CMSNSAttachList attachList = sendAttachHashtable.findSNSAttachList(se.getUserName(),
+								se.getSenderUuid());
 						if(attachList != null)
 						{
 							attachList.addSNSAttach(attach);
@@ -922,7 +925,7 @@ public class CMSNSManager {
 							attachList.addSNSAttach(attach);
 							attachList.setContentDownloadEndEvent(se.getUserName(), se.getWriterName(), 
 									se.getContentOffset(), contentList.getSNSContentNum());
-							sendAttachHashtable.addSNSAttachList(se.getUserName(), attachList);
+							sendAttachHashtable.addSNSAttachList(se.getUserName(), se.getSenderUuid(), attachList);
 						}
 						
 						// save the prefetch list if current mode is the prefetch mode
@@ -959,7 +962,7 @@ public class CMSNSManager {
 				}
 				*/
 		
-				CMEventManager.unicastEvent(sevent, se.getUserName());
+				CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
 				sevent = null;
 				nameList = null;
 			}
@@ -1333,7 +1336,7 @@ public class CMSNSManager {
 			CMSNSAttachList attachList = new CMSNSAttachList();
 			attachList.addSNSAttach(attach);
 			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
-			attachHashtable.addSNSAttachList(se.getUserName(), attachList);
+			attachHashtable.addSNSAttachList(se.getUserName(), se.getSenderUuid(), attachList);
 			/////////////// request for the attached files			
 			tse = new CMSNSEvent();
 			tse.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
@@ -1805,7 +1808,7 @@ public class CMSNSManager {
 		{
 			// find sendAttachHashtable
 			sendAttachHashtable = snsInfo.getSendSNSAttachHashtable();
-			attachList = sendAttachHashtable.findSNSAttachList(se.getUserName());
+			attachList = sendAttachHashtable.findSNSAttachList(se.getUserName(), se.getSenderUuid());
 			if(attachList == null)
 			{
 				System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILES(), attach list for user("
@@ -1854,7 +1857,7 @@ public class CMSNSManager {
 				seAck.setContentID(se.getContentID());
 				seAck.setNumAttachedFiles(naFileNameList.size());
 				seAck.setFileNameList(naFileNameList);
-				CMEventManager.unicastEvent(seAck, se.getUserName());
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			naFileNameList = null;

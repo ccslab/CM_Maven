@@ -1952,8 +1952,8 @@ public class CMInteractionManager {
 		fInfo.removeSendFileList(user.getName(), user.getUuid());
 		// remove all the ongoing sns related file-transfer info about the user
 		snsInfo.getPrefetchMap().removePrefetchList(user.getName());
-		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName());
-		snsInfo.getSendSNSAttachHashtable().removeSNSAttachList(user.getName());
+		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName(), user.getUuid());
+		snsInfo.getSendSNSAttachHashtable().removeSNSAttachList(user.getName(), user.getUuid());
 		// [신규 추가] 로그아웃 시 SNS 사용자 정보 테이블에서 엔트리 삭제
 		snsInfo.getSNSUserInfoTable().remove(user.getName());
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
