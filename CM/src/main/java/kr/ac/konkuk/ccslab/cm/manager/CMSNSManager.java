@@ -280,7 +280,7 @@ public class CMSNSManager {
 			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName, fileReceiverUuid);
 			if(user != null && user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 			{
-				checkServerCompletePrefetch(strReceiverName, strFileName);
+				checkServerCompletePrefetch(strReceiverName, fileReceiverUuid, strFileName);
 			}			
 		}
 		return;
@@ -352,39 +352,39 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be prefetched or not
 	// called when a server completes its file transfer
-	private static void checkServerCompletePrefetch(String strUserName, String strFileName)
+	private static void checkServerCompletePrefetch(String strUserName, UUID uuid, String strFileName)
 	{
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
-		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
+		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName, uuid);
 		if(prefetchList == null) return;
 		String strPath = prefetchList.findFilePath(strFileName);
 		if(strPath == null) return;
 		prefetchList.removeFilePath(strPath);
 		if(!prefetchList.getFilePathList().isEmpty()) return;
-		prefetchMap.removePrefetchList(strUserName);
+		prefetchMap.removePrefetchList(strUserName, uuid);
 		if(CMInfo._CM_DEBUG)
-			System.out.println("CMSNSManager.checkServerPrefetchCompletion(), "
-					+"prefetching for user("+strUserName+") completes.");
+			System.out.println("CMSNSManager.checkServerPrefetchCompletion(), prefetching for user("+strUserName
+					+"), uuid("+uuid+") completes.");
 		
 		// notify the user of the prefetching completion?
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.PREFETCH_COMPLETED);
 		se.setUserName(strUserName);
-		CMEventManager.unicastEvent(se, strUserName);
+		CMEventManager.unicastEvent(se, strUserName, uuid);
 		se = null;
 		
 		return;
 	}
 	
 	// check whether the original files are currently being prefetched to the client or not
-	private static boolean isServerPrefetchOngoing(String strUserName)
+	private static boolean isServerPrefetchOngoing(String strUserName, UUID uuid)
 	{
 		boolean bFound = false;
 		// find the prefetch list of the client
 		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSPrefetchHashMap  prefetchMap = snsInfo.getPrefetchMap();
-		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
+		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName, uuid);
 		if(prefetchList == null) return false;
 		
 		// find the ongoing file sending info
@@ -631,18 +631,18 @@ public class CMSNSManager {
 			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			
 			// check for the ongoing prefetch to the user, and cancel the prefetched file transfer
-			if(isServerPrefetchOngoing(strUser))
+			if(isServerPrefetchOngoing(strUser, se.getSenderUuid()))
 			{
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
-							+ "to the user("+strUser+")");
+							+ "to the user("+strUser+"), uuid("+se.getSenderUuid()+").");
 				CMFileTransferManager.cancelPushFile(strUser);	// not clear
 			}
 			
 			// clear the prefetch list of the user
-			CMSNSPrefetchList prefetchList = snsInfo.getPrefetchMap().findPrefetchList(strUser);
+			CMSNSPrefetchList prefetchList = snsInfo.getPrefetchMap().findPrefetchList(strUser, se.getSenderUuid());
 			if(prefetchList != null)
-				snsInfo.getPrefetchMap().removePrefetchList(strUser);
+				snsInfo.getPrefetchMap().removePrefetchList(strUser, se.getSenderUuid());
 		}
 	
 		nReturnCode = 1;
@@ -663,7 +663,7 @@ public class CMSNSManager {
 		}
 	
 		// send the response event
-		CMEventManager.unicastEvent(seAck, strUser);
+		CMEventManager.unicastEvent(seAck, strUser, se.getSenderUuid());
 		
 		seAck = null;
 		return;
@@ -932,13 +932,14 @@ public class CMSNSManager {
 						if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH && !prefetchPathList.isEmpty())
 						{
 							CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
-							CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName());
+							CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName(),
+									se.getSenderUuid());
 							if(prefetchList == null)
 							{
 								prefetchList = new CMSNSPrefetchList();
 							}
 							prefetchList.addFilePathList(prefetchPathList);
-							prefetchMap.addPrefetchList(se.getUserName(), prefetchList);
+							prefetchMap.addPrefetchList(se.getUserName(), se.getSenderUuid(), prefetchList);
 						}
 					}
 				}
@@ -1021,7 +1022,7 @@ public class CMSNSManager {
 				}
 				*/
 		
-				CMEventManager.unicastEvent(sevent, se.getUserName());
+				CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
 				sevent = null;
 			}
 		}
@@ -1037,7 +1038,7 @@ public class CMSNSManager {
 			sevent.setNumContents( contentList.getSNSContentNum() );
 
 			// send the end event
-			CMEventManager.unicastEvent(sevent, se.getUserName());
+			CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
 			sevent = null;
 		}
 		
@@ -1200,8 +1201,8 @@ public class CMSNSManager {
 	{
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_END_RESPONSE(), requester("
-					+se.getUserName()+"), offset("+se.getContentOffset()+"), return code("
+			System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_END_RESPONSE(), requester(" +se.getUserName()
+					+"), uuid("+se.getSenderUuid()+"), offset("+se.getContentOffset()+"), return code("
 					+se.getReturnCode()+").");
 		}
 		
@@ -1211,7 +1212,7 @@ public class CMSNSManager {
 		{
 			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
-			CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName());
+			CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName(), se.getSenderUuid());
 			if(prefetchList == null) return;
 			ArrayList<String> preArrayList = prefetchList.getFilePathList();
 			if(CMInfo._CM_DEBUG)
@@ -1225,7 +1226,7 @@ public class CMSNSManager {
 			// start prefetching to the user
 			for(int i = 0; i < preArrayList.size(); i++)
 			{
-				CMFileTransferManager.pushFile(preArrayList.get(i), se.getUserName());
+				CMFileTransferManager.pushFile(preArrayList.get(i), se.getUserName(), se.getSenderUuid());
 			}
 		}
 		
