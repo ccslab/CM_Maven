@@ -880,7 +880,7 @@ public class CMSNSManager {
 											+ "call isPrefetchEnabled() for content("+nContID+").");
 								}
 								// check prefetch threshold (interest of a user in a writer)
-								if(isPrefetchEnabled(se.getUserName(), strWriter))
+								if(isPrefetchEnabled(se.getUserName(), se.getSenderUuid(), strWriter))
 								{
 									// add a file path to the prefetching list
 									// avoid duplicate path
@@ -1061,7 +1061,7 @@ public class CMSNSManager {
 	*/
 	
 	// check how much 'strUserName' has interest in 'strWriterName' in terms of access count during specified dates  
-	private static boolean isPrefetchEnabled(String strUserName, String strWriterName)
+	private static boolean isPrefetchEnabled(String strUserName, UUID userUuid, String strWriterName)
 	{
 		boolean bEnable = false;
 		int nTotalAccessCount = 0;
@@ -1074,7 +1074,7 @@ public class CMSNSManager {
 		
 		// get access history of 'strUserName' during specified dates (already retrieved at the login time)
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMUser user = interInfo.getLoginUsers().findMember(strUserName);
+		CMUser user = interInfo.getLoginUsers().findMember(strUserName, userUuid);
 		if(user == null)
 		{
 			System.err.println("CMSNSManager.isPrefetchEnabled(), the requesting user is null!");
@@ -1085,7 +1085,7 @@ public class CMSNSManager {
 		CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
 		if( snsUserInfo == null ) {
 			System.err.println("CMSNSManager.isPrefetchEnabled(), sns user info not found for user("
-					+user.getName()+")!");
+					+user.getName()+"), uuid("+user.getUuid()+")!");
 			return false;
 		}
 		CMSNSAttachAccessHistoryList historyList = snsUserInfo.getSNSAttachAccessHistoryList();
@@ -1108,7 +1108,7 @@ public class CMSNSManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			DecimalFormat df = new DecimalFormat("0.0#");
-			System.out.println("CMSNSManager.isPrefetchEnabled(), user("+strUserName+"), writer("
+			System.out.println("CMSNSManager.isPrefetchEnabled(), user("+strUserName+"), uuid("+userUuid+"), writer("
 					+strWriterName+"), accessCount("+nAccessCount+"), TotalCount("+nTotalAccessCount
 					+"), accessRate("+df.format(dAccessRate)+"), threshold("+dThreshold+").");
 			
