@@ -2086,15 +2086,17 @@ public class CMSNSManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		String strRequester = se.getUserName();
+		UUID requesterUuid = se.getSenderUuid();
 		//int nContentID = se.getContentID();
 		String strWriter = se.getWriterName();
 		//String strFileName = se.getFileName();
 
 		// check the prefetching mode
-		CMUser user = interInfo.getLoginUsers().findMember(strRequester);
+		CMUser user = interInfo.getLoginUsers().findMember(strRequester, requesterUuid);
 		if(user == null)
 		{
-			System.err.println("CMSNSManager.processACCESS_ATTACHED_FILE(), user("+strRequester+") is null!");
+			System.err.println("CMSNSManager.processACCESS_ATTACHED_FILE(), user("+strRequester+"), uuid("
+					+requesterUuid+") is null!");
 			return;
 		}
 		if(user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
