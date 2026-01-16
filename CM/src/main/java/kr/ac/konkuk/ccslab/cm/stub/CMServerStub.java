@@ -719,15 +719,15 @@ public class CMServerStub extends CMStub {
 	 * 
 	 * @see CMStub#getBlockDatagramChannel(int)
 	 */
-	public SocketChannel getBlockSocketChannel(int nChKey, String strUserName)
+	public SocketChannel getBlockSocketChannel(int nChKey, String strUserName, UUID uuid)
 	{
 		SocketChannel sc = null;
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMMember loginUsers = interInfo.getLoginUsers();
-		CMUser user = loginUsers.findMember(strUserName);
+		CMUser user = loginUsers.findMember(strUserName, uuid);
 		if(user == null)
 		{
-			System.err.println("user("+strUserName+") not found!");
+			System.err.println("user("+strUserName+"), uuid("+uuid+") not found!");
 			return null;
 		}
 		

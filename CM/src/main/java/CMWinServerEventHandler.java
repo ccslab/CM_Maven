@@ -297,11 +297,12 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			if(nChType == CMInfo.CM_SOCKET_CHANNEL)
 			{
 				printMessage("with the blocking socket channel ("+nChKey+").\n");
-				sc = m_serverStub.getBlockSocketChannel(nChKey, strUser);
+				sc = m_serverStub.getBlockSocketChannel(nChKey, strUser, ue.getSenderUuid());
 				if(sc == null)
 				{
-					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, socket channel not found, key("
-							+nChKey+"), user("+strUser+")!");
+					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, " +
+							"socket channel not found, key("+nChKey+"), user("+strUser+"), uuid("
+							+ue.getSenderUuid()+")!");
 					return;
 				}
 				
