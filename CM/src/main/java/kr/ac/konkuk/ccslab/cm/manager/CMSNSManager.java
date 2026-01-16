@@ -1325,7 +1325,7 @@ public class CMSNSManager {
 			tse.setContentID(nSeqNum);
 			tse.setDate(strCreationTime);
 			tse.setUserName(se.getUserName());
-			CMEventManager.unicastEvent(tse, se.getUserName());
+			CMEventManager.unicastEvent(tse, se.getUserName(), se.getSenderUuid());
 			tse = null;
 		}
 		else	// if there is attachment
@@ -1343,7 +1343,7 @@ public class CMSNSManager {
 			tse.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
 			tse.setUserName(interInfo.getMyself().getName());	// requester is default server
 			tse.setContentID(nSeqNum);
-			CMEventManager.unicastEvent(tse, se.getUserName());
+			CMEventManager.unicastEvent(tse, se.getUserName(), se.getSenderUuid());
 			tse = null;
 		}
 		
@@ -1410,7 +1410,7 @@ public class CMSNSManager {
 		seAck.setUserName(se.getUserName());
 		seAck.setFriendName(se.getFriendName());
 		
-		CMEventManager.unicastEvent(seAck, se.getUserName());
+		CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 		
 		seAck = null;
 		return;
@@ -1455,7 +1455,7 @@ public class CMSNSManager {
 		seAck.setUserName(se.getUserName());
 		seAck.setFriendName(se.getFriendName());
 		
-		CMEventManager.unicastEvent(seAck, se.getUserName());
+		CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 		
 		seAck = null;
 		return;
@@ -1499,7 +1499,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName());
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			
@@ -1516,7 +1516,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nTotalNumFriends);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName());
+					CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 					seAck = null;
 					i = 0;
@@ -1531,7 +1531,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nTotalNumFriends);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName());
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 				seAck = null;
 			}
@@ -1547,7 +1547,7 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName());
+			CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 			seAck = null;
 		}
 		
@@ -1600,7 +1600,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName());
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			
@@ -1617,7 +1617,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nNumRequesters);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName());
+					CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 					seAck = null;
 					i = 0;
@@ -1632,7 +1632,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nNumRequesters);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName());
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 				seAck = null;
 			}
@@ -1649,7 +1649,7 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName());
+			CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 			seAck = null;
 		}
 
@@ -1701,7 +1701,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName());
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			
@@ -1718,7 +1718,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nNumBiFriends);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName());
+					CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 					seAck = null;
 					i = 0;
@@ -1733,7 +1733,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nNumBiFriends);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName());
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 				seAck = null;
 			}
@@ -1750,7 +1750,7 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName());
+			CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 			seAck = null;
 		}
 
