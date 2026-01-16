@@ -480,9 +480,10 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			System.out.println("Sending a dummy event to ("+strReceiver+")..");
 			
 			if(opt == CMInfo.CM_STREAM)
-				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, true);
+				m_clientStub.send(due, strReceiver, ue.getSenderUuid(), opt, nBlockingChannelKey, true);
 			else if(opt == CMInfo.CM_DATAGRAM)
-				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, nRecvPort, true);
+				m_clientStub.send(due, strReceiver, ue.getSenderUuid(), opt, nBlockingChannelKey, nRecvPort,
+						true);
 			else
 				System.err.println("invalid sending option!: "+opt);
 		}
