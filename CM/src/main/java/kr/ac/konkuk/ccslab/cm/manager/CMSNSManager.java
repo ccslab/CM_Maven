@@ -1943,11 +1943,11 @@ public class CMSNSManager {
 	
 	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		String strRequester = se.getUserName();
+		UUID requesterUuid = se.getSenderUuid();
 		int nContentID = se.getContentID();
 		String strWriter = se.getWriterName();
 		String strFileName = se.getFileName();
@@ -1970,9 +1970,7 @@ public class CMSNSManager {
 					+"file("+strFilePath+") not found!");
 			nReturnCode = 0;
 			seAck.setReturnCode(nReturnCode);
-			CMEventManager.unicastEvent(seAck, strRequester);
-			seAck = null;
-			file = null;
+			CMEventManager.unicastEvent(seAck, strRequester, requesterUuid);
 			return;
 		}
 		
@@ -1995,17 +1993,16 @@ public class CMSNSManager {
 					+") is not the attachment of content ID("+nContentID+")!");
 			nReturnCode = 0;
 			seAck.setReturnCode(nReturnCode);
-			CMEventManager.unicastEvent(seAck, strRequester);
-			seAck = null;
-			file = null;
-			return;			
+			CMEventManager.unicastEvent(seAck, strRequester, requesterUuid);
+			return;
 		}
 
 		// check the prefetching mode
-		CMUser user = interInfo.getLoginUsers().findMember(strRequester);
+		CMUser user = interInfo.getLoginUsers().findMember(strRequester, requesterUuid);
 		if(user == null)
 		{
-			System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILE(), user("+strRequester+") is null!");
+			System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILE(), user("+strRequester+"), uuid("
+					+requesterUuid+") is null!");
 			return;
 		}
 		if(user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
@@ -2052,16 +2049,12 @@ public class CMSNSManager {
 		}
 		
 		// send the requested file
-		CMFileTransferManager.pushFile(strFilePath, strRequester);
+		CMFileTransferManager.pushFile(strFilePath, strRequester, requesterUuid);
 		
 		// send the response event
 		nReturnCode = 1;
 		seAck.setReturnCode(nReturnCode);
-		CMEventManager.unicastEvent(seAck, strRequester);
-		seAck = null;
-		file = null;
-		
-		return;
+		CMEventManager.unicastEvent(seAck, strRequester, requesterUuid);
 	}
 	
 	private static void processRESPONSE_ATTACHED_FILE(CMSNSEvent se)
