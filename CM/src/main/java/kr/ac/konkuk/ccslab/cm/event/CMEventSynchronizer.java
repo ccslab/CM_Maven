@@ -1,5 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.event;
 
+import java.util.Objects;
+import java.util.UUID;
 import java.util.Vector;
 
 public class CMEventSynchronizer {
@@ -7,6 +9,7 @@ public class CMEventSynchronizer {
 	private int m_nWaitedEventType;
 	private int m_nWaitedEventID;
 	private String m_strWaitedReceiver;
+	private UUID m_waitedReceiverUuid;
 	private CMEvent m_replyEvent;
 	
 	private Vector<CMEvent> m_replyEventList;
@@ -17,6 +20,7 @@ public class CMEventSynchronizer {
 		m_nWaitedEventType = -1;
 		m_nWaitedEventID = -1;
 		m_strWaitedReceiver = "";
+		m_waitedReceiverUuid = null;
 		m_replyEvent = null;
 		m_replyEventList = new Vector<CMEvent>();
 		m_nMinNumWaitedEvents = 0;
@@ -27,6 +31,7 @@ public class CMEventSynchronizer {
 		m_nWaitedEventType = -1;
 		m_nWaitedEventID = -1;
 		m_strWaitedReceiver = "";
+		m_waitedReceiverUuid = null;
 		m_replyEvent = null;
 		m_replyEventList.clear();
 		m_nMinNumWaitedEvents = 0;
@@ -43,17 +48,6 @@ public class CMEventSynchronizer {
 	
 	//////////////////////////////////////////////////////
 	// event list methods
-	
-	public synchronized int getSizeOfReplyEventList()
-	{
-		return m_replyEventList.size();
-	}
-	
-	public synchronized void clearReplyEventList()
-	{
-		m_replyEventList.clear();
-		return;
-	}
 	
 	public synchronized boolean addReplyEvent(CMEvent event)
 	{
@@ -72,8 +66,9 @@ public class CMEventSynchronizer {
 		for(int i = 0; i < m_replyEventList.size() && !bFound; i++)
 		{
 			tmpEvent = m_replyEventList.get(i);
-			if( tmpEvent.getSender().equals(event.getSender()) && tmpEvent.getType() == m_nWaitedEventType &&
-					tmpEvent.getID() == m_nWaitedEventID )
+			if( tmpEvent.getSender().equals(event.getSender()) &&
+					Objects.equals(tmpEvent.getSenderUuid(), event.getSenderUuid()) &&
+					tmpEvent.getType() == m_nWaitedEventType && tmpEvent.getID() == m_nWaitedEventID )
 				bFound = true;
 		}
 		
@@ -92,52 +87,50 @@ public class CMEventSynchronizer {
 	//////////////////////////////////////////////////////
 	// get/set methods
 	
-	public synchronized void setWaitedEvent(int nType, int nID, String strReceiver)
+	public synchronized void setWaitedEvent(int nType, int nID, String strReceiver, UUID receiverUuid)
 	{
 		m_nWaitedEventType = nType;
 		m_nWaitedEventID = nID;
 		m_strWaitedReceiver = strReceiver;
+		m_waitedReceiverUuid = receiverUuid;
 	}
 	
 	public synchronized void setWaitedEventType(int nType)
 	{
 		m_nWaitedEventType = nType;
 	}
-	
-	public synchronized void setWaitedEventID(int nID)
-	{
-		m_nWaitedEventID = nID;
-	}
-	
-	public synchronized void setReplyEvent(CMEvent event)
-	{
-		m_replyEvent = event;
-	}
-	
+
 	public synchronized int getWaitedEventType()
 	{
 		return m_nWaitedEventType;
 	}
-	
+
+	public synchronized void setWaitedEventID(int nID)
+	{
+		m_nWaitedEventID = nID;
+	}
+
 	public synchronized int getWaitedEventID()
 	{
 		return m_nWaitedEventID;
 	}
-	
+
+	public synchronized void setReplyEvent(CMEvent event)
+	{
+		m_replyEvent = event;
+	}
+
 	public synchronized CMEvent getReplyEvent()
 	{
 		return m_replyEvent;
 	}
-	
-	public synchronized void setWaitedReceiver(String strReceiver)
-	{
-		m_strWaitedReceiver = strReceiver;
-	}
-	
+
 	public synchronized String getWaitedReceiver()
 	{
 		return m_strWaitedReceiver;
 	}
+
+	public synchronized UUID getWaitedReceiverUuid() { return m_waitedReceiverUuid; }
 	
 	public synchronized void setMinNumWaitedEvents(int num)
 	{
@@ -158,8 +151,4 @@ public class CMEventSynchronizer {
 		return eventArray;
 	}
 	
-	public synchronized Vector<CMEvent> getReplyEventList()
-	{
-		return m_replyEventList;
-	}
 }

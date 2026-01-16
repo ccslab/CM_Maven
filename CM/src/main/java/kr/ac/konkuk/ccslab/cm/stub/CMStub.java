@@ -800,20 +800,23 @@ public class CMStub {
 	/**
 	 * Sends a CM event to a single node.
 	 * 
-	 * <p> This method is the same as calling send(cme, strTarget, CMInfo.CM_STREAM, 0, false) 
-	 * of the {@link CMStub#send(CMEvent, String, int, int, boolean)} method.
-	 * 
+	 * <p> This method is the same as calling send(cme, strTarget, null, CMInfo.CM_STREAM, 0, false).
+	 *
 	 * @param cme - the CM event
 	 * @param strTarget - the receiver name. 
 	 * <br> The receiver can be either the server or the client. In the CM network, 
 	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
 	 * For example, the name of the default server is "SERVER".
 	 * @return true if the event is successfully sent; false otherwise.
-	 * 
+	 *
+	 * @see CMStub#send(CMEvent, String, UUID)
 	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -821,15 +824,42 @@ public class CMStub {
 	 */
 	public boolean send(CMEvent cme, String strTarget)
 	{
-		return send(cme, strTarget, CMInfo.CM_STREAM, 0, false);
+		return send(cme, strTarget, null, CMInfo.CM_STREAM, 0, false);
+	}
+
+	/**
+	 * Sends a CM event to a single node.
+	 *
+	 * <p> This method is the same as calling send(cme, strTarget, targetUuid, CMInfo.CM_STREAM, 0, false).
+	 *
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name.
+	 * @param targetUuid - the UUID of the receiver device (null to send to all devices or if target is server).
+	 * <br> The receiver can be either the server or the client. In the CM network,
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter.
+	 * For example, the name of the default server is "SERVER".
+	 * @return true if the event is successfully sent; false otherwise.
+	 *
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
+	 *
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int)
+	 * @see CMStub#send(CMEvent, String, String, int, int)
+	 */
+	public boolean send(CMEvent cme, String strTarget, UUID targetUuid) {
+		return send(cme, strTarget, targetUuid, CMInfo.CM_STREAM, 0, false);
 	}
 	
 	/**
 	 * Sends a CM event to a single node.
 	 * 
-	 * <p> This method is the same as calling send(cme, strTarget, opt, 0, false)
-	 * of the {@link CMStub#send(CMEvent, String, int, int, boolean)} method.
-	 *  
+	 * <p> This method is the same as calling send(cme, strTarget, null, opt, 0, false).
+	 *
 	 * @param cme - the CM event
 	 * @param strTarget - the receiver name. 
 	 * <br> The receiver can be either the server or the client. In the CM network, 
@@ -841,9 +871,13 @@ public class CMStub {
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
 	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, UUID)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -854,9 +888,10 @@ public class CMStub {
 		boolean bReturn = false;
 		
 		if(opt == CMInfo.CM_STREAM)
-			bReturn = send(cme, strTarget, opt, 0, false);
+			bReturn = send(cme, strTarget, null, opt, 0, false);
 		else if(opt == CMInfo.CM_DATAGRAM)
-			bReturn = send(cme, strTarget, opt, CMConfigurationInfo.getInstance().getUDPPort(), false);
+			bReturn = send(cme, strTarget, null, opt, CMConfigurationInfo.getInstance().getUDPPort(),
+					false);
 		else
 		{
 			System.err.println("CMStub.send(), invalid option !");
@@ -865,13 +900,61 @@ public class CMStub {
 		
 		return bReturn;
 	}
+
+	/**
+	 * Sends a CM event to a single node.
+	 *
+	 * <p> In the case of stream transmission, this method is the same as calling
+	 * send(cme, strTarget, targetUuid, opt, 0, false).
+	 * In the case of datagram transmission, the method is the same as calling
+	 * send(cme, strTarget, targetUuid, opt, "default udp port", false).
+	 *
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name.
+	 * <br> The receiver can be either the server or the client. In the CM network,
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter.
+	 * For example, the name of the default server is "SERVER".
+	 * @param targetUuid - the UUID of the receiver device (null to send to all devices or if target is server).
+	 * @param opt - the reliability option.
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @return true if the event is successfully sent; false otherwise.
+	 *
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, UUID)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
+	 *
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int)
+	 * @see CMStub#send(CMEvent, String, String, int, int)
+	 */
+	public boolean send(CMEvent cme, String strTarget, UUID targetUuid, int opt) {
+		boolean bReturn = false;
+
+		if(opt == CMInfo.CM_STREAM)
+			bReturn = send(cme, strTarget, targetUuid, opt, 0, false);
+		else if(opt == CMInfo.CM_DATAGRAM)
+			bReturn = send(cme, strTarget, targetUuid, opt, CMConfigurationInfo.getInstance().getUDPPort(),
+					false);
+		else
+		{
+			System.err.println("CMStub.send(), invalid option !");
+			return false;
+		}
+
+		return bReturn;
+	}
 	
 	/**
 	 * Sends a CM event to a single node.
 	 * 
-	 * <p> This method is the same as calling send(cme, strTarget, opt, nChNum, false)
-	 * of the {@link CMStub#send(CMEvent, String, int, int, boolean)} method.
-	 *  
+	 * <p> This method is the same as calling send(cme, strTarget, null, opt, nChNum, false).
+	 *
 	 * @param cme - the CM event
 	 * @param strTarget - the receiver name. 
 	 * <br> The receiver can be either the server or the client. In the CM network, 
@@ -887,9 +970,13 @@ public class CMStub {
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
 	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, UUID)
 	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int)
@@ -897,7 +984,44 @@ public class CMStub {
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum)
 	{
-		return send(cme, strTarget, opt, nChNum, false);
+		return send(cme, strTarget, null, opt, nChNum, false);
+	}
+
+	/**
+	 * Sends a CM event to a single node.
+	 *
+	 * <p> This method is the same as calling send(cme, strTarget, targetUuid, opt, nChNum, false).
+	 *
+	 * @param cme - the CM event
+	 * @param strTarget - the receiver name.
+	 * <br> The receiver can be either the server or the client. In the CM network,
+	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter.
+	 * For example, the name of the default server is "SERVER".
+	 * @param targetUuid - the UUID of the receiver device (null to send to all devices or if target is server).
+	 * @param opt - the reliability option.
+	 * <br> If opt is CMInfo.CM_STREAM (or 0), CM uses TCP socket channel to send
+	 * the event. If opt is CMInfo.CM_DATAGRAM (or 1), CM uses UDP datagram socket channel.
+	 * @param nChNum - the channel key.
+	 * <br> If the application adds additional TCP or UDP channels, they are identified
+	 * by the channel key. The key of the TCP channel should be greater than 1 (0 for the default channel),
+	 * and the key of the UDP channel is the locally bound port number.
+	 * @return true if the event is successfully sent; false otherwise.
+	 *
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, UUID)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
+	 *
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int)
+	 * @see CMStub#send(CMEvent, String, String, int, int)
+	 */
+	public boolean send(CMEvent cme, String strTarget, UUID targetUuid, int opt, int nChNum) {
+		return send(cme, strTarget, targetUuid, opt, nChNum, false);
 	}
 	
 	/**
@@ -930,9 +1054,13 @@ public class CMStub {
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
 	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, UUID)
 	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 * 
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int) 
@@ -940,19 +1068,45 @@ public class CMStub {
 	 */
 	public boolean send(CMEvent cme, String strTarget, int opt, int nChNum, boolean isBlock)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
+		// [Modified] Call the new send method with null UUID
+		return send(cme, strTarget, null, opt, nChNum, isBlock);
+	}
+
+	/**
+	 * [Added] Sends a CM event to a specific device (UUID) of a single node.
+	 * * <p> This serves as the final destination for all stream-based send calls in CMStub.
+	 * If the uuid is null, the event is sent to all login devices of the receiver
+	 * (handled by CMEventManager).
+	 * * @param cme - the CM event
+	 * @param strTarget - the receiver name
+	 * @param targetUuid - the UUID of the receiver device (null to send to all devices or if target is server)
+	 * @param opt - the reliability option (CMInfo.CM_STREAM or CMInfo.CM_DATAGRAM)
+	 * @param nChNum - the channel key
+	 * @param isBlock - the blocking option
+	 * @return true if the event is successfully sent; false otherwise.
+	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, UUID)
+	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
+	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
+	 *
+	 * @see CMStub#send(CMEvent, String, String)
+	 * @see CMStub#send(CMEvent, String, String, int)
+	 * @see CMStub#send(CMEvent, String, String, int, int)
+	 */
+	public boolean send(CMEvent cme, String strTarget, UUID targetUuid, int opt, int nChNum, boolean isBlock)
+	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = null;
 		boolean ret = false;
-		
-		// set sender and receiver
-		cme.setSender(getMyself().getName());
-		cme.setReceiver(strTarget);
 
-		if(confInfo.getSystemType().contentEquals("CLIENT") 
-				|| (confInfo.getSystemType().contentEquals("SERVER") 
-						&& !CMConfigurator.isDServer()))
+		if(confInfo.getSystemType().contentEquals("CLIENT")
+				|| (confInfo.getSystemType().contentEquals("SERVER")
+				&& !CMConfigurator.isDServer()))
 		{
 			strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		}
@@ -967,13 +1121,23 @@ public class CMStub {
 		{
 			cme.setDistributionSession("CM_ONE_USER");
 			cme.setDistributionGroup(strTarget);
-			ret = CMEventManager.unicastEvent(cme, strDefServer, opt, nChNum);
+			cme.setDistributionUuid(targetUuid);
+
+			// [Modified] Forwarding logic
+			// When forwarding via server, the immediate target is the server (uuid is meaningless for connection),
+			// but the final destination UUID is already set in the event header above.
+			// We pass null as the third argument because we are sending to the default server, not a specific user device directly.
+			ret = CMEventManager.unicastEvent(cme, strDefServer, null, opt, nChNum, 0, isBlock);
+
 			cme.setDistributionSession("");
 			cme.setDistributionGroup("");
+			cme.setDistributionUuid(null);
 		}
 		else
 		{
-			ret = CMEventManager.unicastEvent(cme, strTarget, opt, nChNum, isBlock);
+			// [Modified] Direct transmission logic
+			// Pass the uuid to CMEventManager. If uuid is null, it handles broadcast to all devices.
+			ret = CMEventManager.unicastEvent(cme, strTarget, targetUuid, opt, nChNum, 0, isBlock);
 		}
 
 		return ret;
@@ -992,7 +1156,8 @@ public class CMStub {
 	 * @param strTarget - the receiver name. 
 	 * <br> The receiver can be either the server or the client. In the CM network, 
 	 * all the participating nodes (servers and clients) have a string name that can be the value of this parameter. 
-	 * For example, the name of the default server is "SERVER". 
+	 * For example, the name of the default server is "SERVER".
+	 * @param targetUuid - the UUID of the receiver device (null to send to all devices or if target is server)
 	 * @param opt - the reliability option. 
 	 * <br> The opt value of this method must be CMInfo.CM_DATAGRAM (or 1), because this method must be called 
 	 * only with the UDP datagram socket channel.
@@ -1008,24 +1173,23 @@ public class CMStub {
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
 	 * @see CMStub#send(CMEvent, String)
+	 * @see CMStub#send(CMEvent, String, UUID)
 	 * @see CMStub#send(CMEvent, String, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
 	 * @see CMStub#send(CMEvent, String, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
 	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * 
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, boolean)
+	 *
 	 * @see CMStub#send(CMEvent, String, String)
 	 * @see CMStub#send(CMEvent, String, String, int) 
 	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 */
-	public boolean send(CMEvent cme, String strTarget, int opt, int nSendPort, int nRecvPort, boolean isBlock)
+	public boolean send(CMEvent cme, String strTarget, UUID targetUuid, int opt, int nSendPort,
+						int nRecvPort, boolean isBlock)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		boolean ret = false;
-
-		// set sender and receiver
-		cme.setSender(getMyself().getName());
-		cme.setReceiver(strTarget);
-
-		ret = CMEventManager.unicastEvent(cme, strTarget, opt, nSendPort, nRecvPort, isBlock);
+		ret = CMEventManager.unicastEvent(cme, strTarget, targetUuid, opt, nSendPort, nRecvPort, isBlock);
 		return ret;
 	}
 	
@@ -1235,13 +1399,43 @@ public class CMStub {
 	public CMEvent sendrecv(CMEvent cme, String strReceiver, int nWaitEventType, int nWaitEventID, 
 			int nTimeout)
 	{
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("=== CMClientStub.sendrecv() called..");
+			System.out.println("receiver = " + strReceiver);
+		}
+
+		// [Modified] Find the UUID list of the receiver
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
+		UUID receiverUuid = null;
+
+		// [Modified] Check valid target (Server or Single Login Client)
+		if(uuidList == null) {
+			// Case 1: Target is a Server (uuidList is null) -> Proceed with receiverUuid = null
+		}
+		else {
+			// Case 2: Target is a Client
+			if(uuidList.isEmpty()) {
+				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver + ") not found!");
+				return null;
+			}
+
+			if(uuidList.size() > 1) {
+				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver +
+						") has multiple active logins! The sendrecv service is not supported for multiple logins.");
+				return null;
+			}
+
+			// Single login found
+			receiverUuid = uuidList.get(0);
+		}
+
 		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMEvent replyEvent = null;
 
 		eventSync.init();
-		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver);
+		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver, receiverUuid);
 
-		boolean bSendResult = send(cme, strReceiver);
+		boolean bSendResult = CMEventManager.unicastEvent(cme, strReceiver, receiverUuid);
 		if(!bSendResult) return null;
 
 		synchronized(eventSync)
@@ -1703,13 +1897,7 @@ public class CMStub {
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
 	 * @see CMStub#send(CMEvent, String, String, int) 
-	 * @see CMStub#send(CMEvent, String, String, int, int)
-	 * 
-	 * @see CMStub#send(CMEvent, String)
-	 * @see CMStub#send(CMEvent, String, int)
-	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean) 
-	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, String, int, int)*
 	 */
 	public boolean send(CMEvent cme, String serverName, String userName)
 	{
@@ -1732,12 +1920,6 @@ public class CMStub {
 	 * 
 	 * @see CMStub#send(CMEvent, String, String) 
 	 * @see CMStub#send(CMEvent, String, String, int, int)
-	 * 
-	 * @see CMStub#send(CMEvent, String)
-	 * @see CMStub#send(CMEvent, String, int)
-	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt)
 	{
@@ -1779,12 +1961,6 @@ public class CMStub {
 	 * 
 	 * @see CMStub#send(CMEvent, String, String) 
 	 * @see CMStub#send(CMEvent, String, String, int)
-	 * 
-	 * @see CMStub#send(CMEvent, String)
-	 * @see CMStub#send(CMEvent, String, int)
-	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * @see CMStub#send(CMEvent, String, int, int, int, boolean)
 	 */
 	public 	boolean send(CMEvent cme, String serverName, String userName, int opt, int nChNum)
 	{
@@ -2273,14 +2449,37 @@ public class CMStub {
 	 * @see CMStub#measureOutputThroughput(String)
 	 */
 	public double measureInputThroughput(String strTarget) {
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureInputThroughput() called..");
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureInputThroughput(strTarget);
+		// [Modified] Find the UUID list of the target
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+
+		// [Modified] Check if the target exists
+		UUID targetUuid = null;
+		if(uuidList == null) {
+			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
+		} else {
+			// Case 2: Target is a Client
+			if(uuidList.isEmpty()) {
+				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget + ") not found!");
+				return -1;
+			}
+			// [Modified] Check if the target has multiple logins
+			if(uuidList.size() > 1) {
+				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget +
+						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
+				return -1;
+			}
+
+			// [Modified] Get the target UUID (0-th member)
+			targetUuid = uuidList.get(0);
+		}
+
+		double speed = CMCommManager.measureInputThroughput(strTarget, targetUuid);
 		return speed;
 	}
 	
@@ -2294,14 +2493,37 @@ public class CMStub {
 	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
 	public double measureOutputThroughput(String strTarget) {
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureOutputThroughput() called..");
 			System.out.println("strTarget = " + strTarget);
 		}
 
-		double speed = CMCommManager.measureOutputThroughput(strTarget);
+		// [Modified] Find the UUID list of the target
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+
+		// [Modified] Check if the target exists
+		UUID targetUuid = null;
+		if(uuidList == null) {
+			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
+		} else {
+			// Case 2: Target is a Client
+			if(uuidList.isEmpty()) {
+				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget + ") not found!");
+				return -1;
+			}
+			// [Modified] Check if the target has multiple logins
+			if(uuidList.size() > 1) {
+				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget +
+						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
+				return -1;
+			}
+
+			// [Modified] Get the target UUID (0-th member)
+			targetUuid = uuidList.get(0);
+		}
+
+		double speed = CMCommManager.measureOutputThroughput(strTarget, targetUuid);
 		return speed;
 	}
 	

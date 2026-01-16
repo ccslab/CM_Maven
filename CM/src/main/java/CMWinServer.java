@@ -919,7 +919,7 @@ public class CMWinServer extends JFrame {
 					+"] is set to ["+lodBox.getItemAt(nScheme)+"].\n");
 			if(strUserName.isEmpty())
 				strUserName = null;
-			m_serverStub.setAttachDownloadScheme(strUserName, nScheme);
+			m_serverStub.setAttachDownloadScheme(strUserName, null, nScheme);
 		}
 		
 		return;
@@ -1691,18 +1691,20 @@ public class CMWinServer extends JFrame {
 		}
 		
 		printMessage("Currently ["+loginUsers.getMemberNum()+"] users are online.\n");
-		Vector<CMUser> loginUserVector = loginUsers.getAllMembers();
-		Iterator<CMUser> iter = loginUserVector.iterator();
+		// The member table is changed from Vector to Hashtable<String, List<CMUser>> to support multiple logins (UUIDs).
+		// The return type of getAllMembers() is updated accordingly.
+		Hashtable<String, List<CMUser>> loginUserTable = loginUsers.getAllMembers();
 		int nPrintCount = 0;
-		while(iter.hasNext())
-		{
-			CMUser user = iter.next();
-			printMessage(user.getName()+" ");
-			nPrintCount++;
-			if((nPrintCount % 10) == 0)
-			{
-				printMessage("\n");
-				nPrintCount = 0;
+		// Iterate through the values (List<CMUser>) of the Hashtable, and then iterate through each CMUser in the list.
+		for(List<CMUser> userList : loginUserTable.values()) {
+			for (CMUser user : userList) {
+				printMessage(user.getName()+" ");
+				nPrintCount++;
+				if((nPrintCount % 10) == 0)
+				{
+					printMessage("\n");
+					nPrintCount = 0;
+				}
 			}
 		}
 	}
@@ -1817,23 +1819,47 @@ public class CMWinServer extends JFrame {
 	
 	public void sendEventWithWrongByteNum()
 	{
-		printMessage("========== send a CMDummyEvent with wrong # bytes to a client\n");
+		printMessage("========== send a CMDummyEvent with wrong # bytes to a target\n");
 		
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
 		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();
+
+		// [Modification Start]
+		// Prepare the event first to send it to multiple targets (devices) if necessary.
+		CMDummyEvent due = new CMDummyEvent();
+		ByteBuffer buf = due.marshall();
+		buf.clear();
+		buf.putInt(-1).clear();
+
+		// 1. Try to find the user list (for multiple logins)
+		List<CMUser> userList = interInfo.getLoginUsers().findMemberList(strTarget);
+
+		if(userList != null && !userList.isEmpty())
+		{
+			// Iterate over all active sessions (devices) of the user
+			for(CMUser user : userList)
+			{
+				SelectableChannel ch = user.getNonBlockSocketChannelInfo().findChannel(0);
+				if(ch != null)
+				{
+					CMMessage msg = new CMMessage(buf, ch);
+					sendQueue.push(msg);
+				}
+			}
+			// Completed sending to the user(s). Return to avoid executing server logic.
+			return;
+		}
+		// [Modification End]
+
+		// 2. If not a user, check if it is a server
 		SelectableChannel ch = null;
-		CMUser user = interInfo.getLoginUsers().findMember(strTarget);
 		CMServer server = null;
 		
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		if(user != null)
-		{
-			ch = user.getNonBlockSocketChannelInfo().findChannel(0);
-		}
-		else if(strTarget.contentEquals(strDefServer))
+		if(strTarget.contentEquals(strDefServer))
 		{
 			ch = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().findChannel(0);
 		}
@@ -1849,14 +1875,11 @@ public class CMWinServer extends JFrame {
 				return;
 			}
 		}
-		
-		CMDummyEvent due = new CMDummyEvent();
-		ByteBuffer buf = due.marshall();
-		buf.clear();
-		buf.putInt(-1).clear();
-		CMMessage msg = new CMMessage(buf, ch);
-		sendQueue.push(msg);
 
+		if(ch != null) {
+			CMMessage msg = new CMMessage(buf, ch);
+			sendQueue.push(msg);
+		}
 	}
 	
 	public void sendEventWithWrongEventType()

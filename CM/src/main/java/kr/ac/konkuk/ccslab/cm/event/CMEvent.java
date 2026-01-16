@@ -1,7 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.event;
 import java.nio.*;
+import java.util.Objects;
+import java.util.UUID;
+
 import kr.ac.konkuk.ccslab.cm.entity.CMObject;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 /**
  * This class represents a CM event.
@@ -28,6 +32,10 @@ public abstract class CMEvent extends CMObject {
 	protected int m_nByteNum;	// total number of bytes in the event
 	protected ByteBuffer m_bytes;
 
+	protected UUID m_senderUuid;
+	protected UUID m_receiverUuid;
+	protected UUID m_distributionUuid;
+
 	/**
 	 * Creates an empty CMEvent object.
 	 */
@@ -43,6 +51,10 @@ public abstract class CMEvent extends CMObject {
 		m_strDistributionGroup = "";
 		m_nByteNum = -1;
 		m_bytes = null;
+
+		m_senderUuid = null;
+		m_receiverUuid = null;
+		m_distributionUuid = null;
 	}
 	
 	/**
@@ -141,7 +153,23 @@ public abstract class CMEvent extends CMObject {
 	{
 		return m_strSender;
 	}
-	
+
+	/**
+	 * Sets the sender UUID.
+	 * @param uuid
+	 */
+	public void setSenderUuid(UUID uuid) {
+		m_senderUuid = uuid;
+	}
+
+	/**
+	 * Returns the sender UUID.
+	 * @return a sender UUID.
+	 */
+	public UUID getSenderUuid() {
+		return m_senderUuid;
+	}
+
 	/**
 	 * Sets the receiver name.
 	 * @param strName - the receiver name.
@@ -175,7 +203,23 @@ public abstract class CMEvent extends CMObject {
 		if(sName != null)
 			m_strHandlerSession = sName;
 	}
-	
+
+	/**
+	 * Sets the receiver UUID.
+	 * @param uuid
+	 */
+	public void setReceiverUuid(UUID uuid) {
+		m_receiverUuid = uuid;
+	}
+
+	/**
+	 * Returns the receiver UUID.
+	 * @return a receiver UUID.
+	 */
+	public UUID getReceiverUuid() {
+		return m_receiverUuid;
+	}
+
 	/**
 	 * Sets a group for handling this event.
 	 * <br> The group name determines which group deals with this event.
@@ -294,7 +338,23 @@ public abstract class CMEvent extends CMObject {
 	{
 		return m_strDistributionGroup;
 	}
-	
+
+	/**
+	 * Sets the distribution UUID.
+	 * @param uuid
+	 */
+	public void setDistributionUuid(UUID uuid) {
+		m_distributionUuid = uuid;
+	}
+
+	/**
+	 * Returns the distribution UUID.
+	 * @return a distribution UUID.
+	 */
+	public UUID getDistributionUuid() {
+		return m_distributionUuid;
+	}
+
 	@Override
 	public boolean equals(Object obj)
 	{
@@ -307,11 +367,14 @@ public abstract class CMEvent extends CMObject {
 		
 		if(m_nID == cme.getID() && m_nByteNum == cme.getByteNum() &&
 				m_strSender.equals(cme.getSender()) &&
+				Objects.equals(m_senderUuid, cme.getSenderUuid()) &&
 				m_strReceiver.equals(cme.getReceiver()) &&
+				Objects.equals(m_receiverUuid, cme.getReceiverUuid()) &&
 				m_strHandlerSession.equals(cme.getHandlerSession()) &&
 				m_strHandlerGroup.equals(cme.getHandlerGroup()) &&
 				m_strDistributionSession.equals(cme.getDistributionSession()) &&
-				m_strDistributionGroup.equals(cme.getDistributionGroup()))
+				m_strDistributionGroup.equals(cme.getDistributionGroup()) &&
+				Objects.equals(m_distributionUuid, cme.getDistributionUuid()))
 			return true;
 		
 		return false;
@@ -322,11 +385,14 @@ public abstract class CMEvent extends CMObject {
 		return "CMEvent{" +
 				"m_nType=" + m_nType +
 				", m_strSender='" + m_strSender + '\'' +
+				", m_senderUuid=" + m_senderUuid +
 				", m_strReceiver='" + m_strReceiver + '\'' +
+				", m_receiverUuid=" + m_receiverUuid +
 				", m_strHandlerSession='" + m_strHandlerSession + '\'' +
 				", m_strHandlerGroup='" + m_strHandlerGroup + '\'' +
 				", m_strDistributionSession='" + m_strDistributionSession + '\'' +
 				", m_strDistributionGroup='" + m_strDistributionGroup + '\'' +
+				", m_distributionUuid=" + m_distributionUuid +
 				", m_nID=" + m_nID +
 				", m_nByteNum=" + m_nByteNum +
 				", m_bytes=" + m_bytes +
@@ -356,11 +422,14 @@ public abstract class CMEvent extends CMObject {
 		m_bytes.putInt(m_nType);
 		m_bytes.putInt(m_nID);
 		putStringToByteBuffer(m_strSender);
+		putStringToByteBuffer(CMUUIDConverter.uuidToString(m_senderUuid));
 		putStringToByteBuffer(m_strReceiver);
+		putStringToByteBuffer(CMUUIDConverter.uuidToString(m_receiverUuid));
 		putStringToByteBuffer(m_strHandlerSession);
 		putStringToByteBuffer(m_strHandlerGroup);
 		putStringToByteBuffer(m_strDistributionSession);
 		putStringToByteBuffer(m_strDistributionGroup);
+		putStringToByteBuffer(CMUUIDConverter.uuidToString(m_distributionUuid));
 		//m_bytes.rewind();
 
 	}
@@ -372,11 +441,14 @@ public abstract class CMEvent extends CMObject {
 		m_nID = msg.getInt();
 
 		m_strSender = getStringFromByteBuffer(msg);
+		m_senderUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 		m_strReceiver = getStringFromByteBuffer(msg);
+		m_receiverUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 		m_strHandlerSession = getStringFromByteBuffer(msg);
 		m_strHandlerGroup = getStringFromByteBuffer(msg);
 		m_strDistributionSession = getStringFromByteBuffer(msg);
 		m_strDistributionGroup = getStringFromByteBuffer(msg);
+		m_distributionUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 
 	}
 	
@@ -399,6 +471,11 @@ public abstract class CMEvent extends CMObject {
 				+ m_strReceiver.getBytes().length + m_strHandlerSession.getBytes().length
 				+ m_strHandlerGroup.getBytes().length + m_strDistributionSession.getBytes().length
 				+ m_strDistributionGroup.getBytes().length;
+		// 3 UUID fields (marshalled as strings)
+		nSize += 3*CMInfo.STRING_LEN_BYTES_LEN
+				+ CMUUIDConverter.uuidToString(m_senderUuid).getBytes().length
+				+ CMUUIDConverter.uuidToString(m_receiverUuid).getBytes().length
+				+ CMUUIDConverter.uuidToString(m_distributionUuid).getBytes().length;
 		return nSize;
 	}
 	

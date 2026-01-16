@@ -167,28 +167,7 @@ public class CMInteractionInfo {
 		
 		return tSession;
 	}
-	
-	public synchronized CMSession findSessionWithUserName(String strUserName)
-	{
-		CMSession tSession = null;
-		boolean bFound = false;
-		Iterator<CMSession> iter = m_sessionList.iterator();
-		
-		while(iter.hasNext() && !bFound)
-		{
-			tSession = iter.next();
-			if(tSession.getSessionUsers().isMember(strUserName))
-			{
-				bFound = true;
-			}
-		}
-		
-		if(!bFound)
-			tSession = null;
-		
-		return tSession;
-	}
-	
+
 	//////////////////////////////////////////////////////////
 	// membership management of additional server info
 

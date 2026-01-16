@@ -243,12 +243,12 @@ public class CMFileTransferManager {
 			CMMember groupMember = group.getGroupUsers();
 			
 			if(strFileSender.contentEquals(myself.getName()) && 
-					groupMember.isMember(strFileReceiver))
+					groupMember.findMember(strFileReceiver, fe.getFileReceiverUuid()))
 			{
 				bReturn = true;
 			}
 			else if(strFileReceiver.contentEquals(myself.getName()) &&
-					groupMember.isMember(strFileSender))
+					groupMember.findMember(strFileSender, fe.getFileSenderUuid()))
 			{
 				bReturn = true;
 			}

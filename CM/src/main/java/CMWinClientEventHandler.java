@@ -527,7 +527,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
 			m_client.printStyledMessage("Intentionally disconnected all channels from ["
-					+se.getChannelName()+"]!\n", "bold");
+					+se.getChannelName()+"], uuid["+se.getChannelUuid()+"]!\n", "bold");
 			m_client.setButtonsAccordingToClientState();
 			m_client.setTitle("CM Client");
 			break;
@@ -653,9 +653,10 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			System.out.println("Sending a dummy event to ("+strReceiver+")..");
 			
 			if(opt == CMInfo.CM_STREAM)
-				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, true);
+				m_clientStub.send(due, strReceiver, ue.getSenderUuid(), opt, nBlockingChannelKey, true);
 			else if(opt == CMInfo.CM_DATAGRAM)
-				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, nRecvPort, true);
+				m_clientStub.send(due, strReceiver, ue.getSenderUuid(), opt, nBlockingChannelKey, nRecvPort,
+						true);
 			else
 				System.err.println("invalid sending option!: "+opt);
 		}
@@ -670,7 +671,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(222);
 			rue.setStringID("testReplySendRecv");
-			boolean ret = m_clientStub.send(rue, ue.getSender());
+			boolean ret = m_clientStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				printMessage("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
 			else
@@ -685,7 +686,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(223);
 			rue.setStringID("testReplyCastRecv");
-			boolean ret = m_clientStub.send(rue, ue.getSender());
+			boolean ret = m_clientStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				printMessage("Sent reply event: (id, "+rue.getID()+"), (sting id, "+rue.getStringID()+")\n");
 			else

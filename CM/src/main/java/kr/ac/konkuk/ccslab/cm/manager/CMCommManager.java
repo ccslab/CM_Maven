@@ -73,16 +73,22 @@ public class CMCommManager {
 		}
 		
 		// socket channel of users (server)
-		Iterator<CMUser> iterUser = interInfo.getLoginUsers().getAllMembers().iterator();
-		while(iterUser.hasNext())
+		// [MODIFIED START]
+		// Adapted iteration logic to support the change in CMMember structure (Hashtable<String, List<CMUser>>)
+		// for multi-login.
+		// The getAllMembers() now returns a Hashtable, so we iterate through the values (List<CMUser>).
+		Hashtable<String, List<CMUser>> loginUserTable = interInfo.getLoginUsers().getAllMembers();
+		for(List<CMUser> userList : loginUserTable.values())
 		{
-			CMUser tUser = iterUser.next();
-			CMChannelInfo<Integer> chInfo = tUser.getNonBlockSocketChannelInfo();
-			chInfo.removeAllChannels();
-			chInfo = tUser.getBlockSocketChannelInfo();
-			chInfo.removeAllChannels();
+			for(CMUser tUser : userList)
+			{
+				CMChannelInfo<Integer> chInfo = tUser.getNonBlockSocketChannelInfo();
+				chInfo.removeAllChannels();
+				chInfo = tUser.getBlockSocketChannelInfo();
+				chInfo.removeAllChannels();
+			}
 		}
-		
+
 		// multicast channel
 		Iterator<CMSession> iterSession = interInfo.getSessionList().iterator();
 		while(iterSession.hasNext())
@@ -332,9 +338,8 @@ public class CMCommManager {
 		return ch;		
 	}
 	
-	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget)
+	public static SocketChannel addBlockSocketChannel(int nChKey, String strTarget, UUID targetUuid)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -361,11 +366,11 @@ public class CMCommManager {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, targetUuid);
 			if(targetUser == null)
 			{
 				System.err.println("CMCommManager.addBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+						+strTarget+") with UUID("+targetUuid+") not found!");
 				return null;
 			}
 			
@@ -377,8 +382,8 @@ public class CMCommManager {
 		sc = (SocketChannel) scInfo.findChannel(nChKey);
 		if(sc != null)
 		{
-			System.err.println("CMCommManager.addBlockSocketChannel(), channel key("
-					+nChKey+") to the target("+strTarget+") already exists!");
+			System.err.println("CMCommManager.addBlockSocketChannel(), failed!: key("
+					+nChKey+"), target("+strTarget+"), UUID("+targetUuid+")");
 			return null;
 		}
 
@@ -400,25 +405,22 @@ public class CMCommManager {
 		
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-		se.setSender(myself.getName());
-		se.setReceiver(strTarget);
 		se.setChannelName(myself.getName());
 		se.setChannelNum(nChKey);
-		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		se = null;
+		se.setChannelUuid(myself.getUuid());
+		bRet = CMEventManager.unicastEvent(se, strTarget, targetUuid, CMInfo.CM_STREAM, nChKey, true);
 
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMCommManager.addBlockSocketChannel(),successfully requested to add the channel "
-					+ "with the key("+nChKey+") to the target("+strTarget+")");
+					+ "with the key("+nChKey+") to the target("+strTarget+") with UUID("+targetUuid+")");
 		}
-				
+
 		return sc;
 	}
 	
-	public static boolean removeBlockSocketChannel(int nChKey, String strTarget)
+	public static boolean removeBlockSocketChannel(int nChKey, String strTarget, UUID targetUuid)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer serverInfo = null;
@@ -446,24 +448,7 @@ public class CMCommManager {
 		}
 		else
 		{
-			String strCurrentSession = myself.getCurrentSession();
-			String strCurrentGroup = myself.getCurrentGroup();
-			
-			CMSession session = interInfo.findSession(strCurrentSession);
-			if(session == null)
-			{
-				System.err.println("CMCommManager.removeBlockSocketChannel(), session("
-						+strCurrentSession+") not found!");
-				return false;
-			}
-			CMGroup group = session.findGroup(strCurrentGroup);
-			if(group == null)
-			{
-				System.err.println("CMCommManager.removeBlockSocketChannel(), group("
-						+strCurrentGroup+") not found!");
-				return false;
-			}
-			targetUser = group.getGroupUsers().findMember(strTarget);
+			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, targetUuid);
 			if(targetUser == null)
 			{
 				System.err.println("CMCommManager.removeBlockSocketChannel(), target user("
@@ -478,7 +463,7 @@ public class CMCommManager {
 		if(sc == null)
 		{
 			System.err.println("CMCommManager.removeBlockSocketChannel(), "
-					+ "socket channel not found! key("+nChKey+"), target("+strTarget+").");
+					+ "socket channel not found! key("+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 			return false;
 		}
 		
@@ -486,31 +471,27 @@ public class CMCommManager {
 		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
 		se.setChannelNum(nChKey);
 		se.setChannelName(myself.getName());
+		se.setChannelUuid(myself.getUuid());
 		
-		//result = send(se, strTarget);	// send the event with the default nonblocking socket channel
-
 		// If targetUser is not null, (that is, if the target is a client instead of a server,)
 		// the request event should be forwarded by the default server (internal forwarding of CM).
-		se.setSender(myself.getName());
-		se.setReceiver(strTarget);		
 		if(targetUser != null)
 		{
 			// set distribution fields
 			se.setDistributionSession("CM_ONE_USER");
 			se.setDistributionGroup(strTarget);
-			
+			se.setDistributionUuid(targetUuid);
+
 			// send the event to the default server
 			result = CMEventManager.unicastEvent(se, strDefServer);
 		}
 		else
 		{
 			// send the event to the target
-			result = CMEventManager.unicastEvent(se, strTarget);
+			result = CMEventManager.unicastEvent(se, strTarget, targetUuid);
 		}
-		se = null;
-		
+
 		// The channel will be closed and removed after the client receives the ACK event at the event handler.
-		
 		return result;
 	}
 	
@@ -645,13 +626,11 @@ public class CMCommManager {
 		return nTotalSentByteNum;
 	}
 
-	public static double measureInputThroughput(String target) {
+	public static double measureInputThroughput(String target, UUID targetUuid) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureInputThroughput() called..");
-			System.out.println("target = " + target);
+			System.out.println("target (" + target + ", target uuid(" + targetUuid + ").");
 		}
-
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
@@ -672,16 +651,16 @@ public class CMCommManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
-				target, CMInfo.FILE_OVERWRITE);
+				target, targetUuid, CMInfo.FILE_OVERWRITE);
 
 		if(!bReturn)
 			return -1;
 
 		eventSync.init();
 		if(confInfo.isFileTransferScheme())
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN, target, targetUuid);
 		else
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER, target, targetUuid);
 
 		synchronized(eventSync)
 		{
@@ -718,13 +697,12 @@ public class CMCommManager {
 		return speed;
 	}
 
-	public static double measureOutputThroughput(String target) {
+	public static double measureOutputThroughput(String target, UUID targetUuid) {
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMCommManager.measureOutputThroughput() called..");
 			System.out.println("target = " + target);
+			System.out.println("target (" + target + ", target uuid(" + targetUuid + ").");
 		}
-
-		CMInfo cmInfo = CMInfo.getInstance();
 
 		// check the current thread id
 		long threadId = Thread.currentThread().getId();
@@ -746,7 +724,7 @@ public class CMCommManager {
 		String strFilePath = confInfo.getTransferedFileHome().toString() + File.separator + CMInfo.THROUGHPUT_TEST_FILE;
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strTarget, CMInfo.FILE_OVERWRITE, m_cmInfo);
-		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, target,
+		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, target, targetUuid,
 				CMInfo.FILE_OVERWRITE, -1);
 
 		if(!bReturn)
@@ -754,9 +732,9 @@ public class CMCommManager {
 
 		eventSync.init();
 		if(confInfo.isFileTransferScheme())
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_CHAN_ACK, target, targetUuid);
 		else
-			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK, target);
+			eventSync.setWaitedEvent(CMInfo.CM_FILE_EVENT, CMFileEvent.END_FILE_TRANSFER_ACK, target, targetUuid);
 
 		synchronized(eventSync)
 		{

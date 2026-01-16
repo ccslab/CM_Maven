@@ -15,6 +15,7 @@ public class CMServer extends CMServerInfo {
 	private int m_nClientState;					// only 4 client
 	private String m_strCommArch;				// only 4 client
 	private boolean m_bLoginScheme;				// only 4 client
+	private boolean m_bMultiLoginScheme;		// only 4 client
 	private boolean m_bSessionScheme;			// only 4 client
 	private Vector<CMSession> m_sessionList;	// only 4 client
 
@@ -32,6 +33,7 @@ public class CMServer extends CMServerInfo {
 		m_nClientState = CMInfo.CM_INIT;
 		m_strCommArch = "";
 		m_bLoginScheme = false;
+		m_bMultiLoginScheme = false;
 		m_bSessionScheme = false;
 		m_sessionList = new Vector<CMSession>();
 	}
@@ -49,6 +51,7 @@ public class CMServer extends CMServerInfo {
 		m_nClientState = CMInfo.CM_INIT;
 		m_strCommArch = "?";
 		m_bLoginScheme = false;
+		m_bMultiLoginScheme = false;
 		m_bSessionScheme = false;
 		m_sessionList = new Vector<CMSession>();
 	}
@@ -155,6 +158,10 @@ public class CMServer extends CMServerInfo {
 	{
 		return m_bLoginScheme;
 	}
+
+	public synchronized void setMultiLoginScheme(boolean bMultiLoginScheme) { m_bMultiLoginScheme = bMultiLoginScheme; }
+
+	public synchronized boolean isMultiLoginScheme() { return m_bMultiLoginScheme; }
 	
 	public synchronized void setSessionScheme(boolean bSession)
 	{

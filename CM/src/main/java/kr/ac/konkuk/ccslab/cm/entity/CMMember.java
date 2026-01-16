@@ -4,13 +4,13 @@ import java.util.*;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 /**
- * This class represents a list of users.
+ * This class represents a table of users.
  * 
  * @author CCSLab, Konkuk University
  *
  */
 public class CMMember extends CMObject{
-	private Vector<CMUser> m_memberList;
+	private Hashtable<String, List<CMUser>> m_memberTable;
 
 	/**
 	 * creates an instance of the CMMember class.
@@ -18,332 +18,219 @@ public class CMMember extends CMObject{
 	public CMMember()
 	{
 		m_nType = CMInfo.CM_MEMBER;
-		m_memberList = new Vector<CMUser>();
+		m_memberTable = new Hashtable<>();
 	}
 	
 	/**
-	 * Adds a user to this member list.
+	 * Adds a user to this member table.
 	 * 
 	 * @param user - an added user.
 	 * @return true if the user is successfully added, or false.
 	 */
 	public synchronized boolean addMember(CMUser user)
 	{
-		if(isMember(user.getName()))
-		{
-			System.out.println("CMMember.addMember(), user("+user.getName()+") already exists.");
-			return false;
+		String userName = user.getName();
+		List<CMUser> userList = m_memberTable.get(userName);
+
+		if( userList == null ) {
+			userList = new ArrayList<>();
+			m_memberTable.put(userName, userList);
 		}
-		
-		m_memberList.addElement(user);
-		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMMember.addMember(), Ok with user("+user.getName()+").");
+
+		userList.add(user);
+
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("CMMember.addMember(), Ok with user("+userName+").");
+			System.out.println("# login of this user: "+userList.size());
 		}
-		
+
 		return true;
 	}
 	
 	/**
-	 * Removes a user from this member list.
+	 * Removes a user from this member table.
 	 * 
 	 * <p> If the member list has a user object that has the same name as the given user.
 	 * 
 	 * @param user - a removed user.
 	 * @return true if the user is successfully removed, or false.
 	 */
-	public synchronized boolean removeMember(CMUser user)
+	public synchronized CMUser removeMember(CMUser user)
 	{
-		Iterator<CMUser> iter = m_memberList.iterator();
-		int nRemovedNum = 0;
-		while(iter.hasNext())
-		{
-			CMUser tuser = iter.next();
-			if(user.getName().equals(tuser.getName()))
-			{
-				iter.remove();
-				nRemovedNum++;
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMMember.removeMember(), user("+user.getName()+") deleted.");
-				}
-			}
-		}
-		
-		if(nRemovedNum == 0)
-		{
-			System.out.println("CMMember.removeMember(), user("+user.getName()+") not found.");
-			return false;
-		}
-		
-		return true;
-	}
+		String userName = user.getName();
+		CMUser removedUser = null;
+		List<CMUser> userList = m_memberTable.get(userName);
 
-	// remove member reference and the member object
-	public synchronized boolean removeMemberObject(CMUser user)
-	{
-		Iterator<CMUser> iter = m_memberList.iterator();
-		int nRemovedNum = 0;
-		boolean bFound = false;
-		while(iter.hasNext() && !bFound)
-		{
-			CMUser tuser = iter.next();
-			if(user.getName().equals(tuser.getName()))
-			{
-				iter.remove();
-				tuser = null;
-				nRemovedNum++;
-				bFound = true;
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMMember.removeMemberObject(), user("+user.getName()+") deleted.");
-				}
-			}
+		if( userList == null ) {
+			System.err.println("CMMember.removeMember(user), no user list with name ("+userName+")!");
+			return null;
 		}
-		
-		if(nRemovedNum == 0)
-		{
-			System.out.println("CMMember.removeMemberObject(), user("+user.getName()+") not found.");
-			return false;
+
+		// find and remove the same object
+		if( userList.remove(user) ) {
+			removedUser = user;
 		}
-		
-		return true;
+
+		if( removedUser == null ) {
+			System.err.println("CMMember.removeMember(user), no same user object found with name("
+					+userName+"), uuid("+user.getUuid()+")!");
+			return null;
+		}
+
+		if( userList.isEmpty() ) {
+			m_memberTable.remove(userName);
+		}
+
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("CMMember.removeMember(), user("+userName+") deleted.");
+		}
+
+		return removedUser;
 	}
 
 	/**
-	 * Removes a user with the given name from this member list.
-	 * 
-	 * @param name - the name of a removed user.
-	 * @return true if the user is successfully removed, or false.
+	 * Removes a specific user with the given name and UUID.
+	 * * @param name - the user name
+	 * @param uuid - the user UUID
+	 * @return true if successfully removed, false otherwise.
 	 */
-	public synchronized boolean removeMember(String name)
-	{
-		Iterator<CMUser> iter = m_memberList.iterator();
-		int nRemovedNum = 0;
-		boolean bFound = false;
-		while(iter.hasNext() && !bFound)
-		{
-			CMUser tuser = iter.next();
-			if(name.equals(tuser.getName()))
-			{
-				iter.remove();
-				nRemovedNum++;
-				bFound = true;
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMMember.removeMember(), user("+name+") deleted.");
-				}
-			}
-		}
-		
-		if(nRemovedNum == 0)
-		{
-			System.out.println("CMMember.removeMember(), user("+name+") not found.");
+	public synchronized boolean removeMember(String name, UUID uuid) {
+		List<CMUser> userList = m_memberTable.get(name);
+		if( userList == null ) {
+			System.err.println("CMMember.removeMember(name, uuid), no user list with name ("+name+") found!");
 			return false;
 		}
-		
-		return true;
-	}
 
-	// remove member item (reference) and the member object with user name
-	public synchronized boolean removeMemberObject(String name)
-	{
-		Iterator<CMUser> iter = m_memberList.iterator();
-		int nRemovedNum = 0;
-		boolean bFound = false;
-		while(iter.hasNext() && !bFound)
-		{
-			CMUser tuser = iter.next();
-			if(name.equals(tuser.getName()))
-			{
-				iter.remove();
-				tuser = null;
-				nRemovedNum++;
-				bFound = true;
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMMember.removeMemberObject(), user("+name+") deleted.");
-				}
-			}
-		}
-		
-		if(nRemovedNum == 0)
-		{
-			System.out.println("CMMember.removeMemberObject(), user("+name+") not found.");
+		boolean removed = userList.removeIf( user ->
+				(user.getUuid() == null && uuid == null) ||
+						(user.getUuid() != null && user.getUuid().equals(uuid))
+		);
+
+		if( !removed ) {
+			System.err.println("CMMember.removeMember(name, uuid), no user found with name("+name+"), uuid("+uuid+")!");
 			return false;
 		}
-		
+
+		if( userList.isEmpty() ) {
+			m_memberTable.remove(name);
+		}
+
 		return true;
 	}
 
 	/**
-	 * Removes all users in this member list.
+	 * Removes all users in this member table.
 	 * 
 	 * @return true if this member list is not empty and cleared; 
 	 * false if the list is already empty.
 	 */
-	public synchronized boolean removeAllMembers()
+	public synchronized void removeAllMembers()
 	{
-		if( m_memberList.isEmpty() )
-		{
+		if( m_memberTable.isEmpty() ) {
 			if(CMInfo._CM_DEBUG)
-				System.out.println("CMMember.removeAllMembers(), already empty.");
-			return false;
+				System.out.println("CMMember.removeAllMembers(), table already empty!");
+			return;
 		}
-		
-		m_memberList.removeAllElements();
-		
-		if(CMInfo._CM_DEBUG)
-		{
+
+		for( List<CMUser> userList : m_memberTable.values() ) {
+			userList.clear();
+		}
+		m_memberTable.clear();
+
+		if(CMInfo._CM_DEBUG) {
 			System.out.println("CMMember.removeAllMembers(), Ok");
 		}
-		
-		return true;
-	}
-
-	// remove all member items (references) and the member objects
-	public synchronized boolean removeAllMemberObjects()
-	{
-		if( m_memberList.isEmpty() )
-		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("CMMember.removeAllMemberObjects(), already empty.");
-			return false;
-		}
-		
-		/*
-		Iterator<CMUser> iter = m_memberList.iterator();
-		while(iter.hasNext())
-		{
-			CMUser tuser = iter.next();
-			iter.remove();
-			tuser = null;	// not clear
-		}
-		*/
-		
-		m_memberList.removeAllElements();
-		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMMember.removeAllMemberObjects(), Ok");
-		}
-		
-		return true;
 	}
 
 	/**
-	 * Checks if a given user is in this member list.
+	 * Checks if the member table is empty or not.
 	 * 
-	 * <p> The given user is regarded as a member if the list has a member with the same name.
-	 * 
-	 * @param user - a given user.
-	 * @return true if the user is a member, or false.
-	 */
-	public synchronized boolean isMember(CMUser user)
-	{
-		Iterator<CMUser> iter = m_memberList.iterator();
-		while(iter.hasNext())
-		{
-			CMUser tuser = iter.next();
-			if(user.getName().equals(tuser.getName()))
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	/**
-	 * Checks if a given name is in this member list.
-	 * 
-	 * <p> The given name is regarded as a member if the list has a member with the same name.
-	 * 
-	 * @param name - a given name.
-	 * @return true if the name is a member, or false.
-	 */
-	public synchronized boolean isMember(String name)
-	{
-		Iterator<CMUser> iter = m_memberList.iterator();
-		while(iter.hasNext())
-		{
-			CMUser tuser = iter.next();
-			if(name.equals(tuser.getName()))
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	/**
-	 * Checks if the member list is empty or not.
-	 * 
-	 * @return true if the member list is empty, or false.
+	 * @return true if the member table is empty, or false.
 	 */
 	public synchronized boolean isEmpty()
 	{
-		return m_memberList.isEmpty();
+		return m_memberTable.isEmpty();
 	}
-	
 
 	/**
-	 * Finds a member with a given name.
+	 * Finds member list with a given name.
+	 * * @param name - a member name
+	 * @return the list of users with the name if found; null otherwise.
+	 */
+	public synchronized List<CMUser> findMemberList(String name)
+	{
+		return m_memberTable.get(name);
+	}
+
+	/**
+	 * Finds a member with a given name and uuid.
 	 * 
-	 * @param name - a member name
+	 * @param userName - a member name
+	 * @param uuid - user uuid
 	 * @return the user with the name if found; null otherwise.
 	 */
-	public synchronized CMUser findMember(String name)
+	public synchronized CMUser findMember(String userName, UUID uuid)
 	{
-		CMUser tuser;
-		Iterator<CMUser> iter = m_memberList.iterator();
-		while(iter.hasNext())
-		{
-			tuser = iter.next();
-			if(name.equals(tuser.getName()))
-				return tuser;
+		List<CMUser> userList = m_memberTable.get(userName);
+		if( userList == null ) {
+			System.err.println("CMMember.findMember(), user list with name("+userName+") is null!");
+			return null;
 		}
-		
-		return null;
+
+		CMUser user = userList.stream()
+				.filter( u -> (u.getUuid() == null && uuid == null) ||
+						(u.getUuid() != null && u.getUuid().equals(uuid)) )
+				.findFirst().orElse(null);
+
+		if( user == null ) {
+			System.err.println("CMMember.findMember(), user with name("+userName+"), uuid("+uuid+") not found!");
+			return null;
+		}
+
+		return user;
 	}
 	
 	/**
-	 * Returns the number of current users in this member list.
+	 * Returns the number of current user lists in this member table.
 	 * 
 	 * @return the number of members.
 	 */
 	public synchronized int getMemberNum()
 	{
-		return m_memberList.size();
+		return m_memberTable.size();
 	}
 	
 	
 	/**
-	 * Returns the Vector reference of this member list.
+	 * Returns the reference of this member table.
 	 * 
-	 * @return the Vector of this member list.
+	 * @return the reference of this member table.
 	 */
-	public synchronized Vector<CMUser> getAllMembers()
+	public synchronized Hashtable<String, List<CMUser>> getAllMembers()
 	{
-		return m_memberList;
+		return m_memberTable;
 	}
-	
+
+	/**
+	 * Returns the reference of the user list.
+	 * @param name - user name
+	 * @return the reference of the user list.
+	 */
+	public synchronized List<CMUser> getAllMembers(String name) {
+		return m_memberTable.get(name);
+	}
+
 	@Override
 	public String toString()
 	{
-		if(m_memberList.isEmpty())
+		if(m_memberTable.isEmpty())
 			return null;
-		
+
 		StringBuffer strBuf = new StringBuffer();
-		strBuf.append("session("+m_memberList.get(0).getCurrentSession()+"), group("
-				+m_memberList.get(0).getCurrentGroup()+")\n");
-		for(CMUser user : m_memberList)
-		{
-			strBuf.append(user.getName()+" ");
+		for(Map.Entry<String, List<CMUser>> entry : m_memberTable.entrySet()) {
+			strBuf.append(entry.getKey()+"("+entry.getValue().size()+") ");
 		}
-		
+
 		return strBuf.toString();
 	}
 }
