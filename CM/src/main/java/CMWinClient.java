@@ -1524,7 +1524,7 @@ public class CMWinClient extends JFrame {
 			if(nRecvPort == 0)
 				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort);
 			else
-				m_clientStub.send(ie, strReceiver, CMInfo.CM_DATAGRAM, nSendPort, nRecvPort, false);
+				m_clientStub.send(ie, strReceiver, null, CMInfo.CM_DATAGRAM, nSendPort, nRecvPort, false);
 			ie = null;
 		}
 		
