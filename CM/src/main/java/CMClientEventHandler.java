@@ -498,7 +498,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(222);
 			rue.setStringID("testReplySendRecv");
-			boolean ret = m_clientStub.send(rue, ue.getSender());
+			boolean ret = m_clientStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				System.out.println("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")");
 			else
@@ -513,7 +513,7 @@ public class CMClientEventHandler implements CMAppEventHandler {
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(223);
 			rue.setStringID("testReplyCastRecv");
-			boolean ret = m_clientStub.send(rue, ue.getSender());
+			boolean ret = m_clientStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				System.out.println("Sent reply event: (id, "+rue.getID()+"), (sting id, "+rue.getStringID()+")");
 			else

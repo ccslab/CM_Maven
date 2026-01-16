@@ -191,7 +191,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 				id = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "id"));
 				System.out.println("Received user evnet 'testForward', id("+id+"), checkCount("+m_nCheckCount+")");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 		}
 		else if(ue.getStringID().equals("EndSim"))
@@ -216,7 +216,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 				id = Integer.parseInt(ue.getEventField(CMInfo.CM_INT, "id"));
 				System.out.println("Received user event 'testForwardDelay', id("+id+")");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 		}
 		else if(ue.getStringID().equals("EndForwardDelay"))
@@ -226,7 +226,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			{
 				System.out.println("Received user event 'EndForwardDelay'");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 			
 		}
@@ -242,7 +242,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			userEvent.setEventField(CMInfo.CM_INT, "chType", Integer.toString(nChType));
 			userEvent.setEventField(CMInfo.CM_INT, "chKey", Integer.toString(nChKey));
 			userEvent.setEventField(CMInfo.CM_INT, "recvPort", Integer.toString(nRecvPort));
-			m_serverStub.send(userEvent, strUser);
+			m_serverStub.send(userEvent, strUser, ue.getSenderUuid());
 			
 			System.out.print("["+strUser+"] requested to receive a dummy event ");
 			
@@ -302,7 +302,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(222);
 			rue.setStringID("testReplySendRecv");
-			boolean ret = m_serverStub.send(rue, ue.getSender());
+			boolean ret = m_serverStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				System.out.println("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")");
 			else

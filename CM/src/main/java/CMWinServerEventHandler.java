@@ -231,7 +231,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				//System.out.println("Received user evnet 'testForward', id("+id+"), checkCount("+m_nCheckCount+")");
 				printMessage("Received user evnet 'testForward', id("+id+"), checkCount("+m_nCheckCount+")\n");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 		}
 		else if(ue.getStringID().equals("EndSim"))
@@ -260,7 +260,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				//System.out.println("Received user event 'testForwardDelay', id("+id+")");
 				printMessage("Received user event 'testForwardDelay', id("+id+")\n");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 		}
 		else if(ue.getStringID().equals("EndForwardDelay"))
@@ -271,7 +271,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				//System.out.println("Received user event 'EndForwardDelay'");
 				printMessage("Received user event 'EndForwardDelay'\n");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 			
 		}
@@ -287,7 +287,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			userEvent.setEventField(CMInfo.CM_INT, "chType", Integer.toString(nChType));
 			userEvent.setEventField(CMInfo.CM_INT, "chKey", Integer.toString(nChKey));
 			userEvent.setEventField(CMInfo.CM_INT, "recvPort", Integer.toString(nRecvPort));
-			m_serverStub.send(userEvent, strUser);
+			m_serverStub.send(userEvent, strUser, ue.getSenderUuid());
 			
 			printMessage("["+strUser+"] requested to receive a dummy event ");
 			
@@ -347,7 +347,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(222);
 			rue.setStringID("testReplySendRecv");
-			boolean ret = m_serverStub.send(rue, ue.getSender());
+			boolean ret = m_serverStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				printMessage("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
 			else
@@ -545,7 +545,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			ue.setEventField(CMInfo.CM_STR, "strFileReceiver", m_strFileReceiver);
 			ue.setEventField(CMInfo.CM_INT, "nNumFilesPerSession", 
 					Integer.toString(m_nTotalNumFilesPerSession));
-			bRet = m_serverStub.send(ue, m_strFileSender);
+			bRet = m_serverStub.send(ue, m_strFileSender, fe.getFileSenderUuid());
 			
 			if(!bRet)
 			{
