@@ -145,22 +145,24 @@ public class CMFileTransferInfo {
 		return true;		
 	}
 
-	public synchronized CMSendFileInfo findSendFileInfo(String uName, String fName, int nContentID)
+	public synchronized CMSendFileInfo findSendFileInfo(String fileReceiver, UUID fileReceiverUuid, String fName,
+														int nContentID)
 	{
 		CMSendFileInfo sInfo = null;
 		CMList<CMSendFileInfo> sInfoList = null;
 		CMSendFileInfo tInfo = null;
 		
-		sInfoList = m_sendFileHashtable.get(uName);
+		sInfoList = m_sendFileHashtable.get(fileReceiver);
 		if(sInfoList == null)
 		{
 			System.err.println("CMFileTransferInfo.findSendFileInfo(), list not found for receiver("
-					+uName+")");
+					+fileReceiver+")");
 			return null;
 		}
 		
 		tInfo = new CMSendFileInfo();
-		tInfo.setFileReceiver(uName);
+		tInfo.setFileReceiver(fileReceiver);
+		tInfo.setFileReceiverUuid(fileReceiverUuid); // Set UUID
 		tInfo.setFileName(fName);
 		tInfo.setContentID(nContentID);
 		

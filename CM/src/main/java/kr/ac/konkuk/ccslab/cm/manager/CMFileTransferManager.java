@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -2271,12 +2272,13 @@ public class CMFileTransferManager {
 			bForward = false;
 		
 		// find the CMSendFileInfo object 
-		sInfo = fInfo.findSendFileInfo(recvFileEvent.getFileReceiver(), recvFileEvent.getFileName(), 
-				recvFileEvent.getContentID());
+		sInfo = fInfo.findSendFileInfo(recvFileEvent.getFileReceiver(), recvFileEvent.getFileReceiverUuid(),
+				recvFileEvent.getFileName(), recvFileEvent.getContentID());
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER_ACK(), sendFileInfo not found! : "
-					+"receiver("+recvFileEvent.getFileReceiver()+"), file("+recvFileEvent.getFileName()
+					+"file receiver("+recvFileEvent.getFileReceiver()+"), file receiver uuid("
+					+recvFileEvent.getFileReceiverUuid()+"), file("+recvFileEvent.getFileName()
 					+"), content ID("+recvFileEvent.getContentID()+")");
 			return bForward;
 		}
@@ -2635,6 +2637,7 @@ public class CMFileTransferManager {
 		CMInfo cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		String strFileReceiver = fe.getFileReceiver();
+		UUID fileReceiverUuid = fe.getFileReceiverUuid();
 		String strFileName = fe.getFileName();
 		long lFileSize = fe.getFileSize();
 		int nContentID = fe.getContentID();
@@ -2672,11 +2675,12 @@ public class CMFileTransferManager {
 		}
 
 		// find completed send info
-		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strFileReceiver, strFileName, nContentID);
+		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strFileReceiver, fileReceiverUuid, strFileName, nContentID);
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_ACK(), send info not found");
-			System.err.println("receiver("+strFileReceiver+"), file("+strFileName+"), content ID("+nContentID+").");
+			System.err.println("file receiver("+strFileReceiver+"), file receiver uuid("+fileReceiverUuid
+					+"), file("+strFileName+"), content ID("+nContentID+").");
 		}
 		else
 		{
@@ -2931,12 +2935,13 @@ public class CMFileTransferManager {
 			bForward = false;
 
 		// find the CMSendFileInfo object 
-		sInfo = fInfo.findSendFileInfo(fe.getFileReceiver(), fe.getFileName(), fe.getContentID());
+		sInfo = fInfo.findSendFileInfo(fe.getFileReceiver(), fe.getFileReceiverUuid(),
+				fe.getFileName(), fe.getContentID());
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER_CHAN_ACK(), sendFileInfo "
-					+ "not found! : receiver("+fe.getFileReceiver()+"), file("+fe.getFileName()
-					+"), content ID("+fe.getContentID()+")");
+					+ "not found! : file receiver("+fe.getFileReceiver()+"), file receiver uuid("
+					+fe.getFileReceiverUuid()+"), file("+fe.getFileName()+"), content ID("+fe.getContentID()+")");
 			return bForward;
 		}
 				
@@ -3105,6 +3110,7 @@ public class CMFileTransferManager {
 		String strMyName = interInfo.getMyself().getName();
 		boolean bForward = true;
 		String strFileReceiver = fe.getFileReceiver();
+		UUID fileReceiverUuid = fe.getFileReceiverUuid();
 		String strFileName = fe.getFileName();
 		long lFileSize = fe.getFileSize();
 		int nContentID = fe.getContentID();
@@ -3140,11 +3146,12 @@ public class CMFileTransferManager {
 		}
 
 		// find completed send info
-		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strFileReceiver, strFileName, nContentID);
+		CMSendFileInfo sInfo = fInfo.findSendFileInfo(strFileReceiver, fileReceiverUuid, strFileName, nContentID);
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN_ACK(), send info not found");
-			System.err.println("receiver("+strFileReceiver+"), file("+strFileName+"), content ID("+nContentID+").");
+			System.err.println("file receiver("+strFileReceiver+"), file receiver uuid("+fileReceiverUuid
+					+"), file("+strFileName+"), content ID("+nContentID+").");
 		}
 		else
 		{
