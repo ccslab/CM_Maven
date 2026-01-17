@@ -143,7 +143,7 @@ public class CMSendFileTask implements Runnable {
 			if(lSentSize > lFileSize)
 			{
 				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getFileReceiver()
-						+"), receiver uuid("+m_sendFileInfo.getReceiverUuid()+") already has "
+						+"), receiver uuid("+m_sendFileInfo.getFileReceiverUuid()+") already has "
 						+ "a bigger size file("+m_sendFileInfo.getFileName()+"); sender size("+lFileSize
 						+ "), receiver size("+lSentSize+")");
 			}
@@ -172,7 +172,7 @@ public class CMSendFileTask implements Runnable {
 				// set distribution fields
 				fe.setDistributionSession("CM_ONE_USER");
 				fe.setDistributionGroup(m_sendFileInfo.getFileReceiver());
-				fe.setDistributionUuid(m_sendFileInfo.getReceiverUuid());
+				fe.setDistributionUuid(m_sendFileInfo.getFileReceiverUuid());
 
 				// Target is the default server
 				CMEventManager.unicastEvent(fe, strDefServer);
@@ -186,7 +186,7 @@ public class CMSendFileTask implements Runnable {
 				}
 				// Sender/Receiver is set by unicastEvent if not specified
 				// Use the method that accepts UUID to support multi-device delivery if needed (or specific target)
-				CMEventManager.unicastEvent(fe, m_sendFileInfo.getFileReceiver(), m_sendFileInfo.getReceiverUuid());
+				CMEventManager.unicastEvent(fe, m_sendFileInfo.getFileReceiver(), m_sendFileInfo.getFileReceiverUuid());
 			}
 			
 			/*CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
