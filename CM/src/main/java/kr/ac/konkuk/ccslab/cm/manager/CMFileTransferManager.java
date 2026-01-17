@@ -2685,7 +2685,7 @@ public class CMFileTransferManager {
 		else
 		{
 			// delete corresponding request from the list
-			fInfo.removeSendFileInfo(strFileReceiver, strFileName, nContentID);
+			fInfo.removeSendFileInfo(strFileReceiver, fileReceiverUuid, strFileName, nContentID);
 		}
 			
 		//////////////////// check the completion of sending attached file of SNS content
@@ -3156,7 +3156,7 @@ public class CMFileTransferManager {
 		else
 		{
 			// delete corresponding request from the list
-			fInfo.removeSendFileInfo(strFileReceiver, strFileName, nContentID);
+			fInfo.removeSendFileInfo(strFileReceiver, fileReceiverUuid, strFileName, nContentID);
 		}
 	
 		//////////////////// check the completion of sending attached file of SNS content
