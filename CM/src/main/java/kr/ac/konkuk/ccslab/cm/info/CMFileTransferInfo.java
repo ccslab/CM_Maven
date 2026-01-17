@@ -112,44 +112,6 @@ public class CMFileTransferInfo {
 		
 	
 	////////// add/remove/find sending file info
-	
-	public synchronized boolean addSendFileInfo(String uName, String fPath, long lSize, int nContentID)
-	{
-		CMSendFileInfo sInfo = null;
-		String strFileName = null;
-		CMList<CMSendFileInfo> sInfoList = null;
-		boolean bResult = false;
-		
-		strFileName = fPath.substring(fPath.lastIndexOf(File.separator)+1);
-		sInfo = new CMSendFileInfo();
-		sInfo.setFileReceiver(uName);
-		sInfo.setFileName(strFileName);
-		sInfo.setFilePath(fPath);
-		sInfo.setFileSize(lSize);
-		sInfo.setContentID(nContentID);
-		
-		sInfoList = m_sendFileHashtable.get(uName);
-		if(sInfoList == null)
-		{
-			sInfoList = new CMList<CMSendFileInfo>();
-			m_sendFileHashtable.put(uName, sInfoList);
-		}
-		
-		bResult = sInfoList.addElement(sInfo);
-		if(!bResult)
-		{
-			System.err.println("CMFileTransferInfo.addSendFileInfo() failed: "+sInfo.toString());
-			return false;
-		}
-		
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMFileTransferInfo.addSendFileInfo() done: "+sInfo.toString());
-			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
-		}
-
-		return true;
-	}
 
 	public synchronized boolean addSendFileInfo(CMSendFileInfo sInfo)
 	{
