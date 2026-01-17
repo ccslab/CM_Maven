@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.io.RandomAccessFile;
 import java.nio.channels.SocketChannel;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.Future;
 
 public class CMSendFileInfo extends CMTransFileInfo {
@@ -41,8 +43,10 @@ public class CMSendFileInfo extends CMTransFileInfo {
 		
 		CMSendFileInfo sfInfo = (CMSendFileInfo) o;
 		String strReceiverName = sfInfo.getFileReceiver();
+		// [Modified] Check receiver UUID in equality check
+		UUID receiverUuid = sfInfo.getFileReceiverUuid();
 		
-		if(strReceiverName.equals(m_strFileReceiver))
+		if(strReceiverName.equals(m_strFileReceiver) && Objects.equals(receiverUuid, m_fileReceiverUuid))
 			return true;
 		return false;
 	}
