@@ -1,8 +1,10 @@
 package kr.ac.konkuk.ccslab.cm.event;
 import java.nio.*;
 import java.util.Arrays;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 /**
  * This class represents CM events that are used for the file-transfer task.
@@ -20,7 +22,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the requested file is an attachment of SNS content ID
@@ -41,7 +45,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>-1: the requested file does not exist.
@@ -62,7 +68,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file path: {@link CMFileEvent#getFilePath()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}</li>
@@ -81,7 +89,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file path: {@link CMFileEvent#getFilePath()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>append mode: {@link CMFileEvent#getFileAppendFlag()}</li>
@@ -107,7 +117,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -127,7 +139,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the file is an attachment of SNS content ID
@@ -148,7 +162,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the file is an attachment of SNS content ID
@@ -169,7 +185,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -187,7 +205,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
@@ -212,7 +232,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * </ul>
 	 */
 	public static final int CANCEL_FILE_SEND = 12;
@@ -225,7 +247,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>1: cancellation success
 	 * <br>0: cancellation failure</li>
@@ -246,7 +270,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -266,7 +292,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
 	 * <br>&gt;= 0: the file is an attachment of SNS content ID
@@ -287,7 +315,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>content ID: {@link CMFileEvent#getContentID()}
@@ -305,7 +335,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>file name: {@link CMFileEvent#getFileName()}</li>
 	 * <li>file size: {@link CMFileEvent#getFileSize()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
@@ -328,7 +360,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * </ul>
 	 */
 	public static final int CANCEL_FILE_SEND_CHAN = 20;
@@ -341,7 +375,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>1: cancellation success
 	 * <br>0: cancellation failure</li>
@@ -359,7 +395,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * </ul>
 	 */
 	public static final int CANCEL_FILE_RECV_CHAN = 22;
@@ -372,7 +410,9 @@ public class CMFileEvent extends CMEvent{
 	 * <br>The following fields are used for this event:
 	 * <ul>
 	 * <li>file sender: {@link CMFileEvent#getFileSender()}</li>
+	 * <li>file sender uuid: {@link CMFileEvent#getFileSenderUuid()}</li>
 	 * <li>file receiver: {@link CMFileEvent#getFileReceiver()}</li>
+	 * <li>file receiver uuid: {@link CMFileEvent#getFileReceiverUuid()}</li>
 	 * <li>return code: {@link CMFileEvent#getReturnCode()}
 	 * <br>1: cancellation success
 	 * <br>0: cancellation failure</li>
@@ -383,8 +423,10 @@ public class CMFileEvent extends CMEvent{
 	public static final int ERR_SEND_FILE_CHAN = 24;
 	public static final int ERR_RECV_FILE_CHAN = 25;
 	
-	private String m_strFileReceiver;	// file receiver
 	private String m_strFileSender;	// file sender
+	private UUID m_fileSenderUuid;	// file sender uuid
+	private String m_strFileReceiver;	// file receiver
+	private UUID m_fileReceiverUuid;	// file receiver uuid
 	private String m_strFileName;	// file name
 	private String m_strFilePath;	// file path
 	private long m_lFileSize;
@@ -401,7 +443,9 @@ public class CMFileEvent extends CMEvent{
 		m_nType = CMInfo.CM_FILE_EVENT;
 		m_nID = -1;
 		m_strFileReceiver = "?";
+		m_fileReceiverUuid = null;
 		m_strFileSender = "?";
+		m_fileSenderUuid = null;
 		m_strFileName = "?";
 		m_strFilePath = "?";
 		m_lFileSize = 0;
@@ -436,6 +480,16 @@ public class CMFileEvent extends CMEvent{
 	{
 		return m_strFileReceiver;
 	}
+
+	public void setFileReceiverUuid(UUID uuid) {
+		m_fileReceiverUuid = uuid;
+	}
+
+	/**
+	 * Returns the receiver UUID of a file.
+	 * @return receiver UUID
+	 */
+	public UUID getFileReceiverUuid() { return m_fileReceiverUuid; }
 	
 	public void setFileSender(String sName)
 	{
@@ -451,6 +505,16 @@ public class CMFileEvent extends CMEvent{
 	{
 		return m_strFileSender;
 	}
+
+	public void setFileSenderUuid(UUID uuid) {
+		m_fileSenderUuid = uuid;
+	}
+
+	/**
+	 * Returns the sender UUID of a file.
+	 * @return sender UUID
+	 */
+	public UUID getFileSenderUuid() { return m_fileSenderUuid; }
 	
 	public void setFileName(String fName)
 	{
@@ -602,7 +666,7 @@ public class CMFileEvent extends CMEvent{
 	}
 	
 	//////////////////////////////////////////////////////////
-	
+	@Override
 	protected int getByteNum()
 	{		
 		int nByteNum = 0;
@@ -610,301 +674,269 @@ public class CMFileEvent extends CMEvent{
 		
 		switch(m_nID)
 		{
-		case REQUEST_PERMIT_PULL_FILE:
-		//case REQUEST_PERMIT_PULL_FILE_CHAN:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// content ID
-			nByteNum += Integer.BYTES;
-			// append mode flag
-			nByteNum += Byte.BYTES;
-			// port number of server socket channel of file receiver in P2P file-transfer
-			nByteNum += Integer.BYTES;
-			break;
-		case REPLY_PERMIT_PULL_FILE:
-		//case REPLY_PERMIT_PULL_FILE_CHAN:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// content ID, return code
-			nByteNum += 2*Integer.BYTES;
-			break;
-		case REQUEST_PERMIT_PUSH_FILE:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file path
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
-			nByteNum += Long.BYTES;	// file size
-			nByteNum += Byte.BYTES;	// append mode flag
-			nByteNum += Integer.BYTES;	// content ID
-			break;
-		case REPLY_PERMIT_PUSH_FILE:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file path
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
-			nByteNum += Long.BYTES;	// file size
-			nByteNum += Byte.BYTES;	// append mode flag
-			nByteNum += Integer.BYTES;	// content ID
-			// port number of server socket channel of file receiver in P2P file-transfer
-			nByteNum += Integer.BYTES;
-			nByteNum += Integer.BYTES;	// return code
-			break;
-		case START_FILE_TRANSFER:
-		case START_FILE_TRANSFER_CHAN:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// file size
-			nByteNum += Long.BYTES;
-			// content ID
-			nByteNum += Integer.BYTES;
-			// append mode
-			nByteNum += Byte.BYTES;
-			break;
-		case START_FILE_TRANSFER_ACK:
-		case START_FILE_TRANSFER_CHAN_ACK:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// content ID
-			nByteNum += Integer.BYTES;
-			// received file size
-			nByteNum += Long.BYTES;
-			break;
-		case CONTINUE_FILE_TRANSFER:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// content ID
-			nByteNum += Integer.BYTES;
-			// file block size
-			nByteNum += Integer.BYTES;
-			// file block
-			nByteNum += CMInfo.FILE_BLOCK_LEN;
-			break;
-		case CONTINUE_FILE_TRANSFER_ACK:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// received file size
-			nByteNum += Long.BYTES;
-			// content ID
-			nByteNum += Integer.BYTES;
-			break;
-		case END_FILE_TRANSFER:
-		case END_FILE_TRANSFER_CHAN:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// file size
-			nByteNum += Long.BYTES;
-			// content ID
-			nByteNum += Integer.BYTES;
-			break;
-		case END_FILE_TRANSFER_ACK:
-		case END_FILE_TRANSFER_CHAN_ACK:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// file size
-			nByteNum += Long.BYTES;
-			// return code
-			nByteNum += Integer.BYTES;
-			// content ID
-			nByteNum += Integer.BYTES;
-			break;
-		case REQUEST_DIST_FILE_PROC:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// content ID
-			nByteNum += Integer.BYTES;
-			break;
-		case CANCEL_FILE_SEND:
-		case CANCEL_FILE_SEND_CHAN:
-		case CANCEL_FILE_RECV_CHAN:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			break;
-		case CANCEL_FILE_SEND_ACK:
-		case CANCEL_FILE_SEND_CHAN_ACK:
-		case CANCEL_FILE_RECV_CHAN_ACK:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// return code
-			nByteNum += Integer.BYTES;
-			break;
-		case ERR_SEND_FILE_CHAN:
-		case ERR_RECV_FILE_CHAN:
-			// file sender
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
-			// file receiver
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
-			// file name
-			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
-			// content ID
-			nByteNum += Integer.BYTES;
-			break;
-		default:
-			nByteNum = -1;
-			break;
+			case REQUEST_PERMIT_PULL_FILE:
+			case REPLY_PERMIT_PULL_FILE:
+			case REQUEST_PERMIT_PUSH_FILE:
+			case REPLY_PERMIT_PUSH_FILE:
+			case START_FILE_TRANSFER:
+			case START_FILE_TRANSFER_CHAN:
+			case START_FILE_TRANSFER_ACK:
+			case START_FILE_TRANSFER_CHAN_ACK:
+			case CONTINUE_FILE_TRANSFER:
+			case CONTINUE_FILE_TRANSFER_ACK:
+			case END_FILE_TRANSFER:
+			case END_FILE_TRANSFER_CHAN:
+			case END_FILE_TRANSFER_ACK:
+			case END_FILE_TRANSFER_CHAN_ACK:
+			case REQUEST_DIST_FILE_PROC:
+			case CANCEL_FILE_SEND:
+			case CANCEL_FILE_SEND_CHAN:
+			case CANCEL_FILE_RECV_CHAN:
+			case CANCEL_FILE_SEND_ACK:
+			case CANCEL_FILE_SEND_CHAN_ACK:
+			case CANCEL_FILE_RECV_CHAN_ACK:
+			case ERR_SEND_FILE_CHAN:
+			case ERR_RECV_FILE_CHAN:
+				// file sender
+				nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileSender.getBytes().length;
+				// fine sender uuid
+				nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_fileSenderUuid)
+						.getBytes().length;
+				// file receiver
+				nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileReceiver.getBytes().length;
+				// file receiver uuid
+				nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_fileReceiverUuid)
+						.getBytes().length;
+
+				if( m_nID == REQUEST_PERMIT_PULL_FILE ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// content ID
+					nByteNum += Integer.BYTES;
+					// append mode flag
+					nByteNum += Byte.BYTES;
+					// port number of server socket channel of file receiver in P2P file-transfer
+					nByteNum += Integer.BYTES;
+				}
+				else if( m_nID == REPLY_PERMIT_PULL_FILE) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// content ID, return code
+					nByteNum += 2*Integer.BYTES;
+				}
+				else if( m_nID == REQUEST_PERMIT_PUSH_FILE ) {
+					// file path
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
+					nByteNum += Long.BYTES;	// file size
+					nByteNum += Byte.BYTES;	// append mode flag
+					nByteNum += Integer.BYTES;	// content ID
+				}
+				else if( m_nID == REPLY_PERMIT_PUSH_FILE ) {
+					// file path
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFilePath.getBytes().length;
+					nByteNum += Long.BYTES;	// file size
+					nByteNum += Byte.BYTES;	// append mode flag
+					nByteNum += Integer.BYTES;	// content ID
+					// port number of server socket channel of file receiver in P2P file-transfer
+					nByteNum += Integer.BYTES;
+					nByteNum += Integer.BYTES;	// return code
+				}
+				else if( m_nID == START_FILE_TRANSFER || m_nID == START_FILE_TRANSFER_CHAN ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// file size
+					nByteNum += Long.BYTES;
+					// content ID
+					nByteNum += Integer.BYTES;
+					// append mode
+					nByteNum += Byte.BYTES;
+				}
+				else if( m_nID == START_FILE_TRANSFER_ACK || m_nID == START_FILE_TRANSFER_CHAN_ACK ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// content ID
+					nByteNum += Integer.BYTES;
+					// received file size
+					nByteNum += Long.BYTES;
+				}
+				else if( m_nID == CONTINUE_FILE_TRANSFER ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// content ID
+					nByteNum += Integer.BYTES;
+					// file block size
+					nByteNum += Integer.BYTES;
+					// file block
+					nByteNum += CMInfo.FILE_BLOCK_LEN;
+				}
+				else if( m_nID == CONTINUE_FILE_TRANSFER_ACK ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// received file size
+					nByteNum += Long.BYTES;
+					// content ID
+					nByteNum += Integer.BYTES;
+				}
+				else if( m_nID == END_FILE_TRANSFER || m_nID == END_FILE_TRANSFER_CHAN ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// file size
+					nByteNum += Long.BYTES;
+					// content ID
+					nByteNum += Integer.BYTES;
+				}
+				else if( m_nID == END_FILE_TRANSFER_ACK || m_nID == END_FILE_TRANSFER_CHAN_ACK ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// file size
+					nByteNum += Long.BYTES;
+					// return code
+					nByteNum += Integer.BYTES;
+					// content ID
+					nByteNum += Integer.BYTES;
+				}
+				else if( m_nID == REQUEST_DIST_FILE_PROC ) {
+					// content ID
+					nByteNum += Integer.BYTES;
+				}
+				else if( m_nID == CANCEL_FILE_SEND || m_nID == CANCEL_FILE_SEND_CHAN
+						|| m_nID == CANCEL_FILE_RECV_CHAN ) {
+					// nothing more to add
+				}
+				else if( m_nID == CANCEL_FILE_SEND_ACK || m_nID == CANCEL_FILE_SEND_CHAN_ACK
+						|| m_nID == CANCEL_FILE_RECV_CHAN_ACK ) {
+					// return code
+					nByteNum += Integer.BYTES;
+				}
+				else if( m_nID == ERR_SEND_FILE_CHAN || m_nID == ERR_RECV_FILE_CHAN ) {
+					// file name
+					nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strFileName.getBytes().length;
+					// content ID
+					nByteNum += Integer.BYTES;
+				}
+				break;
+
+			default:
+				System.err.println("CMFileEvent.getByteNum(), unknown event id("+m_nID+")");
+				nByteNum = -1;
+				break;
 		}
 		
 		return nByteNum;
 	}
-	
+
+	@Override
 	protected void marshallBody()
 	{
 		switch(m_nID)
 		{
-		case REQUEST_PERMIT_PULL_FILE:
-		//case REQUEST_PERMIT_PULL_FILE_CHAN:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putInt(m_nContentID);
-			m_bytes.put(m_byteFileAppendFlag);
-			m_bytes.putInt(m_nSSCPort);
-			break;
-		case REPLY_PERMIT_PULL_FILE:
-		//case REPLY_PERMIT_PULL_FILE_CHAN:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putInt(m_nReturnCode);
-			m_bytes.putInt(m_nContentID);
-			break;
-		case REQUEST_PERMIT_PUSH_FILE:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFilePath);
-			m_bytes.putLong(m_lFileSize);
-			m_bytes.put(m_byteFileAppendFlag);
-			m_bytes.putInt(m_nContentID);
-			break;
-		case REPLY_PERMIT_PUSH_FILE:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFilePath);
-			m_bytes.putLong(m_lFileSize);
-			m_bytes.put(m_byteFileAppendFlag);
-			m_bytes.putInt(m_nContentID);
-			m_bytes.putInt(m_nSSCPort);
-			m_bytes.putInt(m_nReturnCode);
-			break;
-		case START_FILE_TRANSFER:
-		case START_FILE_TRANSFER_CHAN:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putLong(m_lFileSize);
-			m_bytes.putInt(m_nContentID);
-			m_bytes.put(m_byteFileAppendFlag);
-			break;
-		case START_FILE_TRANSFER_ACK:
-		case START_FILE_TRANSFER_CHAN_ACK:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putInt(m_nContentID);
-			m_bytes.putLong(m_lReceivedFileSize);
-			break;
-		case CONTINUE_FILE_TRANSFER:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putInt(m_nContentID);
-			m_bytes.putInt(m_nBlockSize);
-			m_bytes.put(m_cFileBlock);
-			break;
-		case CONTINUE_FILE_TRANSFER_ACK:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putLong(m_lReceivedFileSize);
-			m_bytes.putInt(m_nContentID);
-			break;
-		case END_FILE_TRANSFER:
-		case END_FILE_TRANSFER_CHAN:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);			
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putLong(m_lFileSize);
-			m_bytes.putInt(m_nContentID);
-			break;
-		case END_FILE_TRANSFER_ACK:
-		case END_FILE_TRANSFER_CHAN_ACK:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putLong(m_lFileSize);
-			m_bytes.putInt(m_nReturnCode);
-			m_bytes.putInt(m_nContentID);
-			break;
-		case REQUEST_DIST_FILE_PROC:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			m_bytes.putInt(m_nContentID);
-			break;
-		case CANCEL_FILE_SEND:
-		case CANCEL_FILE_SEND_CHAN:
-		case CANCEL_FILE_RECV_CHAN:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			break;
-		case CANCEL_FILE_SEND_ACK:
-		case CANCEL_FILE_SEND_CHAN_ACK:
-		case CANCEL_FILE_RECV_CHAN_ACK:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			m_bytes.putInt(m_nReturnCode);
-			break;
-		case ERR_SEND_FILE_CHAN:
-		case ERR_RECV_FILE_CHAN:
-			putStringToByteBuffer(m_strFileSender);
-			putStringToByteBuffer(m_strFileReceiver);
-			putStringToByteBuffer(m_strFileName);
-			m_bytes.putInt(m_nContentID);
-			break;
-		default:
-			System.out.println("CMFileEvent.marshallBody(), unknown event id("+m_nID+").");
-			m_bytes = null;
-			break;
+			case REQUEST_PERMIT_PULL_FILE:
+			case REPLY_PERMIT_PULL_FILE:
+			case REQUEST_PERMIT_PUSH_FILE:
+			case REPLY_PERMIT_PUSH_FILE:
+			case START_FILE_TRANSFER:
+			case START_FILE_TRANSFER_CHAN:
+			case START_FILE_TRANSFER_ACK:
+			case START_FILE_TRANSFER_CHAN_ACK:
+			case CONTINUE_FILE_TRANSFER:
+			case CONTINUE_FILE_TRANSFER_ACK:
+			case END_FILE_TRANSFER:
+			case END_FILE_TRANSFER_CHAN:
+			case END_FILE_TRANSFER_ACK:
+			case END_FILE_TRANSFER_CHAN_ACK:
+			case REQUEST_DIST_FILE_PROC:
+			case CANCEL_FILE_SEND:
+			case CANCEL_FILE_SEND_CHAN:
+			case CANCEL_FILE_RECV_CHAN:
+			case CANCEL_FILE_SEND_ACK:
+			case CANCEL_FILE_SEND_CHAN_ACK:
+			case CANCEL_FILE_RECV_CHAN_ACK:
+			case ERR_SEND_FILE_CHAN:
+			case ERR_RECV_FILE_CHAN:
+				putStringToByteBuffer(m_strFileSender);
+				putStringToByteBuffer(CMUUIDConverter.uuidToString(m_fileSenderUuid));
+				putStringToByteBuffer(m_strFileReceiver);
+				putStringToByteBuffer(CMUUIDConverter.uuidToString(m_fileReceiverUuid));
+
+				if( m_nID == REQUEST_PERMIT_PULL_FILE ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putInt(m_nContentID);
+					m_bytes.put(m_byteFileAppendFlag);
+					m_bytes.putInt(m_nSSCPort);
+				}
+				else if( m_nID == REPLY_PERMIT_PULL_FILE ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putInt(m_nReturnCode);
+					m_bytes.putInt(m_nContentID);
+				}
+				else if( m_nID == REQUEST_PERMIT_PUSH_FILE ) {
+					putStringToByteBuffer(m_strFilePath);
+					m_bytes.putLong(m_lFileSize);
+					m_bytes.put(m_byteFileAppendFlag);
+					m_bytes.putInt(m_nContentID);
+				}
+				else if( m_nID == REPLY_PERMIT_PUSH_FILE ) {
+					putStringToByteBuffer(m_strFilePath);
+					m_bytes.putLong(m_lFileSize);
+					m_bytes.put(m_byteFileAppendFlag);
+					m_bytes.putInt(m_nContentID);
+					m_bytes.putInt(m_nSSCPort);
+					m_bytes.putInt(m_nReturnCode);
+				}
+				else if( m_nID == START_FILE_TRANSFER || m_nID == START_FILE_TRANSFER_CHAN ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putLong(m_lFileSize);
+					m_bytes.putInt(m_nContentID);
+					m_bytes.put(m_byteFileAppendFlag);
+				}
+				else if( m_nID == START_FILE_TRANSFER_ACK || m_nID == START_FILE_TRANSFER_CHAN_ACK ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putInt(m_nContentID);
+					m_bytes.putLong(m_lReceivedFileSize);
+				}
+				else if( m_nID == CONTINUE_FILE_TRANSFER ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putInt(m_nContentID);
+					m_bytes.putInt(m_nBlockSize);
+					m_bytes.put(m_cFileBlock);
+				}
+				else if( m_nID == CONTINUE_FILE_TRANSFER_ACK ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putLong(m_lReceivedFileSize);
+					m_bytes.putInt(m_nContentID);
+				}
+				else if( m_nID == END_FILE_TRANSFER || m_nID == END_FILE_TRANSFER_CHAN ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putLong(m_lFileSize);
+					m_bytes.putInt(m_nContentID);
+				}
+				else if( m_nID == END_FILE_TRANSFER_ACK || m_nID == END_FILE_TRANSFER_CHAN_ACK ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putLong(m_lFileSize);
+					m_bytes.putInt(m_nReturnCode);
+					m_bytes.putInt(m_nContentID);
+				}
+				else if( m_nID == REQUEST_DIST_FILE_PROC ) {
+					m_bytes.putInt(m_nContentID);
+				}
+				else if( m_nID == CANCEL_FILE_SEND || m_nID == CANCEL_FILE_SEND_CHAN
+						|| m_nID == CANCEL_FILE_RECV_CHAN ) {
+					// nothing more to add
+				}
+				else if( m_nID == CANCEL_FILE_SEND_ACK || m_nID == CANCEL_FILE_SEND_CHAN_ACK
+						|| m_nID == CANCEL_FILE_RECV_CHAN_ACK ) {
+					m_bytes.putInt(m_nReturnCode);
+				}
+				else if( m_nID == ERR_SEND_FILE_CHAN || m_nID == ERR_RECV_FILE_CHAN ) {
+					putStringToByteBuffer(m_strFileName);
+					m_bytes.putInt(m_nContentID);
+				}
+				break;
+
+			default:
+				System.err.println("CMFileEvent.marshallBody(), unknown event id("+m_nID+").");
+				m_bytes = null;
+				break;
 		}		
 	}
 	
@@ -912,117 +944,111 @@ public class CMFileEvent extends CMEvent{
 	{
 		switch(m_nID)
 		{
-		case REQUEST_PERMIT_PULL_FILE:
-		//case REQUEST_PERMIT_PULL_FILE_CHAN:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_nContentID = msg.getInt();
-			m_byteFileAppendFlag = msg.get();
-			m_nSSCPort = msg.getInt();
-			break;
-		case REPLY_PERMIT_PULL_FILE:
-		//case REPLY_PERMIT_PULL_FILE_CHAN:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_nReturnCode = msg.getInt();
-			m_nContentID = msg.getInt();
-			break;
-		case REQUEST_PERMIT_PUSH_FILE:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFilePath = getStringFromByteBuffer(msg);
-			m_lFileSize = msg.getLong();
-			m_byteFileAppendFlag = msg.get();
-			m_nContentID = msg.getInt();
-			break;
-		case REPLY_PERMIT_PUSH_FILE:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFilePath = getStringFromByteBuffer(msg);
-			m_lFileSize = msg.getLong();
-			m_byteFileAppendFlag = msg.get();
-			m_nContentID = msg.getInt();
-			m_nSSCPort = msg.getInt();
-			m_nReturnCode = msg.getInt();
-			break;
-		case START_FILE_TRANSFER:
-		case START_FILE_TRANSFER_CHAN:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_lFileSize = msg.getLong();
-			m_nContentID = msg.getInt();
-			m_byteFileAppendFlag = msg.get();
-			break;
-		case START_FILE_TRANSFER_ACK:
-		case START_FILE_TRANSFER_CHAN_ACK:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_nContentID = msg.getInt();
-			m_lReceivedFileSize = msg.getLong();
-			break;
-		case CONTINUE_FILE_TRANSFER:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_nContentID = msg.getInt();
-			m_nBlockSize = msg.getInt();
-			msg.get(m_cFileBlock);
-			break;
-		case CONTINUE_FILE_TRANSFER_ACK:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_lReceivedFileSize = msg.getLong();
-			m_nContentID = msg.getInt();
-			break;
-		case END_FILE_TRANSFER:
-		case END_FILE_TRANSFER_CHAN:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_lFileSize = msg.getLong();
-			m_nContentID = msg.getInt();
-			break;
-		case END_FILE_TRANSFER_ACK:
-		case END_FILE_TRANSFER_CHAN_ACK:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_lFileSize = msg.getLong();
-			m_nReturnCode = msg.getInt();
-			m_nContentID = msg.getInt();
-			break;
-		case REQUEST_DIST_FILE_PROC:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_nContentID = msg.getInt();
-			break;
-		case CANCEL_FILE_SEND:
-		case CANCEL_FILE_SEND_CHAN:
-		case CANCEL_FILE_RECV_CHAN:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			break;
-		case CANCEL_FILE_SEND_ACK:
-		case CANCEL_FILE_SEND_CHAN_ACK:
-		case CANCEL_FILE_RECV_CHAN_ACK:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_nReturnCode = msg.getInt();
-			break;
-		case ERR_SEND_FILE_CHAN:
-		case ERR_RECV_FILE_CHAN:
-			m_strFileSender = getStringFromByteBuffer(msg);
-			m_strFileReceiver = getStringFromByteBuffer(msg);
-			m_strFileName = getStringFromByteBuffer(msg);
-			m_nContentID = msg.getInt();
-			break;
+			case REQUEST_PERMIT_PULL_FILE:
+			case REPLY_PERMIT_PULL_FILE:
+			case REQUEST_PERMIT_PUSH_FILE:
+			case REPLY_PERMIT_PUSH_FILE:
+			case START_FILE_TRANSFER:
+			case START_FILE_TRANSFER_CHAN:
+			case START_FILE_TRANSFER_ACK:
+			case START_FILE_TRANSFER_CHAN_ACK:
+			case CONTINUE_FILE_TRANSFER:
+			case CONTINUE_FILE_TRANSFER_ACK:
+			case END_FILE_TRANSFER:
+			case END_FILE_TRANSFER_CHAN:
+			case END_FILE_TRANSFER_ACK:
+			case END_FILE_TRANSFER_CHAN_ACK:
+			case REQUEST_DIST_FILE_PROC:
+			case CANCEL_FILE_SEND:
+			case CANCEL_FILE_SEND_CHAN:
+			case CANCEL_FILE_RECV_CHAN:
+			case CANCEL_FILE_SEND_ACK:
+			case CANCEL_FILE_SEND_CHAN_ACK:
+			case CANCEL_FILE_RECV_CHAN_ACK:
+			case ERR_SEND_FILE_CHAN:
+			case ERR_RECV_FILE_CHAN:
+				m_strFileSender = getStringFromByteBuffer(msg);
+				m_fileSenderUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
+				m_strFileReceiver = getStringFromByteBuffer(msg);
+				m_fileReceiverUuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
+
+				if( m_nID == REQUEST_PERMIT_PULL_FILE ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_nContentID = msg.getInt();
+					m_byteFileAppendFlag = msg.get();
+					m_nSSCPort = msg.getInt();
+				}
+				else if( m_nID == REPLY_PERMIT_PULL_FILE ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_nReturnCode = msg.getInt();
+					m_nContentID = msg.getInt();
+				}
+				else if( m_nID == REQUEST_PERMIT_PUSH_FILE ) {
+					m_strFilePath = getStringFromByteBuffer(msg);
+					m_lFileSize = msg.getLong();
+					m_byteFileAppendFlag = msg.get();
+					m_nContentID = msg.getInt();
+				}
+				else if( m_nID == REPLY_PERMIT_PUSH_FILE ) {
+					m_strFilePath = getStringFromByteBuffer(msg);
+					m_lFileSize = msg.getLong();
+					m_byteFileAppendFlag = msg.get();
+					m_nContentID = msg.getInt();
+					m_nSSCPort = msg.getInt();
+					m_nReturnCode = msg.getInt();
+				}
+				else if( m_nID == START_FILE_TRANSFER || m_nID == START_FILE_TRANSFER_CHAN ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_lFileSize = msg.getLong();
+					m_nContentID = msg.getInt();
+					m_byteFileAppendFlag = msg.get();
+				}
+				else if( m_nID == START_FILE_TRANSFER_ACK || m_nID == START_FILE_TRANSFER_CHAN_ACK ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_nContentID = msg.getInt();
+					m_lReceivedFileSize = msg.getLong();
+				}
+				else if( m_nID == CONTINUE_FILE_TRANSFER ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_nContentID = msg.getInt();
+					m_nBlockSize = msg.getInt();
+					msg.get(m_cFileBlock);
+				}
+				else if( m_nID == CONTINUE_FILE_TRANSFER_ACK ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_lReceivedFileSize = msg.getLong();
+					m_nContentID = msg.getInt();
+				}
+				else if( m_nID == END_FILE_TRANSFER || m_nID == END_FILE_TRANSFER_CHAN ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_lFileSize = msg.getLong();
+					m_nContentID = msg.getInt();
+				}
+				else if( m_nID == END_FILE_TRANSFER_ACK || m_nID == END_FILE_TRANSFER_CHAN_ACK ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_lFileSize = msg.getLong();
+					m_nReturnCode = msg.getInt();
+					m_nContentID = msg.getInt();
+				}
+				else if( m_nID == REQUEST_DIST_FILE_PROC ) {
+					m_nContentID = msg.getInt();
+				}
+				else if( m_nID == CANCEL_FILE_SEND || m_nID == CANCEL_FILE_SEND_CHAN
+						|| m_nID == CANCEL_FILE_RECV_CHAN ) {
+					// nothing more to add
+				}
+				else if( m_nID == CANCEL_FILE_SEND_ACK || m_nID == CANCEL_FILE_SEND_CHAN_ACK
+						|| m_nID == CANCEL_FILE_RECV_CHAN_ACK ) {
+					m_nReturnCode = msg.getInt();
+				}
+				else if( m_nID == ERR_SEND_FILE_CHAN || m_nID == ERR_RECV_FILE_CHAN ) {
+					m_strFileName = getStringFromByteBuffer(msg);
+					m_nContentID = msg.getInt();
+				}
+				break;
+
 		default:
-			System.out.println("CMFileEvent.unmarshallBody(), unknown event id("+m_nID+").");
+			System.err.println("CMFileEvent.unmarshallBody(), unknown event id("+m_nID+").");
 			break;
 		}		
 		
@@ -1038,7 +1064,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_nContentID=" + m_nContentID +
 						", m_byteFileAppendFlag=" + m_byteFileAppendFlag +
@@ -1051,7 +1079,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_nReturnCode=" + m_nReturnCode +
 						", m_nContentID=" + m_nContentID +
@@ -1063,7 +1093,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFilePath='" + m_strFilePath + '\'' +
 						", m_lFileSize=" + m_lFileSize +
 						", m_nContentID=" + m_nContentID +
@@ -1076,7 +1108,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFilePath='" + m_strFilePath + '\'' +
 						", m_lFileSize=" + m_lFileSize +
 						", m_nReturnCode=" + m_nReturnCode +
@@ -1092,7 +1126,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_lReceivedFileSize=" + m_lReceivedFileSize +
 						", m_nContentID=" + m_nContentID +
@@ -1104,7 +1140,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_cFileBlock=" + Arrays.toString(m_cFileBlock) +
 						", m_nBlockSize=" + m_nBlockSize +
@@ -1117,7 +1155,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_lReceivedFileSize=" + m_lReceivedFileSize +
 						", m_nContentID=" + m_nContentID +
@@ -1130,7 +1170,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_lFileSize=" + m_lFileSize +
 						", m_nContentID=" + m_nContentID +
@@ -1143,7 +1185,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_lFileSize=" + m_lFileSize +
 						", m_nReturnCode=" + m_nReturnCode +
@@ -1156,7 +1200,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_nContentID=" + m_nContentID +
 						'}';
 			case CANCEL_FILE_SEND:
@@ -1168,7 +1214,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						'}';
 			case ERR_SEND_FILE_CHAN:
 			case ERR_RECV_FILE_CHAN:
@@ -1178,7 +1226,9 @@ public class CMFileEvent extends CMEvent{
 						", m_nID=" + m_nID +
 						", m_nByteNum=" + m_nByteNum +
 						", m_strFileReceiver='" + m_strFileReceiver + '\'' +
+						", m_fileReceiverUuid= " + m_fileReceiverUuid +
 						", m_strFileSender='" + m_strFileSender + '\'' +
+						", m_fileSenderUuid= " + m_fileSenderUuid +
 						", m_strFileName='" + m_strFileName + '\'' +
 						", m_nContentID=" + m_nContentID +
 						'}';
