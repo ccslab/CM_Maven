@@ -353,35 +353,31 @@ public class CMFileTransferInfo {
 	}
 	
 	// find the sending file info that is not yet started by the thread pool
-	public synchronized CMSendFileInfo findSendFileInfoNotStarted(String strReceiver)
+	public synchronized CMSendFileInfo findSendFileInfoNotStarted(String strReceiver, UUID receiverUuid)
 	{
 		CMSendFileInfo sfInfo = null;
-		CMList<CMSendFileInfo> sfInfoList = m_sendFileHashtable.get(strReceiver);
+		CMUserLoginKey key = new CMUserLoginKey(strReceiver, receiverUuid);
+		CMList<CMSendFileInfo> sfInfoList = m_sendFileHashtable.get(key);
 		boolean bFound = false;
 		
 		if(sfInfoList == null) return null;
 		
 		Iterator<CMSendFileInfo> iter = sfInfoList.getList().iterator();
-		while(iter.hasNext() && !bFound)
+		while(iter.hasNext())
 		{
 			sfInfo = iter.next();
 			if(sfInfo.getSendTaskResult() == null)
 			{
-				bFound = true;
-				if(CMInfo._CM_DEBUG)
-					System.out.println("CMFileTransferInfo.findSendFileInfoNotStarted(); found: "+sfInfo.toString());
+				if(CMInfo._CM_DEBUG) {
+					System.out.println("CMFileTransferInfo.findSendFileInfoNotStarted(); found: " + sfInfo);
+				}
+				return sfInfo;
 			}
 		}
 		
-		if(bFound)
-			return sfInfo;
-		else
-		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("CMFileTransferInfo.findRecvFileInfoNotStarted(); not found!");
-			return null;
-		}
-		
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMFileTransferInfo.findSendFileInfoNotStarted(); not found!");
+		return null;
 	}
 
 	////////// add/remove/find receiving file info
