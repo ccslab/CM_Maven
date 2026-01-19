@@ -1400,7 +1400,7 @@ public class CMFileTransferManager {
 		else
 		{
 			// find the current sending file task
-			sInfo = fInfo.findSendFileInfoOngoing(strFileReceiver);
+			sInfo = fInfo.findSendFileInfoOngoing(strFileReceiver, fileReceiverUuid);
 			if(sInfo == null)
 			{
 				System.err.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); ongoing sending task "
@@ -3787,7 +3787,7 @@ public class CMFileTransferManager {
 		}
 		
 		// find the current sending file task
-		sInfo = fInfo.findSendFileInfoOngoing(strFileReceiver);
+		sInfo = fInfo.findSendFileInfoOngoing(strFileReceiver, fileReceiverUuid);
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); ongoing sending task "

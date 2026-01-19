@@ -389,7 +389,7 @@ public class CMSNSManager {
 		
 		// find the ongoing file sending info
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName);
+		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName, uuid);
 		if(sendFileInfo != null)
 		{
 			// check if the ongoing file is one of the prefetch list member

@@ -326,31 +326,30 @@ public class CMFileTransferInfo {
 	//////////////////// (used by the file transfer with separate channels and threads)
 
 	// find the CMSendFileInfo of which file is currently being sent to the receiver
-	public synchronized CMSendFileInfo findSendFileInfoOngoing(String strReceiver)
+	public synchronized CMSendFileInfo findSendFileInfoOngoing(String strReceiver, UUID receiverUuid)
 	{
 		CMSendFileInfo sInfo = null;
-		CMList<CMSendFileInfo> sInfoList = m_sendFileHashtable.get(strReceiver);
-		boolean bFound = false;
-		
+		// [Modification] Create a key with the receiver name and UUID
+		CMUserLoginKey key = new CMUserLoginKey(strReceiver, receiverUuid);
+
+		CMList<CMSendFileInfo> sInfoList = m_sendFileHashtable.get(key);
 		if(sInfoList == null) return null;
 		
 		Iterator<CMSendFileInfo> iter = sInfoList.getList().iterator();
-		while(iter.hasNext() && !bFound)
+		while(iter.hasNext())
 		{
 			sInfo = iter.next();
 			if(sInfo.getSendTaskResult() != null)
 			{
-				bFound = true;
-				if(CMInfo._CM_DEBUG)
+				if(CMInfo._CM_DEBUG) {
 					System.out.println("CMFileTransferInfo.findSendFileInfoOngoing(); ongoing send info found: "
-							+sInfo.toString());
+							+ sInfo);
+				}
+				return sInfo;
 			}
 		}
 		
-		if(!bFound)
-			sInfo = null;
-		
-		return sInfo;
+		return null;
 	}
 	
 	// find the sending file info that is not yet started by the thread pool
