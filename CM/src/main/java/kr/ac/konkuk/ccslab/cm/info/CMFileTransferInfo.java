@@ -124,24 +124,26 @@ public class CMFileTransferInfo {
 		
 		strFileName = sInfo.getFilePath().substring(sInfo.getFilePath().lastIndexOf(File.separator)+1);
 		sInfo.setFileName(strFileName);
-		
-		sInfoList = m_sendFileHashtable.get(sInfo.getFileReceiver());
+
+		// [Modification]: Create key using receiver name and UUID
+		CMUserLoginKey key = new CMUserLoginKey(sInfo.getFileReceiver(), sInfo.getFileReceiverUuid());
+		sInfoList = m_sendFileHashtable.get(key);
 		if(sInfoList == null)
 		{
-			sInfoList = new CMList<CMSendFileInfo>();
-			m_sendFileHashtable.put(sInfo.getFileReceiver(), sInfoList);
+			sInfoList = new CMList<>();
+			m_sendFileHashtable.put(key, sInfoList);
 		}
 		
 		bResult = sInfoList.addElement(sInfo);
 		if(!bResult)
 		{
-			System.err.println("CMFileTransferInfo.addSendFileInfo() failed: "+sInfo.toString());
+			System.err.println("CMFileTransferInfo.addSendFileInfo() failed: "+sInfo);
 			return false;
 		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferInfo.addSendFileInfo() done: "+sInfo.toString());
+			System.out.println("CMFileTransferInfo.addSendFileInfo() done: "+sInfo);
 			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
 		}
 
