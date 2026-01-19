@@ -162,7 +162,7 @@ public class CMFileTransferInfo {
 		if(sInfoList == null)
 		{
 			System.err.println("CMFileTransferInfo.findSendFileInfo(), list not found for receiver("
-					+fileReceiver+")");
+					+fileReceiver+"), uuid("+fileReceiverUuid+")!");
 			return null;
 		}
 		
@@ -282,7 +282,8 @@ public class CMFileTransferInfo {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferInfo.removeSendFileList() done : receiver("+strReceiver+").");
+			System.out.println("CMFileTransferInfo.removeSendFileList() done : receiver("+strReceiver
+					+"), uuid("+receiverUuid+").");
 			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
 		}
 		
