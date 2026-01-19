@@ -4,16 +4,18 @@ import java.util.*;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
+import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 
 import java.io.*;
 
 public class CMFileTransferInfo {
 	private static CMFileTransferInfo instance;
 
-	// key is the receiver name
-	private Hashtable<String, CMList<CMSendFileInfo>> m_sendFileHashtable;
-	// key is the sender name
-	private Hashtable<String, CMList<CMRecvFileInfo>> m_recvFileHashtable;
+	// [Modification]: Changed key from String to CMUserLoginKey for multi-device support
+	// key is the receiver (name, uuid) pair
+	private Hashtable<CMUserLoginKey, CMList<CMSendFileInfo>> m_sendFileHashtable;
+	// key is the sender (name, uuid) pair
+	private Hashtable<CMUserLoginKey, CMList<CMRecvFileInfo>> m_recvFileHashtable;
 	private boolean m_bCancelSend;	// flag for canceling file push with the default channel
 	
 	// starting time (to send/receive request pushing/pulling a file)
@@ -29,8 +31,8 @@ public class CMFileTransferInfo {
 	
 	private CMFileTransferInfo()
 	{
-		m_sendFileHashtable = new Hashtable<String, CMList<CMSendFileInfo>>();
-		m_recvFileHashtable = new Hashtable<String, CMList<CMRecvFileInfo>>();
+		m_sendFileHashtable = new Hashtable<>();
+		m_recvFileHashtable = new Hashtable<>();
 		m_bCancelSend = false;
 		m_lStartRequestTime = 0;
 		m_lStartSendTime = 0;
@@ -151,8 +153,11 @@ public class CMFileTransferInfo {
 		CMSendFileInfo sInfo = null;
 		CMList<CMSendFileInfo> sInfoList = null;
 		CMSendFileInfo tInfo = null;
-		
-		sInfoList = m_sendFileHashtable.get(fileReceiver);
+
+		// [Modification]: Direct lookup with key
+		CMUserLoginKey key = new CMUserLoginKey(fileReceiver, fileReceiverUuid);
+		sInfoList = m_sendFileHashtable.get(key);
+
 		if(sInfoList == null)
 		{
 			System.err.println("CMFileTransferInfo.findSendFileInfo(), list not found for receiver("
@@ -184,7 +189,9 @@ public class CMFileTransferInfo {
 		CMSendFileInfo sInfo = null;
 		boolean bResult = false;
 
-		sInfoList = m_sendFileHashtable.get(fileReceiver);
+		// [Modification]: Key lookup
+		CMUserLoginKey key = new CMUserLoginKey(fileReceiver, fileReceiverUuid);
+		sInfoList = m_sendFileHashtable.get(key);
 		if(sInfoList == null)
 		{
 			//System.err.println("CMFileTransferInfo.removeSendFileInfo(), list not found for receiver("
@@ -207,7 +214,7 @@ public class CMFileTransferInfo {
 		
 		if(sInfoList.isEmpty())
 		{
-			m_sendFileHashtable.remove(fileReceiver);
+			m_sendFileHashtable.remove(key);
 		}
 
 		if(CMInfo._CM_DEBUG)
@@ -223,9 +230,11 @@ public class CMFileTransferInfo {
 	{
 		CMList<CMSendFileInfo> sInfoList = null;
 		String strFileReceiver = sfInfo.getFileReceiver();
+		UUID fileReceiverUuid = sfInfo.getFileReceiverUuid();
 		boolean bResult = false;
 
-		sInfoList = m_sendFileHashtable.get(strFileReceiver);
+		CMUserLoginKey key = new CMUserLoginKey(strFileReceiver, fileReceiverUuid);
+		sInfoList = m_sendFileHashtable.get(key);
 		if(sInfoList == null)
 		{
 			//System.err.println("CMFileTransferInfo.removeSendFileInfo(), list not found for receiver("
@@ -237,18 +246,18 @@ public class CMFileTransferInfo {
 
 		if(!bResult)
 		{
-			System.err.println("CMFileTransferInfo.removeSendFileInfo() error! : "+sfInfo.toString());
+			System.err.println("CMFileTransferInfo.removeSendFileInfo() error! : "+sfInfo);
 			return false;
 		}
 		
 		if(sInfoList.isEmpty())
 		{
-			m_sendFileHashtable.remove(strFileReceiver);
+			m_sendFileHashtable.remove(key);
 		}
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferInfo.removeSendFileInfo() done : "+sfInfo.toString());
+			System.out.println("CMFileTransferInfo.removeSendFileInfo() done : "+sfInfo);
 			System.out.println("# current hashtable elements: "+m_sendFileHashtable.size());
 		}
 		
@@ -293,7 +302,7 @@ public class CMFileTransferInfo {
 		return sendFileList;
 	}
 	
-	public synchronized Hashtable<String, CMList<CMSendFileInfo>> getSendFileHashtable()
+	public synchronized Hashtable<CMUserLoginKey, CMList<CMSendFileInfo>> getSendFileHashtable()
 	{
 		return m_sendFileHashtable;
 	}
@@ -542,8 +551,8 @@ public class CMFileTransferInfo {
 		
 		return recvFileList;
 	}
-	
-	public synchronized Hashtable<String, CMList<CMRecvFileInfo>> getRecvFileHashtable()
+
+	public synchronized Hashtable<CMUserLoginKey, CMList<CMRecvFileInfo>> getRecvFileHashtable()
 	{
 		return m_recvFileHashtable;
 	}
