@@ -1197,11 +1197,11 @@ public class CMFileTransferManager {
 		if(strFileReceiver != null)
 		{
 			// find the CMSendFile list of the strReceiver
-			sendList = fInfo.getSendFileList(strFileReceiver);
+			sendList = fInfo.getSendFileList(strFileReceiver, fileReceiverUuid);
 			if(sendList == null)
 			{
 				System.err.println("CMFileTransferManager.cancelPushFileWithDefChannel(); Sending file list "
-						+ "not found for the receiver("+strFileReceiver+")!");
+						+ "not found for the receiver("+strFileReceiver+"), uuid("+fileReceiverUuid+").!");
 				return false;
 			}			
 		}
@@ -1314,7 +1314,7 @@ public class CMFileTransferManager {
 				}
 				
 				// close the RandomAccessFile
-				sendList = fInfo.getSendFileList(iterFileReceiver);
+				sendList = fInfo.getSendFileList(iterFileReceiver, fileReceiverUuid);
 				iterSendList = sendList.getList().iterator();
 				while(iterSendList.hasNext())
 				{
@@ -1390,7 +1390,7 @@ public class CMFileTransferManager {
 		boolean bP2PFileTransfer = false;
 		
 		// find the CMSendFile list of the strReceiver
-		sendList = fInfo.getSendFileList(strFileReceiver);
+		sendList = fInfo.getSendFileList(strFileReceiver, fileReceiverUuid);
 		if(sendList == null)
 		{
 			System.err.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); Sending file list "
@@ -3778,11 +3778,11 @@ public class CMFileTransferManager {
 		}
 		
 		// find the CMSendFile list of the strReceiver
-		sendList = fInfo.getSendFileList(strFileReceiver);
+		sendList = fInfo.getSendFileList(strFileReceiver, fileReceiverUuid);
 		if(sendList == null)
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); sending file list "
-					+ "not found for the receiver("+strFileReceiver+")!");
+					+ "not found for the receiver("+strFileReceiver+"), uuid("+fileReceiverUuid+")!");
 			return bForward;
 		}
 		

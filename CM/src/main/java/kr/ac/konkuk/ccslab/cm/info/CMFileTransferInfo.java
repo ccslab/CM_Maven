@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 
 import java.io.*;
+import java.util.stream.Collectors;
 
 public class CMFileTransferInfo {
 	private static CMFileTransferInfo instance;
@@ -298,12 +299,19 @@ public class CMFileTransferInfo {
 		return true;
 	}
 	
-	public synchronized CMList<CMSendFileInfo> getSendFileList(String strReceiver)
+	public synchronized List<CMSendFileInfo> getSendFileList(String strReceiver, UUID receiverUuid)
 	{
 		CMList<CMSendFileInfo> sendFileList = null;
-		sendFileList = m_sendFileHashtable.get(strReceiver);
-		
-		return sendFileList;
+		CMUserLoginKey key = new CMUserLoginKey(strReceiver, receiverUuid);
+		sendFileList = m_sendFileHashtable.get(key);
+
+		if( sendFileList == null ) {
+			System.err.println("CMFileTransferInfo.getSendFileList(), list for receiver("+strReceiver
+					+"), uuid("+receiverUuid+") not found!");
+			return null;
+		}
+
+		return sendFileList.getList();
 	}
 	
 	public synchronized Hashtable<CMUserLoginKey, CMList<CMSendFileInfo>> getSendFileHashtable()
