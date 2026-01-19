@@ -793,10 +793,8 @@ public class CMGroupManager {
 		
 		// check whether the p2p file-transfer with the user is ongoing or not
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-//		fInfo.removeSendFileList(strUser, userUuid);	// will be changed after modification with file-transfer related codes
-//		fInfo.removeRecvFileList(strUser, userUuid);
-		fInfo.removeSendFileList(strUser);
-		fInfo.removeRecvFileList(strUser);
+		fInfo.removeSendFileList(strUser, userUuid);	// will be changed after modification with file-transfer related codes
+		fInfo.removeRecvFileList(strUser, userUuid);
 	}
 	
 	private static void processDummyEvent(CMMessage msg)

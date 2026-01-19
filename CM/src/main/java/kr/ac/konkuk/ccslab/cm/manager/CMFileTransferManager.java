@@ -1266,7 +1266,7 @@ public class CMFileTransferManager {
 				}
 			}
 			
-			bReturn = fInfo.removeSendFileList(strFileReceiver);
+			bReturn = fInfo.removeSendFileList(strFileReceiver, fileReceiverUuid);
 		}
 		else	// for all receivers
 		{
@@ -1405,7 +1405,7 @@ public class CMFileTransferManager {
 			{
 				System.err.println("CMFileTransferManager.cancelPushFileWithSepChannelForOneReceiver(); ongoing sending task "
 						+ "not found for the receiver("+strFileReceiver+")!");
-				bReturn = fInfo.removeSendFileList(strFileReceiver);
+				bReturn = fInfo.removeSendFileList(strFileReceiver, fileReceiverUuid);
 				//return bReturn;
 			}
 			else
@@ -1432,7 +1432,7 @@ public class CMFileTransferManager {
 			}
 
 			// remove the sending file list of the receiver
-			bReturn = fInfo.removeSendFileList(strFileReceiver);			
+			bReturn = fInfo.removeSendFileList(strFileReceiver, fileReceiverUuid);
 
 		}
 		
@@ -3752,6 +3752,7 @@ public class CMFileTransferManager {
 		boolean bReturn = false;
 		
 		String strFileReceiver = fe.getFileReceiver();
+		UUID fileReceiverUuid = fe.getFileReceiverUuid();
 		boolean bException = false;
 		int nReturnCode = -1;
 		boolean bP2PFileTransfer = false;
@@ -3790,8 +3791,8 @@ public class CMFileTransferManager {
 		if(sInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); ongoing sending task "
-					+ "not found for the receiver("+strFileReceiver+")!");
-			fInfo.removeSendFileList(strFileReceiver);
+					+ "not found for the receiver("+strFileReceiver+"), uuid("+fileReceiverUuid+")!");
+			fInfo.removeSendFileList(strFileReceiver, fileReceiverUuid);
 			return bForward;
 		}
 		
@@ -3822,7 +3823,7 @@ public class CMFileTransferManager {
 		}
 
 		// remove the sending file list of the receiver
-		fInfo.removeSendFileList(strFileReceiver);			
+		fInfo.removeSendFileList(strFileReceiver, fileReceiverUuid);
 
 		// send the cancel ack event to the receiver
 		feAck = new CMFileEvent();

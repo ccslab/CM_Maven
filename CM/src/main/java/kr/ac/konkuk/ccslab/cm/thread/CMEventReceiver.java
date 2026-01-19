@@ -233,8 +233,8 @@ public class CMEventReceiver implements Runnable {
 				{
 					chInfo.removeAllChannels();
 					tserver.getBlockSocketChannelInfo().removeAllChannels();
-					fInfo.removeRecvFileList(tserver.getServerName());
-					fInfo.removeSendFileList(tserver.getServerName());
+					fInfo.removeRecvFileList(tserver.getServerName(), null);
+					fInfo.removeSendFileList(tserver.getServerName(), null);
 					tserver.getSessionList().removeAllElements();
 					tserver.setClientState(CMInfo.CM_INIT);
 				}
@@ -263,8 +263,8 @@ public class CMEventReceiver implements Runnable {
 				// stop all the file-transfer threads
 				//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
 				// remove all the ongoing file-transfer info about the default server
-				fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-				fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+				fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+				fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 				// remove all the ongoing sns related file-transfer info at the client
 				snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 				// remove all session info

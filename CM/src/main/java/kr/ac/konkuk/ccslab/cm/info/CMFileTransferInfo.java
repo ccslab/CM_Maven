@@ -264,10 +264,14 @@ public class CMFileTransferInfo {
 		return true;		
 	}
 	
-	public synchronized boolean removeSendFileList(String strReceiver)
+	public synchronized boolean removeSendFileList(String strReceiver, UUID receiverUuid)
 	{
+		// [Modification]: Direct removal by key
+		CMUserLoginKey key = new CMUserLoginKey(strReceiver, receiverUuid);
 		CMList<CMSendFileInfo> sInfoList = null;
-		sInfoList = m_sendFileHashtable.remove(strReceiver);
+
+		sInfoList = m_sendFileHashtable.remove(key);
+
 		if(sInfoList == null)
 		{
 			//System.err.println("CMFileTransferInfo.removeSendFileList(); list not found for receiver("

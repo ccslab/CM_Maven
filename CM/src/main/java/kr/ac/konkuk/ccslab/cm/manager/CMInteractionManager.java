@@ -189,8 +189,8 @@ public class CMInteractionManager {
 		dsInfo.getBlockSocketChannelInfo().removeAllChannels();
 		
 		// remove all the ongoing file-transfer info about the default server
-		fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-		fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+		fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+		fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 		// remove all the ongoing sns related file-transfer info at the client
 		snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 		// remove all session info
@@ -306,8 +306,8 @@ public class CMInteractionManager {
 		tserver.getNonBlockSocketChannelInfo().removeAllChannels();
 		tserver.getBlockSocketChannelInfo().removeAllChannels();
 		// remove ongoing file-transfer information
-		fInfo.removeRecvFileList(tserver.getServerName());
-		fInfo.removeSendFileList(tserver.getServerName());
+		fInfo.removeRecvFileList(tserver.getServerName(), null);
+		fInfo.removeSendFileList(tserver.getServerName(), null);
 		// remove session information
 		tserver.getSessionList().removeAllElements();
 
@@ -422,8 +422,8 @@ public class CMInteractionManager {
 		addServer.getBlockSocketChannelInfo().removeAllChannels();
 		
 		// remove file-transfer info
-		fInfo.removeRecvFileList(addServer.getServerName());
-		fInfo.removeSendFileList(addServer.getServerName());
+		fInfo.removeRecvFileList(addServer.getServerName(), null);
+		fInfo.removeSendFileList(addServer.getServerName(), null);
 		
 		// remove add-server info
 		CMInteractionInfo.getInstance().removeAddServer(addServer.getServerName());
@@ -458,8 +458,8 @@ public class CMInteractionManager {
 		defServer.getNonBlockSocketChannelInfo().removeAllChannels();
 		defServer.getBlockSocketChannelInfo().removeAllChannels();
 		
-		fInfo.removeRecvFileList(defServer.getServerName());
-		fInfo.removeSendFileList(defServer.getServerName());
+		fInfo.removeRecvFileList(defServer.getServerName(), null);
+		fInfo.removeSendFileList(defServer.getServerName(), null);
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -537,8 +537,8 @@ public class CMInteractionManager {
 			// stop all the file-transfer threads
 			//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
 			// remove all the ongoing file-transfer info about the default server
-			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 			// remove all the ongoing sns related file-transfer info at the client
 			snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 			// remove all session info
@@ -583,8 +583,8 @@ public class CMInteractionManager {
 			String strAddServer = addServer.getServerName();
 			addServer.getNonBlockSocketChannelInfo().removeAllChannels();
 			addServer.getBlockSocketChannelInfo().removeAllChannels();
-			fInfo.removeRecvFileList(addServer.getServerName());
-			fInfo.removeSendFileList(addServer.getServerName());
+			fInfo.removeRecvFileList(addServer.getServerName(), null);
+			fInfo.removeSendFileList(addServer.getServerName(), null);
 			addServer.getSessionList().removeAllElements();
 			addServer.setClientState(CMInfo.CM_INIT);
 			if(CMInfo._CM_DEBUG)
