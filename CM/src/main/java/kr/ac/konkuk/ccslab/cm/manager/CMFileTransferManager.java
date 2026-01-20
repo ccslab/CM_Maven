@@ -2575,7 +2575,7 @@ public class CMFileTransferManager {
 		}
 
 		// remove info from push file list
-		fInfo.removeRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
+		fInfo.removeRecvFileInfo(fe.getFileSender(), fe.getFileSenderUuid(), fe.getFileName(), fe.getContentID());
 		
 		// send ack
 		CMFileEvent feAck = new CMFileEvent();
@@ -3049,7 +3049,7 @@ public class CMFileTransferManager {
 		}
 		
 		// remove info from push file list
-		fInfo.removeRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
+		fInfo.removeRecvFileInfo(fe.getFileSender(), fe.getFileSenderUuid(), fe.getFileName(), fe.getContentID());
 		
 		// send ack
 		if(isP2PFileTransfer(feAck))
