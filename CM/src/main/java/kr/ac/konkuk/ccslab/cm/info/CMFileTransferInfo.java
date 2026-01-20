@@ -382,39 +382,41 @@ public class CMFileTransferInfo {
 
 	////////// add/remove/find receiving file info
 
-	public synchronized boolean addRecvFileInfo(String senderName, String fName, 
+	public synchronized boolean addRecvFileInfo(String senderName, UUID senderUuid, String fName,
 			long lSize, int nContentID,	long lRecvSize, RandomAccessFile writeFile)
 	{
 		CMRecvFileInfo rInfo = null;
 		CMList<CMRecvFileInfo> rInfoList = null;
 		boolean bResult = false;
 
-		rInfo = null;
 		rInfo = new CMRecvFileInfo();
 		rInfo.setFileSender(senderName);
+		rInfo.setFileSenderUuid(senderUuid);
 		rInfo.setFileName(fName);
 		rInfo.setFileSize(lSize);
 		rInfo.setContentID(nContentID);
 		rInfo.setRecvSize(lRecvSize);
 		rInfo.setWriteFile(writeFile);
-		
-		rInfoList = m_recvFileHashtable.get(senderName);
+
+		// [Modification] Changed the key of hashtable from String to CMUserLoginKey
+		CMUserLoginKey key = new CMUserLoginKey(senderName, senderUuid);
+		rInfoList = m_recvFileHashtable.get(key);
 		if(rInfoList == null)
 		{
-			rInfoList = new CMList<CMRecvFileInfo>();
-			m_recvFileHashtable.put(senderName, rInfoList);
+			rInfoList = new CMList<>();
+			m_recvFileHashtable.put(key, rInfoList);
 		}
 		
 		bResult = rInfoList.addElement(rInfo);
 		if(!bResult)
 		{
-			System.err.println("CMFileTransferInfo.addRecvFileInfo() failed: "+rInfo.toString());
+			System.err.println("CMFileTransferInfo.addRecvFileInfo() failed: "+rInfo);
 			return false;
 		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferInfo.addRecvFileInfo() done: "+rInfo.toString());
+			System.out.println("CMFileTransferInfo.addRecvFileInfo() done: "+rInfo);
 			System.out.println("# current hashtable elements: "+m_recvFileHashtable.size());
 		}
 		

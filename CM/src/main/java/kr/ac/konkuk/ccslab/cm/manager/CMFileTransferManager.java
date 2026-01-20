@@ -2182,8 +2182,8 @@ public class CMFileTransferManager {
 		
 		
 		// add the received file info in the push list
-		fInfo.addRecvFileInfo(fe.getFileSender(), fe.getFileName(), lFileSize, fe.getContentID(), 
-				lRecvSize, writeFile);
+		fInfo.addRecvFileInfo(fe.getFileSender(), fe.getFileSenderUuid(), fe.getFileName(), lFileSize,
+				fe.getContentID(), lRecvSize, writeFile);
 		
 		// send ack event
 		CMFileEvent feAck = new CMFileEvent();
