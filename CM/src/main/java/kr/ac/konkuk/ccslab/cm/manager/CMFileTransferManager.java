@@ -2487,12 +2487,13 @@ public class CMFileTransferManager {
 			bForward = false;
 
 		// find info in the recv file list
-		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileSenderUuid(),
+				fe.getFileName(), fe.getContentID());
 		if( recvInfo == null )
 		{
 			System.err.println("CMFileTransferManager.processCONTINUE_FILE_TRANSFER(), "
-					+ "recv file info for sender("+fe.getFileSender()+"), file("+fe.getFileName()
-					+"), content ID("+fe.getContentID()+") not found.");
+					+ "recv file info for sender("+fe.getFileSender()+"), uuid("+fe.getFileSenderUuid()
+					+"), file("+fe.getFileName()+"), content ID("+fe.getContentID()+") not found.");
 			return bForward;
 		}
 
@@ -2551,12 +2552,13 @@ public class CMFileTransferManager {
 		}
 
 		// find info from recv file list
-		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileSenderUuid(),
+				fe.getFileName(), fe.getContentID());
 		if(recvInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), recv file info "
-					+"for sender("+fe.getFileSender()+"), file("+fe.getFileName()+"), content ID("
-					+fe.getContentID()+") not found.");
+					+"for sender("+fe.getFileSender()+"), uuid("+fe.getFileSenderUuid()+"), file("
+					+fe.getFileName()+"), content ID("+fe.getContentID()+") not found.");
 
 			return bForward;
 		}
@@ -3001,12 +3003,13 @@ public class CMFileTransferManager {
 		}
 
 		// find info from recv file list
-		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileName(), fe.getContentID());
+		CMRecvFileInfo recvInfo = fInfo.findRecvFileInfo(fe.getFileSender(), fe.getFileSenderUuid(),
+				fe.getFileName(), fe.getContentID());
 		if(recvInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), recv file info "
-					+"for sender("+fe.getFileSender()+"), file("+fe.getFileName()+"), content ID("
-					+fe.getContentID()+") not found.");
+					+"for sender("+fe.getFileSender()+"), uuid("+fe.getFileSenderUuid()+"), file("
+					+fe.getFileName()+"), content ID("+fe.getContentID()+") not found.");
 
 			return bForward;
 		}

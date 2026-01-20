@@ -452,22 +452,27 @@ public class CMFileTransferInfo {
 		return true;		
 	}
 
-	public synchronized CMRecvFileInfo findRecvFileInfo(String senderName, String fName, int nContentID)
+	public synchronized CMRecvFileInfo findRecvFileInfo(String senderName, UUID senderUuid, String fName,
+														int nContentID)
 	{	
 		CMRecvFileInfo rInfo = null;
 		CMList<CMRecvFileInfo> rInfoList = null;
 		CMRecvFileInfo tInfo = null;
-		
-		rInfoList = m_recvFileHashtable.get(senderName);
+
+		// [Modification] Use CMUserLoginKey with sender name and uuid as the key for the hashtable
+		CMUserLoginKey key = new CMUserLoginKey(senderName, senderUuid);
+		rInfoList = m_recvFileHashtable.get(key);
 		if(rInfoList == null)
 		{
 			System.err.println("CMFileTransferInfo.findRecvFileInfo(), list not found for sender("
-					+senderName+")");
+					+senderName+"), uuid("+senderUuid+")!");
 			return null;
 		}
 		
 		tInfo = new CMRecvFileInfo();
 		tInfo.setFileSender(senderName);
+		// [Modification] Set sender UUID to the temporary object for search
+		tInfo.setFileSenderUuid(senderUuid);
 		tInfo.setFileName(fName);
 		tInfo.setContentID(nContentID);
 		
@@ -475,8 +480,7 @@ public class CMFileTransferInfo {
 		
 		if(rInfo == null)
 		{
-			System.err.println("CMFileTransferInfo.findRecvFileInfo(), not found!: "
-					+tInfo.toString());
+			System.err.println("CMFileTransferInfo.findRecvFileInfo(), not found!: "+tInfo);
 			return null;
 		}
 				
