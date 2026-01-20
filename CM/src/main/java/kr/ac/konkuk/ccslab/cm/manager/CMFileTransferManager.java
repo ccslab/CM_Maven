@@ -3232,6 +3232,7 @@ public class CMFileTransferManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bForward = true;
 		String strFileSender = fe.getFileSender();
+		UUID fileSenderUuid = fe.getFileSenderUuid();
 		CMList<CMRecvFileInfo> recvList = fInfo.getRecvFileList(strFileSender);
 		Iterator<CMRecvFileInfo> iter = null;
 		CMRecvFileInfo rInfo = null;
@@ -3330,7 +3331,7 @@ public class CMFileTransferManager {
 				}
 			}
 		}
-		bReturn = fInfo.removeRecvFileList(strFileSender);
+		bReturn = fInfo.removeRecvFileList(strFileSender, fileSenderUuid);
 		
 		if(bReturn)
 			feAck.setReturnCode(1);
@@ -3426,6 +3427,7 @@ public class CMFileTransferManager {
 		boolean bP2PFileTransfer = false;
 		
 		String strFileSender = fe.getFileSender();
+		UUID fileSenderUuid = fe.getFileSenderUuid();
 		boolean bException = false;
 		int nReturnCode = -1;
 		String strMyName = interInfo.getMyself().getName();
@@ -3464,8 +3466,8 @@ public class CMFileTransferManager {
 			if(rInfo == null)
 			{
 				System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(); ongoing receiving task "
-						+ "not found for the sender("+strFileSender+")!");
-				fInfo.removeRecvFileList(strFileSender);
+						+ "not found for the sender("+strFileSender+"), uuid("+fileSenderUuid+")!");
+				fInfo.removeRecvFileList(strFileSender, fileSenderUuid);
 				//return bForward;
 			}
 			else
@@ -3499,7 +3501,7 @@ public class CMFileTransferManager {
 			}
 			
 			// remove the receiving file list of the sender
-			fInfo.removeRecvFileList(strFileSender);
+			fInfo.removeRecvFileList(strFileSender, fileSenderUuid);
 		}
 		
 		

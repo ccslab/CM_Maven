@@ -533,10 +533,12 @@ public class CMFileTransferInfo {
 		return true;
 	}
 
-	public synchronized boolean removeRecvFileList(String strSender)
+	public synchronized boolean removeRecvFileList(String strSender, UUID senderUuid)
 	{
-		CMList<CMRecvFileInfo> rInfoList = null;
-		rInfoList = m_recvFileHashtable.remove(strSender);
+		// [Modification] Use CMUserLoginKey as the key for the hashtable
+		CMUserLoginKey key = new CMUserLoginKey(strSender, senderUuid);
+		// [Modification] Remove the list directly using the key
+		CMList<CMRecvFileInfo> rInfoList = m_recvFileHashtable.remove(key);
 		if(rInfoList == null)
 		{
 			//System.err.println("CMFileTransferInfo.removeRecvFileList(); list not found for sender("
@@ -546,7 +548,8 @@ public class CMFileTransferInfo {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferInfo.removeRecvFileList() done : sender("+strSender+").");
+			System.out.println("CMFileTransferInfo.removeRecvFileList() done : sender("+strSender
+					+"), uuid("+senderUuid+").");
 			System.out.println("# current hashtable elements: "+m_recvFileHashtable.size());
 		}
 		
