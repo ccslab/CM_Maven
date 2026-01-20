@@ -427,24 +427,25 @@ public class CMFileTransferInfo {
 	{
 		CMList<CMRecvFileInfo> rInfoList = null;
 		boolean bResult = false;
-		
-		rInfoList = m_recvFileHashtable.get(rInfo.getFileSender());
+
+		CMUserLoginKey key = new CMUserLoginKey(rInfo.getFileSender(), rInfo.getFileSenderUuid());
+		rInfoList = m_recvFileHashtable.get(key);
 		if(rInfoList == null)
 		{
-			rInfoList = new CMList<CMRecvFileInfo>();
-			m_recvFileHashtable.put(rInfo.getFileSender(), rInfoList);
+			rInfoList = new CMList<>();
+			m_recvFileHashtable.put(key, rInfoList);
 		}
 		
 		bResult = rInfoList.addElement(rInfo);
 		if(!bResult)
 		{
-			System.err.println("CMFileTransferInfo.addRecvFileInfo() failed: "+rInfo.toString());
+			System.err.println("CMFileTransferInfo.addRecvFileInfo() failed: "+rInfo);
 			return false;
 		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMFileTransferInfo.addRecvFileInfo() done: "+rInfo.toString());
+			System.out.println("CMFileTransferInfo.addRecvFileInfo() done: "+rInfo);
 			System.out.println("# current hashtable elements: "+m_recvFileHashtable.size());
 		}
 		
