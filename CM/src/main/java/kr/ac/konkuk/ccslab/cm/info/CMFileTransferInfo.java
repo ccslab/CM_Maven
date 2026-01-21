@@ -622,23 +622,25 @@ public class CMFileTransferInfo {
 	}
 
 	// check whether there is the receiving file info that is being used 
-	public synchronized boolean isRecvOngoing(String strSender)
+	public synchronized boolean isRecvOngoing(String strSender, UUID senderUuid)
 	{
-		CMRecvFileInfo rfInfo = null;
-		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(strSender);
+		CMUserLoginKey key = new CMUserLoginKey(strSender, senderUuid);
+		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(key);
 		boolean bFound = false;
 		
 		if(rfInfoList == null) return false;
 		
 		Iterator<CMRecvFileInfo> iter = rfInfoList.getList().iterator();
-		while(iter.hasNext() && !bFound)
+		while(iter.hasNext())
 		{
-			rfInfo = iter.next();
+			CMRecvFileInfo rfInfo = iter.next();
 			if(rfInfo.getRecvTaskResult() != null)
 			{
 				bFound = true;
-				if(CMInfo._CM_DEBUG)
-					System.out.println("CMFileTransferInfo.isRecvOngoing(); ongoing recv info found: "+rfInfo.toString());
+				if(CMInfo._CM_DEBUG) {
+					System.out.println("CMFileTransferInfo.isRecvOngoing(); ongoing recv info found: " + rfInfo);
+				}
+				break;
 			}
 		}
 		

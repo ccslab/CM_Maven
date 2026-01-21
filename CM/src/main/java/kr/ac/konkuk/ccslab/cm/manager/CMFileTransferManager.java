@@ -2893,7 +2893,7 @@ public class CMFileTransferManager {
 			return bForward;
 		}
 		
-		if(!fInfo.isRecvOngoing(fe.getFileSender()))
+		if(!fInfo.isRecvOngoing(fe.getFileSender(), fe.getFileSenderUuid()))
 		{
 			sendSTART_FILE_TRANSFER_CHAN_ACK(rfInfo);
 		}
