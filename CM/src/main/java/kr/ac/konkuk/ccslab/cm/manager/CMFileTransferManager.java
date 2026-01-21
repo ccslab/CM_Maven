@@ -2003,23 +2003,25 @@ public class CMFileTransferManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		// [Added] Get my UUID for multi-login verification
+		UUID myUuid = interInfo.getMyself().getUuid();
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processREQUEST_PERMIT_PUSH_FILE(), ");
-			System.out.println("file sender("+fe.getFileSender()+"), file receiver("
-					+fe.getFileReceiver()+"), file("+fe.getFilePath()+"), size("
-					+fe.getFileSize()+"), append mode("+fe.getFileAppendFlag()
+			System.out.println("file sender("+fe.getFileSender()+"), file sender uuid("+fe.getFileSenderUuid()
+					+"), file receiver("+fe.getFileReceiver()+"), file receiver uuid("+fe.getFileReceiverUuid()
+					+"), file("+fe.getFilePath()+"), size("+fe.getFileSize()+"), append mode("+fe.getFileAppendFlag()
 					+"), contentID("+fe.getContentID()+").");
 		}
 		
 		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileReceiver().contentEquals(strMyName))
+		if(!fe.getFileReceiver().equals(strMyName) || !Objects.equals(fe.getFileReceiverUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
 				System.err.println("This node ("+strMyName+") is not the file receiver("
-						+fe.getFileReceiver()+").");
+						+fe.getFileReceiver()+"), uuid("+fe.getFileReceiverUuid()+")!");
 			}
 			return false;
 		}
@@ -2030,7 +2032,7 @@ public class CMFileTransferManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		boolean bPermit = confInfo.isPermitFileTransferRequest();
 		String strFileName = getFileNameFromPath(fe.getFilePath());
-		if(bPermit || strFileName.contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
+		if(bPermit || strFileName.equals(CMInfo.THROUGHPUT_TEST_FILE))
 		{
 			replyPermitForPushFile(fe, 1);
 			bForward = false;
