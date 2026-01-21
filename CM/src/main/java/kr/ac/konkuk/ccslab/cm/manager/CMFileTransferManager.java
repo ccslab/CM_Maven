@@ -3096,7 +3096,7 @@ public class CMFileTransferManager {
 		syncManager.checkTransferForLocalMode(fe);
 
 		// check whether there is a remaining receiving file info or not
-		CMRecvFileInfo nextRecvInfo = fInfo.findRecvFileInfoNotStarted(fe.getFileSender());
+		CMRecvFileInfo nextRecvInfo = fInfo.findRecvFileInfoNotStarted(fe.getFileSender(), fe.getFileSenderUuid());
 		if(nextRecvInfo != null)
 		{
 			sendSTART_FILE_TRANSFER_CHAN_ACK(nextRecvInfo);

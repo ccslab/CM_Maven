@@ -595,34 +595,30 @@ public class CMFileTransferInfo {
 	//////////////////// (used by the file transfer with separate channels and threads)
 	
 	// find the receiving file info that is not yet started by the thread pool 
-	public synchronized CMRecvFileInfo findRecvFileInfoNotStarted(String strSender)
+	public synchronized CMRecvFileInfo findRecvFileInfoNotStarted(String strSender, UUID senderUuid)
 	{
 		CMRecvFileInfo rfInfo = null;
-		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(strSender);
-		boolean bFound = false;
-		
+		CMUserLoginKey key = new CMUserLoginKey(strSender, senderUuid);
+		CMList<CMRecvFileInfo> rfInfoList = m_recvFileHashtable.get(key);
+
 		if(rfInfoList == null) return null;
 		
 		Iterator<CMRecvFileInfo> iter = rfInfoList.getList().iterator();
-		while(iter.hasNext() && !bFound)
+		while(iter.hasNext())
 		{
 			rfInfo = iter.next();
 			if(rfInfo.getRecvTaskResult() == null)
 			{
-				bFound = true;
-				if(CMInfo._CM_DEBUG)
-					System.out.println("CMFileTransferInfo.findRecvFileInfoNotStarted(); found: "+rfInfo.toString());
+				if(CMInfo._CM_DEBUG) {
+					System.out.println("CMFileTransferInfo.findRecvFileInfoNotStarted(); found: " + rfInfo);
+				}
+				return rfInfo;
 			}
 		}
 		
-		if(bFound)
-			return rfInfo;
-		else
-		{
-			if(CMInfo._CM_DEBUG)
-				System.out.println("CMFileTransferInfo.findRecvFileInfoNotStarted(); not found!");
-			return null;
-		}
+		if(CMInfo._CM_DEBUG)
+			System.out.println("CMFileTransferInfo.findRecvFileInfoNotStarted(); not found!");
+		return null;
 	}
 
 	// check whether there is the receiving file info that is being used 
