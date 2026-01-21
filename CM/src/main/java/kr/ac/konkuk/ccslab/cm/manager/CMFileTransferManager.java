@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
@@ -219,7 +220,9 @@ public class CMFileTransferManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strFileSender = fe.getFileSender();
+		UUID fileSenderUuid = fe.getFileSenderUuid();
 		String strFileReceiver = fe.getFileReceiver();
+		UUID fileReceiverUuid = fe.getFileReceiverUuid();
 		CMUser myself = interInfo.getMyself();
 		
 		if(confInfo.getCommArch().contentEquals("CM_CS") &&
@@ -243,13 +246,15 @@ public class CMFileTransferManager {
 			}
 			CMMember groupMember = group.getGroupUsers();
 			
-			if(strFileSender.contentEquals(myself.getName()) && 
-					groupMember.findMember(strFileReceiver, fe.getFileReceiverUuid()))
+			if(strFileSender.equals(myself.getName()) &&
+					Objects.equals(fileSenderUuid, myself.getUuid()) &&
+					groupMember.findMember(strFileReceiver, fileReceiverUuid) != null)
 			{
 				bReturn = true;
 			}
-			else if(strFileReceiver.contentEquals(myself.getName()) &&
-					groupMember.findMember(strFileSender, fe.getFileSenderUuid()))
+			else if(strFileReceiver.equals(myself.getName()) &&
+					Objects.equals(fileReceiverUuid, myself.getUuid()) &&
+					groupMember.findMember(strFileSender, fileSenderUuid) != null)
 			{
 				bReturn = true;
 			}
