@@ -648,30 +648,31 @@ public class CMFileTransferInfo {
 	}
 	
 	// find the CMRecvFileInfo of which file is currently being received from the sender
-	public synchronized CMRecvFileInfo findRecvFileInfoOngoing(String strSender)
+	public synchronized CMRecvFileInfo findRecvFileInfoOngoing(String strSender, UUID senderUuid)
 	{
 		CMRecvFileInfo rInfo = null;
-		CMList<CMRecvFileInfo> rInfoList = m_recvFileHashtable.get(strSender);
-		boolean bFound = false;
-		
+		CMList<CMRecvFileInfo> rInfoList = null;
+		// Reflected the change of hashtable key from String to CMUserLoginKey.
+		// Instead of getting the list by name and filtering by UUID, we directly get the specific list.
+		CMUserLoginKey key = new CMUserLoginKey(strSender, senderUuid);
+		rInfoList = m_recvFileHashtable.get(key);
+
 		if(rInfoList == null) return null;
 		
 		Iterator<CMRecvFileInfo> iter = rInfoList.getList().iterator();
-		while(iter.hasNext() && !bFound)
+		while(iter.hasNext())
 		{
 			rInfo = iter.next();
 			if(rInfo.getRecvTaskResult() != null)
 			{
-				bFound = true;
-				if(CMInfo._CM_DEBUG)
+				if(CMInfo._CM_DEBUG) {
 					System.out.println("CMFileTransferInfo.findRecvFileInfoOngoing(); ongoing recv info found: "
-							+rInfo.toString());
+							+ rInfo);
+				}
+				return rInfo;
 			}
 		}
 		
-		if(!bFound)
-			rInfo = null;
-		
-		return rInfo;
+		return null;
 	}	
 }

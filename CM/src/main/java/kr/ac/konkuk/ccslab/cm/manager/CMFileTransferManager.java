@@ -3462,7 +3462,7 @@ public class CMFileTransferManager {
 		else
 		{
 			// find the current receiving file task
-			rInfo = fInfo.findRecvFileInfoOngoing(strFileSender);
+			rInfo = fInfo.findRecvFileInfoOngoing(strFileSender, fileSenderUuid);
 			if(rInfo == null)
 			{
 				System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(); ongoing receiving task "
