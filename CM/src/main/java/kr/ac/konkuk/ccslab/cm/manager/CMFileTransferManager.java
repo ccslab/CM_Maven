@@ -631,9 +631,10 @@ public class CMFileTransferManager {
 	}
 	
 	public static boolean requestPermitForPushFile(String strFilePath, 
-			String strFileReceiver, byte byteFileAppend, int nContentID)
+			String strFileReceiver, UUID fileReceiverUuid, byte byteFileAppend, int nContentID)
 	{
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bReturn = false;
 		
 		// get file information (size)
@@ -649,14 +650,17 @@ public class CMFileTransferManager {
 		fInfo.setStartRequestTime(System.currentTimeMillis());
 		
 		// get sender (my) name
-		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		String strMyName = interInfo.getMyself().getName();
+		CMUser myself = interInfo.getMyself();
+		String strMyName = myself.getName();
+		UUID myUuid = myself.getUuid();
 		
 		// make and send a REQUEST_PERMIT_PUSH_FILE event
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_PERMIT_PUSH_FILE);
 		fe.setFileSender(strMyName);
+		fe.setFileSenderUuid(myUuid);
 		fe.setFileReceiver(strFileReceiver);
+		fe.setFileReceiverUuid(fileReceiverUuid);
 		fe.setFilePath(strFilePath);
 		fe.setFileSize(lFileSize);
 		fe.setFileAppendFlag(byteFileAppend);
@@ -669,14 +673,12 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.requestPermitForPushFile(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			fe.setSender(strMyName);
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			fe.setReceiver(strDefServer);
-			
+
 			// set distribution fields
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			fe.setDistributionSession("CM_ONE_USER");
 			fe.setDistributionGroup(strFileReceiver);
+			fe.setDistributionUuid(fileReceiverUuid);
 			
 			// send the event to the default server
 			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
@@ -688,11 +690,8 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.requestPermitForPushFile(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			fe.setSender(strMyName);
-			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver);
+			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver, fileReceiverUuid);
 		}
 		
 		return bReturn;
