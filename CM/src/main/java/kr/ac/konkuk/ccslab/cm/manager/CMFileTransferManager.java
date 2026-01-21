@@ -622,15 +622,7 @@ public class CMFileTransferManager {
 		return bReturn;		
 	}
 	
-	public static boolean requestPermitForPushFile(String strFilePath, 
-			String strFileReceiver)
-	{
-		boolean bRet = requestPermitForPushFile(strFilePath, strFileReceiver,
-				CMInfo.FILE_DEFAULT, -1);
-		return bRet;
-	}
-	
-	public static boolean requestPermitForPushFile(String strFilePath, 
+	public static boolean requestPermitForPushFile(String strFilePath,
 			String strFileReceiver,	byte byteFileAppend)
 	{
 		boolean bRet = requestPermitForPushFile(strFilePath, strFileReceiver,
