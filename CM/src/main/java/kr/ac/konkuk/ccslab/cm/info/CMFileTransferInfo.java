@@ -567,12 +567,23 @@ public class CMFileTransferInfo {
 	}
 	
 
-	public synchronized CMList<CMRecvFileInfo> getRecvFileList(String strSender)
+	public synchronized List<CMRecvFileInfo> getRecvFileList(String strSender, UUID senderUuid)
 	{
 		CMList<CMRecvFileInfo> recvFileList = null;
-		recvFileList = m_recvFileHashtable.get(strSender);
-		
-		return recvFileList;
+		// [Modification] Construct a key using sender name and uuid to retrieve the list from the hashtable
+		// The hashtable key has been changed from String to CMUserLoginKey
+		CMUserLoginKey key = new CMUserLoginKey(strSender, senderUuid);
+		recvFileList = m_recvFileHashtable.get(key);
+
+		if(recvFileList == null)
+		{
+			// [Modification] Enhanced error message to include UUID
+			System.err.println("CMFileTransferInfo.getRecvFileList(), list for sender("
+					+strSender+"), uuid("+senderUuid+") not found!");
+			return null;
+		}
+
+		return recvFileList.getList();
 	}
 
 	public synchronized Hashtable<CMUserLoginKey, CMList<CMRecvFileInfo>> getRecvFileHashtable()

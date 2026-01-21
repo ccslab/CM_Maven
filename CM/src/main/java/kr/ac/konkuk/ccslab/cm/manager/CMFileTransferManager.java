@@ -3233,7 +3233,7 @@ public class CMFileTransferManager {
 		boolean bForward = true;
 		String strFileSender = fe.getFileSender();
 		UUID fileSenderUuid = fe.getFileSenderUuid();
-		CMList<CMRecvFileInfo> recvList = fInfo.getRecvFileList(strFileSender);
+		CMList<CMRecvFileInfo> recvList = fInfo.getRecvFileList(strFileSender, fileSenderUuid);
 		Iterator<CMRecvFileInfo> iter = null;
 		CMRecvFileInfo rInfo = null;
 		CMFileEvent feAck = new CMFileEvent();
@@ -3452,7 +3452,7 @@ public class CMFileTransferManager {
 		}
 
 		// find the CMRecvFile list of the strSender
-		recvList = fInfo.getRecvFileList(strFileSender);
+		recvList = fInfo.getRecvFileList(strFileSender, fileSenderUuid);
 		if(recvList == null)
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(); Receiving file list "
