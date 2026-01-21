@@ -730,7 +730,6 @@ public class CMFileTransferManager {
 	public static boolean replyPermitForPushFile(CMFileEvent fe, int nReturnCode)
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		String myName = interInfo.getMyself().getName();
 		boolean bRet = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
@@ -738,7 +737,9 @@ public class CMFileTransferManager {
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.REPLY_PERMIT_PUSH_FILE);
 		feAck.setFileSender(fe.getFileSender());
+		feAck.setFileSenderUuid(fe.getFileSenderUuid());
 		feAck.setFileReceiver(fe.getFileReceiver());
+		feAck.setFileReceiverUuid(fe.getFileReceiverUuid());
 		feAck.setFilePath(fe.getFilePath());
 		feAck.setFileSize(fe.getFileSize());
 		feAck.setFileAppendFlag(fe.getFileAppendFlag());
@@ -786,16 +787,13 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.replyPermitForPushFile(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			feAck.setSender(myName);
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			feAck.setReceiver(strDefServer);
-			
 			// set distribution fields
 			feAck.setDistributionSession("CM_ONE_USER");
 			feAck.setDistributionGroup(fe.getFileSender());
-			
+			feAck.setDistributionUuid(fe.getFileSenderUuid());
+
 			// send event to the default server
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			bRet = CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
@@ -805,11 +803,8 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.replyPermitForPushFile(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			feAck.setSender(myName);
-			feAck.setReceiver(fe.getFileSender());
 			// send the event to the file sender
-			bRet = CMEventManager.unicastEvent(feAck, fe.getFileSender());
+			bRet = CMEventManager.unicastEvent(feAck, fe.getFileSender(), fe.getFileSenderUuid());
 		}
 		
 		return bRet;
