@@ -8,10 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -621,15 +618,48 @@ public class CMFileTransferManager {
 
 		return bReturn;		
 	}
-	
+
+	// [Modified] Wrapper method for multi-device support (Design Doc #08)
+	// If the file receiver has multiple logged-in devices, this method calls the core method for each device.
 	public static boolean requestPermitForPushFile(String strFilePath,
-			String strFileReceiver,	byte byteFileAppend)
+			String strFileReceiver,	byte byteFileAppend, int nContentID)
 	{
-		boolean bRet = requestPermitForPushFile(strFilePath, strFileReceiver,
-				byteFileAppend, -1);
-		return bRet;
+		// [Modified] Use singleton pattern for info objects
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		boolean bReturn = false;
+
+		List<CMUser> fileReceiverList = null;
+
+		// 1. Find the target users (devices) based on system type
+		if (confInfo.getSystemType().equals("SERVER")) {
+			// If I am a server, find the receiver in the login user list
+			fileReceiverList = interInfo.getLoginUsers().findMemberList(strFileReceiver);
+		} else if (confInfo.getSystemType().equals("CLIENT")) {
+			// If I am a client, find the receiver in the group member list
+			fileReceiverList = CMInteractionManager.findGroupMemberOfClient(strFileReceiver);
+		}
+
+		// 2. Dispatch logic
+		if (fileReceiverList == null || fileReceiverList.isEmpty()) {
+			// If no specific device list is found, try sending with null UUID (legacy or single target)
+			bReturn = requestPermitForPushFile(strFilePath, strFileReceiver, null, byteFileAppend,
+					nContentID);
+		} else {
+			// Iterate over all found devices (UUIDs) and request permit for each
+			for (CMUser user : fileReceiverList) {
+				// Logical OR to ensure success if at least one request succeeds
+				boolean bResult = requestPermitForPushFile(strFilePath, strFileReceiver,
+						user.getUuid(), byteFileAppend, nContentID);
+				bReturn = bReturn || bResult;
+			}
+		}
+
+		return bReturn;
 	}
-	
+
+	// [Modified] Core method with UUID parameter (Design Doc #08)
+	// This method handles the actual event generation and transmission for a specific target device.
 	public static boolean requestPermitForPushFile(String strFilePath, 
 			String strFileReceiver, UUID fileReceiverUuid, byte byteFileAppend, int nContentID)
 	{

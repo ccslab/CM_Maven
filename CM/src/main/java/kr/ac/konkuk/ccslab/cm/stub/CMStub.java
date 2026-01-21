@@ -2382,7 +2382,7 @@ public class CMStub {
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, 
-				byteFileAppend);
+				byteFileAppend, -1);
 		return bReturn;
 	}
 	
