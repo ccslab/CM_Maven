@@ -810,21 +810,21 @@ public class CMFileTransferManager {
 		return bRet;
 	}
 	
-	public static boolean pushFile(String strFilePath, String strReceiver)
+	public static boolean pushFile(String strFilePath, String strReceiver, UUID receiverUuid)
 	{
 		boolean bReturn = false;
-		bReturn = pushFile(strFilePath, strReceiver, CMInfo.FILE_DEFAULT, -1);
+		bReturn = pushFile(strFilePath, strReceiver, receiverUuid, CMInfo.FILE_DEFAULT, -1);
 		return bReturn;
 	}
 
-	public static boolean pushFile(String strFilePath, String strReceiver, byte byteFileAppend)
+	public static boolean pushFile(String strFilePath, String strReceiver, UUID receiverUuid, byte byteFileAppend)
 	{
 		boolean bReturn = false;
-		bReturn = pushFile(strFilePath, strReceiver, byteFileAppend, -1);
+		bReturn = pushFile(strFilePath, strReceiver, receiverUuid, byteFileAppend, -1);
 		return bReturn;
 	}
 
-	public static boolean pushFile(String strFilePath, String strReceiver, byte byteFileAppend, 
+	public static boolean pushFile(String strFilePath, String strReceiver, UUID receiverUuid, byte byteFileAppend,
 			int nContentID)
 	{
 		boolean bReturn = false;
@@ -834,9 +834,9 @@ public class CMFileTransferManager {
 		fInfo.setStartSendTime(System.currentTimeMillis());
 		
 		if(confInfo.isFileTransferScheme())
-			bReturn = pushFileWithSepChannel(strFilePath, strReceiver, byteFileAppend, nContentID);
+			bReturn = pushFileWithSepChannel(strFilePath, strReceiver, receiverUuid, byteFileAppend, nContentID);
 		else
-			bReturn = pushFileWithDefChannel(strFilePath, strReceiver, byteFileAppend, nContentID);
+			bReturn = pushFileWithDefChannel(strFilePath, strReceiver, receiverUuid, byteFileAppend, nContentID);
 		return bReturn;
 	}
 
