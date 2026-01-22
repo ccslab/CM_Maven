@@ -2483,19 +2483,12 @@ public class CMFileTransferManager {
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 		
-		/*
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMFileManager.processCONTINUE_FILE_TRANSFER(), sender("
-					+fe.getSenderName()+"), file("+fe.getFileName()+"), "+fe.getBlockSize()
-					+" Bytes, contentID("+fe.getContentID()+").");
-		}
-		*/
-		
-		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileReceiver().contentEquals(strMyName))
+		// check whether this CM node is the target node of this event or not
+		// modified: added uuid comparison
+		if(!fe.getFileReceiver().equals(strMyName) || !Objects.equals(fe.getFileReceiverUuid(), myUuid))
 		{
 			/*
 			if(CMInfo._CM_DEBUG)
@@ -2507,7 +2500,7 @@ public class CMFileTransferManager {
 			return false;
 		}
 		
-		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
+		if(fe.getFileName().equals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		// find info in the recv file list
