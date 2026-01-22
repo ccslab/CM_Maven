@@ -841,7 +841,7 @@ public class CMFileTransferManager {
 	}
 
 	// strFilePath: absolute or relative path to a target file
-	private static boolean pushFileWithDefChannel(String strFilePath, String strFileReceiver, 
+	private static boolean pushFileWithDefChannel(String strFilePath, String strFileReceiver, UUID fileReceiverUuid,
 			byte byteFileAppend, int nContentID)
 	{
 		boolean bReturn = false;
@@ -859,12 +859,15 @@ public class CMFileTransferManager {
 
 		// get my name
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 
 		// add send file information
 		// receiver name, file path, size
 		CMSendFileInfo sfInfo = new CMSendFileInfo();
 		sfInfo.setFileSender(strMyName);
+		sfInfo.setFileSenderUuid(myUuid);
 		sfInfo.setFileReceiver(strFileReceiver);
+		sfInfo.setFileReceiverUuid(fileReceiverUuid);
 		sfInfo.setFilePath(strFilePath);
 		sfInfo.setFileSize(lFileSize);
 		sfInfo.setContentID(nContentID);
@@ -875,7 +878,7 @@ public class CMFileTransferManager {
 		{
 			System.err.println("CMFileTransferManager.pushFileWithDefChannel(); "
 					+ "error for adding the sending file info: "
-					+"receiver("+strFileReceiver+"), file("+strFilePath+"), size("
+					+"receiver("+strFileReceiver+", "+fileReceiverUuid+"), file("+strFilePath+"), size("
 					+lFileSize+"), content ID("+nContentID+")!");
 			return false;
 		}
@@ -890,7 +893,9 @@ public class CMFileTransferManager {
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.START_FILE_TRANSFER);
 		fe.setFileSender(strMyName);
+		fe.setFileSenderUuid(myUuid);
 		fe.setFileReceiver(strFileReceiver);
+		fe.setFileReceiverUuid(fileReceiverUuid);
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
@@ -903,14 +908,11 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.pushFileWithDefChannel(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			fe.setSender(strMyName);
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			fe.setReceiver(strDefServer);
-			
 			// set distribution fields
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			fe.setDistributionSession("CM_ONE_USER");
 			fe.setDistributionGroup(strFileReceiver);
+			fe.setDistributionUuid(fileReceiverUuid);
 			
 			// send the event to the default server
 			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
@@ -922,21 +924,16 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.pushFileWithDefChannel(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			fe.setSender(strMyName);
-			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver);
+			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver, fileReceiverUuid);
 		}
 		
 		if(!bReturn)
 		{
 			// remove send file information
-			fInfo.removeSendFileInfo(strFileReceiver, strFileName, nContentID);
+			fInfo.removeSendFileInfo(strFileReceiver, fileReceiverUuid, strFileName, nContentID);
 		}
 
-		file = null;
-		fe = null;
 		return bReturn;
 	}
 	
