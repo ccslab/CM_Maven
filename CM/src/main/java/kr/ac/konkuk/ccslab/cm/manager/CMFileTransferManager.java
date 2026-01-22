@@ -2658,28 +2658,32 @@ public class CMFileTransferManager {
 		int nContentID = fe.getContentID();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER_ACK(), "
-					+ "file sender("+fe.getFileSender()+"), file receiver("
-					+strFileReceiver+"), file("+strFileName+"), size("+lFileSize+"), return code("+fe.getReturnCode()
+					+ "file sender("+fe.getFileSender()+"), sender uuid("+fe.getFileSenderUuid()
+					+"), file receiver("+strFileReceiver+"), receiver uuid("+fileReceiverUuid
+					+"), file("+strFileName+"), size("+lFileSize+"), return code("+fe.getReturnCode()
 					+"), contentID("+nContentID+").");
 		}
 		
-		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileSender().contentEquals(strMyName))
+		// check whether this CM node is the target node of this event or not
+		// modified: added uuid comparison
+		if(!fe.getFileSender().equals(strMyName) || !Objects.equals(fe.getFileSenderUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file sender("
-						+fe.getFileSender()+").");
+				// modified: added file sender uuid
+				System.err.println("This node ("+strMyName+", "+myUuid+") is not the file sender("
+						+fe.getFileSender()+", "+fe.getFileSenderUuid()+").");
 			}
 			return false;
 		}
 
-		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
+		if(fe.getFileName().equals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
 		fInfo.setEndSendTime(System.currentTimeMillis());
