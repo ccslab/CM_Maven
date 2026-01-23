@@ -6,6 +6,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
@@ -207,10 +208,20 @@ public class CMSendFileTask implements Runnable {
 	
 	private void sendErrorToProcThread()
 	{
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		String strMyName = interInfo.getMyself().getName();  // added
+		UUID myUuid = interInfo.getMyself().getUuid();  // added
+
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.ERR_SEND_FILE_CHAN);
-		fe.setFileSender(CMInteractionInfo.getInstance().getMyself().getName());
+		fe.setSender(strMyName);  // added
+		fe.setSenderUuid(myUuid);  // added
+		fe.setReceiver(strMyName);  // added
+		fe.setReceiverUuid(myUuid);  // added
+		fe.setFileSender(strMyName);
+		fe.setFileSenderUuid(myUuid); // added
 		fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
+		fe.setFileReceiverUuid(m_sendFileInfo.getFileReceiverUuid()); // added
 		fe.setFileName(m_sendFileInfo.getFileName());
 		fe.setContentID(m_sendFileInfo.getContentID());
 		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);
