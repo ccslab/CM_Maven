@@ -1067,8 +1067,10 @@ public class CMFileTransferManager {
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		String strFilePath = sfInfo.getFilePath();
 		String strFileReceiver = sfInfo.getFileReceiver();
+		UUID fileReceiverUuid = sfInfo.getFileReceiverUuid();
 		long lFileSize = sfInfo.getFileSize();
 		int nContentID = sfInfo.getContentID();
 		byte byteAppendMode = sfInfo.getAppendMode();
@@ -1083,7 +1085,9 @@ public class CMFileTransferManager {
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.START_FILE_TRANSFER_CHAN);
 		fe.setFileSender(strMyName);
+		fe.setFileSenderUuid(myUuid);
 		fe.setFileReceiver(strFileReceiver);
+		fe.setFileReceiverUuid(fileReceiverUuid);
 		fe.setFileName(strFileName);
 		fe.setFileSize(lFileSize);
 		fe.setContentID(nContentID);
@@ -1096,14 +1100,11 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.pushFileWithSepChannel(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			fe.setSender(strMyName);
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			fe.setReceiver(strDefServer);
-			
 			// set distribution fields
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			fe.setDistributionSession("CM_ONE_USER");
 			fe.setDistributionGroup(strFileReceiver);
+			fe.setDistributionUuid(fileReceiverUuid);
 			
 			// send the event to the default server
 			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
@@ -1115,11 +1116,8 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.pushFileWithSepChannel(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			fe.setSender(strMyName);
-			fe.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver);
+			bReturn = CMEventManager.unicastEvent(fe, strFileReceiver, fileReceiverUuid);
 		}
 
 		if(!bReturn)
