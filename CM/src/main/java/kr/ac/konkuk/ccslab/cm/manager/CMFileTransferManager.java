@@ -2684,33 +2684,35 @@ public class CMFileTransferManager {
 			
 	private static boolean processSTART_FILE_TRANSFER_CHAN(CMFileEvent fe)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processSTART_FILE_TRANSFER_CHAN(),");
-			System.out.println("file sender("+fe.getFileSender()+"), file receiver("
-					+fe.getFileReceiver()+"), file name("+fe.getFileName()+"), size("
+			System.out.println("file sender("+fe.getFileSender()+"), sender uuid("+fe.getFileSenderUuid()
+					+"), file receiver("+fe.getFileReceiver()+"), receiver uuid("+fe.getFileReceiverUuid()
+					+"), file name("+fe.getFileName()+"), size("
 					+fe.getFileSize()+"), contentID("+fe.getContentID()+"), appendFlag("
 					+fe.getFileAppendFlag()+").");
 		}
 
-		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileReceiver().contentEquals(strMyName))
+		// check whether this CM node is the target node of this event or not
+		if( !fe.getFileReceiver().equals(strMyName) || !Objects.equals(fe.getFileReceiverUuid(), myUuid) )
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file receiver("
-						+fe.getFileReceiver()+").");
+				// changed: added uuid info to error message
+				System.err.println("This node ("+strMyName+", "+myUuid+") is not the file receiver("
+						+fe.getFileReceiver()+", "+fe.getFileReceiverUuid()+").");
 			}
 			return false;
 		}
-		
+
 		fInfo.setStartRecvTime(System.currentTimeMillis());
 
 		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
@@ -2768,23 +2770,26 @@ public class CMFileTransferManager {
 			}
 			else
 			{
-				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(fe.getFileSender());
+				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(fe.getFileSender(),
+						fe.getFileSenderUuid());
 				if(targetUser == null)
 				{
 					System.err.println("CMFileTransferManager.processSTART_FILE_TRANSFER_CHAN(), file sender("
-							+fe.getFileSender()+") not found!");
+							+fe.getFileSender()+"), uuid("+fe.getFileSenderUuid()+") not found!");
 					return bForward;
 				}
 				// socket channel to the file receiver (client)
 				sc = (SocketChannel) targetUser.getBlockSocketChannelInfo().findChannel(0);
 				// default non-blocking socket channel to the default server
-				dsc = (SocketChannel) interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().findChannel(0); 
+				dsc = (SocketChannel) interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo()
+						.findChannel(0);
 			}
 			
 		}
 		else	// SERVER
 		{
-			CMUser user = CMInteractionInfo.getInstance().getLoginUsers().findMember(fe.getFileSender());
+			CMUser user = CMInteractionInfo.getInstance().getLoginUsers().findMember(fe.getFileSender(),
+					fe.getFileSenderUuid());
 			sc = (SocketChannel) user.getBlockSocketChannelInfo().findChannel(0);
 			dsc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
 		}
@@ -2832,7 +2837,9 @@ public class CMFileTransferManager {
 		boolean bResult = false;
 		CMRecvFileInfo rfInfo = new CMRecvFileInfo();
 		rfInfo.setFileSender(fe.getFileSender());
+		rfInfo.setFileSenderUuid(fe.getFileSenderUuid());
 		rfInfo.setFileReceiver(fe.getFileReceiver());
+		rfInfo.setFileReceiverUuid(fe.getFileReceiverUuid());
 		rfInfo.setFileName(fe.getFileName());
 		rfInfo.setFilePath(strFullPath);
 		rfInfo.setFileSize(lFileSize);
