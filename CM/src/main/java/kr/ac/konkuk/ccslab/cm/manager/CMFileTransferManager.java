@@ -2937,28 +2937,31 @@ public class CMFileTransferManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), "
-					+ "file sender("+fe.getFileSender()+"), file receiver("
-					+fe.getFileReceiver()+"), file("+fe.getFileName()
-					+"), file size("+fe.getFileSize()+"), contentID("
+					+ "file sender("+fe.getFileSender()+"), file sender uuid("+fe.getFileSenderUuid()
+					+"), file receiver("+fe.getFileReceiver()+"), file receiver uuid("+fe.getFileReceiverUuid()
+					+"), file("+fe.getFileName()+"), file size("+fe.getFileSize()+"), contentID("
 					+fe.getContentID()+")");
 		}
 
-		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileReceiver().contentEquals(strMyName))
+		// check whether this CM node is the target node of this event or not
+		// modified: added uuid check
+		if(!fe.getFileReceiver().equals(strMyName) || !Objects.equals(fe.getFileReceiverUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file receiver("
-						+fe.getFileReceiver()+").");
+				// modified: added my uuid, file receiver uuid
+				System.err.println("This node ("+strMyName+", "+myUuid+") is not the file receiver("
+						+fe.getFileReceiver()+", "+fe.getFileReceiverUuid()+").");
 			}
 			return false;
 		}
-		
+
 		if(fe.getFileName().contentEquals(CMInfo.THROUGHPUT_TEST_FILE))
 			bForward = false;
 
@@ -2997,7 +3000,9 @@ public class CMFileTransferManager {
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.END_FILE_TRANSFER_CHAN_ACK);
 		feAck.setFileSender(fe.getFileSender());
+		feAck.setFileSenderUuid(fe.getFileSenderUuid());
 		feAck.setFileReceiver(fe.getFileReceiver());
+		feAck.setFileReceiverUuid(fe.getFileReceiverUuid());
 		feAck.setFileName(fe.getFileName());
 		feAck.setFileSize(fe.getFileSize());
 		feAck.setContentID(fe.getContentID());
@@ -3026,16 +3031,13 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			feAck.setSender(strMyName);
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			feAck.setReceiver(strDefServer);
-			
+
 			// set distribution fields
 			feAck.setDistributionSession("CM_ONE_USER");
 			feAck.setDistributionGroup(fe.getFileSender());
-			
+
 			// send the event to the default server
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
@@ -3045,13 +3047,9 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			feAck.setSender(strMyName);
-			feAck.setReceiver(fe.getFileSender());
 			// send the event to the file sender
-			CMEventManager.unicastEvent(feAck, fe.getFileSender());
+			CMEventManager.unicastEvent(feAck, fe.getFileSender(), fe.getFileSenderUuid());
 		}
-		//feAck = null;
 
 		if(bResult)
 			CMSNSManager.checkCompleteRecvAttachedFiles(fe);
