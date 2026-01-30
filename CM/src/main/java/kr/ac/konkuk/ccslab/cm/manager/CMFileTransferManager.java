@@ -300,19 +300,18 @@ public class CMFileTransferManager {
 	
 	public static boolean replyPermitForPullFile(CMFileEvent fe, int nReturnCode)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bRet = false;
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.REPLY_PERMIT_PULL_FILE);
 		feAck.setFileSender(fe.getFileSender());
+		feAck.setFileSenderUuid(fe.getFileSenderUuid());
 		feAck.setFileReceiver(fe.getFileReceiver());
+		feAck.setFileReceiverUuid(fe.getFileReceiverUuid());
 		feAck.setFileName(fe.getFileName());
 		feAck.setContentID(fe.getContentID());
 		feAck.setReturnCode(nReturnCode);
-		
-		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		
 		if(isP2PFileTransfer(feAck))
 		{
@@ -325,28 +324,25 @@ public class CMFileTransferManager {
 			if(nReturnCode == 1 && confInfo.isFileTransferScheme())
 			{
 				// set ssc port number of the file receiver to the receiver client info
-				CMUser fileReceiver = CMInteractionManager.findGroupMemberOfClient(fe.getFileReceiver());
+				CMUser fileReceiver = CMInteractionManager.findGroupMemberOfClient(fe.getFileReceiver(),
+						fe.getFileReceiverUuid());
 				if(fileReceiver == null)
 				{
-					System.err.println("file receiver("+fe.getFileReceiver()+") not found in session("
+					System.err.println("file receiver("+fe.getFileReceiver()+"), uuid("
+							+fe.getFileReceiverUuid()+") not found in session("
 							+interInfo.getMyself().getCurrentSession()+") and group("
 							+interInfo.getMyself().getCurrentGroup()+")!");
 					return false;
 				}
 				fileReceiver.setSSCPort(fe.getSSCPort());
 			}
-			
-			// set event sender and receiver
-			String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
-					.getServerName();
-			feAck.setSender(myself.getName());
-			feAck.setReceiver(strDefServer);
-			
 			// set distribution fields
 			feAck.setDistributionSession("CM_ONE_USER");
 			feAck.setDistributionGroup(fe.getFileReceiver());
-			
+			feAck.setDistributionUuid(fe.getFileReceiverUuid());
+
 			// send the event to the default server
+			String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
 			bRet = CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
@@ -356,19 +352,15 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.replyPermitForPullFile(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			feAck.setSender(myself.getName());
-			feAck.setReceiver(fe.getFileReceiver());
 			// send the event to the file receiver
-			bRet = CMEventManager.unicastEvent(feAck, fe.getFileReceiver());
+			bRet = CMEventManager.unicastEvent(feAck, fe.getFileReceiver(), fe.getFileReceiverUuid());
 		}		
 		
 		if(bRet && nReturnCode == 1)
 		{
 			String strFilePath = confInfo.getTransferedFileHome().toString() + 
 					File.separator + fe.getFileName();
-			bRet = pushFile(strFilePath, fe.getFileReceiver(), fe.getFileAppendFlag()
-            );
+			bRet = pushFile(strFilePath, fe.getFileReceiver(), fe.getFileReceiverUuid(), fe.getFileAppendFlag());
 		}
 		
 		return bRet;
