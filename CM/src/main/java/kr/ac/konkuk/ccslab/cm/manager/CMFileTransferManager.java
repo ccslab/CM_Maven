@@ -1856,23 +1856,26 @@ public class CMFileTransferManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processREQUEST_PERMIT_PULL_FILE(), "
-					+ "file sender("+fe.getFileSender()+"), file receiver(requester)("
-					+fe.getFileReceiver()+"), file("+fe.getFileName()
-					+"), contentID("+fe.getContentID()+"), append flag("
-					+fe.getFileAppendFlag()+"), ssc port("+fe.getSSCPort()+").");
+					+ "file sender("+fe.getFileSender()+"), senderUuid("+fe.getFileSenderUuid()
+					+ "), file receiver(requester)("+fe.getFileReceiver()
+					+ "), receiverUuid("+fe.getFileReceiverUuid()
+					+ "), file("+fe.getFileName()
+					+ "), contentID("+fe.getContentID()+"), append flag("
+					+ fe.getFileAppendFlag()+"), ssc port("+fe.getSSCPort()+").");
 		}
 
 		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileSender().contentEquals(strMyName))
+		if(!fe.getFileSender().contentEquals(strMyName) || !Objects.equals(fe.getFileSenderUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file sender("
-						+fe.getFileSender()+").");
+				System.err.println("This node (" + strMyName + ", " + myUuid + ") is not the file sender("
+						+ fe.getFileSender() + ", " + fe.getFileSenderUuid() + ").");
 			}
 			return false;
 		}
