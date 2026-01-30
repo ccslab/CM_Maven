@@ -1904,24 +1904,26 @@ public class CMFileTransferManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processREPLY_PERMIT_PULL_FILE(), "
-					+ "file sender("+fe.getFileSender()+"), file receiver("
-					+ fe.getFileReceiver()+"), file("+fe.getFileName()
-					+"), return code("+fe.getReturnCode()+"), contentID("
-					+fe.getContentID()+").");
+					+ "file sender("+fe.getFileSender()+"), file sender uuid("+fe.getFileSenderUuid()
+					+"), file receiver("+fe.getFileReceiver()+"), file receiver uuid("+fe.getFileReceiverUuid()
+					+"), file("+fe.getFileName()+"), return code("+fe.getReturnCode()
+					+"), contentID("+fe.getContentID()+").");
 		}
 		
 		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileReceiver().contentEquals(strMyName))
+		if(!fe.getFileReceiver().contentEquals(strMyName) || !Objects.equals(fe.getFileReceiverUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file receiver("
-						+fe.getFileReceiver()+").");
+				System.err.println("This node ("+strMyName+"), uuid("+myUuid
+						+") is not the file receiver("+fe.getFileReceiver()
+						+"), uuid("+fe.getFileReceiverUuid()+").");
 			}
 			bForward = false;
 			return bForward;
@@ -1933,7 +1935,8 @@ public class CMFileTransferManager {
 			if(fe.getReturnCode() == -1)
 				System.err.println("The requested file does not exists!");
 			else if(fe.getReturnCode() == 0)
-				System.err.println("sender("+fe.getFileSender()+") rejects to send the file!");
+				System.err.println("sender("+fe.getFileSender()+"), uuid("+fe.getFileSenderUuid()
+						+") rejects to send the file!");
 
 			// close the server socket channel for c2c file transfer
 			if(confInfo.isFileTransferScheme() && isP2PFileTransfer(fe))
