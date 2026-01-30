@@ -651,7 +651,7 @@ public class CMCommManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
-				target, targetUuid, CMInfo.FILE_OVERWRITE);
+				target, targetUuid, CMInfo.FILE_OVERWRITE, -1);
 
 		if(!bReturn)
 			return -1;

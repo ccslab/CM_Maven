@@ -100,6 +100,61 @@ public class CMFileTransferManager {
         );
 		return bReturn;		
 	}
+
+	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, byte byteFileAppend,
+												   int nContentID) {
+		// Updated to use Singleton pattern for info objects
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+		List<CMUser> fileOwnerList = null;
+		CMUser fileOwner = null;
+
+		// 1. If the file owner is a server, call the method with null UUID
+		CMServer server = CMInteractionManager.findServer(strFileOwner);
+		if( server != null )
+		{
+			return requestPermitForPullFile(strFileName, strFileOwner, null, byteFileAppend, nContentID);
+		}
+
+		// 2. If the file owner is a client, find the list of active login devices
+		// Search based on the local system type
+		if( confInfo.getSystemType().equals("SERVER") )
+		{
+			// If 'myself' is a server, search in the login user list
+			fileOwnerList = interInfo.getLoginUsers().findMemberList(strFileOwner);
+			if( fileOwnerList == null || fileOwnerList.isEmpty() )
+			{
+				System.err.println("CMFileTransferManager.requestPermitForPullFile(), "
+						+ "list of file owner("+strFileOwner+") not found or empty in the login user list!");
+				return false;
+			}
+		}
+		else if( confInfo.getSystemType().equals("CLIENT") )
+		{
+			// If 'myself' is a client, search in the group member list
+			fileOwnerList = CMInteractionManager.findGroupMemberOfClient(strFileOwner);
+			if( fileOwnerList == null || fileOwnerList.isEmpty() )
+			{
+				System.err.println("CMFileTransferManager.requestPermitForPullFile(), "
+						+ "list of file owner("+strFileOwner+") not found or empty in the same group member list!");
+				return false;
+			}
+		}
+		else
+		{
+			System.err.println("CMFileTransferManager.requestPermitForPullFile(), "
+					+ "my system type unknown!");
+			return false;
+		}
+
+		// 3. Selection Strategy: Select the first owner node in the list for implementation ease
+		fileOwner = fileOwnerList.get(0);
+
+		// 4. Delegate to the 5-parameter version with the selected UUID
+		return requestPermitForPullFile(strFileName, strFileOwner, fileOwner.getUuid(),
+				byteFileAppend, nContentID);
+	}
 	
 	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, UUID fileOwnerUuid,
 			byte byteFileAppend, int nContentID)
