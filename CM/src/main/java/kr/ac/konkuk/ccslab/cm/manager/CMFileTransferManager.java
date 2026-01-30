@@ -101,10 +101,9 @@ public class CMFileTransferManager {
 		return bReturn;		
 	}
 	
-	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, 
+	public static boolean requestPermitForPullFile(String strFileName, String strFileOwner, UUID fileOwnerUuid,
 			byte byteFileAppend, int nContentID)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
@@ -116,7 +115,9 @@ public class CMFileTransferManager {
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.REQUEST_PERMIT_PULL_FILE);
 		fe.setFileSender(strFileOwner);
+		fe.setFileSenderUuid(fileOwnerUuid);
 		fe.setFileReceiver(myself.getName());	// requester name
+		fe.setFileReceiverUuid(myself.getUuid());
 		fe.setFileName(strFileName);
 		fe.setContentID(nContentID);
 		fe.setFileAppendFlag(byteFileAppend);
@@ -126,16 +127,6 @@ public class CMFileTransferManager {
 			ServerSocketChannel ssc = commInfo.getNonBlockServerSocketChannel();
 			if(ssc == null)
 			{
-				/*
-				try {
-					ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(
-							CMInfo.CM_SERVER_CHANNEL, myself.getHost(), 0, cmInfo);
-				} catch (IOException e) {
-					e.printStackTrace();
-					return false;
-				}
-				*/
-				
 				////////// for Android client where network-related methods must be called in a separate thread
 				////////// rather than the MainActivity thread
 				CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SERVER_CHANNEL,
@@ -180,17 +171,13 @@ public class CMFileTransferManager {
 						+ "isP2PFileTransfer() returns true.");				
 			}
 			
-			// set event sender and receiver
-			String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
-					.getServerName();
-			fe.setSender(myself.getName());
-			fe.setReceiver(strDefServer);
-			
 			// set distribution session and distribution group
 			fe.setDistributionSession("CM_ONE_USER");
 			fe.setDistributionGroup(strFileOwner);
-			
+			fe.setDistributionUuid(fileOwnerUuid);
+
 			// send the event to the default server
+			String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
 			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
@@ -201,11 +188,7 @@ public class CMFileTransferManager {
 						+ "isP2PFileTransfer() returns false.");				
 			}
 
-			// set event sender and receiver
-			fe.setSender(myself.getName());
-			fe.setReceiver(strFileOwner);
-			
-			bReturn = CMEventManager.unicastEvent(fe, strFileOwner);
+			bReturn = CMEventManager.unicastEvent(fe, strFileOwner, fileOwnerUuid);
 		}
 		
 		return bReturn;
