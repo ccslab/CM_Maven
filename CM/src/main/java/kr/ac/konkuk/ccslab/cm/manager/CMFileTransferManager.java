@@ -15,16 +15,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMServer;
-import kr.ac.konkuk.ccslab.cm.entity.CMSession;
-import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
-import kr.ac.konkuk.ccslab.cm.entity.CMMember;
-import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
-import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+
+import kr.ac.konkuk.ccslab.cm.entity.*;
 import kr.ac.konkuk.ccslab.cm.event.CMEventSynchronizer;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
@@ -1234,12 +1226,12 @@ public class CMFileTransferManager {
 		return bReturn;
 	}
 	
-	private static boolean cancelPushFileWithDefChannel(String strFileReceiver)
+	private static boolean cancelPushFileWithDefChannel(String strFileReceiver, UUID fileReceiverUuid)
 	{
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
-		CMList<CMSendFileInfo> sendList = null;
+		List<CMSendFileInfo> sendList = null;
 		Iterator<CMSendFileInfo> iterSendList = null;
 		CMSendFileInfo sInfo = null;
 		CMFileEvent fe = null;
@@ -1267,7 +1259,9 @@ public class CMFileTransferManager {
 			fe = new CMFileEvent();
 			fe.setID(CMFileEvent.CANCEL_FILE_SEND);
 			fe.setFileSender(interInfo.getMyself().getName());
+			fe.setFileSenderUuid(interInfo.getMyself().getUuid());
 			fe.setFileReceiver(strFileReceiver);
+			fe.setFileReceiverUuid(fileReceiverUuid);
 			
 			if(isP2PFileTransfer(fe))
 			{
@@ -1276,16 +1270,14 @@ public class CMFileTransferManager {
 					System.out.println("CMFileTransferManager.cancelPushFileWithDefChannel(), "
 							+ "isP2PFileTransfer() returns true.");
 				}
-				// set event sender and receiver
-				fe.setSender(interInfo.getMyself().getName());
-				strDefServer = interInfo.getDefaultServerInfo().getServerName();
-				fe.setReceiver(strDefServer);
-				
+
 				// set distribution fields
 				fe.setDistributionSession("CM_ONE_USER");
 				fe.setDistributionGroup(strFileReceiver);
-				
+				fe.setDistributionUuid(fileReceiverUuid);
+
 				// send the event to the default server
+				strDefServer = interInfo.getDefaultServerInfo().getServerName();
 				CMEventManager.unicastEvent(fe, strDefServer);
 			}
 			else
@@ -1295,15 +1287,12 @@ public class CMFileTransferManager {
 					System.out.println("CMFileTransferManager.cancelPushFileWithDefChannel(), "
 							+ "isP2PFileTransfer() returns false.");
 				}
-				// set event sender and receiver
-				fe.setSender(interInfo.getMyself().getName());
-				fe.setReceiver(strFileReceiver);
 				// send the event to the file receiver
-				CMEventManager.unicastEvent(fe, strFileReceiver);
+				CMEventManager.unicastEvent(fe, strFileReceiver, fileReceiverUuid);
 			}
 			
 			// close the RandomAccessFile
-			iterSendList = sendList.getList().iterator();
+			iterSendList = sendList.iterator();
 			while(iterSendList.hasNext())
 			{
 				sInfo = iterSendList.next();
@@ -1321,15 +1310,20 @@ public class CMFileTransferManager {
 		}
 		else	// for all receivers
 		{
-			Set<String> keySet = fInfo.getSendFileHashtable().keySet();
-			Iterator<String> iterKeys = keySet.iterator();
+			Set<CMUserLoginKey> keySet = fInfo.getSendFileHashtable().keySet();
+			Iterator<CMUserLoginKey> iterKeys = keySet.iterator();
 			while(iterKeys.hasNext())
 			{
-				String iterFileReceiver = iterKeys.next();
+				CMUserLoginKey iterKey = iterKeys.next();
+				String iterFileReceiver = iterKey.getUserName();
+				UUID iterFileReceiverUuid = iterKey.getUuid();
+
 				fe = new CMFileEvent();
 				fe.setID(CMFileEvent.CANCEL_FILE_SEND);
 				fe.setFileSender(interInfo.getMyself().getName());
+				fe.setFileSenderUuid(interInfo.getMyself().getUuid());
 				fe.setFileReceiver(iterFileReceiver);
+				fe.setFileReceiverUuid(iterFileReceiverUuid);
 				
 				if(isP2PFileTransfer(fe))
 				{
@@ -1338,16 +1332,14 @@ public class CMFileTransferManager {
 						System.out.println("CMFileTransferManager.cancelPushFileWithDefChannel(), "
 								+ "isP2PFileTransfer() returns true.");
 					}
-					// set event sender and receiver
-					fe.setSender(interInfo.getMyself().getName());
-					strDefServer = interInfo.getDefaultServerInfo().getServerName();
-					fe.setReceiver(strDefServer);
-					
+
 					// set distribution fields
 					fe.setDistributionSession("CM_ONE_USER");
 					fe.setDistributionGroup(iterFileReceiver);
-					
+					fe.setDistributionUuid(iterFileReceiverUuid);
+
 					// send the event to the default server
+					strDefServer = interInfo.getDefaultServerInfo().getServerName();
 					CMEventManager.unicastEvent(fe, strDefServer);
 				}
 				else
@@ -1357,16 +1349,13 @@ public class CMFileTransferManager {
 						System.out.println("CMFileTransferManager.cancelPushFileWithDefChannel(), "
 								+ "isP2PFileTransfer() returns false.");
 					}
-					// set event sender and receiver
-					fe.setSender(interInfo.getMyself().getName());
-					fe.setReceiver(iterFileReceiver);
 					// send the event to file receiver
-					CMEventManager.unicastEvent(fe, iterFileReceiver);
+					CMEventManager.unicastEvent(fe, iterFileReceiver, iterFileReceiverUuid);
 				}
 				
 				// close the RandomAccessFile
 				sendList = fInfo.getSendFileList(iterFileReceiver, fileReceiverUuid);
-				iterSendList = sendList.getList().iterator();
+				iterSendList = sendList.iterator();
 				while(iterSendList.hasNext())
 				{
 					sInfo = iterSendList.next();
@@ -1388,12 +1377,12 @@ public class CMFileTransferManager {
 		{
 			if(CMInfo._CM_DEBUG)
 				System.out.println("CMFileTransferManager.cancelPushFileWithDefChannel(); succeeded for "
-						+ "receiver("+strFileReceiver+").");
+						+ "receiver("+strFileReceiver+"), uuid("+fileReceiverUuid+").");
 		}
 		else
 		{
 			System.err.println("CMFileTransferManager.cancelPushFileWithDefChannel(); failed for "
-					+ "receiver("+strFileReceiver+")!");
+					+ "receiver("+strFileReceiver+"), uuid("+fileReceiverUuid+").!");
 		}
 		
 		return bReturn;
