@@ -1391,7 +1391,7 @@ public class CMFileTransferManager {
 	}
 	
 	// cancel the sending file task with separate channels and threads
-	private static boolean cancelPushFileWithSepChannel(String strFileReceiver)
+	private static boolean cancelPushFileWithSepChannel(String strFileReceiver, UUID fileReceiverUuid)
 	{
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
@@ -1402,12 +1402,14 @@ public class CMFileTransferManager {
 		}
 		else // cancel file transfer to all receivers
 		{
-			Set<String> keySet = fInfo.getSendFileHashtable().keySet();
-			Iterator<String> iterKeys = keySet.iterator();
+			Set<CMUserLoginKey> keySet = fInfo.getSendFileHashtable().keySet();
+			Iterator<CMUserLoginKey> iterKeys = keySet.iterator();
 			while(iterKeys.hasNext())
 			{
-				String iterReceiver = iterKeys.next();
-				bReturn = cancelPushFileWithSepChannelForOneReceiver(iterReceiver);
+				CMUserLoginKey loginKey = iterKeys.next();
+				String iterFileReceiver = loginKey.getUserName();
+				UUID iterFileReceiverUuid = loginKey.getUuid();
+				cancelPushFileWithSepChannelForOneReceiver(iterFileReceiver, iterFileReceiverUuid);
 			}
 			// clear the sending file hash table
 			bReturn = fInfo.clearSendFileHashtable();
