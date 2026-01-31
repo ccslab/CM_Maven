@@ -1158,15 +1158,78 @@ public class CMFileTransferManager {
 		
 		return bReturn;
 	}
+
+	/**
+	 * Cancels all ongoing push file transfers for a target receiver name.
+	 * In a multi-device environment, it cancels transfers for all UUIDs associated with the receiver.
+	 * @param strFileReceiver The name of the file receiver.
+	 * @return true if at least one cancellation request was successful, false otherwise.
+	 */
+	public static boolean cancelPushFile(String strFileReceiver) {
+		// Applied singleton pattern for Info objects
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		boolean bReturn = false;
+
+		// Check system type: SERVER
+		if( confInfo.getSystemType().equals("SERVER") )
+		{
+			// Find all login sessions (UUIDs) for the given user name
+			List<CMUser> fileReceiverList = interInfo.getLoginUsers().findMemberList(strFileReceiver);
+
+			if( fileReceiverList == null || fileReceiverList.isEmpty() )
+			{
+				// If not in login list, the receiver might be another server (no UUID)
+				bReturn = cancelPushFile(strFileReceiver, null);
+			}
+			else
+			{
+				// Cancel transfers for all identified device UUIDs
+				for( CMUser user : fileReceiverList )
+				{
+					// Return true if any of the calls return true (using bitwise OR assignment)
+					bReturn |= cancelPushFile(strFileReceiver, user.getUuid());
+				}
+			}
+		}
+		// Check system type: CLIENT
+		else if( confInfo.getSystemType().equals("CLIENT") )
+		{
+			// Find group members matching the receiver name
+			List<CMUser> fileReceiverList = CMInteractionManager.findGroupMemberOfClient(strFileReceiver);
+
+			if( fileReceiverList == null || fileReceiverList.isEmpty() )
+			{
+				// If not a group member, the receiver is likely the server (no UUID)
+				bReturn = cancelPushFile(strFileReceiver, null);
+			}
+			else
+			{
+				// Cancel transfers for all matching member UUIDs in the group
+				for( CMUser user : fileReceiverList )
+				{
+					bReturn |= cancelPushFile(strFileReceiver, user.getUuid());
+				}
+			}
+		}
+		else
+		{
+			// System type error handling
+			System.err.println("CMFileTransferManager.cancelPushFile(), Unknown system type: "
+					+ confInfo.getSystemType());
+		}
+
+		return bReturn;
+	}
 	
-	public static boolean cancelPushFile(String strFileReceiver)
+	public static boolean cancelPushFile(String strFileReceiver, UUID fileReceiverUuid)
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.isFileTransferScheme())
-			bReturn = cancelPushFileWithSepChannel(strFileReceiver);
+			bReturn = cancelPushFileWithSepChannel(strFileReceiver, fileReceiverUuid);
 		else
-			bReturn = cancelPushFileWithDefChannel(strFileReceiver);
+			bReturn = cancelPushFileWithDefChannel(strFileReceiver, fileReceiverUuid);
 		
 		return bReturn;
 	}
@@ -4056,6 +4119,6 @@ public class CMFileTransferManager {
 	
 	private static void processERR_SEND_FILE_CHAN(CMFileEvent fe)
 	{
-		cancelPushFile(fe.getFileReceiver());
+		cancelPushFile(fe.getFileReceiver(), fe.getFileReceiverUuid());
 	}
 }

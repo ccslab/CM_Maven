@@ -636,7 +636,7 @@ public class CMSNSManager {
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
 							+ "to the user("+strUser+"), uuid("+se.getSenderUuid()+").");
-				CMFileTransferManager.cancelPushFile(strUser);	// not clear
+				CMFileTransferManager.cancelPushFile(strUser, se.getSenderUuid());
 			}
 			
 			// clear the prefetch list of the user

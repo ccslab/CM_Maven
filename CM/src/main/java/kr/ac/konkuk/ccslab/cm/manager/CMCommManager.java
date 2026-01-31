@@ -747,7 +747,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPushFile(target);
+				CMFileTransferManager.cancelPushFile(target, targetUuid);
 				return -1;
 			}
 
