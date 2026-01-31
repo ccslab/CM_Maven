@@ -1355,16 +1355,18 @@ public class CMFileTransferManager {
 				
 				// close the RandomAccessFile
 				sendList = fInfo.getSendFileList(iterFileReceiver, fileReceiverUuid);
-				iterSendList = sendList.iterator();
-				while(iterSendList.hasNext())
-				{
-					sInfo = iterSendList.next();
-					if(sInfo.getReadFile() != null)
+				if(sendList != null) {
+					iterSendList = sendList.iterator();
+					while(iterSendList.hasNext())
 					{
-						try {
-							sInfo.getReadFile().close();
-						} catch (IOException e) {
-							e.printStackTrace();
+						sInfo = iterSendList.next();
+						if(sInfo.getReadFile() != null)
+						{
+							try {
+								sInfo.getReadFile().close();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						}
 					}
 				}
