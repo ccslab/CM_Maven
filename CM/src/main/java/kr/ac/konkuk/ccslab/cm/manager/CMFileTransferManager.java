@@ -3766,7 +3766,7 @@ public class CMFileTransferManager {
 	private static boolean processCANCEL_FILE_RECV_CHAN(CMFileEvent fe)
 	{
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMList<CMSendFileInfo> sendList = null;
+		List<CMSendFileInfo> sendList = null;
 		CMSendFileInfo sInfo = null;
 		Future<CMSendFileInfo> sendTask = null;
 		CMFileEvent feAck = null;
@@ -3782,32 +3782,33 @@ public class CMFileTransferManager {
 		int nReturnCode = -1;
 		boolean bP2PFileTransfer = false;
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(), "
-					+"file sender("+fe.getFileSender()+"), file receiver("
-					+fe.getFileReceiver()+").");
+					+"file sender("+fe.getFileSender()+"), uuid("+fe.getFileSenderUuid()
+					+"), file receiver("+fe.getFileReceiver()+"), uuid("+fileReceiverUuid+").");
 		}
-		
-		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileSender().contentEquals(strMyName))
+
+		// check whether this CM node is the target node of this event or not
+		if(!fe.getFileSender().contentEquals(strMyName) || !Objects.equals(fe.getFileSenderUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file sender("
-						+fe.getFileSender()+").");
+				System.err.println("This node ("+strMyName+"), uuid("+myUuid
+						+") is not the file sender("+fe.getFileSender()+"), uuid("+fe.getFileSenderUuid()+").");
 			}
 			return false;
 		}
-		
+
 		// find the CMSendFile list of the strReceiver
 		sendList = fInfo.getSendFileList(strFileReceiver, fileReceiverUuid);
-		if(sendList == null)
+		if(sendList == null || sendList.isEmpty())
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); sending file list "
-					+ "not found for the receiver("+strFileReceiver+"), uuid("+fileReceiverUuid+")!");
+					+ "not found or empty for the receiver("+strFileReceiver+"), uuid("+fileReceiverUuid+")!");
 			return bForward;
 		}
 		
@@ -3829,7 +3830,8 @@ public class CMFileTransferManager {
 			sendTask.get(10L, TimeUnit.SECONDS);
 		} catch(CancellationException e) {
 			System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); the sending task cancelled.: "
-					+ "receiver("+strFileReceiver+"), file("+sInfo.getFileName()+"), file size("+sInfo.getFileSize()
+					+ "receiver("+strFileReceiver+"), uuid("+fileReceiverUuid
+					+"), file("+sInfo.getFileName()+"), file size("+sInfo.getFileSize()
 					+ "), sent size("+sInfo.getSentSize()+")");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -3854,7 +3856,9 @@ public class CMFileTransferManager {
 		feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.CANCEL_FILE_RECV_CHAN_ACK);
 		feAck.setFileSender(fe.getFileSender());
+		feAck.setFileSenderUuid(fe.getFileSenderUuid());
 		feAck.setFileReceiver(strFileReceiver);
+		feAck.setFileReceiverUuid(fileReceiverUuid);
 		feAck.setReturnCode(nReturnCode);
 		
 		bP2PFileTransfer = isP2PFileTransfer(feAck);
@@ -3866,16 +3870,13 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set the event sender and receiver
-			feAck.setSender(interInfo.getMyself().getName());
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			feAck.setReceiver(strDefServer);
-			
 			// set distribution fields
 			feAck.setDistributionSession("CM_ONE_USER");
 			feAck.setDistributionGroup(strFileReceiver);
-			
+			feAck.setDistributionUuid(fileReceiverUuid);
+
 			// send the event to the default server
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
@@ -3885,11 +3886,8 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set the event sender and receiver
-			feAck.setSender(interInfo.getMyself().getName());
-			feAck.setReceiver(strFileReceiver);
 			// send the event to the file receiver
-			CMEventManager.unicastEvent(feAck, strFileReceiver);
+			CMEventManager.unicastEvent(feAck, strFileReceiver, fileReceiverUuid);
 		}
 
 		//////////////////// the management of the closed default blocking socket channel
@@ -3899,12 +3897,12 @@ public class CMFileTransferManager {
 			if(bP2PFileTransfer)
 			{
 				// get the file receiver (client)
-				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(
-						strFileReceiver);
+				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strFileReceiver, fileReceiverUuid);
 				if(targetUser == null)
 				{
-					System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN()"
-							+"client file receiver("+strFileReceiver+") not found!");
+					System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); "
+							+ "client file receiver(" + strFileReceiver + ") with UUID(" + fileReceiverUuid
+							+ ") not found!");
 					return bForward;
 				}
 				blockSCInfo = targetUser.getBlockSocketChannelInfo();
@@ -3920,48 +3918,27 @@ public class CMFileTransferManager {
 					return bForward;
 				}
 				blockSCInfo = server.getBlockSocketChannelInfo();
-
-				/*
-				blockSCInfo = interInfo.getDefaultServerInfo().getBlockSocketChannelInfo();
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); # blocking socket channel: "
-							+ blockSCInfo.getSize());
-				}
-				// get the default blocking socket channel
-				defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0);	// default blocking channel
-				*/
-			}				
+			}
 		}
 		else	// server
 		{
 			// get the file receiver (login client)
-			CMUser receiver = interInfo.getLoginUsers().findMember(strFileReceiver);
+			CMUser receiver = interInfo.getLoginUsers().findMember(strFileReceiver, fileReceiverUuid);
 			if(receiver == null)
 			{
-				System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN()"
-						+"client file receiver("+strFileReceiver+") not found!");
+				System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); "
+						+ "client file receiver(" + strFileReceiver + ") with UUID(" + fileReceiverUuid
+						+ ") not found!");
 				return bForward;
 			}
 			blockSCInfo = receiver.getBlockSocketChannelInfo();
-			
-			/*
-			// get the default blocking socket channel
-			defaultBlockSC = (SocketChannel) sender.getBlockSocketChannelInfo().findChannel(0);
-
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); # blocking socket channel: "
-						+ blockSCInfo.getSize());
-			}
-			*/
 		}
 
 		if(blockSCInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(), "
-					+"block socket channel list not found for file receiver("
-					+strFileReceiver+")!");
+					+ "block socket channel list not found for file receiver(" + strFileReceiver
+					+ ") with UUID(" + fileReceiverUuid + ")!");
 			return bForward;
 		}
 		defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0); 
@@ -4016,10 +3993,11 @@ public class CMFileTransferManager {
 			{
 				CMSessionEvent se = new CMSessionEvent();
 				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-				se.setChannelName(interInfo.getMyself().getName());
+				se.setChannelName(strMyName);
+				se.setChannelUuid(myUuid);
 				se.setChannelNum(0);
-				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true);
-				se = null;
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0,
+						true);
 
 				if(bReturn)
 				{
@@ -4029,7 +4007,6 @@ public class CMFileTransferManager {
 								+ "to add the blocking socket channel with the key(0) to the server("
 								+serverInfo.getServerName()+")");
 					}
-					
 				}
 			}
 		}
