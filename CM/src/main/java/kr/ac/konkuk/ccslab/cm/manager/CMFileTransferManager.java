@@ -425,23 +425,25 @@ public class CMFileTransferManager {
 	}
 
 	// cancel the receiving file task with separate channels and threads
-	private static boolean cancelPullFileWithSepChannel(String strFileSender)
+	private static boolean cancelPullFileWithSepChannel(String strFileSender, UUID fileSenderUuid)
 	{
 		boolean bReturn = false;
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 
 		if(strFileSender != null)
 		{
-			bReturn = cancelPullFileWithSepChannelForOneSender(strFileSender);
+			bReturn = cancelPullFileWithSepChannelForOneSender(strFileSender, fileSenderUuid);
 		}
 		else // cancel file transfer to all senders
 		{
-			Set<String> keySet = fInfo.getRecvFileHashtable().keySet();
-			Iterator<String> iterKeys = keySet.iterator();
+			Set<CMUserLoginKey> keySet = fInfo.getRecvFileHashtable().keySet();
+			Iterator<CMUserLoginKey> iterKeys = keySet.iterator();
 			while(iterKeys.hasNext())
 			{
-				String iterSender = iterKeys.next();
-				bReturn = cancelPullFileWithSepChannelForOneSender(iterSender);
+				CMUserLoginKey iterKey = iterKeys.next();
+				String iterSender = iterKey.getUserName();
+				UUID iterUuid = iterKey.getUuid();
+				cancelPullFileWithSepChannelForOneSender(iterSender, iterUuid);
 			}
 			// clear the sending file hash table
 			bReturn = fInfo.clearRecvFileHashtable();
