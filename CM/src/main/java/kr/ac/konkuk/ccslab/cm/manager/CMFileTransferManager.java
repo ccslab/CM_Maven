@@ -1420,7 +1420,7 @@ public class CMFileTransferManager {
 
 		if(strFileReceiver != null)
 		{
-			bReturn = cancelPushFileWithSepChannelForOneReceiver(strFileReceiver);
+			bReturn = cancelPushFileWithSepChannelForOneReceiver(strFileReceiver, fileReceiverUuid);
 		}
 		else // cancel file transfer to all receivers
 		{
