@@ -453,10 +453,10 @@ public class CMFileTransferManager {
 	}
 
 	// cancel the receiving file task from one sender with a separate channel and thread
-	private static boolean cancelPullFileWithSepChannelForOneSender(String strFileSender)
+	private static boolean cancelPullFileWithSepChannelForOneSender(String strFileSender, UUID fileSenderUuid)
 	{
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMList<CMRecvFileInfo> recvList = null;
+		List<CMRecvFileInfo> recvList = null;
 		CMRecvFileInfo rInfo = null;
 		boolean bReturn = false;
 		Future<CMRecvFileInfo> recvTask = null;
@@ -468,21 +468,23 @@ public class CMFileTransferManager {
 		boolean bP2PFileTransfer = false;
 		
 		// find the CMRecvFile list of the strSender
-		recvList = fInfo.getRecvFileList(strFileSender);
-		if(recvList == null)
+		recvList = fInfo.getRecvFileList(strFileSender, fileSenderUuid);
+		if(recvList == null || recvList.isEmpty())
 		{
-			System.err.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
-					+ "receiving file list not found for the sender("+strFileSender+")!");
+			System.err.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneSender(); "
+					+ "receiving file list not found or empty for the sender("+strFileSender+"), uuid("
+					+fileSenderUuid+")!");
 			return false;
 		}
 		
 		// find the current receiving file task
-		rInfo = fInfo.findRecvFileInfoOngoing(strFileSender);
+		rInfo = fInfo.findRecvFileInfoOngoing(strFileSender, fileSenderUuid);
 		if(rInfo == null)
 		{
-			System.err.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
-					+ "ongoing receiving task not found for the sender("+strFileSender+")!");
-			bReturn = fInfo.removeRecvFileList(strFileSender);
+			System.err.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneSender(); "
+					+ "ongoing receiving task not found for the sender(" + strFileSender
+					+ ") with UUID(" + fileSenderUuid + ")!");
+			bReturn = fInfo.removeRecvFileList(strFileSender, fileSenderUuid);
 			return bReturn;
 		}
 		
@@ -493,9 +495,9 @@ public class CMFileTransferManager {
 		try {
 			recvTask.get(10L, TimeUnit.SECONDS);
 		} catch(CancellationException e) {
-			System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
+			System.out.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneSender(); "
 					+ "the receiving task cancelled.: "
-					+ "file sender("+strFileSender+"), file("+rInfo.getFileName()
+					+ "file sender("+strFileSender+"), uuid("+fileSenderUuid+"), file("+rInfo.getFileName()
 					+"), file size("+rInfo.getFileSize()+ "), recv size("
 					+rInfo.getRecvSize()+")");
 		} catch (InterruptedException e) {
@@ -507,36 +509,6 @@ public class CMFileTransferManager {
 		}
 		
 		/////////////////////// management of the closed default blocking socket channel
-		
-		/*
-		// get the default blocking socket channel
-		if(confInfo.getSystemType().equals("CLIENT"))
-		{
-			blockSCInfo = interInfo.getDefaultServerInfo().getBlockSocketChannelInfo();
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
-						+ "# blocking socket channel: "	+ blockSCInfo.getSize());
-			}
-			// get the default blocking socket channel
-			defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0);	// default blocking channel
-				
-		}
-		else	// server
-		{
-			CMUser receiver = interInfo.getLoginUsers().findMember(strSender);
-			blockSCInfo = receiver.getBlockSocketChannelInfo();
-			// get the default blocking socket channel
-			defaultBlockSC = (SocketChannel) receiver.getBlockSocketChannelInfo().findChannel(0);
-
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMFileTransferManager.cancelRequestFileWithSepChannelForOneSender(); "
-						+ "# blocking socket channel: "	+ blockSCInfo.getSize());
-			}
-
-		}
-		*/
 
 		CMServer targetServer = CMInteractionManager.findServer(strFileSender);
 		if(targetServer != null)
@@ -548,18 +520,17 @@ public class CMFileTransferManager {
 			CMUser targetUser = null;
 			if(confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileSender
-				);
+				targetUser = CMInteractionManager.findGroupMemberOfClient(strFileSender, fileSenderUuid);
 			}
 			else
 			{
-				targetUser = interInfo.getLoginUsers().findMember(strFileSender);
+				targetUser = interInfo.getLoginUsers().findMember(strFileSender, fileSenderUuid);
 			}
 			
 			if(targetUser == null)
 			{
-				System.err.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneReceiver(), "
-						+"target("+strFileSender+") not found!");
+				System.err.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneSender(), "
+						+ "target(" + strFileSender + ") with UUID(" + fileSenderUuid + ") not found!");
 				return false;
 			}
 			blockSCInfo = targetUser.getBlockSocketChannelInfo();
@@ -568,8 +539,8 @@ public class CMFileTransferManager {
 		defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0);
 		if(defaultBlockSC == null)
 		{
-			System.err.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneReceiver(), "
-					+"blocking sc of target("+strFileSender+") is null!");
+			System.err.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneSender(), "
+					+ "blocking sc of target(" + strFileSender + ") with UUID(" + fileSenderUuid + ") is null!");
 			return false;
 		}
 
@@ -602,7 +573,9 @@ public class CMFileTransferManager {
 		fe = new CMFileEvent();
 		fe.setID(CMFileEvent.CANCEL_FILE_RECV_CHAN);
 		fe.setFileSender(strFileSender);
+		fe.setFileSenderUuid(fileSenderUuid);
 		fe.setFileReceiver(interInfo.getMyself().getName());
+		fe.setFileReceiverUuid(interInfo.getMyself().getUuid());
 		
 		bP2PFileTransfer = isP2PFileTransfer(fe);
 		
@@ -613,16 +586,13 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneSender(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			fe.setSender(interInfo.getMyself().getName());
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			fe.setReceiver(strDefServer);
-			
 			// set distribution fields
 			fe.setDistributionSession("CM_ONE_USER");
 			fe.setDistributionGroup(strFileSender);
-			
+			fe.setDistributionUuid(fileSenderUuid);
+
 			// send the event to the default server
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			bReturn = CMEventManager.unicastEvent(fe, strDefServer);
 		}
 		else
@@ -632,11 +602,8 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.cancelPullFileWithSepChannelForOneSender(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			fe.setSender(interInfo.getMyself().getName());
-			fe.setReceiver(strFileSender);
 			// send the event to the file sender
-			bReturn = CMEventManager.unicastEvent(fe, strFileSender);
+			bReturn = CMEventManager.unicastEvent(fe, strFileSender, fileSenderUuid);
 		}
 		
 		if(!bReturn)
@@ -645,7 +612,7 @@ public class CMFileTransferManager {
 		}
 		
 		// remove the receiving file list of the sender
-		bReturn = fInfo.removeRecvFileList(strFileSender);
+		bReturn = fInfo.removeRecvFileList(strFileSender, fileSenderUuid);
 
 		// if the system type is client, it recreates the default blocking socket channel to the default server
 		if(confInfo.getSystemType().equals("CLIENT") && !bP2PFileTransfer)
@@ -673,9 +640,10 @@ public class CMFileTransferManager {
 				CMSessionEvent se = new CMSessionEvent();
 				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
 				se.setChannelName(interInfo.getMyself().getName());
+				se.setChannelUuid(interInfo.getMyself().getUuid());
 				se.setChannelNum(0);
-				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true);
-				se = null;
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0,
+						true);
 
 				if(bReturn)
 				{
