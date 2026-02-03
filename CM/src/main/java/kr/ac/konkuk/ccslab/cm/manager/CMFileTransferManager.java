@@ -3716,22 +3716,24 @@ public class CMFileTransferManager {
 	{
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN_ACK(), "
-					+ "file sender("+fe.getFileSender()+"), receiver("
-					+fe.getFileReceiver()+"), return code("+fe.getReturnCode()+").");
+					+ "file sender("+fe.getFileSender()+"), sender uuid("+fe.getFileSenderUuid()
+					+"), receiver("+fe.getFileReceiver()+"), receiver uuid("+fe.getFileReceiverUuid()
+					+"), return code("+fe.getReturnCode()+").");
 		}
 		
-		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileSender().contentEquals(strMyName))
+		// check whether this CM node is the target node of this event or not
+		if(!fe.getFileSender().equals(strMyName) || !Objects.equals(fe.getFileSenderUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file sender("
-						+fe.getFileSender()+").");
+				System.err.println("This node ("+strMyName+", "+myUuid+") is not the file sender("
+						+fe.getFileSender()+", "+fe.getFileSenderUuid()+").");
 			}
 			return false;
 		}
