@@ -673,7 +673,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMCommManager.measureInputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPullFile(target);
+				CMFileTransferManager.cancelPullFile(target, targetUuid);
 				return -1;
 			}
 

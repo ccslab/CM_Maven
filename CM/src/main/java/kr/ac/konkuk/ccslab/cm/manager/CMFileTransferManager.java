@@ -357,13 +357,65 @@ public class CMFileTransferManager {
 		
 		return bRet;
 	}
+
+	public static boolean cancelPullFile(String strFileSender) {
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMUser myself = interInfo.getMyself();
+		boolean bReturn = false;
+
+		if(!confInfo.isFileTransferScheme())
+		{
+			System.err.println("CMFileTransferManager.cancelPullFile(), default file transfer does not support " +
+					"canceling the pull-file service!");
+			return false;
+		}
+
+		if(confInfo.getSystemType().equals("SERVER"))
+		{
+			List<CMUser> fileSenderList = interInfo.getLoginUsers().findMemberList(strFileSender);
+			if(fileSenderList == null || fileSenderList.isEmpty())
+			{
+				bReturn = cancelPullFile(strFileSender, null);  // sender는 uuid 없는 다른 서버
+			}
+			else
+			{
+				for(CMUser user : fileSenderList)
+				{
+					bReturn |= cancelPullFile(strFileSender, user.getUuid());
+				}
+			}
+		}
+		else if(confInfo.getSystemType().equals("CLIENT"))
+		{
+			List<CMUser> fileSenderList = CMInteractionManager.findGroupMemberOfClient(strFileSender);
+			if(fileSenderList == null || fileSenderList.isEmpty())
+			{
+				bReturn = cancelPullFile(strFileSender, null);  // sender는 uuid 없는 서버
+			}
+			else
+			{
+				for(CMUser user : fileSenderList)
+				{
+					bReturn |= cancelPullFile(strFileSender, user.getUuid());
+				}
+			}
+		}
+		else
+		{
+			System.err.println("CMFileTransferManager.cancelPullFile(), unknown system type: "
+					+ confInfo.getSystemType());
+		}
+
+		return bReturn;
+	}
 		
-	public static boolean cancelPullFile(String strFileSender)
+	public static boolean cancelPullFile(String strFileSender, UUID fileSenderUuid)
 	{
 		boolean bReturn = false;
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.isFileTransferScheme())
-			bReturn = cancelPullFileWithSepChannel(strFileSender);
+			bReturn = cancelPullFileWithSepChannel(strFileSender, fileSenderUuid);
 		else
 		{
 			System.err.println("CMFileTransferManager.cancelRequestFile(); default file transfer does not support!");
@@ -4046,7 +4098,7 @@ public class CMFileTransferManager {
 	
 	private static void processERR_RECV_FILE_CHAN(CMFileEvent fe)
 	{
-		cancelPullFile(fe.getFileSender());
+		cancelPullFile(fe.getFileSender(), fe.getFileSenderUuid());
 	}
 	
 	private static void processERR_SEND_FILE_CHAN(CMFileEvent fe)
