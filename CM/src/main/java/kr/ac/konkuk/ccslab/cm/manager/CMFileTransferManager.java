@@ -3435,7 +3435,7 @@ public class CMFileTransferManager {
 	private static boolean processCANCEL_FILE_SEND_CHAN(CMFileEvent fe)
 	{
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMList<CMRecvFileInfo> recvList = null;
+		List<CMRecvFileInfo> recvList = null;
 		CMRecvFileInfo rInfo = null;
 		Future<CMRecvFileInfo> recvTask = null;
 		CMFileEvent feAck = null;
@@ -3451,32 +3451,33 @@ public class CMFileTransferManager {
 		boolean bException = false;
 		int nReturnCode = -1;
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bForward = true;
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(), "
-					+"file sender("+fe.getFileSender()+"), file receiver("
-					+fe.getFileReceiver()+").");
+					+"file sender("+fe.getFileSender()+"), sender uuid("+fe.getFileSenderUuid()
+					+"), file receiver("+fe.getFileReceiver()+"), receiver uuid("+fe.getFileReceiverUuid()+").");
 		}
 
-		// check whether this CM node is the target node of this event or not		
-		if(!fe.getFileReceiver().contentEquals(strMyName))
+		// check whether this CM node is the target node of this event or not
+		if(!fe.getFileReceiver().equals(strMyName) || !Objects.equals(fe.getFileReceiverUuid(), myUuid))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.err.println("This node ("+strMyName+") is not the file receiver("
-						+fe.getFileReceiver()+").");
+				System.err.println("This node ("+strMyName+", "+myUuid+") is not the file receiver("
+						+fe.getFileReceiver()+", "+fe.getFileReceiverUuid()+").");
 			}
 			return false;
 		}
 
 		// find the CMRecvFile list of the strSender
 		recvList = fInfo.getRecvFileList(strFileSender, fileSenderUuid);
-		if(recvList == null)
+		if(recvList == null || recvList.isEmpty())
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(); Receiving file list "
-					+ "not found for the sender("+strFileSender+")!");
+					+ "not found or empty for the sender("+strFileSender+"), uuid("+fileSenderUuid+")!");
 			//return bForward;
 		}
 		else
@@ -3529,7 +3530,9 @@ public class CMFileTransferManager {
 		feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.CANCEL_FILE_SEND_CHAN_ACK);
 		feAck.setFileSender(strFileSender);
+		feAck.setFileSenderUuid(fileSenderUuid);
 		feAck.setFileReceiver(fe.getFileReceiver());
+		feAck.setFileReceiverUuid(fe.getFileReceiverUuid());
 		feAck.setReturnCode(nReturnCode);
 		
 		bP2PFileTransfer = isP2PFileTransfer(feAck);
@@ -3541,16 +3544,13 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			feAck.setSender(interInfo.getMyself().getName());
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			feAck.setReceiver(strDefServer);
-			
 			// set distribution fields
 			feAck.setDistributionSession("CM_ONE_USER");
 			feAck.setDistributionGroup(strFileSender);
-			
+			feAck.setDistributionUuid(fileSenderUuid);
+
 			// send the event to the default server
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
@@ -3560,11 +3560,8 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			feAck.setSender(interInfo.getMyself().getName());
-			feAck.setReceiver(strFileSender);
 			// send the event to the file sender
-			CMEventManager.unicastEvent(feAck, strFileSender);
+			CMEventManager.unicastEvent(feAck, strFileSender, fileSenderUuid);
 		}
 
 		//////////////////// the management of the closed default blocking socket channel
@@ -3574,12 +3571,11 @@ public class CMFileTransferManager {
 			if(bP2PFileTransfer)
 			{
 				// get the file sender (client)
-				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(
-						strFileSender);
+				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strFileSender, fileSenderUuid);
 				if(targetUser == null)
 				{
-					System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN()"
-							+"client file sender("+strFileSender+") not found!");
+					System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(), "
+							+"client file sender("+strFileSender+"), uuid("+fileSenderUuid+") not found!");
 					//return bForward;
 				}
 				else
@@ -3603,8 +3599,7 @@ public class CMFileTransferManager {
 			else
 			{
 				// get the file sender (server)
-				CMServer server = CMInteractionManager.findServer(strFileSender
-				);
+				CMServer server = CMInteractionManager.findServer(strFileSender);
 				if(server == null)
 				{
 					System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN()"
@@ -3612,47 +3607,27 @@ public class CMFileTransferManager {
 					return bForward;
 				}
 				blockSCInfo = server.getBlockSocketChannelInfo();
-				/*
-				blockSCInfo = interInfo.getDefaultServerInfo().getBlockSocketChannelInfo();
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(); # blocking socket channel: "
-							+ blockSCInfo.getSize());
-				}
-				// get the default blocking socket channel
-				defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0);	// default blocking channel
-				*/
 			}
 				
 		}
 		else	// server
 		{
 			// get the file sender (login client)
-			CMUser sender = interInfo.getLoginUsers().findMember(strFileSender);
+			CMUser sender = interInfo.getLoginUsers().findMember(strFileSender, fileSenderUuid);
 			if(sender == null)
 			{
-				System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN()"
-						+"client file sender("+strFileSender+") not found!");
+				System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(), "
+						+"client file sender("+strFileSender+"), uuid("+fileSenderUuid+") not found!");
 				return bForward;
 			}
 			blockSCInfo = sender.getBlockSocketChannelInfo();
-
-			/*
-			defaultBlockSC = (SocketChannel) sender.getBlockSocketChannelInfo().findChannel(0);
-
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(); # blocking socket channel: "
-						+ blockSCInfo.getSize());
-			}
-			*/
 		}
 
 		if(blockSCInfo == null)
 		{
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_SEND_CHAN(), "
 					+"block socket channel list not found for file sender("
-					+strFileSender+")!");
+					+strFileSender+"), uuid("+fileSenderUuid+")!");
 			return bForward;
 		}
 		defaultBlockSC = (SocketChannel) blockSCInfo.findChannel(0); 
@@ -3713,10 +3688,11 @@ public class CMFileTransferManager {
 			{
 				CMSessionEvent se = new CMSessionEvent();
 				se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-				se.setChannelName(interInfo.getMyself().getName());
+				se.setChannelName(strMyName);
+				se.setChannelUuid(myUuid);
 				se.setChannelNum(0);
-				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true);
-				se = null;
+				bReturn = CMEventManager.unicastEvent(se, serverInfo.getServerName(), CMInfo.CM_STREAM, 0,
+						true);
 
 				if(bReturn)
 				{
