@@ -3809,7 +3809,7 @@ public class CMWinClient extends JFrame {
 			if(targetUuid == null) return;
 		}
 
-		speed = m_clientStub.measureOutputThroughput(strTarget);
+		speed = m_clientStub.measureOutputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			printMessage("Test failed!\n");
 		else

@@ -2436,93 +2436,50 @@ public class CMStub {
 	// measure synchronously the end-to-end input throughput from the target node to this node
 	/**
 	 * measures the incoming network throughput from a CM node.
-	 * 
-	 * <p> A CM application can measure the incoming/outgoing network throughput from/to another CM application 
+	 * * <p> A CM application can measure the incoming/outgoing network throughput from/to another CM application
 	 * (server or client).
-	 * The incoming network throughput of a CM node A from B measures how many bytes A can receive from B in a second. 
+	 * The incoming network throughput of a CM node A from B measures how many bytes A can receive from B in a second.
 	 * The outgoing network throughput of a CM node A to B measures how many bytes A can send to B.
-	 * 
-	 * @param strTarget - the target CM node
+	 * * @param strTarget - the target CM node
 	 * <br> The target CM node should be directly connected to the calling node.
-	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
+	 * @param targetUuid - the UUID of the target CM node.
+	 * <br> If the target is the default server, it can be null.
+	 * <br> If the target is a client and it has multiple login instances, a specific UUID must be provided.
+	 * <br> If the target is a client and it has a single login instance, it can be null or the specific UUID.
+	 * @return the network throughput value by the unit of Megabytes per second (MBps)
 	 * if successfully measured, or -1 otherwise.
-	 * @see CMStub#measureOutputThroughput(String)
+	 * @see CMStub#measureOutputThroughput(String, UUID)
 	 */
-	public double measureInputThroughput(String strTarget) {
+	public double measureInputThroughput(String strTarget, UUID targetUuid) {
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureInputThroughput() called..");
-			System.out.println("strTarget = " + strTarget);
+			System.out.println("strTarget = " + strTarget + ", targetUuid = " + targetUuid);
 		}
 
-		// [Modified] Find the UUID list of the target
-		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
-
-		// [Modified] Check if the target exists
-		UUID targetUuid = null;
-		if(uuidList == null) {
-			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
-		} else {
-			// Case 2: Target is a Client
-			if(uuidList.isEmpty()) {
-				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget + ") not found!");
-				return -1;
-			}
-			// [Modified] Check if the target has multiple logins
-			if(uuidList.size() > 1) {
-				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget +
-						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
-				return -1;
-			}
-
-			// [Modified] Get the target UUID (0-th member)
-			targetUuid = uuidList.get(0);
-		}
-
+		// [Modified] Directly call CMCommManager with the provided target name and UUID
 		double speed = CMCommManager.measureInputThroughput(strTarget, targetUuid);
 		return speed;
 	}
-	
+
 	/**
 	 * measures the outgoing network throughput to a CM node.
-	 * 
-	 * @param strTarget - the target CM node
-	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
+	 * * @param strTarget - the target CM node
+	 * @param targetUuid - the UUID of the target CM node.
+	 * <br> If the target is the default server, it can be null.
+	 * @return the network throughput value by the unit of Megabytes per second (MBps)
 	 * if successfully measured, or -1 otherwise.
-	 * @see CMStub#measureInputThroughput(String)
+	 * @see CMStub#measureInputThroughput(String, UUID)
 	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
-	public double measureOutputThroughput(String strTarget) {
+	public double measureOutputThroughput(String strTarget, UUID targetUuid) {
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureOutputThroughput() called..");
-			System.out.println("strTarget = " + strTarget);
+			System.out.println("strTarget = " + strTarget + ", targetUuid = " + targetUuid);
 		}
 
-		// [Modified] Find the UUID list of the target
-		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
-
-		// [Modified] Check if the target exists
-		UUID targetUuid = null;
-		if(uuidList == null) {
-			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
-		} else {
-			// Case 2: Target is a Client
-			if(uuidList.isEmpty()) {
-				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget + ") not found!");
-				return -1;
-			}
-			// [Modified] Check if the target has multiple logins
-			if(uuidList.size() > 1) {
-				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget +
-						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
-				return -1;
-			}
-
-			// [Modified] Get the target UUID (0-th member)
-			targetUuid = uuidList.get(0);
-		}
-
+		// [Modified] Directly call CMCommManager with the provided target name and UUID
 		double speed = CMCommManager.measureOutputThroughput(strTarget, targetUuid);
 		return speed;
 	}
