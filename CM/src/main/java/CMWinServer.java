@@ -30,9 +30,11 @@ import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
+import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 public class CMWinServer extends JFrame {
 
@@ -1187,6 +1189,7 @@ public class CMWinServer extends JFrame {
 	public void measureInputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		printMessage("========== test input network throughput\n");
 		
@@ -1194,16 +1197,48 @@ public class CMWinServer extends JFrame {
 		if(strTarget == null || strTarget.equals("")) 
 			return;
 
-		speed = m_serverStub.measureInputThroughput(strTarget);
+		// [Modified] Check for multiple login instances of the target user
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] Multi-login case: prompt user to select a specific UUID
+			Object[] possibilities = uuidList.toArray();
+			targetUuid = (UUID) JOptionPane.showInputDialog(
+					null,
+					"Select target device (UUID):",
+					"Multiple Devices Found",
+					JOptionPane.QUESTION_MESSAGE,
+					null,
+					possibilities,
+					possibilities[0]);
+
+			if(targetUuid == null) return; // User cancelled the selection
+		}
+
+		speed = m_serverStub.measureInputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			printMessage("Test failed!\n");
 		else
-			printMessage(String.format("Input network throughput from [%s] : %.2f MBps%n", strTarget, speed));
+		{
+			// [Modified] Use CMUUIDConverter for consistent string representation in logs
+			String strUuid = CMUUIDConverter.uuidToString(targetUuid);
+			printMessage(String.format("Input network throughput from [%s] (UUID: %s) : %.2f MBps%n",
+					strTarget, strUuid, speed));
+		}
 	}
 	
 	public void measureOutputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		printMessage("========== test output network throughput\n");
 		
@@ -1211,11 +1246,42 @@ public class CMWinServer extends JFrame {
 		if(strTarget == null || strTarget.equals("")) 
 			return;
 
-		speed = m_serverStub.measureOutputThroughput(strTarget);
+		// [Modified] Handle multi-device environment via CMInteractionManager
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] UI interaction for choosing one from multiple UUIDs
+			Object[] possibilities = uuidList.toArray();
+			targetUuid = (UUID) JOptionPane.showInputDialog(
+					null,
+					"Select target device (UUID):",
+					"Multiple Devices Found",
+					JOptionPane.QUESTION_MESSAGE,
+					null,
+					possibilities,
+					possibilities[0]);
+
+			if(targetUuid == null) return;
+		}
+
+		speed = m_serverStub.measureOutputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			printMessage("Test failed!\n");
 		else
-			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, speed));
+		{
+			// [Modified] Use CMUUIDConverter for standardized output
+			String strUuid = CMUUIDConverter.uuidToString(targetUuid);
+			printMessage(String.format("Output network throughput to [%s] (UUID: %s) : %.2f MBps%n",
+					strTarget, strUuid, speed));
+		}
 	}
 	
 	public void addChannel()
