@@ -10,10 +10,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.info.*;
-import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
+import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
@@ -884,29 +881,89 @@ public class CMServerApp {
 	public void measureInputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		System.out.println("========== test input network throughput");
 		System.out.print("target user: ");
 		strTarget = m_scan.next();
-		speed = m_serverStub.measureInputThroughput(strTarget);
+
+		// [Modified] Retrieve the list of UUIDs for the target user name
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			// No active login found for the target name
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			// Single device login, select the only UUID
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] Multi-login case: prompt for a specific target device
+			System.out.println("Target user [" + strTarget + "] has multiple login instances:");
+			for(int i = 0; i < uuidList.size(); i++)
+			{
+				System.out.println(i + ": " + uuidList.get(i));
+			}
+			System.out.print("Select UUID index (0-" + (uuidList.size()-1) + "): ");
+			int nIndex = m_scan.nextInt();
+			if(nIndex >= 0 && nIndex < uuidList.size())
+				targetUuid = uuidList.get(nIndex);
+			else
+				targetUuid = uuidList.get(0);
+		}
+
+		speed = m_serverStub.measureInputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			System.err.println("Test failed!");
 		else
-			System.out.format("Input network throughput from [%s] : %.2f%n", strTarget, speed);
+			System.out.format("Input network throughput from [%s] (UUID: %s) : %.2f%n",
+					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
 	}
 	
 	public void measureOutputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		System.out.println("========== test output network throughput");
 		System.out.print("target user: ");
 		strTarget = m_scan.next();
-		speed = m_serverStub.measureOutputThroughput(strTarget);
+
+		// [Modified] Check multi-login status via CMInteractionManager
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] Display options when multiple devices are associated with the user name
+			System.out.println("Target user [" + strTarget + "] has multiple login instances:");
+			for(int i = 0; i < uuidList.size(); i++)
+			{
+				System.out.println(i + ": " + uuidList.get(i));
+			}
+			System.out.print("Select UUID index: ");
+			int nIndex = m_scan.nextInt();
+			if(nIndex >= 0 && nIndex < uuidList.size())
+				targetUuid = uuidList.get(nIndex);
+			else
+				targetUuid = uuidList.get(0);
+		}
+
+		speed = m_serverStub.measureOutputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			System.err.println("Test failed!");
 		else
-			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, speed);
+			System.out.format("Output network throughput to [%s] (UUID: %s) : %.2f%n",
+					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
 	}
 	
 	public void addChannel()

@@ -2993,29 +2993,89 @@ public class CMClientApp {
 	public void testMeasureInputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		System.out.println("========== test input network throughput");
 		System.out.print("target node (\"SERVER\" for the default server): ");
 		strTarget = m_scan.next();
-		speed = m_clientStub.measureInputThroughput(strTarget);
+
+		// [Modified] Check UUID list for the target to support multi-login
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			// If no UUID list is found, proceed with null UUID (default behavior)
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			// If only one device is logged in, use its UUID
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] If multiple devices are logged in, let the user choose one
+			System.out.println("Multiple devices found for target [" + strTarget + "]:");
+			for(int i = 0; i < uuidList.size(); i++)
+			{
+				System.out.println(i + ": " + uuidList.get(i));
+			}
+			System.out.print("Select UUID index (0-" + (uuidList.size()-1) + "): ");
+			int nIndex = m_scan.nextInt();
+			if(nIndex >= 0 && nIndex < uuidList.size())
+				targetUuid = uuidList.get(nIndex);
+			else
+				targetUuid = uuidList.get(0); // Default to first device if input is invalid
+		}
+
+		speed = m_clientStub.measureInputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			System.err.println("Test failed!");
 		else
-			System.out.format("Input network throughput from [%s] : %.2f%n", strTarget, speed);
+			System.out.format("Input network throughput from [%s] (UUID: %s) : %.2f%n",
+					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
 	}
 	
 	public void testMeasureOutputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		System.out.println("========== test output network throughput");
 		System.out.print("target node (\"SERVER\" for the default server): ");
 		strTarget = m_scan.next();
-		speed = m_clientStub.measureOutputThroughput(strTarget);
+
+		// [Modified] Retrieve available UUIDs for the target node
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] User interaction required for multiple login instances
+			System.out.println("Multiple devices found for target [" + strTarget + "]:");
+			for(int i = 0; i < uuidList.size(); i++)
+			{
+				System.out.println(i + ": " + uuidList.get(i));
+			}
+			System.out.print("Select UUID index: ");
+			int nIndex = m_scan.nextInt();
+			if(nIndex >= 0 && nIndex < uuidList.size())
+				targetUuid = uuidList.get(nIndex);
+			else
+				targetUuid = uuidList.get(0);
+		}
+
+		speed = m_clientStub.measureOutputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			System.err.println("Test failed!");
 		else
-			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, speed);
+			System.out.format("Output network throughput to [%s] (UUID: %s) : %.2f%n",
+					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
 	}
 
 	public void testPrintCurrentChannelInfo()
