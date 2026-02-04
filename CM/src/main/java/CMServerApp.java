@@ -13,6 +13,7 @@ import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 import java.awt.*;
 import java.io.*;
@@ -920,7 +921,7 @@ public class CMServerApp {
 			System.err.println("Test failed!");
 		else
 			System.out.format("Input network throughput from [%s] (UUID: %s) : %.2f%n",
-					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
+					strTarget, CMUUIDConverter.uuidToString(targetUuid), speed);
 	}
 	
 	public void measureOutputThroughput()
@@ -963,7 +964,7 @@ public class CMServerApp {
 			System.err.println("Test failed!");
 		else
 			System.out.format("Output network throughput to [%s] (UUID: %s) : %.2f%n",
-					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
+					strTarget, CMUUIDConverter.uuidToString(targetUuid), speed);
 	}
 	
 	public void addChannel()

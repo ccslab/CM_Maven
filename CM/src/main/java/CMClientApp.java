@@ -36,6 +36,7 @@ import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 
 public class CMClientApp {
@@ -3032,7 +3033,7 @@ public class CMClientApp {
 			System.err.println("Test failed!");
 		else
 			System.out.format("Input network throughput from [%s] (UUID: %s) : %.2f%n",
-					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
+					strTarget, CMUUIDConverter.uuidToString(targetUuid), speed);
 	}
 	
 	public void testMeasureOutputThroughput()
@@ -3075,7 +3076,7 @@ public class CMClientApp {
 			System.err.println("Test failed!");
 		else
 			System.out.format("Output network throughput to [%s] (UUID: %s) : %.2f%n",
-					strTarget, (targetUuid == null ? "N/A" : targetUuid.toString()), speed);
+					strTarget, CMUUIDConverter.uuidToString(targetUuid), speed);
 	}
 
 	public void testPrintCurrentChannelInfo()
