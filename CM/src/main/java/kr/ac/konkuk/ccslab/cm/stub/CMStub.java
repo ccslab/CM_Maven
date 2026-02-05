@@ -1388,6 +1388,7 @@ public class CMStub {
 	 * @param strReceiver - the target name
 	 * <br> The target node can be a server or a client. If the target is a client, the event and its 
 	 * reply event are delivered through the default server.
+	 * @param receiverUuid - the UUID of the target receiver device (Added for multi-device support)
 	 * @param nWaitEventType - the waited event type of the reply event from 'strReceiver'
 	 * @param nWaitEventID - the waited event ID of the reply event from 'strReceiver'
 	 * @param nTimeout - the maximum time to wait in milliseconds.
@@ -1396,37 +1397,12 @@ public class CMStub {
 	 * @return a reply CM event if it is successfully received, or null otherwise.
 	 * @see CMStub#castrecv(CMEvent, String, String, int, int, int, int)
 	 */
-	public CMEvent sendrecv(CMEvent cme, String strReceiver, int nWaitEventType, int nWaitEventID, 
+	public CMEvent sendrecv(CMEvent cme, String strReceiver, UUID receiverUuid, int nWaitEventType, int nWaitEventID,
 			int nTimeout)
 	{
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.sendrecv() called..");
-			System.out.println("receiver = " + strReceiver);
-		}
-
-		// [Modified] Find the UUID list of the receiver
-		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
-		UUID receiverUuid = null;
-
-		// [Modified] Check valid target (Server or Single Login Client)
-		if(uuidList == null) {
-			// Case 1: Target is a Server (uuidList is null) -> Proceed with receiverUuid = null
-		}
-		else {
-			// Case 2: Target is a Client
-			if(uuidList.isEmpty()) {
-				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver + ") not found!");
-				return null;
-			}
-
-			if(uuidList.size() > 1) {
-				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver +
-						") has multiple active logins! The sendrecv service is not supported for multiple logins.");
-				return null;
-			}
-
-			// Single login found
-			receiverUuid = uuidList.get(0);
+			System.out.println("receiver = " + strReceiver + ", uuid = " + receiverUuid);
 		}
 
 		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
