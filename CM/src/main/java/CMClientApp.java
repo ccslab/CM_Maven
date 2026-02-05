@@ -969,6 +969,8 @@ public class CMClientApp {
 		CMUserEvent ue = new CMUserEvent();
 		CMUserEvent rue = null;
 		String strTargetName = null;
+		List<UUID> uuidList = null;
+		UUID targetUuid = null;
 		
 		// a user event: (id, 111) (string id, "testSendRecv")
 		// a reply user event: (id, 222) (string id, "testReplySendRecv")
@@ -987,18 +989,58 @@ public class CMClientApp {
 
 		try {
 			strTargetName = br.readLine().trim();
+			if(strTargetName.isEmpty())
+			{
+				strTargetName = m_clientStub.getDefaultServerName();
+			}
+
+			// [Modified] Get UUID list for the target name
+			uuidList = CMInteractionManager.findUuidList(strTargetName);
+
+			if(uuidList != null && !uuidList.isEmpty())
+			{
+				if(uuidList.size() == 1)
+				{
+					// Only one login found
+					targetUuid = uuidList.get(0);
+				}
+				else
+				{
+					// Multiple logins found: Select via index
+					System.out.println("Multiple devices found for [" + strTargetName + "]:");
+					for(int i = 0; i < uuidList.size(); i++) {
+						System.out.println(i + ": " + uuidList.get(i));
+					}
+					System.out.print("Select index (default 0): ");
+					String strIndex = br.readLine().trim();
+					if(strIndex.isEmpty()) {
+						targetUuid = uuidList.get(0);
+					} else {
+						try {
+							int nIndex = Integer.parseInt(strIndex);
+							if(nIndex >= 0 && nIndex < uuidList.size()) {
+								targetUuid = uuidList.get(nIndex);
+							} else {
+								targetUuid = uuidList.get(0);
+							}
+						} catch (NumberFormatException e) {
+							targetUuid = uuidList.get(0);
+						}
+					}
+				}
+			}
+			// If uuidList is null (e.g. Server), targetUuid remains null
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
-		
-		if(strTargetName.isEmpty())
-		{
-			strTargetName = m_clientStub.getDefaultServerName();
-		}
-		
+
+		// [Modified] Include targetUuid in debug message
+		System.out.println("Target name: " + strTargetName + ", target uuid: " + targetUuid);
+
 		long lStartTime = System.currentTimeMillis();
-		rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, 10000);
+		rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, targetUuid, CMInfo.CM_USER_EVENT,
+				222, 10000);
 		long lServerResponseDelay = System.currentTimeMillis() - lStartTime;
 
 		if(rue == null)
