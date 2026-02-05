@@ -2590,6 +2590,8 @@ public class CMClientApp {
 		int nMode = -1; // 1: push, 2: pull
 		int nFileNum = -1;
 		String strTarget = null;
+		UUID targetUuid = null;
+
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("====== pull/push multiple files");
 		try {
@@ -2609,6 +2611,32 @@ public class CMClientApp {
 			{
 				System.out.println("Incorrect transmission mode!");
 				return;
+			}
+
+			// [Modified] UUID selection logic using findUuidList() and Singleton CMInteractionInfo
+			List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+
+			if(uuidList != null && !uuidList.isEmpty())
+			{
+				if(uuidList.size() > 1)
+				{
+					System.out.println("Target user \"" + strTarget + "\" has multiple devices.");
+					for(int i = 0; i < uuidList.size(); i++) {
+						System.out.println(i + ": " + uuidList.get(i));
+					}
+					System.out.print("Select device index (0-" + (uuidList.size()-1) + "): ");
+					int nIndex = Integer.parseInt(br.readLine());
+					if(nIndex >= 0 && nIndex < uuidList.size()) {
+						targetUuid = uuidList.get(nIndex);
+					} else {
+						System.out.println("Invalid index! Operation cancelled.");
+						return;
+					}
+				}
+				else
+				{
+					targetUuid = uuidList.get(0);
+				}
 			}
 
 			System.out.print("Number of files: ");
@@ -2637,15 +2665,14 @@ public class CMClientApp {
 			switch(nMode)
 			{
 			case 1: // push
-				CMFileTransferManager.pushFile(strFiles[i], strTarget);
+				CMFileTransferManager.pushFile(strFiles[i], strTarget, targetUuid);
 				break;
 			case 2: // pull
-				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget);
+				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget, targetUuid,
+						CMInfo.FILE_DEFAULT, -1);
 				break;
 			}
 		}
-		
-		return;
 	}
 	
 	public void testSplitFile()
