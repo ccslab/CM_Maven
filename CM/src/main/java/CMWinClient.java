@@ -3311,7 +3311,8 @@ public class CMWinClient extends JFrame {
 		int nMode = -1; // 1: push, 2: pull
 		int nFileNum = -1;
 		String strTarget = null;
-		
+		UUID targetUuid = null;
+
 		printMessage("====== pull/push multiple files\n");
 		
 		String[] modes = {"Push", "Pull"};
@@ -3329,6 +3330,28 @@ public class CMWinClient extends JFrame {
 		if(option != JOptionPane.OK_OPTION) return;
 		nMode = modeBox.getSelectedIndex();
 		strTarget = targetField.getText();
+
+		// [Modified] UUID selection logic using findUuidList()
+		// According to the requirement, use the singleton pattern for info objects
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() > 1)
+			{
+				// [Recommendation] Let the user select a specific device among multiple logins
+				targetUuid = (UUID) JOptionPane.showInputDialog(null,
+						strTarget + " has multiple devices. Select one:", "Select UUID",
+						JOptionPane.QUESTION_MESSAGE, null, uuidList.toArray(), uuidList.get(0));
+
+				if(targetUuid == null) return; // Cancelled by user
+			}
+			else
+			{
+				// Only one device found, use it as default
+				targetUuid = uuidList.get(0);
+			}
+		}
+
 		try{
 			nFileNum = Integer.parseInt(fileNumField.getText());
 		}catch(NumberFormatException e){
@@ -3350,10 +3373,11 @@ public class CMWinClient extends JFrame {
 			switch(nMode)
 			{
 			case 0: // push
-				CMFileTransferManager.pushFile(strFiles[i], strTarget);
+				CMFileTransferManager.pushFile(strFiles[i], strTarget, targetUuid);
 				break;
 			case 1: // pull
-				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget);
+				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget, targetUuid,
+						CMInfo.FILE_DEFAULT, -1);
 				break;
 			}
 		}
