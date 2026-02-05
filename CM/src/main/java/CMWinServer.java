@@ -16,15 +16,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
-import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
-import kr.ac.konkuk.ccslab.cm.entity.CMMember;
-import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
-import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMServer;
-import kr.ac.konkuk.ccslab.cm.entity.CMSession;
-import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.entity.*;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.info.*;
@@ -835,23 +827,31 @@ public class CMWinServer extends JFrame {
 	public void printSendRecvFileInfo()
 	{
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
-		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
-		Set<String> sendKeySet = sendHashtable.keySet();
-		Set<String> recvKeySet = recvHashtable.keySet();
-		
+		// [Modification]: The key type of file transfer hashtables has been changed
+		// from String to CMUserLoginKey to support multi-device login.
+		Hashtable<CMUserLoginKey, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
+		Hashtable<CMUserLoginKey, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
+
+		// [Modification]: Key set type changed to CMUserLoginKey.
+		Set<CMUserLoginKey> sendKeySet = sendHashtable.keySet();
+		Set<CMUserLoginKey> recvKeySet = recvHashtable.keySet();
+
 		printMessage("==== sending file info\n");
-		for(String receiver : sendKeySet)
+		for(CMUserLoginKey receiverKey : sendKeySet)
 		{
-			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiver);
-			printMessage(sendList+"\n");
+			// [Modification]: Use receiverKey (CMUserLoginKey) to get the list.
+			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiverKey);
+			printMessage("Receiver: " + receiverKey + "\n");
+			printMessage(sendList + "\n");
 		}
 
 		printMessage("==== receiving file info\n");
-		for(String sender : recvKeySet)
+		for(CMUserLoginKey senderKey : recvKeySet)
 		{
-			CMList<CMRecvFileInfo> recvList = recvHashtable.get(sender);
-			printMessage(recvList+"\n");
+			// [Modification]: Use senderKey (CMUserLoginKey) to get the list.
+			CMList<CMRecvFileInfo> recvList = recvHashtable.get(senderKey);
+			printMessage("Sender: " + senderKey + "\n");
+			printMessage(recvList + "\n");
 		}
 	}
 
