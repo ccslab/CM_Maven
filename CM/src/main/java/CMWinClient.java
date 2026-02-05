@@ -1644,6 +1644,8 @@ public class CMWinClient extends JFrame {
 		CMUserEvent rue = null;
 		String strTargetName = null;
 		int nTimeout = 10000;
+		List<UUID> uuidList = null;
+		UUID targetUuid = null;
 		
 		// a user event: (id, 111) (string id, "testSendRecv")
 		// a reply user event: (id, 222) (string id, "testReplySendRecv")
@@ -1667,11 +1669,36 @@ public class CMWinClient extends JFrame {
 			strTargetName = targetNameTextField.getText().trim();
 			if(strTargetName.isEmpty())
 				strTargetName = m_clientStub.getDefaultServerName();
-			printMessage("Target name: "+strTargetName+"\n");
+
+			// [Modified] Routine to select a UUID from the uuid list
+			uuidList = CMInteractionManager.findUuidList(strTargetName);
+			if(uuidList != null && !uuidList.isEmpty())
+			{
+				if(uuidList.size() == 1)
+				{
+					// Case 1: Only one login found
+					targetUuid = uuidList.get(0);
+				}
+				else
+				{
+					// Case 2: Multiple logins found (added index selection logic)
+					targetUuid = (UUID) JOptionPane.showInputDialog(null,
+							"Select target device UUID:", "Multiple Devices Found",
+							JOptionPane.QUESTION_MESSAGE, null,
+							uuidList.toArray(), uuidList.get(0));
+
+					if(targetUuid == null) return; // User cancelled the selection
+				}
+			}
+			// If uuidList is null (e.g., target is a server), targetUuid remains null
+
+			// [Modified] Include targetUuid in the debug message
+			printMessage("Target name: "+strTargetName+", target uuid: "+targetUuid+"\n");
 			printMessage("Waiting timeout: "+nTimeout+" ms\n");
 
 			long lStartTime = System.currentTimeMillis();
-			rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, nTimeout);
+			rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, targetUuid, CMInfo.CM_USER_EVENT,
+					222, nTimeout);
 			long lServerResponseDelay = System.currentTimeMillis() - lStartTime;
 
 			if(rue == null)
