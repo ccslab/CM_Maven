@@ -2883,7 +2883,7 @@ public class CMClientApp {
 			
 			m_clientStub.send(fe, strAddServer);
 			
-			CMFileTransferManager.pushFile(strPieceName, strAddServer);
+			CMFileTransferManager.pushFile(strPieceName, strAddServer, null);
 		}
 		// for the last piece
 		if( i == 0 )
@@ -2904,8 +2904,7 @@ public class CMClientApp {
 		fe.setFileReceiver(m_clientStub.getDefaultServerName());
 		m_clientStub.send(fe, m_clientStub.getDefaultServerName());
 		
-		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName()
-        );
+		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName(), null);
 		
 		try {
 			raf.close();
