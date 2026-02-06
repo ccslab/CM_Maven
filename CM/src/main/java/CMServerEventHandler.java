@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -381,7 +382,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 			String strFile = fe.getFileName();
 			if(m_bDistFileProc)
 			{
-				processFile(fe.getFileSender(), strFile);
+				processFile(fe.getFileSender(), fe.getFileSenderUuid(), strFile);
 				m_bDistFileProc = false;
 			}
 			break;
@@ -400,7 +401,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		return;
 	}
 	
-	private void processFile(String strSender, String strFile)
+	private void processFile(String strFileSender, UUID fileSenderUuid, String strFile)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strFullSrcFilePath = null;
@@ -413,11 +414,11 @@ public class CMServerEventHandler implements CMAppEventHandler {
 
 		// change the modified file name
 		strModifiedFile = "m-"+strFile;
-		strModifiedFile = confInfo.getTransferedFileHome().toString()+File.separator+strSender+
+		strModifiedFile = confInfo.getTransferedFileHome().toString()+File.separator+strFileSender+
 				File.separator+strModifiedFile;
 
 		// stylize the file
-		strFullSrcFilePath = confInfo.getTransferedFileHome().toString()+File.separator+strSender+
+		strFullSrcFilePath = confInfo.getTransferedFileHome().toString()+File.separator+strFileSender+
 				File.separator+strFile;
 		File srcFile = new File(strFullSrcFilePath);
 		long lFileSize = srcFile.length();
@@ -472,9 +473,7 @@ public class CMServerEventHandler implements CMAppEventHandler {
 		System.out.println("processing delay: "+(lEndTime-lStartTime)+" ms");
 
 		// send the modified file to the sender
-		CMFileTransferManager.pushFile(strModifiedFile, strSender);
-
-		return;
+		CMFileTransferManager.pushFile(strModifiedFile, strFileSender, fileSenderUuid);
 	}
 	
 	private void processSNSEvent(CMEvent cme)
