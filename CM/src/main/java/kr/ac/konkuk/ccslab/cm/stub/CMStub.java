@@ -1670,7 +1670,7 @@ public class CMStub {
 	 * @return an array of reply CM events if the minimum number (nMinNumWaitedEvents) of reply events are 
 	 * successfully received, or null otherwise.
 	 * <br> The size of the array can be greater than 'nMinNumWaitedEvents'.
-	 * @see CMStub#sendrecv(CMEvent, String, int, int, int)
+	 * @see CMStub#sendrecv(CMEvent, String, UUID, int, int, int)
 	 */
 	public CMEvent[] castrecv(CMEvent event, String strSessionName, String strGroupName, 
 			int nWaitedEventType, int nWaitedEventID, int nMinNumWaitedEvents, int nTimeout)
