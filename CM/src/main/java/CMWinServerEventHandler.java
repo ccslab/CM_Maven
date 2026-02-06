@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -483,7 +484,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			String strFile = fe.getFileName();
 			if(m_bDistFileProc)
 			{
-				processFile(fe.getFileSender(), strFile);
+				processFile(fe.getFileSender(), fe.getFileSenderUuid(), strFile);
 				m_bDistFileProc = false;
 			}
 			
@@ -565,7 +566,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		return;
 	}
 	
-	private void processFile(String strSender, String strFile)
+	private void processFile(String strFileSender, UUID fileSenderUuid, String strFile)
 	{
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strFullSrcFilePath = null;
@@ -578,11 +579,12 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 
 		// change the modified file name
 		strModifiedFile = "m-"+strFile;
-		strModifiedFile = confInfo.getTransferedFileHome().toString()+File.separator+strSender+
+		strModifiedFile = confInfo.getTransferedFileHome().toString()+File.separator+strFileSender+
 				File.separator+strModifiedFile;
 
 		// stylize the file
-		strFullSrcFilePath = confInfo.getTransferedFileHome().toString()+File.separator+strSender+File.separator+strFile;
+		strFullSrcFilePath = confInfo.getTransferedFileHome().toString()+File.separator+strFileSender
+				+File.separator+strFile;
 		File srcFile = new File(strFullSrcFilePath);
 		long lFileSize = srcFile.length();
 		long lRemainBytes = lFileSize;
@@ -637,9 +639,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		printMessage("processing delay: "+(lEndTime-lStartTime)+" ms\n");
 
 		// send the modified file to the sender
-		CMFileTransferManager.pushFile(strModifiedFile, strSender);
-
-		return;
+		CMFileTransferManager.pushFile(strModifiedFile, strFileSender, fileSenderUuid);
 	}
 	
 	private void processSNSEvent(CMEvent cme)
