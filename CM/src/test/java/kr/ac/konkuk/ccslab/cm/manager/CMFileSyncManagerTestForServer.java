@@ -15,7 +15,7 @@ public class CMFileSyncManagerTestForServer {
     @Before
     public void setUp() {
         System.out.println("===== called setUp()");
-        cmInfo = new CMInfo();
+        cmInfo = CMInfo.getInstance();
         CMConfigurator.init("cm-server.conf");
         fileSyncManager = new CMFileSyncManager();
     }

@@ -31,7 +31,7 @@ public class CMConfiguratorTest {
 	@Before
 	public void setUp() {
 		System.out.println("===== called setUp().");
-		cmInfo = new CMInfo();
+		cmInfo = CMInfo.getInstance();
 	}
 
 	@After
