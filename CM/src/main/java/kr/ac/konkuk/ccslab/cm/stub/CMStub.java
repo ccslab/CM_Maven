@@ -1873,7 +1873,7 @@ public class CMStub {
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
 	 * @see CMStub#send(CMEvent, String, String, int) 
-	 * @see CMStub#send(CMEvent, String, String, int, int)*
+	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 */
 	public boolean send(CMEvent cme, String serverName, String userName)
 	{
