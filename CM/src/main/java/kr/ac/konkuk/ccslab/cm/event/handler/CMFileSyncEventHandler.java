@@ -197,6 +197,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("listEvent = " + listEvent);
         }
         String requester = listEvent.getRequester();
+        UUID requesterUuid = listEvent.getSenderUuid();
 
         // get sync home of requester
         CMInfo cmInfo = CMInfo.getInstance();
@@ -209,7 +210,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // get the absolute path
             Path absPath = serverSyncHome.resolve(relativePath);
             // start push-file
-            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester);
+            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester, requesterUuid);
             if(!ret) {
                 System.err.println("push error: "+absPath);
                 return false;
