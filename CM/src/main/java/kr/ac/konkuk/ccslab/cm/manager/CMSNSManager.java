@@ -1801,8 +1801,8 @@ public class CMSNSManager {
 			filePathList = sendAttach.getFilePathList();
 			for(i = 0; i < filePathList.size(); i++)
 			{				
-				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), CMInfo.FILE_DEFAULT, 
-						se.getContentID());
+				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), se.getSenderUuid(),
+						CMInfo.FILE_DEFAULT, se.getContentID());
 			}
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
@@ -1843,10 +1843,9 @@ public class CMSNSManager {
 				}
 				else
 				{
-					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), CMInfo.FILE_DEFAULT, 
-							se.getContentID());
+					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), se.getSenderUuid(),
+							CMInfo.FILE_DEFAULT, se.getContentID());
 				}
-				file = null;
 			}
 			
 			if(naFileNameList.size() > 0)
