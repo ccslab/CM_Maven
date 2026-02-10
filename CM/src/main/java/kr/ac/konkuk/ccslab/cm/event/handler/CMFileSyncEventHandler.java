@@ -1413,6 +1413,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Path clientSyncHome = syncManager.getClientSyncHome();
         // get the requester name
         String requesterName = fse_rnf.getRequesterName();  // server name
+        UUID requesterUuid = fse_rnf.getSenderUuid();   // server(sender) uuid
         // check if the requested file list is null or empty
         List<Path> requestedFileList = fse_rnf.getRequestedFileList();
         if(requestedFileList == null) {
@@ -1427,7 +1428,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         boolean sendResult = true;
         for(Path path : requestedFileList) {
             Path syncPath = clientSyncHome.resolve(path);   // adjust the path with the sync home
-            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName) )
+            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, requesterUuid) )
                 sendResult = false;
         }
 
