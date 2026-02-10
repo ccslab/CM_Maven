@@ -2149,7 +2149,7 @@ public class CMFileSyncManager extends CMServiceManager {
         String defaultServer = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         // get input throughput (MBps)
         CMInfo cmInfo = CMInfo.getInstance();
-        double inputThroughput = CMCommManager.measureInputThroughput(defaultServer);
+        double inputThroughput = CMCommManager.measureInputThroughput(defaultServer, null);
         // calculate minimum size (Bytes) of a file to be local mode
         long minFileSizeForLocalMode = (long) (inputThroughput * 1000000 * maxAccessDelayThreshold / 1000);
         if (CMInfo._CM_DEBUG) {
