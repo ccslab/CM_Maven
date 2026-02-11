@@ -1797,8 +1797,8 @@ public class CMInteractionManager {
 
 		// set my info
 		CMUser myself = interInfo.getMyself();
-		// set my name (although it is already set before sending LOGIN event)
-		myself.setName(se.getUserName());
+		// do not set my name because it is already set before sending LOGIN event
+		// myself.setName(se.getUserName());
 		// [New] set my UUID received from the server
 		myself.setUuid(se.getUuid());
 
