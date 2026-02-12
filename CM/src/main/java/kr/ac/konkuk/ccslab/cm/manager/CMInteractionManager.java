@@ -3994,8 +3994,8 @@ public class CMInteractionManager {
 				CMEventManager.unicastEvent(cme, strDistGroup, distUuid, opt);
 			}
 		}
-		// Case 2: Broadcast to all session managers (Servers)
-		else if(strDistSession.equals("CM_ALL_SESSION_MANAGERS"))
+		// Case 2: Broadcast to all connected nodes (session=null, group=null)
+		else if(strDistSession.equals("CM_ALL_SESSION"))
 		{
 			// [Modified] Use broadcastEvent instead of castEvent for clarity and efficiency
 			CMEventManager.broadcastEvent(cme, opt);
