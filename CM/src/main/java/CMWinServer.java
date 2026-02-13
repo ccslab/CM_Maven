@@ -177,7 +177,7 @@ public class CMWinServer extends JFrame {
 		JMenuItem showAllConfMenuItem = new JMenuItem("show all configurations");
 		showAllConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(showAllConfMenuItem);
-		JMenuItem changeConfMenuItem = new JMenuItem("change configuration");
+		JMenuItem changeConfMenuItem = new JMenuItem("edit configuration file");
 		changeConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(changeConfMenuItem);
 		JMenuItem showThreadInfoItem = new JMenuItem("show thread information");
@@ -411,7 +411,7 @@ public class CMWinServer extends JFrame {
 		printMessage("1: show session information, 2: show group information\n");
 		printMessage("3: test input network throughput, 4: test output network throughput\n");
 		printMessage("5: show current channels, 6: show login users\n");
-		printMessage("7: show all configurations, 8: change configuration\n");
+		printMessage("7: show all configurations, 8: edit configuration file\n");
 		printMessage("9: show current thread information\n");
 		printMessage("---------------------------------- Event Transmission\n");
 		printMessage("10: send CMDummyEvent\n");
@@ -1803,7 +1803,7 @@ public class CMWinServer extends JFrame {
 		boolean bRet = false;
 		String strField = null;
 		String strValue = null;
-		printMessage("========== change configuration\n");
+		printMessage("========== edit configuration file\n");
 		Path confPath = m_serverStub.getConfigurationHome().resolve("cm-server.conf");
 		
 		JTextField fieldTextField = new JTextField();
@@ -1812,7 +1812,7 @@ public class CMWinServer extends JFrame {
 			"Field Name:", fieldTextField,
 			"Value:", valueTextField
 		};
-		int nRet = JOptionPane.showConfirmDialog(null, msg, "Change Configuration", JOptionPane.OK_CANCEL_OPTION);
+		int nRet = JOptionPane.showConfirmDialog(null, msg, "Edit Configuration File", JOptionPane.OK_CANCEL_OPTION);
 		if(nRet != JOptionPane.OK_OPTION) return;
 		strField = fieldTextField.getText().trim();
 		strValue = valueTextField.getText().trim();
@@ -2116,7 +2116,7 @@ public class CMWinServer extends JFrame {
 			case "show all configurations":
 				printConfigurations();
 				break;
-			case "change configuration":
+			case "edit configuration file":
 				changeConfiguration();
 				break;
 			case "show thread information":

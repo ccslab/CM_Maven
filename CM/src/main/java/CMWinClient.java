@@ -356,7 +356,7 @@ public class CMWinClient extends JFrame {
 		JMenuItem showAllConfMenuItem = new JMenuItem("show all configurations");
 		showAllConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(showAllConfMenuItem);
-		JMenuItem changeConfMenuItem = new JMenuItem("change configuration");
+		JMenuItem changeConfMenuItem = new JMenuItem("edit configuration file");
 		changeConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(changeConfMenuItem);
 		JMenuItem showThreadInfoItem = new JMenuItem("show thread information");
@@ -804,7 +804,7 @@ public class CMWinClient extends JFrame {
 			case 57: // print all configurations
 				testPrintConfigurations();
 				break;
-			case 58: // change configuration
+			case 58: // edit configuration file
 				testChangeConfiguration();
 				break;
 			case 59: // show current thread information
@@ -997,7 +997,7 @@ public class CMWinClient extends JFrame {
 		printMessage("52: show current channels, 53: show current server information\n");
 		printMessage("54: show group information of designated server\n");
 		printMessage("55: measure input network throughput, 56: measure output network throughput\n");
-		printMessage("57: show all configurations, 58: change configuration\n");
+		printMessage("57: show all configurations, 58: edit configuration file\n");
 		printMessage("59: show current thread information\n");
 		printMessage("---------------------------------- Channel\n");
 		printMessage("60: add channel, 61: remove channel, 62: test blocking channel\n");
@@ -3902,7 +3902,7 @@ public class CMWinClient extends JFrame {
 		boolean bRet = false;
 		String strField = null;
 		String strValue = null;
-		printMessage("========== change configuration\n");
+		printMessage("========== edit configuration file\n");
 		Path confPath = m_clientStub.getConfigurationHome().resolve("cm-client.conf");
 		
 		JTextField fieldTextField = new JTextField();
@@ -3911,7 +3911,7 @@ public class CMWinClient extends JFrame {
 			"Field Name:", fieldTextField,
 			"Value:", valueTextField
 		};
-		int nRet = JOptionPane.showConfirmDialog(null, msg, "Change Configuration", JOptionPane.OK_CANCEL_OPTION);
+		int nRet = JOptionPane.showConfirmDialog(null, msg, "Edit Configuration File", JOptionPane.OK_CANCEL_OPTION);
 		if(nRet != JOptionPane.OK_OPTION) return;
 		strField = fieldTextField.getText().trim();
 		strValue = valueTextField.getText().trim();
@@ -4880,7 +4880,7 @@ public class CMWinClient extends JFrame {
 				case "show all configurations":
 					testPrintConfigurations();
 					break;
-				case "change configuration":
+				case "edit configuration file":
 					testChangeConfiguration();
 					break;
 				case "show thread information":

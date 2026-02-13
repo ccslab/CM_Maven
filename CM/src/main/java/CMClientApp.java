@@ -200,7 +200,7 @@ public class CMClientApp {
 				case 57: // print all configurations
 					testPrintConfigurations();
 					break;
-				case 58: // change configuration
+				case 58: // edit configuration file
 					testChangeConfiguration();
 					break;
 				case 59: // show current thread information
@@ -395,7 +395,7 @@ public class CMClientApp {
 		System.out.println("52: show current channels, 53: show current server information");
 		System.out.println("54: show group information of designated server");
 		System.out.println("55: measure input network throughput, 56: measure output network throughput");
-		System.out.println("57: show all configurations, 58: change configuration");
+		System.out.println("57: show all configurations, 58: edit configuration file");
 		System.out.println("59: show current thread information");
 		System.out.println("---------------------------------- Channel");
 		System.out.println("60: add channel, 61: remove channel, 62: test blocking channel");
@@ -3182,7 +3182,7 @@ public class CMClientApp {
 		boolean bRet = false;
 		String strField = null;
 		String strValue = null;
-		System.out.println("========== change configuration");
+		System.out.println("========== edit configuration file");
 		Path confPath = m_clientStub.getConfigurationHome().resolve("cm-client.conf");
 		
 		System.out.print("Field name: ");

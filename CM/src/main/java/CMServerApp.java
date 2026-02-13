@@ -227,7 +227,7 @@ public class CMServerApp {
 		System.out.print("1: show session information, 2: show group information\n");
 		System.out.print("3: test input network throughput, 4: test output network throughput\n");
 		System.out.print("5: show current channels, 6: show login users\n");
-		System.out.print("7: show all configurations, 8: change configuration\n");
+		System.out.print("7: show all configurations, 8: edit configuration file\n");
 		System.out.print("9: show current thread information\n");
 		System.out.print("---------------------------------- File Transfer\n");
 		System.out.print("20: set file path, 21: request file, 22: push file\n");
@@ -1441,7 +1441,7 @@ public class CMServerApp {
 		boolean bRet = false;
 		String strField = null;
 		String strValue = null;
-		System.out.println("========== change configuration");
+		System.out.println("========== edit configuration file");
 		Path confPath = m_serverStub.getConfigurationHome().resolve("cm-server.conf");
 		
 		System.out.print("Field name: ");
