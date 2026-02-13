@@ -1264,9 +1264,10 @@ public class CMClientApp {
 		CMUser myself = interInfo.getMyself();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.println("------ for the default server");
-		System.out.println("name("+myself.getName()+"), session("+myself.getCurrentSession()+"), group("
-				+myself.getCurrentGroup()+"), udp port("+myself.getUDPPort()+"), state("
-				+myself.getState()+"), attachment download scheme("+confInfo.getAttachDownloadScheme()+").");
+		System.out.println("name("+myself.getName()+"), uuid("+myself.getUuid()+"), session("
+				+myself.getCurrentSession()+"), group(" +myself.getCurrentGroup()+"), udp port("
+				+myself.getUDPPort()+"), state("+myself.getState()+"), attachment download scheme("
+				+confInfo.getAttachDownloadScheme()+").");
 		
 		// for additional servers
 		Iterator<CMServer> iter = interInfo.getAddServerList().iterator();

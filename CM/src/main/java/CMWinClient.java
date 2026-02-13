@@ -1933,9 +1933,10 @@ public class CMWinClient extends JFrame {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		printMessage("------ for the default server\n");
-		printMessage("name("+myself.getName()+"), session("+myself.getCurrentSession()+"), group("
-				+myself.getCurrentGroup()+"), udp port("+myself.getUDPPort()+"), state("
-				+myself.getState()+"), attachment download scheme("+confInfo.getAttachDownloadScheme()+").\n");
+		printMessage("name("+myself.getName()+"), uuid("+myself.getUuid()+"), session("
+				+myself.getCurrentSession()+"), group(" +myself.getCurrentGroup()+"), udp port("
+				+myself.getUDPPort()+"), state("+myself.getState()+"), attachment download scheme("
+				+confInfo.getAttachDownloadScheme()+").\n");
 		
 		// for additional servers
 		Iterator<CMServer> iter = interInfo.getAddServerList().iterator();
