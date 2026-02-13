@@ -625,7 +625,7 @@ public class CMSessionEvent extends CMEvent {
 	 */
 	public void setChannelUuid(UUID uuid)
 	{
-		m_uuid = uuid;
+		m_channelUuid = uuid;
 	}
 
 	/**
@@ -633,7 +633,7 @@ public class CMSessionEvent extends CMEvent {
 	 * @return channel UUID.
 	 */
 	public UUID getChannelUuid() {
-		return m_uuid;
+		return m_channelUuid;
 	}
 
 	public void setValidUser(int bValid)
