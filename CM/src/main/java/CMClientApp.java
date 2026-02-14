@@ -1901,19 +1901,19 @@ public class CMClientApp {
 		Set<CMUserLoginKey> recvKeySet = recvHashtable.keySet();
 
 		System.out.print("==== sending file info\n");
-		for(CMUserLoginKey receiverKey : sendKeySet)
+		for(CMUserLoginKey receiverKey : new ArrayList<>(sendKeySet))
 		{
-			// [Modification]: Retrieve the list using the CMUserLoginKey object.
 			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiverKey);
+			if(sendList == null) continue;
 			System.out.print("Receiver (Name+UUID): " + receiverKey + "\n");
 			System.out.print(sendList + "\n");
 		}
 
 		System.out.print("==== receiving file info\n");
-		for(CMUserLoginKey senderKey : recvKeySet)
+		for(CMUserLoginKey senderKey : new ArrayList<>(recvKeySet))
 		{
-			// [Modification]: Retrieve the list using the CMUserLoginKey object.
 			CMList<CMRecvFileInfo> recvList = recvHashtable.get(senderKey);
+			if(recvList == null) continue;
 			System.out.print("Sender (Name+UUID): " + senderKey + "\n");
 			System.out.print(recvList + "\n");
 		}

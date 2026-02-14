@@ -534,19 +534,19 @@ public class CMServerApp {
 		Set<CMUserLoginKey> recvKeySet = recvHashtable.keySet();
 
 		System.out.print("==== sending file info\n");
-		for(CMUserLoginKey receiverKey : sendKeySet)
+		for(CMUserLoginKey receiverKey : new ArrayList<>(sendKeySet))
 		{
-			// [Modification]: Use CMUserLoginKey to retrieve the corresponding send list.
 			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiverKey);
+			if(sendList == null) continue;
 			System.out.print("Receiver Key: " + receiverKey + "\n");
 			System.out.print(sendList + "\n");
 		}
 
 		System.out.print("==== receiving file info\n");
-		for(CMUserLoginKey senderKey : recvKeySet)
+		for(CMUserLoginKey senderKey : new ArrayList<>(recvKeySet))
 		{
-			// [Modification]: Use CMUserLoginKey to retrieve the corresponding receive list.
 			CMList<CMRecvFileInfo> recvList = recvHashtable.get(senderKey);
+			if(recvList == null) continue;
 			System.out.print("Sender Key: " + senderKey + "\n");
 			System.out.print(recvList + "\n");
 		}

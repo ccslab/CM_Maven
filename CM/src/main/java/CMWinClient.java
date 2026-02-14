@@ -2664,19 +2664,19 @@ public class CMWinClient extends JFrame {
 		Set<CMUserLoginKey> recvKeySet = recvHashtable.keySet();
 
 		printMessage("==== sending file info\n");
-		for(CMUserLoginKey receiverKey : sendKeySet)
+		for(CMUserLoginKey receiverKey : new ArrayList<>(sendKeySet))
 		{
-			// [Modification]: Retrieve the CMSendFileInfo list using the CMUserLoginKey.
 			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiverKey);
+			if(sendList == null) continue;
 			printMessage("Receiver: " + receiverKey + "\n");
 			printMessage(sendList + "\n");
 		}
 
 		printMessage("==== receiving file info\n");
-		for(CMUserLoginKey senderKey : recvKeySet)
+		for(CMUserLoginKey senderKey : new ArrayList<>(recvKeySet))
 		{
-			// [Modification]: Retrieve the CMRecvFileInfo list using the CMUserLoginKey.
 			CMList<CMRecvFileInfo> recvList = recvHashtable.get(senderKey);
+			if(recvList == null) continue;
 			printMessage("Sender: " + senderKey + "\n");
 			printMessage(recvList + "\n");
 		}
