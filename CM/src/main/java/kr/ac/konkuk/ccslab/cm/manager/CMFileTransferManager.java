@@ -436,16 +436,14 @@ public class CMFileTransferManager {
 		}
 		else // cancel file transfer to all senders
 		{
-			Set<CMUserLoginKey> keySet = fInfo.getRecvFileHashtable().keySet();
-			Iterator<CMUserLoginKey> iterKeys = keySet.iterator();
-			while(iterKeys.hasNext())
+			List<CMUserLoginKey> keyList = new ArrayList<>(fInfo.getRecvFileHashtable().keySet());
+			for(CMUserLoginKey iterKey : keyList)
 			{
-				CMUserLoginKey iterKey = iterKeys.next();
 				String iterSender = iterKey.getUserName();
 				UUID iterUuid = iterKey.getUuid();
 				cancelPullFileWithSepChannelForOneSender(iterSender, iterUuid);
 			}
-			// clear the sending file hash table
+			// clear the receiving file hash table
 			bReturn = fInfo.clearRecvFileHashtable();
 		}
 		
@@ -507,7 +505,10 @@ public class CMFileTransferManager {
 		} catch (TimeoutException e) {
 			e.printStackTrace();
 		}
-		
+
+		// remove the receiving file list of the sender
+		fInfo.removeRecvFileList(strFileSender, fileSenderUuid);
+
 		/////////////////////// management of the closed default blocking socket channel
 
 		CMServer targetServer = CMInteractionManager.findServer(strFileSender);
@@ -610,9 +611,6 @@ public class CMFileTransferManager {
 		{
 			return false;
 		}
-		
-		// remove the receiving file list of the sender
-		bReturn = fInfo.removeRecvFileList(strFileSender, fileSenderUuid);
 
 		// if the system type is client, it recreates the default blocking socket channel to the default server
 		if(confInfo.getSystemType().equals("CLIENT") && !bP2PFileTransfer)
@@ -1424,11 +1422,9 @@ public class CMFileTransferManager {
 		}
 		else // cancel file transfer to all receivers
 		{
-			Set<CMUserLoginKey> keySet = fInfo.getSendFileHashtable().keySet();
-			Iterator<CMUserLoginKey> iterKeys = keySet.iterator();
-			while(iterKeys.hasNext())
+			List<CMUserLoginKey> keyList = new ArrayList<>(fInfo.getSendFileHashtable().keySet());
+			for(CMUserLoginKey loginKey : keyList)
 			{
-				CMUserLoginKey loginKey = iterKeys.next();
 				String iterFileReceiver = loginKey.getUserName();
 				UUID iterFileReceiverUuid = loginKey.getUuid();
 				cancelPushFileWithSepChannelForOneReceiver(iterFileReceiver, iterFileReceiverUuid);
