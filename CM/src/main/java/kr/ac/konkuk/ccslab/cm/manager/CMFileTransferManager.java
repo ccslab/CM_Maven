@@ -1376,7 +1376,7 @@ public class CMFileTransferManager {
 				}
 				
 				// close the RandomAccessFile
-				sendList = fInfo.getSendFileList(iterFileReceiver, fileReceiverUuid);
+				sendList = fInfo.getSendFileList(iterFileReceiver, iterFileReceiverUuid);
 				if(sendList != null) {
 					iterSendList = sendList.iterator();
 					while(iterSendList.hasNext())
@@ -3945,14 +3945,19 @@ public class CMFileTransferManager {
 
 		// close the default blocking socket channel if it is open
 		// the channel is actually closed due to the interrupt exception of the receiving thread
-		if(defaultBlockSC.isOpen())
+		if(defaultBlockSC == null)
+		{
+			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(), the default blocking "
+					+"socket channel is null!");
+		}
+		else if(defaultBlockSC.isOpen())
 		{
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); the default channel is "
 						+ "still open and should be closed for reconnection!");
 			}
-			
+
 			try {
 				defaultBlockSC.close();
 			} catch (IOException e) {
@@ -3964,9 +3969,10 @@ public class CMFileTransferManager {
 			System.err.println("CMFileTransferManager.processCANCEL_FILE_RECV_CHAN(); the default channel is "
 					+ "already closed!");
 		}
-		
+
 		// remove the default blocking socket channel
-		blockSCInfo.removeChannel(0);
+		if(defaultBlockSC != null)
+			blockSCInfo.removeChannel(0);
 
 		// if the system type is client, it recreates the default blocking socket channel to the default server
 		if(confInfo.getSystemType().equals("CLIENT") && !bP2PFileTransfer)
