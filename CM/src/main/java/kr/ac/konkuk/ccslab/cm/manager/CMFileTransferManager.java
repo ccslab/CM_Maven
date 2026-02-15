@@ -3207,7 +3207,6 @@ public class CMFileTransferManager {
 	
 	private static void sendSTART_FILE_TRANSFER_CHAN_ACK(CMRecvFileInfo rfInfo)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
 		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
@@ -3221,7 +3220,9 @@ public class CMFileTransferManager {
 		CMFileEvent feAck = new CMFileEvent();
 		feAck.setID(CMFileEvent.START_FILE_TRANSFER_CHAN_ACK);
 		feAck.setFileSender(rfInfo.getFileSender());
-		feAck.setFileReceiver(CMInteractionInfo.getInstance().getMyself().getName());
+		feAck.setFileSenderUuid(rfInfo.getFileSenderUuid());
+		feAck.setFileReceiver(interInfo.getMyself().getName());
+		feAck.setFileReceiverUuid(interInfo.getMyself().getUuid());
 		feAck.setFileName(rfInfo.getFileName());
 		feAck.setContentID(rfInfo.getContentID());
 		feAck.setReceivedFileSize(rfInfo.getRecvSize());
@@ -3233,16 +3234,13 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN_ACK(), "
 						+ "isP2PFileTransfer() returns true.");
 			}
-			// set event sender and receiver
-			feAck.setSender(interInfo.getMyself().getName());
-			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-			feAck.setReceiver(strDefServer);
-			
 			// set distribution fields
 			feAck.setDistributionSession("CM_ONE_USER");
 			feAck.setDistributionGroup(rfInfo.getFileSender());
-			
+			feAck.setDistributionUuid(rfInfo.getFileSenderUuid());
+
 			// send the event to the default server
+			String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 			CMEventManager.unicastEvent(feAck, strDefServer);
 		}
 		else
@@ -3252,14 +3250,9 @@ public class CMFileTransferManager {
 				System.out.println("CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN_ACK(), "
 						+ "isP2PFileTransfer() returns false.");
 			}
-			// set event sender and receiver
-			feAck.setSender(interInfo.getMyself().getName());
-			feAck.setReceiver(rfInfo.getFileSender());
 			// send the event to the file sender
-			CMEventManager.unicastEvent(feAck, rfInfo.getFileSender());
+			CMEventManager.unicastEvent(feAck, rfInfo.getFileSender(), rfInfo.getFileSenderUuid());
 		}
-
-		feAck = null;
 	}
 	
 	private static boolean processCANCEL_FILE_SEND(CMFileEvent fe)
