@@ -2950,10 +2950,8 @@ public class CMFileTransferManager {
 			System.out.println("CMFileTransferManager.processSTART_FILE_TRANSFER_CHAN_ACK(); "
 					+ "file sender("+fe.getFileSender()+"), sender uuid("+fe.getFileSenderUuid()
 					+"), file receiver("+fe.getFileReceiver()+"), receiver uuid("+fe.getFileReceiverUuid()
-					+"), file name("+fe.getFileName()
-					+ "), file size("+fe.getFileSize()+"), content ID("
-					+fe.getContentID()+"), received file size("+fe.getReceivedFileSize()
-					+").");
+					+"), file name("+fe.getFileName()+ "), content ID("+fe.getContentID()+"), received file size("
+					+fe.getReceivedFileSize()+").");
 		}
 		
 		// check whether this CM node is the target node of this event or not
