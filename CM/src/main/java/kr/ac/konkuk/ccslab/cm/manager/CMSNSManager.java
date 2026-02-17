@@ -1894,7 +1894,9 @@ public class CMSNSManager {
 			CMFileEvent fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_ACK);
 			fe.setFileSender(strDefServer);
+			fe.setFileSenderUuid(null);	// server uuid is null.
 			fe.setFileReceiver(se.getUserName());
+			fe.setFileReceiverUuid(se.getReceiverUuid());
 			fe.setFileName(strFileNameList.get(i));
 			fe.setReturnCode(0);	// the file is not received
 			fe.setContentID(se.getContentID());
