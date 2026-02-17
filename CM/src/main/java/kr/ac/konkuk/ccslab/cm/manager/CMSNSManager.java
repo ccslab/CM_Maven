@@ -1310,7 +1310,7 @@ public class CMSNSManager {
 			// add the content to the content list only if the previous logic is successful
 			bRet = contentList.addSNSContent(nSeqNum, strCreationTime, se.getUserName(), se.getMessage()
 					, se.getNumAttachedFiles(), se.getReplyOf(), se.getLevelOfDisclosure()
-					, se.getFileNameList());
+					, null);
 		}
 
 		if(ret == 1 || bRet)	// Any case is correct
@@ -1333,7 +1333,7 @@ public class CMSNSManager {
 			////////////// store the response event and the file name list
 			CMSNSAttach attach = new CMSNSAttach();
 			attach.setContentUploadResponseEvent(nReturnCode, nSeqNum, strCreationTime, se.getUserName());
-			attach.setFilePathList(new ArrayList<>(se.getFileNameList()));	// only file names
+			attach.setFilePathList(se.getFileNameList());	// only file names
 			CMSNSAttachList attachList = new CMSNSAttachList();
 			attachList.addSNSAttach(attach);
 			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
