@@ -718,6 +718,7 @@ public class CMSNSManager {
 		Vector<CMSNSContent> contentVector = null;
 		int nForStart = -1;
 		int nForEnd = -1;
+		int nActualDownNum = 0;
 		
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nDefDownloadNum = confInfo.getDownloadNum();
@@ -811,6 +812,7 @@ public class CMSNSManager {
 
 			nForStart = 0;
 			nForEnd = contentList.getSNSContentNum();
+			nActualDownNum = contentList.getSNSContentNum();
 
 			// create and send content events
 			for(int i = nForStart; i < nForEnd; i++)
@@ -982,6 +984,7 @@ public class CMSNSManager {
 		
 			nForStart = contentList.getSNSContentNum() - nOffset -1;
 			nForEnd = contentList.getSNSContentNum() - (nOffset+nContNum) - 1;
+			nActualDownNum = nContNum;
 
 			// create and send content events
 			for(int i = nForStart; i > nForEnd; i--)
@@ -1035,7 +1038,7 @@ public class CMSNSManager {
 			sevent.setUserName( se.getUserName() );
 			sevent.setWriterName(se.getWriterName());
 			sevent.setContentOffset( se.getContentOffset() );
-			sevent.setNumContents( contentList.getSNSContentNum() );
+			sevent.setNumContents( nActualDownNum );
 
 			// send the end event
 			CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
