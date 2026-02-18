@@ -2065,7 +2065,18 @@ public class CMSNSManager {
 		
 		// check whether the requested file is the attachment of the given content ID or not
 		ArrayList<String> attachFileList = null;
-		attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID);
+		if(confInfo.isDBUse())
+		{
+			attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID);
+		}
+		else
+		{
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSContentList contentList = snsInfo.getSNSContentList();
+			CMSNSContent content = contentList.findSNSContent(nContentID);
+			if(content != null)
+				attachFileList = content.getFilePathList();
+		}
 		boolean bFound = false;
 		
 		for(int i = 0; attachFileList != null && i < attachFileList.size(); i++)
