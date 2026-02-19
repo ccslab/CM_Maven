@@ -1104,6 +1104,16 @@ public class CMStub {
 		String strDefServer = null;
 		boolean ret = false;
 
+		// set sender and receiver before forwarding decision
+		// sender/receiver: 논리적 송수신자 (릴레이 경유 시에도 원본 노드를 유지)
+		// 물리적 직접 송수신자(transport layer)와 다를 수 있음
+		// - 직접 통신 시: logical == physical
+		// - 서버 경유 시: logical = 원본 클라이언트, physical = 서버
+		cme.setSender(getMyself().getName());
+		cme.setSenderUuid(getMyself().getUuid());
+		cme.setReceiver(strTarget);
+		cme.setReceiverUuid(targetUuid);
+
 		if(confInfo.getSystemType().contentEquals("CLIENT")
 				|| (confInfo.getSystemType().contentEquals("SERVER")
 				&& !CMConfigurator.isDServer()))
@@ -1123,10 +1133,6 @@ public class CMStub {
 			cme.setDistributionGroup(strTarget);
 			cme.setDistributionUuid(targetUuid);
 
-			// [Modified] Forwarding logic
-			// When forwarding via server, the immediate target is the server (uuid is meaningless for connection),
-			// but the final destination UUID is already set in the event header above.
-			// We pass null as the third argument because we are sending to the default server, not a specific user device directly.
 			ret = CMEventManager.unicastEvent(cme, strDefServer, null, opt, nChNum, 0, isBlock);
 
 			cme.setDistributionSession("");
@@ -1135,8 +1141,6 @@ public class CMStub {
 		}
 		else
 		{
-			// [Modified] Direct transmission logic
-			// Pass the uuid to CMEventManager. If uuid is null, it handles broadcast to all devices.
 			ret = CMEventManager.unicastEvent(cme, strTarget, targetUuid, opt, nChNum, 0, isBlock);
 		}
 
