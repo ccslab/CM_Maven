@@ -1411,7 +1411,7 @@ public class CMStub {
 		eventSync.init();
 		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver, receiverUuid);
 
-		boolean bSendResult = CMEventManager.unicastEvent(cme, strReceiver, receiverUuid);
+		boolean bSendResult = send(cme, strReceiver, receiverUuid);
 		if(!bSendResult) return null;
 
 		synchronized(eventSync)
