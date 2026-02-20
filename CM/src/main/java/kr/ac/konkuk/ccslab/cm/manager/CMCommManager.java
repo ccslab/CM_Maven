@@ -477,6 +477,12 @@ public class CMCommManager {
 		// the request event should be forwarded by the default server (internal forwarding of CM).
 		if(targetUser != null)
 		{
+			// set logical sender/receiver so the server can correctly identify
+			// that it is not the intended receiver of this event.
+			se.setSender(myself.getName());
+			se.setSenderUuid(myself.getUuid());
+			se.setReceiver(strTarget);
+			se.setReceiverUuid(targetUuid);
 			// set distribution fields
 			se.setDistributionSession("CM_ONE_USER");
 			se.setDistributionGroup(strTarget);

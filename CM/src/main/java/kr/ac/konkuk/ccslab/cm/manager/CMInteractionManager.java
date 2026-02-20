@@ -2270,13 +2270,17 @@ public class CMInteractionManager {
 			e.printStackTrace();
 			
 			seAck.setReturnCode(0);
-			
-			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+			if(confInfo.getCommArch().contentEquals("CM_CS") &&
 					confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				// If this node is the client type, the requester is another client 
+				// If this node is the client type, the requester is another client
 				// and this reply event should be forwarded by the default server.
 				// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setSender(interInfo.getMyself().getName());
+				seAck.setSenderUuid(interInfo.getMyself().getUuid());
+				seAck.setReceiver(user.getName());
+				seAck.setReceiverUuid(user.getUuid());
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
 				seAck.setDistributionUuid(channelUuid);
@@ -2288,7 +2292,7 @@ public class CMInteractionManager {
 			}
 			return;
 		}
-		
+
 		boolean ret = user.getBlockSocketChannelInfo().addChannel(nChKey, msg.m_ch);
 		if(ret)
 			seAck.setReturnCode(1);
@@ -2311,12 +2315,16 @@ public class CMInteractionManager {
 			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 		}
 
-		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+		if(confInfo.getCommArch().contentEquals("CM_CS") &&
 				confInfo.getSystemType().contentEquals("CLIENT"))
 		{
-			// If this node is the client type, the requester is another client 
+			// If this node is the client type, the requester is another client
 			// and this reply event should be forwarded by the default server.
 			// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setSender(interInfo.getMyself().getName());
+			seAck.setSenderUuid(interInfo.getMyself().getUuid());
+			seAck.setReceiver(user.getName());
+			seAck.setReceiverUuid(user.getUuid());
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
 			seAck.setDistributionUuid(channelUuid);
@@ -2455,13 +2463,17 @@ public class CMInteractionManager {
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), channel not found! "
 					+"user("+strChannelName+"), uuid("+channelUuid+"), channel key("+nChKey+")");
 			seAck.setReturnCode(0);
-			
-			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+			if(confInfo.getCommArch().contentEquals("CM_CS") &&
 					confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				// If this node is the client type, the requester is another client 
+				// If this node is the client type, the requester is another client
 				// and this reply event should be forwarded by the default server.
 				// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setSender(interInfo.getMyself().getName());
+				seAck.setSenderUuid(interInfo.getMyself().getUuid());
+				seAck.setReceiver(user.getName());
+				seAck.setReceiverUuid(user.getUuid());
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
 				seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
@@ -2474,16 +2486,20 @@ public class CMInteractionManager {
 
 			return;
 		}
-		
+
 		// found the blocking channel that will be disconnected
 		seAck.setReturnCode(1);	// ok
-		
-		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+		if(confInfo.getCommArch().contentEquals("CM_CS") &&
 				confInfo.getSystemType().contentEquals("CLIENT"))
 		{
-			// If this node is the client type, the requester is another client 
+			// If this node is the client type, the requester is another client
 			// and this reply event should be forwarded by the default server.
 			// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setSender(interInfo.getMyself().getName());
+			seAck.setSenderUuid(interInfo.getMyself().getUuid());
+			seAck.setReceiver(user.getName());
+			seAck.setReceiverUuid(user.getUuid());
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
 			seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
