@@ -669,6 +669,7 @@ public class CMFileTransferManager {
 		// [Modified] Use singleton pattern for info objects
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		boolean bReturn = false;
 
 		List<CMUser> fileReceiverList = null;
@@ -690,6 +691,8 @@ public class CMFileTransferManager {
 		} else {
 			// Iterate over all found devices (UUIDs) and request permit for each
 			for (CMUser user : fileReceiverList) {
+				// 자기 자신의 uuid이면 건너뜀
+				if (Objects.equals(user.getUuid(), myUuid)) continue;
 				// Logical OR to ensure success if at least one request succeeds
 				boolean bResult = requestPermitForPushFile(strFilePath, strFileReceiver,
 						user.getUuid(), byteFileAppend, nContentID);
