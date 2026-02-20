@@ -1073,29 +1073,25 @@ public class CMStub {
 	}
 
 	/**
-	 * [Added] Sends a CM event to a specific device (UUID) of a single node.
-	 * * <p> This serves as the final destination for all stream-based send calls in CMStub.
-	 * If the uuid is null, the event is sent to all login devices of the receiver
-	 * (handled by CMEventManager).
-	 * * @param cme - the CM event
+	 * Sends a CM event to a specific device (UUID) of a single node.
+	 *
+	 * <p> This method is the same as {@link CMStub#send(CMEvent, String, int, int, boolean)} with
+	 * an additional {@code targetUuid} parameter to target a specific device of the receiver.
+	 * If the targetUuid is null, the event is sent to all login devices of the receiver.
+	 *
+	 * @param cme - the CM event
 	 * @param strTarget - the receiver name
 	 * @param targetUuid - the UUID of the receiver device (null to send to all devices or if target is server)
 	 * @param opt - the reliability option (CMInfo.CM_STREAM or CMInfo.CM_DATAGRAM)
 	 * @param nChNum - the channel key
 	 * @param isBlock - the blocking option
 	 * @return true if the event is successfully sent; false otherwise.
-	 * @see CMStub#send(CMEvent, String)
-	 * @see CMStub#send(CMEvent, String, UUID)
-	 * @see CMStub#send(CMEvent, String, int)
-	 * @see CMStub#send(CMEvent, String, UUID, int)
-	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, UUID, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 *
-	 * @see CMStub#send(CMEvent, String, String)
-	 * @see CMStub#send(CMEvent, String, String, int)
-	 * @see CMStub#send(CMEvent, String, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 */
 	public boolean send(CMEvent cme, String strTarget, UUID targetUuid, int opt, int nChNum, boolean isBlock)
 	{
@@ -2253,7 +2249,58 @@ public class CMStub {
 				byteFileAppend);
 		return bReturn;
 	}
-	
+
+	/**
+	 * Requests a file from a file owner specifying the owner's device UUID.
+	 *
+	 * <p> This method is the same as {@link CMStub#requestFile(String, String)} with
+	 * an additional {@code fileOwnerUuid} parameter to target a specific device of the file owner.
+	 *
+	 * @param strFileName - the requested file name
+	 * @param strFileOwner - the file owner name
+	 * @param fileOwnerUuid - the UUID of the file owner's device
+	 * @return true if the request is successfully sent; false otherwise.
+	 * @see CMStub#requestFile(String, String)
+	 * @see CMStub#requestFile(String, String, UUID, byte)
+	 */
+	public boolean requestFile(String strFileName, String strFileOwner, UUID fileOwnerUuid)
+	{
+		boolean bReturn = false;
+		bReturn = requestFile(strFileName, strFileOwner, fileOwnerUuid, CMInfo.FILE_DEFAULT);
+		return bReturn;
+	}
+
+	/**
+	 * Requests a file from a file owner specifying the owner's device UUID and the file append mode.
+	 *
+	 * <p> This method is the same as {@link CMStub#requestFile(String, String, byte)} with
+	 * an additional {@code fileOwnerUuid} parameter to target a specific device of the file owner.
+	 *
+	 * @param strFileName - the requested file name
+	 * @param strFileOwner - the file owner name
+	 * @param fileOwnerUuid - the UUID of the file owner's device
+	 * @param byteFileAppend - the file append mode
+	 * @return true if the request is successfully sent; false otherwise.
+	 * @see CMStub#requestFile(String, String, byte)
+	 * @see CMStub#requestFile(String, String, UUID)
+	 */
+	public boolean requestFile(String strFileName, String strFileOwner, UUID fileOwnerUuid, byte byteFileAppend)
+	{
+		boolean bReturn = false;
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
+
+		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN)
+		{
+			System.err.println("CMFileTransferManager.requestFile(), Client must log in to the default server.");
+			return false;
+		}
+
+		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, fileOwnerUuid,
+				byteFileAppend, -1);
+		return bReturn;
+	}
+
 	/**
 	 * Sends a file to a receiver (push mode).
 	 * 
@@ -2355,7 +2402,59 @@ public class CMStub {
 				byteFileAppend, -1);
 		return bReturn;
 	}
-	
+
+	/**
+	 * Sends a file to a receiver specifying the receiver's device UUID (push mode).
+	 *
+	 * <p> This method is the same as {@link CMStub#pushFile(String, String)} with
+	 * an additional {@code fileReceiverUuid} parameter to target a specific device of the receiver.
+	 *
+	 * @param strFilePath - the path name of a file to be sent
+	 * @param strFileReceiver - the file receiver name
+	 * @param fileReceiverUuid - the UUID of the file receiver's device
+	 * @return true if the permit for pushing a file is successfully requested; false otherwise.
+	 * @see CMStub#pushFile(String, String)
+	 * @see CMStub#pushFile(String, String, UUID, byte)
+	 */
+	public boolean pushFile(String strFilePath, String strFileReceiver, UUID fileReceiverUuid)
+	{
+		boolean bReturn = false;
+		bReturn = pushFile(strFilePath, strFileReceiver, fileReceiverUuid, CMInfo.FILE_DEFAULT);
+		return bReturn;
+	}
+
+	/**
+	 * Sends a file to a receiver specifying the receiver's device UUID and the file append mode (push mode).
+	 *
+	 * <p> This method is the same as {@link CMStub#pushFile(String, String, byte)} with
+	 * an additional {@code fileReceiverUuid} parameter to target a specific device of the receiver.
+	 *
+	 * @param strFilePath - the path name of a file to be sent
+	 * @param strReceiver - the file receiver name
+	 * @param fileReceiverUuid - the UUID of the file receiver's device
+	 * @param byteFileAppend - the file append mode
+	 * @return true if the permit for pushing a file is successfully requested; false otherwise.
+	 * @see CMStub#pushFile(String, String, byte)
+	 * @see CMStub#pushFile(String, String, UUID)
+	 */
+	public boolean pushFile(String strFilePath, String strReceiver, UUID fileReceiverUuid, byte byteFileAppend)
+	{
+		boolean bReturn = false;
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
+
+		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN)
+		{
+			System.err.println("CMFileTransferManager.pushFile(), Client must log in to "
+					+ "the default server.");
+			return false;
+		}
+
+		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, fileReceiverUuid,
+				byteFileAppend, -1);
+		return bReturn;
+	}
+
 	/**
 	 * Cancels sending (or pushing) a file.
 	 * 
