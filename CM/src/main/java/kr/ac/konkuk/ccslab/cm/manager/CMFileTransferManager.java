@@ -98,6 +98,8 @@ public class CMFileTransferManager {
 		// Updated to use Singleton pattern for info objects
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		String myName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 
 		List<CMUser> fileOwnerList = null;
 		CMUser fileOwner = null;
@@ -141,7 +143,17 @@ public class CMFileTransferManager {
 		}
 
 		// 3. Selection Strategy: Select the first owner node in the list for implementation ease
-		fileOwner = fileOwnerList.get(0);
+		// 자기 자신 uuid는 제외하고 첫 번째 선택 (현재 group member에 (name, uuid)나 자신과 같은 클라이언트는 포함 안되긴 함)
+		fileOwner = fileOwnerList.stream()
+				.filter(u -> !(myName.equals(strFileOwner)
+						&& Objects.equals(u.getUuid(), myUuid)))
+				.findFirst()
+				.orElse(null);
+
+		if (fileOwner == null) {
+			System.err.println("No valid remote device found for: " + strFileOwner);
+			return false;
+		}
 
 		// 4. Delegate to the 5-parameter version with the selected UUID
 		return requestPermitForPullFile(strFileName, strFileOwner, fileOwner.getUuid(),
