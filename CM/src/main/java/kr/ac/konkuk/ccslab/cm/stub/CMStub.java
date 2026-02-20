@@ -1559,9 +1559,6 @@ public class CMStub {
 		CMGroup group = null;
 		CMMember member = null;
 		boolean ret = false;
-		
-		// set sender
-		cme.setSender(getMyself().getName());
 
 		// if a client in the c/s model, use internal forwarding by a server
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT"))
@@ -1738,10 +1735,6 @@ public class CMStub {
 	 */
 	public boolean multicast(CMEvent cme, String sessionName, String groupName)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
-		// set sender
-		cme.setSender(getMyself().getName());
-
 		boolean ret = false;
 		ret = CMEventManager.multicastEvent(cme, sessionName, groupName);
 		return ret;
@@ -1832,9 +1825,6 @@ public class CMStub {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
-		
-		// set sender
-		cme.setSender(getMyself().getName());
 
 		// in the case of a client in the C/S model, use internal forwarding by all servers
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT"))

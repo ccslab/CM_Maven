@@ -670,6 +670,16 @@ public class CMEventManager {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
+
+		// Set the sender and sender UUID if they are not set (initial state)
+		if(cme.getSender().equals(""))
+		{
+			String strMyName = interInfo.getMyself().getName();
+			UUID myUuid = interInfo.getMyself().getUuid();
+			cme.setSender(strMyName);
+			cme.setSenderUuid(myUuid);
+		}
+
 		CMSession session = interInfo.findSession(strSessionName);
 		CMGroup group = null;
 		InetSocketAddress sockAddress = null;
