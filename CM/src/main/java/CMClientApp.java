@@ -1775,18 +1775,60 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
+		byte byteFileAppendMode;
 		if(strFileAppend.isEmpty())
-			bReturn = m_clientStub.requestFile(strFileName, strFileOwner);
+			byteFileAppendMode = CMInfo.FILE_DEFAULT;
 		else if(strFileAppend.equals("y"))
-			bReturn = m_clientStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_APPEND);
+			byteFileAppendMode = CMInfo.FILE_APPEND;
 		else if(strFileAppend.equals("n"))
-			bReturn = m_clientStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
+			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
 		else
+		{
 			System.err.println("wrong input for the file append mode!");
-		
+			return;
+		}
+
+		// Search for UUID list of the file owner
+		UUID fileOwnerUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strFileOwner);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileOwnerUuid = uuidList.get(0);
+			}
+			else
+			{
+				System.out.println("Multiple devices found for [" + strFileOwner + "]:");
+				System.out.println("0: (all devices)");
+				for(int i = 0; i < uuidList.size(); i++)
+					System.out.println((i + 1) + ": " + uuidList.get(i));
+				System.out.print("Select index (default 0): ");
+				try {
+					String strIndex = br.readLine().trim();
+					if(!strIndex.isEmpty())
+					{
+						int nIndex = Integer.parseInt(strIndex);
+						if(nIndex >= 1 && nIndex <= uuidList.size())
+							fileOwnerUuid = uuidList.get(nIndex - 1);
+						// If 0 or out of range, fileOwnerUuid remains null (all devices)
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (NumberFormatException e) {
+					System.err.println("Invalid index! Using all devices.");
+				}
+			}
+		}
+
+		if(fileOwnerUuid != null)
+			bReturn = m_clientStub.requestFile(strFileName, strFileOwner, fileOwnerUuid, byteFileAppendMode);
+		else
+			bReturn = m_clientStub.requestFile(strFileName, strFileOwner, byteFileAppendMode);
+
 		if(!bReturn)
 			System.err.println("Request file error! file("+strFileName+"), owner("+strFileOwner+").");
-		
+
 		System.out.println("======");
 	}
 	
@@ -1813,18 +1855,60 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
+		byte byteFileAppendMode;
 		if(strFileAppend.isEmpty())
-			bReturn = m_clientStub.pushFile(strFilePath, strReceiver);
+			byteFileAppendMode = CMInfo.FILE_DEFAULT;
 		else if(strFileAppend.equals("y"))
-			bReturn = m_clientStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_APPEND);
+			byteFileAppendMode = CMInfo.FILE_APPEND;
 		else if(strFileAppend.equals("n"))
-			bReturn = m_clientStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_OVERWRITE);
+			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
 		else
+		{
 			System.err.println("wrong input for the file append mode!");
-		
+			return;
+		}
+
+		// Search for UUID list of the receiver
+		UUID fileReceiverUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileReceiverUuid = uuidList.get(0);
+			}
+			else
+			{
+				System.out.println("Multiple devices found for [" + strReceiver + "]:");
+				System.out.println("0: (all devices)");
+				for(int i = 0; i < uuidList.size(); i++)
+					System.out.println((i + 1) + ": " + uuidList.get(i));
+				System.out.print("Select index (default 0): ");
+				try {
+					String strIndex = br.readLine().trim();
+					if(!strIndex.isEmpty())
+					{
+						int nIndex = Integer.parseInt(strIndex);
+						if(nIndex >= 1 && nIndex <= uuidList.size())
+							fileReceiverUuid = uuidList.get(nIndex - 1);
+						// If 0 or out of range, fileReceiverUuid remains null (all devices)
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (NumberFormatException e) {
+					System.err.println("Invalid index! Using all devices.");
+				}
+			}
+		}
+
+		if(fileReceiverUuid != null)
+			bReturn = m_clientStub.pushFile(strFilePath, strReceiver, fileReceiverUuid, byteFileAppendMode);
+		else
+			bReturn = m_clientStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
+
 		if(!bReturn)
 			System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
-		
+
 		System.out.println("======");
 	}
 	

@@ -2524,9 +2524,42 @@ public class CMWinClient extends JFrame {
 			byteFileAppendMode = CMInfo.FILE_APPEND;
 			break;
 		}
-		
-		bReturn = m_clientStub.requestFile(strFileName, strFileOwner, byteFileAppendMode);
-					
+
+		// Search for UUID list of the file owner
+		UUID fileOwnerUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strFileOwner);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileOwnerUuid = uuidList.get(0);
+			}
+			else
+			{
+				// Multiple devices found: let the user select
+				Object[] uuidOptions = new Object[uuidList.size() + 1];
+				uuidOptions[0] = "(all devices)";
+				for(int i = 0; i < uuidList.size(); i++)
+					uuidOptions[i + 1] = uuidList.get(i);
+
+				Object selected = JOptionPane.showInputDialog(null,
+						"File owner [" + strFileOwner + "] has multiple devices.\nSelect target device UUID:",
+						"Multiple Devices Found",
+						JOptionPane.QUESTION_MESSAGE, null,
+						uuidOptions, uuidOptions[0]);
+
+				if(selected == null) return; // User cancelled
+				if(selected instanceof UUID)
+					fileOwnerUuid = (UUID) selected;
+				// If "(all devices)" is selected, fileOwnerUuid remains null
+			}
+		}
+
+		if(fileOwnerUuid != null)
+			bReturn = m_clientStub.requestFile(strFileName, strFileOwner, fileOwnerUuid, byteFileAppendMode);
+		else
+			bReturn = m_clientStub.requestFile(strFileName, strFileOwner, byteFileAppendMode);
+
 		if(!bReturn)
 			printMessage("Request file error! file("+strFileName+"), owner("+strFileOwner+").\n");
 		
@@ -2580,6 +2613,36 @@ public class CMWinClient extends JFrame {
 			break;			
 		}
 		
+		// Search for UUID list of the receiver
+		UUID fileReceiverUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileReceiverUuid = uuidList.get(0);
+			}
+			else
+			{
+				// Multiple devices found: let the user select
+				Object[] uuidOptions = new Object[uuidList.size() + 1];
+				uuidOptions[0] = "(all devices)";
+				for(int i = 0; i < uuidList.size(); i++)
+					uuidOptions[i + 1] = uuidList.get(i);
+
+				Object selected = JOptionPane.showInputDialog(null,
+						"Receiver [" + strReceiver + "] has multiple devices.\nSelect target device UUID:",
+						"Multiple Devices Found",
+						JOptionPane.QUESTION_MESSAGE, null,
+						uuidOptions, uuidOptions[0]);
+
+				if(selected == null) return; // User cancelled
+				if(selected instanceof UUID)
+					fileReceiverUuid = (UUID) selected;
+				// If "(all devices)" is selected, fileReceiverUuid remains null
+			}
+		}
+
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -2592,7 +2655,10 @@ public class CMWinClient extends JFrame {
 		for(int i=0; i < files.length; i++)
 		{
 			strFilePath = files[i].getPath();
-			bReturn = m_clientStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
+			if(fileReceiverUuid != null)
+				bReturn = m_clientStub.pushFile(strFilePath, strReceiver, fileReceiverUuid, byteFileAppendMode);
+			else
+				bReturn = m_clientStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
 			if(!bReturn)
 			{
 				printMessage("push file error! file("+strFilePath+"), receiver("
