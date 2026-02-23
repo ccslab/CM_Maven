@@ -3339,14 +3339,19 @@ public class CMClientApp {
 			return;
 		}
 		
+		boolean bRet;
 		if(bDetail)
 		{
-			mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag, 
+			bRet = mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag,
 					bCleanSession);
 		}
 		else {
-			mqttManager.connect();
+			bRet = mqttManager.connect();
 		}
+		if(bRet)
+			System.out.println("MQTT connect succeeded.");
+		else
+			System.err.println("MQTT connect failed!");
 
 	}
 	

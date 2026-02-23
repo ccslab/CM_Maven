@@ -4035,9 +4035,13 @@ public class CMWinClient extends JFrame {
 			printStyledMessage("CMMqttManager is null!\n", "bold");
 			return;
 		}
-		mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag, 
+		boolean bRet = mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag,
 				bCleanSession);
-		
+		if(bRet)
+			printMessage("MQTT connect succeeded.");
+		else
+			printStyledMessage("MQTT connect failed!", "bold");
+
 	}
 	
 	private void testMqttPublish()
