@@ -4077,7 +4077,11 @@ public class CMWinClient extends JFrame {
 			return;
 		}
 		//mqttManager.publish(1, "/CM/test", "This is a test message.", (byte)1);
-		mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);
+		boolean bRet = mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);
+		if(bRet)
+			printMessage("MQTT publish succeeded.");
+		else
+			printStyledMessage("MQTT publish failed!", "bold");
 	}
 	
 	private void testMqttSubscribe()
@@ -4103,9 +4107,13 @@ public class CMWinClient extends JFrame {
 			printStyledMessage("CMMqttManager is null!\n", "bold");
 			return;
 		}
-		mqttManager.subscribe(strTopicFilter, qos);
+		boolean bRet = mqttManager.subscribe(strTopicFilter, qos);
+		if(bRet)
+			printMessage("MQTT subscribe succeeded.");
+		else
+			printStyledMessage("MQTT subscribe failed!", "bold");
 	}
-	
+
 	private void testPrintMqttSessionInfo()
 	{
 		printMessage("========== print MQTT session info\n");
@@ -4132,9 +4140,13 @@ public class CMWinClient extends JFrame {
 			printStyledMessage("CMMqttManager is null!\n", "bold");
 			return;
 		}
-		mqttManager.unsubscribe(strTopic);
+		boolean bRet = mqttManager.unsubscribe(strTopic);
+		if(bRet)
+			printMessage("MQTT unsubscribe succeeded.");
+		else
+			printStyledMessage("MQTT unsubscribe failed!", "bold");
 	}
-	
+
 	private void testMqttDisconnect()
 	{
 		printMessage("========== MQTT disconnect\n");
@@ -4144,7 +4156,11 @@ public class CMWinClient extends JFrame {
 			printStyledMessage("CMMqttManager is null!\n", "bold");
 			return;
 		}
-		mqttManager.disconnect();
+		boolean bRet = mqttManager.disconnect();
+		if(bRet)
+			printMessage("MQTT disconnect succeeded.");
+		else
+			printStyledMessage("MQTT disconnect failed!", "bold");
 	}
 
 	private void testStartFileSyncWithManualMode() {

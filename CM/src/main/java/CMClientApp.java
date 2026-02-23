@@ -3403,14 +3403,19 @@ public class CMClientApp {
 			return;
 		}
 		
+		boolean bRet;
 		if(bDetail)
 		{
-			mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);			
+			bRet = mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);
 		}
 		else
 		{
-			mqttManager.publish(strTopic, strMessage);
+			bRet = mqttManager.publish(strTopic, strMessage);
 		}
+		if(bRet)
+			System.out.println("MQTT publish succeeded.");
+		else
+			System.err.println("MQTT publish failed!");
 
 	}
 	
@@ -3437,7 +3442,11 @@ public class CMClientApp {
 			System.err.println("CMMqttManager is null!");
 			return;
 		}
-		mqttManager.subscribe(strTopicFilter, qos);
+		boolean bRet = mqttManager.subscribe(strTopicFilter, qos);
+		if(bRet)
+			System.out.println("MQTT subscribe succeeded.");
+		else
+			System.err.println("MQTT subscribe failed!");
 
 	}
 	
@@ -3469,7 +3478,11 @@ public class CMClientApp {
 			System.err.println("CMMqttManager is null!");
 			return;
 		}
-		mqttManager.unsubscribe(strTopic);
+		boolean bRet = mqttManager.unsubscribe(strTopic);
+		if(bRet)
+			System.out.println("MQTT unsubscribe succeeded.");
+		else
+			System.err.println("MQTT unsubscribe failed!");
 
 	}
 	
@@ -3482,7 +3495,11 @@ public class CMClientApp {
 			System.err.println("CMMqttManager is null!");
 			return;
 		}
-		mqttManager.disconnect();
+		boolean bRet = mqttManager.disconnect();
+		if(bRet)
+			System.out.println("MQTT disconnect succeeded.");
+		else
+			System.err.println("MQTT disconnect failed!");
 
 	}
 
