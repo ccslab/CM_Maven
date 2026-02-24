@@ -12,18 +12,7 @@ import java.util.List;
 
 import javax.swing.*;
 
-import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
-import kr.ac.konkuk.ccslab.cm.entity.CMGroupInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
-import kr.ac.konkuk.ccslab.cm.entity.CMMember;
-import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
-import kr.ac.konkuk.ccslab.cm.entity.CMPosition;
-import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMServer;
-import kr.ac.konkuk.ccslab.cm.entity.CMSession;
-import kr.ac.konkuk.ccslab.cm.entity.CMSessionInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.entity.*;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -36,6 +25,7 @@ import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.manager.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 
 public class CMClientApp {
@@ -210,7 +200,7 @@ public class CMClientApp {
 				case 57: // print all configurations
 					testPrintConfigurations();
 					break;
-				case 58: // change configuration
+				case 58: // edit configuration file
 					testChangeConfiguration();
 					break;
 				case 59: // show current thread information
@@ -405,7 +395,7 @@ public class CMClientApp {
 		System.out.println("52: show current channels, 53: show current server information");
 		System.out.println("54: show group information of designated server");
 		System.out.println("55: measure input network throughput, 56: measure output network throughput");
-		System.out.println("57: show all configurations, 58: change configuration");
+		System.out.println("57: show all configurations, 58: edit configuration file");
 		System.out.println("59: show current thread information");
 		System.out.println("---------------------------------- Channel");
 		System.out.println("60: add channel, 61: remove channel, 62: test blocking channel");
@@ -968,6 +958,8 @@ public class CMClientApp {
 		CMUserEvent ue = new CMUserEvent();
 		CMUserEvent rue = null;
 		String strTargetName = null;
+		List<UUID> uuidList = null;
+		UUID targetUuid = null;
 		
 		// a user event: (id, 111) (string id, "testSendRecv")
 		// a reply user event: (id, 222) (string id, "testReplySendRecv")
@@ -986,18 +978,58 @@ public class CMClientApp {
 
 		try {
 			strTargetName = br.readLine().trim();
+			if(strTargetName.isEmpty())
+			{
+				strTargetName = m_clientStub.getDefaultServerName();
+			}
+
+			// [Modified] Get UUID list for the target name
+			uuidList = CMInteractionManager.findUuidList(strTargetName);
+
+			if(uuidList != null && !uuidList.isEmpty())
+			{
+				if(uuidList.size() == 1)
+				{
+					// Only one login found
+					targetUuid = uuidList.get(0);
+				}
+				else
+				{
+					// Multiple logins found: Select via index
+					System.out.println("Multiple devices found for [" + strTargetName + "]:");
+					for(int i = 0; i < uuidList.size(); i++) {
+						System.out.println(i + ": " + uuidList.get(i));
+					}
+					System.out.print("Select index (default 0): ");
+					String strIndex = br.readLine().trim();
+					if(strIndex.isEmpty()) {
+						targetUuid = uuidList.get(0);
+					} else {
+						try {
+							int nIndex = Integer.parseInt(strIndex);
+							if(nIndex >= 0 && nIndex < uuidList.size()) {
+								targetUuid = uuidList.get(nIndex);
+							} else {
+								targetUuid = uuidList.get(0);
+							}
+						} catch (NumberFormatException e) {
+							targetUuid = uuidList.get(0);
+						}
+					}
+				}
+			}
+			// If uuidList is null (e.g. Server), targetUuid remains null
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
-		
-		if(strTargetName.isEmpty())
-		{
-			strTargetName = m_clientStub.getDefaultServerName();
-		}
-		
+
+		// [Modified] Include targetUuid in debug message
+		System.out.println("Target name: " + strTargetName + ", target uuid: " + targetUuid);
+
 		long lStartTime = System.currentTimeMillis();
-		rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, CMInfo.CM_USER_EVENT, 222, 10000);
+		rue = (CMUserEvent) m_clientStub.sendrecv(ue, strTargetName, targetUuid, CMInfo.CM_USER_EVENT,
+				222, 10000);
 		long lServerResponseDelay = System.currentTimeMillis() - lStartTime;
 
 		if(rue == null)
@@ -1232,9 +1264,10 @@ public class CMClientApp {
 		CMUser myself = interInfo.getMyself();
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		System.out.println("------ for the default server");
-		System.out.println("name("+myself.getName()+"), session("+myself.getCurrentSession()+"), group("
-				+myself.getCurrentGroup()+"), udp port("+myself.getUDPPort()+"), state("
-				+myself.getState()+"), attachment download scheme("+confInfo.getAttachDownloadScheme()+").");
+		System.out.println("name("+myself.getName()+"), uuid("+myself.getUuid()+"), session("
+				+myself.getCurrentSession()+"), group(" +myself.getCurrentGroup()+"), udp port("
+				+myself.getUDPPort()+"), state("+myself.getState()+"), attachment download scheme("
+				+confInfo.getAttachDownloadScheme()+").");
 		
 		// for additional servers
 		Iterator<CMServer> iter = interInfo.getAddServerList().iterator();
@@ -1742,18 +1775,60 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
+		byte byteFileAppendMode;
 		if(strFileAppend.isEmpty())
-			bReturn = m_clientStub.requestFile(strFileName, strFileOwner);
+			byteFileAppendMode = CMInfo.FILE_DEFAULT;
 		else if(strFileAppend.equals("y"))
-			bReturn = m_clientStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_APPEND);
+			byteFileAppendMode = CMInfo.FILE_APPEND;
 		else if(strFileAppend.equals("n"))
-			bReturn = m_clientStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
+			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
 		else
+		{
 			System.err.println("wrong input for the file append mode!");
-		
+			return;
+		}
+
+		// Search for UUID list of the file owner
+		UUID fileOwnerUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strFileOwner);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileOwnerUuid = uuidList.get(0);
+			}
+			else
+			{
+				System.out.println("Multiple devices found for [" + strFileOwner + "]:");
+				System.out.println("0: (all devices)");
+				for(int i = 0; i < uuidList.size(); i++)
+					System.out.println((i + 1) + ": " + uuidList.get(i));
+				System.out.print("Select index (default 0): ");
+				try {
+					String strIndex = br.readLine().trim();
+					if(!strIndex.isEmpty())
+					{
+						int nIndex = Integer.parseInt(strIndex);
+						if(nIndex >= 1 && nIndex <= uuidList.size())
+							fileOwnerUuid = uuidList.get(nIndex - 1);
+						// If 0 or out of range, fileOwnerUuid remains null (all devices)
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (NumberFormatException e) {
+					System.err.println("Invalid index! Using all devices.");
+				}
+			}
+		}
+
+		if(fileOwnerUuid != null)
+			bReturn = m_clientStub.requestFile(strFileName, strFileOwner, fileOwnerUuid, byteFileAppendMode);
+		else
+			bReturn = m_clientStub.requestFile(strFileName, strFileOwner, byteFileAppendMode);
+
 		if(!bReturn)
 			System.err.println("Request file error! file("+strFileName+"), owner("+strFileOwner+").");
-		
+
 		System.out.println("======");
 	}
 	
@@ -1780,18 +1855,60 @@ public class CMClientApp {
 			e.printStackTrace();
 		}
 		
+		byte byteFileAppendMode;
 		if(strFileAppend.isEmpty())
-			bReturn = m_clientStub.pushFile(strFilePath, strReceiver);
+			byteFileAppendMode = CMInfo.FILE_DEFAULT;
 		else if(strFileAppend.equals("y"))
-			bReturn = m_clientStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_APPEND);
+			byteFileAppendMode = CMInfo.FILE_APPEND;
 		else if(strFileAppend.equals("n"))
-			bReturn = m_clientStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_OVERWRITE);
+			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
 		else
+		{
 			System.err.println("wrong input for the file append mode!");
-		
+			return;
+		}
+
+		// Search for UUID list of the receiver
+		UUID fileReceiverUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileReceiverUuid = uuidList.get(0);
+			}
+			else
+			{
+				System.out.println("Multiple devices found for [" + strReceiver + "]:");
+				System.out.println("0: (all devices)");
+				for(int i = 0; i < uuidList.size(); i++)
+					System.out.println((i + 1) + ": " + uuidList.get(i));
+				System.out.print("Select index (default 0): ");
+				try {
+					String strIndex = br.readLine().trim();
+					if(!strIndex.isEmpty())
+					{
+						int nIndex = Integer.parseInt(strIndex);
+						if(nIndex >= 1 && nIndex <= uuidList.size())
+							fileReceiverUuid = uuidList.get(nIndex - 1);
+						// If 0 or out of range, fileReceiverUuid remains null (all devices)
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (NumberFormatException e) {
+					System.err.println("Invalid index! Using all devices.");
+				}
+			}
+		}
+
+		if(fileReceiverUuid != null)
+			bReturn = m_clientStub.pushFile(strFilePath, strReceiver, fileReceiverUuid, byteFileAppendMode);
+		else
+			bReturn = m_clientStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
+
 		if(!bReturn)
 			System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
-		
+
 		System.out.println("======");
 	}
 	
@@ -1858,23 +1975,31 @@ public class CMClientApp {
 	public void printSendRecvFileInfo()
 	{
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
-		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
-		Set<String> sendKeySet = sendHashtable.keySet();
-		Set<String> recvKeySet = recvHashtable.keySet();
-		
+		// [Modification]: The key type has been changed from String to CMUserLoginKey
+		// to support multi-device environments (refer to design doc 05, 08).
+		Hashtable<CMUserLoginKey, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
+		Hashtable<CMUserLoginKey, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
+
+		// [Modification]: Key set type updated to CMUserLoginKey.
+		Set<CMUserLoginKey> sendKeySet = sendHashtable.keySet();
+		Set<CMUserLoginKey> recvKeySet = recvHashtable.keySet();
+
 		System.out.print("==== sending file info\n");
-		for(String receiver : sendKeySet)
+		for(CMUserLoginKey receiverKey : new ArrayList<>(sendKeySet))
 		{
-			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiver);
-			System.out.print(sendList+"\n");
+			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiverKey);
+			if(sendList == null) continue;
+			System.out.print("Receiver (Name+UUID): " + receiverKey + "\n");
+			System.out.print(sendList + "\n");
 		}
 
 		System.out.print("==== receiving file info\n");
-		for(String sender : recvKeySet)
+		for(CMUserLoginKey senderKey : new ArrayList<>(recvKeySet))
 		{
-			CMList<CMRecvFileInfo> recvList = recvHashtable.get(sender);
-			System.out.print(recvList+"\n");
+			CMList<CMRecvFileInfo> recvList = recvHashtable.get(senderKey);
+			if(recvList == null) continue;
+			System.out.print("Sender (Name+UUID): " + senderKey + "\n");
+			System.out.print(recvList + "\n");
 		}
 	}
 	
@@ -2550,6 +2675,8 @@ public class CMClientApp {
 		int nMode = -1; // 1: push, 2: pull
 		int nFileNum = -1;
 		String strTarget = null;
+		UUID targetUuid = null;
+
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.println("====== pull/push multiple files");
 		try {
@@ -2569,6 +2696,32 @@ public class CMClientApp {
 			{
 				System.out.println("Incorrect transmission mode!");
 				return;
+			}
+
+			// [Modified] UUID selection logic using findUuidList() and Singleton CMInteractionInfo
+			List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+
+			if(uuidList != null && !uuidList.isEmpty())
+			{
+				if(uuidList.size() > 1)
+				{
+					System.out.println("Target user \"" + strTarget + "\" has multiple devices.");
+					for(int i = 0; i < uuidList.size(); i++) {
+						System.out.println(i + ": " + uuidList.get(i));
+					}
+					System.out.print("Select device index (0-" + (uuidList.size()-1) + "): ");
+					int nIndex = Integer.parseInt(br.readLine());
+					if(nIndex >= 0 && nIndex < uuidList.size()) {
+						targetUuid = uuidList.get(nIndex);
+					} else {
+						System.out.println("Invalid index! Operation cancelled.");
+						return;
+					}
+				}
+				else
+				{
+					targetUuid = uuidList.get(0);
+				}
 			}
 
 			System.out.print("Number of files: ");
@@ -2597,15 +2750,14 @@ public class CMClientApp {
 			switch(nMode)
 			{
 			case 1: // push
-				CMFileTransferManager.pushFile(strFiles[i], strTarget);
+				CMFileTransferManager.pushFile(strFiles[i], strTarget, targetUuid);
 				break;
 			case 2: // pull
-				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget);
+				CMFileTransferManager.requestPermitForPullFile(strFiles[i], strTarget, targetUuid,
+						CMInfo.FILE_DEFAULT, -1);
 				break;
 			}
 		}
-		
-		return;
 	}
 	
 	public void testSplitFile()
@@ -2816,7 +2968,7 @@ public class CMClientApp {
 			
 			m_clientStub.send(fe, strAddServer);
 			
-			CMFileTransferManager.pushFile(strPieceName, strAddServer);
+			CMFileTransferManager.pushFile(strPieceName, strAddServer, null);
 		}
 		// for the last piece
 		if( i == 0 )
@@ -2837,8 +2989,7 @@ public class CMClientApp {
 		fe.setFileReceiver(m_clientStub.getDefaultServerName());
 		m_clientStub.send(fe, m_clientStub.getDefaultServerName());
 		
-		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName()
-        );
+		CMFileTransferManager.pushFile(strPieceName, m_clientStub.getDefaultServerName(), null);
 		
 		try {
 			raf.close();
@@ -2993,29 +3144,89 @@ public class CMClientApp {
 	public void testMeasureInputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		System.out.println("========== test input network throughput");
 		System.out.print("target node (\"SERVER\" for the default server): ");
 		strTarget = m_scan.next();
-		speed = m_clientStub.measureInputThroughput(strTarget);
+
+		// [Modified] Check UUID list for the target to support multi-login
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			// If no UUID list is found, proceed with null UUID (default behavior)
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			// If only one device is logged in, use its UUID
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] If multiple devices are logged in, let the user choose one
+			System.out.println("Multiple devices found for target [" + strTarget + "]:");
+			for(int i = 0; i < uuidList.size(); i++)
+			{
+				System.out.println(i + ": " + uuidList.get(i));
+			}
+			System.out.print("Select UUID index (0-" + (uuidList.size()-1) + "): ");
+			int nIndex = m_scan.nextInt();
+			if(nIndex >= 0 && nIndex < uuidList.size())
+				targetUuid = uuidList.get(nIndex);
+			else
+				targetUuid = uuidList.get(0); // Default to first device if input is invalid
+		}
+
+		speed = m_clientStub.measureInputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			System.err.println("Test failed!");
 		else
-			System.out.format("Input network throughput from [%s] : %.2f%n", strTarget, speed);
+			System.out.format("Input network throughput from [%s] (UUID: %s) : %.2f%n",
+					strTarget, CMUUIDConverter.uuidToString(targetUuid), speed);
 	}
 	
 	public void testMeasureOutputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		System.out.println("========== test output network throughput");
 		System.out.print("target node (\"SERVER\" for the default server): ");
 		strTarget = m_scan.next();
-		speed = m_clientStub.measureOutputThroughput(strTarget);
+
+		// [Modified] Retrieve available UUIDs for the target node
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] User interaction required for multiple login instances
+			System.out.println("Multiple devices found for target [" + strTarget + "]:");
+			for(int i = 0; i < uuidList.size(); i++)
+			{
+				System.out.println(i + ": " + uuidList.get(i));
+			}
+			System.out.print("Select UUID index: ");
+			int nIndex = m_scan.nextInt();
+			if(nIndex >= 0 && nIndex < uuidList.size())
+				targetUuid = uuidList.get(nIndex);
+			else
+				targetUuid = uuidList.get(0);
+		}
+
+		speed = m_clientStub.measureOutputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			System.err.println("Test failed!");
 		else
-			System.out.format("Output network throughput to [%s] : %.2f%n", strTarget, speed);
+			System.out.format("Output network throughput to [%s] (UUID: %s) : %.2f%n",
+					strTarget, CMUUIDConverter.uuidToString(targetUuid), speed);
 	}
 
 	public void testPrintCurrentChannelInfo()
@@ -3055,7 +3266,7 @@ public class CMClientApp {
 		boolean bRet = false;
 		String strField = null;
 		String strValue = null;
-		System.out.println("========== change configuration");
+		System.out.println("========== edit configuration file");
 		Path confPath = m_clientStub.getConfigurationHome().resolve("cm-client.conf");
 		
 		System.out.print("Field name: ");
@@ -3128,14 +3339,19 @@ public class CMClientApp {
 			return;
 		}
 		
+		boolean bRet;
 		if(bDetail)
 		{
-			mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag, 
+			bRet = mqttManager.connect(strWillTopic, strWillMessage, bWillRetain, willQoS, bWillFlag,
 					bCleanSession);
 		}
 		else {
-			mqttManager.connect();
+			bRet = mqttManager.connect();
 		}
+		if(bRet)
+			System.out.println("MQTT connect succeeded.");
+		else
+			System.err.println("MQTT connect failed!");
 
 	}
 	
@@ -3187,14 +3403,19 @@ public class CMClientApp {
 			return;
 		}
 		
+		boolean bRet;
 		if(bDetail)
 		{
-			mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);			
+			bRet = mqttManager.publish(strTopic, strMessage, qos, bDupFlag, bRetainFlag);
 		}
 		else
 		{
-			mqttManager.publish(strTopic, strMessage);
+			bRet = mqttManager.publish(strTopic, strMessage);
 		}
+		if(bRet)
+			System.out.println("MQTT publish succeeded.");
+		else
+			System.err.println("MQTT publish failed!");
 
 	}
 	
@@ -3221,7 +3442,11 @@ public class CMClientApp {
 			System.err.println("CMMqttManager is null!");
 			return;
 		}
-		mqttManager.subscribe(strTopicFilter, qos);
+		boolean bRet = mqttManager.subscribe(strTopicFilter, qos);
+		if(bRet)
+			System.out.println("MQTT subscribe succeeded.");
+		else
+			System.err.println("MQTT subscribe failed!");
 
 	}
 	
@@ -3253,7 +3478,11 @@ public class CMClientApp {
 			System.err.println("CMMqttManager is null!");
 			return;
 		}
-		mqttManager.unsubscribe(strTopic);
+		boolean bRet = mqttManager.unsubscribe(strTopic);
+		if(bRet)
+			System.out.println("MQTT unsubscribe succeeded.");
+		else
+			System.err.println("MQTT unsubscribe failed!");
 
 	}
 	
@@ -3266,7 +3495,11 @@ public class CMClientApp {
 			System.err.println("CMMqttManager is null!");
 			return;
 		}
-		mqttManager.disconnect();
+		boolean bRet = mqttManager.disconnect();
+		if(bRet)
+			System.out.println("MQTT disconnect succeeded.");
+		else
+			System.err.println("MQTT disconnect failed!");
 
 	}
 

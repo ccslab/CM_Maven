@@ -120,9 +120,6 @@ public class CMMember extends CMObject{
 
 	/**
 	 * Removes all users in this member table.
-	 * 
-	 * @return true if this member list is not empty and cleared; 
-	 * false if the list is already empty.
 	 */
 	public synchronized void removeAllMembers()
 	{

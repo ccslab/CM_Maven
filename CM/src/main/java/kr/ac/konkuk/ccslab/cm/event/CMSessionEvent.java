@@ -28,6 +28,7 @@ public class CMSessionEvent extends CMEvent {
 	 * <li>host address : {@link CMSessionEvent#getHostAddress()}</li>
 	 * <li>UDP port of the user : {@link CMSessionEvent#getUDPPort()}</li>
 	 * <li>keep-alive time of the user : {@link CMSessionEvent#getKeepAliveTime()}</li>
+	 * <li>uuid of the user : {@link CMSessionEvent#getUuid()}</li>
 	 * </ul>
 	 */
 	public static final int LOGIN = 1;
@@ -625,7 +626,7 @@ public class CMSessionEvent extends CMEvent {
 	 */
 	public void setChannelUuid(UUID uuid)
 	{
-		m_uuid = uuid;
+		m_channelUuid = uuid;
 	}
 
 	/**
@@ -633,7 +634,7 @@ public class CMSessionEvent extends CMEvent {
 	 * @return channel UUID.
 	 */
 	public UUID getChannelUuid() {
-		return m_uuid;
+		return m_channelUuid;
 	}
 
 	public void setValidUser(int bValid)
@@ -1176,6 +1177,8 @@ public class CMSessionEvent extends CMEvent {
 				+ m_strPasswd.getBytes().length	+ m_strHostAddr.getBytes().length;
 			nByteNum += Integer.BYTES;
 			nByteNum += Integer.BYTES;	// keep-alive time
+			// uuid
+			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + CMUUIDConverter.uuidToString(m_uuid).getBytes().length;
 			break;
 		case LOGOUT:
 			nByteNum += CMInfo.STRING_LEN_BYTES_LEN + m_strUserName.getBytes().length;
@@ -1315,6 +1318,7 @@ public class CMSessionEvent extends CMEvent {
 		{
 		case LOGIN:
 			putStringToByteBuffer(m_strUserName);
+			putStringToByteBuffer(CMUUIDConverter.uuidToString(m_uuid));
 			putStringToByteBuffer(m_strPasswd);
 			putStringToByteBuffer(m_strHostAddr);
 			m_bytes.putInt(m_nUDPPort);
@@ -1477,6 +1481,7 @@ public class CMSessionEvent extends CMEvent {
 		{
 		case LOGIN:
 			m_strUserName = getStringFromByteBuffer(msg);
+			m_uuid = CMUUIDConverter.stringToUuid(getStringFromByteBuffer(msg));
 			m_strPasswd = getStringFromByteBuffer(msg);
 			m_strHostAddr = getStringFromByteBuffer(msg);
 			m_nUDPPort = msg.getInt();

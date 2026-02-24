@@ -389,7 +389,7 @@ public class CMSNSManager {
 		
 		// find the ongoing file sending info
 		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
-		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName);
+		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName, uuid);
 		if(sendFileInfo != null)
 		{
 			// check if the ongoing file is one of the prefetch list member
@@ -636,7 +636,7 @@ public class CMSNSManager {
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
 							+ "to the user("+strUser+"), uuid("+se.getSenderUuid()+").");
-				CMFileTransferManager.cancelPushFile(strUser);	// not clear
+				CMFileTransferManager.cancelPushFile(strUser, se.getSenderUuid());
 			}
 			
 			// clear the prefetch list of the user
@@ -718,6 +718,7 @@ public class CMSNSManager {
 		Vector<CMSNSContent> contentVector = null;
 		int nForStart = -1;
 		int nForEnd = -1;
+		int nActualDownNum = 0;
 		
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nDefDownloadNum = confInfo.getDownloadNum();
@@ -811,6 +812,7 @@ public class CMSNSManager {
 
 			nForStart = 0;
 			nForEnd = contentList.getSNSContentNum();
+			nActualDownNum = contentList.getSNSContentNum();
 
 			// create and send content events
 			for(int i = nForStart; i < nForEnd; i++)
@@ -970,18 +972,16 @@ public class CMSNSManager {
 		}
 		else	// if DB is not used,
 		{
-			//////////////////////////////////
-			////// not yet (Currently, only offset and number of content are considered!
-			
 			// if CM DB is not used (content list contains all the uploaded contents in ascending order of seqNum)
 			// adjust nContNum if it is greater than the real remaining number from the offset in the content list
 			if( nOffset > contentList.getSNSContentNum() )	// it means an error
 				nContNum = 0;
 			else if( nOffset + nContNum > contentList.getSNSContentNum() )
 				nContNum = contentList.getSNSContentNum() - nOffset;
-		
+
 			nForStart = contentList.getSNSContentNum() - nOffset -1;
 			nForEnd = contentList.getSNSContentNum() - (nOffset+nContNum) - 1;
+			nActualDownNum = nContNum;
 
 			// create and send content events
 			for(int i = nForStart; i > nForEnd; i--)
@@ -990,40 +990,128 @@ public class CMSNSManager {
 				sevent.setID(CMSNSEvent.CONTENT_DOWNLOAD);
 				sevent.setUserName( se.getUserName() );
 				sevent.setContentOffset( se.getContentOffset() );
-			
+
 				nContID = contentVector.elementAt(i).getContentID();
 				sevent.setContentID( nContID );
 				strDate = contentVector.elementAt(i).getDate();
 				sevent.setDate( strDate );
 				strWriter = contentVector.elementAt(i).getWriterName();
 				sevent.setWriterName( strWriter );
-				//strFileName = contentVector.elementAt(i).getAttachedFileName();
-				//if( strFileName != null )
-				//	sevent.setAttachedFileName( strFileName );
 				strMsg = contentVector.elementAt(i).getMessage();
 				sevent.setMessage( strMsg );
-					
-				// add estimated download delay of this content for simulation
-				/*
-				int maxDelta = ((int)lDelay/2)/3; // 30% of estimated one-way delay
-				int delta = 0;
-				if( maxDelta != 0 )
+				nNumAttachedFiles = contentVector.elementAt(i).getNumAttachedFiles();
+				sevent.setNumAttachedFiles(nNumAttachedFiles);
+				nReplyOf = contentVector.elementAt(i).getReplyOf();
+				sevent.setReplyOf(nReplyOf);
+				nLevelOfDisclosure = contentVector.elementAt(i).getLevelOfDisclosure();
+				sevent.setLevelOfDisclosure(nLevelOfDisclosure);
+
+				// if the content includes attached files,
+				if(nNumAttachedFiles > 0)
 				{
-					delta = rnd.nextInt(maxDelta); // 0 ~ maxDelta
+					bExistAttachment = true;
+
+					ArrayList<String> attachFileList = contentVector.elementAt(i).getFilePathList();
+					nameList = new ArrayList<String>();
+					pathList = new ArrayList<String>();
+					prefetchPathList = new ArrayList<String>();
+
+					for(int j = 0; attachFileList != null && j < attachFileList.size(); j++)
+					{
+						String strAttachPathFile = attachFileList.get(j);
+						boolean bOriginal = true;
+						boolean bThumbnail = false;
+						String strFilePath = strAttachPathFile.substring(0, strAttachPathFile.lastIndexOf(File.separator));
+						String strFileName = strAttachPathFile.substring(strAttachPathFile.lastIndexOf(File.separator)+1);
+						String strThumbnailName = null;
+						if(CMUtil.isImageFile(strFilePath+File.separator+strFileName))
+						{
+							// change the image file name to its thumbnail image name
+							int index = strFileName.lastIndexOf(".");
+							strThumbnailName = strFileName.substring(0, index)+"-thumbnail"
+								+strFileName.substring(index, strFileName.length());
+
+							if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PARTIAL)
+							{
+								bOriginal = false;
+								bThumbnail = true;
+							}
+							else if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH)
+							{
+								bOriginal = false;
+								bThumbnail = true;
+								if(CMInfo._CM_DEBUG)
+								{
+									System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_READY(), "
+											+ "call isPrefetchEnabled() for content("+nContID+").");
+								}
+								// check prefetch threshold (interest of a user in a writer)
+								if(isPrefetchEnabled(se.getUserName(), se.getSenderUuid(), strWriter))
+								{
+									// add a file path to the prefetching list
+									// avoid duplicate path
+									if(!prefetchPathList.contains(strFilePath+File.separator+strFileName))
+										prefetchPathList.add(strFilePath+File.separator+strFileName);
+								}
+							}
+						}
+
+						if(bOriginal)
+						{
+							nameList.add(strFileName);
+							pathList.add(strFilePath+File.separator+strFileName);
+						}
+						if(bThumbnail)
+						{
+							nameList.add(strThumbnailName);
+							pathList.add(strFilePath+File.separator+strThumbnailName);
+						}
+					}
+
+					// add the file name list to the CONTENT_DOWNLOAD event
+					sevent.setFileNameList(nameList);
+
+					if(nAttachDownloadScheme != CMInfo.SNS_ATTACH_NONE)
+					{
+						// add the attached file path to the attachMapToBeSent
+						CMSNSAttachHashtable sendAttachHashtable = snsInfo.getSendSNSAttachHashtable();
+						CMSNSAttach attach = new CMSNSAttach();
+						attach.setContentID(nContID);
+						attach.setFilePathList(pathList);
+						CMSNSAttachList attachList = sendAttachHashtable.findSNSAttachList(se.getUserName(),
+								se.getSenderUuid());
+						if(attachList != null)
+						{
+							attachList.addSNSAttach(attach);
+						}
+						else
+						{
+							attachList = new CMSNSAttachList();
+							attachList.addSNSAttach(attach);
+							attachList.setContentDownloadEndEvent(se.getUserName(), se.getWriterName(),
+									se.getContentOffset(), nActualDownNum);
+							sendAttachHashtable.addSNSAttachList(se.getUserName(), se.getSenderUuid(), attachList);
+						}
+
+						// save the prefetch list if current mode is the prefetch mode
+						if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH && !prefetchPathList.isEmpty())
+						{
+							CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
+							CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName(),
+									se.getSenderUuid());
+							if(prefetchList == null)
+							{
+								prefetchList = new CMSNSPrefetchList();
+							}
+							prefetchList.addFilePathList(prefetchPathList);
+							prefetchMap.addPrefetchList(se.getUserName(), se.getSenderUuid(), prefetchList);
+						}
+					}
 				}
-				int incdec = rnd.nextInt(2);	// 0 or 1
-				if( incdec == 1 )
-				{
-					sevent.setEstDelay( (int)lDelay/2 + delta );
-				}
-				else
-				{
-					sevent.setEstDelay( (int)lDelay/2 - delta );
-				}
-				*/
-		
+
 				CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
 				sevent = null;
+				nameList = null;
 			}
 		}
 
@@ -1035,7 +1123,7 @@ public class CMSNSManager {
 			sevent.setUserName( se.getUserName() );
 			sevent.setWriterName(se.getWriterName());
 			sevent.setContentOffset( se.getContentOffset() );
-			sevent.setNumContents( contentList.getSNSContentNum() );
+			sevent.setNumContents( nActualDownNum );
 
 			// send the end event
 			CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
@@ -1310,7 +1398,7 @@ public class CMSNSManager {
 			// add the content to the content list only if the previous logic is successful
 			bRet = contentList.addSNSContent(nSeqNum, strCreationTime, se.getUserName(), se.getMessage()
 					, se.getNumAttachedFiles(), se.getReplyOf(), se.getLevelOfDisclosure()
-					, se.getFileNameList());
+					, null);
 		}
 
 		if(ret == 1 || bRet)	// Any case is correct
@@ -1801,8 +1889,8 @@ public class CMSNSManager {
 			filePathList = sendAttach.getFilePathList();
 			for(i = 0; i < filePathList.size(); i++)
 			{				
-				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), CMInfo.FILE_DEFAULT, 
-						se.getContentID());
+				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), se.getSenderUuid(),
+						CMInfo.FILE_DEFAULT, se.getContentID());
 			}
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
@@ -1843,10 +1931,9 @@ public class CMSNSManager {
 				}
 				else
 				{
-					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), CMInfo.FILE_DEFAULT, 
-							se.getContentID());
+					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), se.getSenderUuid(),
+							CMInfo.FILE_DEFAULT, se.getContentID());
 				}
-				file = null;
 			}
 			
 			if(naFileNameList.size() > 0)
@@ -1895,7 +1982,9 @@ public class CMSNSManager {
 			CMFileEvent fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_ACK);
 			fe.setFileSender(strDefServer);
+			fe.setFileSenderUuid(null);	// server uuid is null.
 			fe.setFileReceiver(se.getUserName());
+			fe.setFileReceiverUuid(se.getReceiverUuid());
 			fe.setFileName(strFileNameList.get(i));
 			fe.setReturnCode(0);	// the file is not received
 			fe.setContentID(se.getContentID());
@@ -1976,7 +2065,18 @@ public class CMSNSManager {
 		
 		// check whether the requested file is the attachment of the given content ID or not
 		ArrayList<String> attachFileList = null;
-		attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID);
+		if(confInfo.isDBUse())
+		{
+			attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID);
+		}
+		else
+		{
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSContentList contentList = snsInfo.getSNSContentList();
+			CMSNSContent content = contentList.findSNSContent(nContentID);
+			if(content != null)
+				attachFileList = content.getFilePathList();
+		}
 		boolean bFound = false;
 		
 		for(int i = 0; attachFileList != null && i < attachFileList.size(); i++)

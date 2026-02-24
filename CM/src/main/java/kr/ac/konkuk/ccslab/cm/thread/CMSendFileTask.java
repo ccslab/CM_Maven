@@ -6,6 +6,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
@@ -143,7 +144,7 @@ public class CMSendFileTask implements Runnable {
 			if(lSentSize > lFileSize)
 			{
 				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getFileReceiver()
-						+"), receiver uuid("+m_sendFileInfo.getReceiverUuid()+") already has "
+						+"), receiver uuid("+m_sendFileInfo.getFileReceiverUuid()+") already has "
 						+ "a bigger size file("+m_sendFileInfo.getFileName()+"); sender size("+lFileSize
 						+ "), receiver size("+lSentSize+")");
 			}
@@ -172,7 +173,7 @@ public class CMSendFileTask implements Runnable {
 				// set distribution fields
 				fe.setDistributionSession("CM_ONE_USER");
 				fe.setDistributionGroup(m_sendFileInfo.getFileReceiver());
-				fe.setDistributionUuid(m_sendFileInfo.getReceiverUuid());
+				fe.setDistributionUuid(m_sendFileInfo.getFileReceiverUuid());
 
 				// Target is the default server
 				CMEventManager.unicastEvent(fe, strDefServer);
@@ -186,7 +187,7 @@ public class CMSendFileTask implements Runnable {
 				}
 				// Sender/Receiver is set by unicastEvent if not specified
 				// Use the method that accepts UUID to support multi-device delivery if needed (or specific target)
-				CMEventManager.unicastEvent(fe, m_sendFileInfo.getFileReceiver(), m_sendFileInfo.getReceiverUuid());
+				CMEventManager.unicastEvent(fe, m_sendFileInfo.getFileReceiver(), m_sendFileInfo.getFileReceiverUuid());
 			}
 			
 			/*CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
@@ -207,10 +208,20 @@ public class CMSendFileTask implements Runnable {
 	
 	private void sendErrorToProcThread()
 	{
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		String strMyName = interInfo.getMyself().getName();  // added
+		UUID myUuid = interInfo.getMyself().getUuid();  // added
+
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.ERR_SEND_FILE_CHAN);
-		fe.setFileSender(CMInteractionInfo.getInstance().getMyself().getName());
+		fe.setSender(strMyName);  // added
+		fe.setSenderUuid(myUuid);  // added
+		fe.setReceiver(strMyName);  // added
+		fe.setReceiverUuid(myUuid);  // added
+		fe.setFileSender(strMyName);
+		fe.setFileSenderUuid(myUuid); // added
 		fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
+		fe.setFileReceiverUuid(m_sendFileInfo.getFileReceiverUuid()); // added
 		fe.setFileName(m_sendFileInfo.getFileName());
 		fe.setContentID(m_sendFileInfo.getContentID());
 		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);

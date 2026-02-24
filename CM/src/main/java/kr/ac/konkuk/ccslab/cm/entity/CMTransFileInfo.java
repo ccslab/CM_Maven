@@ -1,10 +1,13 @@
 package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.nio.channels.SelectableChannel;
+import java.util.UUID;
 
 public class CMTransFileInfo extends Object {
 	protected String m_strFileSender;	// the file sender name
+	protected UUID m_fileSenderUuid;	// the file sender UUID
 	protected String m_strFileReceiver;// the file receiver name
+	protected UUID m_fileReceiverUuid;	// the file receiver UUID
 	protected String m_strFileName; // the name of the transferred file
 	protected String m_strFilePath;	// the local full path to the sent or received file
 	protected long m_lFileSize;	  // the size of the transferred file
@@ -14,7 +17,9 @@ public class CMTransFileInfo extends Object {
 	public CMTransFileInfo()
 	{
 		m_strFileSender = "?";
+		m_fileSenderUuid = null;
 		m_strFileReceiver = "?";
+		m_fileReceiverUuid = null;
 		m_strFileName = "?";
 		m_strFilePath = "?";
 		m_lFileSize = -1;
@@ -25,7 +30,9 @@ public class CMTransFileInfo extends Object {
 	public CMTransFileInfo(String strFile, long lSize, int nID)
 	{
 		m_strFileSender = "?";
+		m_fileSenderUuid = null;
 		m_strFileReceiver = "?";
+		m_fileReceiverUuid = null;
 		m_strFileName = strFile;
 		m_strFilePath = "?";
 		m_lFileSize = lSize;
@@ -47,14 +54,15 @@ public class CMTransFileInfo extends Object {
 		if(strFileName.equals(m_strFileName) && nContentID == m_nContentID)
 			return true;
 		
-		return false;	
+		return false;
 	}
 	
 	@Override
 	public String toString()
 	{
-		String strInfo = "CMTransFileInfo: file sender("+m_strFileSender+"), file receiver("
-				+m_strFileReceiver+"), file name("+m_strFileName+"), content ID("+m_nContentID+")";
+		String strInfo = "CMTransFileInfo: file sender("+m_strFileSender+"), file sender uuid ("+m_fileReceiverUuid
+				+"), file receiver("+m_strFileReceiver+"), file receiver uuid("+m_fileReceiverUuid+"), file name("
+				+m_strFileName+"), content ID("+m_nContentID+")";
 		return strInfo;
 	}
 	
@@ -70,7 +78,13 @@ public class CMTransFileInfo extends Object {
 	{
 		return m_strFileSender;
 	}
-	
+
+	public synchronized void setFileSenderUuid(UUID uuid) {
+		m_fileSenderUuid = uuid;
+	}
+
+	public synchronized UUID getFileSenderUuid() { return m_fileSenderUuid; }
+
 	public synchronized void setFileReceiver(String strName)
 	{
 		m_strFileReceiver = strName;
@@ -81,6 +95,12 @@ public class CMTransFileInfo extends Object {
 	{
 		return m_strFileReceiver;
 	}
+
+	public synchronized void setFileReceiverUuid(UUID uuid) {
+		m_fileReceiverUuid = uuid;
+	}
+
+	public synchronized UUID getFileReceiverUuid() { return m_fileReceiverUuid; }
 
 	public synchronized void setFileName(String strName)
 	{

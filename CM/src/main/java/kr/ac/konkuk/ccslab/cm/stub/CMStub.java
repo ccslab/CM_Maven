@@ -1073,29 +1073,25 @@ public class CMStub {
 	}
 
 	/**
-	 * [Added] Sends a CM event to a specific device (UUID) of a single node.
-	 * * <p> This serves as the final destination for all stream-based send calls in CMStub.
-	 * If the uuid is null, the event is sent to all login devices of the receiver
-	 * (handled by CMEventManager).
-	 * * @param cme - the CM event
+	 * Sends a CM event to a specific device (UUID) of a single node.
+	 *
+	 * <p> This method is the same as {@link CMStub#send(CMEvent, String, int, int, boolean)} with
+	 * an additional {@code targetUuid} parameter to target a specific device of the receiver.
+	 * If the targetUuid is null, the event is sent to all login devices of the receiver.
+	 *
+	 * @param cme - the CM event
 	 * @param strTarget - the receiver name
 	 * @param targetUuid - the UUID of the receiver device (null to send to all devices or if target is server)
 	 * @param opt - the reliability option (CMInfo.CM_STREAM or CMInfo.CM_DATAGRAM)
 	 * @param nChNum - the channel key
 	 * @param isBlock - the blocking option
 	 * @return true if the event is successfully sent; false otherwise.
-	 * @see CMStub#send(CMEvent, String)
-	 * @see CMStub#send(CMEvent, String, UUID)
-	 * @see CMStub#send(CMEvent, String, int)
-	 * @see CMStub#send(CMEvent, String, UUID, int)
-	 * @see CMStub#send(CMEvent, String, int, int)
-	 * @see CMStub#send(CMEvent, String, UUID, int, int)
-	 * @see CMStub#send(CMEvent, String, int, int, boolean)
-	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 *
-	 * @see CMStub#send(CMEvent, String, String)
-	 * @see CMStub#send(CMEvent, String, String, int)
-	 * @see CMStub#send(CMEvent, String, String, int, int)
+	 * @see CMStub#send(CMEvent, String, int, int, boolean)
+	 * @see CMStub#send(CMEvent, String, UUID)
+	 * @see CMStub#send(CMEvent, String, UUID, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int)
+	 * @see CMStub#send(CMEvent, String, UUID, int, int, int, boolean)
 	 */
 	public boolean send(CMEvent cme, String strTarget, UUID targetUuid, int opt, int nChNum, boolean isBlock)
 	{
@@ -1103,6 +1099,16 @@ public class CMStub {
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = null;
 		boolean ret = false;
+
+		// set sender and receiver before forwarding decision
+		// sender/receiver: 논리적 송수신자 (릴레이 경유 시에도 원본 노드를 유지)
+		// 물리적 직접 송수신자(transport layer)와 다를 수 있음
+		// - 직접 통신 시: logical == physical
+		// - 서버 경유 시: logical = 원본 클라이언트, physical = 서버
+		cme.setSender(getMyself().getName());
+		cme.setSenderUuid(getMyself().getUuid());
+		cme.setReceiver(strTarget);
+		cme.setReceiverUuid(targetUuid);
 
 		if(confInfo.getSystemType().contentEquals("CLIENT")
 				|| (confInfo.getSystemType().contentEquals("SERVER")
@@ -1123,10 +1129,6 @@ public class CMStub {
 			cme.setDistributionGroup(strTarget);
 			cme.setDistributionUuid(targetUuid);
 
-			// [Modified] Forwarding logic
-			// When forwarding via server, the immediate target is the server (uuid is meaningless for connection),
-			// but the final destination UUID is already set in the event header above.
-			// We pass null as the third argument because we are sending to the default server, not a specific user device directly.
 			ret = CMEventManager.unicastEvent(cme, strDefServer, null, opt, nChNum, 0, isBlock);
 
 			cme.setDistributionSession("");
@@ -1135,8 +1137,6 @@ public class CMStub {
 		}
 		else
 		{
-			// [Modified] Direct transmission logic
-			// Pass the uuid to CMEventManager. If uuid is null, it handles broadcast to all devices.
 			ret = CMEventManager.unicastEvent(cme, strTarget, targetUuid, opt, nChNum, 0, isBlock);
 		}
 
@@ -1388,6 +1388,7 @@ public class CMStub {
 	 * @param strReceiver - the target name
 	 * <br> The target node can be a server or a client. If the target is a client, the event and its 
 	 * reply event are delivered through the default server.
+	 * @param receiverUuid - the UUID of the target receiver device (Added for multi-device support)
 	 * @param nWaitEventType - the waited event type of the reply event from 'strReceiver'
 	 * @param nWaitEventID - the waited event ID of the reply event from 'strReceiver'
 	 * @param nTimeout - the maximum time to wait in milliseconds.
@@ -1396,37 +1397,12 @@ public class CMStub {
 	 * @return a reply CM event if it is successfully received, or null otherwise.
 	 * @see CMStub#castrecv(CMEvent, String, String, int, int, int, int)
 	 */
-	public CMEvent sendrecv(CMEvent cme, String strReceiver, int nWaitEventType, int nWaitEventID, 
+	public CMEvent sendrecv(CMEvent cme, String strReceiver, UUID receiverUuid, int nWaitEventType, int nWaitEventID,
 			int nTimeout)
 	{
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMClientStub.sendrecv() called..");
-			System.out.println("receiver = " + strReceiver);
-		}
-
-		// [Modified] Find the UUID list of the receiver
-		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
-		UUID receiverUuid = null;
-
-		// [Modified] Check valid target (Server or Single Login Client)
-		if(uuidList == null) {
-			// Case 1: Target is a Server (uuidList is null) -> Proceed with receiverUuid = null
-		}
-		else {
-			// Case 2: Target is a Client
-			if(uuidList.isEmpty()) {
-				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver + ") not found!");
-				return null;
-			}
-
-			if(uuidList.size() > 1) {
-				System.err.println("CMClientStub.sendrecv(), receiver(" + strReceiver +
-						") has multiple active logins! The sendrecv service is not supported for multiple logins.");
-				return null;
-			}
-
-			// Single login found
-			receiverUuid = uuidList.get(0);
+			System.out.println("receiver = " + strReceiver + ", uuid = " + receiverUuid);
 		}
 
 		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
@@ -1435,7 +1411,7 @@ public class CMStub {
 		eventSync.init();
 		eventSync.setWaitedEvent(nWaitEventType, nWaitEventID, strReceiver, receiverUuid);
 
-		boolean bSendResult = CMEventManager.unicastEvent(cme, strReceiver, receiverUuid);
+		boolean bSendResult = send(cme, strReceiver, receiverUuid);
 		if(!bSendResult) return null;
 
 		synchronized(eventSync)
@@ -1579,9 +1555,6 @@ public class CMStub {
 		CMGroup group = null;
 		CMMember member = null;
 		boolean ret = false;
-		
-		// set sender
-		cme.setSender(getMyself().getName());
 
 		// if a client in the c/s model, use internal forwarding by a server
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT"))
@@ -1694,7 +1667,7 @@ public class CMStub {
 	 * @return an array of reply CM events if the minimum number (nMinNumWaitedEvents) of reply events are 
 	 * successfully received, or null otherwise.
 	 * <br> The size of the array can be greater than 'nMinNumWaitedEvents'.
-	 * @see CMStub#sendrecv(CMEvent, String, int, int, int)
+	 * @see CMStub#sendrecv(CMEvent, String, UUID, int, int, int)
 	 */
 	public CMEvent[] castrecv(CMEvent event, String strSessionName, String strGroupName, 
 			int nWaitedEventType, int nWaitedEventID, int nMinNumWaitedEvents, int nTimeout)
@@ -1758,10 +1731,6 @@ public class CMStub {
 	 */
 	public boolean multicast(CMEvent cme, String sessionName, String groupName)
 	{
-		CMInfo cmInfo = CMInfo.getInstance();
-		// set sender
-		cme.setSender(getMyself().getName());
-
 		boolean ret = false;
 		ret = CMEventManager.multicastEvent(cme, sessionName, groupName);
 		return ret;
@@ -1852,9 +1821,6 @@ public class CMStub {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean ret = false;
-		
-		// set sender
-		cme.setSender(getMyself().getName());
 
 		// in the case of a client in the C/S model, use internal forwarding by all servers
 		//if(confInfo.getCommArch().equals("CM_CS") && confInfo.getSystemType().equals("CLIENT"))
@@ -1897,7 +1863,7 @@ public class CMStub {
 	 * @return true if the event is successfully sent; false otherwise.
 	 * 
 	 * @see CMStub#send(CMEvent, String, String, int) 
-	 * @see CMStub#send(CMEvent, String, String, int, int)*
+	 * @see CMStub#send(CMEvent, String, String, int, int)
 	 */
 	public boolean send(CMEvent cme, String serverName, String userName)
 	{
@@ -2283,7 +2249,58 @@ public class CMStub {
 				byteFileAppend);
 		return bReturn;
 	}
-	
+
+	/**
+	 * Requests a file from a file owner specifying the owner's device UUID.
+	 *
+	 * <p> This method is the same as {@link CMStub#requestFile(String, String)} with
+	 * an additional {@code fileOwnerUuid} parameter to target a specific device of the file owner.
+	 *
+	 * @param strFileName - the requested file name
+	 * @param strFileOwner - the file owner name
+	 * @param fileOwnerUuid - the UUID of the file owner's device
+	 * @return true if the request is successfully sent; false otherwise.
+	 * @see CMStub#requestFile(String, String)
+	 * @see CMStub#requestFile(String, String, UUID, byte)
+	 */
+	public boolean requestFile(String strFileName, String strFileOwner, UUID fileOwnerUuid)
+	{
+		boolean bReturn = false;
+		bReturn = requestFile(strFileName, strFileOwner, fileOwnerUuid, CMInfo.FILE_DEFAULT);
+		return bReturn;
+	}
+
+	/**
+	 * Requests a file from a file owner specifying the owner's device UUID and the file append mode.
+	 *
+	 * <p> This method is the same as {@link CMStub#requestFile(String, String, byte)} with
+	 * an additional {@code fileOwnerUuid} parameter to target a specific device of the file owner.
+	 *
+	 * @param strFileName - the requested file name
+	 * @param strFileOwner - the file owner name
+	 * @param fileOwnerUuid - the UUID of the file owner's device
+	 * @param byteFileAppend - the file append mode
+	 * @return true if the request is successfully sent; false otherwise.
+	 * @see CMStub#requestFile(String, String, byte)
+	 * @see CMStub#requestFile(String, String, UUID)
+	 */
+	public boolean requestFile(String strFileName, String strFileOwner, UUID fileOwnerUuid, byte byteFileAppend)
+	{
+		boolean bReturn = false;
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
+
+		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN)
+		{
+			System.err.println("CMFileTransferManager.requestFile(), Client must log in to the default server.");
+			return false;
+		}
+
+		bReturn = CMFileTransferManager.requestPermitForPullFile(strFileName, strFileOwner, fileOwnerUuid,
+				byteFileAppend, -1);
+		return bReturn;
+	}
+
 	/**
 	 * Sends a file to a receiver (push mode).
 	 * 
@@ -2382,10 +2399,62 @@ public class CMStub {
 
 		//bReturn = CMFileTransferManager.pushFile(strFilePath, strReceiver, m_cmInfo);
 		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, 
-				byteFileAppend);
+				byteFileAppend, -1);
 		return bReturn;
 	}
-	
+
+	/**
+	 * Sends a file to a receiver specifying the receiver's device UUID (push mode).
+	 *
+	 * <p> This method is the same as {@link CMStub#pushFile(String, String)} with
+	 * an additional {@code fileReceiverUuid} parameter to target a specific device of the receiver.
+	 *
+	 * @param strFilePath - the path name of a file to be sent
+	 * @param strFileReceiver - the file receiver name
+	 * @param fileReceiverUuid - the UUID of the file receiver's device
+	 * @return true if the permit for pushing a file is successfully requested; false otherwise.
+	 * @see CMStub#pushFile(String, String)
+	 * @see CMStub#pushFile(String, String, UUID, byte)
+	 */
+	public boolean pushFile(String strFilePath, String strFileReceiver, UUID fileReceiverUuid)
+	{
+		boolean bReturn = false;
+		bReturn = pushFile(strFilePath, strFileReceiver, fileReceiverUuid, CMInfo.FILE_DEFAULT);
+		return bReturn;
+	}
+
+	/**
+	 * Sends a file to a receiver specifying the receiver's device UUID and the file append mode (push mode).
+	 *
+	 * <p> This method is the same as {@link CMStub#pushFile(String, String, byte)} with
+	 * an additional {@code fileReceiverUuid} parameter to target a specific device of the receiver.
+	 *
+	 * @param strFilePath - the path name of a file to be sent
+	 * @param strReceiver - the file receiver name
+	 * @param fileReceiverUuid - the UUID of the file receiver's device
+	 * @param byteFileAppend - the file append mode
+	 * @return true if the permit for pushing a file is successfully requested; false otherwise.
+	 * @see CMStub#pushFile(String, String, byte)
+	 * @see CMStub#pushFile(String, String, UUID)
+	 */
+	public boolean pushFile(String strFilePath, String strReceiver, UUID fileReceiverUuid, byte byteFileAppend)
+	{
+		boolean bReturn = false;
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
+
+		if(confInfo.getSystemType().equals("CLIENT") && myself.getState() < CMInfo.CM_LOGIN)
+		{
+			System.err.println("CMFileTransferManager.pushFile(), Client must log in to "
+					+ "the default server.");
+			return false;
+		}
+
+		bReturn = CMFileTransferManager.requestPermitForPushFile(strFilePath, strReceiver, fileReceiverUuid,
+				byteFileAppend, -1);
+		return bReturn;
+	}
+
 	/**
 	 * Cancels sending (or pushing) a file.
 	 * 
@@ -2436,93 +2505,50 @@ public class CMStub {
 	// measure synchronously the end-to-end input throughput from the target node to this node
 	/**
 	 * measures the incoming network throughput from a CM node.
-	 * 
-	 * <p> A CM application can measure the incoming/outgoing network throughput from/to another CM application 
+	 * * <p> A CM application can measure the incoming/outgoing network throughput from/to another CM application
 	 * (server or client).
-	 * The incoming network throughput of a CM node A from B measures how many bytes A can receive from B in a second. 
+	 * The incoming network throughput of a CM node A from B measures how many bytes A can receive from B in a second.
 	 * The outgoing network throughput of a CM node A to B measures how many bytes A can send to B.
-	 * 
-	 * @param strTarget - the target CM node
+	 * * @param strTarget - the target CM node
 	 * <br> The target CM node should be directly connected to the calling node.
-	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
+	 * @param targetUuid - the UUID of the target CM node.
+	 * <br> If the target is the default server, it can be null.
+	 * <br> If the target is a client and it has multiple login instances, a specific UUID must be provided.
+	 * <br> If the target is a client and it has a single login instance, it can be null or the specific UUID.
+	 * @return the network throughput value by the unit of Megabytes per second (MBps)
 	 * if successfully measured, or -1 otherwise.
-	 * @see CMStub#measureOutputThroughput(String)
+	 * @see CMStub#measureOutputThroughput(String, UUID)
 	 */
-	public double measureInputThroughput(String strTarget) {
+	public double measureInputThroughput(String strTarget, UUID targetUuid) {
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureInputThroughput() called..");
-			System.out.println("strTarget = " + strTarget);
+			System.out.println("strTarget = " + strTarget + ", targetUuid = " + targetUuid);
 		}
 
-		// [Modified] Find the UUID list of the target
-		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
-
-		// [Modified] Check if the target exists
-		UUID targetUuid = null;
-		if(uuidList == null) {
-			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
-		} else {
-			// Case 2: Target is a Client
-			if(uuidList.isEmpty()) {
-				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget + ") not found!");
-				return -1;
-			}
-			// [Modified] Check if the target has multiple logins
-			if(uuidList.size() > 1) {
-				System.err.println("CMStub.measureInputThroughput(), target(" + strTarget +
-						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
-				return -1;
-			}
-
-			// [Modified] Get the target UUID (0-th member)
-			targetUuid = uuidList.get(0);
-		}
-
+		// [Modified] Directly call CMCommManager with the provided target name and UUID
 		double speed = CMCommManager.measureInputThroughput(strTarget, targetUuid);
 		return speed;
 	}
-	
+
 	/**
 	 * measures the outgoing network throughput to a CM node.
-	 * 
-	 * @param strTarget - the target CM node
-	 * @return the network throughput value by the unit of Megabytes per second (MBps) 
+	 * * @param strTarget - the target CM node
+	 * @param targetUuid - the UUID of the target CM node.
+	 * <br> If the target is the default server, it can be null.
+	 * @return the network throughput value by the unit of Megabytes per second (MBps)
 	 * if successfully measured, or -1 otherwise.
-	 * @see CMStub#measureInputThroughput(String)
+	 * @see CMStub#measureInputThroughput(String, UUID)
 	 */
 	// measure synchronously the end-to-end output throughput from this node to the target node
-	public double measureOutputThroughput(String strTarget) {
+	public double measureOutputThroughput(String strTarget, UUID targetUuid) {
 
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("=== CMStub.measureOutputThroughput() called..");
-			System.out.println("strTarget = " + strTarget);
+			System.out.println("strTarget = " + strTarget + ", targetUuid = " + targetUuid);
 		}
 
-		// [Modified] Find the UUID list of the target
-		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
-
-		// [Modified] Check if the target exists
-		UUID targetUuid = null;
-		if(uuidList == null) {
-			// Case 1: Target is a Server (uuidList is null) -> Proceed with targetUuid = null
-		} else {
-			// Case 2: Target is a Client
-			if(uuidList.isEmpty()) {
-				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget + ") not found!");
-				return -1;
-			}
-			// [Modified] Check if the target has multiple logins
-			if(uuidList.size() > 1) {
-				System.err.println("CMStub.measureOutputThroughput(), target(" + strTarget +
-						") has multiple active logins! The throughput measurement is not supported for multiple logins.");
-				return -1;
-			}
-
-			// [Modified] Get the target UUID (0-th member)
-			targetUuid = uuidList.get(0);
-		}
-
+		// [Modified] Directly call CMCommManager with the provided target name and UUID
 		double speed = CMCommManager.measureOutputThroughput(strTarget, targetUuid);
 		return speed;
 	}

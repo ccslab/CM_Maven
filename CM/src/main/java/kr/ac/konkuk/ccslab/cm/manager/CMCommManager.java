@@ -477,6 +477,12 @@ public class CMCommManager {
 		// the request event should be forwarded by the default server (internal forwarding of CM).
 		if(targetUser != null)
 		{
+			// set logical sender/receiver so the server can correctly identify
+			// that it is not the intended receiver of this event.
+			se.setSender(myself.getName());
+			se.setSenderUuid(myself.getUuid());
+			se.setReceiver(strTarget);
+			se.setReceiverUuid(targetUuid);
 			// set distribution fields
 			se.setDistributionSession("CM_ONE_USER");
 			se.setDistributionGroup(strTarget);
@@ -651,7 +657,7 @@ public class CMCommManager {
 		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 
 		bReturn = CMFileTransferManager.requestPermitForPullFile(CMInfo.THROUGHPUT_TEST_FILE,
-				target, targetUuid, CMInfo.FILE_OVERWRITE);
+				target, targetUuid, CMInfo.FILE_OVERWRITE, -1);
 
 		if(!bReturn)
 			return -1;
@@ -673,7 +679,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMCommManager.measureInputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPullFile(target);
+				CMFileTransferManager.cancelPullFile(target, targetUuid);
 				return -1;
 			}
 
@@ -747,7 +753,7 @@ public class CMCommManager {
 			if(replyEvent == null)
 			{
 				System.err.println("CMStub.measureOutputThroughput(), timeout expired!");
-				CMFileTransferManager.cancelPushFile(target);
+				CMFileTransferManager.cancelPushFile(target, targetUuid);
 				return -1;
 			}
 

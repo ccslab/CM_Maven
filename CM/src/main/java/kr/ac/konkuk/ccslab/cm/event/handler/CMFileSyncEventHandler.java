@@ -197,6 +197,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("listEvent = " + listEvent);
         }
         String requester = listEvent.getRequester();
+        UUID requesterUuid = listEvent.getSenderUuid();
 
         // get sync home of requester
         CMInfo cmInfo = CMInfo.getInstance();
@@ -209,7 +210,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // get the absolute path
             Path absPath = serverSyncHome.resolve(relativePath);
             // start push-file
-            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester);
+            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester, requesterUuid);
             if(!ret) {
                 System.err.println("push error: "+absPath);
                 return false;
@@ -1412,6 +1413,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Path clientSyncHome = syncManager.getClientSyncHome();
         // get the requester name
         String requesterName = fse_rnf.getRequesterName();  // server name
+        UUID requesterUuid = fse_rnf.getSenderUuid();   // server(sender) uuid
         // check if the requested file list is null or empty
         List<Path> requestedFileList = fse_rnf.getRequestedFileList();
         if(requestedFileList == null) {
@@ -1426,7 +1428,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         boolean sendResult = true;
         for(Path path : requestedFileList) {
             Path syncPath = clientSyncHome.resolve(path);   // adjust the path with the sync home
-            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName) )
+            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, requesterUuid) )
                 sendResult = false;
         }
 

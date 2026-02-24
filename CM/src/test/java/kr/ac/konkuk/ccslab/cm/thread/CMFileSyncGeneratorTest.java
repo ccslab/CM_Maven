@@ -18,7 +18,7 @@ public class CMFileSyncGeneratorTest {
     @Before
     public void setUp() {
         System.out.println("===== called setUp()..");
-        cmInfo = new CMInfo();
+        cmInfo = CMInfo.getInstance();
         userName = "ccslab";
     }
 

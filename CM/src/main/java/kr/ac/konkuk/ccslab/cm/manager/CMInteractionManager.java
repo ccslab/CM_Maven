@@ -189,8 +189,8 @@ public class CMInteractionManager {
 		dsInfo.getBlockSocketChannelInfo().removeAllChannels();
 		
 		// remove all the ongoing file-transfer info about the default server
-		fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-		fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+		fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+		fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 		// remove all the ongoing sns related file-transfer info at the client
 		snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 		// remove all session info
@@ -306,8 +306,8 @@ public class CMInteractionManager {
 		tserver.getNonBlockSocketChannelInfo().removeAllChannels();
 		tserver.getBlockSocketChannelInfo().removeAllChannels();
 		// remove ongoing file-transfer information
-		fInfo.removeRecvFileList(tserver.getServerName());
-		fInfo.removeSendFileList(tserver.getServerName());
+		fInfo.removeRecvFileList(tserver.getServerName(), null);
+		fInfo.removeSendFileList(tserver.getServerName(), null);
 		// remove session information
 		tserver.getSessionList().removeAllElements();
 
@@ -422,8 +422,8 @@ public class CMInteractionManager {
 		addServer.getBlockSocketChannelInfo().removeAllChannels();
 		
 		// remove file-transfer info
-		fInfo.removeRecvFileList(addServer.getServerName());
-		fInfo.removeSendFileList(addServer.getServerName());
+		fInfo.removeRecvFileList(addServer.getServerName(), null);
+		fInfo.removeSendFileList(addServer.getServerName(), null);
 		
 		// remove add-server info
 		CMInteractionInfo.getInstance().removeAddServer(addServer.getServerName());
@@ -458,8 +458,8 @@ public class CMInteractionManager {
 		defServer.getNonBlockSocketChannelInfo().removeAllChannels();
 		defServer.getBlockSocketChannelInfo().removeAllChannels();
 		
-		fInfo.removeRecvFileList(defServer.getServerName());
-		fInfo.removeSendFileList(defServer.getServerName());
+		fInfo.removeRecvFileList(defServer.getServerName(), null);
+		fInfo.removeSendFileList(defServer.getServerName(), null);
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -537,8 +537,8 @@ public class CMInteractionManager {
 			// stop all the file-transfer threads
 			//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
 			// remove all the ongoing file-transfer info about the default server
-			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 			// remove all the ongoing sns related file-transfer info at the client
 			snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 			// remove all session info
@@ -583,8 +583,8 @@ public class CMInteractionManager {
 			String strAddServer = addServer.getServerName();
 			addServer.getNonBlockSocketChannelInfo().removeAllChannels();
 			addServer.getBlockSocketChannelInfo().removeAllChannels();
-			fInfo.removeRecvFileList(addServer.getServerName());
-			fInfo.removeSendFileList(addServer.getServerName());
+			fInfo.removeRecvFileList(addServer.getServerName(), null);
+			fInfo.removeSendFileList(addServer.getServerName(), null);
 			addServer.getSessionList().removeAllElements();
 			addServer.setClientState(CMInfo.CM_INIT);
 			if(CMInfo._CM_DEBUG)
@@ -1797,8 +1797,8 @@ public class CMInteractionManager {
 
 		// set my info
 		CMUser myself = interInfo.getMyself();
-		// set my name (although it is already set before sending LOGIN event)
-		myself.setName(se.getUserName());
+		// do not set my name because it is already set before sending LOGIN event
+		// myself.setName(se.getUserName());
 		// [New] set my UUID received from the server
 		myself.setUuid(se.getUuid());
 
@@ -2270,13 +2270,17 @@ public class CMInteractionManager {
 			e.printStackTrace();
 			
 			seAck.setReturnCode(0);
-			
-			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+			if(confInfo.getCommArch().contentEquals("CM_CS") &&
 					confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				// If this node is the client type, the requester is another client 
+				// If this node is the client type, the requester is another client
 				// and this reply event should be forwarded by the default server.
 				// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setSender(interInfo.getMyself().getName());
+				seAck.setSenderUuid(interInfo.getMyself().getUuid());
+				seAck.setReceiver(user.getName());
+				seAck.setReceiverUuid(user.getUuid());
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
 				seAck.setDistributionUuid(channelUuid);
@@ -2288,7 +2292,7 @@ public class CMInteractionManager {
 			}
 			return;
 		}
-		
+
 		boolean ret = user.getBlockSocketChannelInfo().addChannel(nChKey, msg.m_ch);
 		if(ret)
 			seAck.setReturnCode(1);
@@ -2311,12 +2315,16 @@ public class CMInteractionManager {
 			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 		}
 
-		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+		if(confInfo.getCommArch().contentEquals("CM_CS") &&
 				confInfo.getSystemType().contentEquals("CLIENT"))
 		{
-			// If this node is the client type, the requester is another client 
+			// If this node is the client type, the requester is another client
 			// and this reply event should be forwarded by the default server.
 			// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setSender(interInfo.getMyself().getName());
+			seAck.setSenderUuid(interInfo.getMyself().getUuid());
+			seAck.setReceiver(user.getName());
+			seAck.setReceiverUuid(user.getUuid());
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
 			seAck.setDistributionUuid(channelUuid);
@@ -2455,13 +2463,17 @@ public class CMInteractionManager {
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), channel not found! "
 					+"user("+strChannelName+"), uuid("+channelUuid+"), channel key("+nChKey+")");
 			seAck.setReturnCode(0);
-			
-			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+			if(confInfo.getCommArch().contentEquals("CM_CS") &&
 					confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				// If this node is the client type, the requester is another client 
+				// If this node is the client type, the requester is another client
 				// and this reply event should be forwarded by the default server.
 				// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setSender(interInfo.getMyself().getName());
+				seAck.setSenderUuid(interInfo.getMyself().getUuid());
+				seAck.setReceiver(user.getName());
+				seAck.setReceiverUuid(user.getUuid());
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
 				seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
@@ -2474,16 +2486,20 @@ public class CMInteractionManager {
 
 			return;
 		}
-		
+
 		// found the blocking channel that will be disconnected
 		seAck.setReturnCode(1);	// ok
-		
-		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+		if(confInfo.getCommArch().contentEquals("CM_CS") &&
 				confInfo.getSystemType().contentEquals("CLIENT"))
 		{
-			// If this node is the client type, the requester is another client 
+			// If this node is the client type, the requester is another client
 			// and this reply event should be forwarded by the default server.
 			// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setSender(interInfo.getMyself().getName());
+			seAck.setSenderUuid(interInfo.getMyself().getUuid());
+			seAck.setReceiver(user.getName());
+			seAck.setReceiverUuid(user.getUuid());
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
 			seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
@@ -3994,8 +4010,8 @@ public class CMInteractionManager {
 				CMEventManager.unicastEvent(cme, strDistGroup, distUuid, opt);
 			}
 		}
-		// Case 2: Broadcast to all session managers (Servers)
-		else if(strDistSession.equals("CM_ALL_SESSION_MANAGERS"))
+		// Case 2: Broadcast to all connected nodes (session=null, group=null)
+		else if(strDistSession.equals("CM_ALL_SESSION"))
 		{
 			// [Modified] Use broadcastEvent instead of castEvent for clarity and efficiency
 			CMEventManager.broadcastEvent(cme, opt);

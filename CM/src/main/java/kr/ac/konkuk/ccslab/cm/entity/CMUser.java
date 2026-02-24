@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.util.Calendar;
 import java.util.Hashtable;
+import java.util.Objects;
 import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -317,5 +318,22 @@ public class CMUser extends CMObject {
 	public synchronized int getKeepAliveTime()
 	{
 		return m_nKeepAliveTime;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if(this == obj) return true;
+		if(obj == null || getClass() != obj.getClass()) return false;
+
+		CMUser other = (CMUser) obj;
+		return Objects.equals(m_strName, other.m_strName)
+				&& Objects.equals(m_uuid, other.m_uuid);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(m_strName, m_uuid);
 	}
 }

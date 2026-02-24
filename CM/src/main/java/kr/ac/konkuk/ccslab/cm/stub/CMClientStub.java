@@ -2212,7 +2212,7 @@ public class CMClientStub extends CMStub {
 		
 		// update next content offset
 		nOffset = nOffset-nDownContentNum;
-		//if(nOffset < 0) nOffset = 0;
+		if(nOffset < 0) nOffset = 0;
 		
 		// request SNS content
 		requestSNSContent(strWriter, nOffset);
