@@ -45,6 +45,9 @@ public class CMFileSyncInfo {
 
     private ScheduledFuture<?> proactiveModeTaskFuture;
 
+    // [NEW] 4 client
+    private UUID m_deviceUuid;
+
     private CMFileSyncInfo() {
 
         currentMode = CMFileSyncMode.OFF;
@@ -206,5 +209,15 @@ public class CMFileSyncInfo {
             return true;
         }
         return proactiveModeTaskFuture.isDone() || proactiveModeTaskFuture.isCancelled();
+    }
+
+    // [NEW] 4 client
+    public synchronized UUID getDeviceUuid() {
+        return m_deviceUuid;
+    }
+
+    // [NEW] 4 client
+    public synchronized void setDeviceUuid(UUID deviceUuid) {
+        this.m_deviceUuid = deviceUuid;
     }
 }
