@@ -285,7 +285,10 @@ public abstract class CMFileSyncEvent extends CMEvent {
                 "m_nType=" + m_nType +
                 ", m_nID=" + m_nID +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", initiatorName='" + m_initiatorName + '\'' +
                 ", initiatorUuid=" + m_initiatorUuid +
                 ", initiatorDeviceUuid=" + m_initiatorDeviceUuid +
