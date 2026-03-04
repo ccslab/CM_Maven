@@ -34,6 +34,7 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.thread.CMOpenChannelTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMRemoveChannelTask;
+import kr.ac.konkuk.ccslab.cm.util.CMDeviceUuidManager;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 /**
@@ -284,11 +285,20 @@ public class CMClientStub extends CMStub {
 		CMCommManager.startSendingMessage();
 		
 		cmInfo.setStarted(true);
-		
+
+		// [NEW] CM 홈 기준 device_uuid 확보(생성/복구 포함)
+		final UUID devUuid = CMDeviceUuidManager.getOrCreateDeviceUuid();
+		CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+		syncInfo.setDeviceUuid(devUuid);
+
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("[CM] deviceUuid=" + devUuid.toString().substring(0, 8) + "…");
+		}
+
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMClientStub.startCM(), succeeded.");
-		
-		return true;
+
+		return bRet;
 	}
 	
 	/**
