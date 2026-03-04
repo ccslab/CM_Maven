@@ -43,7 +43,7 @@ public class CMFileSyncEventStartFileBlockChecksumAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
+    protected void marshallBodyCore() {
         // fileEntryIndex
         m_bytes.putInt(fileEntryIndex);
         // totalNumBlocks
@@ -55,7 +55,7 @@ public class CMFileSyncEventStartFileBlockChecksumAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // fileEntryIndex
         fileEntryIndex = msg.getInt();
         // totalNumBlocks
@@ -71,7 +71,10 @@ public class CMFileSyncEventStartFileBlockChecksumAck extends CMFileSyncEvent {
         return "CMFileSyncEventStartFileBlockChecksumAck{" +
                 "m_nType=" + m_nType +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nID=" + m_nID +
                 ", m_nByteNum=" + m_nByteNum +
                 ", fileEntryIndex=" + fileEntryIndex +

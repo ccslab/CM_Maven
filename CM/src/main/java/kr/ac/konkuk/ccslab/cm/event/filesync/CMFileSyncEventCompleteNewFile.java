@@ -14,12 +14,10 @@ import java.util.Objects;
  */
 public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
     // Fields: userName, completedPath
-    private String userName;    // user name
     private Path completedPath;     // completed path
 
     public CMFileSyncEventCompleteNewFile() {
         m_nID = CMFileSyncEvent.COMPLETE_NEW_FILE;
-        userName = null;
         completedPath = null;
     }
 
@@ -28,29 +26,31 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getUserName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setUserName(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // userName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
         // completedPath
         byteNum += CMInfo.STRING_LEN_BYTES_LEN + completedPath.toString().getBytes().length;
         return byteNum;
     }
 
     @Override
-    protected void marshallBody() {
-        // userName
-        putStringToByteBuffer(userName);
+    protected void marshallBodyCore() {
         // completedPath
         putStringToByteBuffer(completedPath.toString());
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // userName
-        userName = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // completedPath
         completedPath = Paths.get(getStringFromByteBuffer(msg));
     }
@@ -60,10 +60,13 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
         return "CMFileSyncEventCompleteNewFile{" +
                 "m_nType=" + m_nType +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nID=" + m_nID +
                 ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", completedPath=" + completedPath +
                 '}';
     }
@@ -84,25 +87,14 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventCompleteNewFile that = (CMFileSyncEventCompleteNewFile) o;
-        return userName.equals(that.userName) && completedPath.equals(that.completedPath);
+        return getInitiatorName().equals(that.getInitiatorName()) && completedPath.equals(that.completedPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, completedPath);
+        return Objects.hash(getInitiatorName(), completedPath);
     }
 
-    /**
-     * gets the target user (client) name.
-     * @return user (client) name
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     /**
      * gets the new file path.

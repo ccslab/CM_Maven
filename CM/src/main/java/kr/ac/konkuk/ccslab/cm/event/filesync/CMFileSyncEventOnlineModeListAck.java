@@ -15,13 +15,11 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
-    private String requester;
     private List<Path> relativePathList;
     private int returnCode;
 
     public CMFileSyncEventOnlineModeListAck() {
         m_nID = CMFileSyncEvent.ONLINE_MODE_LIST_ACK;
-        requester = null;           // must not be null
         relativePathList = null;    // must not be null
         returnCode = -1;            // initial value
     }
@@ -31,12 +29,18 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getRequester() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setRequester(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // requester
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + requester.getBytes().length;
         // size of list
         byteNum += Integer.BYTES;
         // relativePathList (must not null)
@@ -50,9 +54,7 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // requester
-        putStringToByteBuffer(requester);
+    protected void marshallBodyCore() {
         // numCurrentFiles
         m_bytes.putInt(relativePathList.size());
         // relativePathList
@@ -64,10 +66,8 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         int listSize;
-        // requester
-        requester = getStringFromByteBuffer(msg);
         // list size
         listSize = msg.getInt();
         // relativePathList
@@ -83,7 +83,10 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
     @Override
     public String toString() {
         return "CMFileSyncEventOnlineModeListAck{" +
-                "requester='" + requester + '\'' +
+                "initiatorName='" + getInitiatorName() + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", relativePathList=" + relativePathList +
                 ", returnCode=" + returnCode +
                 '}';
@@ -95,25 +98,14 @@ public class CMFileSyncEventOnlineModeListAck extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventOnlineModeListAck that = (CMFileSyncEventOnlineModeListAck) o;
-        return returnCode == that.returnCode && requester.equals(that.requester) && relativePathList.equals(that.relativePathList);
+        return returnCode == that.returnCode && getInitiatorName().equals(that.getInitiatorName()) && relativePathList.equals(that.relativePathList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requester, relativePathList, returnCode);
+        return Objects.hash(getInitiatorName(), relativePathList, returnCode);
     }
 
-    /**
-     * gets the requester (client) name.
-     * @return requester (client) name
-     */
-    public String getRequester() {
-        return requester;
-    }
-
-    public void setRequester(String requester) {
-        this.requester = requester;
-    }
 
     /**
      * gets the list of local mode file paths that will be changed to the online mode.

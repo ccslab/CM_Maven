@@ -11,12 +11,10 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
-    private String requester;
     private int numLocalModeFiles;
 
     public CMFileSyncEventEndLocalModeList() {
         m_nID = CMFileSyncEvent.END_LOCAL_MODE_LIST;
-        requester = null;   // must not be null
         numLocalModeFiles = 0;
     }
 
@@ -25,12 +23,18 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getRequester() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setRequester(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // requester
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + requester.getBytes().length;
         // numLocalModeFiles
         byteNum += Integer.BYTES;
 
@@ -38,17 +42,13 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // requester
-        putStringToByteBuffer(requester);
+    protected void marshallBodyCore() {
         // numLocalModeFiles
         m_bytes.putInt(numLocalModeFiles);
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // requester
-        requester = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // numLocalModeFiles
         numLocalModeFiles = msg.getInt();
     }
@@ -56,7 +56,10 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
     @Override
     public String toString() {
         return "CMFileSyncEventEndLocalModeList{" +
-                "requester='" + requester + '\'' +
+                "initiatorName='" + getInitiatorName() + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", numLocalModeFiles=" + numLocalModeFiles +
                 '}';
     }
@@ -67,25 +70,14 @@ public class CMFileSyncEventEndLocalModeList extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventEndLocalModeList that = (CMFileSyncEventEndLocalModeList) o;
-        return numLocalModeFiles == that.numLocalModeFiles && requester.equals(that.requester);
+        return numLocalModeFiles == that.numLocalModeFiles && getInitiatorName().equals(that.getInitiatorName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requester, numLocalModeFiles);
+        return Objects.hash(getInitiatorName(), numLocalModeFiles);
     }
 
-    /**
-     * gets the requester (client) name.
-     * @return requester (client) name
-     */
-    public String getRequester() {
-        return requester;
-    }
-
-    public void setRequester(String requester) {
-        this.requester = requester;
-    }
 
     /**
      * gets the number of requested files to be changed to the local mode.

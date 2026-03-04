@@ -12,12 +12,10 @@ import java.util.Objects;
  */
 public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
     // Fields: userName, numFilesCompleted
-    private String userName;    // user name
     private int numFilesCompleted;  // number of files completed
 
     public CMFileSyncEventCompleteFileSync() {
         m_nID = CMFileSyncEvent.COMPLETE_FILE_SYNC;
-        userName = null;
         numFilesCompleted = 0;
     }
 
@@ -26,29 +24,31 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getUserName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setUserName(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // userName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
         // numFilesCompleted
         byteNum += Integer.BYTES;
         return byteNum;
     }
 
     @Override
-    protected void marshallBody() {
-        // userName
-        putStringToByteBuffer(userName);
+    protected void marshallBodyCore() {
         // numFilesCompleted
         m_bytes.putInt(numFilesCompleted);
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // userName
-        userName = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // numFilesCompleted
         numFilesCompleted = msg.getInt();
     }
@@ -58,10 +58,13 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         return "CMFileSyncEventCompleteFileSync{" +
                 "m_nType=" + m_nType +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nID=" + m_nID +
                 ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", numFilesCompleted=" + numFilesCompleted +
                 '}';
     }
@@ -82,26 +85,14 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventCompleteFileSync that = (CMFileSyncEventCompleteFileSync) o;
-        return numFilesCompleted == that.numFilesCompleted && userName.equals(that.userName);
+        return numFilesCompleted == that.numFilesCompleted && getInitiatorName().equals(that.getInitiatorName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, numFilesCompleted);
+        return Objects.hash(getInitiatorName(), numFilesCompleted);
     }
 
-    /**
-     * gets the target user (client) name.
-     *
-     * @return user (client) name
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     /**
      * gets the number of files that completed synchronization.

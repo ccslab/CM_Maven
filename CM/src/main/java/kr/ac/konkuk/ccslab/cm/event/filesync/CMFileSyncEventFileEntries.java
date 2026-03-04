@@ -18,14 +18,12 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
-    private String userName;    // user name
     private int numFilesCompleted;  // number of files completed
     private int numFiles;       // number of current files
     private List<CMFileSyncEntry> clientPathEntryList;    // list of CMFileSyncEntry
 
     public CMFileSyncEventFileEntries() {
         m_nID = CMFileSyncEvent.FILE_ENTRIES;
-        userName = null;
         numFilesCompleted = 0;
         numFiles = 0;
         clientPathEntryList = null;
@@ -36,12 +34,18 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getUserName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setUserName(String name) { setInitiatorName(name); }
+
     @Override
     public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // userName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
         // numFilesCompleted
         byteNum += Integer.BYTES;
         // numFiles
@@ -66,9 +70,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // userName
-        putStringToByteBuffer(userName);
+    protected void marshallBodyCore() {
         // numFilesCompleted
         m_bytes.putInt(numFilesCompleted);
         // numFiles
@@ -93,11 +95,9 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         int numFileEntries;
 
-        // userName
-        userName = getStringFromByteBuffer(msg);
         // numFilesCompleted
         numFilesCompleted = msg.getInt();
         // numFiles
@@ -132,9 +132,12 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 "m_nType=" + m_nType +
                 ", m_nID=" + m_nID +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", numFilesCompleted=" + numFilesCompleted +
                 ", numFiles=" + numFiles +
                 ", fileEntryList=" + clientPathEntryList +
@@ -161,26 +164,15 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         CMFileSyncEventFileEntries that = (CMFileSyncEventFileEntries) o;
         return numFilesCompleted == that.numFilesCompleted &&
                 numFiles == that.numFiles &&
-                userName.equals(that.userName) &&
+                getInitiatorName().equals(that.getInitiatorName()) &&
                 clientPathEntryList.equals(that.clientPathEntryList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, numFilesCompleted, numFiles, clientPathEntryList);
+        return Objects.hash(getInitiatorName(), numFilesCompleted, numFiles, clientPathEntryList);
     }
 
-    /**
-     * gets user (client) name.
-     * @return user (client) name
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     /**
      * gets the number of file entries that has been already transferred.

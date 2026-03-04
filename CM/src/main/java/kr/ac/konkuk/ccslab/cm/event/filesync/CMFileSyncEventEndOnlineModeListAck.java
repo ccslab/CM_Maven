@@ -11,13 +11,11 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventEndOnlineModeListAck extends CMFileSyncEvent {
-    private String requester;
     private int numOnlineModeFiles;
     private int returnCode;
 
     public CMFileSyncEventEndOnlineModeListAck() {
         m_nID = CMFileSyncEvent.END_ONLINE_MODE_LIST_ACK;
-        requester = null;   // must not be null
         numOnlineModeFiles = 0;
         returnCode = -1;
     }
@@ -27,12 +25,18 @@ public class CMFileSyncEventEndOnlineModeListAck extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getRequester() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setRequester(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // requester
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + requester.getBytes().length;
         // numOnlineModeFiles
         byteNum += Integer.BYTES;
         // returnCode
@@ -42,9 +46,7 @@ public class CMFileSyncEventEndOnlineModeListAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // requester
-        putStringToByteBuffer(requester);
+    protected void marshallBodyCore() {
         // numOnlineModeFiles
         m_bytes.putInt(numOnlineModeFiles);
         // returnCode
@@ -52,9 +54,7 @@ public class CMFileSyncEventEndOnlineModeListAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // requester
-        requester = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // numOnlineModeFiles
         numOnlineModeFiles = msg.getInt();
         // returnCode
@@ -64,7 +64,10 @@ public class CMFileSyncEventEndOnlineModeListAck extends CMFileSyncEvent {
     @Override
     public String toString() {
         return "CMFileSyncEventEndOnlineModeAck{" +
-                "requester='" + requester + '\'' +
+                "initiatorName='" + getInitiatorName() + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", numOnlineModeFiles=" + numOnlineModeFiles +
                 ", returnCode=" + returnCode +
                 '}';
@@ -76,25 +79,14 @@ public class CMFileSyncEventEndOnlineModeListAck extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventEndOnlineModeListAck that = (CMFileSyncEventEndOnlineModeListAck) o;
-        return numOnlineModeFiles == that.numOnlineModeFiles && returnCode == that.returnCode && requester.equals(that.requester);
+        return numOnlineModeFiles == that.numOnlineModeFiles && returnCode == that.returnCode && getInitiatorName().equals(that.getInitiatorName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requester, numOnlineModeFiles, returnCode);
+        return Objects.hash(getInitiatorName(), numOnlineModeFiles, returnCode);
     }
 
-    /**
-     * gets the requester (client) name.
-     * @return requester (client) name
-     */
-    public String getRequester() {
-        return requester;
-    }
-
-    public void setRequester(String requester) {
-        this.requester = requester;
-    }
 
     /**
      * gets the number of requested files to be changed to the online mode
