@@ -191,7 +191,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return;
         }
         List<CMFileSyncEntry> newClientPathEntryList = CMFileSyncInfo.getInstance().getSyncGeneratorMap()
-                .get(fileSender).getNewClientPathEntryList();
+                .get(fileSender).getNewInitiatorPathEntryList();
         Objects.requireNonNull(newClientPathEntryList);
 
         // search for the entry in the newClientPathEntryList
@@ -379,7 +379,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // compare the number of new files completed to the size of the new-file list
-        newClientPathEntryList = syncGenerator.getNewClientPathEntryList();
+        newClientPathEntryList = syncGenerator.getNewInitiatorPathEntryList();
         numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
         if (!newClientPathEntryList.isEmpty()) {
             if (CMInfo._CM_DEBUG) {

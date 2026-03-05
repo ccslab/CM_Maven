@@ -1736,8 +1736,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // check the elements of file entry list
         String userName = fse_efl.getUserName();
+        String initiatorName = fse_efl.getInitiatorName();
+        UUID initiatorUuid = fse_efl.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_efl.getInitiatorDeviceUuid();
         int numFilesCompleted = fse_efl.getNumFilesCompleted();
-        List<CMFileSyncEntry> fileEntryList = CMFileSyncInfo.getInstance().getClientPathEntryListMap()
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<CMFileSyncEntry> fileEntryList = syncInfo.getClientPathEntryListMap()
                 .get(userName);
         int numFileEntries;
         // the fileEntryList can be null if the client has no file-entry.
@@ -1768,11 +1772,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // start CMFileSyncGeneratorTask
-        CMFileSyncGenerator fileSyncGenerator = new CMFileSyncGenerator(userName);
+        CMFileSyncGenerator fileSyncGenerator =
+                new CMFileSyncGenerator(initiatorName, initiatorUuid, initiatorDeviceUuid);
         ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
         es.submit(fileSyncGenerator);
         // set the generator in the CMFileSyncInfo
-        CMFileSyncInfo.getInstance().getSyncGeneratorMap().put(userName, fileSyncGenerator);
+        syncInfo.getSyncGeneratorMap().put(initiatorName, fileSyncGenerator);
 
         return true;
     }
