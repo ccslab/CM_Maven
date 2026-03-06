@@ -11,12 +11,14 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
-    // Fields: userName, numFilesCompleted
+    // Fields: userName, numFilesCompleted, cursor
     private int numFilesCompleted;  // number of files completed
+    private long cursor;            // updated lastChangeId to be applied on client side
 
     public CMFileSyncEventCompleteFileSync() {
         m_nID = CMFileSyncEvent.COMPLETE_FILE_SYNC;
         numFilesCompleted = 0;
+        cursor = -1;
     }
 
     public CMFileSyncEventCompleteFileSync(ByteBuffer msg) {
@@ -38,6 +40,8 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         byteNum = super.getByteNum();
         // numFilesCompleted
         byteNum += Integer.BYTES;
+        // cursor
+        byteNum += Long.BYTES;
         return byteNum;
     }
 
@@ -45,12 +49,16 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
     protected void marshallBodyCore() {
         // numFilesCompleted
         m_bytes.putInt(numFilesCompleted);
+        // cursor
+        m_bytes.putLong(cursor);
     }
 
     @Override
     protected void unmarshallBodyCore(ByteBuffer msg) {
         // numFilesCompleted
         numFilesCompleted = msg.getInt();
+        // cursor
+        cursor = msg.getLong();
     }
 
     @Override
@@ -66,6 +74,7 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
                 ", m_nByteNum=" + m_nByteNum +
                 ", initiatorName='" + getInitiatorName() + '\'' +
                 ", numFilesCompleted=" + numFilesCompleted +
+                ", cursor=" + cursor +
                 '}';
     }
 
@@ -85,12 +94,14 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventCompleteFileSync that = (CMFileSyncEventCompleteFileSync) o;
-        return numFilesCompleted == that.numFilesCompleted && getInitiatorName().equals(that.getInitiatorName());
+        return numFilesCompleted == that.numFilesCompleted &&
+                cursor == that.cursor &&
+                getInitiatorName().equals(that.getInitiatorName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getInitiatorName(), numFilesCompleted);
+        return Objects.hash(getInitiatorName(), numFilesCompleted, cursor);
     }
 
 
@@ -107,5 +118,17 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
 
     public void setNumFilesCompleted(int numFilesCompleted) {
         this.numFilesCompleted = numFilesCompleted;
+    }
+
+    /**
+     * gets the updated lastChangeId to be applied on the client side.
+     * @return updated lastChangeId (cursor)
+     */
+    public long getCursor() {
+        return cursor;
+    }
+
+    public void setCursor(long cursor) {
+        this.cursor = cursor;
     }
 }
