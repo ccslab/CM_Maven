@@ -13,12 +13,14 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
-    // Fields: userName, completedPath
+    // Fields: userName, completedPath, cursor
     private Path completedPath;     // completed path
+    private long cursor;            // updated lastChangeId to be applied on client side
 
     public CMFileSyncEventCompleteNewFile() {
         m_nID = CMFileSyncEvent.COMPLETE_NEW_FILE;
         completedPath = null;
+        cursor = -1;
     }
 
     public CMFileSyncEventCompleteNewFile(ByteBuffer msg) {
@@ -40,6 +42,8 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
         byteNum = super.getByteNum();
         // completedPath
         byteNum += CMInfo.STRING_LEN_BYTES_LEN + completedPath.toString().getBytes().length;
+        // cursor
+        byteNum += Long.BYTES;
         return byteNum;
     }
 
@@ -47,12 +51,16 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
     protected void marshallBodyCore() {
         // completedPath
         putStringToByteBuffer(completedPath.toString());
+        // cursor
+        m_bytes.putLong(cursor);
     }
 
     @Override
     protected void unmarshallBodyCore(ByteBuffer msg) {
         // completedPath
         completedPath = Paths.get(getStringFromByteBuffer(msg));
+        // cursor
+        cursor = msg.getLong();
     }
 
     @Override
@@ -68,6 +76,7 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
                 ", m_nByteNum=" + m_nByteNum +
                 ", initiatorName='" + getInitiatorName() + '\'' +
                 ", completedPath=" + completedPath +
+                ", cursor=" + cursor +
                 '}';
     }
 
@@ -87,12 +96,14 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventCompleteNewFile that = (CMFileSyncEventCompleteNewFile) o;
-        return getInitiatorName().equals(that.getInitiatorName()) && completedPath.equals(that.completedPath);
+        return cursor == that.cursor &&
+                getInitiatorName().equals(that.getInitiatorName()) &&
+                completedPath.equals(that.completedPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getInitiatorName(), completedPath);
+        return Objects.hash(getInitiatorName(), completedPath, cursor);
     }
 
 
@@ -106,5 +117,17 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
 
     public void setCompletedPath(Path completedPath) {
         this.completedPath = completedPath;
+    }
+
+    /**
+     * gets the updated lastChangeId to be applied on the client side.
+     * @return updated lastChangeId (cursor)
+     */
+    public long getCursor() {
+        return cursor;
+    }
+
+    public void setCursor(long cursor) {
+        this.cursor = cursor;
     }
 }
