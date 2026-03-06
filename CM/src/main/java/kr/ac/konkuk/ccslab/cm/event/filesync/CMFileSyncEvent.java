@@ -135,6 +135,13 @@ public abstract class CMFileSyncEvent extends CMEvent {
     public static final int COMPLETE_FILE_SYNC = 17;
 
     /**
+     * event ID of the CMFileSyncEventCompleteDeleteFiles class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: deletedPathList, cursor
+    public static final int COMPLETE_DELETE_FILES = 18;
+
+    /**
      * event ID of the CMFileSyncEventOnlineModeList class.
      */
     // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
