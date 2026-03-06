@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 
@@ -29,7 +30,7 @@ public class CMFileSyncInfo {
     private Map<Integer, Map<Short, Integer>> fileIndexToHashToBlockIndexMap; // 4 client
 
     private Map<String, List<CMFileSyncEntry>> clientPathEntryListMap;    // 4 server
-    private Map<String, CMFileSyncGenerator> syncGeneratorMap;      // 4 server
+    private Map<CMUserLoginKey, CMFileSyncGenerator> syncGeneratorMap;      // 4 server
 
     private boolean fileChangeDetected;
     private WatchService watchService;
@@ -127,7 +128,7 @@ public class CMFileSyncInfo {
         return clientPathEntryListMap;
     }
 
-    public Map<String, CMFileSyncGenerator> getSyncGeneratorMap() {
+    public Map<CMUserLoginKey, CMFileSyncGenerator> getSyncGeneratorMap() {
         return syncGeneratorMap;
     }
 

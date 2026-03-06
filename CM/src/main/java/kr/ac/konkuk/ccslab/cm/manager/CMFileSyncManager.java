@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.*;
@@ -184,14 +185,15 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileName = fe.getFileName();
         // get the new file list
         String fileSender = fe.getFileSender();
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(fileSender);
+        CMUserLoginKey loginKey = new CMUserLoginKey(fileSender, fe.getFileSenderUuid());
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             if(CMInfo._CM_DEBUG)
                 System.err.println("The sync generator for (" + fileSender + ") is null!");
             return;
         }
         List<CMFileSyncEntry> newClientPathEntryList = CMFileSyncInfo.getInstance().getSyncGeneratorMap()
-                .get(fileSender).getNewInitiatorPathEntryList();
+                .get(loginKey).getNewInitiatorPathEntryList();
         Objects.requireNonNull(newClientPathEntryList);
 
         // search for the entry in the newClientPathEntryList
@@ -226,7 +228,7 @@ public class CMFileSyncManager extends CMServiceManager {
             }
 
             // complete the new-file-transfer
-            boolean result = completeNewFileTransfer(fileSender, foundPath);
+            boolean result = completeNewFileTransfer(loginKey, foundPath);
             if (result) {
                 // remove the completed newClientPathEntry from the list
                 final Path finalFoundPath = foundPath;
@@ -238,23 +240,23 @@ public class CMFileSyncManager extends CMServiceManager {
                     return;
                 }
                 // check if the file-sync is complete or not
-                if (isCompleteFileSync(fileSender)) {
+                if (isCompleteFileSync(loginKey)) {
                     // complete the file-sync task
-                    completeFileSync(fileSender);
+                    completeFileSync(loginKey);
                 }
             }
         }
     }
 
     // called by the server
-    public boolean completeNewFileTransfer(String userName, Path path) {
+    public boolean completeNewFileTransfer(CMUserLoginKey loginKey, Path path) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeNewFileTransfer() called..");
-            System.out.println("userName = " + userName);
+            System.out.println("loginKey = " + loginKey);
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -270,13 +272,13 @@ public class CMFileSyncManager extends CMServiceManager {
         String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventCompleteNewFile fse = new CMFileSyncEventCompleteNewFile();
         fse.setSender(serverName);
-        fse.setReceiver(userName);
-        fse.setUserName(userName);
+        fse.setReceiver(loginKey.getUserName());
+        fse.setUserName(loginKey.getUserName());
         fse.setCompletedPath(path);
 
         // send the event
         CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(fse, userName);
+        boolean ret = CMEventManager.unicastEvent(fse, loginKey.getUserName());
         if (!ret) {
             System.err.println("send error: " + fse);
             return false;
@@ -286,14 +288,14 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called at the server
-    public boolean skipUpdateFile(String userName, Path basisFile) {
+    public boolean skipUpdateFile(CMUserLoginKey loginKey, Path basisFile) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.skipUpdateFile() called..");
-            System.out.println("userName = " + userName);
+            System.out.println("loginKey = " + loginKey);
             System.out.println("basisFile = " + basisFile);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
         // set the isUpdateFileCompletedMap element
         syncGenerator.getIsUpdateFileCompletedMap().put(basisFile, true);
@@ -306,28 +308,28 @@ public class CMFileSyncManager extends CMServiceManager {
         String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventSkipUpdateFile fse = new CMFileSyncEventSkipUpdateFile();
         fse.setSender(serverName);
-        fse.setReceiver(userName);
-        fse.setUserName(userName);
+        fse.setReceiver(loginKey.getUserName());
+        fse.setUserName(loginKey.getUserName());
 
         // get the relative path of the basis file path
-        Path syncHome = getServerSyncHome(userName);
+        Path syncHome = getServerSyncHome(loginKey.getUserName());
         Path relativePath = basisFile.subpath(syncHome.getNameCount(), basisFile.getNameCount());
         // set the relative path to the event
         fse.setSkippedPath(relativePath);
 
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, userName);
+        return CMEventManager.unicastEvent(fse, loginKey.getUserName());
     }
 
     // called by the server
-    public boolean completeUpdateFile(String userName, Path path) {
+    public boolean completeUpdateFile(CMUserLoginKey loginKey, Path path) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeUpdateFile() called..");
-            System.out.println("userName = " + userName);
+            System.out.println("loginKey = " + loginKey);
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
         // set the isUpdateFileCompletedMap element
         syncGenerator.getIsUpdateFileCompletedMap().put(path, true);
@@ -340,24 +342,24 @@ public class CMFileSyncManager extends CMServiceManager {
         String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventCompleteUpdateFile fse = new CMFileSyncEventCompleteUpdateFile();
         fse.setSender(serverName);
-        fse.setReceiver(userName);
-        fse.setUserName(userName);
+        fse.setReceiver(loginKey.getUserName());
+        fse.setUserName(loginKey.getUserName());
 
         // get the relative path of the basis file path
-        Path syncHome = getServerSyncHome(userName);
+        Path syncHome = getServerSyncHome(loginKey.getUserName());
         Path relativePath = path.subpath(syncHome.getNameCount(), path.getNameCount());
         // set the relative path to the event
         fse.setCompletedPath(relativePath);
 
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, userName);
+        return CMEventManager.unicastEvent(fse, loginKey.getUserName());
     }
 
     // called by the server
-    public boolean isCompleteFileSync(String userName) {
+    public boolean isCompleteFileSync(CMUserLoginKey loginKey) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.isCompleteFileSync() called..");
-            System.out.println("userName = " + userName);
+            System.out.println("loginKey = " + loginKey);
         }
 
         List<CMFileSyncEntry> newClientPathEntryList = null;
@@ -372,7 +374,7 @@ public class CMFileSyncManager extends CMServiceManager {
         Map<Path, Boolean> isUpdateFileCompletedMap = null;
 
         // get CMFileSyncGenerator object
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -390,7 +392,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // get basis file list
         CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
-        basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(userName);
+        basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(loginKey.getUserName());
         // compare the number of updated files to the size of the basis-file list
         numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
         if (basisFileList != null && numUpdateFilesCompleted < basisFileList.size()) {
@@ -401,7 +403,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
-        fileEntryList = CMFileSyncInfo.getInstance().getClientPathEntryListMap().get(userName);
+        fileEntryList = CMFileSyncInfo.getInstance().getClientPathEntryListMap().get(loginKey.getUserName());
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
         if (fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
             System.err.println("numFilesCompleted = " + numFilesCompleted);
@@ -447,28 +449,28 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called by the server
-    public boolean completeFileSync(String userName) {
+    public boolean completeFileSync(CMUserLoginKey loginKey) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeFileSync() called..");
-            System.out.println("userName = " + userName);
+            System.out.println("loginKey = " + loginKey);
         }
         // send the file-sync completion event
         boolean result = true;
-        result = sendCompleteFileSync(userName);
+        result = sendCompleteFileSync(loginKey);
         if (!result) return false;
-        deleteFileSyncInfo(userName);
+        deleteFileSyncInfo(loginKey);
         return true;
     }
 
     // called by the server
-    private boolean sendCompleteFileSync(String userName) {
+    private boolean sendCompleteFileSync(CMUserLoginKey loginKey) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.sendCompleteFileSync() called..");
-            System.out.println("userName = " + userName);
+            System.out.println("loginKey = " + loginKey);
         }
 
         // get the CMFileSyncGenerator reference
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -480,27 +482,27 @@ public class CMFileSyncManager extends CMServiceManager {
 
         CMFileSyncEventCompleteFileSync fse = new CMFileSyncEventCompleteFileSync();
         fse.setSender(serverName);
-        fse.setReceiver(userName);
-        fse.setUserName(userName);
+        fse.setReceiver(loginKey.getUserName());
+        fse.setUserName(loginKey.getUserName());
         fse.setNumFilesCompleted(numFilesCompleted);
 
         // send the event
         CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, userName);
+        return CMEventManager.unicastEvent(fse, loginKey.getUserName());
     }
 
     // called by the server
-    private void deleteFileSyncInfo(String userName) {
+    private void deleteFileSyncInfo(CMUserLoginKey loginKey) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.deleteFileSyncInfo() called..");
-            System.out.println("userName = " + userName);
+            System.out.println("loginKey = " + loginKey);
         }
         // get CMFileSyncInfo reference
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         // remove element in fileEntryListMap
-        syncInfo.getClientPathEntryListMap().remove(userName);
+        syncInfo.getClientPathEntryListMap().remove(loginKey.getUserName());
         // remove element in syncGeneratorMap
-        syncInfo.getSyncGeneratorMap().remove(userName);
+        syncInfo.getSyncGeneratorMap().remove(loginKey);
     }
 
     // called by the server

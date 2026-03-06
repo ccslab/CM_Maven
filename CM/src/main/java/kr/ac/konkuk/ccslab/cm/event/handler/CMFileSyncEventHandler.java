@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.event.handler;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
@@ -515,7 +516,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // get the sync generator reference
         String userName = ackEvent.getSender();
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
+        CMUserLoginKey loginKey = new CMUserLoginKey(ackEvent.getInitiatorName(), ackEvent.getInitiatorUuid());
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
 
         // get the target basis file channel
@@ -633,12 +635,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // complete the update-existing-file task
-        boolean result = syncManager.completeUpdateFile(userName, basisFilePath);
+        boolean result = syncManager.completeUpdateFile(loginKey, basisFilePath);
         if(result) {
             // check if the file-sync is complete or not
-            if( syncManager.isCompleteFileSync(userName) ) {
+            if( syncManager.isCompleteFileSync(loginKey) ) {
                 // complete the file-sync task
-                syncManager.completeFileSync(userName);
+                syncManager.completeFileSync(loginKey);
             }
         }
 
@@ -661,7 +663,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(userName));
 
         // get the basis file path
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(userName);
+        CMUserLoginKey loginKey = new CMUserLoginKey(updateEvent.getInitiatorName(), updateEvent.getInitiatorUuid());
+        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
         int fileEntryIndex = updateEvent.getFileEntryIndex();
         int basisFileIndex = syncGenerator.getBasisFileIndexMap().get(fileEntryIndex);
@@ -1283,8 +1286,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
         // get CMFileSyncGenerator reference
         String userName = startAckEvent.getSender();
+        CMUserLoginKey loginKey = new CMUserLoginKey(startAckEvent.getInitiatorName(), startAckEvent.getInitiatorUuid());
         CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap()
-                .get(userName);
+                .get(loginKey);
         Objects.requireNonNull(syncGenerator);
 
         // get the block checksum array of the file
@@ -1777,7 +1781,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
         es.submit(fileSyncGenerator);
         // set the generator in the CMFileSyncInfo
-        syncInfo.getSyncGeneratorMap().put(initiatorName, fileSyncGenerator);
+        syncInfo.getSyncGeneratorMap().put(new CMUserLoginKey(initiatorName, initiatorUuid), fileSyncGenerator);
 
         return true;
     }

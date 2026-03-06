@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.thread;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventRequestNewFiles;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartFileBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
@@ -170,8 +171,8 @@ public class CMFileSyncGenerator implements Runnable {
         // check if the file-sync task is completed. (both client and server sync home are empty)
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-        if (syncManager.isCompleteFileSync(initiatorName)) {
-            syncManager.completeFileSync(initiatorName);
+        if (syncManager.isCompleteFileSync(new CMUserLoginKey(initiatorName, initiatorUuid))) {
+            syncManager.completeFileSync(new CMUserLoginKey(initiatorName, initiatorUuid));
         }
     }
 
@@ -243,7 +244,7 @@ public class CMFileSyncGenerator implements Runnable {
             if (clientPathEntry.getSize() == sizeOfBasisFile &&
                     clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
                 // already synchronized
-                syncManager.skipUpdateFile(initiatorName, basisFile);
+                syncManager.skipUpdateFile(new CMUserLoginKey(initiatorName, initiatorUuid), basisFile);
                 if (CMInfo._CM_DEBUG) {
                     System.out.println("basisFile(" + basisFile + ") skips synchronization.");
                     System.out.println("sizeOfBasisFile = " + sizeOfBasisFile);
@@ -263,7 +264,7 @@ public class CMFileSyncGenerator implements Runnable {
                     }
                 }
                 // complete the update-file task of the file-sync for this sub-directory
-                boolean ret = syncManager.completeUpdateFile(initiatorName, basisFile);
+                boolean ret = syncManager.completeUpdateFile(new CMUserLoginKey(initiatorName, initiatorUuid), basisFile);
                 if (!ret) {
                     System.err.println("error of completing update file(dir)!");
                     System.err.println("initiatorName(" + initiatorName + "), dir(" + basisFile + ")");
@@ -500,7 +501,7 @@ public class CMFileSyncGenerator implements Runnable {
                     continue;
                 }
                 // set the completion of new-file-transfer
-                boolean ret = syncManager.completeNewFileTransfer(initiatorName, entry.getPathRelativeToHome());
+                boolean ret = syncManager.completeNewFileTransfer(new CMUserLoginKey(initiatorName, initiatorUuid), entry.getPathRelativeToHome());
                 if (ret) {
                     // remove the current entry from this list
                     iter.remove();
