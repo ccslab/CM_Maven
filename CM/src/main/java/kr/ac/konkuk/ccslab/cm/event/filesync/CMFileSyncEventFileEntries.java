@@ -20,13 +20,13 @@ import java.util.Objects;
 public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
     private int numFilesCompleted;  // number of files completed
     private int numFiles;       // number of current files
-    private List<CMFileSyncEntry> clientPathEntryList;    // list of CMFileSyncEntry
+    private List<CMFileSyncEntry> initiatorPathEntryList;    // list of CMFileSyncEntry
 
     public CMFileSyncEventFileEntries() {
         m_nID = CMFileSyncEvent.FILE_ENTRIES;
         numFilesCompleted = 0;
         numFiles = 0;
-        clientPathEntryList = null;
+        initiatorPathEntryList = null;
     }
 
     public CMFileSyncEventFileEntries(ByteBuffer msg) {
@@ -53,8 +53,8 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         // number of elements of fileEntryList
         byteNum += Integer.BYTES;
         // fileEntryList (Path pathRelativeToHome, long size, FileTime lastModifiedTime)
-        if(clientPathEntryList != null) {
-            for (CMFileSyncEntry entry : clientPathEntryList) {
+        if(initiatorPathEntryList != null) {
+            for (CMFileSyncEntry entry : initiatorPathEntryList) {
                 // Path pathRelativeToHome
                 byteNum += CMInfo.STRING_LEN_BYTES_LEN +
                         entry.getPathRelativeToHome().toString().getBytes().length;
@@ -75,11 +75,11 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         m_bytes.putInt(numFilesCompleted);
         // numFiles
         m_bytes.putInt(numFiles);
-        if(clientPathEntryList != null) {
+        if(initiatorPathEntryList != null) {
             // number of elements of fileEntryList
-            m_bytes.putInt(clientPathEntryList.size());
+            m_bytes.putInt(initiatorPathEntryList.size());
             // fileEntryList
-            for (CMFileSyncEntry entry : clientPathEntryList) {
+            for (CMFileSyncEntry entry : initiatorPathEntryList) {
                 // Path relativePathToHome
                 putStringToByteBuffer(entry.getPathRelativeToHome().toString());
                 // long size
@@ -106,7 +106,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         numFileEntries = msg.getInt();
         if(numFileEntries > 0){
             // create a new entry list
-            clientPathEntryList = new ArrayList<>();
+            initiatorPathEntryList = new ArrayList<>();
             for (int i = 0; i < numFileEntries; i++) {
                 CMFileSyncEntry entry = new CMFileSyncEntry();
                 // Path relativePathToHome
@@ -121,7 +121,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 CMFileType type = CMFileType.values()[msg.getInt()];
                 entry.setType(type);
                 // add to the entry list
-                clientPathEntryList.add(entry);
+                initiatorPathEntryList.add(entry);
             }
         }
     }
@@ -140,7 +140,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
                 ", initiatorName='" + getInitiatorName() + '\'' +
                 ", numFilesCompleted=" + numFilesCompleted +
                 ", numFiles=" + numFiles +
-                ", fileEntryList=" + clientPathEntryList +
+                ", fileEntryList=" + initiatorPathEntryList +
                 '}';
     }
 
@@ -152,7 +152,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         return fse.getUserName().equals(userName) &&
                 fse.getNumFilesCompleted() == numFilesCompleted &&
                 fse.getNumFiles() == numFiles &&
-                fse.getClientPathEntryList().equals(clientPathEntryList);
+                fse.getInitiatorPathEntryList().equals(initiatorPathEntryList);
     }
 */
 
@@ -165,12 +165,12 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
         return numFilesCompleted == that.numFilesCompleted &&
                 numFiles == that.numFiles &&
                 getInitiatorName().equals(that.getInitiatorName()) &&
-                clientPathEntryList.equals(that.clientPathEntryList);
+                initiatorPathEntryList.equals(that.initiatorPathEntryList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getInitiatorName(), numFilesCompleted, numFiles, clientPathEntryList);
+        return Objects.hash(getInitiatorName(), numFilesCompleted, numFiles, initiatorPathEntryList);
     }
 
 
@@ -202,11 +202,11 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
      * gets the list of file entries in this event.
      * @return a list of file entries
      */
-    public List<CMFileSyncEntry> getClientPathEntryList() {
-        return clientPathEntryList;
+    public List<CMFileSyncEntry> getInitiatorPathEntryList() {
+        return initiatorPathEntryList;
     }
 
-    public void setClientPathEntryList(List<CMFileSyncEntry> clientPathEntryList) {
-        this.clientPathEntryList = clientPathEntryList;
+    public void setInitiatorPathEntryList(List<CMFileSyncEntry> initiatorPathEntryList) {
+        this.initiatorPathEntryList = initiatorPathEntryList;
     }
 }

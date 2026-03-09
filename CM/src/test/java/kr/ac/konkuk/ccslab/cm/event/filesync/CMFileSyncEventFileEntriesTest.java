@@ -35,18 +35,18 @@ public class CMFileSyncEventFileEntriesTest {
         assertEquals(5, unmarshallEvent.getNumFilesCompleted());
         assertEquals(11, unmarshallEvent.getNumFiles());
         // List<CMFileSyncEntry> is null
-        List<CMFileSyncEntry> entryList = unmarshallEvent.getClientPathEntryList();
+        List<CMFileSyncEntry> entryList = unmarshallEvent.getInitiatorPathEntryList();
         assertNull(entryList);
 
         // add an empty List<CMFileSyncEntry>
         entryList = new ArrayList<>();
-        fsEvent.setClientPathEntryList(entryList);
+        fsEvent.setInitiatorPathEntryList(entryList);
         System.out.println("fsEvent = " + fsEvent);
         byteBuffer = CMEventManager.marshallEvent(fsEvent);
         unmarshallEvent = (CMFileSyncEventFileEntries) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
-        List<CMFileSyncEntry> unmarshallEntryList = unmarshallEvent.getClientPathEntryList();
+        List<CMFileSyncEntry> unmarshallEntryList = unmarshallEvent.getInitiatorPathEntryList();
         assertNull(unmarshallEntryList);
 
         // add a List<CMFileSyncEntry> with 2 items
@@ -64,14 +64,14 @@ public class CMFileSyncEventFileEntriesTest {
         entry2.setType(CMFileType.DIR);
         entryList.add(entry2);
 
-        fsEvent.setClientPathEntryList(entryList);
+        fsEvent.setInitiatorPathEntryList(entryList);
         System.out.println("fsEvent = " + fsEvent);
 
         byteBuffer = CMEventManager.marshallEvent(fsEvent);
         unmarshallEvent = (CMFileSyncEventFileEntries) CMEventManager.unmarshallEvent(byteBuffer);
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
-        unmarshallEntryList = unmarshallEvent.getClientPathEntryList();
+        unmarshallEntryList = unmarshallEvent.getInitiatorPathEntryList();
 
         CMFileSyncEntry unmarshallEntry1 = unmarshallEntryList.get(0);
         assertEquals(entry1.getPathRelativeToHome(), unmarshallEntry1.getPathRelativeToHome());
