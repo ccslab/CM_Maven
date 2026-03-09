@@ -1491,19 +1491,21 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("event = " + fse_sfla);
         }
 
-        String server = fse_sfla.getSender();
+        String receiver = fse_sfla.getSender();
+        UUID receiverUuid = fse_sfla.getSenderUuid();
 
         // create a FILE_ENTRIES event
         CMFileSyncEventFileEntries newfse = new CMFileSyncEventFileEntries();
-        newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
-        newfse.setSender(fse_sfla.getReceiver());  // user name
-        newfse.setReceiver(server);  // server name
-        newfse.setUserName(fse_sfla.getUserName());    // user name
-        newfse.setNumFilesCompleted(0); // initialized to 0
+        // 공통 필드 설정
+        newfse.setInitiatorName(fse_sfla.getInitiatorName());
+        newfse.setInitiatorUuid(fse_sfla.getInitiatorUuid());
+        newfse.setInitiatorDeviceUuid(fse_sfla.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
+        newfse.setNumFilesCompleted(0);
         // set numFiles and fileEntryList
         setNumFilesAndEntryList(newfse, 0);
 
-        return CMEventManager.unicastEvent(newfse, server);
+        return CMEventManager.unicastEvent(newfse, receiver, receiverUuid);
     }
 
     // called at the client
