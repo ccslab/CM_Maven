@@ -142,30 +142,36 @@ public class CMFileSyncManager extends CMServiceManager {
         if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.sendFileList() called..");
 
-        String userName;
-        String serverName;
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        String initiatorName;
+        String receiverName;
         List<Path> pathList;
+
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+        UUID receiverUuid = null;
 
         // create START_FILE_LIST event.
         CMFileSyncEventStartFileList fse = new CMFileSyncEventStartFileList();
-        // get my name
-        userName = CMInteractionInfo.getInstance().getMyself().getName();
-        fse.setSender(userName);
-        // get default server name
-        serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
-        fse.setReceiver(serverName);
-
-        fse.setUserName(userName);
+        // get initiator name
+        initiatorName = interInfo.getMyself().getName();
+        // get default server name (양방향 동기화 때 수정 필요)
+        receiverName = interInfo.getDefaultServerInfo().getServerName();
+        // set common initiator, initiator uuid, initiator device uuid
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
         // get path list
-        pathList = CMFileSyncInfo.getInstance().getPathList();
+        pathList = syncInfo.getPathList();
         if (pathList == null)
             fse.setNumTotalFiles(0);
         else
             fse.setNumTotalFiles(pathList.size());
 
         // send the event
-        CMInfo cmInfo = CMInfo.getInstance();
-        boolean sendResult = CMEventManager.unicastEvent(fse, serverName);
+        boolean sendResult = CMEventManager.unicastEvent(fse, receiverName, receiverUuid);
         if (!sendResult) {
             System.err.println("CMFileSyncManager.sendFileList(), send error!");
             System.err.println(fse);
