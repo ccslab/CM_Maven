@@ -1452,12 +1452,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("event = " + fse_sfl);
         }
 
-        String userName = fse_sfl.getUserName();
+        String initiatorName = fse_sfl.getInitiatorName();
+        UUID initiatorUuid = fse_sfl.getInitiatorUuid();
         // get the file-sync manager
-        CMInfo cmInfo = CMInfo.getInstance();
-        CMFileSyncManager fsManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-        // get server sync home for userName
-        Path serverSyncHome = fsManager.getServerSyncHome(userName);
+        CMFileSyncManager fsManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        // get server sync home for initiatorName
+        // 추후 양방향 파일 동기화시에 server 명칭보다 receiver 명칭으로 수정 필요
+        Path serverSyncHome = fsManager.getServerSyncHome(initiatorName);
         // check and create the server sync home
         if (Files.notExists(serverSyncHome)) {
             try {
@@ -1470,15 +1471,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create the ack event
         CMFileSyncEventStartFileListAck ackFse = new CMFileSyncEventStartFileListAck();
-        ackFse.setSender(fse_sfl.getReceiver());  // server name
-        ackFse.setReceiver(userName);
-        ackFse.setUserName(userName);
+        // 공통 필드 설정
+        ackFse.setInitiatorName(initiatorName);
+        ackFse.setInitiatorUuid(initiatorUuid);
+        ackFse.setInitiatorDeviceUuid(fse_sfl.getInitiatorDeviceUuid());
+        // 나머지 필드 설정 (num total files, return code)
         ackFse.setNumTotalFiles(fse_sfl.getNumTotalFiles());
         ackFse.setReturnCode(1);    // always success
 
         // send the ack event to the client
-
-        return CMEventManager.unicastEvent(ackFse, userName);
+        return CMEventManager.unicastEvent(ackFse, initiatorName, initiatorUuid);
     }
 
     // called at the client
