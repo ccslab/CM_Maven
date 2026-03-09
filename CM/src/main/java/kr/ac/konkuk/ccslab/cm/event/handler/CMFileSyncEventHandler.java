@@ -1516,12 +1516,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("curByteNum before adding entries = " + curByteNum);
         }
         // set variables before the while loop
-        List<Path> pathList = CMFileSyncInfo.getInstance().getPathList();
+        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
+        List<Path> pathList = syncInfo.getPathList();
         List<Path> subList = new ArrayList<>();
         int index = startListIndex;
         int numFiles = 0;
-        CMInfo cmInfo = CMInfo.getInstance();
-        CMFileSyncManager fsManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+        CMFileSyncManager fsManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
         Path clientSyncHome = fsManager.getClientSyncHome();
         int startPathIndex = clientSyncHome.getNameCount();
         // create sub-list that will be added as the file-entry-list to the event
@@ -1568,7 +1568,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     return fileEntry;
                 }).collect(Collectors.toList());
 */
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         Map<Path,Long> onlineModePathToSizeMap = Objects.requireNonNull(syncInfo.getOnlineModePathSizeMap());
         List<CMFileSyncEntry> fileEntryList = new ArrayList<>();
         for(Path path : subList) {
