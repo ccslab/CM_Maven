@@ -1724,14 +1724,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.sendNextFileEntries() called..");
         }
 
-        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         // create FILE_ENTRIES event
         CMFileSyncEventFileEntries newfse = new CMFileSyncEventFileEntries();
-        newfse.setID(CMFileSyncEvent.FILE_ENTRIES);
-        newfse.setSender(fse.getReceiver());  // client
-        String server = fse.getSender();
-        newfse.setReceiver(server);  // server
-        newfse.setUserName(fse.getUserName());    // client
+        // 공통 필드 설정
+        newfse.setInitiatorName(fse.getInitiatorName());
+        newfse.setInitiatorUuid(fse.getInitiatorUuid());
+        newfse.setInitiatorDeviceUuid(fse.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
         newfse.setNumFilesCompleted(fse.getNumFilesCompleted());
 
         // set numFiles and fileEntryList
@@ -1739,7 +1738,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         setNumFilesAndEntryList(newfse, startListIndex);
 
         // send FILE_ENTRIES event
-        return CMEventManager.unicastEvent(newfse, server);
+        return CMEventManager.unicastEvent(newfse, fse.getSender(), fse.getSenderUuid());
     }
 
     // called at the server
