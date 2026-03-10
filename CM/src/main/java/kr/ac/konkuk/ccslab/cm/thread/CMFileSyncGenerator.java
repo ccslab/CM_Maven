@@ -477,7 +477,16 @@ public class CMFileSyncGenerator implements Runnable {
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
-        Path syncHome = syncManager.getServerSyncHome(initiatorName);
+        Path syncHome;
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = syncManager.getServerSyncHome(initiatorName);
+        } else if (confInfo.getSystemType().equals("CLIENT")) {
+            syncHome = syncManager.getClientSyncHome();
+        } else {
+            System.err.println("CMFileSyncGenerator.requestTransferOfNewFiles(), wrong system type!");
+            return false;
+        }
 
         // create new sub-directories that do not have to be requested from the client
         Iterator<CMFileSyncEntry> iter = newInitiatorPathEntryList.iterator();
@@ -504,7 +513,8 @@ public class CMFileSyncGenerator implements Runnable {
                     continue;
                 }
                 // set the completion of new-file-transfer
-                boolean ret = syncManager.completeNewFileTransfer(new CMUserLoginKey(initiatorName, initiatorUuid), entry.getPathRelativeToHome());
+                boolean ret = syncManager.completeNewFileTransfer(new CMUserLoginKey(initiatorName, initiatorUuid),
+                        entry.getPathRelativeToHome());
                 if (ret) {
                     // remove the current entry from this list
                     iter.remove();
@@ -526,10 +536,10 @@ public class CMFileSyncGenerator implements Runnable {
         while (numRequestsCompleted < newFileEntryList.size()) {
             // create a request event
             CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
-            String serverName = CMInteractionInfo.getInstance().getMyself().getName();
-            fse.setSender(serverName);   // server
-            fse.setReceiver(initiatorName);
-            fse.setRequesterName(serverName); // server
+            // 공통 필드 설정
+            fse.setInitiatorName(initiatorName);
+            fse.setInitiatorUuid(initiatorUuid);
+            fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
             //// set numRequestedFiles and requestedFileList
             // get the size of the remaining event fields
             int curByteNum = fse.getByteNum();
@@ -553,7 +563,7 @@ public class CMFileSyncGenerator implements Runnable {
             fse.setNumRequestedFiles(numRequestedFiles);
             fse.setRequestedFileList(requestedFileList);
             // send the request event
-            sendResult = CMEventManager.unicastEvent(fse, initiatorName);
+            sendResult = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
             if (!sendResult) {
                 System.err.println("CMFileSyncGenerator.requestTransferOfNewFiles(), send error!");
                 return false;
