@@ -369,7 +369,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("loginKey = " + loginKey);
         }
 
-        List<CMFileSyncEntry> newClientPathEntryList = null;
+        List<CMFileSyncEntry> newInitiatorPathEntryList = null;
         List<Path> basisFileList = null;
         List<CMFileSyncEntry> fileEntryList = null;
         int numNewFilesCompleted = 0;
@@ -381,27 +381,29 @@ public class CMFileSyncManager extends CMServiceManager {
         Map<Path, Boolean> isUpdateFileCompletedMap = null;
 
         // get CMFileSyncGenerator object
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
         }
 
         // compare the number of new files completed to the size of the new-file list
-        newClientPathEntryList = syncGenerator.getNewInitiatorPathEntryList();
+        newInitiatorPathEntryList = syncGenerator.getNewInitiatorPathEntryList();
         numNewFilesCompleted = syncGenerator.getNumNewFilesCompleted();
-        if (!newClientPathEntryList.isEmpty()) {
+        if (!newInitiatorPathEntryList.isEmpty()) {
             if (CMInfo._CM_DEBUG) {
                 System.err.println("numNewFilesCompleted = " + numNewFilesCompleted);
-                System.err.println("size of newClientPathEntryList = " + newClientPathEntryList.size());
+                System.err.println("size of newInitiatorPathEntryList = " + newInitiatorPathEntryList.size());
             }
             return false;
         }
         // get basis file list
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
-        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
-                syncGenerator.getInitiatorDeviceUuid());
-        basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(stateKey);
+        UUID initiatorDeviceUuid = syncGenerator.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        basisFileList = syncInfo.getBasisFileListMap().get(stateKey);
         // compare the number of updated files to the size of the basis-file list
         numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
         if (basisFileList != null && numUpdateFilesCompleted < basisFileList.size()) {
@@ -412,7 +414,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
-        fileEntryList = CMFileSyncInfo.getInstance().getInitiatorPathEntryListMap().get(stateKey);
+        fileEntryList = syncInfo.getInitiatorPathEntryListMap().get(stateKey);
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
         if (fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
             System.err.println("numFilesCompleted = " + numFilesCompleted);
