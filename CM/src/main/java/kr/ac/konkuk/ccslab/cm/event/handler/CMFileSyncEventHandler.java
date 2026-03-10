@@ -1609,7 +1609,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("event = " + fse_fe);
         }
 
-        String userName = fse_fe.getUserName();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        String initiatorName = fse_fe.getInitiatorName();
+        UUID initiatorUuid = fse_fe.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_fe.getInitiatorDeviceUuid();
         int returnCode = 1;
         int numFilesCompleted = 0;
         int numFiles = fse_fe.getNumFiles();
@@ -1617,12 +1621,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // if 0, the entry list is null in the event
         if(numFiles > 0) {
             // set or add the entry list of the event to the entry Map
-            CMFileSyncStateKey stateKey = new CMFileSyncStateKey(fse_fe.getInitiatorName(),
-                    fse_fe.getInitiatorDeviceUuid());
-            List<CMFileSyncEntry> entryList = CMFileSyncInfo.getInstance().getInitiatorPathEntryListMap().get(stateKey);
+            CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+            List<CMFileSyncEntry> entryList = syncInfo.getInitiatorPathEntryListMap().get(stateKey);
             if (entryList == null) {
                 // set the new entry list to the Map
-                CMFileSyncInfo.getInstance().getInitiatorPathEntryListMap().put(stateKey, fse_fe.getInitiatorPathEntryList());
+                syncInfo.getInitiatorPathEntryListMap().put(stateKey, fse_fe.getInitiatorPathEntryList());
                 // set the number of completed files
                 numFilesCompleted = numFiles;
             } else {
@@ -1648,15 +1651,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create FILE_ENTRIES_ACK event
         CMFileSyncEventFileEntriesAck fseAck = new CMFileSyncEventFileEntriesAck();
-        fseAck.setSender(fse_fe.getReceiver());  // server
-        fseAck.setReceiver(fse_fe.getSender());  // client
-        fseAck.setUserName(fse_fe.getUserName());
+        // 공통 필드 설정
+        fseAck.setInitiatorName(initiatorName);
+        fseAck.setInitiatorUuid(initiatorUuid);
+        fseAck.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
         fseAck.setNumFilesCompleted(numFilesCompleted);   // updated
         fseAck.setNumFiles(numFiles);
         fseAck.setReturnCode(returnCode);
 
         // send the ack event
-        return CMEventManager.unicastEvent(fseAck, userName);
+        return CMEventManager.unicastEvent(fseAck, initiatorName, initiatorUuid);
     }
 
     // called at the client
