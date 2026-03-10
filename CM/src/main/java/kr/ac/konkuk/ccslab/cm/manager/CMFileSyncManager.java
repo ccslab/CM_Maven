@@ -296,13 +296,17 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called at the server
     public boolean skipUpdateFile(CMUserLoginKey loginKey, Path basisFile) {
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.skipUpdateFile() called..");
-            System.out.println("loginKey = " + loginKey);
+            System.out.println("initiatorName = " + initiatorName);
+            System.out.println("initiatorUuid = " + initiatorUuid);
             System.out.println("basisFile = " + basisFile);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
         // set the isUpdateFileCompletedMap element
         syncGenerator.getIsUpdateFileCompletedMap().put(basisFile, true);
@@ -312,20 +316,25 @@ public class CMFileSyncManager extends CMServiceManager {
         syncGenerator.setNumUpdateFilesCompleted(numUpdateFilesCompleted);
 
         // create a SKIP_UPDATE_FILE event
-        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventSkipUpdateFile fse = new CMFileSyncEventSkipUpdateFile();
-        fse.setSender(serverName);
-        fse.setReceiver(loginKey.getUserName());
-        fse.setUserName(loginKey.getUserName());
+        // 공통 필드 설정
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
 
         // get the relative path of the basis file path
-        Path syncHome = getServerSyncHome(loginKey.getUserName());
+        Path syncHome;
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = getServerSyncHome(initiatorName);
+        } else {
+            syncHome = getClientSyncHome();
+        }
         Path relativePath = basisFile.subpath(syncHome.getNameCount(), basisFile.getNameCount());
         // set the relative path to the event
         fse.setSkippedPath(relativePath);
 
-        CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, loginKey.getUserName());
+        return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
     }
 
     // called by the server
