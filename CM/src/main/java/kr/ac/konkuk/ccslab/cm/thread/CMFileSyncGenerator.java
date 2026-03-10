@@ -748,14 +748,20 @@ public class CMFileSyncGenerator implements Runnable {
             System.err.println("CMFileSyncGenerator.createBasisFileList(), file-sync manager is null!");
             return null;
         }
-        // get the server sync home
-        Path serverSyncHome = syncManager.getServerSyncHome(initiatorName);
+        // get the sync home
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = syncManager.getServerSyncHome(initiatorName);
+        } else {
+            syncHome = syncManager.getClientSyncHome();
+        }
         // check if the sync home exists or not
-        if (Files.notExists(serverSyncHome)) {
+        if (Files.notExists(syncHome)) {
             System.err.println("CMFileSyncGenerator.createBasisFileList(), the server sync-home does not exist!");
             return null;
         }
         // create a basis file list
-        return syncManager.createPathList(serverSyncHome);
+        return syncManager.createPathList(syncHome);
     }
 }
