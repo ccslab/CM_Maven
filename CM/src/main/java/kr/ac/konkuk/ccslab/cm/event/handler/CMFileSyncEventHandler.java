@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.event.handler;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
@@ -562,8 +563,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
+                syncGenerator.getInitiatorDeviceUuid());
         List<Path> basisFileList = Objects.requireNonNull(CMFileSyncInfo.getInstance().getBasisFileListMap()
-                .get(userName));
+                .get(stateKey));
         Path basisFilePath = basisFileList.get(basisFileIndex);
         if(basisFilePath == null) {
             System.err.println("Basis file path NOT FOUND for basis file index ("+basisFileIndex+")!");
@@ -584,8 +587,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // get the client file entry reference
         CMFileSyncEntry clientFileEntry = Optional.of(CMFileSyncInfo.getInstance())
-                .map(CMFileSyncInfo::getClientPathEntryListMap)
-                .map(t -> t.get(userName))
+                .map(CMFileSyncInfo::getInitiatorPathEntryListMap)
+                .map(t -> t.get(stateKey))
                 .map(l -> l.get(fileEntryIndex))
                 .orElse(null);
         if(clientFileEntry == null) {
@@ -668,8 +671,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Objects.requireNonNull(syncGenerator);
         int fileEntryIndex = updateEvent.getFileEntryIndex();
         int basisFileIndex = syncGenerator.getBasisFileIndexMap().get(fileEntryIndex);
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
+                syncGenerator.getInitiatorDeviceUuid());
         List<Path> basisFileList = Objects.requireNonNull(CMFileSyncInfo.getInstance().getBasisFileListMap()
-                .get(userName));
+                .get(stateKey));
         Path basisFilePath = Objects.requireNonNull(basisFileList.get(basisFileIndex));
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFilePath = " + basisFilePath);
@@ -1612,10 +1617,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // if 0, the entry list is null in the event
         if(numFiles > 0) {
             // set or add the entry list of the event to the entry Map
-            List<CMFileSyncEntry> entryList = CMFileSyncInfo.getInstance().getClientPathEntryListMap().get(userName);
+            CMFileSyncStateKey stateKey = new CMFileSyncStateKey(fse_fe.getInitiatorName(),
+                    fse_fe.getInitiatorDeviceUuid());
+            List<CMFileSyncEntry> entryList = CMFileSyncInfo.getInstance().getInitiatorPathEntryListMap().get(stateKey);
             if (entryList == null) {
                 // set the new entry list to the Map
-                CMFileSyncInfo.getInstance().getClientPathEntryListMap().put(userName, fse_fe.getInitiatorPathEntryList());
+                CMFileSyncInfo.getInstance().getInitiatorPathEntryListMap().put(stateKey, fse_fe.getInitiatorPathEntryList());
                 // set the number of completed files
                 numFilesCompleted = numFiles;
             } else {
@@ -1748,8 +1755,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         UUID initiatorDeviceUuid = fse_efl.getInitiatorDeviceUuid();
         int numFilesCompleted = fse_efl.getNumFilesCompleted();
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
-        List<CMFileSyncEntry> fileEntryList = syncInfo.getClientPathEntryListMap()
-                .get(userName);
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        List<CMFileSyncEntry> fileEntryList = syncInfo.getInitiatorPathEntryListMap()
+                .get(stateKey);
         int numFileEntries;
         // the fileEntryList can be null if the client has no file-entry.
         if(fileEntryList == null)

@@ -1,6 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
@@ -398,7 +399,9 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // get basis file list
         CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
-        basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(loginKey.getUserName());
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
+                syncGenerator.getInitiatorDeviceUuid());
+        basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap()).get(stateKey);
         // compare the number of updated files to the size of the basis-file list
         numUpdateFilesCompleted = syncGenerator.getNumUpdateFilesCompleted();
         if (basisFileList != null && numUpdateFilesCompleted < basisFileList.size()) {
@@ -409,7 +412,7 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         // compare the number of files of which sync is completed to the size of client file-entry list
-        fileEntryList = CMFileSyncInfo.getInstance().getClientPathEntryListMap().get(loginKey.getUserName());
+        fileEntryList = CMFileSyncInfo.getInstance().getInitiatorPathEntryListMap().get(stateKey);
         numFilesCompleted = numNewFilesCompleted + numUpdateFilesCompleted;
         if (fileEntryList != null && numFilesCompleted < fileEntryList.size()) {
             System.err.println("numFilesCompleted = " + numFilesCompleted);
@@ -505,8 +508,14 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // get CMFileSyncInfo reference
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
-        // remove element in fileEntryListMap
-        syncInfo.getClientPathEntryListMap().remove(loginKey.getUserName());
+        // get syncGenerator to build stateKey
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
+        if (syncGenerator != null) {
+            CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
+                    syncGenerator.getInitiatorDeviceUuid());
+            // remove element in initiatorPathEntryListMap
+            syncInfo.getInitiatorPathEntryListMap().remove(stateKey);
+        }
         // remove element in syncGeneratorMap
         syncInfo.getSyncGeneratorMap().remove(loginKey);
     }

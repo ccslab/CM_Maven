@@ -2,6 +2,7 @@ package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
@@ -29,7 +30,7 @@ public class CMFileSyncInfo {
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumMap;   // 4 client
     private Map<Integer, Map<Short, Integer>> fileIndexToHashToBlockIndexMap; // 4 client
 
-    private Map<String, List<CMFileSyncEntry>> clientPathEntryListMap;    // 4 server
+    private Map<CMFileSyncStateKey, List<CMFileSyncEntry>> initiatorPathEntryListMap;    // 4 server
     private Map<CMUserLoginKey, CMFileSyncGenerator> syncGeneratorMap;      // 4 server
 
     private boolean fileChangeDetected;
@@ -42,7 +43,7 @@ public class CMFileSyncInfo {
     //private Map<String, List<Path>> onlineModePathListMap;      // 4 server
 
     private ConcurrentLinkedQueue<Path> localModeRequestQueue;      // 4 client
-    private Map<String, List<Path>> basisFileListMap;           // 4 server
+    private Map<CMFileSyncStateKey, List<Path>> basisFileListMap;           // 4 server
 
     private ScheduledFuture<?> proactiveModeTaskFuture;
 
@@ -58,7 +59,7 @@ public class CMFileSyncInfo {
         blockChecksumMap = new Hashtable<>();
         fileIndexToHashToBlockIndexMap = new Hashtable<>();
 
-        clientPathEntryListMap = new Hashtable<>();
+        initiatorPathEntryListMap = new Hashtable<>();
         syncGeneratorMap = new Hashtable<>();
 
         fileChangeDetected = false;
@@ -124,8 +125,8 @@ public class CMFileSyncInfo {
         return isFileSyncCompletedMap;
     }
 
-    public Map<String, List<CMFileSyncEntry>> getClientPathEntryListMap() {
-        return clientPathEntryListMap;
+    public Map<CMFileSyncStateKey, List<CMFileSyncEntry>> getInitiatorPathEntryListMap() {
+        return initiatorPathEntryListMap;
     }
 
     public Map<CMUserLoginKey, CMFileSyncGenerator> getSyncGeneratorMap() {
@@ -193,7 +194,7 @@ public class CMFileSyncInfo {
         return localModeRequestQueue;
     }
 
-    public Map<String, List<Path>> getBasisFileListMap() {
+    public Map<CMFileSyncStateKey, List<Path>> getBasisFileListMap() {
         return basisFileListMap;
     }
 
