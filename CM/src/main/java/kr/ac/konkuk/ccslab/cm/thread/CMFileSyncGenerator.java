@@ -133,7 +133,8 @@ public class CMFileSyncGenerator implements Runnable {
         // put the basis file list to the basis-file-list-map
         CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         Map<CMFileSyncStateKey, List<Path>> basisFileListMap = Objects.requireNonNull(syncInfo.getBasisFileListMap());
-        basisFileListMap.put(new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid), basisFileList);
+        CMFileSyncStateKey key = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        basisFileListMap.put(key, basisFileList);
 
         //// compare the client file-entry-list and the basis file-entry-list
 
