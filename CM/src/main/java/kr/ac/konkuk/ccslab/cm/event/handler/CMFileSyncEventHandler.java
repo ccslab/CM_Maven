@@ -1753,13 +1753,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         int returnCode;
 
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
         // check the elements of file entry list
-        String userName = fse_efl.getUserName();
         String initiatorName = fse_efl.getInitiatorName();
         UUID initiatorUuid = fse_efl.getInitiatorUuid();
         UUID initiatorDeviceUuid = fse_efl.getInitiatorDeviceUuid();
         int numFilesCompleted = fse_efl.getNumFilesCompleted();
-        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
         List<CMFileSyncEntry> fileEntryList = syncInfo.getInitiatorPathEntryListMap()
                 .get(stateKey);
@@ -1778,14 +1778,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create an END_FILE_LIST_ACK event
         CMFileSyncEventEndFileListAck fseAck = new CMFileSyncEventEndFileListAck();
-        fseAck.setSender(fse_efl.getReceiver());  // server
-        fseAck.setReceiver(fse_efl.getSender());  // client
-        fseAck.setUserName(userName);
+        // 공통 필드 설정
+        fseAck.setInitiatorName(initiatorName);
+        fseAck.setInitiatorUuid(initiatorUuid);
+        fseAck.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
         fseAck.setNumFilesCompleted(numFilesCompleted);
         fseAck.setReturnCode(returnCode);
 
         // send the ack event
-        boolean result = CMEventManager.unicastEvent(fseAck, userName);
+        boolean result = CMEventManager.unicastEvent(fseAck, initiatorName, initiatorUuid);
         if (!result) {
             System.err.println("send END_FILE_LIST_ACK error!");
             return false;
