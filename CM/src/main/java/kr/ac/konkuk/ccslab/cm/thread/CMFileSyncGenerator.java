@@ -165,7 +165,7 @@ public class CMFileSyncGenerator implements Runnable {
         }
 
         // update the files at the server by synchronizing with those at the client
-        requestResult = compareBasisAndClientFileList();
+        requestResult = compareBasisAndInitiatorFileList();
         if (!requestResult) {
             System.err.println("compare-basis-and-client-file-list error!");
         }
@@ -178,14 +178,14 @@ public class CMFileSyncGenerator implements Runnable {
         }
     }
 
-    private boolean compareBasisAndClientFileList() {
+    private boolean compareBasisAndInitiatorFileList() {
         if (CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncGenerator.compareBasisAndClientFileList() called..");
+            System.out.println("=== CMFileSyncGenerator.compareBasisAndInitiatorFileList() called..");
         }
 
         CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
-        List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap())
-                .get(new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid));
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        List<Path> basisFileList = syncInfo.getBasisFileListMap().get(stateKey);
 
         if (basisFileList == null) {
             System.err.println("basisFileList is null!");
@@ -203,8 +203,14 @@ public class CMFileSyncGenerator implements Runnable {
         // get CMFileSyncManager object
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-        // get the server sync home
-        Path serverSyncHome = syncManager.getServerSyncHome(initiatorName);
+        // get the file sync home
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = syncManager.getServerSyncHome(initiatorName);
+        } else {
+            syncHome = syncManager.getClientSyncHome();
+        }
 
         for (int basisFileIndex = 0; basisFileIndex < basisFileList.size(); basisFileIndex++) {
             Path basisFile = basisFileList.get(basisFileIndex);
@@ -214,27 +220,27 @@ public class CMFileSyncGenerator implements Runnable {
                 System.out.println("basisFile = " + basisFile);
             }
             // get relative path
-            Path relativeBasisFile = basisFile.subpath(serverSyncHome.getNameCount(),
+            Path relativeBasisFile = basisFile.subpath(syncHome.getNameCount(),
                     basisFile.getNameCount());
-            // search for the client file entry
-            CMFileSyncEntry clientPathEntry = null;
-            int clientPathEntryIndex = -1;
-            List<CMFileSyncEntry> clientPathEntryList = CMFileSyncInfo.getInstance().getInitiatorPathEntryListMap()
-                    .get(new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid));
-            for (int i = 0; i < clientPathEntryList.size(); i++) {
-                CMFileSyncEntry entry = clientPathEntryList.get(i);
+            // search for the initiator file entry
+            CMFileSyncEntry initiatorPathEntry = null;
+            int initiatorPathEntryIndex = -1;
+            List<CMFileSyncEntry> initiatorPathEntryList = syncInfo.getInitiatorPathEntryListMap()
+                    .get(stateKey);
+            for (int i = 0; i < initiatorPathEntryList.size(); i++) {
+                CMFileSyncEntry entry = initiatorPathEntryList.get(i);
                 if (relativeBasisFile.equals(entry.getPathRelativeToHome())) {
-                    clientPathEntry = entry;
-                    clientPathEntryIndex = i;
+                    initiatorPathEntry = entry;
+                    initiatorPathEntryIndex = i;
                     break;
                 }
             }
-            if (clientPathEntry == null) {
-                System.err.println("client file entry not found for basisFile(" + relativeBasisFile + ")!");
+            if (initiatorPathEntry == null) {
+                System.err.println("initiator file entry not found for basisFile(" + relativeBasisFile + ")!");
                 continue;   // proceed to the next basis file
             }
 
-            // compare clientFileEntry and basisFile
+            // compare initiatorPathEntry and basisFile
             long sizeOfBasisFile;
             FileTime lastModifiedTimeOfBasisFile;
             try {
@@ -244,8 +250,8 @@ public class CMFileSyncGenerator implements Runnable {
                 e.printStackTrace();
                 continue;
             }
-            if (clientPathEntry.getSize() == sizeOfBasisFile &&
-                    clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
+            if (initiatorPathEntry.getSize() == sizeOfBasisFile &&
+                    initiatorPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
                 // already synchronized
                 syncManager.skipUpdateFile(new CMUserLoginKey(initiatorName, initiatorUuid), basisFile);
                 if (CMInfo._CM_DEBUG) {
@@ -257,11 +263,11 @@ public class CMFileSyncGenerator implements Runnable {
             }
 
             // check the directory case
-            if (clientPathEntry.getType() == CMFileType.DIR) {
-                if (!clientPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
+            if (initiatorPathEntry.getType() == CMFileType.DIR) {
+                if (!initiatorPathEntry.getLastModifiedTime().equals(lastModifiedTimeOfBasisFile)) {
                     try {
                         // update the last modified time of the sub-directory
-                        Files.setLastModifiedTime(basisFile, clientPathEntry.getLastModifiedTime());
+                        Files.setLastModifiedTime(basisFile, initiatorPathEntry.getLastModifiedTime());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -270,14 +276,14 @@ public class CMFileSyncGenerator implements Runnable {
                 boolean ret = syncManager.completeUpdateFile(new CMUserLoginKey(initiatorName, initiatorUuid), basisFile);
                 if (!ret) {
                     System.err.println("error of completing update file(dir)!");
-                    System.err.println("initiatorName(" + initiatorName + "), dir(" + basisFile + ")");
+                    System.err.println("initiatorName(" + initiatorName + "), initiatorUuid(" + initiatorUuid + "), dir(" + basisFile + ")");
                 }
                 // continue with the next basis file
                 continue;
             }
 
             // add the index pair to the table
-            basisFileIndexMap.put(clientPathEntryIndex, basisFileIndex);
+            basisFileIndexMap.put(initiatorPathEntryIndex, basisFileIndex);
 
             // get block checksum
             CMFileSyncBlockChecksum[] checksumArray = createBlockChecksum(basisFileIndex, basisFile);
@@ -290,11 +296,11 @@ public class CMFileSyncGenerator implements Runnable {
             }
 
             // add block-checksum array to the table
-            // key: client entry index, value: block-checksum array
-            blockChecksumArrayMap.put(clientPathEntryIndex, checksumArray);
+            // key: initiator entry index, value: block-checksum array
+            blockChecksumArrayMap.put(initiatorPathEntryIndex, checksumArray);
 
-            // send the client entry index and block-checksum array to the client
-            sendResult = sendBlockChecksum(clientPathEntryIndex, checksumArray);
+            // send the initiator entry index and block-checksum array to the initiator
+            sendResult = sendBlockChecksum(initiatorPathEntryIndex, checksumArray);
             if (!sendResult) {
                 System.err.println("send block-checksum error!");
                 return false;
