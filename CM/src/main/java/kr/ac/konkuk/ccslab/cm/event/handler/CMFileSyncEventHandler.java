@@ -6,6 +6,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
@@ -1418,11 +1419,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // get CMFileSyncManager
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-        // get the client sync home
-        Path clientSyncHome = syncManager.getClientSyncHome();
+        // get the sync home
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = syncManager.getServerSyncHome(fse_rnf.getSender());
+        } else {
+            syncHome = syncManager.getClientSyncHome();
+        }
         // get the requester name
-        String requesterName = fse_rnf.getRequesterName();  // server name
-        UUID requesterUuid = fse_rnf.getSenderUuid();   // server(sender) uuid
+        String requesterName = fse_rnf.getSender();
+        UUID requesterUuid = fse_rnf.getSenderUuid();
         // check if the requested file list is null or empty
         List<Path> requestedFileList = fse_rnf.getRequestedFileList();
         if(requestedFileList == null) {
@@ -1436,7 +1443,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // use file-push service of the CMFileTransferManager for each element of the requested file list
         boolean sendResult = true;
         for(Path path : requestedFileList) {
-            Path syncPath = clientSyncHome.resolve(path);   // adjust the path with the sync home
+            Path syncPath = syncHome.resolve(path);   // adjust the path with the sync home
             if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, requesterUuid) )
                 sendResult = false;
         }
