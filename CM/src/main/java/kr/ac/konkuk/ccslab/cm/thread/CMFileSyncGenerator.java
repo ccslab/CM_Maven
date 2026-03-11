@@ -9,7 +9,6 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartFileBlockChecks
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncUpdateMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -314,24 +313,25 @@ public class CMFileSyncGenerator implements Runnable {
         return true;
     }
 
-    private boolean sendBlockChecksum(int clientFileEntryIndex, CMFileSyncBlockChecksum[] checksumArray) {
+    private boolean sendBlockChecksum(int initiatorFileEntryIndex, CMFileSyncBlockChecksum[] checksumArray) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncGenerator.sendBlockChecksum() called..");
         }
 
         // create a START_FILE_BLOCK_CHECKSUM event
         CMFileSyncEventStartFileBlockChecksum fse = new CMFileSyncEventStartFileBlockChecksum();
-        fse.setSender(CMInteractionInfo.getInstance().getMyself().getName());
-        fse.setReceiver(initiatorName);
-        fse.setFileEntryIndex(clientFileEntryIndex);
+        // 공통 필드 설정
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse.setFileEntryIndex(initiatorFileEntryIndex);
         fse.setTotalNumBlocks(checksumArray.length);
         // get basis file index
-        int basisFileIndex = basisFileIndexMap.get(clientFileEntryIndex);
+        int basisFileIndex = basisFileIndexMap.get(initiatorFileEntryIndex);
         // get block size with the basis file index
         fse.setBlockSize(blockSizeOfBasisFileMap.get(basisFileIndex));
         // send the event
-        CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(fse, initiatorName);
+        boolean ret = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
         if (!ret) {
             System.err.println("send error, fse: " + fse);
             return false;
