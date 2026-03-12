@@ -1866,7 +1866,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("skipFileEvent = " + skipFileEvent);
         }
         // update info for the file-update completion at the client
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
         Objects.requireNonNull(isFileSyncCompletedMap);
         isFileSyncCompletedMap.put(skipFileEvent.getSkippedPath(), true);
