@@ -498,31 +498,34 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     private boolean sendCompleteFileSync(CMUserLoginKey loginKey) {
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.sendCompleteFileSync() called..");
-            System.out.println("loginKey = " + loginKey);
+            System.out.println("initiatorName = " + initiatorName);
+            System.out.println("initiatorUuid = " + initiatorUuid);
         }
 
         // get the CMFileSyncGenerator reference
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
         }
 
         // create a COMPLETE_FILE_SYNC event
-        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         int numFilesCompleted = syncGenerator.getNumNewFilesCompleted() + syncGenerator.getNumUpdateFilesCompleted();
-
         CMFileSyncEventCompleteFileSync fse = new CMFileSyncEventCompleteFileSync();
-        fse.setSender(serverName);
-        fse.setReceiver(loginKey.getUserName());
-        fse.setUserName(loginKey.getUserName());
+        // 공통 필드 설정
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
         fse.setNumFilesCompleted(numFilesCompleted);
 
         // send the event
-        CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, loginKey.getUserName());
+        return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
     }
 
     // called by the server
