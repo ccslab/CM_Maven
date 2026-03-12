@@ -192,21 +192,22 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileName = fe.getFileName();
         // get the new file list
         String fileSender = fe.getFileSender();
-        CMUserLoginKey loginKey = new CMUserLoginKey(fileSender, fe.getFileSenderUuid());
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        UUID fileSenderUuid = fe.getFileSenderUuid();
+        CMUserLoginKey loginKey = new CMUserLoginKey(fileSender, fileSenderUuid);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             if(CMInfo._CM_DEBUG)
-                System.err.println("The sync generator for (" + fileSender + ") is null!");
+                System.err.println("The sync generator for (" + fileSender + ", " + fileSenderUuid + ") is null!");
             return;
         }
-        List<CMFileSyncEntry> newClientPathEntryList = CMFileSyncInfo.getInstance().getSyncGeneratorMap()
-                .get(loginKey).getNewInitiatorPathEntryList();
-        Objects.requireNonNull(newClientPathEntryList);
+        List<CMFileSyncEntry> newInitiatorPathEntryList = syncGenerator.getNewInitiatorPathEntryList();
+        Objects.requireNonNull(newInitiatorPathEntryList);
 
-        // search for the entry in the newClientPathEntryList
+        // search for the entry in the newInitiatorPathEntryList
         CMFileSyncEntry foundEntry = null;
         Path foundPath = null;
-        for (CMFileSyncEntry entry : newClientPathEntryList) {
+        for (CMFileSyncEntry entry : newInitiatorPathEntryList) {
             if (entry.getPathRelativeToHome().endsWith(fileName)) {
                 foundEntry = entry;
                 foundPath = entry.getPathRelativeToHome();
@@ -214,21 +215,28 @@ public class CMFileSyncManager extends CMServiceManager {
             }
         }
         if (foundPath != null) {
-            // get the file-transfer home
-            Path transferFileHome = CMConfigurationInfo.getInstance().getTransferedFileHome().resolve(fileSender);
-            // get the server sync home
-            Path serverSyncHome = getServerSyncHome(fileSender);
+            // get the file-transfer home and sync home
+            CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+            Path transferFileHome;
+            Path syncHome;
+            if (confInfo.getSystemType().equals("SERVER")) {
+                transferFileHome = confInfo.getTransferedFileHome().resolve(fileSender);
+                syncHome = getServerSyncHome(fileSender);
+            } else {
+                transferFileHome = confInfo.getTransferedFileHome();
+                syncHome = getClientSyncHome();
+            }
             // move the transferred file to the sync home (including sub-directories)
             try {
-                //Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(foundPath));
-                Files.move(transferFileHome.resolve(fileName), serverSyncHome.resolve(foundPath),
+                //Files.move(transferFileHome.resolve(fileName), syncHome.resolve(foundPath));
+                Files.move(transferFileHome.resolve(fileName), syncHome.resolve(foundPath),
                         StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 e.printStackTrace();
             }
             // set the last-modified-time of the corresponding client file entry
             try {
-                Files.setLastModifiedTime(serverSyncHome.resolve(foundPath), foundEntry.getLastModifiedTime());
+                Files.setLastModifiedTime(syncHome.resolve(foundPath), foundEntry.getLastModifiedTime());
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
@@ -237,13 +245,13 @@ public class CMFileSyncManager extends CMServiceManager {
             // complete the new-file-transfer
             boolean result = completeNewFileTransfer(loginKey, foundPath);
             if (result) {
-                // remove the completed newClientPathEntry from the list
+                // remove the completed newInitiatorPathEntry from the list
                 final Path finalFoundPath = foundPath;
-                boolean removeResult = newClientPathEntryList.removeIf(entry ->
+                boolean removeResult = newInitiatorPathEntryList.removeIf(entry ->
                         entry.getPathRelativeToHome().equals(finalFoundPath));
 
                 if (!removeResult) {
-                    System.err.println("remove error from the new-client-path-entry-list: " + foundPath);
+                    System.err.println("remove error from the new-initiator-path-entry-list: " + foundPath);
                     return;
                 }
                 // check if the file-sync is complete or not
