@@ -481,9 +481,12 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     public boolean completeFileSync(CMUserLoginKey loginKey) {
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeFileSync() called..");
-            System.out.println("loginKey = " + loginKey);
+            System.out.println("initiatorName = " + initiatorName);
+            System.out.println("initiatorUuid = " + initiatorUuid);
         }
         // send the file-sync completion event
         boolean result = true;
