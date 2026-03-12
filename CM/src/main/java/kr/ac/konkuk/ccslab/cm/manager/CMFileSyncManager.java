@@ -530,21 +530,24 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     private void deleteFileSyncInfo(CMUserLoginKey loginKey) {
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.deleteFileSyncInfo() called..");
-            System.out.println("loginKey = " + loginKey);
+            System.out.println("initiatorName = " + initiatorName);
+            System.out.println("initiatorUuid = " + initiatorUuid);
         }
         // get CMFileSyncInfo reference
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
-        // get syncGenerator to build stateKey
+        // remove elements in fileEntryListMap
         CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
-        if (syncGenerator != null) {
-            CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
-                    syncGenerator.getInitiatorDeviceUuid());
-            // remove element in initiatorPathEntryListMap
-            syncInfo.getInitiatorPathEntryListMap().remove(stateKey);
+        if (syncGenerator == null) {
+            System.err.println("syncGenerator is null!");
+            return;
         }
-        // remove element in syncGeneratorMap
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, syncGenerator.getInitiatorDeviceUuid());
+        syncInfo.getInitiatorPathEntryListMap().remove(stateKey);
+        // remove elements in syncGeneratorMap
         syncInfo.getSyncGeneratorMap().remove(loginKey);
     }
 
