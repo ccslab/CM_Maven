@@ -265,13 +265,16 @@ public class CMFileSyncManager extends CMServiceManager {
 
     // called by the server
     public boolean completeNewFileTransfer(CMUserLoginKey loginKey, Path path) {
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completeNewFileTransfer() called..");
             System.out.println("loginKey = " + loginKey);
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         if (syncGenerator == null) {
             System.err.println("syncGenerator is null!");
             return false;
@@ -284,16 +287,16 @@ public class CMFileSyncManager extends CMServiceManager {
         syncGenerator.setNumNewFilesCompleted(numNewFilesCompleted);
 
         // create a COMPLETE_NEW_FILE event
-        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventCompleteNewFile fse = new CMFileSyncEventCompleteNewFile();
-        fse.setSender(serverName);
-        fse.setReceiver(loginKey.getUserName());
-        fse.setUserName(loginKey.getUserName());
+        // 공통 필드 설정
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
         fse.setCompletedPath(path);
 
         // send the event
-        CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(fse, loginKey.getUserName());
+        boolean ret = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
         if (!ret) {
             System.err.println("send error: " + fse);
             return false;
