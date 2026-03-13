@@ -1368,9 +1368,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int totalNumBlocks = startChecksumEvent.getTotalNumBlocks();
         int returnCode = 1;
 
-        // get the file in the client file entry list
+        // get the file in the initiator file entry list
         CMFileSyncInfo fsInfo = CMFileSyncInfo.getInstance();
-        Objects.requireNonNull(fsInfo);
         Path path = fsInfo.getPathList().get(fileIndex);
         if(CMInfo._CM_DEBUG) {
             System.out.println("path = " + path);
@@ -1393,8 +1392,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create an ack event
         CMFileSyncEventStartFileBlockChecksumAck ackEvent = new CMFileSyncEventStartFileBlockChecksumAck();
-        ackEvent.setSender(CMInteractionInfo.getInstance().getMyself().getName());
-        ackEvent.setReceiver(startChecksumEvent.getSender());
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(startChecksumEvent.getInitiatorName());
+        ackEvent.setInitiatorUuid(startChecksumEvent.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(startChecksumEvent.getInitiatorDeviceUuid());
         // set fields as they are in the received event
         ackEvent.setBlockSize(startChecksumEvent.getBlockSize());
         ackEvent.setFileEntryIndex(fileIndex);
@@ -1403,7 +1404,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(returnCode);
 
         // send the ack event
-        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender());
+        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender(), startChecksumEvent.getSenderUuid());
     }
 
     // called at the client
