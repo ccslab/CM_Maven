@@ -845,15 +845,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 makeHashToBlockIndexMap(fileEntryIndex);
         Objects.requireNonNull(hashToBlockIndexMap);
         // get block checksum Map
-        Map<Integer, CMFileSyncBlockChecksum[]> checksumMap = CMFileSyncInfo.getInstance()
-                .getBlockChecksumMap();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<Integer, CMFileSyncBlockChecksum[]> checksumMap = syncInfo.getBlockChecksumMap();
         Objects.requireNonNull(checksumMap);
         // get block checksum array with the file entry index
         CMFileSyncBlockChecksum[] checksumArray = checksumMap.get(fileEntryIndex);
         Objects.requireNonNull(checksumArray);
 
         // get the local path list
-        List<Path> pathList = Objects.requireNonNull(CMFileSyncInfo.getInstance().getPathList());
+        List<Path> pathList = syncInfo.getPathList();
         // get the target file path
         Path path = Objects.requireNonNull(pathList.get(fileEntryIndex));
 
@@ -877,8 +877,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         short hash = 0;     // 16-bit hash
         int sortedBlockIndex = -1;
         int matchBlockIndex = -1;
-        String sender = endChecksumEvent.getReceiver();
         String receiver = endChecksumEvent.getSender();
+        UUID receiverUuid = endChecksumEvent.getSenderUuid();
+        String initiatorName = endChecksumEvent.getInitiatorName();
+        UUID initiatorUuid = endChecksumEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = endChecksumEvent.getInitiatorDeviceUuid();
 
         // read (next) block, calculate (update) weak checksum, search a matching block
         //try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
@@ -997,7 +1000,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         matchingCount++;
                         bBlockMatch = true;
                         // create and send an UPDATE_EXISTING_FILE event to the server
-                        boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                        boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
                                 nonMatchBuffer, matchBlockIndex);
                         if(!ret) return false;
                         // initialize buffer and non-matching block buffer
@@ -1017,7 +1021,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         // if the non-match buffer is full,
                         if(!nonMatchBuffer.hasRemaining()) {
                             // create and send an UPDATE_EXISTING_FILE event to the server
-                            boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
                                     nonMatchBuffer, -1);
                             if(!ret) return false;
                             // initialize non-matching block buffer
@@ -1052,7 +1057,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                             int oldLimit = buffer.limit();
                             buffer.limit(buffer.position() + nonMatchBuffer.remaining());
                             nonMatchBuffer.put(buffer);
-                            boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
                                     nonMatchBuffer, -1);
                             if(!ret) return false;
                             nonMatchBuffer.clear();
@@ -1060,7 +1066,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         }
                         else {
                             nonMatchBuffer.put(buffer);
-                            boolean ret = sendUpdateExistingFileEvent(sender, receiver, fileEntryIndex,
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
                                     nonMatchBuffer, -1);
                             if(!ret) return false;
                             nonMatchBuffer.clear();
@@ -1099,12 +1106,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     }
 
     // called at the client
-    private boolean sendUpdateExistingFileEvent(String sender, String receiver, int fileEntryIndex,
+    private boolean sendUpdateExistingFileEvent(String receiver, UUID receiverUuid,
+                                                String initiatorName, UUID initiatorUuid,
+                                                UUID initiatorDeviceUuid, int fileEntryIndex,
                                                 ByteBuffer nonMatchBuffer, int matchBlockIndex) {
-        ////// create and send an UPDATE_EXISTING_FILE event to the server
+        ////// create and send an UPDATE_EXISTING_FILE event to the sync receiver
         CMFileSyncEventUpdateExistingFile updateEvent = new CMFileSyncEventUpdateExistingFile();
-        updateEvent.setSender(sender);
-        updateEvent.setReceiver(receiver);
+        // 공통 필드 설정
+        updateEvent.setInitiatorName(initiatorName);
+        updateEvent.setInitiatorUuid(initiatorUuid);
+        updateEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
         updateEvent.setFileEntryIndex(fileEntryIndex);
         // set non-match buffer
         nonMatchBuffer.flip();
@@ -1115,7 +1127,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // set matching block index
         updateEvent.setMatchBlockIndex(matchBlockIndex);
         // send the event
-        boolean ret = CMEventManager.unicastEvent(updateEvent, receiver);
+        boolean ret = CMEventManager.unicastEvent(updateEvent, receiver, receiverUuid);
         if(!ret) {
             System.err.println("send error, updateEvent = "+updateEvent);
             return false;
