@@ -515,10 +515,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
         // get the sync generator reference
-        String userName = ackEvent.getSender();
-        CMUserLoginKey loginKey = new CMUserLoginKey(ackEvent.getInitiatorName(), ackEvent.getInitiatorUuid());
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        // initiator 정보 변수 선언
+        String initiatorName = ackEvent.getInitiatorName();
+        UUID initiatorUuid = ackEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = ackEvent.getInitiatorDeviceUuid();
+        // get generator
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
 
         // get the target basis file channel
@@ -563,10 +570,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
-                syncGenerator.getInitiatorDeviceUuid());
-        List<Path> basisFileList = Objects.requireNonNull(CMFileSyncInfo.getInstance().getBasisFileListMap()
-                .get(stateKey));
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        List<Path> basisFileList = syncInfo.getBasisFileListMap().get(stateKey);
         Path basisFilePath = basisFileList.get(basisFileIndex);
         if(basisFilePath == null) {
             System.err.println("Basis file path NOT FOUND for basis file index ("+basisFileIndex+")!");
@@ -577,7 +582,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // get the temp file path
-        CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         Path tempFilePath = syncManager.getTempPathOfBasisFile(basisFilePath);
@@ -585,19 +589,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("tempFilePath = " + tempFilePath);
         }
 
-        // get the client file entry reference
-        CMFileSyncEntry clientFileEntry = Optional.of(CMFileSyncInfo.getInstance())
+        // get the initiator file entry reference
+        CMFileSyncEntry initiatorFileEntry = Optional.of(syncInfo)
                 .map(CMFileSyncInfo::getInitiatorPathEntryListMap)
-                .map(t -> t.get(stateKey))
-                .map(l -> l.get(fileEntryIndex))
+                .map(map -> map.get(stateKey))
+                .map(list -> list.get(fileEntryIndex))
                 .orElse(null);
-        if(clientFileEntry == null) {
-            System.err.println("client file entry is null! : userName("+userName+"), file entry index("
+        if(initiatorFileEntry == null) {
+            System.err.println("initiator file entry is null! : initiatorName("+initiatorName+"), file entry index("
                     +fileEntryIndex+")");
             return false;
         }
         if(CMInfo._CM_DEBUG) {
-            System.out.println("clientFileEntry = " + clientFileEntry);
+            System.out.println("initiatorFileEntry = " + initiatorFileEntry);
         }
 
         if(basisFileChannel != null && tempFileChannel != null) {
@@ -612,7 +616,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
             // set the last modified time to that of the client file entry
             try {
-                Files.setLastModifiedTime(tempFilePath, clientFileEntry.getLastModifiedTime());
+                Files.setLastModifiedTime(tempFilePath, initiatorFileEntry.getLastModifiedTime());
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
@@ -630,7 +634,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // client file size = 0 (online mode)
             // client have never sent a UPDATE_EXISTING_FILE event
             try {
-                Files.setLastModifiedTime(basisFilePath, clientFileEntry.getLastModifiedTime());
+                Files.setLastModifiedTime(basisFilePath, initiatorFileEntry.getLastModifiedTime());
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
