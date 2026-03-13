@@ -356,7 +356,8 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("path = " + path);
         }
         // get CMFileSyncGenerator
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
         // set the isUpdateFileCompletedMap element
         syncGenerator.getIsUpdateFileCompletedMap().put(path, true);
@@ -365,21 +366,29 @@ public class CMFileSyncManager extends CMServiceManager {
         numUpdateFilesCompleted++;
         syncGenerator.setNumUpdateFilesCompleted(numUpdateFilesCompleted);
 
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
+
         // create a COMPLETE_UPDATE_FILE event
-        String serverName = CMInteractionInfo.getInstance().getMyself().getName();
         CMFileSyncEventCompleteUpdateFile fse = new CMFileSyncEventCompleteUpdateFile();
-        fse.setSender(serverName);
-        fse.setReceiver(loginKey.getUserName());
-        fse.setUserName(loginKey.getUserName());
+        // 공통 필드 설정
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
 
         // get the relative path of the basis file path
-        Path syncHome = getServerSyncHome(loginKey.getUserName());
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = getServerSyncHome(initiatorName);
+        } else {
+            syncHome = getClientSyncHome();
+        }
         Path relativePath = path.subpath(syncHome.getNameCount(), path.getNameCount());
         // set the relative path to the event
         fse.setCompletedPath(relativePath);
 
-        CMInfo cmInfo = CMInfo.getInstance();
-        return CMEventManager.unicastEvent(fse, loginKey.getUserName());
+        return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
     }
 
     // called by the server
