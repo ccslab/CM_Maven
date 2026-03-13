@@ -9,7 +9,6 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -1291,10 +1290,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("startAckEvent = " + startAckEvent);
         }
         // get CMFileSyncGenerator reference
-        String userName = startAckEvent.getSender();
-        CMUserLoginKey loginKey = new CMUserLoginKey(startAckEvent.getInitiatorName(), startAckEvent.getInitiatorUuid());
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap()
-                .get(loginKey);
+        String initiatorName = startAckEvent.getInitiatorName();
+        UUID initiatorUuid = startAckEvent.getInitiatorUuid();
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
 
         // get the block checksum array of the file
@@ -1306,7 +1306,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // repeat to create and send FILE_BLOCK_CHECKSUM events
         int totalNumBlocks = startAckEvent.getTotalNumBlocks();
         int curIndex = 0;
-        String myName = CMInteractionInfo.getInstance().getMyself().getName();
         int remainingEventBytes = 0;
         int checksumBytes = 0;
         int numCurrentBlocks = 0;
@@ -1314,8 +1313,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         while(curIndex < checksumArray.length) {
             // create FILE_BLOCK_CHECKSUM event
             CMFileSyncEventFileBlockChecksum checksumEvent = new CMFileSyncEventFileBlockChecksum();
-            checksumEvent.setSender(myName);
-            checksumEvent.setReceiver(userName);
+            // 공통 필드 설정
+            checksumEvent.setInitiatorName(initiatorName);
+            checksumEvent.setInitiatorUuid(initiatorUuid);
+            checksumEvent.setInitiatorDeviceUuid(startAckEvent.getInitiatorDeviceUuid());
+            // 나머지 필드 설정
             checksumEvent.setFileEntryIndex(fileEntryIndex);
             checksumEvent.setTotalNumBlocks(totalNumBlocks);
             checksumEvent.setStartBlockIndex(curIndex);
@@ -1335,7 +1337,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             checksumEvent.setChecksumArray(partialChecksumArray);
 
             // send the event
-            ret = CMEventManager.unicastEvent(checksumEvent, startAckEvent.getSender());
+            ret = CMEventManager.unicastEvent(checksumEvent, initiatorName, initiatorUuid);
             if(!ret) return false;
 
             // update the curIndex
@@ -1344,12 +1346,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create and send END_FILE_BLOCK_CHECKSUM event
         CMFileSyncEventEndFileBlockChecksum endChecksumEvent = new CMFileSyncEventEndFileBlockChecksum();
-        endChecksumEvent.setSender(CMInteractionInfo.getInstance().getMyself().getName());
-        endChecksumEvent.setReceiver(userName);
+        // 공통 필드 설정
+        endChecksumEvent.setInitiatorName(initiatorName);
+        endChecksumEvent.setInitiatorUuid(initiatorUuid);
+        endChecksumEvent.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
         endChecksumEvent.setFileEntryIndex(fileEntryIndex);
         endChecksumEvent.setTotalNumBlocks(totalNumBlocks); // checksumArrays.length
         endChecksumEvent.setBlockSize(startAckEvent.getBlockSize());
-        ret = CMEventManager.unicastEvent(endChecksumEvent, userName);
+        ret = CMEventManager.unicastEvent(endChecksumEvent, initiatorName, initiatorUuid);
         if(!ret) return false;
 
         return true;
