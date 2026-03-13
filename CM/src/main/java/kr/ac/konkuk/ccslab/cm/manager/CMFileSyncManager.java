@@ -138,6 +138,34 @@ public class CMFileSyncManager extends CMServiceManager {
         return pathList;
     }
 
+    private List<Path> toRelativePathList(List<Path> paths, Path basePath) {
+        Objects.requireNonNull(paths);
+        Objects.requireNonNull(basePath);
+
+        Path normalizedBasePath = basePath.toAbsolutePath().normalize();
+        List<Path> relativePaths = new ArrayList<>(paths.size());
+
+        for (Path path : paths) {
+            Objects.requireNonNull(path);
+            Path normalizedPath = path.normalize();
+
+            Path relativePath;
+            if (path.isAbsolute()) {
+                Path normalizedAbsolutePath = normalizedPath.toAbsolutePath().normalize();
+                if (!normalizedAbsolutePath.startsWith(normalizedBasePath)) {
+                    throw new IllegalArgumentException(
+                            String.format("Path %s is not a descendant of base path %s",
+                                    normalizedAbsolutePath, normalizedBasePath));
+                }
+                relativePath = normalizedBasePath.relativize(normalizedAbsolutePath);
+            } else {
+                relativePath = normalizedPath;
+            }
+            relativePaths.add(relativePath);
+        }
+        return relativePaths;
+    }
+
     // currently called by client
     private boolean sendFileList() {
         if (CMInfo._CM_DEBUG)
