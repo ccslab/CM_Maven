@@ -1873,8 +1873,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_UPDATE_FILE() called..");
             System.out.println("fse = " + fse_cuf);
         }
-        // update info for the file-update completion at the client
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
+        // update info for the file-update completion at the sync sender
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
         Objects.requireNonNull(isFileSyncCompletedMap);
         isFileSyncCompletedMap.put(fse_cuf.getCompletedPath(), true);
