@@ -659,22 +659,23 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("updateEvent = " + updateEvent);
         }
 
-        // get the server sync home
-        String userName = updateEvent.getSender();
+        String initiatorName = updateEvent.getInitiatorName();
+        UUID initiatorUuid = updateEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = updateEvent.getInitiatorDeviceUuid();
+
+        // get the sync manager
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = Objects.requireNonNull(cmInfo.getServiceManager(CMFileSyncManager.class));
-        Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(userName));
 
         // get the basis file path
-        CMUserLoginKey loginKey = new CMUserLoginKey(updateEvent.getInitiatorName(), updateEvent.getInitiatorUuid());
-        CMFileSyncGenerator syncGenerator = CMFileSyncInfo.getInstance().getSyncGeneratorMap().get(loginKey);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
         int fileEntryIndex = updateEvent.getFileEntryIndex();
         int basisFileIndex = syncGenerator.getBasisFileIndexMap().get(fileEntryIndex);
-        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(syncGenerator.getInitiatorName(),
-                syncGenerator.getInitiatorDeviceUuid());
-        List<Path> basisFileList = Objects.requireNonNull(CMFileSyncInfo.getInstance().getBasisFileListMap()
-                .get(stateKey));
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        List<Path> basisFileList = syncInfo.getBasisFileListMap().get(stateKey);
         Path basisFilePath = Objects.requireNonNull(basisFileList.get(basisFileIndex));
         if(CMInfo._CM_DEBUG) {
             System.out.println("basisFilePath = " + basisFilePath);
