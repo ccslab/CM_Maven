@@ -792,13 +792,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
         int blockSize = endChecksumEvent.getBlockSize();
-        String sender = endChecksumEvent.getReceiver();
-        String receiver = endChecksumEvent.getSender();
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         Objects.requireNonNull(syncManager);
         // get the local path list
-        List<Path> pathList = Objects.requireNonNull(CMFileSyncInfo.getInstance().getPathList());
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<Path> pathList = syncInfo.getPathList();
         // get the target file path
         Path path = Objects.requireNonNull(pathList.get(fileEntryIndex));
 
@@ -810,8 +809,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create and send an END_FILE_BLOCK_CHECKSUM_ACK event
         CMFileSyncEventEndFileBlockChecksumAck ackEvent = new CMFileSyncEventEndFileBlockChecksumAck();
-        ackEvent.setSender(sender);
-        ackEvent.setReceiver(receiver);
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(endChecksumEvent.getInitiatorName());
+        ackEvent.setInitiatorUuid(endChecksumEvent.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(endChecksumEvent.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
         ackEvent.setFileEntryIndex(fileEntryIndex);
         ackEvent.setTotalNumBlocks(endChecksumEvent.getTotalNumBlocks());
         ackEvent.setBlockSize(blockSize);
@@ -828,7 +830,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         byte[] fileChecksum = syncManager.calculateFileChecksum(path);
         ackEvent.setFileChecksum(fileChecksum);
         // send the ack event
-        ret = CMEventManager.unicastEvent(ackEvent, receiver);
+        ret = CMEventManager.unicastEvent(ackEvent, endChecksumEvent.getSender(), endChecksumEvent.getSenderUuid());
         if(!ret) return false;
 
         return true;
