@@ -1033,10 +1033,12 @@ public class CMFileSyncManager extends CMServiceManager {
         Objects.requireNonNull(userName);
         String serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         Objects.requireNonNull(serverName);
+        // convert to relative path list
+        List<Path> relativeFileOnlyList = toRelativePathList(fileOnlyList, getClientSyncHome());
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
-        while (listIndex < fileOnlyList.size()) {
+        while (listIndex < relativeFileOnlyList.size()) {
             // create an event
             CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
             listEvent.setSender(userName);
@@ -1044,13 +1046,12 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setRequester(userName);
 
             // get relative path list to be added to this event
-            List<Path> subList = createSubOnlineModeListForEvent(listEvent, fileOnlyList, listIndex);
+            List<Path> subList = createSubPathListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the sublist to the event
             listEvent.setRelativePathList(subList);
             // send the event
-            CMInfo cmInfo = CMInfo.getInstance();
             sendResult = CMEventManager.unicastEvent(listEvent, serverName);
             if (!sendResult) {
                 System.err.println("send error: " + listEvent);
@@ -1073,29 +1074,20 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    // From the starting index (listIndex) of filteredFileOnlyList,
-    // create a sublist that will be added to an online-mode-list event (listEvent)
-    private List<Path> createSubOnlineModeListForEvent(CMFileSyncEventOnlineModeList listEvent,
-                                                       List<Path> filteredFileOnlyList, int listIndex) {
+    private List<Path> createSubPathListForEvent(int initialByteNum, List<Path> relativePathList, int listIndex) {
         if (CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncManager.createSubOnlineModeListForEvent() called..");
-            System.out.println("listEvent = " + listEvent);
-            System.out.println("filteredFileOnlyList = " + filteredFileOnlyList);
+            System.out.println("=== CMFileSyncManager.createSubPathListForEvent() called..");
+            System.out.println("initialByteNum = " + initialByteNum);
+            System.out.println("relativePathList = " + relativePathList);
             System.out.println("listIndex = " + listIndex);
         }
-        // get the name count of the sync home path
-        int startPathIndex = getClientSyncHome().getNameCount();
-        // get the current size of the given event
-        int curByteNum = listEvent.getByteNum();
-        // create an empty sublist
+
+        int curByteNum = initialByteNum;
         List<Path> subList = new ArrayList<>();
 
         boolean ret = false;
-        for (int i = listIndex; i < filteredFileOnlyList.size(); i++) {
-            // get the relative path of the i-th element
-            Path path = filteredFileOnlyList.get(i);
-            Path relativePath = path.subpath(startPathIndex, path.getNameCount());
-            // check the size of the relative path and add it to the event
+        for (int i = listIndex; i < relativePathList.size(); i++) {
+            Path relativePath = relativePathList.get(i);
             curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
             if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
                 ret = subList.add(relativePath);
@@ -1103,8 +1095,9 @@ public class CMFileSyncManager extends CMServiceManager {
                     System.err.println("error to add " + relativePath);
                     return null;
                 }
-            } else
+            } else {
                 break;
+            }
         }
         return subList;
     }
@@ -1214,10 +1207,12 @@ public class CMFileSyncManager extends CMServiceManager {
         Objects.requireNonNull(userName);
         String serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
         Objects.requireNonNull(serverName);
+        // convert to relative path list
+        List<Path> relativeFileOnlyList = toRelativePathList(fileOnlyList, getClientSyncHome());
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
-        while (listIndex < fileOnlyList.size()) {
+        while (listIndex < relativeFileOnlyList.size()) {
             // create an event
             CMFileSyncEventLocalModeList listEvent = new CMFileSyncEventLocalModeList();
             listEvent.setSender(userName);
@@ -1225,13 +1220,12 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setRequester(userName);
 
             // get relative path list to be added to this event
-            List<Path> subList = createSubLocalModeListForEvent(listEvent, fileOnlyList, listIndex);
+            List<Path> subList = createSubPathListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the sublist to the event
             listEvent.setRelativePathList(subList);
             // send the event
-            CMInfo cmInfo = CMInfo.getInstance();
             sendResult = CMEventManager.unicastEvent(listEvent, serverName);
             if (!sendResult) {
                 System.err.println("send error: " + listEvent);
@@ -1252,41 +1246,6 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return true;
-    }
-
-    // From the starting index (listIndex) of filteredFileOnlyList,
-    // create a sublist that will be added to a local-mode-list event (listEvent)
-    private List<Path> createSubLocalModeListForEvent(CMFileSyncEventLocalModeList listEvent, List<Path> filteredFileOnlyList, int listIndex) {
-        if (CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncManager.createSubLocalModeListForEvent() called..");
-            System.out.println("listEvent = " + listEvent);
-            System.out.println("filteredFileOnlyList = " + filteredFileOnlyList);
-            System.out.println("listIndex = " + listIndex);
-        }
-        // get the name count of the sync home path
-        int startPathIndex = getClientSyncHome().getNameCount();
-        // get the current size of the given event
-        int curByteNum = listEvent.getByteNum();
-        // create an empty sublist
-        List<Path> subList = new ArrayList<>();
-
-        boolean ret = false;
-        for (int i = listIndex; i < filteredFileOnlyList.size(); i++) {
-            // get the relative path of the i-th element
-            Path path = filteredFileOnlyList.get(i);
-            Path relativePath = path.subpath(startPathIndex, path.getNameCount());
-            // check the size of the relative path and add it to the event
-            curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
-            if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
-                ret = subList.add(relativePath);
-                if (!ret) {
-                    System.err.println("error to add " + relativePath);
-                    return null;
-                }
-            } else
-                break;
-        }
-        return subList;
     }
 
     // called at the client
