@@ -476,21 +476,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processONLINE_MODE_LIST() called..");
             System.out.println("listEvent = " + listEvent);
         }
-        String requester = listEvent.getRequester();
-
         // create and send an ack event
         CMFileSyncEventOnlineModeListAck ackEvent = new CMFileSyncEventOnlineModeListAck();
-        ackEvent.setSender(listEvent.getReceiver());
-        ackEvent.setReceiver(listEvent.getSender());
-        ackEvent.setRequester(requester);
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(listEvent.getInitiatorName());
+        ackEvent.setInitiatorUuid(listEvent.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(listEvent.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
         ackEvent.setRelativePathList(listEvent.getRelativePathList());
         ackEvent.setReturnCode(1);
-/*
-        if(ret) ackEvent.setReturnCode(1);
-        else ackEvent.setReturnCode(0);
-*/
 
-        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender());
+        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getInitiatorName(), listEvent.getInitiatorUuid());
         if(!ret) {
             System.err.println("send error : "+ackEvent);
             return false;
