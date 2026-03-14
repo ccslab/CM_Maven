@@ -936,7 +936,7 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("pathList = " + pathList);
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         // check current file-sync mode
         if (syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
             System.err.println("Current file-sync mode is OFF!");
@@ -1028,11 +1028,11 @@ public class CMFileSyncManager extends CMServiceManager {
 
         //// create and send an online-mode-list event
 
-        // get the user and server names
-        String userName = CMInteractionInfo.getInstance().getMyself().getName();
-        Objects.requireNonNull(userName);
-        String serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
-        Objects.requireNonNull(serverName);
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String initiatorName = interInfo.getMyself().getName();
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
         // convert to relative path list
         List<Path> relativeFileOnlyList = toRelativePathList(fileOnlyList, getClientSyncHome());
         // event transmission loop
@@ -1041,9 +1041,10 @@ public class CMFileSyncManager extends CMServiceManager {
         while (listIndex < relativeFileOnlyList.size()) {
             // create an event
             CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
-            listEvent.setSender(userName);
-            listEvent.setReceiver(serverName);
-            listEvent.setRequester(userName);
+            // 공통 필드 설정
+            listEvent.setInitiatorName(initiatorName);
+            listEvent.setInitiatorUuid(initiatorUuid);
+            listEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
             // get relative path list to be added to this event
             List<Path> subList = createSubPathListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
@@ -1052,7 +1053,7 @@ public class CMFileSyncManager extends CMServiceManager {
             // set the sublist to the event
             listEvent.setRelativePathList(subList);
             // send the event
-            sendResult = CMEventManager.unicastEvent(listEvent, serverName);
+            sendResult = CMEventManager.unicastEvent(listEvent, serverName, null);
             if (!sendResult) {
                 System.err.println("send error: " + listEvent);
                 return false;
