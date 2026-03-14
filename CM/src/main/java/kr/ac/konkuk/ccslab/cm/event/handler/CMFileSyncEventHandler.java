@@ -317,21 +317,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create and send ack event
         CMFileSyncEventEndOnlineModeListAck ackEvent = new CMFileSyncEventEndOnlineModeListAck();
-        ackEvent.setSender(endEvent.getReceiver());
-        ackEvent.setReceiver(endEvent.getSender());
-        ackEvent.setRequester(endEvent.getRequester());
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(endEvent.getInitiatorName());
+        ackEvent.setInitiatorUuid(endEvent.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(endEvent.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
         ackEvent.setNumOnlineModeFiles(endEvent.getNumOnlineModeFiles());
         ackEvent.setReturnCode(1);
-/*
-        int numOnlineFiles = endEvent.getNumOnlineModeFiles();
-        ackEvent.setNumOnlineModeFiles(numOnlineFiles);
-        if(numOnlineFiles == onlineModeList.size())
-            ackEvent.setReturnCode(1);
-        else
-            ackEvent.setReturnCode(0);
-*/
 
-        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender());
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), endEvent.getSenderUuid());
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
@@ -487,7 +481,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setRelativePathList(listEvent.getRelativePathList());
         ackEvent.setReturnCode(1);
 
-        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getInitiatorName(), listEvent.getInitiatorUuid());
+        boolean ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender(), listEvent.getSenderUuid());
         if(!ret) {
             System.err.println("send error : "+ackEvent);
             return false;
