@@ -357,7 +357,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // get online-mode-request queue
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         ConcurrentLinkedQueue<Path> requestQueue = Objects.requireNonNull(syncInfo.getOnlineModeRequestQueue());
         // get the list in event
         List<Path> eventList = ackEvent.getRelativePathList();
@@ -452,13 +452,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if(requestQueue.isEmpty()) {
             // create and send the end-online-mode event
             CMFileSyncEventEndOnlineModeList endEvent = new CMFileSyncEventEndOnlineModeList();
-            endEvent.setSender(ackEvent.getReceiver());
-            endEvent.setReceiver(ackEvent.getSender());
-            endEvent.setRequester(ackEvent.getRequester());
-            //endEvent.setNumOnlineModeFiles(onlineModeList.size());
+            // 공통 필드 설정
+            endEvent.setInitiatorName(ackEvent.getInitiatorName());
+            endEvent.setInitiatorUuid(ackEvent.getInitiatorUuid());
+            endEvent.setInitiatorDeviceUuid(ackEvent.getInitiatorDeviceUuid());
+            // 나머지 필드 설정
             endEvent.setNumOnlineModeFiles(onlineModePathSizeMap.size());
 
-            boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender());
+            boolean ret = CMEventManager.unicastEvent(endEvent, ackEvent.getSender(), ackEvent.getSenderUuid());
             if(!ret) {
                 System.err.println("send error: "+endEvent);
                 return false;
