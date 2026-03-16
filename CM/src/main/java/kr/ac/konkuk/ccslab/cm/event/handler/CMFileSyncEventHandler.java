@@ -91,7 +91,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
 
         // print local mode files
         if(CMInfo._CM_DEBUG) {
