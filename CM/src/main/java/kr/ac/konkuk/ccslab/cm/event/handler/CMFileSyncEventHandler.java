@@ -154,18 +154,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("CMFileSyncEventHandler.processEND_LOCAL_MODE_LIST() called..");
             System.out.println("endEvent = " + endEvent);
         }
-        String requester = endEvent.getRequester();
-
-        // create an end-local-mode-list event
+        // create an end-local-mode-list ack event
         CMFileSyncEventEndLocalModeListAck ackEvent = new CMFileSyncEventEndLocalModeListAck();
-        ackEvent.setSender(endEvent.getReceiver());
-        ackEvent.setReceiver(endEvent.getSender());
-        ackEvent.setRequester(endEvent.getRequester());
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(endEvent.getInitiatorName());
+        ackEvent.setInitiatorUuid(endEvent.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(endEvent.getInitiatorDeviceUuid());
         ackEvent.setNumLocalModeFiles(endEvent.getNumLocalModeFiles());
         ackEvent.setReturnCode(1);
 
         // send the ack event
-        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender());
+        boolean ret = CMEventManager.unicastEvent(ackEvent, endEvent.getSender(), endEvent.getSenderUuid());
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
