@@ -198,13 +198,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processLOCAL_MODE_LIST() called..");
             System.out.println("listEvent = " + listEvent);
         }
-        String requester = listEvent.getRequester();
-        UUID requesterUuid = listEvent.getSenderUuid();
+        String initiatorName = listEvent.getInitiatorName();
+        UUID initiatorUuid = listEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = listEvent.getInitiatorDeviceUuid();
 
-        // get sync home of requester
+        // get sync home of initiator
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = Objects.requireNonNull(cmInfo.getServiceManager(CMFileSyncManager.class));
-        Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(requester));
+        Path serverSyncHome = Objects.requireNonNull(syncManager.getServerSyncHome(initiatorName));
 
         // start push-file for all paths in the event
         boolean ret = true;
@@ -212,7 +213,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // get the absolute path
             Path absPath = serverSyncHome.resolve(relativePath);
             // start push-file
-            ret &= CMFileTransferManager.pushFile(absPath.toString(), requester, requesterUuid);
+            ret &= CMFileTransferManager.pushFile(absPath.toString(), initiatorName, initiatorUuid);
             if(!ret) {
                 System.err.println("push error: "+absPath);
                 return false;
@@ -229,14 +230,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // create and send ack event
         CMFileSyncEventLocalModeListAck ackEvent = new CMFileSyncEventLocalModeListAck();
-        ackEvent.setSender(listEvent.getReceiver());
-        ackEvent.setReceiver(listEvent.getSender());
-        ackEvent.setRequester(requester);
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(initiatorName);
+        ackEvent.setInitiatorUuid(initiatorUuid);
+        ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
         ackEvent.setRelativePathList(listEvent.getRelativePathList());
         if(ret) ackEvent.setReturnCode(1);
         else ackEvent.setReturnCode(0);
 
-        ret = CMEventManager.unicastEvent(ackEvent, listEvent.getSender());
+        ret = CMEventManager.unicastEvent(ackEvent, initiatorName, initiatorUuid);
         if(!ret) {
             System.err.println("send error: "+ackEvent);
             return false;
