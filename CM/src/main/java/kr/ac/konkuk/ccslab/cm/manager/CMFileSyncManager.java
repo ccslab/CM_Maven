@@ -1261,10 +1261,12 @@ public class CMFileSyncManager extends CMServiceManager {
         // get transferred file info
         String fileName = fe.getFileName();
         String fileSender = fe.getFileSender();
-        Path transferFileHome = Objects.requireNonNull(CMConfigurationInfo.getInstance().getTransferedFileHome());
+        UUID fileSenderUuid = fe.getFileSenderUuid();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path transferFileHome = confInfo.getTransferedFileHome();
 
         // get local-mode-request queue
-        CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         ConcurrentLinkedQueue<Path> localModeRequestQueue = syncInfo.getLocalModeRequestQueue();
         Objects.requireNonNull(localModeRequestQueue);
 
@@ -1320,9 +1322,10 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         // if the queue is empty, create and send an end-local-mode-list event
         CMFileSyncEventEndLocalModeList endEvent = new CMFileSyncEventEndLocalModeList();
-        endEvent.setSender(fe.getFileReceiver());
-        endEvent.setReceiver(fileSender);
-        endEvent.setRequester(fe.getFileReceiver());
+        // 공통 필드 설정
+        endEvent.setInitiatorName(fe.getFileReceiver());
+        endEvent.setInitiatorUuid(fe.getFileReceiverUuid());
+        endEvent.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
 
         // filter only file type from the path list
         List<Path> pathList = Objects.requireNonNull(syncInfo.getPathList());
@@ -1334,8 +1337,7 @@ public class CMFileSyncManager extends CMServiceManager {
         int numLocalModeFiles = filteredPathList.size() - syncInfo.getOnlineModePathSizeMap().size();
         endEvent.setNumLocalModeFiles(numLocalModeFiles);
 
-        CMInfo cmInfo = CMInfo.getInstance();
-        boolean ret = CMEventManager.unicastEvent(endEvent, fileSender);
+        boolean ret = CMEventManager.unicastEvent(endEvent, fileSender, fileSenderUuid);
         if (!ret) {
             System.err.println("send error: " + endEvent);
         }
