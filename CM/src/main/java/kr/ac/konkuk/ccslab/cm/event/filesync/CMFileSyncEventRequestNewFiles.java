@@ -16,13 +16,11 @@ import java.util.Objects;
  */
 public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
     // Fields: String requesterName, int numRequestedFiles, List<Path> requestedFileList
-    private String requesterName;   // requester name
     private int numRequestedFiles;  // number of requested files
     private List<Path> requestedFileList;   // list of requested files
 
     public CMFileSyncEventRequestNewFiles() {
         m_nID = CMFileSyncEvent.REQUEST_NEW_FILES;
-        requesterName = null;
         numRequestedFiles = 0;
         requestedFileList = null;
     }
@@ -32,12 +30,18 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getRequesterName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setRequesterName(String name) { setInitiatorName(name); }
+
     @Override
     public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // requesterName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + requesterName.getBytes().length;
         // numRequestedFiles
         byteNum += Integer.BYTES;
         // number of elements of requestedFileList
@@ -53,9 +57,7 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // requesterName
-        putStringToByteBuffer(requesterName);
+    protected void marshallBodyCore() {
         // numRequestedFiles
         m_bytes.putInt(numRequestedFiles);
         if(requestedFileList != null) {
@@ -71,11 +73,9 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         int numElementsOfRequestedFileList;
 
-        // requesterName
-        requesterName = getStringFromByteBuffer(msg);
         // numRequestedFiles
         numRequestedFiles = msg.getInt();
         // number of elements of requestedFileList
@@ -95,10 +95,13 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         return "CMFileSyncEventRequestNewFiles{" +
                 "m_nType=" + m_nType +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nID=" + m_nID +
                 ", m_nByteNum=" + m_nByteNum +
-                ", requesterName='" + requesterName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", numRequestedFiles=" + numRequestedFiles +
                 ", requestedFileList=" + requestedFileList +
                 '}';
@@ -122,26 +125,15 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         if (!super.equals(o)) return false;
         CMFileSyncEventRequestNewFiles that = (CMFileSyncEventRequestNewFiles) o;
         return numRequestedFiles == that.numRequestedFiles &&
-                requesterName.equals(that.requesterName) &&
+                getInitiatorName().equals(that.getInitiatorName()) &&
                 requestedFileList.equals(that.requestedFileList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requesterName, numRequestedFiles, requestedFileList);
+        return Objects.hash(getInitiatorName(), numRequestedFiles, requestedFileList);
     }
 
-    /**
-     * gets the requester (server) name
-     * @return requester (server) name
-     */
-    public String getRequesterName() {
-        return requesterName;
-    }
-
-    public void setRequesterName(String requesterName) {
-        this.requesterName = requesterName;
-    }
 
     /**
      * gets the number of requested new files.

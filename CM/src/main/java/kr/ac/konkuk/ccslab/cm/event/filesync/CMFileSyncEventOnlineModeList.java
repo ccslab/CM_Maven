@@ -15,12 +15,10 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
-    private String requester;
     private List<Path> relativePathList;
 
     public CMFileSyncEventOnlineModeList() {
         m_nID = CMFileSyncEvent.ONLINE_MODE_LIST;
-        requester = null;   // must not be null
         relativePathList = null;    // must not be null
     }
 
@@ -29,12 +27,18 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getRequester() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setRequester(String name) { setInitiatorName(name); }
+
     @Override
     public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // requester
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + requester.getBytes().length;
         // size of list
         byteNum += Integer.BYTES;
         // relativePathList (can be null by calling the method before setting a list)
@@ -48,9 +52,7 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // requester
-        putStringToByteBuffer(requester);
+    protected void marshallBodyCore() {
         // numCurrentFiles
         m_bytes.putInt(relativePathList.size());
         // relativePathList
@@ -60,10 +62,8 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         int listSize;
-        // requester
-        requester = getStringFromByteBuffer(msg);
         // list size
         listSize = msg.getInt();
         // relativePathList
@@ -77,7 +77,10 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
     @Override
     public String toString() {
         return "CMFileSyncEventOnlineModeList{" +
-                "requester='" + requester + '\'' +
+                "initiatorName='" + getInitiatorName() + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", relativePathList=" + relativePathList +
                 '}';
     }
@@ -98,25 +101,14 @@ public class CMFileSyncEventOnlineModeList extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventOnlineModeList that = (CMFileSyncEventOnlineModeList) o;
-        return requester.equals(that.requester) && relativePathList.equals(that.relativePathList);
+        return getInitiatorName().equals(that.getInitiatorName()) && relativePathList.equals(that.relativePathList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requester, relativePathList);
+        return Objects.hash(getInitiatorName(), relativePathList);
     }
 
-    /**
-     * gets the requester (client) name.
-     * @return requester (client) name
-     */
-    public String getRequester() {
-        return requester;
-    }
-
-    public void setRequester(String requester) {
-        this.requester = requester;
-    }
 
     /**
      * gets the list of local mode file paths that will be changed to the online mode.

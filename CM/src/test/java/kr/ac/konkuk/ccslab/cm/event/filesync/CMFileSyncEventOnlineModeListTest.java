@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -14,7 +15,9 @@ public class CMFileSyncEventOnlineModeListTest {
     public void marshallUnmarshall() {
         System.out.println("===== CMFileSyncEventOnlineModeListTest.marshallUnmarshall() called..");
         CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
-        listEvent.setRequester("ccslab");
+        listEvent.setInitiatorName("ccslab");
+        listEvent.setInitiatorUuid(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        listEvent.setInitiatorDeviceUuid(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         List<Path> pathList = List.of(Path.of("test1.txt"), Path.of("test2.txt"));
         listEvent.setRelativePathList(pathList);
         System.out.println("onlineModeListEvent = " + listEvent);
@@ -24,6 +27,9 @@ public class CMFileSyncEventOnlineModeListTest {
                 (CMFileSyncEventOnlineModeList) CMEventManager.unmarshallEvent(buffer);
         assertNotNull(unmarhsallEvent);
         System.out.println("unmarhsallEvent = " + unmarhsallEvent);
+        assertEquals("ccslab", unmarhsallEvent.getInitiatorName());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), unmarhsallEvent.getInitiatorUuid());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000002"), unmarhsallEvent.getInitiatorDeviceUuid());
         assertEquals(listEvent, unmarhsallEvent);
     }
 
@@ -31,7 +37,7 @@ public class CMFileSyncEventOnlineModeListTest {
     public void marshallException() {
         System.out.println("===== CMFileSyncEventOnlineModeListTest.marshallException() called..");
         CMFileSyncEventOnlineModeList listEvent = new CMFileSyncEventOnlineModeList();
-        listEvent.setRequester("ccslab");
+        listEvent.setInitiatorName("ccslab");
 
         ByteBuffer buffer = CMEventManager.marshallEvent(listEvent);
     }

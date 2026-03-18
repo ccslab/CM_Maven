@@ -216,6 +216,10 @@ public class CMEventManager {
 					case CMFileSyncEvent.COMPLETE_FILE_SYNC:
 						CMFileSyncEventCompleteFileSync completeFileSync = new CMFileSyncEventCompleteFileSync(buf);
 						return completeFileSync;
+					case CMFileSyncEvent.COMPLETE_DELETE_FILES:
+						CMFileSyncEventCompleteDeleteFiles completeDeleteFiles =
+								new CMFileSyncEventCompleteDeleteFiles(buf);
+						return completeDeleteFiles;
 					case CMFileSyncEvent.ONLINE_MODE_LIST:
 						CMFileSyncEventOnlineModeList onlineModeList = new CMFileSyncEventOnlineModeList(buf);
 						return onlineModeList;

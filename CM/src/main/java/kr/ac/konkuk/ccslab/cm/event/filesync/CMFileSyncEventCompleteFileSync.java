@@ -11,14 +11,14 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
-    // Fields: userName, numFilesCompleted
-    private String userName;    // user name
+    // Fields: userName, numFilesCompleted, cursor
     private int numFilesCompleted;  // number of files completed
+    private long cursor;            // updated lastChangeId to be applied on client side
 
     public CMFileSyncEventCompleteFileSync() {
         m_nID = CMFileSyncEvent.COMPLETE_FILE_SYNC;
-        userName = null;
         numFilesCompleted = 0;
+        cursor = -1;
     }
 
     public CMFileSyncEventCompleteFileSync(ByteBuffer msg) {
@@ -26,31 +26,39 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getUserName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setUserName(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // userName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
         // numFilesCompleted
         byteNum += Integer.BYTES;
+        // cursor
+        byteNum += Long.BYTES;
         return byteNum;
     }
 
     @Override
-    protected void marshallBody() {
-        // userName
-        putStringToByteBuffer(userName);
+    protected void marshallBodyCore() {
         // numFilesCompleted
         m_bytes.putInt(numFilesCompleted);
+        // cursor
+        m_bytes.putLong(cursor);
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // userName
-        userName = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // numFilesCompleted
         numFilesCompleted = msg.getInt();
+        // cursor
+        cursor = msg.getLong();
     }
 
     @Override
@@ -58,11 +66,15 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         return "CMFileSyncEventCompleteFileSync{" +
                 "m_nType=" + m_nType +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nID=" + m_nID +
                 ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", numFilesCompleted=" + numFilesCompleted +
+                ", cursor=" + cursor +
                 '}';
     }
 
@@ -82,26 +94,16 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventCompleteFileSync that = (CMFileSyncEventCompleteFileSync) o;
-        return numFilesCompleted == that.numFilesCompleted && userName.equals(that.userName);
+        return numFilesCompleted == that.numFilesCompleted &&
+                cursor == that.cursor &&
+                getInitiatorName().equals(that.getInitiatorName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, numFilesCompleted);
+        return Objects.hash(getInitiatorName(), numFilesCompleted, cursor);
     }
 
-    /**
-     * gets the target user (client) name.
-     *
-     * @return user (client) name
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     /**
      * gets the number of files that completed synchronization.
@@ -116,5 +118,17 @@ public class CMFileSyncEventCompleteFileSync extends CMFileSyncEvent {
 
     public void setNumFilesCompleted(int numFilesCompleted) {
         this.numFilesCompleted = numFilesCompleted;
+    }
+
+    /**
+     * gets the updated lastChangeId to be applied on the client side.
+     * @return updated lastChangeId (cursor)
+     */
+    public long getCursor() {
+        return cursor;
+    }
+
+    public void setCursor(long cursor) {
+        this.cursor = cursor;
     }
 }
