@@ -9,12 +9,17 @@ import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.WatchService;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
@@ -377,16 +382,37 @@ public class CMFileSyncInfo {
         repo.flushSnapshot();
     }
 
-    // TODO: cursor 파일에 lastChangeId를 기록
-    protected void writeCursor(String initiatorName, UUID initiatorDeviceUuid, long changeId) throws IOException {
-        // 구현 예정
+    private void writeCursor(String initiatorName, UUID initiatorDeviceUuid, long changeId) throws IOException {
+        Path cursorFile = Path.of(".cm-settings", "file-sync", "server",
+                initiatorName, CMUUIDConverter.uuidToString(initiatorDeviceUuid), "cursor");
+        Files.createDirectories(cursorFile.getParent());
+        Files.writeString(cursorFile, Long.toString(changeId),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    // TODO: changelog 파일에 op 한 줄 append
-    protected void appendChangelog(String initiatorName, UUID initiatorDeviceUuid,
-                                   String op, String path, boolean isDirectory,
-                                   String contentHash, long mtimeEpochSec, long sizeBytes,
-                                   long changeId) throws IOException {
-        // 구현 예정
+    private void appendChangelog(String initiatorName, UUID initiatorDeviceUuid,
+                                 String op, String path, boolean isDirectory,
+                                 String contentHash, long mtimeEpochSec, long sizeBytes,
+                                 long changeId) throws IOException {
+        String today = LocalDate.now().toString();
+        Path logFile = Path.of(".cm-settings", "file-sync", "server",
+                initiatorName, "changelog-" + today + ".jsonl");
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("changeId", changeId);
+        entry.put("userName", initiatorName);
+        entry.put("originDeviceUuid", initiatorDeviceUuid);
+        entry.put("op", op);
+        entry.put("path", path);
+        entry.put("isDirectory", isDirectory);
+        entry.put("contentHash", contentHash);
+        entry.put("mtime", mtimeEpochSec);
+        entry.put("size", sizeBytes);
+        entry.put("tombstone", op.equals("DELETE"));
+        entry.put("ts", OffsetDateTime.now().toString());
+        String logEntry = new ObjectMapper().writeValueAsString(entry);
+
+        Files.writeString(logFile, logEntry + System.lineSeparator(),
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 }
