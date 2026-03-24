@@ -15,6 +15,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -598,7 +599,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         if(basisFileChannel != null && tempFileChannel != null) {
             // compare file checksum of the temp file and the checksum of the ack event
-            byte[] fileChecksum = syncManager.calculateFileChecksum(tempFilePath);
+            byte[] fileChecksum;
+            try {
+                fileChecksum = CMUtil.md5(tempFilePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
             if(!Arrays.equals(fileChecksum, ackEvent.getFileChecksum())) {
                 System.err.println("File checksum error!");
                 System.err.println("temp checksum = " + DatatypeConverter.printHexBinary(fileChecksum));
@@ -824,7 +831,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(1);
 
         // calculate a file checksum and set it to the ack event
-        byte[] fileChecksum = syncManager.calculateFileChecksum(path);
+        byte[] fileChecksum;
+        try {
+            fileChecksum = CMUtil.md5(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
         ackEvent.setFileChecksum(fileChecksum);
         // send the ack event
         ret = CMEventManager.unicastEvent(ackEvent, endChecksumEvent.getSender(), endChecksumEvent.getSenderUuid());

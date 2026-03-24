@@ -6,6 +6,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -141,5 +143,33 @@ public class CMUtil {
 		GraphicsConfiguration gc = gd.getDefaultConfiguration();
 		BufferedImage image = gc.createCompatibleImage(w, h);
 		return image;
+	}
+
+	public static byte[] md5(Path path) throws IOException
+	{
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException("MD5 not available", e);
+		}
+		try (InputStream in = Files.newInputStream(path)) {
+			byte[] buf = new byte[8192];
+			int n;
+			while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
+		}
+		return md.digest();
+	}
+
+	public static String md5Hex(Path path) throws IOException
+	{
+		byte[] digest = md5(path);
+		StringBuilder sb = new StringBuilder(digest.length * 2);
+		for (byte b : digest) {
+			int v = b & 0xFF;
+			if (v < 16) sb.append('0');
+			sb.append(Integer.toHexString(v));
+		}
+		return sb.toString();
 	}
 }

@@ -673,6 +673,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return digest;
     }
 
+    /*
     public byte[] calculateFileChecksum(Path path) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateFileChecksum() called..");
@@ -718,6 +719,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         return bytes;
     }
+    */
 
     // called by the client
     public int[] updateWeakChecksum(int oldA, int oldB, byte oldStartByte, byte newEndByte, int blockSize) {
