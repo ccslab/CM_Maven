@@ -292,6 +292,57 @@ public class CMFileSyncInfo {
         repo.flushSnapshot();
     }
 
+    /**
+     * 파일 수정(MODIFY) op 완료: Path로부터 hash/mtime/size를 직접 구해 인덱스·메타 파일 업데이트
+     */
+    public void applyModify(String initiatorName, UUID initiatorDeviceUuid, String path) throws IOException {
+        CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = repo.lastChangeId() + 1;
+
+        CMFileSyncManager syncManager = CMInfo.getInstance()
+                .getServiceManager(CMFileSyncManager.class);
+
+        Path syncHome = syncManager.getServerSyncHome(initiatorName);
+
+        // 경로 정규화: abs(절대) / relPath(상대; 메타 기록용)
+        Path input = Path.of(path);
+        Path abs, relPath;
+        if (input.isAbsolute()) {
+            abs = input.toAbsolutePath().normalize();
+            relPath = syncHome.relativize(abs).normalize();
+            path = relPath.toString().replace('\\', '/');
+        } else {
+            relPath = input.normalize();
+            abs = syncHome.resolve(relPath).toAbsolutePath().normalize();
+            path = relPath.toString().replace('\\', '/');
+        }
+
+        boolean isDirectory = Files.isDirectory(abs);
+        String md5Hex = CMUtil.md5Hex(abs);
+        long mtimeSec = Files.getLastModifiedTime(abs).toMillis() / 1000;
+        long sizeBytes = Files.size(abs);
+
+        repo.applyCreateOrModify(path, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", path, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        repo.flushSnapshot();
+    }
+
+    /**
+     * 파일 수정(MODIFY) op 완료: 클라이언트로부터 받은 메타 정보로 인덱스·메타 파일 업데이트
+     */
+    public void applyModifyFast(String initiatorName, UUID initiatorDeviceUuid,
+                                String path, boolean isDirectory, String contentHash,
+                                long mtimeEpochSec, long sizeBytes) throws IOException {
+        CMFileSyncIndexRepository repo = indexRegistry.getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = repo.lastChangeId() + 1;
+
+        repo.applyCreateOrModify(path, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", path, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        repo.flushSnapshot();
+    }
+
     // TODO: cursor 파일에 lastChangeId를 기록
     protected void writeCursor(String initiatorName, UUID initiatorDeviceUuid, long changeId) throws IOException {
         // 구현 예정
