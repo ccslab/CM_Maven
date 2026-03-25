@@ -397,12 +397,22 @@ public class CMFileSyncManager extends CMServiceManager {
         String initiatorName = loginKey.getUserName();
         UUID initiatorUuid = loginKey.getUuid();
 
+        // device uuid 구하기
+        UUID deviceUuid = syncGenerator.getInitiatorDeviceUuid();
+        // 동기화 메타 파일 및 인메모리 정보 업데이트
+        try {
+            syncInfo.applyModify(initiatorName, deviceUuid, path.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         // create a COMPLETE_UPDATE_FILE event
         CMFileSyncEventCompleteUpdateFile fse = new CMFileSyncEventCompleteUpdateFile();
         // 공통 필드 설정
         fse.setInitiatorName(initiatorName);
         fse.setInitiatorUuid(initiatorUuid);
-        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        fse.setInitiatorDeviceUuid(deviceUuid);
 
         // get the relative path of the basis file path
         CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -416,7 +426,8 @@ public class CMFileSyncManager extends CMServiceManager {
         // set the relative path to the event
         fse.setCompletedPath(relativePath);
 
-        return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
+        boolean ret = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
+        return ret;
     }
 
     // called by the server
