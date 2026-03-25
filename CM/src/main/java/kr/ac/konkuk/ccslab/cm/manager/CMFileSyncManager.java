@@ -401,7 +401,7 @@ public class CMFileSyncManager extends CMServiceManager {
         UUID deviceUuid = syncGenerator.getInitiatorDeviceUuid();
         // 동기화 메타 파일 및 인메모리 정보 업데이트
         try {
-            syncInfo.applyModify(initiatorName, deviceUuid, path.toString());
+            syncInfo.applyModify(initiatorName, deviceUuid, path);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -450,7 +450,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // 동기화 메타 파일 및 인메모리 정보 업데이트 (각 삭제된 파일에 대해)
         for (Path path : deletedPathList) {
             try {
-                syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path.toString());
+                syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path);
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;

@@ -249,7 +249,7 @@ public class CMFileSyncInfo {
     /**
      * 파일 추가(CREATE) op 완료: Path로부터 hash/mtime/size를 직접 구해 인덱스·메타 파일 업데이트
      */
-    public void applyCreate(String initiatorName, UUID initiatorDeviceUuid, String path) throws IOException {
+    public void applyCreate(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
         CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
         long newChangeId = repo.lastChangeId() + 1;
 
@@ -259,26 +259,24 @@ public class CMFileSyncInfo {
         Path syncHome = syncManager.getServerSyncHome(initiatorName);
 
         // 경로 정규화: abs(절대) / relPath(상대; 메타 기록용)
-        Path input = Path.of(path);
         Path abs, relPath;
-        if (input.isAbsolute()) {
-            abs = input.toAbsolutePath().normalize();
+        if (path.isAbsolute()) {
+            abs = path.toAbsolutePath().normalize();
             relPath = syncHome.relativize(abs).normalize();
-            path = relPath.toString().replace('\\', '/');
         } else {
-            relPath = input.normalize();
+            relPath = path.normalize();
             abs = syncHome.resolve(relPath).toAbsolutePath().normalize();
-            path = relPath.toString().replace('\\', '/');
         }
+        String pathStr = relPath.toString().replace('\\', '/');
 
         boolean isDirectory = Files.isDirectory(abs);
         String md5Hex = CMUtil.md5Hex(abs);
         long mtimeSec = Files.getLastModifiedTime(abs).toMillis() / 1000;
         long sizeBytes = Files.size(abs);
 
-        repo.applyCreateOrModify(path, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        repo.applyCreateOrModify(pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
         writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
-        appendChangelog(initiatorName, initiatorDeviceUuid, "CREATE", path, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "CREATE", pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
         repo.flushSnapshot();
     }
 
@@ -286,21 +284,22 @@ public class CMFileSyncInfo {
      * 파일 추가(CREATE) op 완료: 클라이언트로부터 받은 메타 정보로 인덱스·메타 파일 업데이트
      */
     public void applyCreateFast(String initiatorName, UUID initiatorDeviceUuid,
-                                String path, boolean isDirectory, String contentHash,
+                                Path path, boolean isDirectory, String contentHash,
                                 long mtimeEpochSec, long sizeBytes) throws IOException {
         CMFileSyncIndexRepository repo = indexRegistry.getOrLoad(initiatorName, initiatorDeviceUuid);
         long newChangeId = repo.lastChangeId() + 1;
+        String pathStr = path.toString().replace('\\', '/');
 
-        repo.applyCreateOrModify(path, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        repo.applyCreateOrModify(pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
         writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
-        appendChangelog(initiatorName, initiatorDeviceUuid, "CREATE", path, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "CREATE", pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
         repo.flushSnapshot();
     }
 
     /**
      * 파일 수정(MODIFY) op 완료: Path로부터 hash/mtime/size를 직접 구해 인덱스·메타 파일 업데이트
      */
-    public void applyModify(String initiatorName, UUID initiatorDeviceUuid, String path) throws IOException {
+    public void applyModify(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
         CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
         long newChangeId = repo.lastChangeId() + 1;
 
@@ -310,26 +309,24 @@ public class CMFileSyncInfo {
         Path syncHome = syncManager.getServerSyncHome(initiatorName);
 
         // 경로 정규화: abs(절대) / relPath(상대; 메타 기록용)
-        Path input = Path.of(path);
         Path abs, relPath;
-        if (input.isAbsolute()) {
-            abs = input.toAbsolutePath().normalize();
+        if (path.isAbsolute()) {
+            abs = path.toAbsolutePath().normalize();
             relPath = syncHome.relativize(abs).normalize();
-            path = relPath.toString().replace('\\', '/');
         } else {
-            relPath = input.normalize();
+            relPath = path.normalize();
             abs = syncHome.resolve(relPath).toAbsolutePath().normalize();
-            path = relPath.toString().replace('\\', '/');
         }
+        String pathStr = relPath.toString().replace('\\', '/');
 
         boolean isDirectory = Files.isDirectory(abs);
         String md5Hex = CMUtil.md5Hex(abs);
         long mtimeSec = Files.getLastModifiedTime(abs).toMillis() / 1000;
         long sizeBytes = Files.size(abs);
 
-        repo.applyCreateOrModify(path, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        repo.applyCreateOrModify(pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
         writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
-        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", path, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
         repo.flushSnapshot();
     }
 
@@ -337,21 +334,22 @@ public class CMFileSyncInfo {
      * 파일 수정(MODIFY) op 완료: 클라이언트로부터 받은 메타 정보로 인덱스·메타 파일 업데이트
      */
     public void applyModifyFast(String initiatorName, UUID initiatorDeviceUuid,
-                                String path, boolean isDirectory, String contentHash,
+                                Path path, boolean isDirectory, String contentHash,
                                 long mtimeEpochSec, long sizeBytes) throws IOException {
         CMFileSyncIndexRepository repo = indexRegistry.getOrLoad(initiatorName, initiatorDeviceUuid);
         long newChangeId = repo.lastChangeId() + 1;
+        String pathStr = path.toString().replace('\\', '/');
 
-        repo.applyCreateOrModify(path, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        repo.applyCreateOrModify(pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
         writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
-        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", path, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
         repo.flushSnapshot();
     }
 
     /**
      * 파일 삭제(DELETE) op 완료: 인덱스·메타 파일 업데이트
      */
-    public void applyDelete(String initiatorName, UUID initiatorDeviceUuid, String path) throws IOException {
+    public void applyDelete(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
         CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
         long newChangeId = repo.lastChangeId() + 1;
 
@@ -361,24 +359,22 @@ public class CMFileSyncInfo {
         Path syncHome = syncManager.getServerSyncHome(initiatorName);
 
         // 경로 정규화: abs(절대) / relPath(상대; 메타 기록용)
-        Path input = Path.of(path);
         Path abs, relPath;
-        if (input.isAbsolute()) {
-            abs = input.toAbsolutePath().normalize();
+        if (path.isAbsolute()) {
+            abs = path.toAbsolutePath().normalize();
             relPath = syncHome.relativize(abs).normalize();
-            path = relPath.toString().replace('\\', '/');
         } else {
-            relPath = input.normalize();
+            relPath = path.normalize();
             abs = syncHome.resolve(relPath).toAbsolutePath().normalize();
-            path = relPath.toString().replace('\\', '/');
         }
+        String pathStr = relPath.toString().replace('\\', '/');
 
         boolean isDirectory = Files.isDirectory(abs);
         long nowSec = System.currentTimeMillis() / 1000;
 
-        repo.applyDelete(path, isDirectory, newChangeId, nowSec);
+        repo.applyDelete(pathStr, isDirectory, newChangeId, nowSec);
         writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
-        appendChangelog(initiatorName, initiatorDeviceUuid, "DELETE", path, isDirectory, null, nowSec, 0L, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "DELETE", pathStr, isDirectory, null, nowSec, 0L, newChangeId);
         repo.flushSnapshot();
     }
 
