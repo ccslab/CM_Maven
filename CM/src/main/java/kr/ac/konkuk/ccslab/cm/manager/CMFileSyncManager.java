@@ -431,6 +431,76 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // called by the server
+    public boolean completeDeleteFiles(CMUserLoginKey loginKey, UUID initiatorDeviceUuid,
+                                       List<Path> deletedPathList) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.completeDeleteFiles() called..");
+            System.out.println("loginKey = " + loginKey);
+            System.out.println("initiatorDeviceUuid = " + initiatorDeviceUuid);
+            System.out.println("deletedPathList = " + deletedPathList);
+        }
+        // initiatorName, initiatorUuid 구하기
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
+        // sync info 구하기
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        // sync generator 구하기
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
+
+        // 동기화 메타 파일 및 인메모리 정보 업데이트 (각 삭제된 파일에 대해)
+        for (Path path : deletedPathList) {
+            try {
+                syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        // cursor 구하기 (applyDelete 후)
+        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid).lastChangeId();
+
+        // 이벤트 전송 루프 시작
+        int listIndex = 0;
+        boolean sendResult = false;
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = getServerSyncHome(initiatorName);
+        } else {
+            syncHome = getClientSyncHome();
+        }
+        List<Path> relativeDeletedPathList = toRelativePathList(deletedPathList, syncHome);
+        while (listIndex < relativeDeletedPathList.size()) {
+            // 이벤트 객체 생성
+            CMFileSyncEventCompleteDeleteFiles fse = new CMFileSyncEventCompleteDeleteFiles();
+            // 공통 필드 설정
+            fse.setInitiatorName(initiatorName);
+            fse.setInitiatorUuid(initiatorUuid);
+            fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+            // 이벤트에 넣을 path 서브리스트 구하기
+            List<Path> subList = createSubPathListForEvent(fse.getByteNum(), relativeDeletedPathList, listIndex);
+            // update the listIndex
+            listIndex += subList.size();
+            // set the subList to the event
+            fse.setDeletedPathList(subList);
+            // cursor 설정
+            fse.setCursor(lastChangeId);
+            // send the event
+            sendResult = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
+            if (!sendResult) {
+                System.err.println("send error: " + fse);
+                return false;
+            }
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("sent event = " + fse);
+            }
+        }
+
+        return true;
+    }
+
+    // called by the server
     public boolean isCompleteFileSync(CMUserLoginKey loginKey) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.isCompleteFileSync() called..");
