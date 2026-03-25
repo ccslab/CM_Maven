@@ -697,6 +697,8 @@ public class CMFileSyncGenerator implements Runnable {
         // get basis file list
         List<Path> basisFileList = Objects.requireNonNull(syncInfo.getBasisFileListMap())
                 .get(new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid));
+        // deletedPathList 선언
+        List<Path> deletedPathList = new ArrayList<>();
         // firstly, delete files (not directories) that exist only at the basis file list
         Iterator<Path> iter = basisFileList.iterator();
         while (iter.hasNext()) {
@@ -707,6 +709,10 @@ public class CMFileSyncGenerator implements Runnable {
                     try {
                         Files.delete(path);
                         iter.remove();
+                        // deletedPathList에 추가
+                        deletedPathList.add(path.subpath(startPathIndex, path.getNameCount()));
+                        // 동기화 메타 파일 및 인메모리 정보 업데이트
+                        syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path.toString());
                         if (CMInfo._CM_DEBUG) {
                             System.out.println("deleted file = " + path);
                         }
@@ -727,6 +733,10 @@ public class CMFileSyncGenerator implements Runnable {
                 try {
                     Files.delete(path);
                     iter.remove();
+                    // deletedPathList에 추가
+                    deletedPathList.add(path.subpath(startPathIndex, path.getNameCount()));
+                    // 동기화 메타 파일 및 인메모리 정보 업데이트
+                    syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path.toString());
                     if (CMInfo._CM_DEBUG) {
                         System.out.println("deleted directory = " + path);
                     }
@@ -737,6 +747,9 @@ public class CMFileSyncGenerator implements Runnable {
                 }
             }
         }
+
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        syncManager.completeDeleteFiles(loginKey, initiatorDeviceUuid, deletedPathList);
 
         if (entryPathList == null) {
             // check if the basis file list is empty
