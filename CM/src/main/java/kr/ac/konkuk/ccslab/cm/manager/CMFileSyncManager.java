@@ -551,15 +551,21 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
+        // device uuid 구하기
+        UUID deviceUuid = syncGenerator.getInitiatorDeviceUuid();
+        // cursor 구하기
+        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, deviceUuid).lastChangeId();
+
         // create a COMPLETE_FILE_SYNC event
         int numFilesCompleted = syncGenerator.getNumNewFilesCompleted() + syncGenerator.getNumUpdateFilesCompleted();
         CMFileSyncEventCompleteFileSync fse = new CMFileSyncEventCompleteFileSync();
         // 공통 필드 설정
         fse.setInitiatorName(initiatorName);
         fse.setInitiatorUuid(initiatorUuid);
-        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        fse.setInitiatorDeviceUuid(deviceUuid);
         // 나머지 필드 설정
         fse.setNumFilesCompleted(numFilesCompleted);
+        fse.setCursor(lastChangeId);
 
         // send the event
         return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
