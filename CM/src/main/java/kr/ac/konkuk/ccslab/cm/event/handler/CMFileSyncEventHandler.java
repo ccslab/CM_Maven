@@ -52,6 +52,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.REQUEST_NEW_FILES -> processResult = processREQUEST_NEW_FILES(fse);
             case CMFileSyncEvent.COMPLETE_NEW_FILE -> processResult = processCOMPLETE_NEW_FILE(fse);
             case CMFileSyncEvent.COMPLETE_UPDATE_FILE -> processResult = processCOMPLETE_UPDATE_FILE(fse);
+            case CMFileSyncEvent.COMPLETE_DELETE_FILES -> processResult = processCOMPLETE_DELETE_FILES(fse);
             case CMFileSyncEvent.SKIP_UPDATE_FILE -> processResult = processSKIP_UPDATE_FILE(fse);
             case CMFileSyncEvent.COMPLETE_FILE_SYNC -> processResult = processCOMPLETE_FILE_SYNC(fse);
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM -> processResult = processSTART_FILE_BLOCK_CHECKSUM(fse);
@@ -1956,6 +1957,38 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         long newCursor = fse_cuf.getCursor();
         if(CMInfo._CM_DEBUG) {
             System.out.printf("[CM] processCOMPLETE_UPDATE_FILE: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
+        if(memCursor >= newCursor) {
+            System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
+        }
+        syncInfo.setCursor(newCursor);
+
+        return true;
+    }
+
+    // called by the client
+    private boolean processCOMPLETE_DELETE_FILES(CMFileSyncEvent fse) {
+        CMFileSyncEventCompleteDeleteFiles fse_cdf = (CMFileSyncEventCompleteDeleteFiles) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_DELETE_FILES() called..");
+            System.out.println("fse = " + fse_cdf);
+        }
+
+        // 인메모리 client-index Map에서 삭제된 path list의 각 원소에 대해 (path, lastSyncedMtime) 삭제
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<Path> deletedPathList = fse_cdf.getDeletedPathList();
+        if(deletedPathList != null) {
+            for(Path relPath : deletedPathList) {
+                syncInfo.removeLastSyncedMtime(relPath.toString());
+            }
+        }
+
+        // 인메모리 cursor 값 업데이트
+        long memCursor = syncInfo.getCursor();
+        long newCursor = fse_cdf.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_DELETE_FILES: cursor before=%d, after=%d%n", memCursor, newCursor);
         }
         if(memCursor >= newCursor) {
             System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
