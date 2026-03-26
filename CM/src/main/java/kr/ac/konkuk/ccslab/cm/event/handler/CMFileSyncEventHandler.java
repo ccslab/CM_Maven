@@ -1898,6 +1898,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // 인메모리 cursor 값 업데이트
         long memCursor = syncInfo.getCursor();
         long newCursor = fse_cnf.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_NEW_FILE: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
         if(memCursor >= newCursor) {
             System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
         }
@@ -1951,6 +1954,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // 인메모리 cursor 값 업데이트
         long memCursor = syncInfo.getCursor();
         long newCursor = fse_cuf.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_UPDATE_FILE: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
         if(memCursor >= newCursor) {
             System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
         }
