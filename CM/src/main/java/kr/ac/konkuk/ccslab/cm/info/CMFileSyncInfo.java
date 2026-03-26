@@ -284,6 +284,15 @@ public class CMFileSyncInfo {
         m_lastSyncedMtimeMap.remove(relPath);
     }
 
+    /**
+     * 주어진 절대경로의 마지막 수정 시간을 초 단위로 반환합니다.
+     * 파일이 없으면 -1을 리턴합니다.
+     */
+    public long currentMtimeSecOrMinusOne(Path abs) throws IOException {
+        if (!Files.exists(abs)) return -1L;
+        return Files.getLastModifiedTime(abs).toMillis() / 1000;
+    }
+
     // --------------------------------------------------------------------
     // [NEW] 4 client: 파일 경로 도우미
     //   <project_home>/.cm-settings/file-sync/client/{cursor,client-index.json}
