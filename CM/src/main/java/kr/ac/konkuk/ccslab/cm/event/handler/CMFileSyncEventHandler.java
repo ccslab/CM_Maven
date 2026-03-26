@@ -2053,6 +2053,50 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         syncInfo.getIsFileSyncCompletedMap().clear();
 
+        // 인메모리 cursor 업데이트
+        long memCursor = syncInfo.getCursor();
+        long newCursor = fse_cfs.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_FILE_SYNC: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
+        if(memCursor >= newCursor) {
+            System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
+        }
+        syncInfo.setCursor(newCursor);
+
+        // 파일 cursor 가져오기
+        Path cursorFile = syncInfo.getCursorFile(".");
+
+        // cursor 파일 값이 정상이면,
+        if(cursorFile != null && Files.exists(cursorFile)) {
+            memCursor = syncInfo.getCursor();
+            try {
+                long fileCursor = Long.parseLong(Files.readString(cursorFile).trim());
+                // memory cursor가 더 작은 비정상 상태이면,
+                if(memCursor < fileCursor) {
+                    System.err.printf("cursor regression detected!: mem = %d, file = %d%n", memCursor, fileCursor);
+                    syncInfo.setCursor(fileCursor);
+                    // 파일로 메타 정보 저장 필요 없음
+                } else if(memCursor == fileCursor) {
+                    System.out.printf("cursor values are the same: mem = %d, file = %d%n", memCursor, fileCursor);
+                    // 파일로 메타 정보 저장 필요 없음
+                } else {
+                    // 정상적인 memory cursor가 file cursor보다 큰 상태이면,
+                    syncInfo.saveClientCursor(".");
+                    syncInfo.saveClientIndex(".", syncInfo.getCursor());
+                }
+            } catch(IOException | NumberFormatException e) {
+                e.printStackTrace();
+                syncInfo.saveClientCursor(".");
+                syncInfo.saveClientIndex(".", syncInfo.getCursor());
+            }
+        }
+        // cursor 파일이 없으면,
+        else {
+            syncInfo.saveClientCursor(".");
+            syncInfo.saveClientIndex(".", syncInfo.getCursor());
+        }
+
         // change the file-sync state to stop
         syncInfo.setSyncInProgress(false);
 

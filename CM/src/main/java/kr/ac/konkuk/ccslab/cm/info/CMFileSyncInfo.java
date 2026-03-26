@@ -302,7 +302,7 @@ public class CMFileSyncInfo {
                 ".cm-settings", "file-sync", "client");
     }
 
-    private Path getCursorFile(final String projectHome) {
+    public Path getCursorFile(final String projectHome) {
         return getClientSyncBaseDir(projectHome).resolve("cursor");
     }
 
