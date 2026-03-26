@@ -1920,6 +1920,42 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Objects.requireNonNull(isFileSyncCompletedMap);
         isFileSyncCompletedMap.put(fse_cuf.getCompletedPath(), true);
 
+        // CMFileSyncManager 구하기
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+
+        // syncHome 구하기
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if(confInfo.getSystemType().equals("SERVER")) {
+            syncHome = syncManager.getServerSyncHome(fse_cuf.getSender());
+        } else {
+            syncHome = syncManager.getClientSyncHome();
+        }
+
+        // 완료된 path의 절대 경로 구하기
+        Path relPath = fse_cuf.getCompletedPath();
+        Path absPath = syncHome.resolve(relPath).toAbsolutePath().normalize();
+        // 절대경로의 현재 mtime 구하기
+        long curMtime;
+        try {
+            curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            curMtime = -1;
+        }
+
+        // 인메모리 client-index Map에 (path, mtime) 추가하기
+        syncInfo.setLastSyncedMtime(relPath.toString(), curMtime);
+
+        // 인메모리 cursor 값 업데이트
+        long memCursor = syncInfo.getCursor();
+        long newCursor = fse_cuf.getCursor();
+        if(memCursor >= newCursor) {
+            System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
+        }
+        syncInfo.setCursor(newCursor);
+
         return true;
     }
 
