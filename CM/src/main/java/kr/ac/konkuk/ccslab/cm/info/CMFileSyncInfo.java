@@ -4,6 +4,8 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRegistry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexSnapshotStore;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncJacksonSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
@@ -17,6 +19,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.WatchService;
 import java.time.LocalDate;
@@ -97,6 +100,15 @@ public class CMFileSyncInfo {
         basisFileListMap = new HashMap<>();
 
         proactiveModeTaskFuture = null;
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (confInfo.getSystemType().equals("SERVER")) {
+            CMFileSyncIndexSnapshotStore store = new CMFileSyncJacksonSnapshotStore();
+            Path indexBaseDir = Paths.get(CMInfo.SETTINGS_DIR, "file-sync", "server");
+            indexRegistry = new CMFileSyncIndexRegistry(store, indexBaseDir);
+        } else {
+            indexRegistry = null;
+        }
     }
 
     // getInstance()
