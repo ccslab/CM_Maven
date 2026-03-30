@@ -622,23 +622,10 @@ public class CMFileSyncGenerator implements Runnable {
             Path basisFile = serverSyncHome.resolve(entryPath);
             // If the entry path is not in the basis file list,
             if (!relativeBasisFileList.contains(entryPath)) {
-                if (updateMode == CMFileSyncUpdateMode.DELTA) {
-                    // create an empty file in the sync home
-                    try {
-                        Files.createFile(basisFile);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        throw new RuntimeException(e);
-                    }
-                    // add it to the basis file list and isUpdateFileCompletedMap
-                    basisFileList.add(basisFile);
-                    isUpdateFileCompletedMap.put(basisFile, false);
-                } else {
-                    // add entry to the new list
-                    newInitiatorPathEntryList.add(entry);
-                    // add entry path to the isNewFileCompletedMap
-                    isNewFileCompletedMap.put(entryPath, false);
-                }
+                // add entry to the new list regardless of updateMode
+                newInitiatorPathEntryList.add(entry);
+                // add entry path to the isNewFileCompletedMap
+                isNewFileCompletedMap.put(entryPath, false);
             } else {
                 // get the size and last modified time of the basis file
                 long basisFileSize;
