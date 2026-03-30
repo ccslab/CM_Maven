@@ -698,8 +698,6 @@ public class CMFileSyncGenerator implements Runnable {
                         iter.remove();
                         // deletedPathList에 추가
                         deletedPathList.add(path.subpath(startPathIndex, path.getNameCount()));
-                        // 동기화 메타 파일 및 인메모리 정보 업데이트
-                        syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path);
                         if (CMInfo._CM_DEBUG) {
                             System.out.println("deleted file = " + path);
                         }
@@ -722,8 +720,6 @@ public class CMFileSyncGenerator implements Runnable {
                     iter.remove();
                     // deletedPathList에 추가
                     deletedPathList.add(path.subpath(startPathIndex, path.getNameCount()));
-                    // 동기화 메타 파일 및 인메모리 정보 업데이트
-                    syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path);
                     if (CMInfo._CM_DEBUG) {
                         System.out.println("deleted directory = " + path);
                     }
