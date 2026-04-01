@@ -48,8 +48,11 @@ public class CMFileSyncJacksonSnapshotStore implements CMFileSyncIndexSnapshotSt
 
         Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 
-        try (FileChannel dirChannel = FileChannel.open(dir, StandardOpenOption.READ)) {
-            dirChannel.force(true);
+        // Directory fsync (Linux only — Windows does not support opening directories as FileChannel)
+        if (!System.getProperty("os.name", "").toLowerCase().contains("win")) {
+            try (FileChannel dirChannel = FileChannel.open(dir, StandardOpenOption.READ)) {
+                dirChannel.force(true);
+            }
         }
     }
 
