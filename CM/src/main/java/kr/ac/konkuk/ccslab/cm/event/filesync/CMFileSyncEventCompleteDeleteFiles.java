@@ -31,7 +31,7 @@ public class CMFileSyncEventCompleteDeleteFiles extends CMFileSyncEvent {
     }
 
     @Override
-    protected int getByteNum() {
+    public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
         // number of elements of deletedPathList

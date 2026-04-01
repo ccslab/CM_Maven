@@ -314,14 +314,27 @@ public class CMFileSyncManager extends CMServiceManager {
         numNewFilesCompleted++;
         syncGenerator.setNumNewFilesCompleted(numNewFilesCompleted);
 
+        // 메타 정보 파일 업데이트
+        UUID deviceUuid = syncGenerator.getInitiatorDeviceUuid();
+        try {
+            syncInfo.applyCreate(initiatorName, deviceUuid, path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // cursor 구하기
+        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, deviceUuid).lastChangeId();
+
         // create a COMPLETE_NEW_FILE event
         CMFileSyncEventCompleteNewFile fse = new CMFileSyncEventCompleteNewFile();
         // 공통 필드 설정
         fse.setInitiatorName(initiatorName);
         fse.setInitiatorUuid(initiatorUuid);
-        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        fse.setInitiatorDeviceUuid(deviceUuid);
         // 나머지 필드 설정
         fse.setCompletedPath(path);
+        fse.setCursor(lastChangeId);
 
         // send the event
         boolean ret = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
@@ -397,12 +410,22 @@ public class CMFileSyncManager extends CMServiceManager {
         String initiatorName = loginKey.getUserName();
         UUID initiatorUuid = loginKey.getUuid();
 
+        // device uuid 구하기
+        UUID deviceUuid = syncGenerator.getInitiatorDeviceUuid();
+        // 동기화 메타 파일 및 인메모리 정보 업데이트
+        try {
+            syncInfo.applyModify(initiatorName, deviceUuid, path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         // create a COMPLETE_UPDATE_FILE event
         CMFileSyncEventCompleteUpdateFile fse = new CMFileSyncEventCompleteUpdateFile();
         // 공통 필드 설정
         fse.setInitiatorName(initiatorName);
         fse.setInitiatorUuid(initiatorUuid);
-        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        fse.setInitiatorDeviceUuid(deviceUuid);
 
         // get the relative path of the basis file path
         CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -415,8 +438,82 @@ public class CMFileSyncManager extends CMServiceManager {
         Path relativePath = path.subpath(syncHome.getNameCount(), path.getNameCount());
         // set the relative path to the event
         fse.setCompletedPath(relativePath);
+        // cursor 구하기
+        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, deviceUuid).lastChangeId();
+        fse.setCursor(lastChangeId);
 
-        return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
+        boolean ret = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
+        return ret;
+    }
+
+    // called by the server
+    public boolean completeDeleteFiles(CMUserLoginKey loginKey, UUID initiatorDeviceUuid,
+                                       List<Path> deletedPathList) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.completeDeleteFiles() called..");
+            System.out.println("loginKey = " + loginKey);
+            System.out.println("initiatorDeviceUuid = " + initiatorDeviceUuid);
+            System.out.println("deletedPathList = " + deletedPathList);
+        }
+        // initiatorName, initiatorUuid 구하기
+        String initiatorName = loginKey.getUserName();
+        UUID initiatorUuid = loginKey.getUuid();
+        // sync info 구하기
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        // sync generator 구하기
+        CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
+
+        // 동기화 메타 파일 및 인메모리 정보 업데이트 (각 삭제된 파일에 대해)
+        for (Path path : deletedPathList) {
+            try {
+                syncInfo.applyDelete(initiatorName, initiatorDeviceUuid, path);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        // cursor 구하기 (applyDelete 후)
+        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid).lastChangeId();
+
+        // 이벤트 전송 루프 시작
+        int listIndex = 0;
+        boolean sendResult = false;
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if (confInfo.getSystemType().equals("SERVER")) {
+            syncHome = getServerSyncHome(initiatorName);
+        } else {
+            syncHome = getClientSyncHome();
+        }
+        List<Path> relativeDeletedPathList = toRelativePathList(deletedPathList, syncHome);
+        while (listIndex < relativeDeletedPathList.size()) {
+            // 이벤트 객체 생성
+            CMFileSyncEventCompleteDeleteFiles fse = new CMFileSyncEventCompleteDeleteFiles();
+            // 공통 필드 설정
+            fse.setInitiatorName(initiatorName);
+            fse.setInitiatorUuid(initiatorUuid);
+            fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+            // 이벤트에 넣을 path 서브리스트 구하기
+            List<Path> subList = createSubPathListForEvent(fse.getByteNum(), relativeDeletedPathList, listIndex);
+            // update the listIndex
+            listIndex += subList.size();
+            // set the subList to the event
+            fse.setDeletedPathList(subList);
+            // cursor 설정
+            fse.setCursor(lastChangeId);
+            // send the event
+            sendResult = CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
+            if (!sendResult) {
+                System.err.println("send error: " + fse);
+                return false;
+            }
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("sent event = " + fse);
+            }
+        }
+
+        return true;
     }
 
     // called by the server
@@ -551,15 +648,21 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
+        // device uuid 구하기
+        UUID deviceUuid = syncGenerator.getInitiatorDeviceUuid();
+        // cursor 구하기
+        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, deviceUuid).lastChangeId();
+
         // create a COMPLETE_FILE_SYNC event
         int numFilesCompleted = syncGenerator.getNumNewFilesCompleted() + syncGenerator.getNumUpdateFilesCompleted();
         CMFileSyncEventCompleteFileSync fse = new CMFileSyncEventCompleteFileSync();
         // 공통 필드 설정
         fse.setInitiatorName(initiatorName);
         fse.setInitiatorUuid(initiatorUuid);
-        fse.setInitiatorDeviceUuid(syncGenerator.getInitiatorDeviceUuid());
+        fse.setInitiatorDeviceUuid(deviceUuid);
         // 나머지 필드 설정
         fse.setNumFilesCompleted(numFilesCompleted);
+        fse.setCursor(lastChangeId);
 
         // send the event
         return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
@@ -673,6 +776,7 @@ public class CMFileSyncManager extends CMServiceManager {
         return digest;
     }
 
+    /*
     public byte[] calculateFileChecksum(Path path) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.calculateFileChecksum() called..");
@@ -718,6 +822,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         return bytes;
     }
+    */
 
     // called by the client
     public int[] updateWeakChecksum(int oldA, int oldB, byte oldStartByte, byte newEndByte, int blockSize) {

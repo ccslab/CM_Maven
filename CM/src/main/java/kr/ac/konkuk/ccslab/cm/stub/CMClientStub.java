@@ -291,8 +291,14 @@ public class CMClientStub extends CMStub {
 		CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
 		syncInfo.setDeviceUuid(devUuid);
 
+		// load client-side cursor and client-index for file sync
+		syncInfo.loadClientCursor(".");
+		syncInfo.loadClientIndex(".");
+
 		if(CMInfo._CM_DEBUG) {
 			System.out.println("[CM] deviceUuid=" + devUuid.toString().substring(0, 8) + "…");
+			System.out.println("[CM] cursor=" + syncInfo.getCursor()
+					+ ", client-index entries=" + syncInfo.getLastSyncedMtimeMap().size());
 		}
 
 		if(CMInfo._CM_DEBUG)

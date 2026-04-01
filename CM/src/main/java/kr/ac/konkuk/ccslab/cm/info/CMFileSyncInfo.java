@@ -2,14 +2,30 @@ package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRegistry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexSnapshotStore;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncJacksonSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.WatchService;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -50,10 +66,19 @@ public class CMFileSyncInfo {
     // [NEW] 4 client
     private UUID m_deviceUuid;
 
+    // [NEW] 4 server: in-memory index registry
+    private CMFileSyncIndexRegistry indexRegistry;
+
+    // [NEW] 4 client: 파일 동기화 커서 (서버 ChangeLog 상의 마지막 처리 위치)
+    private long m_lCursor;
+    // [NEW] 4 client: 클라이언트 베이스 스냅샷 path -> lastSyncedMtime (sec)
+    private final Map<String, Long> m_lastSyncedMtimeMap = new ConcurrentHashMap<>();
+
     private CMFileSyncInfo() {
 
         currentMode = CMFileSyncMode.OFF;
         syncInProgress = false;
+        m_lCursor = -1;
         pathList = null;
         isFileSyncCompletedMap = new Hashtable<>();
         blockChecksumMap = new Hashtable<>();
@@ -75,6 +100,15 @@ public class CMFileSyncInfo {
         basisFileListMap = new HashMap<>();
 
         proactiveModeTaskFuture = null;
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (confInfo.getSystemType().equals("SERVER")) {
+            CMFileSyncIndexSnapshotStore store = new CMFileSyncJacksonSnapshotStore();
+            Path indexBaseDir = Paths.get(CMInfo.SETTINGS_DIR, "file-sync", "server");
+            indexRegistry = new CMFileSyncIndexRegistry(store, indexBaseDir);
+        } else {
+            indexRegistry = null;
+        }
     }
 
     // getInstance()
@@ -221,5 +255,337 @@ public class CMFileSyncInfo {
     // [NEW] 4 client
     public synchronized void setDeviceUuid(UUID deviceUuid) {
         this.m_deviceUuid = deviceUuid;
+    }
+
+    // [NEW] 4 server
+    public CMFileSyncIndexRegistry getIndexRegistry() {
+        return indexRegistry;
+    }
+
+    public void setIndexRegistry(CMFileSyncIndexRegistry indexRegistry) {
+        this.indexRegistry = indexRegistry;
+    }
+
+    // [NEW] 4 client: cursor getter/setter
+    public long getCursor() {
+        return m_lCursor;
+    }
+
+    public void setCursor(final long lCursor) {
+        this.m_lCursor = lCursor;
+    }
+
+    // [NEW] 4 client: lastSyncedMtimeMap getter / convenience methods
+    public Map<String, Long> getLastSyncedMtimeMap() {
+        return m_lastSyncedMtimeMap;
+    }
+
+    public long getLastSyncedMtime(String relPath) {
+        Long mtime = m_lastSyncedMtimeMap.get(relPath);
+        long lastSyncedMtime;
+        if (mtime == null) lastSyncedMtime = -1;
+        else lastSyncedMtime = mtime;
+        return lastSyncedMtime;
+    }
+
+    public void setLastSyncedMtime(String relPath, long mtimeSec) {
+        m_lastSyncedMtimeMap.put(relPath, mtimeSec);
+    }
+
+    public void removeLastSyncedMtime(String relPath) {
+        m_lastSyncedMtimeMap.remove(relPath);
+    }
+
+    /**
+     * 주어진 절대경로의 마지막 수정 시간을 초 단위로 반환합니다.
+     * 파일이 없으면 -1을 리턴합니다.
+     */
+    public long currentMtimeSecOrMinusOne(Path abs) throws IOException {
+        if (!Files.exists(abs)) return -1L;
+        return Files.getLastModifiedTime(abs).toMillis() / 1000;
+    }
+
+    // --------------------------------------------------------------------
+    // [NEW] 4 client: 파일 경로 도우미
+    //   <project_home>/.cm-settings/file-sync/client/{cursor,client-index.json}
+    // --------------------------------------------------------------------
+    private Path getClientSyncBaseDir(final String projectHome) {
+        return Path.of(Objects.requireNonNull(projectHome, "projectHome must not be null"),
+                ".cm-settings", "file-sync", "client");
+    }
+
+    public Path getCursorFile(final String projectHome) {
+        return getClientSyncBaseDir(projectHome).resolve("cursor");
+    }
+
+    private Path getClientIndexFile(final String projectHome) {
+        return getClientSyncBaseDir(projectHome).resolve("client-index.json");
+    }
+
+    // --------------------------------------------------------------------
+    // [NEW] 4 client: 저장 / 로드 API
+    // --------------------------------------------------------------------
+
+    /**
+     * 클라이언트 커서를 파일로 저장합니다.
+     * 경로가 없으면 생성합니다.
+     *
+     * @param projectHome 프로젝트 홈 디렉토리 (예: 앱이 인식하는 루트)
+     */
+    public void saveClientCursor(final String projectHome) {
+        final Path baseDir = getClientSyncBaseDir(projectHome);
+
+        try {
+            if (!Files.exists(baseDir)) {
+                Files.createDirectories(baseDir);
+            }
+
+            // cursor 저장 (음수이면 빈 문자열)
+            final Path cursorFile = getCursorFile(projectHome);
+            final String cursorStr = (m_lCursor >= 0) ? String.valueOf(m_lCursor) : "";
+            Files.writeString(cursorFile, cursorStr);
+
+        } catch (IOException e) {
+            System.err.println("CMFileSyncInfo.saveClientCursor(), failed to save: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 클라이언트 커서를 파일에서 읽어옵니다.
+     * 파일이 없으면 해당 필드는 변경하지 않습니다.
+     *
+     * @param projectHome 프로젝트 홈 디렉토리
+     */
+    public void loadClientCursor(final String projectHome) {
+        try {
+            // cursor 읽기
+            final Path cursorFile = getCursorFile(projectHome);
+            if (Files.exists(cursorFile)) {
+                final String cursorStr = Files.readString(cursorFile).trim();
+                m_lCursor = cursorStr.isEmpty() ? -1 : Long.parseLong(cursorStr);
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncInfo.loadClientCursor(), failed to load: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // DTO는 내부 static class로 간단히
+    static class ClientIndexDto {
+        public long baseCursor;
+        public String generatedAt;
+        public Map<String, Long> files;
+    }
+
+    /**
+     * 클라이언트 index 파일에서 읽어옵니다.
+     * 파일이 없으면 아무 것도 하지 않습니다.
+     *
+     * @param projectHome 프로젝트 홈 디렉토리
+     */
+    public void loadClientIndex(String projectHome) {
+        Path file = getClientIndexFile(projectHome);
+        if (!Files.exists(file)) return;
+
+        try {
+            ObjectMapper om = new ObjectMapper();
+            ClientIndexDto dto = om.readValue(file.toFile(), ClientIndexDto.class);
+            m_lastSyncedMtimeMap.clear();
+            if (dto.files != null) {
+                m_lastSyncedMtimeMap.putAll(dto.files);
+            }
+        } catch (IOException e) {
+            // 로그만 찍고 무시 (손상 시 재생성)
+            System.err.println("CMFileSyncInfo.loadClientIndex(), failed to load: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 클라이언트 index 파일로 저장합니다.
+     *
+     * @param projectHome 프로젝트 홈 디렉토리
+     * @param baseCursor  현재 기준 커서 값
+     */
+    public void saveClientIndex(String projectHome, long baseCursor) {
+        Path file = getClientIndexFile(projectHome);
+        try {
+            Files.createDirectories(file.getParent());
+            ObjectMapper om = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+            ClientIndexDto dto = new ClientIndexDto();
+            dto.baseCursor = baseCursor;
+            dto.generatedAt = OffsetDateTime.now().toString();
+            dto.files = new HashMap<>(m_lastSyncedMtimeMap);
+            om.writeValue(file.toFile(), dto);
+        } catch (IOException e) {
+            // 로그만
+            System.err.println("CMFileSyncInfo.saveClientIndex(), failed to save: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 파일 추가(CREATE) op 완료: Path로부터 hash/mtime/size를 직접 구해 인덱스·메타 파일 업데이트
+     */
+    public void applyCreate(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
+        CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = repo.lastChangeId() + 1;
+
+        CMFileSyncManager syncManager = CMInfo.getInstance()
+                .getServiceManager(CMFileSyncManager.class);
+
+        Path syncHome = syncManager.getServerSyncHome(initiatorName);
+
+        // 경로 정규화: abs(절대) / relPath(상대; 메타 기록용)
+        Path abs, relPath;
+        if (path.isAbsolute()) {
+            abs = path.toAbsolutePath().normalize();
+            relPath = syncHome.relativize(abs).normalize();
+        } else {
+            relPath = path.normalize();
+            abs = syncHome.resolve(relPath).toAbsolutePath().normalize();
+        }
+        String pathStr = relPath.toString().replace('\\', '/');
+
+        boolean isDirectory = Files.isDirectory(abs);
+        String md5Hex = CMUtil.md5Hex(abs);
+        long mtimeSec = Files.getLastModifiedTime(abs).toMillis() / 1000;
+        long sizeBytes = Files.size(abs);
+
+        repo.applyCreateOrModify(pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "CREATE", pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        repo.flushSnapshot();
+    }
+
+    /**
+     * 파일 추가(CREATE) op 완료: 클라이언트로부터 받은 메타 정보로 인덱스·메타 파일 업데이트
+     */
+    public void applyCreateFast(String initiatorName, UUID initiatorDeviceUuid,
+                                Path path, boolean isDirectory, String contentHash,
+                                long mtimeEpochSec, long sizeBytes) throws IOException {
+        CMFileSyncIndexRepository repo = indexRegistry.getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = repo.lastChangeId() + 1;
+        String pathStr = path.toString().replace('\\', '/');
+
+        repo.applyCreateOrModify(pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "CREATE", pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        repo.flushSnapshot();
+    }
+
+    /**
+     * 파일 수정(MODIFY) op 완료: Path로부터 hash/mtime/size를 직접 구해 인덱스·메타 파일 업데이트
+     */
+    public void applyModify(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
+        CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = repo.lastChangeId() + 1;
+
+        CMFileSyncManager syncManager = CMInfo.getInstance()
+                .getServiceManager(CMFileSyncManager.class);
+
+        Path syncHome = syncManager.getServerSyncHome(initiatorName);
+
+        // 경로 정규화: abs(절대) / relPath(상대; 메타 기록용)
+        Path abs, relPath;
+        if (path.isAbsolute()) {
+            abs = path.toAbsolutePath().normalize();
+            relPath = syncHome.relativize(abs).normalize();
+        } else {
+            relPath = path.normalize();
+            abs = syncHome.resolve(relPath).toAbsolutePath().normalize();
+        }
+        String pathStr = relPath.toString().replace('\\', '/');
+
+        boolean isDirectory = Files.isDirectory(abs);
+        String md5Hex = CMUtil.md5Hex(abs);
+        long mtimeSec = Files.getLastModifiedTime(abs).toMillis() / 1000;
+        long sizeBytes = Files.size(abs);
+
+        repo.applyCreateOrModify(pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", pathStr, isDirectory, md5Hex, mtimeSec, sizeBytes, newChangeId);
+        repo.flushSnapshot();
+    }
+
+    /**
+     * 파일 수정(MODIFY) op 완료: 클라이언트로부터 받은 메타 정보로 인덱스·메타 파일 업데이트
+     */
+    public void applyModifyFast(String initiatorName, UUID initiatorDeviceUuid,
+                                Path path, boolean isDirectory, String contentHash,
+                                long mtimeEpochSec, long sizeBytes) throws IOException {
+        CMFileSyncIndexRepository repo = indexRegistry.getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = repo.lastChangeId() + 1;
+        String pathStr = path.toString().replace('\\', '/');
+
+        repo.applyCreateOrModify(pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "MODIFY", pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
+        repo.flushSnapshot();
+    }
+
+    /**
+     * 파일 삭제(DELETE) op 완료: 인덱스·메타 파일 업데이트
+     */
+    public void applyDelete(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
+        CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = repo.lastChangeId() + 1;
+
+        CMFileSyncManager syncManager = CMInfo.getInstance()
+                .getServiceManager(CMFileSyncManager.class);
+
+        Path syncHome = syncManager.getServerSyncHome(initiatorName);
+
+        // 경로 정규화: abs(절대) / relPath(상대; 메타 기록용)
+        Path abs, relPath;
+        if (path.isAbsolute()) {
+            abs = path.toAbsolutePath().normalize();
+            relPath = syncHome.relativize(abs).normalize();
+        } else {
+            relPath = path.normalize();
+            abs = syncHome.resolve(relPath).toAbsolutePath().normalize();
+        }
+        String pathStr = relPath.toString().replace('\\', '/');
+
+        boolean isDirectory = Files.isDirectory(abs);
+        long nowSec = System.currentTimeMillis() / 1000;
+
+        repo.applyDelete(pathStr, isDirectory, newChangeId, nowSec);
+        writeCursor(initiatorName, initiatorDeviceUuid, newChangeId);
+        appendChangelog(initiatorName, initiatorDeviceUuid, "DELETE", pathStr, isDirectory, null, nowSec, 0L, newChangeId);
+        repo.flushSnapshot();
+    }
+
+    private void writeCursor(String initiatorName, UUID initiatorDeviceUuid, long changeId) throws IOException {
+        Path cursorFile = Path.of(".cm-settings", "file-sync", "server",
+                initiatorName, CMUUIDConverter.uuidToString(initiatorDeviceUuid), "cursor");
+        Files.createDirectories(cursorFile.getParent());
+        Files.writeString(cursorFile, Long.toString(changeId),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    private void appendChangelog(String initiatorName, UUID initiatorDeviceUuid,
+                                 String op, String path, boolean isDirectory,
+                                 String contentHash, long mtimeEpochSec, long sizeBytes,
+                                 long changeId) throws IOException {
+        String today = LocalDate.now().toString();
+        Path logFile = Path.of(".cm-settings", "file-sync", "server",
+                initiatorName, "changelog-" + today + ".jsonl");
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("changeId", changeId);
+        entry.put("userName", initiatorName);
+        entry.put("originDeviceUuid", initiatorDeviceUuid);
+        entry.put("op", op);
+        entry.put("path", path);
+        entry.put("isDirectory", isDirectory);
+        entry.put("contentHash", contentHash);
+        entry.put("mtime", mtimeEpochSec);
+        entry.put("size", sizeBytes);
+        entry.put("tombstone", op.equals("DELETE"));
+        entry.put("ts", OffsetDateTime.now().toString());
+        String logEntry = new ObjectMapper().writeValueAsString(entry);
+
+        Files.writeString(logFile, logEntry + System.lineSeparator(),
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 }

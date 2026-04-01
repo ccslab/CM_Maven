@@ -15,6 +15,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -51,6 +52,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.REQUEST_NEW_FILES -> processResult = processREQUEST_NEW_FILES(fse);
             case CMFileSyncEvent.COMPLETE_NEW_FILE -> processResult = processCOMPLETE_NEW_FILE(fse);
             case CMFileSyncEvent.COMPLETE_UPDATE_FILE -> processResult = processCOMPLETE_UPDATE_FILE(fse);
+            case CMFileSyncEvent.COMPLETE_DELETE_FILES -> processResult = processCOMPLETE_DELETE_FILES(fse);
             case CMFileSyncEvent.SKIP_UPDATE_FILE -> processResult = processSKIP_UPDATE_FILE(fse);
             case CMFileSyncEvent.COMPLETE_FILE_SYNC -> processResult = processCOMPLETE_FILE_SYNC(fse);
             case CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM -> processResult = processSTART_FILE_BLOCK_CHECKSUM(fse);
@@ -598,7 +600,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         if(basisFileChannel != null && tempFileChannel != null) {
             // compare file checksum of the temp file and the checksum of the ack event
-            byte[] fileChecksum = syncManager.calculateFileChecksum(tempFilePath);
+            byte[] fileChecksum;
+            try {
+                fileChecksum = CMUtil.md5(tempFilePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
             if(!Arrays.equals(fileChecksum, ackEvent.getFileChecksum())) {
                 System.err.println("File checksum error!");
                 System.err.println("temp checksum = " + DatatypeConverter.printHexBinary(fileChecksum));
@@ -824,7 +832,13 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(1);
 
         // calculate a file checksum and set it to the ack event
-        byte[] fileChecksum = syncManager.calculateFileChecksum(path);
+        byte[] fileChecksum;
+        try {
+            fileChecksum = CMUtil.md5(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
         ackEvent.setFileChecksum(fileChecksum);
         // send the ack event
         ret = CMEventManager.unicastEvent(ackEvent, endChecksumEvent.getSender(), endChecksumEvent.getSenderUuid());
@@ -1854,6 +1868,45 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Objects.requireNonNull(isFileSyncCompletedMap);
         isFileSyncCompletedMap.put(fse_cnf.getCompletedPath(), true);
 
+        // CMFileSyncManager 구하기
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+
+        // syncHome 구하기
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if(confInfo.getSystemType().equals("SERVER")) {
+            syncHome = syncManager.getServerSyncHome(fse_cnf.getSender());
+        } else {
+            syncHome = syncManager.getClientSyncHome();
+        }
+
+        // 완료된 path의 절대 경로 구하기
+        Path relPath = fse_cnf.getCompletedPath();
+        Path absPath = syncHome.resolve(relPath).toAbsolutePath().normalize();
+        // 절대경로의 현재 mtime 구하기
+        long curMtime;
+        try {
+            curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            curMtime = -1;
+        }
+
+        // 인메모리 client-index Map에 (path, mtime) 추가하기
+        syncInfo.setLastSyncedMtime(relPath.toString(), curMtime);
+
+        // 인메모리 cursor 값 업데이트
+        long memCursor = syncInfo.getCursor();
+        long newCursor = fse_cnf.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_NEW_FILE: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
+        if(memCursor >= newCursor) {
+            System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
+        }
+        syncInfo.setCursor(newCursor);
+
         return true;
     }
 
@@ -1870,6 +1923,77 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
         Objects.requireNonNull(isFileSyncCompletedMap);
         isFileSyncCompletedMap.put(fse_cuf.getCompletedPath(), true);
+
+        // CMFileSyncManager 구하기
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+
+        // syncHome 구하기
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path syncHome;
+        if(confInfo.getSystemType().equals("SERVER")) {
+            syncHome = syncManager.getServerSyncHome(fse_cuf.getSender());
+        } else {
+            syncHome = syncManager.getClientSyncHome();
+        }
+
+        // 완료된 path의 절대 경로 구하기
+        Path relPath = fse_cuf.getCompletedPath();
+        Path absPath = syncHome.resolve(relPath).toAbsolutePath().normalize();
+        // 절대경로의 현재 mtime 구하기
+        long curMtime;
+        try {
+            curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            curMtime = -1;
+        }
+
+        // 인메모리 client-index Map에 (path, mtime) 추가하기
+        syncInfo.setLastSyncedMtime(relPath.toString(), curMtime);
+
+        // 인메모리 cursor 값 업데이트
+        long memCursor = syncInfo.getCursor();
+        long newCursor = fse_cuf.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_UPDATE_FILE: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
+        if(memCursor >= newCursor) {
+            System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
+        }
+        syncInfo.setCursor(newCursor);
+
+        return true;
+    }
+
+    // called by the client
+    private boolean processCOMPLETE_DELETE_FILES(CMFileSyncEvent fse) {
+        CMFileSyncEventCompleteDeleteFiles fse_cdf = (CMFileSyncEventCompleteDeleteFiles) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_DELETE_FILES() called..");
+            System.out.println("fse = " + fse_cdf);
+        }
+
+        // 인메모리 client-index Map에서 삭제된 path list의 각 원소에 대해 (path, lastSyncedMtime) 삭제
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<Path> deletedPathList = fse_cdf.getDeletedPathList();
+        if(deletedPathList != null) {
+            for(Path relPath : deletedPathList) {
+                syncInfo.removeLastSyncedMtime(relPath.toString());
+            }
+        }
+
+        // 인메모리 cursor 값 업데이트
+        long memCursor = syncInfo.getCursor();
+        long newCursor = fse_cdf.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_DELETE_FILES: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
+        if(memCursor >= newCursor) {
+            System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
+        }
+        syncInfo.setCursor(newCursor);
 
         return true;
     }
@@ -1928,6 +2052,50 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
         syncInfo.getIsFileSyncCompletedMap().clear();
+
+        // 인메모리 cursor 업데이트
+        long memCursor = syncInfo.getCursor();
+        long newCursor = fse_cfs.getCursor();
+        if(CMInfo._CM_DEBUG) {
+            System.out.printf("[CM] processCOMPLETE_FILE_SYNC: cursor before=%d, after=%d%n", memCursor, newCursor);
+        }
+        if(memCursor >= newCursor) {
+            System.err.printf("memory cursor %d >= received cursor %d%n", memCursor, newCursor);
+        }
+        syncInfo.setCursor(newCursor);
+
+        // 파일 cursor 가져오기
+        Path cursorFile = syncInfo.getCursorFile(".");
+
+        // cursor 파일 값이 정상이면,
+        if(cursorFile != null && Files.exists(cursorFile)) {
+            memCursor = syncInfo.getCursor();
+            try {
+                long fileCursor = Long.parseLong(Files.readString(cursorFile).trim());
+                // memory cursor가 더 작은 비정상 상태이면,
+                if(memCursor < fileCursor) {
+                    System.err.printf("cursor regression detected!: mem = %d, file = %d%n", memCursor, fileCursor);
+                    syncInfo.setCursor(fileCursor);
+                    // 파일로 메타 정보 저장 필요 없음
+                } else if(memCursor == fileCursor) {
+                    System.out.printf("cursor values are the same: mem = %d, file = %d%n", memCursor, fileCursor);
+                    // 파일로 메타 정보 저장 필요 없음
+                } else {
+                    // 정상적인 memory cursor가 file cursor보다 큰 상태이면,
+                    syncInfo.saveClientCursor(".");
+                    syncInfo.saveClientIndex(".", syncInfo.getCursor());
+                }
+            } catch(IOException | NumberFormatException e) {
+                e.printStackTrace();
+                syncInfo.saveClientCursor(".");
+                syncInfo.saveClientIndex(".", syncInfo.getCursor());
+            }
+        }
+        // cursor 파일이 없으면,
+        else {
+            syncInfo.saveClientCursor(".");
+            syncInfo.saveClientIndex(".", syncInfo.getCursor());
+        }
 
         // change the file-sync state to stop
         syncInfo.setSyncInProgress(false);
