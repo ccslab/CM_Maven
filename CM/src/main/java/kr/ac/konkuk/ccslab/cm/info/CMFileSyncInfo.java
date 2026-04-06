@@ -69,7 +69,7 @@ public class CMFileSyncInfo {
     // [NEW] 4 server: in-memory index registry
     private CMFileSyncIndexRegistry indexRegistry;
 
-    // [NEW] 4 client: 파일 동기화 커서 (서버 ChangeLog 상의 마지막 처리 위치)
+    // [NEW] 4 client: 파일 동기화 커서 (서버 ChangeLog 상의 마지막 처리 위치, 0 = 미동기화)
     private long m_lCursor;
     // [NEW] 4 client: 클라이언트 베이스 스냅샷 path -> lastSyncedMtime (sec)
     private final Map<String, Long> m_lastSyncedMtimeMap = new ConcurrentHashMap<>();
@@ -78,7 +78,7 @@ public class CMFileSyncInfo {
 
         currentMode = CMFileSyncMode.OFF;
         syncInProgress = false;
-        m_lCursor = -1;
+        m_lCursor = 0;
         pathList = null;
         isFileSyncCompletedMap = new Hashtable<>();
         blockChecksumMap = new Hashtable<>();
@@ -342,7 +342,7 @@ public class CMFileSyncInfo {
 
             // cursor 저장 (음수이면 빈 문자열)
             final Path cursorFile = getCursorFile(projectHome);
-            final String cursorStr = (m_lCursor >= 0) ? String.valueOf(m_lCursor) : "";
+            final String cursorStr = String.valueOf(m_lCursor);
             Files.writeString(cursorFile, cursorStr);
 
         } catch (IOException e) {
@@ -363,7 +363,7 @@ public class CMFileSyncInfo {
             final Path cursorFile = getCursorFile(projectHome);
             if (Files.exists(cursorFile)) {
                 final String cursorStr = Files.readString(cursorFile).trim();
-                m_lCursor = cursorStr.isEmpty() ? -1 : Long.parseLong(cursorStr);
+                m_lCursor = cursorStr.isEmpty() ? 0 : Long.parseLong(cursorStr);
             }
         } catch (IOException e) {
             System.err.println("CMFileSyncInfo.loadClientCursor(), failed to load: " + e.getMessage());
