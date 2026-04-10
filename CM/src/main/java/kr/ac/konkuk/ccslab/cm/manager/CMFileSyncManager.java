@@ -75,6 +75,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // create a path list in the sync-file-home.
         List<Path> pathList = createPathList(syncHome);
+        if (pathList == null) return false;
         // store the path list in the CMFileSyncInfo.
         fsInfo.setPathList(pathList);
 
