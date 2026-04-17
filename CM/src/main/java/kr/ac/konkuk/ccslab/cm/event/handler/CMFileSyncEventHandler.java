@@ -210,7 +210,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // start push-file for all paths in the event
         boolean ret = true;
-        for(Path relativePath : listEvent.getRelativePathList()) {
+        for(String relativeStr : listEvent.getRelativePathList()) {
+            // reconstruct a platform-appropriate Path from the forward-slash normalized string
+            String[] parts = relativeStr.split("/");
+            Path relativePath = Paths.get(parts[0], Arrays.copyOfRange(parts, 1, parts.length));
             // get the absolute path
             Path absPath = serverSyncHome.resolve(relativePath);
             // start push-file
@@ -357,7 +360,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         ConcurrentLinkedQueue<Path> requestQueue = Objects.requireNonNull(syncInfo.getOnlineModeRequestQueue());
         // get the list in event
-        List<Path> eventList = ackEvent.getRelativePathList();
+        List<String> eventList = ackEvent.getRelativePathList();
         if(eventList == null || eventList.isEmpty()) {
             System.err.println("The list in event is null or empty!");
             return false;
@@ -389,8 +392,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             }
             // change the queue head to relative path
             relativeHeadPath = headPath.subpath(startPathIndex, headPath.getNameCount());
-            // if the head is in the list of event
-            if(eventList.contains(relativeHeadPath)) {
+            // if the head is in the list of event (normalize to forward slashes for cross-OS comparison)
+            String relativeHeadStr = relativeHeadPath.toString().replace('\\', '/');
+            if(eventList.contains(relativeHeadStr)) {
                 //// change the head path to the online mode
                 long size;
                 try {
@@ -1977,10 +1981,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // 인메모리 client-index Map에서 삭제된 path list의 각 원소에 대해 (path, lastSyncedMtime) 삭제
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
-        List<Path> deletedPathList = fse_cdf.getDeletedPathList();
+        List<String> deletedPathList = fse_cdf.getDeletedPathList();
         if(deletedPathList != null) {
-            for(Path relPath : deletedPathList) {
-                syncInfo.removeLastSyncedMtime(relPath.toString());
+            for(String relPath : deletedPathList) {
+                syncInfo.removeLastSyncedMtime(relPath);
             }
         }
 

@@ -139,6 +139,13 @@ public class CMFileSyncManager extends CMServiceManager {
         return pathList;
     }
 
+    private List<String> toRelativeStringList(List<Path> paths, Path basePath) {
+        List<Path> relativePaths = toRelativePathList(paths, basePath);
+        return relativePaths.stream()
+                .map(p -> p.toString().replace('\\', '/'))
+                .collect(Collectors.toList());
+    }
+
     private List<Path> toRelativePathList(List<Path> paths, Path basePath) {
         Objects.requireNonNull(paths);
         Objects.requireNonNull(basePath);
@@ -486,7 +493,7 @@ public class CMFileSyncManager extends CMServiceManager {
         } else {
             syncHome = getClientSyncHome();
         }
-        List<Path> relativeDeletedPathList = toRelativePathList(deletedPathList, syncHome);
+        List<String> relativeDeletedPathList = toRelativeStringList(deletedPathList, syncHome);
         while (listIndex < relativeDeletedPathList.size()) {
             // 이벤트 객체 생성
             CMFileSyncEventCompleteDeleteFiles fse = new CMFileSyncEventCompleteDeleteFiles();
@@ -496,7 +503,7 @@ public class CMFileSyncManager extends CMServiceManager {
             fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
             // 이벤트에 넣을 path 서브리스트 구하기
-            List<Path> subList = createSubPathListForEvent(fse.getByteNum(), relativeDeletedPathList, listIndex);
+            List<String> subList = createSubStringListForEvent(fse.getByteNum(), relativeDeletedPathList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the subList to the event
@@ -1139,8 +1146,8 @@ public class CMFileSyncManager extends CMServiceManager {
         UUID initiatorUuid = interInfo.getMyself().getUuid();
         UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
         String serverName = interInfo.getDefaultServerInfo().getServerName();
-        // convert to relative path list
-        List<Path> relativeFileOnlyList = toRelativePathList(fileOnlyList, getClientSyncHome());
+        // convert to relative string list (forward-slash normalized for cross-OS transfer)
+        List<String> relativeFileOnlyList = toRelativeStringList(fileOnlyList, getClientSyncHome());
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
@@ -1153,7 +1160,7 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
             // get relative path list to be added to this event
-            List<Path> subList = createSubPathListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
+            List<String> subList = createSubStringListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the sublist to the event
@@ -1181,25 +1188,25 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    private List<Path> createSubPathListForEvent(int initialByteNum, List<Path> relativePathList, int listIndex) {
+    private List<String> createSubStringListForEvent(int initialByteNum, List<String> relativeStringList, int listIndex) {
         if (CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncManager.createSubPathListForEvent() called..");
+            System.out.println("=== CMFileSyncManager.createSubStringListForEvent() called..");
             System.out.println("initialByteNum = " + initialByteNum);
-            System.out.println("relativePathList = " + relativePathList);
+            System.out.println("relativeStringList = " + relativeStringList);
             System.out.println("listIndex = " + listIndex);
         }
 
         int curByteNum = initialByteNum;
-        List<Path> subList = new ArrayList<>();
+        List<String> subList = new ArrayList<>();
 
         boolean ret = false;
-        for (int i = listIndex; i < relativePathList.size(); i++) {
-            Path relativePath = relativePathList.get(i);
-            curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
+        for (int i = listIndex; i < relativeStringList.size(); i++) {
+            String relativeStr = relativeStringList.get(i);
+            curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativeStr.getBytes().length;
             if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
-                ret = subList.add(relativePath);
+                ret = subList.add(relativeStr);
                 if (!ret) {
-                    System.err.println("error to add " + relativePath);
+                    System.err.println("error to add " + relativeStr);
                     return null;
                 }
             } else {
@@ -1315,8 +1322,8 @@ public class CMFileSyncManager extends CMServiceManager {
         UUID initiatorUuid = interInfo.getMyself().getUuid();
         UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
         String serverName = interInfo.getDefaultServerInfo().getServerName();
-        // convert to relative path list
-        List<Path> relativeFileOnlyList = toRelativePathList(fileOnlyList, getClientSyncHome());
+        // convert to relative string list (forward-slash normalized for cross-OS transfer)
+        List<String> relativeFileOnlyList = toRelativeStringList(fileOnlyList, getClientSyncHome());
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
@@ -1329,7 +1336,7 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
             // get relative path list to be added to this event
-            List<Path> subList = createSubPathListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
+            List<String> subList = createSubStringListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the sublist to the event

@@ -3,8 +3,6 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -15,7 +13,7 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventLocalModeListAck extends CMFileSyncEvent {
-    private List<Path> relativePathList;
+    private List<String> relativePathList; // forward-slash separated relative paths
     private int returnCode;
 
     public CMFileSyncEventLocalModeListAck() {
@@ -44,8 +42,8 @@ public class CMFileSyncEventLocalModeListAck extends CMFileSyncEvent {
         // size of list
         byteNum += Integer.BYTES;
         // relativePathList (must not null)
-        for (Path path : relativePathList) {
-            byteNum += CMInfo.STRING_LEN_BYTES_LEN + path.toString().getBytes().length;
+        for (String pathStr : relativePathList) {
+            byteNum += CMInfo.STRING_LEN_BYTES_LEN + pathStr.getBytes().length;
         }
         // returnCode
         byteNum += Integer.BYTES;
@@ -57,9 +55,9 @@ public class CMFileSyncEventLocalModeListAck extends CMFileSyncEvent {
     protected void marshallBodyCore() {
         // numCurrentFiles
         m_bytes.putInt(relativePathList.size());
-        // relativePathList
-        for (Path path : relativePathList) {
-            putStringToByteBuffer(path.toString());
+        // relativePathList (already normalized to forward slashes)
+        for (String pathStr : relativePathList) {
+            putStringToByteBuffer(pathStr);
         }
         // returnCode
         m_bytes.putInt(returnCode);
@@ -73,8 +71,7 @@ public class CMFileSyncEventLocalModeListAck extends CMFileSyncEvent {
         // relativePathList
         relativePathList = new ArrayList<>();
         for (int i = 0; i < listSize; i++) {
-            Path relativePath = Paths.get(getStringFromByteBuffer(msg));
-            relativePathList.add(relativePath);
+            relativePathList.add(getStringFromByteBuffer(msg));
         }
         // returnCode
         returnCode = msg.getInt();
@@ -112,11 +109,11 @@ public class CMFileSyncEventLocalModeListAck extends CMFileSyncEvent {
      * @return a list of online mode file paths
      * <br> The path is a relative path from the synchronization home directory.
      */
-    public List<Path> getRelativePathList() {
+    public List<String> getRelativePathList() {
         return relativePathList;
     }
 
-    public void setRelativePathList(List<Path> relativePathList) {
+    public void setRelativePathList(List<String> relativePathList) {
         this.relativePathList = relativePathList;
     }
 
