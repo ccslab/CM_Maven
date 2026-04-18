@@ -341,7 +341,7 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setInitiatorUuid(initiatorUuid);
         fse.setInitiatorDeviceUuid(deviceUuid);
         // 나머지 필드 설정
-        fse.setCompletedPath(path);
+        fse.setCompletedPath(path.toString());
         fse.setCursor(lastChangeId);
 
         // send the event

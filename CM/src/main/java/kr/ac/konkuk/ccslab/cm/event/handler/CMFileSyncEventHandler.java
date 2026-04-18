@@ -1870,7 +1870,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
         Objects.requireNonNull(isFileSyncCompletedMap);
-        isFileSyncCompletedMap.put(fse_cnf.getCompletedPath(), true);
+        isFileSyncCompletedMap.put(Paths.get(fse_cnf.getCompletedPath()), true);
 
         // CMFileSyncManager 구하기
         CMInfo cmInfo = CMInfo.getInstance();
@@ -1886,7 +1886,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // 완료된 path의 절대 경로 구하기
-        Path relPath = fse_cnf.getCompletedPath();
+        Path relPath = Paths.get(fse_cnf.getCompletedPath());
         Path absPath = syncHome.resolve(relPath).toAbsolutePath().normalize();
         // 절대경로의 현재 mtime 구하기
         long curMtime;

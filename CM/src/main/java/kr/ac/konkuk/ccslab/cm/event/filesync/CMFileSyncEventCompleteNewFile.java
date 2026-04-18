@@ -3,8 +3,6 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -14,7 +12,7 @@ import java.util.Objects;
  */
 public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
     // Fields: userName, completedPath, cursor
-    private Path completedPath;     // completed path
+    private String completedPath;     // completed path
     private long cursor;            // updated lastChangeId to be applied on client side
 
     public CMFileSyncEventCompleteNewFile() {
@@ -41,7 +39,7 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
         int byteNum;
         byteNum = super.getByteNum();
         // completedPath
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + completedPath.toString().getBytes().length;
+        byteNum += CMInfo.STRING_LEN_BYTES_LEN + completedPath.getBytes().length;
         // cursor
         byteNum += Long.BYTES;
         return byteNum;
@@ -50,7 +48,7 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
     @Override
     protected void marshallBodyCore() {
         // completedPath
-        putStringToByteBuffer(completedPath.toString());
+        putStringToByteBuffer(completedPath);
         // cursor
         m_bytes.putLong(cursor);
     }
@@ -58,7 +56,7 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
     @Override
     protected void unmarshallBodyCore(ByteBuffer msg) {
         // completedPath
-        completedPath = Paths.get(getStringFromByteBuffer(msg));
+        completedPath = getStringFromByteBuffer(msg);
         // cursor
         cursor = msg.getLong();
     }
@@ -111,11 +109,11 @@ public class CMFileSyncEventCompleteNewFile extends CMFileSyncEvent {
      * gets the new file path.
      * @return new file path
      */
-    public Path getCompletedPath() {
+    public String getCompletedPath() {
         return completedPath;
     }
 
-    public void setCompletedPath(Path completedPath) {
+    public void setCompletedPath(String completedPath) {
         this.completedPath = completedPath;
     }
 
