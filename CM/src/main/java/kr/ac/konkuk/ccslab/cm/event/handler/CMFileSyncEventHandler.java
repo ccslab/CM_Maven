@@ -2014,7 +2014,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Map<Path, Boolean> isFileSyncCompletedMap = syncInfo.getIsFileSyncCompletedMap();
         Objects.requireNonNull(isFileSyncCompletedMap);
-        isFileSyncCompletedMap.put(skipFileEvent.getSkippedPath(), true);
+        isFileSyncCompletedMap.put(Paths.get(skipFileEvent.getSkippedPath()), true);
 
         return true;
     }

@@ -392,7 +392,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         Path relativePath = basisFile.subpath(syncHome.getNameCount(), basisFile.getNameCount());
         // set the relative path to the event
-        fse.setSkippedPath(relativePath);
+        fse.setSkippedPath(relativePath.toString());
 
         return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
     }

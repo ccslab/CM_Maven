@@ -3,8 +3,6 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -14,7 +12,7 @@ import java.util.Objects;
  */
 public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
     // Fields: userName, skippedPath
-    private Path skippedPath;     // skipped path
+    private String skippedPath;     // skipped path
 
     public CMFileSyncEventSkipUpdateFile() {
         m_nID = CMFileSyncEvent.SKIP_UPDATE_FILE;
@@ -39,20 +37,20 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
         int byteNum;
         byteNum = super.getByteNum();
         // skippedPath
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + skippedPath.toString().getBytes().length;
+        byteNum += CMInfo.STRING_LEN_BYTES_LEN + skippedPath.getBytes().length;
         return byteNum;
     }
 
     @Override
     protected void marshallBodyCore() {
         // completedPath
-        putStringToByteBuffer(skippedPath.toString());
+        putStringToByteBuffer(skippedPath);
     }
 
     @Override
     protected void unmarshallBodyCore(ByteBuffer msg) {
         // completedPath
-        skippedPath = Paths.get(getStringFromByteBuffer(msg));
+        skippedPath = getStringFromByteBuffer(msg);
     }
 
     @Override
@@ -101,11 +99,11 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
      * @return a skipped file path
      * <br>The path is a relative path from the synchronization home directory.
      */
-    public Path getSkippedPath() {
+    public String getSkippedPath() {
         return skippedPath;
     }
 
-    public void setSkippedPath(Path skippedPath) {
+    public void setSkippedPath(String skippedPath) {
         this.skippedPath = skippedPath;
     }
 }
