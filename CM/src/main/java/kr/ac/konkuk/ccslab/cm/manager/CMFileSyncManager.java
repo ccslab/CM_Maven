@@ -445,7 +445,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         Path relativePath = path.subpath(syncHome.getNameCount(), path.getNameCount());
         // set the relative path to the event
-        fse.setCompletedPath(relativePath);
+        fse.setCompletedPath(relativePath.toString());
         // cursor 구하기
         long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, deviceUuid).lastChangeId();
         fse.setCursor(lastChangeId);
