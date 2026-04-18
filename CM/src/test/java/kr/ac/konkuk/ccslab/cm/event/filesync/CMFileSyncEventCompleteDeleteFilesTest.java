@@ -4,8 +4,6 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -21,9 +19,9 @@ public class CMFileSyncEventCompleteDeleteFilesTest {
         fse.setInitiatorName("ccslab");
         fse.setInitiatorUuid(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         fse.setInitiatorDeviceUuid(UUID.fromString("00000000-0000-0000-0000-000000000002"));
-        List<Path> deletedPaths = Arrays.asList(
-                Paths.get("deleted1.txt"),
-                Paths.get("subdir/deleted2.txt")
+        List<String> deletedPaths = Arrays.asList(
+                "deleted1.txt",
+                "subdir/deleted2.txt"
         );
         fse.setDeletedPathList(deletedPaths);
         fse.setCursor(42L);
