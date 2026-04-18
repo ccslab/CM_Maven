@@ -50,7 +50,7 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
         if(requestedFileList != null) {
             for(Path path : requestedFileList) {
                 byteNum += CMInfo.STRING_LEN_BYTES_LEN +
-                        path.toString().getBytes().length;
+                        path.toString().replace('\\', '/').getBytes().length;
             }
         }
         return byteNum;
@@ -65,7 +65,7 @@ public class CMFileSyncEventRequestNewFiles extends CMFileSyncEvent {
             m_bytes.putInt(requestedFileList.size());
             // requestedFileList
             for(Path path : requestedFileList) {
-                putStringToByteBuffer(path.toString());
+                putStringToByteBuffer(path.toString().replace('\\', '/'));
             }
         }
         else

@@ -341,7 +341,7 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setInitiatorUuid(initiatorUuid);
         fse.setInitiatorDeviceUuid(deviceUuid);
         // 나머지 필드 설정
-        fse.setCompletedPath(path.toString());
+        fse.setCompletedPath(path.toString().replace('\\', '/'));
         fse.setCursor(lastChangeId);
 
         // send the event
@@ -392,7 +392,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         Path relativePath = basisFile.subpath(syncHome.getNameCount(), basisFile.getNameCount());
         // set the relative path to the event
-        fse.setSkippedPath(relativePath.toString());
+        fse.setSkippedPath(relativePath.toString().replace('\\', '/'));
 
         return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
     }
@@ -445,7 +445,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         Path relativePath = path.subpath(syncHome.getNameCount(), path.getNameCount());
         // set the relative path to the event
-        fse.setCompletedPath(relativePath.toString());
+        fse.setCompletedPath(relativePath.toString().replace('\\', '/'));
         // cursor 구하기
         long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, deviceUuid).lastChangeId();
         fse.setCursor(lastChangeId);
