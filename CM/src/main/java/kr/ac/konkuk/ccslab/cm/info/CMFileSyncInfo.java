@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.info;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRegistry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
@@ -70,16 +72,36 @@ public class CMFileSyncInfo {
     // [NEW] 4 server: in-memory index registry
     private CMFileSyncIndexRegistry indexRegistry;
 
-    // [NEW] 4 client: 파일 동기화 커서 (서버 ChangeLog 상의 마지막 처리 위치, 0 = 미동기화)
+    // [NEW] 4 client: 파일 동기화 커서 (서버 ChangeLog 상의 마지막 처리 위치, -1 = 미동기화)
     private long m_lCursor;
     // [NEW] 4 client: 클라이언트 베이스 스냅샷 path -> lastSyncedMtime (sec)
     private final Map<String, Long> m_lastSyncedMtimeMap = new ConcurrentHashMap<>();
+
+    // [NEW] 4 server: pull sync를 위해 서버가 클라이언트로 보내기로 결정한 server entry list
+    private Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> serverEntryMap;
+    // [NEW] 4 server: pull sync의 완료 여부 상태를 확인하기 위한 map
+    private Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pullStateTable;
+
+    // [NEW] 4 client: 서버로부터 받은 server entry list (수신 이벤트의 serverEntryList 참조)
+    private List<CMFileSyncChangeLogEntry> serverEntryList;
+    // [NEW] 4 client: server entry list와 비교할 클라이언트측 동기화 디렉토리 파일 리스트
+    private List<Path> clientPathList;
+    // [NEW] 4 client: pull sync 완료 후 클라이언트가 맞춰야 할 서버측 cursor 값
+    private long serverCursor;
+    // [NEW] 4 client: pull sync에서 삭제 대상인 client entry (relative path 기준)
+    private Map<String, CMFileSyncClientEntry> pullDeleteMap;
+    // [NEW] 4 client: pull sync에서 신규 추가 대상인 client entry (relative path 기준)
+    private Map<String, CMFileSyncClientEntry> pullCreateMap;
+    // [NEW] 4 client: pull sync에서 업데이트 대상인 client entry (relative path 기준)
+    private Map<String, CMFileSyncClientEntry> pullModifyMap;
+    // [NEW] 4 client: pull sync에서 server entry와 비교 결과 push 대상인 client entry (relative path 기준)
+    private Map<String, CMFileSyncClientEntry> pendingPushMap;
 
     private CMFileSyncInfo() {
 
         currentMode = CMFileSyncMode.OFF;
         syncProgress = CMFileSyncProgress.NONE;
-        m_lCursor = 0;
+        m_lCursor = -1;
         pathList = null;
         isFileSyncCompletedMap = new Hashtable<>();
         blockChecksumMap = new Hashtable<>();
@@ -101,6 +123,17 @@ public class CMFileSyncInfo {
         basisFileListMap = new HashMap<>();
 
         proactiveModeTaskFuture = null;
+
+        // [NEW] pull sync 관련 필드 초기화
+        serverEntryMap = new HashMap<>();   // 4 server
+        pullStateTable = new HashMap<>();   // 4 server
+        serverEntryList = null;             // 4 client
+        clientPathList = null;              // 4 client
+        serverCursor = -1;                  // 4 client
+        pullDeleteMap = new HashMap<>();    // 4 client
+        pullCreateMap = new HashMap<>();    // 4 client
+        pullModifyMap = new HashMap<>();    // 4 client
+        pendingPushMap = new HashMap<>();   // 4 client
 
         CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
         if (confInfo.getSystemType().equals("SERVER")) {
@@ -281,6 +314,63 @@ public class CMFileSyncInfo {
         this.m_lCursor = lCursor;
     }
 
+    // [NEW] 4 server: serverEntryMap getter
+    public Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> getServerEntryMap() {
+        return serverEntryMap;
+    }
+
+    // [NEW] 4 server: pullStateTable getter
+    public Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> getPullStateTable() {
+        return pullStateTable;
+    }
+
+    // [NEW] 4 client: serverEntryList getter/setter
+    public List<CMFileSyncChangeLogEntry> getServerEntryList() {
+        return serverEntryList;
+    }
+
+    public void setServerEntryList(List<CMFileSyncChangeLogEntry> serverEntryList) {
+        this.serverEntryList = serverEntryList;
+    }
+
+    // [NEW] 4 client: clientPathList getter/setter
+    public List<Path> getClientPathList() {
+        return clientPathList;
+    }
+
+    public void setClientPathList(List<Path> clientPathList) {
+        this.clientPathList = clientPathList;
+    }
+
+    // [NEW] 4 client: serverCursor getter/setter
+    public long getServerCursor() {
+        return serverCursor;
+    }
+
+    public void setServerCursor(long serverCursor) {
+        this.serverCursor = serverCursor;
+    }
+
+    // [NEW] 4 client: pullDeleteMap getter
+    public Map<String, CMFileSyncClientEntry> getPullDeleteMap() {
+        return pullDeleteMap;
+    }
+
+    // [NEW] 4 client: pullCreateMap getter
+    public Map<String, CMFileSyncClientEntry> getPullCreateMap() {
+        return pullCreateMap;
+    }
+
+    // [NEW] 4 client: pullModifyMap getter
+    public Map<String, CMFileSyncClientEntry> getPullModifyMap() {
+        return pullModifyMap;
+    }
+
+    // [NEW] 4 client: pendingPushMap getter
+    public Map<String, CMFileSyncClientEntry> getPendingPushMap() {
+        return pendingPushMap;
+    }
+
     // [NEW] 4 client: lastSyncedMtimeMap getter / convenience methods
     public Map<String, Long> getLastSyncedMtimeMap() {
         return m_lastSyncedMtimeMap;
@@ -369,7 +459,7 @@ public class CMFileSyncInfo {
             final Path cursorFile = getCursorFile(projectHome);
             if (Files.exists(cursorFile)) {
                 final String cursorStr = Files.readString(cursorFile).trim();
-                m_lCursor = cursorStr.isEmpty() ? 0 : Long.parseLong(cursorStr);
+                m_lCursor = cursorStr.isEmpty() ? -1 : Long.parseLong(cursorStr);
             }
         } catch (IOException e) {
             System.err.println("CMFileSyncInfo.loadClientCursor(), failed to load: " + e.getMessage());
