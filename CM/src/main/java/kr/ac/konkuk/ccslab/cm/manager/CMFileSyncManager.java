@@ -398,10 +398,85 @@ public class CMFileSyncManager extends CMServiceManager {
         return result;
     }
 
-    // TODO: 설계 10-2 (라인 1258~) 구현 예정 — pullDeleteMap 파일 삭제 후 COMPLETE_PULL_DELETE 전송
+    // called by client; deletes the files registered in pullDeleteMap, marks each entry
+    // completed, removes their client-index metadata, then reports the deleted list to the
+    // server via COMPLETE_PULL_DELETE events (chunked if long).
     private boolean proceedPullDeleteMap() {
         if (CMInfo._CM_DEBUG)
-            System.out.println("=== CMFileSyncManager.proceedPullDeleteMap() called.. (not yet implemented)");
+            System.out.println("=== CMFileSyncManager.proceedPullDeleteMap() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pullDeleteMap = syncInfo.getPullDeleteMap();
+        Path syncHome = getClientSyncHome();
+        Map<String, Long> lastSyncedMtimeMap = syncInfo.getLastSyncedMtimeMap();
+        int numDeletedFiles = 0;
+        String myName = interInfo.getMyself().getName();
+        UUID myUuid = interInfo.getMyself().getUuid();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+
+        if (pullDeleteMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pullDeleteMap is empty, nothing to delete.");
+            return true;
+        }
+
+        Set<String> keys = pullDeleteMap.keySet();
+        for (String relPath : keys) {
+            Path absPath = syncHome.resolve(relPath).normalize();
+            try {
+                if (Files.exists(absPath)) {
+                    Files.delete(absPath);
+                } else {
+                    // online 모드이거나 이미 외부에서 삭제된 경우 — 정상 처리
+                    if (CMInfo._CM_DEBUG)
+                        System.out.println("file does not exist locally, skip delete: " + absPath);
+                }
+                // online list에 등록되어 있으면 제거 (온라인 모드 리스트 파일 반영은 COMPLETE_PULL_SYNC 처리 때)
+                removeFromOnlineList(relPath);
+                // client entry 완료 처리
+                CMFileSyncClientEntry entry = pullDeleteMap.get(relPath);
+                entry.setCompleted(true);
+                numDeletedFiles++;
+                // client-index 인메모리 메타 정보 삭제
+                lastSyncedMtimeMap.remove(relPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // pullDeleteMap의 모든 파일을 삭제했는지 확인
+        if (numDeletedFiles != keys.size()) {
+            System.err.println("CMFileSyncManager.proceedPullDeleteMap(), not all files deleted: "
+                    + numDeletedFiles + "/" + keys.size());
+            return false;
+        }
+
+        // COMPLETE_PULL_DELETE 이벤트 전송 루프 (긴 경우 나눠서 전송)
+        int listIndex = 0;
+        boolean sendResult;
+        List<String> deletedPathList = new ArrayList<>(keys);
+        while (listIndex < deletedPathList.size()) {
+            CMFileSyncEventCompletePullDelete fse_cpd = new CMFileSyncEventCompletePullDelete();
+            // 공통 필드 설정
+            fse_cpd.setInitiatorName(myName);
+            fse_cpd.setInitiatorUuid(myUuid);
+            fse_cpd.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+            // 이벤트에 넣을 string path 서브 리스트 구하기
+            List<String> subList = createSubStringListForEvent(fse_cpd.getByteNum(), deletedPathList, listIndex);
+            listIndex += subList.size();
+            // set the subList to the event
+            fse_cpd.setDeletedPathList(subList);
+            // send the event
+            sendResult = CMEventManager.unicastEvent(fse_cpd, serverName, null);
+            if (!sendResult) {
+                System.err.println("CMFileSyncManager.proceedPullDeleteMap(), send error: " + fse_cpd);
+                return false;
+            }
+            if (CMInfo._CM_DEBUG)
+                System.out.println("sent event = " + fse_cpd);
+        }
+
         return true;
     }
 
