@@ -419,6 +419,24 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // called by client; removes the given relative path from the online-mode-map.
+    // (the legacy online-mode list was replaced by onlineModePathSizeMap.)
+    public boolean removeFromOnlineList(String relPathStr) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.removeFromOnlineList() called: " + relPathStr);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+
+        // online-mode-map 갱신
+        Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        if (onlineModePathSizeMap != null) {
+            onlineModePathSizeMap.remove(absPath);
+        }
+
+        return true;
+    }
+
     public List<Path> createPathList(Path syncHome) {
 
         if (CMInfo._CM_DEBUG)
