@@ -9,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncJacksonSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
@@ -40,7 +41,7 @@ public class CMFileSyncInfo {
     public static final String ONLINE_MODE_MAP_FILE = "online_mode_map.txt";
 
     private CMFileSyncMode currentMode;
-    private boolean syncInProgress;
+    private CMFileSyncProgress syncProgress;
     private List<Path> pathList;        // 4 client
     private Map<Path, Boolean> isFileSyncCompletedMap;  // 4 client
     private Map<Integer, CMFileSyncBlockChecksum[]> blockChecksumMap;   // 4 client
@@ -77,7 +78,7 @@ public class CMFileSyncInfo {
     private CMFileSyncInfo() {
 
         currentMode = CMFileSyncMode.OFF;
-        syncInProgress = false;
+        syncProgress = CMFileSyncProgress.NONE;
         m_lCursor = 0;
         pathList = null;
         isFileSyncCompletedMap = new Hashtable<>();
@@ -128,15 +129,20 @@ public class CMFileSyncInfo {
         this.currentMode = currentMode;
     }
 
-    public boolean isSyncInProgress() {
-        return syncInProgress;
+    public CMFileSyncProgress getSyncProgress() {
+        return syncProgress;
     }
 
-    public void setSyncInProgress(boolean syncInProgress) {
-        this.syncInProgress = syncInProgress;
+    public void setSyncProgress(CMFileSyncProgress syncProgress) {
+        this.syncProgress = syncProgress;
         if(CMInfo._CM_DEBUG) {
-            System.out.println("CMFileSyncInfo.setSyncInProgress( "+syncInProgress+" ) called ..");
+            System.out.println("CMFileSyncInfo.setSyncProgress( "+syncProgress+" ) called ..");
         }
+    }
+
+    // 하위 호환: 동기화 진행 여부 (NONE이 아니면 진행 중)
+    public boolean isSyncInProgress() {
+        return syncProgress != CMFileSyncProgress.NONE;
     }
 
     public Map<Integer, CMFileSyncBlockChecksum[]> getBlockChecksumMap() {

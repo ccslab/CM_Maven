@@ -11,6 +11,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
@@ -137,7 +138,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // set the syncInProgress to false
-        syncInfo.setSyncInProgress(false);
+        syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
 
         // perform file-sync
         ret = syncManager.sync();
@@ -293,7 +294,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // set syncInProgress to false
-        syncInfo.setSyncInProgress(false);
+        syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
 
         // restart watch service
         ret = syncManager.startWatchService();
@@ -2102,7 +2103,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // change the file-sync state to stop
-        syncInfo.setSyncInProgress(false);
+        syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
 
         // check if the watch service has detected another change
         if(syncInfo.isFileChangeDetected() && !syncInfo.isWatchServiceTaskDone()) {

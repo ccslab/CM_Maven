@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
@@ -58,8 +59,8 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("The file sync is in progress!");
             return false;
         } else {
-            // set syncInProgress to true.
-            fsInfo.setSyncInProgress(true);
+            // set sync progress to full (push) sync.
+            fsInfo.setSyncProgress(CMFileSyncProgress.FULL_SYNC);
         }
 
         // set file sync home.
@@ -1074,7 +1075,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // change the file-sync status
-        syncInfo.setSyncInProgress(true);
+        syncInfo.setSyncProgress(CMFileSyncProgress.ONLINE_MODE);
         // stop the watch service
         boolean ret = stopWatchService();
         if (!ret) {
@@ -1247,7 +1248,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // change the file-sync status
-        syncInfo.setSyncInProgress(true);
+        syncInfo.setSyncProgress(CMFileSyncProgress.LOCAL_MODE);
         // stop the watch service
         boolean ret = stopWatchService();
         if (!ret) {
@@ -1696,8 +1697,8 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("error to save the online-mode-path-list to file!");
         }
 
-        // set syncInProgress to false
-        syncInfo.setSyncInProgress(false);
+        // set sync progress to none
+        syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
 
         // check file-sync mode
         if (syncInfo.getCurrentMode() == CMFileSyncMode.AUTO) {
