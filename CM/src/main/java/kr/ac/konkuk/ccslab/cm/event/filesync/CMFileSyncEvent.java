@@ -197,6 +197,62 @@ public abstract class CMFileSyncEvent extends CMEvent {
     // Fields: String requester, int numLocalModeFiles, int returnCode
     public static final int END_LOCAL_MODE_LIST_ACK = 27;
 
+    /**
+     * event ID of the CMFileSyncEventStartPullSync class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: long cursor
+    public static final int START_PULL_SYNC = 28;
+
+    /**
+     * event ID of the CMFileSyncEventStartPullSyncAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int returnCode, long serverCursor
+    public static final int START_PULL_SYNC_ACK = 29;
+
+    /**
+     * event ID of the CMFileSyncEventStartServerEntryList class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numTotalFiles
+    public static final int START_SERVER_ENTRY_LIST = 30;
+
+    /**
+     * event ID of the CMFileSyncEventStartServerEntryListAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numTotalFiles, int returnCode
+    public static final int START_SERVER_ENTRY_LIST_ACK = 31;
+
+    /**
+     * event ID of the CMFileSyncEventServerEntries class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int numFiles, List<CMFileSyncChangeLogEntry> serverEntryList
+    public static final int SERVER_ENTRIES = 32;
+
+    /**
+     * event ID of the CMFileSyncEventServerEntriesAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int numFiles, int returnCode
+    public static final int SERVER_ENTRIES_ACK = 33;
+
+    /**
+     * event ID of the CMFileSyncEventEndServerEntryList class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted
+    public static final int END_SERVER_ENTRY_LIST = 34;
+
+    /**
+     * event ID of the CMFileSyncEventEndServerEntryListAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int returnCode
+    public static final int END_SERVER_ENTRY_LIST_ACK = 35;
+
     // ----------------------------------------------------------------
     // [NEW] FileSync common header fields (event initiator identity)
     // Used by both client-initiated and server-initiated events

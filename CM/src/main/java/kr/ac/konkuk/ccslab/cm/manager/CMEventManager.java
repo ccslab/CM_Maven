@@ -244,6 +244,34 @@ public class CMEventManager {
 					case CMFileSyncEvent.END_LOCAL_MODE_LIST_ACK:
 						CMFileSyncEventEndLocalModeListAck endLocalModeAck = new CMFileSyncEventEndLocalModeListAck(buf);
 						return endLocalModeAck;
+					case CMFileSyncEvent.START_PULL_SYNC:
+						CMFileSyncEventStartPullSync startPullSync = new CMFileSyncEventStartPullSync(buf);
+						return startPullSync;
+					case CMFileSyncEvent.START_PULL_SYNC_ACK:
+						CMFileSyncEventStartPullSyncAck startPullSyncAck = new CMFileSyncEventStartPullSyncAck(buf);
+						return startPullSyncAck;
+					case CMFileSyncEvent.START_SERVER_ENTRY_LIST:
+						CMFileSyncEventStartServerEntryList startServerEntryList =
+								new CMFileSyncEventStartServerEntryList(buf);
+						return startServerEntryList;
+					case CMFileSyncEvent.START_SERVER_ENTRY_LIST_ACK:
+						CMFileSyncEventStartServerEntryListAck startServerEntryListAck =
+								new CMFileSyncEventStartServerEntryListAck(buf);
+						return startServerEntryListAck;
+					case CMFileSyncEvent.SERVER_ENTRIES:
+						CMFileSyncEventServerEntries serverEntries = new CMFileSyncEventServerEntries(buf);
+						return serverEntries;
+					case CMFileSyncEvent.SERVER_ENTRIES_ACK:
+						CMFileSyncEventServerEntriesAck serverEntriesAck = new CMFileSyncEventServerEntriesAck(buf);
+						return serverEntriesAck;
+					case CMFileSyncEvent.END_SERVER_ENTRY_LIST:
+						CMFileSyncEventEndServerEntryList endServerEntryList =
+								new CMFileSyncEventEndServerEntryList(buf);
+						return endServerEntryList;
+					case CMFileSyncEvent.END_SERVER_ENTRY_LIST_ACK:
+						CMFileSyncEventEndServerEntryListAck endServerEntryListAck =
+								new CMFileSyncEventEndServerEntryListAck(buf);
+						return endServerEntryListAck;
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);
