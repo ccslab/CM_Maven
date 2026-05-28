@@ -512,6 +512,24 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // called by client; adds the given relative path (with size) to the online-mode-map.
+    // (used for online-mode CREATE handling in pull sync.)
+    public boolean addToOnlineList(String relPathStr, long size) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.addToOnlineList() called: " + relPathStr + ", size=" + size);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+
+        // online-mode-map 갱신
+        Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        if (onlineModePathSizeMap != null) {
+            onlineModePathSizeMap.put(absPath, size);
+        }
+
+        return true;
+    }
+
     public List<Path> createPathList(Path syncHome) {
 
         if (CMInfo._CM_DEBUG)
