@@ -530,6 +530,50 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // online-mode CREATE helper: 파일 전송 없이 인메모리 client-index 업데이트 +
+    // isCompleted=true + COMPLETE_PULL_CREATE 송신.
+    // checkCompletePullCreate()는 실제 파일 수신을 트리거로 호출되므로 online 모드에서는
+    // 호출되지 않는다. 따라서 본 헬퍼가 그 책임을 직접 수행한다.
+    private boolean proceedOnlinePullCreateEntry(String relPathStr, CMFileSyncClientEntry entry, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedOnlinePullCreateEntry() called: " + relPathStr);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // 온라인 모드 리스트에 추가
+        addToOnlineList(relPathStr, entry.getSize());
+
+        // server mtime을 baseMtime으로 저장 (online 모드 변형: "file 없음 == baseMtime은 server mtime")
+        long serverMtime = -1;
+        List<CMFileSyncChangeLogEntry> serverEntryList = syncInfo.getServerEntryList();
+        if (serverEntryList != null) {
+            for (CMFileSyncChangeLogEntry se : serverEntryList) {
+                if (relPathStr.equals(se.getPath())) {
+                    serverMtime = se.getMtime();
+                    break;
+                }
+            }
+        }
+        syncInfo.getLastSyncedMtimeMap().put(relPathStr, serverMtime);
+
+        // entry 완료 처리
+        entry.setCompleted(true);
+
+        // COMPLETE_PULL_CREATE 이벤트 생성 및 전송
+        CMFileSyncEventCompletePullCreate fse_cpc = new CMFileSyncEventCompletePullCreate();
+        fse_cpc.setInitiatorName(interInfo.getMyself().getName());
+        fse_cpc.setInitiatorUuid(interInfo.getMyself().getUuid());
+        fse_cpc.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_cpc.setCreatedPath(relPathStr);
+
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpc, serverName, null);
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.proceedOnlinePullCreateEntry(), send error: " + fse_cpc);
+
+        return sendResult;
+    }
+
     public List<Path> createPathList(Path syncHome) {
 
         if (CMInfo._CM_DEBUG)
