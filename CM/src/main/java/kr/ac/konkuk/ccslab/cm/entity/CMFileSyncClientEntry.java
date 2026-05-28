@@ -12,6 +12,7 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
     private long baseMtime;         // 마지막 동기화 시점 mtime (epoch seconds, -1이면 없음)
     private CMFileSyncOp opHint;    // CREATE/MODIFY/DELETE/UNKNOWN
     private boolean isCompleted;    // 동기화 완료 여부
+    private long serverMtime;       // 서버측 mtime (epoch seconds, -1이면 미설정; PULL 전용, 전송 제외)
 
     public CMFileSyncClientEntry() {
         this.path = null;
@@ -20,6 +21,7 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
         baseMtime = -1;
         opHint = CMFileSyncOp.UNKNOWN;
         isCompleted = false;
+        serverMtime = -1;
     }
 
     public String getPath() {
@@ -76,6 +78,15 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
         return this;
     }
 
+    public long getServerMtime() {
+        return serverMtime;
+    }
+
+    public CMFileSyncClientEntry setServerMtime(long serverMtime) {
+        this.serverMtime = serverMtime;
+        return this;
+    }
+
     @Override
     public int compareTo(CMFileSyncClientEntry o) {
         return this.path.compareTo(o.getPath());
@@ -90,6 +101,7 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
                 ", baseMtime=" + baseMtime +
                 ", opHint=" + opHint +
                 ", isCompleted=" + isCompleted +
+                ", serverMtime=" + serverMtime +
                 '}';
     }
 
@@ -103,11 +115,12 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
                 entry.getCurMtime() == curMtime &&
                 entry.getBaseMtime() == baseMtime &&
                 entry.getOpHint() == opHint &&
-                entry.isCompleted() == isCompleted;
+                entry.isCompleted() == isCompleted &&
+                entry.getServerMtime() == serverMtime;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(path, size, curMtime, baseMtime, opHint, isCompleted);
+        return Objects.hash(path, size, curMtime, baseMtime, opHint, isCompleted, serverMtime);
     }
 }

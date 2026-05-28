@@ -197,7 +197,8 @@ public class CMFileSyncManager extends CMServiceManager {
                 clientEntry.setPath(relPathStr)
                         .setSize(serverEntry.getSize())
                         .setCurMtime(curMtime)
-                        .setBaseMtime(baseMtime);
+                        .setBaseMtime(baseMtime)
+                        .setServerMtime(serverMtime);
 
                 CMFileSyncOp op = serverEntry.getOp();
                 if (op == CMFileSyncOp.MODIFY) {
@@ -545,17 +546,7 @@ public class CMFileSyncManager extends CMServiceManager {
         addToOnlineList(relPathStr, entry.getSize());
 
         // server mtime을 baseMtime으로 저장 (online 모드 변형: "file 없음 == baseMtime은 server mtime")
-        long serverMtime = -1;
-        List<CMFileSyncChangeLogEntry> serverEntryList = syncInfo.getServerEntryList();
-        if (serverEntryList != null) {
-            for (CMFileSyncChangeLogEntry se : serverEntryList) {
-                if (relPathStr.equals(se.getPath())) {
-                    serverMtime = se.getMtime();
-                    break;
-                }
-            }
-        }
-        syncInfo.getLastSyncedMtimeMap().put(relPathStr, serverMtime);
+        syncInfo.getLastSyncedMtimeMap().put(relPathStr, entry.getServerMtime());
 
         // entry 완료 처리
         entry.setCompleted(true);
