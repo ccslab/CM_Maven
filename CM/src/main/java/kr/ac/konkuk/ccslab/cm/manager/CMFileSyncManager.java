@@ -364,6 +364,61 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // called by client; processes the pull maps (delete/create/modify).
+    // Except for the delete map, processing here only *initiates* the work
+    // (e.g., starting a generator thread); completion happens elsewhere.
+    public boolean proceedPullMaps() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullMaps() called..");
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        boolean result;
+
+        // only the client processes pull maps
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.proceedPullMaps(), system type is not CLIENT!");
+            return false;
+        }
+
+        // pullDeleteMap 처리
+        result = proceedPullDeleteMap();
+        if (!result)
+            System.err.println("CMFileSyncManager.proceedPullMaps(), proceedPullDeleteMap() failed!");
+
+        // pullCreateMap 처리
+        result &= proceedPullCreateMap();
+        if (!result)
+            System.err.println("CMFileSyncManager.proceedPullMaps(), proceedPullCreateMap() failed!");
+
+        // pullModifyMap 처리
+        result &= proceedPullModifyMap();
+        if (!result)
+            System.err.println("CMFileSyncManager.proceedPullMaps(), proceedPullModifyMap() failed!");
+
+        return result;
+    }
+
+    // TODO: 설계 10-2 (라인 1258~) 구현 예정 — pullDeleteMap 파일 삭제 후 COMPLETE_PULL_DELETE 전송
+    private boolean proceedPullDeleteMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullDeleteMap() called.. (not yet implemented)");
+        return true;
+    }
+
+    // TODO: 설계 10-2 (라인 1449~) 구현 예정 — pullCreateMap 신규 파일 수신 시작
+    private boolean proceedPullCreateMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullCreateMap() called.. (not yet implemented)");
+        return true;
+    }
+
+    // TODO: 설계 10-2 (라인 1666~) 구현 예정 — pullModifyMap generator 스레드 시작
+    private boolean proceedPullModifyMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullModifyMap() called.. (not yet implemented)");
+        return true;
+    }
+
     public List<Path> createPathList(Path syncHome) {
 
         if (CMInfo._CM_DEBUG)
