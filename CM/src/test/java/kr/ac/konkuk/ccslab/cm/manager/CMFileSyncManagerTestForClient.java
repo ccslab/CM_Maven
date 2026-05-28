@@ -34,7 +34,7 @@ public class CMFileSyncManagerTestForClient {
     @Test
     public void startFileSync() {
         System.out.println("===== called startFileSync()");
-        assertTrue(fileSyncManager.sync());
+        assertTrue(fileSyncManager.startFullPushSync());
     }
 
     @Test

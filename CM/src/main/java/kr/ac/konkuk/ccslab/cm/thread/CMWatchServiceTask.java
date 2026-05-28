@@ -62,7 +62,8 @@ public class CMWatchServiceTask implements Runnable {
                             });
                         }
                         // start the file-sync task
-                        boolean ret = syncManager.sync();
+                        // TODO: 양방향 push 동기화(startPushSync) 구현 후 교체 예정
+                        boolean ret = syncManager.startFullPushSync();
                         // clear the detectedPathMap
                         detectedPathMap.clear();
                         if (!ret) syncInfo.setFileChangeDetected(true);

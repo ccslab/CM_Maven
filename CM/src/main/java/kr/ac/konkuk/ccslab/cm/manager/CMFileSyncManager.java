@@ -47,11 +47,11 @@ public class CMFileSyncManager extends CMServiceManager {
                 .resolve(CMFileSyncInfo.SYNC_HOME).toAbsolutePath().normalize();
     }
 
-    // currently called by client
-    public synchronized boolean sync() {
+    // currently called by client; performs the initial full push synchronization
+    public synchronized boolean startFullPushSync() {
 
         if (CMInfo._CM_DEBUG)
-            System.out.println("=== CMFileSyncManager.startFileSync() called..");
+            System.out.println("=== CMFileSyncManager.startFullPushSync() called..");
 
         CMFileSyncInfo fsInfo = CMFileSyncInfo.getInstance();
 
@@ -101,9 +101,57 @@ public class CMFileSyncManager extends CMServiceManager {
         // send the file list to the server
         boolean sendResult = sendFileList();
         if (!sendResult) {
-            System.err.println("CMFileSyncManager.startFileSync(), error to send the file list.");
+            System.err.println("CMFileSyncManager.startFullPushSync(), error to send the file list.");
             return false;
         }
+
+        return true;
+    }
+
+    // called by client to start bidirectional synchronization:
+    // sends the client cursor to the server so it can decide pull vs. full-push.
+    public synchronized boolean startPullSync() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.startPullSync() called..");
+
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // only the client can start a pull sync
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.startPullSync(), system type is not CLIENT!");
+            return false;
+        }
+
+        // create the START_PULL_SYNC event
+        CMFileSyncEventStartPullSync fse = new CMFileSyncEventStartPullSync();
+
+        // set common initiator fields
+        String initiatorName = interInfo.getMyself().getName();
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+        // set the client cursor (use the stored value if non-negative, otherwise 0)
+        long cursor = syncInfo.getCursor();
+        if (cursor < 0) cursor = 0;
+        fse.setCursor(cursor);
+
+        // send the event to the default server
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+        UUID serverUuid = null;
+        boolean result = CMEventManager.unicastEvent(fse, serverName, serverUuid);
+        if (!result) {
+            System.err.println("CMFileSyncManager.startPullSync(), send error!");
+            System.err.println(fse);
+            return false;
+        }
+
+        // change the sync session state to PULL
+        syncInfo.setSyncProgress(CMFileSyncProgress.PULL);
 
         return true;
     }
@@ -1525,8 +1573,8 @@ public class CMFileSyncManager extends CMServiceManager {
             syncInfo.setCurrentMode(CMFileSyncMode.MANUAL);
         }
 
-        // conduct file-sync task once
-        ret = sync();
+        // conduct file-sync task once (client starts bidirectional sync via pull handshake)
+        ret = startPullSync();
         if (!ret) {
             System.err.println("error starting file-sync!");
             return false;

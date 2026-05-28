@@ -141,7 +141,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
 
         // perform file-sync
-        ret = syncManager.sync();
+        ret = syncManager.startPullSync();
         if(!ret) {
             System.err.println("error to start file-sync!");
             return false;
@@ -304,7 +304,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // perform file-sync
-        ret = syncManager.sync();
+        ret = syncManager.startPullSync();
         if(!ret) {
             System.err.println("error to start file-sync!");
             return false;
@@ -2108,7 +2108,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // check if the watch service has detected another change
         if(syncInfo.isFileChangeDetected() && !syncInfo.isWatchServiceTaskDone()) {
             syncInfo.setFileChangeDetected(false);
-            syncManager.sync();
+            // TODO: 양방향 push 동기화(startPushSync) 구현 후 교체 예정
+            syncManager.startFullPushSync();
         }
 
         return true;
