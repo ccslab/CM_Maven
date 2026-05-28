@@ -253,6 +253,41 @@ public abstract class CMFileSyncEvent extends CMEvent {
     // Fields: int numFilesCompleted, int returnCode
     public static final int END_SERVER_ENTRY_LIST_ACK = 35;
 
+    /**
+     * event ID of the CMFileSyncEventCompletePullDelete class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: List<String> deletedPathList
+    public static final int COMPLETE_PULL_DELETE = 36;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullCreate class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: String createdPath
+    public static final int COMPLETE_PULL_CREATE = 37;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullModify class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: String modifiedPath
+    public static final int COMPLETE_PULL_MODIFY = 38;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullSync class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted
+    public static final int COMPLETE_PULL_SYNC = 39;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullSyncAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int returnCode
+    public static final int COMPLETE_PULL_SYNC_ACK = 40;
+
     // ----------------------------------------------------------------
     // [NEW] FileSync common header fields (event initiator identity)
     // Used by both client-initiated and server-initiated events

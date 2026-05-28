@@ -272,6 +272,26 @@ public class CMEventManager {
 						CMFileSyncEventEndServerEntryListAck endServerEntryListAck =
 								new CMFileSyncEventEndServerEntryListAck(buf);
 						return endServerEntryListAck;
+					case CMFileSyncEvent.COMPLETE_PULL_DELETE:
+						CMFileSyncEventCompletePullDelete completePullDelete =
+								new CMFileSyncEventCompletePullDelete(buf);
+						return completePullDelete;
+					case CMFileSyncEvent.COMPLETE_PULL_CREATE:
+						CMFileSyncEventCompletePullCreate completePullCreate =
+								new CMFileSyncEventCompletePullCreate(buf);
+						return completePullCreate;
+					case CMFileSyncEvent.COMPLETE_PULL_MODIFY:
+						CMFileSyncEventCompletePullModify completePullModify =
+								new CMFileSyncEventCompletePullModify(buf);
+						return completePullModify;
+					case CMFileSyncEvent.COMPLETE_PULL_SYNC:
+						CMFileSyncEventCompletePullSync completePullSync =
+								new CMFileSyncEventCompletePullSync(buf);
+						return completePullSync;
+					case CMFileSyncEvent.COMPLETE_PULL_SYNC_ACK:
+						CMFileSyncEventCompletePullSyncAck completePullSyncAck =
+								new CMFileSyncEventCompletePullSyncAck(buf);
+						return completePullSyncAck;
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);
