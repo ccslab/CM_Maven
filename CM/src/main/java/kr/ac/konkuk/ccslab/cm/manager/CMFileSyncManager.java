@@ -1,5 +1,7 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
@@ -7,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncOp;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
@@ -24,6 +27,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -152,6 +157,209 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // change the sync session state to PULL
         syncInfo.setSyncProgress(CMFileSyncProgress.PULL);
+
+        return true;
+    }
+
+    // called by client; compares the received serverEntryList against the local clientPathList
+    // and classifies each entry into the pull maps (delete/create/modify) or the pending push map.
+    public boolean compareServerAndClientEntriesForPullSync() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.compareServerAndClientEntriesForPullSync() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<CMFileSyncChangeLogEntry> serverEntryList = syncInfo.getServerEntryList();
+        List<Path> clientPathList = syncInfo.getClientPathList();
+        if (serverEntryList == null || clientPathList == null) {
+            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                    "serverEntryList or clientPathList is null!");
+            return false;
+        }
+
+        Path clientSyncHome = getClientSyncHome();
+        Map<String, CMFileSyncClientEntry> pullModifyMap = syncInfo.getPullModifyMap();
+        Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
+        Map<String, CMFileSyncClientEntry> pullDeleteMap = syncInfo.getPullDeleteMap();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+
+        try {
+            // classify each server entry by op
+            for (CMFileSyncChangeLogEntry serverEntry : serverEntryList) {
+                String relPathStr = serverEntry.getPath();      // relative path (server & client)
+                Path relPath = Path.of(relPathStr);
+                Path absPath = clientSyncHome.resolve(relPath); // client absolute path
+                long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
+                long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+                long serverMtime = serverEntry.getMtime();
+                boolean existsOnClient = clientPathList.contains(absPath);
+
+                CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
+                clientEntry.setPath(relPathStr)
+                        .setSize(serverEntry.getSize())
+                        .setCurMtime(curMtime)
+                        .setBaseMtime(baseMtime);
+
+                CMFileSyncOp op = serverEntry.getOp();
+                if (op == CMFileSyncOp.MODIFY) {
+                    if (!existsOnClient || curMtime != baseMtime) {
+                        // conflict: local file missing or locally modified since last sync
+                        boolean conflictResult = proceedConflictedClientEntry(clientEntry);
+                        if (!conflictResult) {
+                            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                                    "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            continue;   // rename 실패 시 pullCreateMap에 추가하지 않고 건너뜀
+                        }
+                        pullCreateMap.put(relPathStr, clientEntry);
+                    } else {
+                        pullModifyMap.put(relPathStr, clientEntry);
+                    }
+                } else if (op == CMFileSyncOp.CREATE) {
+                    if (existsOnClient) {
+                        // conflict: 기존 클라 파일 보호
+                        boolean conflictResult = proceedConflictedClientEntry(clientEntry);
+                        if (!conflictResult) {
+                            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                                    "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            continue;   // rename 실패 -> 기존 클라 파일 보호
+                        }
+                    }
+                    pullCreateMap.put(relPathStr, clientEntry);
+                } else if (op == CMFileSyncOp.DELETE) {
+                    if (!existsOnClient) {
+                        // 이미 없으므로 별도 동작 안함
+                    } else if (baseMtime == serverMtime && curMtime == serverMtime) {
+                        // 마지막 동기화 이후 변경 없음 -> 안전하게 삭제 대상
+                        pullDeleteMap.put(relPathStr, clientEntry);
+                    } else {
+                        // 로컬에서 수정됨 -> conflict (삭제하지 않고 rename + push)
+                        boolean conflictResult = proceedConflictedClientEntry(clientEntry);
+                        if (!conflictResult) {
+                            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                                    "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            // rename 실패 -> 삭제도, push도 하지 않음 (현상 유지)
+                        }
+                    }
+                }
+            }
+
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("pullModifyMap = " + pullModifyMap);
+                System.out.println("pullCreateMap = " + pullCreateMap);
+                System.out.println("pullDeleteMap = " + pullDeleteMap);
+                System.out.println("pendingPushMap = " + pendingPushMap);
+            }
+
+            // pullModifyMap 대상을 제외한 client path 중 baseMtime보다 큰 curMtime인 파일을
+            // pendingPushMap에 추가 (이 클라이언트에서 최신 수정된 파일들)
+            for (Path absPath : clientPathList) {
+                Path relPath = clientSyncHome.relativize(absPath);
+                String relPathStr = relPath.toString().replace('\\', '/');
+
+                if (pullModifyMap.containsKey(relPathStr)) continue;
+
+                long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
+                long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+
+                if (curMtime > baseMtime) {
+                    CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
+                    clientEntry.setPath(relPathStr)
+                            .setCurMtime(curMtime)
+                            .setBaseMtime(baseMtime)
+                            .setOpHint(baseMtime == -1 ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY);
+                    pendingPushMap.put(relPathStr, clientEntry);
+                    if (CMInfo._CM_DEBUG)
+                        System.out.println("pendingPushMap added: key = " + relPathStr + ", value = " + clientEntry);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), I/O error!");
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    // called by client; marks a conflicting local file by renaming it with a
+    // "-conflict-yyyyMMdd-HHmmss" suffix and queues the renamed file into pendingPushMap.
+    // The parameter entry may belong to another pull map, so a new CMFileSyncClientEntry
+    // is created for pendingPushMap to keep the original untouched.
+    private boolean proceedConflictedClientEntry(CMFileSyncClientEntry entry) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedConflictedClientEntry() called..");
+            System.out.println("entry = " + entry);
+        }
+
+        // (1) 필요 변수 설정
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        String relPathStr = entry.getPath();
+        Path clientSyncHome = getClientSyncHome();
+        Path absPath = clientSyncHome.resolve(relPathStr).toAbsolutePath().normalize();
+
+        // (2) conflict suffix 생성: "-conflict-yyyyMMdd-HHmmss"
+        String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+        String conflictSuffix = "-conflict-" + timestamp;
+
+        // (3) 새 파일명 생성 (확장자 앞에 suffix 삽입)
+        String originalFileName = absPath.getFileName().toString();
+        int dotIndex = originalFileName.lastIndexOf('.');
+        String stem = (dotIndex >= 0) ? originalFileName.substring(0, dotIndex) : originalFileName;
+        String ext = (dotIndex >= 0) ? originalFileName.substring(dotIndex) : "";
+
+        // (4) 파일명 255자 제한 방어
+        String baseConflictName = stem + conflictSuffix + ext;
+        if (baseConflictName.length() > 255) {
+            int excess = baseConflictName.length() - 255;
+            stem = stem.substring(0, Math.max(1, stem.length() - excess));
+            baseConflictName = stem + conflictSuffix + ext;
+        }
+
+        // (5) 중복 파일명 처리: 이미 존재하면 numbering
+        String conflictFileName = baseConflictName;
+        Path conflictAbsPath = absPath.resolveSibling(conflictFileName);
+        int count = 2;
+        while (Files.exists(conflictAbsPath)) {
+            conflictFileName = stem + conflictSuffix + "(" + count + ")" + ext;
+            conflictAbsPath = absPath.resolveSibling(conflictFileName);
+            count++;
+        }
+
+        // (6) 실제 파일 rename
+        if (!Files.exists(absPath)) {
+            // DELETE 충돌: 파일이 없으면 rename 불필요, pendingPushMap 추가도 스킵
+            if (CMInfo._CM_DEBUG)
+                System.out.println("file does not exist (DELETE conflict), skip rename: " + absPath);
+            return true;    // 처리할 파일이 없는 것이므로 정상 완료
+        }
+        try {
+            Files.move(absPath, conflictAbsPath);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedConflictedClientEntry(), " +
+                    "error renaming file: " + absPath + " -> " + conflictAbsPath);
+            e.printStackTrace();
+            return false;
+        }
+        if (CMInfo._CM_DEBUG)
+            System.out.println("renamed: " + absPath + " -> " + conflictAbsPath);
+
+        // (7) renamed entry 새로 생성 (원본 entry 불변 유지)
+        String conflictRelPathStr = clientSyncHome.relativize(conflictAbsPath)
+                .toString().replace('\\', '/');
+        CMFileSyncClientEntry renamedEntry = new CMFileSyncClientEntry();
+        renamedEntry.setPath(conflictRelPathStr)
+                .setSize(entry.getSize())
+                .setCurMtime(entry.getCurMtime())
+                .setBaseMtime(-1L)
+                .setOpHint(CMFileSyncOp.CREATE);
+        renamedEntry.setCompleted(false);
+
+        // (8) pendingPushMap에 추가
+        pendingPushMap.put(conflictRelPathStr, renamedEntry);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("added to pendingPushMap: key = " + conflictRelPathStr);
+            System.out.println("renamedEntry = " + renamedEntry);
+        }
 
         return true;
     }
