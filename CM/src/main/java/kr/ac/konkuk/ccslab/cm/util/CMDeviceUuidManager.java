@@ -22,6 +22,11 @@ public final class CMDeviceUuidManager {
     private static final String[] REL_DIR = {".cm-settings", "file-sync", "client"};
     private static final String FILE_NAME = "device_uuid";
 
+    // 같은 JVM 내 동시 생성을 직렬화하기 위한 락.
+    // 현재 호출부(CMClientStub.startCM)는 단일 스레드 1회 호출이라 실제 경쟁은 없으나,
+    // public static 유틸의 thread-safety 보장을 위한 대비용.
+    private static final Object CREATE_LOCK = new Object();
+
     private CMDeviceUuidManager() {}
 
     /**
@@ -44,32 +49,39 @@ public final class CMDeviceUuidManager {
         try {
             Files.createDirectories(file.getParent());
 
-            // 1) 파일이 존재하면 읽기 시도
+            // 1) 파일이 존재하면 읽기 시도 (락 밖 fast path)
             UUID existing = tryReadUuid(file);
             if (existing != null) return existing;
 
-            // 2) 없으면 배타적 생성 (동시 실행 시 딱 1개만 성공)
-            final UUID fresh = UUID.randomUUID();
-            try {
-                Files.writeString(file, fresh + "\n", StandardCharsets.UTF_8,
-                        StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-                if (CMInfo._CM_DEBUG) {
-                    System.out.println("[CMDeviceUuidManager] new device_uuid created: "
-                            + fresh.toString().substring(0, 8) + "...");
+            // 2) 같은 JVM 내 동시 생성을 직렬화 (멀티스레드 경쟁 시 1개만 생성)
+            synchronized (CREATE_LOCK) {
+                // 락 획득 후 재확인 (다른 스레드가 이미 생성했을 수 있음)
+                existing = tryReadUuid(file);
+                if (existing != null) return existing;
+
+                // 배타적 생성 (프로세스 간 경쟁에서도 딱 1개만 성공)
+                final UUID fresh = UUID.randomUUID();
+                try {
+                    Files.writeString(file, fresh + "\n", StandardCharsets.UTF_8,
+                            StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                    if (CMInfo._CM_DEBUG) {
+                        System.out.println("[CMDeviceUuidManager] new device_uuid created: "
+                                + fresh.toString().substring(0, 8) + "...");
+                    }
+                    return fresh;
+
+                } catch (FileAlreadyExistsException raced) {
+                    // 다른 프로세스가 먼저 생성한 경우 → 재-읽기 (내용 flush 지연 대비 짧게 재시도)
+                    UUID after = readWithRetry(file);
+                    if (after != null) return after;
+
+                    // 끝내 읽히지 않으면(손상 등) 덮어쓰기
+                    System.err.println("[CMDeviceUuidManager] device_uuid unreadable after race, overwriting: " + file);
+                    Files.writeString(file, fresh + "\n", StandardCharsets.UTF_8,
+                            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+                            StandardOpenOption.WRITE);
+                    return fresh;
                 }
-                return fresh;
-
-            } catch (FileAlreadyExistsException raced) {
-                // 동시에 다른 스레드가 먼저 생성한 경우 → 재-읽기
-                UUID after = tryReadUuid(file);
-                if (after != null) return after;
-
-                // 여전히 읽히지 않으면(손상 등) 덮어쓰기
-                System.err.println("[CMDeviceUuidManager] device_uuid unreadable after race, overwriting: " + file);
-                Files.writeString(file, fresh + "\n", StandardCharsets.UTF_8,
-                        StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
-                        StandardOpenOption.WRITE);
-                return fresh;
             }
 
         } catch (IOException ioe) {
@@ -90,6 +102,21 @@ public final class CMDeviceUuidManager {
         Path dir = baseDir;
         for (String s : REL_DIR) dir = dir.resolve(s);
         return dir.resolve(FILE_NAME);
+    }
+
+    // device_uuid 파일을 짧게 재시도하며 읽는다 (다른 프로세스의 동시 생성 직후 내용 flush 지연 대비).
+    private static UUID readWithRetry(Path file) {
+        for (int i = 0; i < 50; i++) {
+            UUID u = tryReadUuid(file);
+            if (u != null) return u;
+            try {
+                Thread.sleep(2);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        return null;
     }
 
     private static UUID tryReadUuid(Path file) {
