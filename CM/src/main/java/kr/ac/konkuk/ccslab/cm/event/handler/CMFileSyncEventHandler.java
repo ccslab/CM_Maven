@@ -83,6 +83,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.END_SERVER_ENTRY_LIST -> processResult = processEND_SERVER_ENTRY_LIST(fse);
             case CMFileSyncEvent.END_SERVER_ENTRY_LIST_ACK -> processResult = processEND_SERVER_ENTRY_LIST_ACK(fse);
             case CMFileSyncEvent.COMPLETE_PULL_DELETE -> processResult = processCOMPLETE_PULL_DELETE(fse);
+            case CMFileSyncEvent.COMPLETE_PULL_CREATE -> processResult = processCOMPLETE_PULL_CREATE(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -647,6 +648,50 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                             "entry not found in pullStateMap for path: " + deletedPath);
                 }
             }
+        }
+
+        // check whether the whole pull sync is complete
+        if(syncManager.isCompletePullSync(pullStateMap)) {
+            result = syncManager.completePullSync(initiatorName, initiatorUuid, initiatorDeviceUuid);
+        }
+
+        return result;
+    }
+
+    // called at the server
+    private boolean processCOMPLETE_PULL_CREATE(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePullCreate fse_cpc = (CMFileSyncEventCompletePullCreate) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PULL_CREATE() called..");
+            System.out.println("fse_cpc = " + fse_cpc);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        String initiatorName = fse_cpc.getInitiatorName();
+        UUID initiatorUuid = fse_cpc.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_cpc.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        String createdPath = fse_cpc.getCreatedPath();
+        boolean result = true;
+
+        // get the pull-state map for this client device
+        Map<String, CMFileSyncClientEntry> pullStateMap = syncInfo.getPullStateTable().get(stateKey);
+        if(pullStateMap == null) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_CREATE(), " +
+                    "pullStateMap is null for stateKey = " + stateKey);
+            return false;
+        }
+
+        // mark the created path as completed in the pull-state map (single path per event)
+        CMFileSyncClientEntry entry = pullStateMap.get(createdPath);
+        if(entry != null) {
+            entry.setCompleted(true);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_CREATE(), " +
+                    "entry not found in pullStateMap for path: " + createdPath);
+            return false;
         }
 
         // check whether the whole pull sync is complete
