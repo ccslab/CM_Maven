@@ -80,6 +80,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.START_SERVER_ENTRY_LIST_ACK -> processResult = processSTART_SERVER_ENTRY_LIST_ACK(fse);
             case CMFileSyncEvent.SERVER_ENTRIES -> processResult = processSERVER_ENTRIES(fse);
             case CMFileSyncEvent.SERVER_ENTRIES_ACK -> processResult = processSERVER_ENTRIES_ACK(fse);
+            case CMFileSyncEvent.END_SERVER_ENTRY_LIST -> processResult = processEND_SERVER_ENTRY_LIST(fse);
+            case CMFileSyncEvent.END_SERVER_ENTRY_LIST_ACK -> processResult = processEND_SERVER_ENTRY_LIST_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -520,6 +522,91 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the event to the client
         return CMEventManager.unicastEvent(newfse, fse_sea.getSender(), fse_sea.getSenderUuid());
+    }
+
+    // called at the client
+    private boolean processEND_SERVER_ENTRY_LIST(CMFileSyncEvent fse) {
+        CMFileSyncEventEndServerEntryList fse_esel = (CMFileSyncEventEndServerEntryList) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST() called..");
+            System.out.println("fse_esel = " + fse_esel);
+        }
+
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        int numFilesCompleted = fse_esel.getNumFilesCompleted();
+        List<CMFileSyncChangeLogEntry> serverEntryList = syncInfo.getServerEntryList();
+        int returnCode = 1;
+
+        // check the number of received server entries
+        if(serverEntryList == null) {
+            System.err.println("CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST(), serverEntryList is null!");
+            returnCode = 0;
+        } else if(numFilesCompleted != serverEntryList.size()) {
+            System.err.println("CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST(), numFilesCompleted("
+                    + numFilesCompleted + ") != serverEntryList size(" + serverEntryList.size() + ")!");
+            returnCode = 0;
+        }
+
+        // create and send the ack event to the server
+        CMFileSyncEventEndServerEntryListAck ackEvent = new CMFileSyncEventEndServerEntryListAck();
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(fse_esel.getInitiatorName());
+        ackEvent.setInitiatorUuid(fse_esel.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(fse_esel.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
+        ackEvent.setNumFilesCompleted(numFilesCompleted);
+        ackEvent.setReturnCode(returnCode);
+
+        boolean result = CMEventManager.unicastEvent(ackEvent, fse_esel.getSender(), fse_esel.getSenderUuid());
+        if(!result) {
+            System.err.println("CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST(), send ack error!");
+            return false;
+        }
+
+        // stop if the entry-count check failed
+        if(returnCode == 0) {
+            return false;
+        }
+
+        // create the client path list and store it in CMFileSyncInfo
+        Path syncHome = syncManager.getClientSyncHome();
+        List<Path> clientPathList = syncManager.createPathList(syncHome);
+        if(clientPathList == null) {
+            System.err.println("CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST(), clientPathList is null!");
+            return false;
+        }
+        syncInfo.setClientPathList(clientPathList);
+
+        // compare each server entry with the client paths and classify into the pull maps
+        result = syncManager.compareServerAndClientEntriesForPullSync();
+        if(!result) {
+            System.err.println("CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST(), " +
+                    "compareServerAndClientEntriesForPullSync error!");
+            return false;
+        }
+
+        // start the pull-map sync tasks (the pending push map runs after pull sync completes)
+        result = syncManager.proceedPullMaps();
+        if(!result) {
+            System.err.println("CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST(), proceedPullMaps error!");
+            return false;
+        }
+
+        return true;
+    }
+
+    // called at the server
+    private boolean processEND_SERVER_ENTRY_LIST_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventEndServerEntryListAck fse_esels = (CMFileSyncEventEndServerEntryListAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_SERVER_ENTRY_LIST_ACK() called..");
+            System.out.println("fse_esels = " + fse_esels);
+        }
+
+        return true;
     }
 
     // called at the client
