@@ -617,6 +617,35 @@ public class CMFileSyncManager extends CMServiceManager {
         return sendResult;
     }
 
+    // online-mode MODIFY helper: skips block-checksum flow; updates baseMtime to server mtime,
+    // marks entry completed, and sends COMPLETE_PULL_MODIFY to the server.
+    private boolean proceedOnlinePullModifyEntry(String relPathStr, CMFileSyncClientEntry entry, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedOnlinePullModifyEntry() called: " + relPathStr);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // server mtime을 baseMtime으로 저장
+        syncInfo.getLastSyncedMtimeMap().put(relPathStr, entry.getServerMtime());
+
+        // entry 완료 처리
+        entry.setCompleted(true);
+
+        // COMPLETE_PULL_MODIFY 이벤트 생성 및 전송
+        CMFileSyncEventCompletePullModify fse_cpm = new CMFileSyncEventCompletePullModify();
+        fse_cpm.setInitiatorName(interInfo.getMyself().getName());
+        fse_cpm.setInitiatorUuid(interInfo.getMyself().getUuid());
+        fse_cpm.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_cpm.setModifiedPath(relPathStr);
+
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpm, serverName, null);
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.proceedOnlinePullModifyEntry(), send error: " + fse_cpm);
+
+        return sendResult;
+    }
+
     // TODO: 설계 10-2 (라인 1666~) 구현 예정 — pullModifyMap generator 스레드 시작
     private boolean proceedPullModifyMap() {
         if (CMInfo._CM_DEBUG)
