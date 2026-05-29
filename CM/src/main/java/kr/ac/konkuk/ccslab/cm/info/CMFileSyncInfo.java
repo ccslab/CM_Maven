@@ -14,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
 import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
@@ -96,6 +97,8 @@ public class CMFileSyncInfo {
     private Map<String, CMFileSyncClientEntry> pullModifyMap;
     // [NEW] 4 client: pull sync에서 server entry와 비교 결과 push 대상인 client entry (relative path 기준)
     private Map<String, CMFileSyncClientEntry> pendingPushMap;
+    // [NEW] 4 client: pull sync MODIFY용 block-checksum generator 스레드
+    private CMFileSyncPullGenerator pullGenerator;
 
     private CMFileSyncInfo() {
 
@@ -134,6 +137,7 @@ public class CMFileSyncInfo {
         pullCreateMap = new HashMap<>();    // 4 client
         pullModifyMap = new HashMap<>();    // 4 client
         pendingPushMap = new HashMap<>();   // 4 client
+        pullGenerator = null;              // 4 client
 
         CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
         if (confInfo.getSystemType().equals("SERVER")) {
@@ -369,6 +373,15 @@ public class CMFileSyncInfo {
     // [NEW] 4 client: pendingPushMap getter
     public Map<String, CMFileSyncClientEntry> getPendingPushMap() {
         return pendingPushMap;
+    }
+
+    // [NEW] 4 client: pullGenerator getter/setter
+    public CMFileSyncPullGenerator getPullGenerator() {
+        return pullGenerator;
+    }
+
+    public void setPullGenerator(CMFileSyncPullGenerator pullGenerator) {
+        this.pullGenerator = pullGenerator;
     }
 
     // [NEW] 4 client: lastSyncedMtimeMap getter / convenience methods
