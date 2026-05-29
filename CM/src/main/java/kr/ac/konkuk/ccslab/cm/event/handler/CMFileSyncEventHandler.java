@@ -82,6 +82,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.SERVER_ENTRIES_ACK -> processResult = processSERVER_ENTRIES_ACK(fse);
             case CMFileSyncEvent.END_SERVER_ENTRY_LIST -> processResult = processEND_SERVER_ENTRY_LIST(fse);
             case CMFileSyncEvent.END_SERVER_ENTRY_LIST_ACK -> processResult = processEND_SERVER_ENTRY_LIST_ACK(fse);
+            case CMFileSyncEvent.COMPLETE_PULL_DELETE -> processResult = processCOMPLETE_PULL_DELETE(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -607,6 +608,53 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return true;
+    }
+
+    // called at the server
+    private boolean processCOMPLETE_PULL_DELETE(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePullDelete fse_cpd = (CMFileSyncEventCompletePullDelete) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PULL_DELETE() called..");
+            System.out.println("fse_cpd = " + fse_cpd);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        String initiatorName = fse_cpd.getInitiatorName();
+        UUID initiatorUuid = fse_cpd.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_cpd.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        List<String> deletedPathList = fse_cpd.getDeletedPathList();
+        boolean result = true;
+
+        // get the pull-state map for this client device
+        Map<String, CMFileSyncClientEntry> pullStateMap = syncInfo.getPullStateTable().get(stateKey);
+        if(pullStateMap == null) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_DELETE(), " +
+                    "pullStateMap is null for stateKey = " + stateKey);
+            return false;
+        }
+
+        // mark the deleted paths as completed in the pull-state map
+        if(deletedPathList != null) {
+            for(String deletedPath : deletedPathList) {
+                CMFileSyncClientEntry entry = pullStateMap.get(deletedPath);
+                if(entry != null) {
+                    entry.setCompleted(true);
+                } else {
+                    System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_DELETE(), " +
+                            "entry not found in pullStateMap for path: " + deletedPath);
+                }
+            }
+        }
+
+        // check whether the whole pull sync is complete
+        if(syncManager.isCompletePullSync(pullStateMap)) {
+            result = syncManager.completePullSync(initiatorName, initiatorUuid, initiatorDeviceUuid);
+        }
+
+        return result;
     }
 
     // called at the client
