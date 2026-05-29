@@ -14,6 +14,7 @@ import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 
 import javax.xml.bind.DatatypeConverter;
@@ -646,10 +647,75 @@ public class CMFileSyncManager extends CMServiceManager {
         return sendResult;
     }
 
-    // TODO: 설계 10-2 (라인 1666~) 구현 예정 — pullModifyMap generator 스레드 시작
     private boolean proceedPullModifyMap() {
         if (CMInfo._CM_DEBUG)
-            System.out.println("=== CMFileSyncManager.proceedPullModifyMap() called.. (not yet implemented)");
+            System.out.println("=== CMFileSyncManager.proceedPullModifyMap() called..");
+
+        // (1) 필요 변수
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // (2) system type 확인
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.proceedPullModifyMap(), not a CLIENT.");
+            return false;
+        }
+
+        // (3) pullModifyMap 비어있으면 즉시 true
+        Map<String, CMFileSyncClientEntry> pullModifyMap = syncInfo.getPullModifyMap();
+        if (pullModifyMap == null || pullModifyMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pullModifyMap is empty. nothing to do.");
+            return true;
+        }
+
+        // (3.5) online/local 분리 처리
+        List<CMFileSyncClientEntry> localModifyList = new ArrayList<>();
+        boolean result = true;
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+
+        for (Map.Entry<String, CMFileSyncClientEntry> mapEntry : pullModifyMap.entrySet()) {
+            String relPathStr = mapEntry.getKey();
+            CMFileSyncClientEntry entry = mapEntry.getValue();
+            Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+            if (isOnlineMode(absPath)) {
+                result &= proceedOnlinePullModifyEntry(relPathStr, entry, serverName);
+            } else {
+                localModifyList.add(entry);
+            }
+        }
+
+        if (localModifyList.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("no local-mode MODIFY entries -- skip pullGenerator.");
+            return result;
+        }
+
+        // (4) 이미 pullGenerator가 동작 중이면 중복 시작 방지
+        if (syncInfo.getPullGenerator() != null) {
+            System.err.println("pullGenerator already exists; skip.");
+            return false;
+        }
+
+        // (5) generator 생성에 필요한 정보 수집
+        String initiatorName = interInfo.getMyself().getName();
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+
+        // (6) generator 생성 및 등록
+        CMFileSyncPullGenerator pullGen = new CMFileSyncPullGenerator(
+                initiatorName, initiatorUuid, initiatorDeviceUuid,
+                serverName, localModifyList);
+        syncInfo.setPullGenerator(pullGen);
+
+        // (7) executor에 submit
+        ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
+        es.submit(pullGen);
+
+        if (CMInfo._CM_DEBUG)
+            System.out.println("pullGenerator submitted with " + localModifyList.size() + " entries.");
+
         return true;
     }
 
