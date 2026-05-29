@@ -67,7 +67,7 @@ public abstract class CMFileSyncEvent extends CMEvent {
      * event ID of the CMFileSyncEventStartFileBlockChecksum class.
      */
     // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
-    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize
+    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize, String relativePath
     public static final int START_FILE_BLOCK_CHECKSUM = 8;
 
     /**

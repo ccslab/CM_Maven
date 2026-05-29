@@ -5,6 +5,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPullModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -2012,7 +2013,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return true;
     }
 
-    // called at the client
+    // called at the client (full push) or the server (pull sync) depending on system type
     private boolean processSTART_FILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
         CMFileSyncEventStartFileBlockChecksum startChecksumEvent = (CMFileSyncEventStartFileBlockChecksum) fse;
 
@@ -2021,6 +2022,20 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("startChecksumEvent = " + startChecksumEvent);
         }
 
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if(confInfo.getSystemType().equals("SERVER")) {
+            return processSTART_FILE_BLOCK_CHECKSUM_AtServer(startChecksumEvent);
+        } else if(confInfo.getSystemType().equals("CLIENT")) {
+            return processSTART_FILE_BLOCK_CHECKSUM_AtClient(startChecksumEvent);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM(), unknown system type: "
+                    + confInfo.getSystemType());
+            return false;
+        }
+    }
+
+    // called at the client (full push sync): prepares to receive the basis file block checksums
+    private boolean processSTART_FILE_BLOCK_CHECKSUM_AtClient(CMFileSyncEventStartFileBlockChecksum startChecksumEvent) {
         int fileIndex = startChecksumEvent.getFileEntryIndex();
         int totalNumBlocks = startChecksumEvent.getTotalNumBlocks();
         int returnCode = 1;
@@ -2061,6 +2076,78 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setReturnCode(returnCode);
 
         // send the ack event
+        return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender(), startChecksumEvent.getSenderUuid());
+    }
+
+    // called at the server (pull sync): registers fileEntryIndex<->path mapping in the
+    // CMFileSyncPullModifyState holder and reserves structures to receive source block checksums.
+    private boolean processSTART_FILE_BLOCK_CHECKSUM_AtServer(CMFileSyncEventStartFileBlockChecksum startChecksumEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_AtServer() called..");
+
+        int fileEntryIndex = startChecksumEvent.getFileEntryIndex();
+        int totalNumBlocks = startChecksumEvent.getTotalNumBlocks();
+        int blockSize = startChecksumEvent.getBlockSize();
+        String relativePath = startChecksumEvent.getRelativePath();
+        String initiatorName = startChecksumEvent.getInitiatorName();
+        UUID initiatorUuid = startChecksumEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = startChecksumEvent.getInitiatorDeviceUuid();
+        int returnCode = 1;
+
+        // relativePath must be non-empty in pull sync
+        if(relativePath == null || relativePath.isEmpty()) {
+            System.err.println("CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_AtServer(), "
+                    + "relativePath is empty.");
+            returnCode = 0;
+        }
+
+        // resolve the server-side source file path (server sync home + relativePath)
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        if(returnCode == 1) {
+            Path serverSyncHome = syncManager.getServerSyncHome(initiatorName);
+            Path sourceAbsPath = serverSyncHome.resolve(relativePath).normalize();
+            if(!Files.exists(sourceAbsPath)) {
+                System.err.println("CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_AtServer(), "
+                        + "source file does not exist: " + sourceAbsPath);
+                returnCode = 0;
+            }
+        }
+
+        // register the holder structures only when the source is valid
+        if(returnCode == 1) {
+            CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+            CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+            Map<CMFileSyncStateKey, CMFileSyncPullModifyState> pullModifyStateMap = syncInfo.getPullModifyStateMap();
+            CMFileSyncPullModifyState pullModifyState = pullModifyStateMap.get(stateKey);
+            if(pullModifyState == null) {
+                pullModifyState = new CMFileSyncPullModifyState(initiatorName, initiatorUuid, initiatorDeviceUuid);
+                pullModifyStateMap.put(stateKey, pullModifyState);
+                if(CMInfo._CM_DEBUG)
+                    System.out.println("created and registered new PullModifyState for stateKey = " + stateKey);
+            }
+
+            // reserve structures for this fileEntryIndex
+            CMFileSyncBlockChecksum[] checksumArray = new CMFileSyncBlockChecksum[totalNumBlocks];
+            pullModifyState.getBlockChecksumArrayMap().put(fileEntryIndex, checksumArray);
+            Map<Short, Integer> hashToBlockMap = new Hashtable<>();
+            pullModifyState.getFileIndexToHashToBlockIndexMap().put(fileEntryIndex, hashToBlockMap);
+            pullModifyState.getBlockSizeMap().put(fileEntryIndex, blockSize);
+            pullModifyState.getFileEntryIndexToRelativePathMap().put(fileEntryIndex, relativePath);
+            pullModifyState.getIsUpdateFileCompletedMap().put(relativePath, false);
+        }
+
+        // create and send the ack event to the client (CMFileSyncPullGenerator)
+        CMFileSyncEventStartFileBlockChecksumAck ackEvent = new CMFileSyncEventStartFileBlockChecksumAck();
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(initiatorName);
+        ackEvent.setInitiatorUuid(initiatorUuid);
+        ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정 (수신 이벤트 그대로)
+        ackEvent.setBlockSize(blockSize);
+        ackEvent.setFileEntryIndex(fileEntryIndex);
+        ackEvent.setTotalNumBlocks(totalNumBlocks);
+        ackEvent.setReturnCode(returnCode);
+
         return CMEventManager.unicastEvent(ackEvent, startChecksumEvent.getSender(), startChecksumEvent.getSenderUuid());
     }
 

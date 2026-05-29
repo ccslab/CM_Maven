@@ -184,6 +184,8 @@ public class CMFileSyncPullGenerator implements Runnable {
         fse.setFileEntryIndex(fileEntryIndex);
         fse.setTotalNumBlocks(checksumArray.length);
         fse.setBlockSize(blockSizeOfBasisFileMap.get(fileEntryIndex));
+        // pull sync: carry the relative path so the server can map fileEntryIndex to a path
+        fse.setRelativePath(pullModifyEntryList.get(fileEntryIndex).getPath());
 
         boolean ret = CMEventManager.unicastEvent(fse, serverName, null);
         if (!ret)
