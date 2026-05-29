@@ -8,6 +8,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRegistry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncJacksonSnapshotStore;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPullModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
@@ -82,6 +83,8 @@ public class CMFileSyncInfo {
     private Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> serverEntryMap;
     // [NEW] 4 server: pull sync의 완료 여부 상태를 확인하기 위한 map
     private Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pullStateTable;
+    // [NEW] 4 server: stateKey별 pull sync MODIFY 진행 상태 holder
+    private Map<CMFileSyncStateKey, CMFileSyncPullModifyState> pullModifyStateMap;
 
     // [NEW] 4 client: 서버로부터 받은 server entry list (수신 이벤트의 serverEntryList 참조)
     private List<CMFileSyncChangeLogEntry> serverEntryList;
@@ -130,6 +133,7 @@ public class CMFileSyncInfo {
         // [NEW] pull sync 관련 필드 초기화
         serverEntryMap = new HashMap<>();   // 4 server
         pullStateTable = new HashMap<>();   // 4 server
+        pullModifyStateMap = new Hashtable<>(); // 4 server
         serverEntryList = null;             // 4 client
         clientPathList = null;              // 4 client
         serverCursor = -1;                  // 4 client
@@ -321,6 +325,11 @@ public class CMFileSyncInfo {
     // [NEW] 4 server: serverEntryMap getter
     public Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> getServerEntryMap() {
         return serverEntryMap;
+    }
+
+    // [NEW] 4 server: pullModifyStateMap getter
+    public Map<CMFileSyncStateKey, CMFileSyncPullModifyState> getPullModifyStateMap() {
+        return pullModifyStateMap;
     }
 
     // [NEW] 4 server: pullStateTable getter
