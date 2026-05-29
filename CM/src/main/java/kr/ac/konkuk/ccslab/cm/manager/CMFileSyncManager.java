@@ -574,6 +574,18 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // called by server; returns true only if every entry in the given pullStateMap is completed.
+    public boolean isCompletePullSync(Map<String, CMFileSyncClientEntry> pullStateMap) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.isCompletePullSync() called..");
+
+        boolean isCompleted = true;
+        for (CMFileSyncClientEntry entry : pullStateMap.values()) {
+            isCompleted &= entry.isCompleted();
+        }
+        return isCompleted;
+    }
+
     // TODO: 설계 10-2 (라인 1666~) 구현 예정 — pullModifyMap generator 스레드 시작
     private boolean proceedPullModifyMap() {
         if (CMInfo._CM_DEBUG)
