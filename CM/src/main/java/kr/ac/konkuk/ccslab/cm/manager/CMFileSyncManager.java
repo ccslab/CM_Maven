@@ -517,6 +517,63 @@ public class CMFileSyncManager extends CMServiceManager {
         return sendResult;
     }
 
+    // called by client on file-receive completion; finds the matching pullCreateMap entry by
+    // file name, marks it completed, updates the in-memory client-index, then sends
+    // COMPLETE_PULL_CREATE to the server (file sender).
+    // NOTE: matching is by file name suffix — a future improvement should carry the full
+    // relative path in CMFileEvent to avoid ambiguity across subdirectories.
+    public boolean checkCompletePullCreate(CMFileEvent fe) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.checkCompletePullCreate() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        String fileName = fe.getFileName();
+        Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
+
+        // find the pullCreateMap key whose relative path ends with the received file name
+        String foundKey = null;
+        for (String relPath : pullCreateMap.keySet()) {
+            if (relPath.equals(fileName) || relPath.endsWith("/" + fileName)) {
+                foundKey = relPath;
+                break;
+            }
+        }
+        if (foundKey == null) {
+            System.err.println("CMFileSyncManager.checkCompletePullCreate(), "
+                    + "no pullCreateMap entry found for file: " + fileName);
+            return false;
+        }
+
+        // mark entry completed
+        CMFileSyncClientEntry entry = pullCreateMap.get(foundKey);
+        entry.setCompleted(true);
+
+        // update in-memory client-index with current mtime
+        String relPathStr = entry.getPath();
+        Path absPath = getClientSyncHome().resolve(relPathStr);
+        try {
+            long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            syncInfo.setLastSyncedMtime(relPathStr, curMtime);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // send COMPLETE_PULL_CREATE to the server (file sender)
+        CMFileSyncEventCompletePullCreate fse_cpc = new CMFileSyncEventCompletePullCreate();
+        fse_cpc.setInitiatorName(fe.getFileReceiver());
+        fse_cpc.setInitiatorUuid(fe.getFileReceiverUuid());
+        fse_cpc.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_cpc.setCreatedPath(foundKey);
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpc, fe.getFileSender(), fe.getFileSenderUuid());
+        if (!sendResult) {
+            System.err.println("CMFileSyncManager.checkCompletePullCreate(), send error: " + fse_cpc);
+            return false;
+        }
+
+        return true;
+    }
+
     // TODO: 설계 10-2 (라인 1666~) 구현 예정 — pullModifyMap generator 스레드 시작
     private boolean proceedPullModifyMap() {
         if (CMInfo._CM_DEBUG)
