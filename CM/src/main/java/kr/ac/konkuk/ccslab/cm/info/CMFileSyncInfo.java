@@ -22,6 +22,7 @@ import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -681,13 +682,54 @@ public class CMFileSyncInfo {
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
+    // [NEW] 4 server: changelog 디렉토리 경로 (initiatorName 기준, 모든 디바이스 공용)
+    private Path getServerChangelogDir(String initiatorName) {
+        return Path.of(".cm-settings", "file-sync", "server", initiatorName);
+    }
+
+    /**
+     * 서버측 changelog 파일들에서 (fromCursorExclusive, toCursorInclusive] 범위의 변경 항목을
+     * changeId 오름차순으로 읽어 반환합니다. pull sync에서 서버가 클라이언트로 보낼
+     * server entry list를 구성하는 데 사용됩니다.
+     *
+     * @param initiatorName       변경 로그를 조회할 사용자명
+     * @param fromCursorExclusive 클라이언트 cursor (이 값은 제외)
+     * @param toCursorInclusive   서버 cursor (이 값까지 포함)
+     * @return changeId 오름차순으로 정렬된 변경 항목 리스트 (없으면 빈 리스트)
+     */
+    public List<CMFileSyncChangeLogEntry> readChangeLogEntries(String initiatorName,
+                                                               long fromCursorExclusive,
+                                                               long toCursorInclusive) {
+        List<CMFileSyncChangeLogEntry> entries = new ArrayList<>();
+        Path logDir = getServerChangelogDir(initiatorName);
+        if (!Files.isDirectory(logDir)) {
+            return entries;
+        }
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(logDir, "changelog-*.jsonl")) {
+            for (Path logFile : stream) {
+                for (String line : Files.readAllLines(logFile)) {
+                    if (line.isBlank()) continue;
+                    CMFileSyncChangeLogEntry entry = CMFileSyncChangeLogEntry.fromJsonString(line);
+                    long changeId = entry.getChangeId();
+                    if (changeId > fromCursorExclusive && changeId <= toCursorInclusive) {
+                        entries.add(entry);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncInfo.readChangeLogEntries(), failed to read changelog: " + e.getMessage());
+            e.printStackTrace();
+        }
+        entries.sort(Comparator.comparingLong(CMFileSyncChangeLogEntry::getChangeId));
+        return entries;
+    }
+
     private void appendChangelog(String initiatorName, UUID initiatorDeviceUuid,
                                  String op, String path, boolean isDirectory,
                                  String contentHash, long mtimeEpochSec, long sizeBytes,
                                  long changeId) throws IOException {
         String today = LocalDate.now().toString();
-        Path logFile = Path.of(".cm-settings", "file-sync", "server",
-                initiatorName, "changelog-" + today + ".jsonl");
+        Path logFile = getServerChangelogDir(initiatorName).resolve("changelog-" + today + ".jsonl");
 
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("changeId", changeId);

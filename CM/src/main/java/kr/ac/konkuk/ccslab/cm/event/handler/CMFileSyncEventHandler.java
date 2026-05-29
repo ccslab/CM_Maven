@@ -1,6 +1,8 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
@@ -71,6 +73,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.LOCAL_MODE_LIST_ACK -> processResult = processLOCAL_MODE_LIST_ACK(fse);
             case CMFileSyncEvent.END_LOCAL_MODE_LIST -> processResult = processEND_LOCAL_MODE_LIST(fse);
             case CMFileSyncEvent.END_LOCAL_MODE_LIST_ACK -> processResult = processEND_LOCAL_MODE_LIST_ACK(fse);
+            case CMFileSyncEvent.START_PULL_SYNC -> processResult = processSTART_PULL_SYNC(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -78,6 +81,134 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    // called at the server
+    private boolean processSTART_PULL_SYNC(CMFileSyncEvent fse) {
+        CMFileSyncEventStartPullSync fse_sps = (CMFileSyncEventStartPullSync) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSTART_PULL_SYNC() called..");
+            System.out.println("fse_sps = " + fse_sps);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        String initiatorName = fse_sps.getInitiatorName();
+        UUID initiatorUuid = fse_sps.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_sps.getInitiatorDeviceUuid();
+
+        long clientCursor = fse_sps.getCursor();
+        int returnCode;
+        boolean isPullSync = false;
+
+        // get the server-side cursor (last applied change id) for this client device
+        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid).lastChangeId();
+
+        // decide the return code by comparing the client cursor with the server cursor
+        if(lastChangeId == 0) {
+            // no sync history on the server -> client should perform full push sync
+            returnCode = 0;
+        } else if(lastChangeId == clientCursor) {
+            // client is already up to date
+            returnCode = 1;
+        } else if(lastChangeId > clientCursor) {
+            // client is behind -> pull sync needed
+            returnCode = 2;
+            isPullSync = true;
+        } else {
+            // server cursor < client cursor -> error, full push sync needed
+            returnCode = -1;
+        }
+
+        // create and send the START_PULL_SYNC_ACK event
+        CMFileSyncEventStartPullSyncAck ackEvent = new CMFileSyncEventStartPullSyncAck();
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(initiatorName);
+        ackEvent.setInitiatorUuid(initiatorUuid);
+        ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
+        ackEvent.setReturnCode(returnCode);
+        ackEvent.setServerCursor(lastChangeId);
+
+        boolean sendResult = CMEventManager.unicastEvent(ackEvent, initiatorName, initiatorUuid);
+        if(!sendResult) {
+            System.err.println("send error: " + ackEvent);
+            return false;
+        }
+
+        // if pull sync is needed, start sending the server changelog entry list to the client
+        if(isPullSync) {
+            sendResult = startServerEntryList(clientCursor, lastChangeId, initiatorName, initiatorUuid,
+                    initiatorDeviceUuid);
+            if(!sendResult) {
+                System.err.println("CMFileSyncEventHandler.processSTART_PULL_SYNC(), startServerEntryList error!");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // called at the server
+    private boolean startServerEntryList(long clientCursor, long serverCursor, String initiatorName,
+                                         UUID initiatorUuid, UUID initiatorDeviceUuid) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.startServerEntryList() called..");
+            System.out.println("clientCursor = " + clientCursor + ", serverCursor = " + serverCursor);
+            System.out.println("initiatorName = " + initiatorName);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+
+        // read the changelog entries in the range (clientCursor, serverCursor], sorted by change id
+        List<CMFileSyncChangeLogEntry> changeLogEntries =
+                syncInfo.readChangeLogEntries(initiatorName, clientCursor, serverCursor);
+
+        // keep only the latest changelog entry per path (entries are in change-id order)
+        Map<String, CMFileSyncChangeLogEntry> latestEntryByPath = new LinkedHashMap<>();
+        for(CMFileSyncChangeLogEntry entry : changeLogEntries) {
+            latestEntryByPath.put(entry.getPath(), entry);
+        }
+
+        // build the server entry list to send to the client and store it in the serverEntryMap
+        List<CMFileSyncChangeLogEntry> serverEntryList = new ArrayList<>(latestEntryByPath.values());
+        syncInfo.getServerEntryMap().put(stateKey, serverEntryList);
+
+        // build the pull-state map (relative path -> client entry) for tracking pull-sync completion
+        Map<String, CMFileSyncClientEntry> pullStateMap = new LinkedHashMap<>();
+        for(CMFileSyncChangeLogEntry entry : serverEntryList) {
+            CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry()
+                    .setPath(entry.getPath())
+                    .setSize(entry.getSize())
+                    .setOpHint(entry.getOp());
+            pullStateMap.put(entry.getPath(), clientEntry);
+        }
+        syncInfo.getPullStateTable().put(stateKey, pullStateMap);
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("serverEntryList size = " + serverEntryList.size());
+            System.out.println("serverEntryList = " + serverEntryList);
+        }
+
+        // notify the client of the start of the server-entry-list transmission.
+        // the actual SERVER_ENTRIES batches are sent when the START_SERVER_ENTRY_LIST_ACK is received.
+        CMFileSyncEventStartServerEntryList fse_ssel = new CMFileSyncEventStartServerEntryList();
+        // 공통 필드 설정
+        fse_ssel.setInitiatorName(initiatorName);
+        fse_ssel.setInitiatorUuid(initiatorUuid);
+        fse_ssel.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
+        fse_ssel.setNumTotalFiles(serverEntryList.size());
+
+        boolean sendResult = CMEventManager.unicastEvent(fse_ssel, initiatorName, initiatorUuid);
+        if(!sendResult) {
+            System.err.println("send error: " + fse_ssel);
+            return false;
+        }
+
+        return true;
     }
 
     // called at the client
