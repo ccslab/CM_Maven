@@ -481,11 +481,40 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    // TODO: 설계 10-2 (라인 1449~) 구현 예정 — pullCreateMap 신규 파일 수신 시작
+    // called by client; requests file pull from server for each entry in pullCreateMap.
+    // online-mode entries are handled inline (no actual transfer); offline-mode entries
+    // request a permit which triggers the normal file-transfer flow, with
+    // checkCompletePullCreate() called on receipt.
     private boolean proceedPullCreateMap() {
         if (CMInfo._CM_DEBUG)
-            System.out.println("=== CMFileSyncManager.proceedPullCreateMap() called.. (not yet implemented)");
-        return true;
+            System.out.println("=== CMFileSyncManager.proceedPullCreateMap() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
+        Set<String> keys = pullCreateMap.keySet();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+
+        if (pullCreateMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pullCreateMap is empty, nothing to create.");
+            return true;
+        }
+
+        boolean sendResult = true;
+        for (String relPathStr : keys) {
+            Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+            boolean isOnlinePath = isOnlineMode(absPath);
+            if (isOnlinePath) {
+                sendResult &= proceedOnlinePullCreateEntry(relPathStr, pullCreateMap.get(relPathStr), serverName);
+            } else {
+                sendResult &= CMFileTransferManager.requestPermitForPullFile(relPathStr, serverName);
+            }
+            if (!sendResult)
+                System.err.println("CMFileSyncManager.proceedPullCreateMap(), failed for: " + relPathStr);
+        }
+
+        return sendResult;
     }
 
     // TODO: 설계 10-2 (라인 1666~) 구현 예정 — pullModifyMap generator 스레드 시작
