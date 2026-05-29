@@ -74,6 +74,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.END_LOCAL_MODE_LIST -> processResult = processEND_LOCAL_MODE_LIST(fse);
             case CMFileSyncEvent.END_LOCAL_MODE_LIST_ACK -> processResult = processEND_LOCAL_MODE_LIST_ACK(fse);
             case CMFileSyncEvent.START_PULL_SYNC -> processResult = processSTART_PULL_SYNC(fse);
+            case CMFileSyncEvent.START_PULL_SYNC_ACK -> processResult = processSTART_PULL_SYNC_ACK(fse);
+            case CMFileSyncEvent.START_SERVER_ENTRY_LIST -> processResult = processSTART_SERVER_ENTRY_LIST(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -209,6 +211,94 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return true;
+    }
+
+    // called at the client
+    private boolean processSTART_PULL_SYNC_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventStartPullSyncAck ackEvent = (CMFileSyncEventStartPullSyncAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSTART_PULL_SYNC_ACK() called..");
+            System.out.println("ackEvent = " + ackEvent);
+        }
+
+        int returnCode = ackEvent.getReturnCode();
+        long serverCursor = ackEvent.getServerCursor();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+
+        boolean result = true;
+        if(returnCode == -1) {
+            // error: server cursor < client cursor -> recover with full push sync
+            System.err.println("CMFileSyncEventHandler.processSTART_PULL_SYNC_ACK(), server cursor("
+                    + serverCursor + ") < client cursor; starting full push sync.");
+            result = syncManager.startFullPushSync();
+        } else if(returnCode == 0) {
+            // no sync history on the server -> full push sync
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("no sync history on the server; starting full push sync.");
+            }
+            result = syncManager.startFullPushSync();
+        } else if(returnCode == 1) {
+            // client is already up to date -> end the sync session
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("client is up to date with the server; nothing to sync.");
+            }
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+        } else if(returnCode == 2) {
+            // pull sync needed -> save the server cursor and wait for START_SERVER_ENTRY_LIST
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("pull sync needed; serverCursor = " + serverCursor);
+            }
+            syncInfo.setServerCursor(serverCursor);
+            // the server sends START_SERVER_ENTRY_LIST right after this ack.
+        } else {
+            System.err.println("CMFileSyncEventHandler.processSTART_PULL_SYNC_ACK(), invalid returnCode("
+                    + returnCode + ")!");
+            return false;
+        }
+
+        return result;
+    }
+
+    // called at the client
+    private boolean processSTART_SERVER_ENTRY_LIST(CMFileSyncEvent fse) {
+        CMFileSyncEventStartServerEntryList fse_ssel = (CMFileSyncEventStartServerEntryList) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSTART_SERVER_ENTRY_LIST() called..");
+            System.out.println("fse_ssel = " + fse_ssel);
+        }
+
+        String initiatorName = fse_ssel.getInitiatorName();
+        UUID initiatorUuid = fse_ssel.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_ssel.getInitiatorDeviceUuid();
+
+        // get the file-sync manager and the client sync home
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        Path clientSyncHome = syncManager.getClientSyncHome();
+        // check and create the client sync home
+        if(Files.notExists(clientSyncHome)) {
+            try {
+                Files.createDirectories(clientSyncHome);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // create the ack event
+        CMFileSyncEventStartServerEntryListAck ackFse = new CMFileSyncEventStartServerEntryListAck();
+        // 공통 필드 설정
+        ackFse.setInitiatorName(initiatorName);
+        ackFse.setInitiatorUuid(initiatorUuid);
+        ackFse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
+        ackFse.setNumTotalFiles(fse_ssel.getNumTotalFiles());
+        ackFse.setReturnCode(1);    // always success
+
+        // send the ack event to the server (the sender of the start event)
+        return CMEventManager.unicastEvent(ackFse, fse_ssel.getSender(), fse_ssel.getSenderUuid());
     }
 
     // called at the client
