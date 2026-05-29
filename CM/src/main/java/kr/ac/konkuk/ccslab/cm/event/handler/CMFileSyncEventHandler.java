@@ -78,6 +78,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.START_PULL_SYNC_ACK -> processResult = processSTART_PULL_SYNC_ACK(fse);
             case CMFileSyncEvent.START_SERVER_ENTRY_LIST -> processResult = processSTART_SERVER_ENTRY_LIST(fse);
             case CMFileSyncEvent.START_SERVER_ENTRY_LIST_ACK -> processResult = processSTART_SERVER_ENTRY_LIST_ACK(fse);
+            case CMFileSyncEvent.SERVER_ENTRIES -> processResult = processSERVER_ENTRIES(fse);
+            case CMFileSyncEvent.SERVER_ENTRIES_ACK -> processResult = processSERVER_ENTRIES_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -386,6 +388,138 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return fse_se;
+    }
+
+    // called at the client
+    private boolean processSERVER_ENTRIES(CMFileSyncEvent fse) {
+        CMFileSyncEventServerEntries fse_se = (CMFileSyncEventServerEntries) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSERVER_ENTRIES() called..");
+            System.out.println("fse_se = " + fse_se);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<CMFileSyncChangeLogEntry> serverEntryList = syncInfo.getServerEntryList();
+        int returnCode = 1;
+        int numFilesCompleted = 0;
+        int numFiles = fse_se.getNumFiles();
+
+        // append the server entry list in the event to the client-side serverEntryList
+        if(numFiles > 0) {
+            if(serverEntryList == null) {
+                // set the new entry list
+                syncInfo.setServerEntryList(fse_se.getServerEntryList());
+                numFilesCompleted = numFiles;
+            } else {
+                // add the new entry list to the existing list
+                boolean addResult = serverEntryList.addAll(fse_se.getServerEntryList());
+                if(!addResult) {
+                    System.err.println("CMFileSyncEventHandler.processSERVER_ENTRIES(), entry list add error!");
+                    returnCode = 0;
+                    numFilesCompleted = fse_se.getNumFilesCompleted();
+                } else {
+                    numFilesCompleted = fse_se.getNumFilesCompleted() + numFiles;
+                }
+            }
+        }
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("numFilesCompleted = " + numFilesCompleted);
+            System.out.println("returnCode = " + returnCode);
+        }
+
+        // create and send the ack event to the server
+        CMFileSyncEventServerEntriesAck ackEvent = new CMFileSyncEventServerEntriesAck();
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(fse_se.getInitiatorName());
+        ackEvent.setInitiatorUuid(fse_se.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(fse_se.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
+        ackEvent.setNumFilesCompleted(numFilesCompleted);
+        ackEvent.setNumFiles(numFiles);
+        ackEvent.setReturnCode(returnCode);
+
+        return CMEventManager.unicastEvent(ackEvent, fse_se.getSender(), fse_se.getSenderUuid());
+    }
+
+    // called at the server
+    private boolean processSERVER_ENTRIES_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventServerEntriesAck fse_sea = (CMFileSyncEventServerEntriesAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSERVER_ENTRIES_ACK() called..");
+            System.out.println("fse_sea = " + fse_sea);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        String initiatorName = fse_sea.getInitiatorName();
+        UUID initiatorDeviceUuid = fse_sea.getInitiatorDeviceUuid();
+
+        // check the return code
+        int returnCode = fse_sea.getReturnCode();
+        if(returnCode == 0) {
+            System.err.println("CMFileSyncEventHandler.processSERVER_ENTRIES_ACK(), return code = " + returnCode);
+            return false;
+        }
+
+        // check if there are remaining server entries to send
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        int numFilesCompleted = fse_sea.getNumFilesCompleted();
+        int serverEntryListSize = syncInfo.getServerEntryMap().get(stateKey).size();
+        boolean sendResult;
+        if(numFilesCompleted < serverEntryListSize) {
+            // send the next batch
+            sendResult = sendNextServerEntries(fse_sea);
+        } else if(numFilesCompleted == serverEntryListSize) {
+            // send the END_SERVER_ENTRY_LIST event
+            sendResult = sendEND_SERVER_ENTRY_LIST(fse_sea);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processSERVER_ENTRIES_ACK(), numFilesCompleted("
+                    + numFilesCompleted + ") > serverEntryListSize(" + serverEntryListSize + ")!");
+            return false;
+        }
+
+        return sendResult;
+    }
+
+    // called at the server
+    private boolean sendNextServerEntries(CMFileSyncEventServerEntriesAck fse_sea) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.sendNextServerEntries() called..");
+        }
+
+        // create the next SERVER_ENTRIES event
+        CMFileSyncEventServerEntries newfse = new CMFileSyncEventServerEntries();
+        // 공통 필드 설정
+        newfse.setInitiatorName(fse_sea.getInitiatorName());
+        newfse.setInitiatorUuid(fse_sea.getInitiatorUuid());
+        newfse.setInitiatorDeviceUuid(fse_sea.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
+        newfse.setNumFilesCompleted(fse_sea.getNumFilesCompleted());
+        int startListIndex = fse_sea.getNumFilesCompleted();
+        setServerNumFilesAndEntryList(newfse, startListIndex);
+
+        // send the event to the client
+        return CMEventManager.unicastEvent(newfse, fse_sea.getSender(), fse_sea.getSenderUuid());
+    }
+
+    // called at the server
+    private boolean sendEND_SERVER_ENTRY_LIST(CMFileSyncEventServerEntriesAck fse_sea) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.sendEND_SERVER_ENTRY_LIST() called..");
+        }
+
+        // create the END_SERVER_ENTRY_LIST event
+        CMFileSyncEventEndServerEntryList newfse = new CMFileSyncEventEndServerEntryList();
+        // 공통 필드 설정
+        newfse.setInitiatorName(fse_sea.getInitiatorName());
+        newfse.setInitiatorUuid(fse_sea.getInitiatorUuid());
+        newfse.setInitiatorDeviceUuid(fse_sea.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
+        newfse.setNumFilesCompleted(fse_sea.getNumFilesCompleted());
+
+        // send the event to the client
+        return CMEventManager.unicastEvent(newfse, fse_sea.getSender(), fse_sea.getSenderUuid());
     }
 
     // called at the client
