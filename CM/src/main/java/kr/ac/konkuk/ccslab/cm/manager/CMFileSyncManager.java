@@ -586,6 +586,34 @@ public class CMFileSyncManager extends CMServiceManager {
         return isCompleted;
     }
 
+    // called by server; removes the pullStateMap for the given client from pullStateTable,
+    // then sends COMPLETE_PULL_SYNC to that client.
+    public boolean completePullSync(String initiatorName, UUID initiatorUuid, UUID initiatorDeviceUuid) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.completePullSync() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pullStateTable = syncInfo.getPullStateTable();
+        Map<String, CMFileSyncClientEntry> pullStateMap = pullStateTable.remove(stateKey);
+        if (pullStateMap == null) {
+            System.err.println("CMFileSyncManager.completePullSync(), pullStateMap not found for: " + stateKey);
+            return false;
+        }
+
+        CMFileSyncEventCompletePullSync fse_cps = new CMFileSyncEventCompletePullSync();
+        fse_cps.setInitiatorName(initiatorName);
+        fse_cps.setInitiatorUuid(initiatorUuid);
+        fse_cps.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_cps.setNumFilesCompleted(pullStateMap.size());
+        boolean sendResult = CMEventManager.unicastEvent(fse_cps, initiatorName, initiatorUuid);
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.completePullSync(), send error: " + fse_cps);
+
+        return sendResult;
+    }
+
     // TODO: 설계 10-2 (라인 1666~) 구현 예정 — pullModifyMap generator 스레드 시작
     private boolean proceedPullModifyMap() {
         if (CMInfo._CM_DEBUG)
