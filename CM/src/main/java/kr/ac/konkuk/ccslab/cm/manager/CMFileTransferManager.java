@@ -2664,15 +2664,25 @@ public class CMFileTransferManager {
 
 		CMSNSManager.checkCompleteRecvAttachedFiles(fe);
 
-		// check if the transfer is for sync a new file
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-		syncManager.checkNewTransferForSync(fe);
-		// check if the transfer is for the file-sync local mode
-		syncManager.checkTransferForLocalMode(fe);
+		if (confInfo.getSystemType().equals("SERVER")) {
+			// check if the transfer is for sync a new file
+			syncManager.checkNewTransferForSync(fe);
+		} else if (confInfo.getSystemType().equals("CLIENT")) {
+			// check if the transfer is for the file-sync local mode
+			syncManager.checkTransferForLocalMode(fe);
+			// check if the transfer is for pull-sync CREATE
+			syncManager.checkCompletePullCreate(fe);
+		} else {
+			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), "
+					+ "unknown system type: " + confInfo.getSystemType());
+			return false;
+		}
 
 		return bForward;
 	}
-	
+
 	private static boolean processEND_FILE_TRANSFER_ACK(CMFileEvent fe)
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
@@ -3138,11 +3148,21 @@ public class CMFileTransferManager {
 		if(bResult)
 			CMSNSManager.checkCompleteRecvAttachedFiles(fe);
 
-		// check if the transfer is for sync a new file
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-		syncManager.checkNewTransferForSync(fe);
-		// check if the transfer is for the file-sync local mode
-		syncManager.checkTransferForLocalMode(fe);
+		if (confInfo.getSystemType().equals("SERVER")) {
+			// check if the transfer is for sync a new file
+			syncManager.checkNewTransferForSync(fe);
+		} else if (confInfo.getSystemType().equals("CLIENT")) {
+			// check if the transfer is for the file-sync local mode
+			syncManager.checkTransferForLocalMode(fe);
+			// check if the transfer is for pull-sync CREATE
+			syncManager.checkCompletePullCreate(fe);
+		} else {
+			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), "
+					+ "unknown system type: " + confInfo.getSystemType());
+			return false;
+		}
 
 		// check whether there is a remaining receiving file info or not
 		CMRecvFileInfo nextRecvInfo = fInfo.findRecvFileInfoNotStarted(fe.getFileSender(), fe.getFileSenderUuid());
