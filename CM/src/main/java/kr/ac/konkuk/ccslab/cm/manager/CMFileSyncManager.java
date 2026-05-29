@@ -530,6 +530,9 @@ public class CMFileSyncManager extends CMServiceManager {
         String fileName = fe.getFileName();
         Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
 
+        // pull sync not in progress — nothing to do
+        if (pullCreateMap.isEmpty()) return true;
+
         // find the pullCreateMap key whose relative path ends with the received file name
         String foundKey = null;
         for (String relPath : pullCreateMap.keySet()) {
