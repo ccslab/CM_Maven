@@ -1,5 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
@@ -76,6 +77,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.START_PULL_SYNC -> processResult = processSTART_PULL_SYNC(fse);
             case CMFileSyncEvent.START_PULL_SYNC_ACK -> processResult = processSTART_PULL_SYNC_ACK(fse);
             case CMFileSyncEvent.START_SERVER_ENTRY_LIST -> processResult = processSTART_SERVER_ENTRY_LIST(fse);
+            case CMFileSyncEvent.START_SERVER_ENTRY_LIST_ACK -> processResult = processSTART_SERVER_ENTRY_LIST_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -299,6 +301,91 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // send the ack event to the server (the sender of the start event)
         return CMEventManager.unicastEvent(ackFse, fse_ssel.getSender(), fse_ssel.getSenderUuid());
+    }
+
+    // called at the server
+    private boolean processSTART_SERVER_ENTRY_LIST_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventStartServerEntryListAck fse_ack = (CMFileSyncEventStartServerEntryListAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSTART_SERVER_ENTRY_LIST_ACK() called..");
+            System.out.println("fse_ack = " + fse_ack);
+        }
+
+        String initiatorName = fse_ack.getInitiatorName();
+        UUID initiatorUuid = fse_ack.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_ack.getInitiatorDeviceUuid();
+
+        // create the first SERVER_ENTRIES event; the next batches follow upon receiving its ack
+        CMFileSyncEventServerEntries fse_se = new CMFileSyncEventServerEntries();
+        // 공통 필드 설정
+        fse_se.setInitiatorName(initiatorName);
+        fse_se.setInitiatorUuid(initiatorUuid);
+        fse_se.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
+        fse_se.setNumFilesCompleted(0);
+        setServerNumFilesAndEntryList(fse_se, 0);
+
+        return CMEventManager.unicastEvent(fse_se, initiatorName, initiatorUuid);
+    }
+
+    // called at the server
+    private CMFileSyncEvent setServerNumFilesAndEntryList(CMFileSyncEventServerEntries fse_se, int startListIndex) {
+        // current number of bytes except the entry list
+        int curByteNum = fse_se.getByteNum();
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.setServerNumFilesAndEntryList() called..");
+            System.out.println("startListIndex = " + startListIndex);
+            System.out.println("curByteNum before adding entries = " + curByteNum);
+        }
+
+        String initiatorName = fse_se.getInitiatorName();
+        UUID initiatorDeviceUuid = fse_se.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<CMFileSyncChangeLogEntry> serverEntryList = syncInfo.getServerEntryMap().get(stateKey);
+        if(serverEntryList == null) {
+            System.err.println("CMFileSyncEventHandler.setServerNumFilesAndEntryList(), " +
+                    "serverEntryList is null for stateKey = " + stateKey);
+            fse_se.setNumFiles(0);
+            return fse_se;
+        }
+
+        List<CMFileSyncChangeLogEntry> subList = new ArrayList<>();
+        int index = startListIndex;
+        int numFiles = 0;
+
+        // add change-log entries to the sub-list while the event size stays under the limit.
+        // each entry is marshalled as a JSON string (see CMFileSyncEventServerEntries), so the
+        // size estimate uses that wire format rather than a field-by-field count.
+        while(curByteNum < CMInfo.MAX_EVENT_SIZE && index < serverEntryList.size()) {
+            CMFileSyncChangeLogEntry entry = serverEntryList.get(index);
+            int entryBytes;
+            try {
+                entryBytes = CMInfo.STRING_LEN_BYTES_LEN + entry.toJsonString().getBytes().length;
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+                return fse_se;
+            }
+            curByteNum += entryBytes;
+            if(curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                subList.add(entry);
+                numFiles++;
+                index++;
+            } else {
+                break;
+            }
+        }
+
+        // set numFiles and the entry sub-list
+        fse_se.setNumFiles(numFiles);
+        if(subList.isEmpty()) {
+            System.err.println("CMFileSyncEventHandler.setServerNumFilesAndEntryList(), subList is empty!");
+        } else {
+            fse_se.setServerEntryList(subList);
+        }
+
+        return fse_se;
     }
 
     // called at the client

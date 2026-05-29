@@ -55,7 +55,7 @@ public class CMFileSyncEventServerEntries extends CMFileSyncEvent {
     }
 
     @Override
-    protected int getByteNum() {
+    public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
         // numFilesCompleted
