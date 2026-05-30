@@ -13,6 +13,7 @@ import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
@@ -20,6 +21,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import javax.xml.bind.DatatypeConverter;
@@ -1934,7 +1936,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return true;
     }
 
-    // called at the server
+    // called at the server (full push sync) or the client (pull sync) depending on system type
     private boolean processSTART_FILE_BLOCK_CHECKSUM_ACK(CMFileSyncEvent fse) {
         CMFileSyncEventStartFileBlockChecksumAck startAckEvent = (CMFileSyncEventStartFileBlockChecksumAck) fse;
 
@@ -1942,6 +1944,31 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK() called..");
             System.out.println("startAckEvent = " + startAckEvent);
         }
+
+        // returnCode 가드 (양쪽 공통 선처리)
+        if(startAckEvent.getReturnCode() == 0) {
+            System.err.println("CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK(), "
+                    + "returnCode == 0, abort.");
+            return false;
+        }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if(confInfo.getSystemType().equals("SERVER")) {
+            return processSTART_FILE_BLOCK_CHECKSUM_ACK_AtServer(startAckEvent);
+        } else if(confInfo.getSystemType().equals("CLIENT")) {
+            return processSTART_FILE_BLOCK_CHECKSUM_ACK_AtClient(startAckEvent);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK(), "
+                    + "unknown system type: " + confInfo.getSystemType());
+            return false;
+        }
+    }
+
+    // called at the server (full push sync): sends source block checksums back to the client
+    private boolean processSTART_FILE_BLOCK_CHECKSUM_ACK_AtServer(CMFileSyncEventStartFileBlockChecksumAck startAckEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK_AtServer() called..");
+
         // get CMFileSyncGenerator reference
         String initiatorName = startAckEvent.getInitiatorName();
         UUID initiatorUuid = startAckEvent.getInitiatorUuid();
@@ -2008,6 +2035,94 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         endChecksumEvent.setTotalNumBlocks(totalNumBlocks); // checksumArrays.length
         endChecksumEvent.setBlockSize(startAckEvent.getBlockSize());
         ret = CMEventManager.unicastEvent(endChecksumEvent, initiatorName, initiatorUuid);
+        if(!ret) return false;
+
+        return true;
+    }
+
+    // called at the client (pull sync): sends the pull generator's block checksums to the server
+    private boolean processSTART_FILE_BLOCK_CHECKSUM_ACK_AtClient(CMFileSyncEventStartFileBlockChecksumAck startAckEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK_AtClient() called..");
+
+        String initiatorName = startAckEvent.getInitiatorName();
+        UUID initiatorUuid = startAckEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = startAckEvent.getInitiatorDeviceUuid();
+        int fileEntryIndex = startAckEvent.getFileEntryIndex();
+        int totalNumBlocks = startAckEvent.getTotalNumBlocks();
+        int blockSize = startAckEvent.getBlockSize();
+
+        // get the pull generator (CMFileSyncInfo holds a single instance on the client)
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncPullGenerator pullGenerator = syncInfo.getPullGenerator();
+        if(pullGenerator == null) {
+            System.err.println("CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK_AtClient(), "
+                    + "pullGenerator is null.");
+            return false;
+        }
+
+        // get the block checksum array of the file
+        CMFileSyncBlockChecksum[] checksumArray = pullGenerator.getBlockChecksumArrayMap().get(fileEntryIndex);
+        if(checksumArray == null) {
+            System.err.println("CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK_AtClient(), "
+                    + "checksumArray is null for fileEntryIndex = " + fileEntryIndex);
+            return false;
+        }
+
+        // determine the receiver (default server)
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+        UUID serverUuid = null;
+
+        // repeat to create and send FILE_BLOCK_CHECKSUM events to the server
+        int curIndex = 0;
+        int remainingEventBytes;
+        int checksumBytes;
+        int numCurrentBlocks;
+        boolean ret;
+        while(curIndex < checksumArray.length) {
+            CMFileSyncEventFileBlockChecksum checksumEvent = new CMFileSyncEventFileBlockChecksum();
+            // 공통 필드 설정
+            checksumEvent.setInitiatorName(initiatorName);
+            checksumEvent.setInitiatorUuid(initiatorUuid);
+            checksumEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            // 나머지 필드 설정
+            checksumEvent.setFileEntryIndex(fileEntryIndex);
+            checksumEvent.setTotalNumBlocks(totalNumBlocks);
+            checksumEvent.setStartBlockIndex(curIndex);
+
+            // calculate the maximum number of checksum elements
+            remainingEventBytes = CMInfo.MAX_EVENT_SIZE - checksumEvent.getByteNum();
+            checksumBytes = Integer.BYTES * 3;  // block index, weak checksum, length of array
+            checksumBytes += CMInfo.STRONG_CHECKSUM_LEN;    // length of strong checksum
+            numCurrentBlocks = remainingEventBytes / checksumBytes;
+            if(curIndex + numCurrentBlocks > checksumArray.length)
+                numCurrentBlocks = checksumArray.length - curIndex;
+
+            // set numCurrentBlocks and checksum array fields
+            checksumEvent.setNumCurrentBlocks(numCurrentBlocks);
+            CMFileSyncBlockChecksum[] partialChecksumArray =
+                    Arrays.copyOfRange(checksumArray, curIndex, curIndex+numCurrentBlocks);
+            checksumEvent.setChecksumArray(partialChecksumArray);
+
+            // send the event to the server
+            ret = CMEventManager.unicastEvent(checksumEvent, serverName, serverUuid);
+            if(!ret) return false;
+
+            curIndex += numCurrentBlocks;
+        }
+
+        // create and send END_FILE_BLOCK_CHECKSUM event to the server
+        CMFileSyncEventEndFileBlockChecksum endChecksumEvent = new CMFileSyncEventEndFileBlockChecksum();
+        // 공통 필드 설정
+        endChecksumEvent.setInitiatorName(initiatorName);
+        endChecksumEvent.setInitiatorUuid(initiatorUuid);
+        endChecksumEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        // 나머지 필드 설정
+        endChecksumEvent.setFileEntryIndex(fileEntryIndex);
+        endChecksumEvent.setTotalNumBlocks(totalNumBlocks);
+        endChecksumEvent.setBlockSize(blockSize);
+        ret = CMEventManager.unicastEvent(endChecksumEvent, serverName, serverUuid);
         if(!ret) return false;
 
         return true;
