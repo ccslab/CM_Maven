@@ -1416,7 +1416,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return true;
     }
 
-    // called at the client
+    // called at the client (full push sync) or the server (pull sync) depending on system type
     private boolean processEND_FILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
         CMFileSyncEventEndFileBlockChecksum endChecksumEvent = (CMFileSyncEventEndFileBlockChecksum) fse;
 
@@ -1424,6 +1424,23 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM() called..");
             System.out.println("endChecksumEvent = " + endChecksumEvent);
         }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if(confInfo.getSystemType().equals("SERVER")) {
+            return processEND_FILE_BLOCK_CHECKSUM_AtServer(endChecksumEvent);
+        } else if(confInfo.getSystemType().equals("CLIENT")) {
+            return processEND_FILE_BLOCK_CHECKSUM_AtClient(endChecksumEvent);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM(), "
+                    + "unknown system type: " + confInfo.getSystemType());
+            return false;
+        }
+    }
+
+    // called at the client (full push sync): compare blocks against the basis file and send the ACK to the server
+    private boolean processEND_FILE_BLOCK_CHECKSUM_AtClient(CMFileSyncEventEndFileBlockChecksum endChecksumEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_AtClient() called..");
 
         int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
         int blockSize = endChecksumEvent.getBlockSize();
@@ -1452,13 +1469,6 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setFileEntryIndex(fileEntryIndex);
         ackEvent.setTotalNumBlocks(endChecksumEvent.getTotalNumBlocks());
         ackEvent.setBlockSize(blockSize);
-        // set a return code
-/*
-            if(channel.position() == channel.size())
-                ackEvent.setReturnCode(1);
-            else
-                ackEvent.setReturnCode(0);
-*/
         ackEvent.setReturnCode(1);
 
         // calculate a file checksum and set it to the ack event
@@ -1473,6 +1483,104 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // send the ack event
         ret = CMEventManager.unicastEvent(ackEvent, endChecksumEvent.getSender(), endChecksumEvent.getSenderUuid());
         if(!ret) return false;
+
+        return true;
+    }
+
+    // called at the server (pull sync): compute delta from PullModifyState and send the ACK to the client
+    private boolean processEND_FILE_BLOCK_CHECKSUM_AtServer(CMFileSyncEventEndFileBlockChecksum endChecksumEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_AtServer() called..");
+
+        int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
+        int blockSize = endChecksumEvent.getBlockSize();
+        String initiatorName = endChecksumEvent.getInitiatorName();
+        UUID initiatorDeviceUuid = endChecksumEvent.getInitiatorDeviceUuid();
+
+        // get the PullModifyState by stateKey
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        CMFileSyncPullModifyState pullModifyState = syncInfo.getPullModifyStateMap().get(stateKey);
+        if(pullModifyState == null) {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_AtServer(), "
+                    + "pullModifyState is null for stateKey = " + stateKey);
+            return false;
+        }
+
+        // resolve the source file path (server sync home + relativePath)
+        String relativePath = pullModifyState.getFileEntryIndexToRelativePathMap().get(fileEntryIndex);
+        if(relativePath == null) {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_AtServer(), "
+                    + "relativePath is null for fileEntryIndex = " + fileEntryIndex);
+            return false;
+        }
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager =
+                Objects.requireNonNull(cmInfo.getServiceManager(CMFileSyncManager.class));
+        Path serverSyncHome = syncManager.getServerSyncHome(initiatorName);
+        Path sourcePath = serverSyncHome.resolve(relativePath).normalize();
+        if(!Files.exists(sourcePath)) {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_AtServer(), "
+                    + "source file does not exist: " + sourcePath);
+            return false;
+        }
+
+        // open the source file read channel and register it in PullModifyState
+        // (compareFileBlocksAtServer opens its own try-with-resources channel; this one is a cleanup safety net)
+        try {
+            SeekableByteChannel sourceChannel = Files.newByteChannel(sourcePath, StandardOpenOption.READ);
+            pullModifyState.getSourceFileChannelForReadMap().put(fileEntryIndex, sourceChannel);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        boolean ret = compareFileBlocksAtServer(endChecksumEvent, pullModifyState, sourcePath);
+        if(!ret) {
+            System.err.println("error to compare file blocks at server!");
+            pullModifyState.cleanupForFileEntry(fileEntryIndex);
+            return false;
+        }
+
+        // create and send an END_FILE_BLOCK_CHECKSUM_ACK event
+        CMFileSyncEventEndFileBlockChecksumAck ackEvent = new CMFileSyncEventEndFileBlockChecksumAck();
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(endChecksumEvent.getInitiatorName());
+        ackEvent.setInitiatorUuid(endChecksumEvent.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(endChecksumEvent.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
+        ackEvent.setFileEntryIndex(fileEntryIndex);
+        ackEvent.setTotalNumBlocks(endChecksumEvent.getTotalNumBlocks());
+        ackEvent.setBlockSize(blockSize);
+        ackEvent.setReturnCode(1);
+
+        // calculate the source file MD5 and set it to the ack event
+        byte[] fileChecksum;
+        try {
+            fileChecksum = CMUtil.md5(sourcePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            pullModifyState.cleanupForFileEntry(fileEntryIndex);
+            return false;
+        }
+        ackEvent.setFileChecksum(fileChecksum);
+
+        // send the ack event to the client
+        ret = CMEventManager.unicastEvent(ackEvent, endChecksumEvent.getSender(), endChecksumEvent.getSenderUuid());
+        if(!ret) {
+            pullModifyState.cleanupForFileEntry(fileEntryIndex);
+            return false;
+        }
+
+        // cleanup per-fileEntry structures and mark this entry completed
+        pullModifyState.cleanupForFileEntry(fileEntryIndex);
+        pullModifyState.getIsUpdateFileCompletedMap().put(relativePath, true);
+        pullModifyState.incrementNumUpdateFilesCompleted();
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("server-side completed entry: relativePath = " + relativePath
+                    + ", numUpdateFilesCompleted = " + pullModifyState.getNumUpdateFilesCompleted());
+        }
 
         return true;
     }
@@ -1746,7 +1854,229 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return true;
     }
 
-    // called at the client
+    // called at the server (pull sync): mirrors compareFileBlocks() but pulls its checksum array and
+    // hash map from the PullModifyState and reads the source file at the server-resolved sourcePath.
+    private boolean compareFileBlocksAtServer(CMFileSyncEventEndFileBlockChecksum endChecksumEvent,
+                                              CMFileSyncPullModifyState pullModifyState, Path sourcePath) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.compareFileBlocksAtServer() called..");
+
+        int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
+        int blockSize = endChecksumEvent.getBlockSize();
+
+        // create hash-to-blockIndex Map (server-side variant uses PullModifyState)
+        Map<Short, Integer> hashToBlockIndexMap = makeHashToBlockIndexMapAtServer(pullModifyState, fileEntryIndex);
+        Objects.requireNonNull(hashToBlockIndexMap);
+        // get block checksum array with the file entry index
+        CMFileSyncBlockChecksum[] checksumArray = pullModifyState.getBlockChecksumArrayMap().get(fileEntryIndex);
+        Objects.requireNonNull(checksumArray);
+
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+
+        MappedByteBuffer mappedBuffer = null;
+        ByteBuffer buffer = null;
+        ByteBuffer nonMatchBuffer = ByteBuffer.allocate(CMInfo.FILE_BLOCK_LEN);
+        boolean bBlockMatch = true;
+        int oldA = 0;
+        int oldB = 0;
+        byte oldStartByte = 0;
+        byte newEndByte = 0;
+        int[] weakChecksumABS = new int[3];
+        short hash = 0;
+        int sortedBlockIndex = -1;
+        int matchBlockIndex = -1;
+        String receiver = endChecksumEvent.getSender();
+        UUID receiverUuid = endChecksumEvent.getSenderUuid();
+        String initiatorName = endChecksumEvent.getInitiatorName();
+        UUID initiatorUuid = endChecksumEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = endChecksumEvent.getInitiatorDeviceUuid();
+
+        try (FileChannel channel = (FileChannel) Files.newByteChannel(sourcePath, StandardOpenOption.READ)) {
+
+            long mapStartPosition = 0;
+            long fileSize = channel.size();
+            int mapCount = 0;
+            while(mapStartPosition < fileSize) {
+
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("==========================================");
+                    System.out.println("mapCount = " + mapCount);
+                    System.out.println("fileSize = " + fileSize);
+                    System.out.println("mapStartPosition = " + mapStartPosition);
+                }
+
+                mapCount++;
+
+                if(fileSize - mapStartPosition > Integer.MAX_VALUE) {
+                    mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, mapStartPosition, Integer.MAX_VALUE);
+                    mapStartPosition += Integer.MAX_VALUE;
+                }
+                else {
+                    mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, mapStartPosition,
+                            fileSize - mapStartPosition);
+                    mapStartPosition += fileSize - mapStartPosition;
+                }
+
+                bBlockMatch = true;
+
+                if(mappedBuffer == null) {
+                    System.err.println("MappedByteBuffer is null!");
+                    return false;
+                }
+
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
+                            mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
+                }
+                long matchingCount = 0;
+                long nonMatchingCount = 0;
+                while(bBlockMatch && mappedBuffer.hasRemaining() || !bBlockMatch && mappedBuffer.remaining() >= blockSize) {
+
+                    if(CMInfo._CM_DEBUG_2)
+                        System.out.println("===============================");
+
+                    if(bBlockMatch) {
+                        if(mappedBuffer.remaining() < blockSize) {
+                            buffer = mappedBuffer.slice(mappedBuffer.position(), mappedBuffer.remaining());
+                        }
+                        else {
+                            buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                        }
+                        weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
+                        buffer.rewind();
+                    }
+                    else {
+                        buffer.clear();
+                        oldStartByte = buffer.get();
+                        buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                        newEndByte = buffer.get(buffer.limit()-1);
+                        oldA = weakChecksumABS[0];
+                        oldB = weakChecksumABS[1];
+                        weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
+                    }
+
+                    if(CMInfo._CM_DEBUG_2) {
+                        System.out.println("-------rolling weak checksum = "+weakChecksumABS[2]);
+                    }
+
+                    hash = calculateHash(weakChecksumABS[2]);
+
+                    sortedBlockIndex = Optional.ofNullable(hashToBlockIndexMap.get(hash)).orElse(-1);
+                    if(sortedBlockIndex >= 0) {
+                        matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], checksumArray,
+                                hash, buffer);
+                    }
+                    else {
+                        matchBlockIndex = -1;
+                    }
+
+                    if(CMInfo._CM_DEBUG_2) {
+                        System.out.println("-------- hash = "+hash);
+                        System.out.println("-------- sortedBlockIndex = "+sortedBlockIndex);
+                        System.out.println("-------- matchBlockIndex = "+matchBlockIndex);
+                    }
+
+                    if(matchBlockIndex >= 0) {
+                        matchingCount++;
+                        bBlockMatch = true;
+                        boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                nonMatchBuffer, matchBlockIndex);
+                        if(!ret) return false;
+                        nonMatchBuffer.clear();
+
+                        if(mappedBuffer.remaining() < blockSize)
+                            mappedBuffer.position(mappedBuffer.position()+mappedBuffer.remaining());
+                        else
+                            mappedBuffer.position(mappedBuffer.position()+blockSize);
+                    }
+                    else {
+                        nonMatchingCount++;
+                        bBlockMatch = false;
+                        nonMatchBuffer.put(buffer.get(0));
+                        if(!nonMatchBuffer.hasRemaining()) {
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if(!ret) return false;
+                            nonMatchBuffer.clear();
+                        }
+
+                        mappedBuffer.position(mappedBuffer.position()+1);
+                    }
+
+                    if(CMInfo._CM_DEBUG_2) {
+                        System.out.println("===============================");
+                    }
+                }
+
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("------------------- end of while loop");
+                }
+                // flush any non-matching bytes that remain in buffer/nonMatchBuffer at the end
+                if(!bBlockMatch) {
+                    buffer.position(1);
+                    nonMatchingCount += buffer.remaining();
+                    if(CMInfo._CM_DEBUG) {
+                        System.out.println("================ send the last bytes in buffer and nonMatchBuffer");
+                        System.out.println("buffer.remaining(): "+buffer.remaining());
+                        System.out.println("nonMatchBuffer.remaining(): "+nonMatchBuffer.remaining());
+                    }
+                    while( buffer.hasRemaining() ) {
+                        if(buffer.remaining() > nonMatchBuffer.remaining()) {
+                            int oldLimit = buffer.limit();
+                            buffer.limit(buffer.position() + nonMatchBuffer.remaining());
+                            nonMatchBuffer.put(buffer);
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if(!ret) return false;
+                            nonMatchBuffer.clear();
+                            buffer.limit(oldLimit);
+                        }
+                        else {
+                            nonMatchBuffer.put(buffer);
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if(!ret) return false;
+                            nonMatchBuffer.clear();
+                        }
+                    }
+                }
+
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("--------------- info after the last transmission of UPDATE_EXISTING_FILE event");
+                    System.out.println("mappedBuffer: position = "+mappedBuffer.position()+", limit = "+
+                            mappedBuffer.limit()+", capacity = "+mappedBuffer.capacity());
+                    System.out.println("path = "+sourcePath);
+                    System.out.println("matchingCount = " + matchingCount + ", total number of blocks = " +
+                            endChecksumEvent.getTotalNumBlocks());
+                    System.out.println("non-matching bytes = " + nonMatchingCount + ", total size = " +
+                            Files.size(sourcePath) + " bytes");
+                    System.out.printf("matching block rate = %5.3f\n",
+                            matchingCount/(double)(endChecksumEvent.getTotalNumBlocks()));
+                    System.out.printf("non-matching bytes rate = %5.3f\n",
+                            nonMatchingCount/(double)(Files.size(sourcePath)));
+                    System.out.println("-----------------");
+                }
+
+            }
+
+        } catch(IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if(mappedBuffer != null)
+                syncManager.closeDirectBuffer(mappedBuffer);
+        }
+
+        return true;
+    }
+
+    // called at the client or server
     private boolean sendUpdateExistingFileEvent(String receiver, UUID receiverUuid,
                                                 String initiatorName, UUID initiatorUuid,
                                                 UUID initiatorDeviceUuid, int fileEntryIndex,
@@ -1779,7 +2109,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return true;
     }
 
-    // called at the client
+    // called at the client or server
     private int searchMatchBlockIndex(int sortedBlockIndex, int weakChecksum,
                                       CMFileSyncBlockChecksum[] checksumArray, short hash, ByteBuffer buffer) {
         if(CMInfo._CM_DEBUG_2) {
@@ -1881,7 +2211,49 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return hashToBlockIndexMap;
     }
 
-    // called at the client
+    // called at the server (pull sync): mirrors makeHashToBlockIndexMap() but reads/writes via PullModifyState.
+    private Map<Short, Integer> makeHashToBlockIndexMapAtServer(CMFileSyncPullModifyState pullModifyState,
+                                                                int fileEntryIndex) {
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.makeHashToBlockIndexMapAtServer() called..");
+            System.out.println("fileEntryIndex = " + fileEntryIndex);
+        }
+
+        // sort the block checksum array by the weak checksum
+        CMFileSyncBlockChecksum[] checksumArray = pullModifyState.getBlockChecksumArrayMap().get(fileEntryIndex);
+        Objects.requireNonNull(checksumArray);
+        if(CMInfo._CM_DEBUG_2) {
+            System.out.println("checksumArray before sorting = " + Arrays.toString(checksumArray));
+        }
+        Arrays.sort(checksumArray, Comparator.comparingInt(CMFileSyncBlockChecksum::getWeakChecksum));
+        if(CMInfo._CM_DEBUG_2) {
+            System.out.println("checksumArray after sorting = " + Arrays.toString(checksumArray));
+        }
+
+        // reuse the inner Map reserved at processSTART_FILE_BLOCK_CHECKSUM_AtServer if present; otherwise create one
+        Map<Integer, Map<Short, Integer>> outerMap = pullModifyState.getFileIndexToHashToBlockIndexMap();
+        Objects.requireNonNull(outerMap);
+        Map<Short, Integer> hashToBlockIndexMap = outerMap.get(fileEntryIndex);
+        if(hashToBlockIndexMap == null) {
+            hashToBlockIndexMap = new Hashtable<>();
+            outerMap.put(fileEntryIndex, hashToBlockIndexMap);
+        }
+
+        for(int i = 0; i < checksumArray.length; i++) {
+            CMFileSyncBlockChecksum blockChecksum = checksumArray[i];
+            int weakChecksum = blockChecksum.getWeakChecksum();
+            short hash = calculateHash(weakChecksum);
+            if(hashToBlockIndexMap.containsKey(hash)) continue;
+            hashToBlockIndexMap.put(hash, i);
+            if(CMInfo._CM_DEBUG_2) {
+                System.out.println("key hash("+hash+"), value block index("+i+") added to the Map.");
+            }
+        }
+
+        return hashToBlockIndexMap;
+    }
+
+    // called at the client or server
     private short calculateHash(int weakChecksum) {
 
         if(CMInfo._CM_DEBUG_2) {
