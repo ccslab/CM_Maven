@@ -229,4 +229,29 @@ public class CMFileSyncPullGenerator implements Runnable {
     public Map<String, Boolean> getIsUpdateFileCompletedMap() { return isUpdateFileCompletedMap; }
     public int getNumUpdateFilesCompleted() { return numUpdateFilesCompleted; }
     public void setNumUpdateFilesCompleted(int n) { this.numUpdateFilesCompleted = n; }
+
+    // Called from processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient after the last MODIFY entry completes:
+    // closes any remaining channels and clears all per-entry maps so the generator can be released.
+    public void cleanupAll() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncPullGenerator.cleanupAll() called..");
+
+        for (SeekableByteChannel ch : basisFileChannelForReadMap.values()) {
+            if (ch != null && ch.isOpen()) {
+                try { ch.close(); } catch (IOException e) { e.printStackTrace(); }
+            }
+        }
+        for (SeekableByteChannel ch : tempFileChannelForWriteMap.values()) {
+            if (ch != null && ch.isOpen()) {
+                try { ch.close(); } catch (IOException e) { e.printStackTrace(); }
+            }
+        }
+
+        blockChecksumArrayMap.clear();
+        blockSizeOfBasisFileMap.clear();
+        basisFileChannelForReadMap.clear();
+        tempFileChannelForWriteMap.clear();
+        isUpdateFileCompletedMap.clear();
+        numUpdateFilesCompleted = 0;
+    }
 }

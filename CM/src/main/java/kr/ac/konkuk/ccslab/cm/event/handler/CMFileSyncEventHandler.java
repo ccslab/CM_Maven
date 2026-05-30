@@ -7,6 +7,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPullModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
@@ -1123,7 +1124,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return true;
     }
 
-    // called at the server
+    // called at the server (full push sync) or the client (pull sync) depending on system type
     private boolean processEND_FILE_BLOCK_CHECKSUM_ACK(CMFileSyncEvent fse) {
         CMFileSyncEventEndFileBlockChecksumAck ackEvent = (CMFileSyncEventEndFileBlockChecksumAck) fse;
 
@@ -1132,12 +1133,29 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("ackEvent = " + ackEvent);
         }
 
-        // check the return code
+        // returnCode 가드 (양쪽 공통 선처리)
         final int returnCode = ackEvent.getReturnCode();
         if(returnCode != 1) {
             System.err.println("return code error: " + returnCode);
             return false;
         }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if(confInfo.getSystemType().equals("SERVER")) {
+            return processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer(ackEvent);
+        } else if(confInfo.getSystemType().equals("CLIENT")) {
+            return processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient(ackEvent);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK(), "
+                    + "unknown system type: " + confInfo.getSystemType());
+            return false;
+        }
+    }
+
+    // called at the server (full push sync): finalize the basis file using CMFileSyncGenerator state.
+    private boolean processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer(CMFileSyncEventEndFileBlockChecksumAck ackEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer() called..");
 
         CMInfo cmInfo = CMInfo.getInstance();
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
@@ -1279,6 +1297,141 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 // complete the file-sync task
                 syncManager.completeFileSync(loginKey);
             }
+        }
+
+        return true;
+    }
+
+    // called at the client (pull sync): finalize the basis file using CMFileSyncPullGenerator state,
+    // send COMPLETE_PULL_MODIFY to the server, and clean up the pull generator after the last entry.
+    private boolean processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient(CMFileSyncEventEndFileBlockChecksumAck ackEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient() called..");
+
+        int fileEntryIndex = ackEvent.getFileEntryIndex();
+
+        // get the pull generator
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncPullGenerator pullGenerator = syncInfo.getPullGenerator();
+        if(pullGenerator == null) {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient(), "
+                    + "pullGenerator is null.");
+            return false;
+        }
+
+        // close + remove the basis/temp channels for this fileEntryIndex
+        Map<Integer, SeekableByteChannel> basisFileChannelMap = pullGenerator.getBasisFileChannelForReadMap();
+        SeekableByteChannel basisFileChannel = basisFileChannelMap.get(fileEntryIndex);
+        if(basisFileChannel == null) {
+            System.out.println("The basis file channel is null for fileEntryIndex (" + fileEntryIndex + ").");
+        }
+        Map<Integer, SeekableByteChannel> tempFileChannelMap = pullGenerator.getTempFileChannelForWriteMap();
+        SeekableByteChannel tempFileChannel = tempFileChannelMap.get(fileEntryIndex);
+        if(tempFileChannel == null) {
+            System.out.println("The temp file channel is null for fileEntryIndex (" + fileEntryIndex + ").");
+        }
+        if(basisFileChannel != null && basisFileChannel.isOpen()) {
+            try { basisFileChannel.close(); } catch (IOException e) { e.printStackTrace(); }
+            basisFileChannelMap.remove(fileEntryIndex);
+        }
+        if(tempFileChannel != null && tempFileChannel.isOpen()) {
+            try { tempFileChannel.close(); } catch (IOException e) { e.printStackTrace(); }
+            tempFileChannelMap.remove(fileEntryIndex);
+        }
+
+        // resolve basis path + lookup the entry (for serverMtime)
+        List<CMFileSyncClientEntry> pullModifyEntryList = pullGenerator.getPullModifyEntryList();
+        if(fileEntryIndex < 0 || fileEntryIndex >= pullModifyEntryList.size()) {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient(), "
+                    + "invalid fileEntryIndex: " + fileEntryIndex);
+            return false;
+        }
+        CMFileSyncClientEntry entry = pullModifyEntryList.get(fileEntryIndex);
+        String relativePath = entry.getPath();
+        long serverMtime = entry.getServerMtime();
+        if(serverMtime <= 0) {
+            System.err.println("CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient(), "
+                    + "invalid serverMtime for relativePath = " + relativePath + ", serverMtime = " + serverMtime);
+            return false;
+        }
+        CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        Path clientSyncHome = syncManager.getClientSyncHome();
+        Path basisFilePath = clientSyncHome.resolve(relativePath).normalize();
+        Path tempFilePath = syncManager.getTempPathOfBasisFile(basisFilePath);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("basisFilePath = " + basisFilePath);
+            System.out.println("tempFilePath = " + tempFilePath);
+            System.out.println("serverMtime = " + serverMtime);
+        }
+
+        // verify MD5 → preserve server source mtime on temp → temp→basis move
+        if(basisFileChannel != null && tempFileChannel != null) {
+            byte[] fileChecksum;
+            try {
+                fileChecksum = CMUtil.md5(tempFilePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            if(!Arrays.equals(fileChecksum, ackEvent.getFileChecksum())) {
+                System.err.println("File checksum error!");
+                System.err.println("temp checksum = " + DatatypeConverter.printHexBinary(fileChecksum));
+                System.err.println("event checksum = " + DatatypeConverter.printHexBinary(ackEvent.getFileChecksum()));
+                return false;
+            }
+            // preserve server source mtime on the temp file (mirror of full-push SERVER branch)
+            try {
+                Files.setLastModifiedTime(tempFilePath, FileTime.fromMillis(serverMtime * 1000L));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            try {
+                Files.move(tempFilePath, basisFilePath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        } else {
+            System.err.println("basis or temp channel is null in PULL --- unexpected for MODIFY entry: " + relativePath);
+            return false;
+        }
+
+        // update lastSyncedMtimeMap with the preserved serverMtime so "file mtime == baseMtime" holds
+        syncInfo.setLastSyncedMtime(relativePath, serverMtime);
+
+        // send COMPLETE_PULL_MODIFY to the server
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMUser myself = interInfo.getMyself();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+        CMFileSyncEventCompletePullModify fse_cpm = new CMFileSyncEventCompletePullModify();
+        fse_cpm.setInitiatorName(myself.getName());
+        fse_cpm.setInitiatorUuid(myself.getUuid());
+        fse_cpm.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_cpm.setModifiedPath(relativePath);
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpm, serverName, null);
+        if(!sendResult) {
+            System.err.println("failed to send COMPLETE_PULL_MODIFY for " + relativePath);
+            return false;
+        }
+
+        // mark this entry completed
+        pullGenerator.getIsUpdateFileCompletedMap().put(relativePath, true);
+        pullGenerator.setNumUpdateFilesCompleted(pullGenerator.getNumUpdateFilesCompleted() + 1);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("client-side completed entry: relativePath = " + relativePath
+                    + ", numUpdateFilesCompleted = " + pullGenerator.getNumUpdateFilesCompleted());
+        }
+
+        // when every MODIFY entry is done, release the generator
+        if(pullGenerator.getNumUpdateFilesCompleted() == pullModifyEntryList.size()) {
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("all pull MODIFY entries completed. cleanup pullGenerator.");
+            }
+            pullGenerator.cleanupAll();
+            syncInfo.setPullGenerator(null);
         }
 
         return true;
