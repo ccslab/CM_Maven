@@ -1904,25 +1904,41 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return hash;
     }
 
-    // called at the client
+    // called at the client (full push sync) or the server (pull sync) depending on system type
     private boolean processFILE_BLOCK_CHECKSUM(CMFileSyncEvent fse) {
-        CMFileSyncEventFileBlockChecksum checksumEvent = (CMFileSyncEventFileBlockChecksum) fse;
-        // store checksum in the Map
+        CMFileSyncEventFileBlockChecksum fileBlockChecksumEvent = (CMFileSyncEventFileBlockChecksum) fse;
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM() called..");
-            System.out.println("checksumEvent = " + checksumEvent);
+            System.out.println("fileBlockChecksumEvent = " + fileBlockChecksumEvent);
         }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if(confInfo.getSystemType().equals("SERVER")) {
+            return processFILE_BLOCK_CHECKSUM_AtServer(fileBlockChecksumEvent);
+        } else if(confInfo.getSystemType().equals("CLIENT")) {
+            return processFILE_BLOCK_CHECKSUM_AtClient(fileBlockChecksumEvent);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM(), "
+                    + "unknown system type: " + confInfo.getSystemType());
+            return false;
+        }
+    }
+
+    // called at the client (full push sync): fills the basis file block checksum array
+    private boolean processFILE_BLOCK_CHECKSUM_AtClient(CMFileSyncEventFileBlockChecksum fileBlockChecksumEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM_AtClient() called..");
 
         // get checksum array with the file entry index as a key
         Map<Integer, CMFileSyncBlockChecksum[]> checksumMap =
                 CMFileSyncInfo.getInstance().getBlockChecksumMap();
         Objects.requireNonNull(checksumMap);
-        CMFileSyncBlockChecksum[] checksumArray = checksumMap.get(checksumEvent.getFileEntryIndex());
+        CMFileSyncBlockChecksum[] checksumArray = checksumMap.get(fileBlockChecksumEvent.getFileEntryIndex());
         Objects.requireNonNull(checksumArray);
 
         // add sub array of the event to the checksum array
-        CMFileSyncBlockChecksum[] subArray = checksumEvent.getChecksumArray();
-        int startIndex = checksumEvent.getStartBlockIndex();
+        CMFileSyncBlockChecksum[] subArray = fileBlockChecksumEvent.getChecksumArray();
+        int startIndex = fileBlockChecksumEvent.getStartBlockIndex();
         for(int i = 0; i < subArray.length; i++) {
             checksumArray[startIndex+i] = subArray[i];
         }
@@ -1932,6 +1948,42 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             for(int i = 0; i < checksumArray.length; i++)
                 System.out.println("["+i+"] = "+checksumArray[i]);
         }
+
+        return true;
+    }
+
+    // called at the server (pull sync): fills the source file block checksum array in CMFileSyncPullModifyState
+    private boolean processFILE_BLOCK_CHECKSUM_AtServer(CMFileSyncEventFileBlockChecksum fileBlockChecksumEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM_AtServer() called..");
+
+        String initiatorName = fileBlockChecksumEvent.getInitiatorName();
+        UUID initiatorDeviceUuid = fileBlockChecksumEvent.getInitiatorDeviceUuid();
+        int fileEntryIndex = fileBlockChecksumEvent.getFileEntryIndex();
+        int startBlockIndex = fileBlockChecksumEvent.getStartBlockIndex();
+        int numCurrentBlocks = fileBlockChecksumEvent.getNumCurrentBlocks();
+        CMFileSyncBlockChecksum[] partialChecksumArray = fileBlockChecksumEvent.getChecksumArray();
+
+        // get the PullModifyState by stateKey
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        CMFileSyncPullModifyState pullModifyState = syncInfo.getPullModifyStateMap().get(stateKey);
+        if(pullModifyState == null) {
+            System.err.println("CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM_AtServer(), "
+                    + "pullModifyState is null for stateKey = " + stateKey);
+            return false;
+        }
+
+        // get the full checksum array for fileEntryIndex
+        CMFileSyncBlockChecksum[] checksumArray = pullModifyState.getBlockChecksumArrayMap().get(fileEntryIndex);
+        if(checksumArray == null) {
+            System.err.println("CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM_AtServer(), "
+                    + "checksumArray is null for fileEntryIndex = " + fileEntryIndex);
+            return false;
+        }
+
+        // copy the partial array into the full array at startBlockIndex
+        System.arraycopy(partialChecksumArray, 0, checksumArray, startBlockIndex, numCurrentBlocks);
 
         return true;
     }
