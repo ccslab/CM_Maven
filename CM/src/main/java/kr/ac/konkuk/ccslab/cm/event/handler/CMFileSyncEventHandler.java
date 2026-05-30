@@ -1284,7 +1284,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         return true;
     }
 
-    // called at the server
+    // called at the server (full push sync) or the client (pull sync) depending on system type
     private boolean processUPDATE_EXISTING_FILE(CMFileSyncEvent fse) {
         CMFileSyncEventUpdateExistingFile updateEvent = (CMFileSyncEventUpdateExistingFile) fse;
 
@@ -1292,6 +1292,23 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.processUPDATE_EXISTING_FILE() called..");
             System.out.println("updateEvent = " + updateEvent);
         }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if(confInfo.getSystemType().equals("SERVER")) {
+            return processUPDATE_EXISTING_FILE_AtServer(updateEvent);
+        } else if(confInfo.getSystemType().equals("CLIENT")) {
+            return processUPDATE_EXISTING_FILE_AtClient(updateEvent);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processUPDATE_EXISTING_FILE(), "
+                    + "unknown system type: " + confInfo.getSystemType());
+            return false;
+        }
+    }
+
+    // called at the server (full push sync): reconstruct the temp basis file using CMFileSyncGenerator state.
+    private boolean processUPDATE_EXISTING_FILE_AtServer(CMFileSyncEventUpdateExistingFile updateEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processUPDATE_EXISTING_FILE_AtServer() called..");
 
         String initiatorName = updateEvent.getInitiatorName();
         UUID initiatorUuid = updateEvent.getInitiatorUuid();
@@ -1374,7 +1391,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int matchBlockIndex = updateEvent.getMatchBlockIndex();
         if(matchBlockIndex > -1) {
 
-            // get the block size of this file
+            // get the block size of this file (server: keyed by basisFileIndex)
             Map<Integer, Integer> blockSizeMap = Objects.requireNonNull(syncGenerator.getBlockSizeOfBasisFileMap());
             int blockSize = blockSizeMap.get(basisFileIndex);
             // prepare ByteBuffer
@@ -1413,6 +1430,135 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // The file channels (readChannel and writeChannel) will be closed when END_FILE_BLOCK_CHECKSUM_ACK
         // event is received.
+        return true;
+    }
+
+    // called at the client (pull sync): reconstruct the temp basis file using CMFileSyncPullGenerator state.
+    private boolean processUPDATE_EXISTING_FILE_AtClient(CMFileSyncEventUpdateExistingFile updateEvent) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processUPDATE_EXISTING_FILE_AtClient() called..");
+
+        int fileEntryIndex = updateEvent.getFileEntryIndex();
+        byte[] nonMatchBytes = updateEvent.getNonMatchBytes();
+        int matchBlockIndex = updateEvent.getMatchBlockIndex();
+
+        // get the pull generator (single instance on the client)
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncPullGenerator pullGenerator = syncInfo.getPullGenerator();
+        if(pullGenerator == null) {
+            System.err.println("CMFileSyncEventHandler.processUPDATE_EXISTING_FILE_AtClient(), "
+                    + "pullGenerator is null.");
+            return false;
+        }
+
+        // resolve the basis file path (client sync home + relativePath)
+        List<CMFileSyncClientEntry> pullModifyEntryList = pullGenerator.getPullModifyEntryList();
+        if(fileEntryIndex < 0 || fileEntryIndex >= pullModifyEntryList.size()) {
+            System.err.println("CMFileSyncEventHandler.processUPDATE_EXISTING_FILE_AtClient(), "
+                    + "invalid fileEntryIndex: " + fileEntryIndex);
+            return false;
+        }
+        String relativePath = pullModifyEntryList.get(fileEntryIndex).getPath();
+        CMFileSyncManager syncManager =
+                Objects.requireNonNull(cmInfo.getServiceManager(CMFileSyncManager.class));
+        Path clientSyncHome = syncManager.getClientSyncHome();
+        Path basisFilePath = clientSyncHome.resolve(relativePath).normalize();
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("basisFilePath = " + basisFilePath);
+        }
+        Path tempBasisFilePath = syncManager.getTempPathOfBasisFile(basisFilePath);
+
+        // get or create a temp file write channel
+        Map<Integer, SeekableByteChannel> writeChannelMap = pullGenerator.getTempFileChannelForWriteMap();
+        Objects.requireNonNull(writeChannelMap);
+        SeekableByteChannel writeChannel = writeChannelMap.get(fileEntryIndex);
+        if(writeChannel == null) {
+            try {
+                writeChannel = Files.newByteChannel(tempBasisFilePath, StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            writeChannelMap.put(fileEntryIndex, writeChannel);
+        }
+
+        // write non-matching bytes
+        if(nonMatchBytes != null) {
+            ByteBuffer nonMatchBuffer = ByteBuffer.wrap(nonMatchBytes);
+            try {
+                int bytesWritten = writeChannel.write(nonMatchBuffer);
+                if(bytesWritten != nonMatchBytes.length) {
+                    System.err.println("bytes written to the channel = " + bytesWritten);
+                    System.err.println("non-match bytes = " + nonMatchBytes.length);
+                    return false;
+                }
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("-------------------------- write non-matching bytes");
+                    System.out.println("bytesWritten = " + bytesWritten);
+                    System.out.println("writeChannel position = " + writeChannel.position());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // get or open the basis file read channel
+        Map<Integer, SeekableByteChannel> readChannelMap = pullGenerator.getBasisFileChannelForReadMap();
+        Objects.requireNonNull(readChannelMap);
+        SeekableByteChannel readChannel = readChannelMap.get(fileEntryIndex);
+        if(readChannel == null) {
+            try {
+                readChannel = Files.newByteChannel(basisFilePath, StandardOpenOption.READ);
+                readChannelMap.put(fileEntryIndex, readChannel);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // process matching block (PULL: blockSize keyed by fileEntryIndex since basisFileIndex == fileEntryIndex)
+        if(matchBlockIndex > -1) {
+            Map<Integer, Integer> blockSizeMap = Objects.requireNonNull(pullGenerator.getBlockSizeOfBasisFileMap());
+            Integer blockSizeBoxed = blockSizeMap.get(fileEntryIndex);
+            if(blockSizeBoxed == null) {
+                System.err.println("CMFileSyncEventHandler.processUPDATE_EXISTING_FILE_AtClient(), "
+                        + "blockSize is null for fileEntryIndex = " + fileEntryIndex);
+                return false;
+            }
+            int blockSize = blockSizeBoxed;
+            ByteBuffer matchBuffer = ByteBuffer.allocate(blockSize);
+            try {
+                int readBytes = readChannel.position((long) blockSize * matchBlockIndex).read(matchBuffer);
+                matchBuffer.flip();
+                int writeBytes = writeChannel.write(matchBuffer);
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("-------------------------- write a matching block");
+                    System.out.println("blockSize = " + blockSize);
+                    System.out.println("matchBlockIndex = " + matchBlockIndex);
+                    System.out.println("readChannel position = " + (long) blockSize * matchBlockIndex);
+                    System.out.println("readBytes = " + readBytes);
+                    System.out.println("--------------------------");
+                    System.out.println("writeBytes = " + writeBytes);
+                    System.out.println("writeChannel position = " + writeChannel.position());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                try {
+                    readChannel.close();
+                    writeChannel.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                readChannelMap.remove(fileEntryIndex);
+                writeChannelMap.remove(fileEntryIndex);
+                return false;
+            }
+        }
+
+        // Channels are closed in processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient.
         return true;
     }
 
