@@ -90,6 +90,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.COMPLETE_PULL_CREATE -> processResult = processCOMPLETE_PULL_CREATE(fse);
             case CMFileSyncEvent.COMPLETE_PULL_MODIFY -> processResult = processCOMPLETE_PULL_MODIFY(fse);
             case CMFileSyncEvent.COMPLETE_PULL_SYNC -> processResult = processCOMPLETE_PULL_SYNC(fse);
+            case CMFileSyncEvent.COMPLETE_PULL_SYNC_ACK -> processResult = processCOMPLETE_PULL_SYNC_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -864,6 +865,69 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return true;
+    }
+
+    // called at the server
+    private boolean processCOMPLETE_PULL_SYNC_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePullSyncAck fse_cpsa = (CMFileSyncEventCompletePullSyncAck) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC_ACK() called..");
+            System.out.println("fse_cpsa = " + fse_cpsa);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        String initiatorName = fse_cpsa.getInitiatorName();
+        UUID initiatorDeviceUuid = fse_cpsa.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        int returnCode = fse_cpsa.getReturnCode();
+        int numFilesCompleted = fse_cpsa.getNumFilesCompleted();
+
+        // log the returnCode but proceed with cleanup either way (avoid leaking server-side state)
+        if(returnCode == 0) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC_ACK(), "
+                    + "client reported pull-sync completion failure. stateKey = " + stateKey
+                    + ", numFilesCompleted = " + numFilesCompleted);
+        } else if(returnCode == 1) {
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("client reported pull-sync completion success. stateKey = " + stateKey
+                        + ", numFilesCompleted = " + numFilesCompleted);
+            }
+        } else {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC_ACK(), "
+                    + "invalid returnCode: " + returnCode);
+        }
+
+        // cleanup pullModifyStateMap[stateKey] (holder lifecycle end)
+        // remove from map first to drop external references, then close any remaining channels
+        Map<CMFileSyncStateKey, CMFileSyncPullModifyState> pullModifyStateMap = syncInfo.getPullModifyStateMap();
+        CMFileSyncPullModifyState pullModifyState = pullModifyStateMap.remove(stateKey);
+        if(pullModifyState != null) {
+            pullModifyState.cleanupAll();
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("pullModifyState removed and cleaned up for stateKey = " + stateKey);
+            }
+        } else {
+            // normal when this session had no MODIFY entries (PullModifyState is lazily created)
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("pullModifyState is null (no MODIFY entries in this session). stateKey = "
+                        + stateKey);
+            }
+        }
+
+        // NOTE: server-side serverEntryListMap[stateKey] cleanup is mentioned in the design doc but
+        // not implemented — change-log entries are streamed in startServerEntryList() without being
+        // retained per-stateKey on the server.
+
+        // defensive check: pullStateTable[stateKey] should already be removed by completePullSync()
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pullStateTable = syncInfo.getPullStateTable();
+        if(pullStateTable.containsKey(stateKey)) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC_ACK(), "
+                    + "pullStateTable still has entry for stateKey = " + stateKey + ", removing as defensive cleanup.");
+            pullStateTable.remove(stateKey);
+        }
+
+        return returnCode == 1;
     }
 
     // called at the client
