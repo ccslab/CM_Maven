@@ -89,6 +89,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.COMPLETE_PULL_DELETE -> processResult = processCOMPLETE_PULL_DELETE(fse);
             case CMFileSyncEvent.COMPLETE_PULL_CREATE -> processResult = processCOMPLETE_PULL_CREATE(fse);
             case CMFileSyncEvent.COMPLETE_PULL_MODIFY -> processResult = processCOMPLETE_PULL_MODIFY(fse);
+            case CMFileSyncEvent.COMPLETE_PULL_SYNC -> processResult = processCOMPLETE_PULL_SYNC(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -749,6 +750,120 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return result;
+    }
+
+    // called at the client
+    private boolean processCOMPLETE_PULL_SYNC(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePullSync fse_cps = (CMFileSyncEventCompletePullSync) fse;
+
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC() called..");
+            System.out.println("fse_cps = " + fse_cps);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        Objects.requireNonNull(syncManager);
+        boolean isCompleted = true;
+        int returnCode;
+
+        // get the pull maps
+        Map<String, CMFileSyncClientEntry> pullDeleteMap = syncInfo.getPullDeleteMap();
+        Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
+        Map<String, CMFileSyncClientEntry> pullModifyMap = syncInfo.getPullModifyMap();
+
+        // size check: total entries vs server-reported numFilesCompleted
+        // (mismatch is logged but not fatal: conflict-rename failures can legitimately reduce the count)
+        int sumMapSize = pullDeleteMap.size() + pullCreateMap.size() + pullModifyMap.size();
+        if(sumMapSize != fse_cps.getNumFilesCompleted()) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                    + "entry count mismatch: sumMapSize = " + sumMapSize
+                    + ", numFilesCompleted = " + fse_cps.getNumFilesCompleted());
+        }
+
+        // verify every entry in each pull map is completed (continue scanning so all errors are logged)
+        for(String key : pullDeleteMap.keySet()) {
+            CMFileSyncClientEntry entry = pullDeleteMap.get(key);
+            isCompleted &= entry.isCompleted();
+            if(!entry.isCompleted()) {
+                System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                        + "pullDeleteMap entry not completed: " + key);
+            }
+        }
+        for(String key : pullCreateMap.keySet()) {
+            CMFileSyncClientEntry entry = pullCreateMap.get(key);
+            isCompleted &= entry.isCompleted();
+            if(!entry.isCompleted()) {
+                System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                        + "pullCreateMap entry not completed: " + key);
+            }
+        }
+        for(String key : pullModifyMap.keySet()) {
+            CMFileSyncClientEntry entry = pullModifyMap.get(key);
+            isCompleted &= entry.isCompleted();
+            if(!entry.isCompleted()) {
+                System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                        + "pullModifyMap entry not completed: " + key);
+            }
+        }
+
+        returnCode = isCompleted ? 1 : 0;
+
+        // send COMPLETE_PULL_SYNC_ACK to the server
+        CMFileSyncEventCompletePullSyncAck ackEvent = new CMFileSyncEventCompletePullSyncAck();
+        // 공통 필드 설정
+        ackEvent.setInitiatorName(fse_cps.getInitiatorName());
+        ackEvent.setInitiatorUuid(fse_cps.getInitiatorUuid());
+        ackEvent.setInitiatorDeviceUuid(fse_cps.getInitiatorDeviceUuid());
+        // 나머지 필드 설정
+        ackEvent.setNumFilesCompleted(fse_cps.getNumFilesCompleted());
+        ackEvent.setReturnCode(returnCode);
+        boolean sendResult = CMEventManager.unicastEvent(ackEvent, fse_cps.getSender(), fse_cps.getSenderUuid());
+        if(!sendResult) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                    + "failed to send COMPLETE_PULL_SYNC_ACK");
+            return false;
+        }
+
+        // abort post-processing if not fully completed
+        if(!isCompleted) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                    + "not all pull entries completed; abort post-processing.");
+            return false;
+        }
+
+        // persist in-memory online-mode list
+        syncManager.saveOnlineModePathSizeMapToFile();
+
+        // persist in-memory client-index and update cursor to serverCursor
+        long serverCursor = syncInfo.getServerCursor();
+        syncInfo.saveClientIndex(".", serverCursor);
+        syncInfo.setCursor(serverCursor);
+        syncInfo.saveClientCursor(".");
+
+        // clear pull maps and reset per-session state
+        pullDeleteMap.clear();
+        pullCreateMap.clear();
+        pullModifyMap.clear();
+        syncInfo.setServerEntryList(null);
+        syncInfo.setClientPathList(null);
+        syncInfo.setServerCursor(-1L);
+
+        // reset sync session state
+        syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+
+        // if pendingPushMap is non-empty, kick off push sync
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        if(!pendingPushMap.isEmpty()) {
+            syncInfo.setSyncProgress(CMFileSyncProgress.PUSH);
+            // TODO: syncManager.proceedPendingPushMap() is defined in the design doc (line 8693)
+            //  but not yet implemented. Push sync will be wired up in a later step.
+            System.out.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                    + "pendingPushMap is non-empty (size=" + pendingPushMap.size()
+                    + "); push sync will be initiated when proceedPendingPushMap() is implemented.");
+        }
+
+        return true;
     }
 
     // called at the client
