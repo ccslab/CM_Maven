@@ -61,6 +61,19 @@ public class CMWatchServiceTask implements Runnable {
                                 listValue.forEach(System.out::println);
                             });
                         }
+                        // pull sync 가 방금 디스크에 떨어뜨린 파일들이 ENTRY_CREATE/MODIFY 로 잡힌
+                        // 경우는 push 대상이 아니다. 현재 mtime+size 가 lastSynced* 와 일치하면
+                        // self-event 로 간주해서 제거한다.
+                        filterSelfEvents();
+                        if (detectedPathMap.isEmpty()) {
+                            // 전부 self-event 였음 → push 트리거하지 않음
+                            if (CMInfo._CM_DEBUG) {
+                                System.out.println("CMWatchServiceTask: all events filtered as self-events; "
+                                        + "skip startFullPushSync().");
+                            }
+                            syncInfo.setFileChangeDetected(false);
+                            continue;
+                        }
                         // start the file-sync task
                         // TODO: 양방향 push 동기화(startPushSync) 구현 후 교체 예정
                         boolean ret = syncManager.startFullPushSync();
@@ -140,6 +153,54 @@ public class CMWatchServiceTask implements Runnable {
         if (CMInfo._CM_DEBUG) {
             System.out.println("CMWatchServiceTask.run() ended..");
         }
+    }
+
+    // detectedPathMap 의 ENTRY_CREATE/ENTRY_MODIFY 이벤트 중, 현재 파일의 mtime+size 가
+    // 마지막으로 동기화된 값(lastSyncedMtime + lastSyncedSize)과 일치하는 항목을 제거한다.
+    // pull sync 가 막 디스크에 떨어뜨린 파일을 다시 push 하는 self-event 루프를 방지한다.
+    // ENTRY_DELETE 는 별도 처리(파일이 없으니 mtime/size 비교 불가). DELETE 의 self-event 방지는
+    // 후속 작업 — 현재는 통과시킨다.
+    private void filterSelfEvents() {
+        Path syncHome = syncManager.getClientSyncHome().toAbsolutePath().normalize();
+
+        for (Map.Entry<WatchEvent.Kind<?>, List<Path>> entry : detectedPathMap.entrySet()) {
+            WatchEvent.Kind<?> kind = entry.getKey();
+            if (kind != StandardWatchEventKinds.ENTRY_CREATE
+                    && kind != StandardWatchEventKinds.ENTRY_MODIFY) {
+                continue;   // DELETE 등은 필터 대상 아님
+            }
+            List<Path> paths = entry.getValue();
+            Iterator<Path> iter = paths.iterator();
+            while (iter.hasNext()) {
+                Path absPath = iter.next().toAbsolutePath().normalize();
+                if (!absPath.startsWith(syncHome)) continue;
+                if (!Files.isRegularFile(absPath)) continue;
+
+                String relPath = syncHome.relativize(absPath).toString().replace('\\', '/');
+                long lastMtime = syncInfo.getLastSyncedMtime(relPath);
+                long lastSize = syncInfo.getLastSyncedSize(relPath);
+                if (lastMtime < 0 || lastSize < 0) continue;    // 모른다 → 통과
+
+                long curMtime;
+                long curSize;
+                try {
+                    curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+                    curSize = syncInfo.currentSizeOrMinusOne(absPath);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+                if (curMtime == lastMtime && curSize == lastSize) {
+                    if (CMInfo._CM_DEBUG) {
+                        System.out.println("CMWatchServiceTask: filtered self-event ("
+                                + kind + ") for " + relPath);
+                    }
+                    iter.remove();
+                }
+            }
+        }
+        // 비어있는 kind 항목 정리
+        detectedPathMap.entrySet().removeIf(e -> e.getValue().isEmpty());
     }
 
     private void registerPath(Path path) throws IOException {

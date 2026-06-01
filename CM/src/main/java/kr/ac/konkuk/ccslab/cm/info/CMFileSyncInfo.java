@@ -79,6 +79,9 @@ public class CMFileSyncInfo {
     private long m_lCursor;
     // [NEW] 4 client: 클라이언트 베이스 스냅샷 path -> lastSyncedMtime (sec)
     private final Map<String, Long> m_lastSyncedMtimeMap = new ConcurrentHashMap<>();
+    // [NEW] 4 client: 클라이언트 베이스 스냅샷 path -> lastSyncedSize (bytes).
+    // pull 로 받은 파일이 WatchService 의 self-event 로 다시 push 되는 것을 막기 위한 필터에 사용.
+    private final Map<String, Long> m_lastSyncedSizeMap = new ConcurrentHashMap<>();
 
     // [NEW] 4 server: pull sync를 위해 서버가 클라이언트로 보내기로 결정한 server entry list
     private Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> serverEntryMap;
@@ -415,6 +418,32 @@ public class CMFileSyncInfo {
         m_lastSyncedMtimeMap.remove(relPath);
     }
 
+    // [NEW] 4 client: lastSyncedSizeMap getter / convenience methods
+    public Map<String, Long> getLastSyncedSizeMap() {
+        return m_lastSyncedSizeMap;
+    }
+
+    public long getLastSyncedSize(String relPath) {
+        Long size = m_lastSyncedSizeMap.get(relPath);
+        return size == null ? -1L : size;
+    }
+
+    public void setLastSyncedSize(String relPath, long sizeBytes) {
+        m_lastSyncedSizeMap.put(relPath, sizeBytes);
+    }
+
+    public void removeLastSyncedSize(String relPath) {
+        m_lastSyncedSizeMap.remove(relPath);
+    }
+
+    /**
+     * mtime + size 를 한 번에 저장 (self-event 필터용 짝).
+     */
+    public void setLastSynced(String relPath, long mtimeSec, long sizeBytes) {
+        m_lastSyncedMtimeMap.put(relPath, mtimeSec);
+        m_lastSyncedSizeMap.put(relPath, sizeBytes);
+    }
+
     /**
      * 주어진 절대경로의 마지막 수정 시간을 초 단위로 반환합니다.
      * 파일이 없으면 -1을 리턴합니다.
@@ -422,6 +451,14 @@ public class CMFileSyncInfo {
     public long currentMtimeSecOrMinusOne(Path abs) throws IOException {
         if (!Files.exists(abs)) return -1L;
         return Files.getLastModifiedTime(abs).toMillis() / 1000;
+    }
+
+    /**
+     * 주어진 절대경로의 파일 크기(bytes)를 반환합니다. 파일이 없으면 -1.
+     */
+    public long currentSizeOrMinusOne(Path abs) throws IOException {
+        if (!Files.exists(abs)) return -1L;
+        return Files.size(abs);
     }
 
     // --------------------------------------------------------------------
@@ -494,7 +531,8 @@ public class CMFileSyncInfo {
     static class ClientIndexDto {
         public long baseCursor;
         public String generatedAt;
-        public Map<String, Long> files;
+        public Map<String, Long> files;       // relPath -> mtimeSec
+        public Map<String, Long> fileSizes;   // relPath -> sizeBytes (nullable for backward compat)
     }
 
     /**
@@ -511,8 +549,12 @@ public class CMFileSyncInfo {
             ObjectMapper om = new ObjectMapper();
             ClientIndexDto dto = om.readValue(file.toFile(), ClientIndexDto.class);
             m_lastSyncedMtimeMap.clear();
+            m_lastSyncedSizeMap.clear();
             if (dto.files != null) {
                 m_lastSyncedMtimeMap.putAll(dto.files);
+            }
+            if (dto.fileSizes != null) {
+                m_lastSyncedSizeMap.putAll(dto.fileSizes);
             }
         } catch (IOException e) {
             // 로그만 찍고 무시 (손상 시 재생성)
@@ -535,6 +577,7 @@ public class CMFileSyncInfo {
             dto.baseCursor = baseCursor;
             dto.generatedAt = OffsetDateTime.now().toString();
             dto.files = new HashMap<>(m_lastSyncedMtimeMap);
+            dto.fileSizes = new HashMap<>(m_lastSyncedSizeMap);
             om.writeValue(file.toFile(), dto);
         } catch (IOException e) {
             // 로그만

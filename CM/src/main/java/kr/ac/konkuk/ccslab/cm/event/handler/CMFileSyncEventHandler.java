@@ -1628,8 +1628,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        // update lastSyncedMtimeMap with the preserved serverMtime so "file mtime == baseMtime" holds
-        syncInfo.setLastSyncedMtime(relativePath, serverMtime);
+        // update lastSyncedMtimeMap with the preserved serverMtime so "file mtime == baseMtime" holds.
+        // size 도 함께 저장: WatchService 의 self-event 필터가 mtime+size 양쪽을 비교한다.
+        long curSize;
+        try {
+            curSize = syncInfo.currentSizeOrMinusOne(basisFilePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            curSize = -1L;
+        }
+        syncInfo.setLastSynced(relativePath, serverMtime, curSize);
 
         // send COMPLETE_PULL_MODIFY to the server
         CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
@@ -3717,17 +3725,20 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // 완료된 path의 절대 경로 구하기
         Path relPath = Paths.get(fse_cnf.getCompletedPath());
         Path absPath = syncHome.resolve(relPath).toAbsolutePath().normalize();
-        // 절대경로의 현재 mtime 구하기
+        // 절대경로의 현재 mtime + size 구하기 (self-event 필터용)
         long curMtime;
+        long curSize;
         try {
             curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            curSize = syncInfo.currentSizeOrMinusOne(absPath);
         } catch (IOException e) {
             e.printStackTrace();
             curMtime = -1;
+            curSize = -1;
         }
 
-        // 인메모리 client-index Map에 (path, mtime) 추가하기
-        syncInfo.setLastSyncedMtime(relPath.toString(), curMtime);
+        // 인메모리 client-index Map에 (path, mtime, size) 추가하기
+        syncInfo.setLastSynced(relPath.toString(), curMtime, curSize);
 
         // 인메모리 cursor 값 업데이트
         long memCursor = syncInfo.getCursor();
@@ -3773,17 +3784,20 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // 완료된 path의 절대 경로 구하기
         Path relPath = Paths.get(fse_cuf.getCompletedPath());
         Path absPath = syncHome.resolve(relPath).toAbsolutePath().normalize();
-        // 절대경로의 현재 mtime 구하기
+        // 절대경로의 현재 mtime + size 구하기 (self-event 필터용)
         long curMtime;
+        long curSize;
         try {
             curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            curSize = syncInfo.currentSizeOrMinusOne(absPath);
         } catch (IOException e) {
             e.printStackTrace();
             curMtime = -1;
+            curSize = -1;
         }
 
-        // 인메모리 client-index Map에 (path, mtime) 추가하기
-        syncInfo.setLastSyncedMtime(relPath.toString(), curMtime);
+        // 인메모리 client-index Map에 (path, mtime, size) 추가하기
+        syncInfo.setLastSynced(relPath.toString(), curMtime, curSize);
 
         // 인메모리 cursor 값 업데이트
         long memCursor = syncInfo.getCursor();

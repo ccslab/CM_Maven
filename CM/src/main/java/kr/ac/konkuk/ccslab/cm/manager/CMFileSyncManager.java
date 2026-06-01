@@ -440,8 +440,9 @@ public class CMFileSyncManager extends CMServiceManager {
                 CMFileSyncClientEntry entry = pullDeleteMap.get(relPath);
                 entry.setCompleted(true);
                 numDeletedFiles++;
-                // client-index 인메모리 메타 정보 삭제
+                // client-index 인메모리 메타 정보 삭제 (mtime + size 모두)
                 lastSyncedMtimeMap.remove(relPath);
+                syncInfo.removeLastSyncedSize(relPath);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -633,10 +634,11 @@ public class CMFileSyncManager extends CMServiceManager {
         // mark entry completed
         entry.setCompleted(true);
 
-        // update in-memory client-index with current mtime
+        // update in-memory client-index with current mtime + size (for self-event filter)
         try {
             long curMtime = syncInfo.currentMtimeSecOrMinusOne(dstPath);
-            syncInfo.setLastSyncedMtime(relPathStr, curMtime);
+            long curSize = syncInfo.currentSizeOrMinusOne(dstPath);
+            syncInfo.setLastSynced(relPathStr, curMtime, curSize);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
