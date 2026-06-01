@@ -155,21 +155,43 @@ public class CMWatchServiceTask implements Runnable {
         }
     }
 
-    // detectedPathMap 의 ENTRY_CREATE/ENTRY_MODIFY 이벤트 중, 현재 파일의 mtime+size 가
-    // 마지막으로 동기화된 값(lastSyncedMtime + lastSyncedSize)과 일치하는 항목을 제거한다.
-    // pull sync 가 막 디스크에 떨어뜨린 파일을 다시 push 하는 self-event 루프를 방지한다.
-    // ENTRY_DELETE 는 별도 처리(파일이 없으니 mtime/size 비교 불가). DELETE 의 self-event 방지는
-    // 후속 작업 — 현재는 통과시킨다.
+    // pull-delete 후 ENTRY_DELETE 이벤트가 안 들어오는 경우의 leak 방지용 TTL (ms).
+    private static final long PENDING_PULL_DELETE_TTL_MS = 30_000L;
+
+    // detectedPathMap 의 self-event 항목을 제거한다 — pull sync 가 막 디스크에 적용한 변경이
+    // 다시 push 흐름으로 돌아오는 루프를 방지한다.
+    //   CREATE/MODIFY: 현재 mtime+size 가 lastSynced* 와 일치하면 self-event 로 간주.
+    //   DELETE:        pendingPullDeletePaths 에 등록된 path 면 self-event 로 간주.
     private void filterSelfEvents() {
+        // 등록은 됐는데 이벤트가 끝내 안 온 항목 정리 (leak 방지)
+        syncInfo.sweepStalePendingPullDeletes(PENDING_PULL_DELETE_TTL_MS);
+
         Path syncHome = syncManager.getClientSyncHome().toAbsolutePath().normalize();
 
         for (Map.Entry<WatchEvent.Kind<?>, List<Path>> entry : detectedPathMap.entrySet()) {
             WatchEvent.Kind<?> kind = entry.getKey();
+            List<Path> paths = entry.getValue();
+
+            if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+                Iterator<Path> iter = paths.iterator();
+                while (iter.hasNext()) {
+                    Path absPath = iter.next().toAbsolutePath().normalize();
+                    if (!absPath.startsWith(syncHome)) continue;
+                    String relPath = syncHome.relativize(absPath).toString().replace('\\', '/');
+                    if (syncInfo.consumePendingPullDelete(relPath)) {
+                        if (CMInfo._CM_DEBUG) {
+                            System.out.println("CMWatchServiceTask: filtered self-DELETE for " + relPath);
+                        }
+                        iter.remove();
+                    }
+                }
+                continue;
+            }
+
             if (kind != StandardWatchEventKinds.ENTRY_CREATE
                     && kind != StandardWatchEventKinds.ENTRY_MODIFY) {
-                continue;   // DELETE 등은 필터 대상 아님
+                continue;   // OVERFLOW 등 그 외 종류는 필터 대상 아님
             }
-            List<Path> paths = entry.getValue();
             Iterator<Path> iter = paths.iterator();
             while (iter.hasNext()) {
                 Path absPath = iter.next().toAbsolutePath().normalize();

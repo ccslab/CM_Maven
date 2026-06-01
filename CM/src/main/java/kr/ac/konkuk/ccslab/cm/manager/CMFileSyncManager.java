@@ -428,9 +428,13 @@ public class CMFileSyncManager extends CMServiceManager {
             Path absPath = syncHome.resolve(relPath).normalize();
             try {
                 if (Files.exists(absPath)) {
+                    // WatchService 가 발생시킬 ENTRY_DELETE 이벤트가 self-event 임을 표시.
+                    // 반드시 Files.delete() 직전에 등록 (race 방지).
+                    syncInfo.addPendingPullDelete(relPath);
                     Files.delete(absPath);
                 } else {
                     // online 모드이거나 이미 외부에서 삭제된 경우 — 정상 처리
+                    // 이 경우 DELETE 이벤트가 안 나오므로 pendingPullDelete 등록하지 않음.
                     if (CMInfo._CM_DEBUG)
                         System.out.println("file does not exist locally, skip delete: " + absPath);
                 }

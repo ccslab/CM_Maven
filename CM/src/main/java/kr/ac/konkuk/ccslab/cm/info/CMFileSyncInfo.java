@@ -82,6 +82,9 @@ public class CMFileSyncInfo {
     // [NEW] 4 client: 클라이언트 베이스 스냅샷 path -> lastSyncedSize (bytes).
     // pull 로 받은 파일이 WatchService 의 self-event 로 다시 push 되는 것을 막기 위한 필터에 사용.
     private final Map<String, Long> m_lastSyncedSizeMap = new ConcurrentHashMap<>();
+    // [NEW] 4 client: pull-delete 직전 등록된 path -> 등록 시각(ms).
+    // WatchService 의 self-DELETE 이벤트를 식별/drop 하는 데 사용 (영속화 불필요).
+    private final Map<String, Long> m_pendingPullDeletePaths = new ConcurrentHashMap<>();
 
     // [NEW] 4 server: pull sync를 위해 서버가 클라이언트로 보내기로 결정한 server entry list
     private Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> serverEntryMap;
@@ -442,6 +445,31 @@ public class CMFileSyncInfo {
     public void setLastSynced(String relPath, long mtimeSec, long sizeBytes) {
         m_lastSyncedMtimeMap.put(relPath, mtimeSec);
         m_lastSyncedSizeMap.put(relPath, sizeBytes);
+    }
+
+    // ---- pendingPullDeletePaths: WatchService self-DELETE 필터 ----
+
+    /**
+     * pull-delete 로 곧 삭제될 path 를 등록한다 (반드시 Files.delete() 직전에 호출).
+     */
+    public void addPendingPullDelete(String relPath) {
+        m_pendingPullDeletePaths.put(relPath, System.currentTimeMillis());
+    }
+
+    /**
+     * WatchService 가 가져온 DELETE 이벤트의 path 가 pull-delete 등록 분이었는지 확인하고 제거.
+     * @return true 면 self-delete (필터 drop 대상)
+     */
+    public boolean consumePendingPullDelete(String relPath) {
+        return m_pendingPullDeletePaths.remove(relPath) != null;
+    }
+
+    /**
+     * 등록은 됐지만 ttlMs 가 지나도록 이벤트가 안 들어온 항목 정리 (leak 방지).
+     */
+    public void sweepStalePendingPullDeletes(long ttlMs) {
+        long cutoff = System.currentTimeMillis() - ttlMs;
+        m_pendingPullDeletePaths.entrySet().removeIf(e -> e.getValue() < cutoff);
     }
 
     /**
