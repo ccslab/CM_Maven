@@ -114,10 +114,12 @@ public class CMFileSyncInfo {
 
     // [NEW] 동기화 제외 대상 glob 패턴 (OS 자동 생성 파일, 임시 파일, conflict 보존 파일 등).
     // 향후 cm-client.conf / cm-server.conf 에서 추가 패턴을 머지하도록 확장 예정.
+    // 주의: "-conflict-*" 는 의도적으로 제외. conflict-rename 파일은 사용자 데이터 보존용
+    // 백업이므로 다음 push sync 때 서버로 전송되어 다른 디바이스에서도 확인 가능해야 함.
+    // .DS_Store 같은 OS 자동 재생성 파일은 ignore 로 충돌 자체를 차단하므로 무한 루프 위험 없음.
     private static final List<String> DEFAULT_IGNORED_GLOBS = List.of(
             ".DS_Store", "._*", ".Spotlight-V100", ".Trashes", ".fseventsd",
             "Thumbs.db", "desktop.ini",
-            "-conflict-*",          // proceedConflictedClientEntry 가 만든 보존 파일
             "*.tmp", "*.swp"
     );
     private final List<PathMatcher> ignoreMatchers = DEFAULT_IGNORED_GLOBS.stream()
