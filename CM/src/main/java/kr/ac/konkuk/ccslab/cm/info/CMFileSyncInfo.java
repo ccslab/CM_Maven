@@ -23,8 +23,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.WatchService;
@@ -109,6 +111,18 @@ public class CMFileSyncInfo {
     private Map<String, CMFileSyncClientEntry> pendingPushMap;
     // [NEW] 4 client: pull sync MODIFY용 block-checksum generator 스레드
     private CMFileSyncPullGenerator pullGenerator;
+
+    // [NEW] 동기화 제외 대상 glob 패턴 (OS 자동 생성 파일, 임시 파일, conflict 보존 파일 등).
+    // 향후 cm-client.conf / cm-server.conf 에서 추가 패턴을 머지하도록 확장 예정.
+    private static final List<String> DEFAULT_IGNORED_GLOBS = List.of(
+            ".DS_Store", "._*", ".Spotlight-V100", ".Trashes", ".fseventsd",
+            "Thumbs.db", "desktop.ini",
+            "-conflict-*",          // proceedConflictedClientEntry 가 만든 보존 파일
+            "*.tmp", "*.swp"
+    );
+    private final List<PathMatcher> ignoreMatchers = DEFAULT_IGNORED_GLOBS.stream()
+            .map(g -> FileSystems.getDefault().getPathMatcher("glob:" + g))
+            .toList();
 
     private CMFileSyncInfo() {
 
@@ -470,6 +484,33 @@ public class CMFileSyncInfo {
     public void sweepStalePendingPullDeletes(long ttlMs) {
         long cutoff = System.currentTimeMillis() - ttlMs;
         m_pendingPullDeletePaths.entrySet().removeIf(e -> e.getValue() < cutoff);
+    }
+
+    // ---- ignore patterns: 동기화 대상에서 제외할 경로 매처 ----
+
+    /**
+     * 상대경로(또는 단일 segment) 가 ignore 패턴에 매칭되는지 검사한다.
+     * 경로의 모든 segment (각 디렉토리 컴포넌트 + 파일명) 에 대해 패턴 매칭을 시도하여,
+     * 어느 하나라도 매칭되면 무시 대상으로 간주.
+     */
+    public boolean isIgnored(Path relPath) {
+        if (relPath == null) return false;
+        int n = relPath.getNameCount();
+        if (n == 0) {
+            // 단일 segment 로 들어온 경우 (Path.of("foo")) 자체를 매칭
+            return matchesAnyIgnore(relPath);
+        }
+        for (int i = 0; i < n; i++) {
+            if (matchesAnyIgnore(relPath.getName(i))) return true;
+        }
+        return false;
+    }
+
+    private boolean matchesAnyIgnore(Path segment) {
+        for (PathMatcher m : ignoreMatchers) {
+            if (m.matches(segment)) return true;
+        }
+        return false;
     }
 
     /**

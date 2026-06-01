@@ -106,6 +106,13 @@ public class CMWatchServiceTask implements Runnable {
                 // process CREATE event of a new sub-directory
                 final Path directory = directoryMap.get(key);
                 final Path child = directory.resolve(filename);
+                // ignore 패턴 매칭 시 이벤트 수집 자체를 건너뜀 (.DS_Store 등 OS 자동 생성 파일)
+                Path syncHomeNorm = syncManager.getClientSyncHome().toAbsolutePath().normalize();
+                Path childNorm = child.toAbsolutePath().normalize();
+                if (childNorm.startsWith(syncHomeNorm)
+                        && syncInfo.isIgnored(syncHomeNorm.relativize(childNorm))) {
+                    continue;
+                }
                 if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
                     if (Files.isDirectory(child)) {
                         try {

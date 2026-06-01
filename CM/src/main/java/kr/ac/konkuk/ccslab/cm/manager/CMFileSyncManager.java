@@ -188,6 +188,12 @@ public class CMFileSyncManager extends CMServiceManager {
             for (CMFileSyncChangeLogEntry serverEntry : serverEntryList) {
                 String relPathStr = serverEntry.getPath();      // relative path (server & client)
                 Path relPath = Path.of(relPathStr);
+                // ignore 패턴 매칭 시 동기화 대상에서 제외 (.DS_Store 등)
+                if (syncInfo.isIgnored(relPath)) {
+                    if (CMInfo._CM_DEBUG)
+                        System.out.println("ignored server entry: " + relPathStr);
+                    continue;
+                }
                 Path absPath = clientSyncHome.resolve(relPath); // client absolute path
                 long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
                 long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
@@ -879,12 +885,17 @@ public class CMFileSyncManager extends CMServiceManager {
         if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.createPathList() called..");
 
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path syncHomeNorm = syncHome.toAbsolutePath().normalize();
+
         List<Path> pathList;
         try {
             // change to absolute path -> sorted -> change to a list
             pathList = Files.walk(syncHome)
                     .filter(path -> !path.equals(syncHome))
                     .map(path -> path.toAbsolutePath().normalize())
+                    // ignore 패턴에 매칭되는 경로 제외 (.DS_Store 등 OS 자동 생성 파일)
+                    .filter(path -> !syncInfo.isIgnored(syncHomeNorm.relativize(path)))
                     .sorted()
                     .collect(Collectors.toList());
         } catch (IOException e) {
