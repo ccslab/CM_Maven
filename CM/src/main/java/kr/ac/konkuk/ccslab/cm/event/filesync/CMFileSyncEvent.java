@@ -288,6 +288,14 @@ public abstract class CMFileSyncEvent extends CMEvent {
     // Fields: int numFilesCompleted, int returnCode
     public static final int COMPLETE_PULL_SYNC_ACK = 40;
 
+    /**
+     * event ID of the CMFileSyncEventRequestPullCreates class.
+     * 클라이언트가 서버에 pull-sync CREATE 대상 파일들의 push 를 요청.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numRequestedFiles, List<Path> requestedFileList (relative to FileSyncHome)
+    public static final int REQUEST_PULL_CREATES = 41;
+
     // ----------------------------------------------------------------
     // [NEW] FileSync common header fields (event initiator identity)
     // Used by both client-initiated and server-initiated events

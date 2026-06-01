@@ -482,17 +482,17 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    // called by client; requests file pull from server for each entry in pullCreateMap.
-    // online-mode entries are handled inline (no actual transfer); offline-mode entries
-    // request a permit which triggers the normal file-transfer flow, with
-    // checkCompletePullCreate() called on receipt.
+    // called by client; pullCreateMap 의 offline 모드 entry 들을 모아 서버에 REQUEST_PULL_CREATES
+    // 이벤트를 전송한다. 서버가 자기 sync home 에서 직접 path 를 조립해 pushFile() 로 보낸다.
+    // 요청 파일 개수가 많아 MAX_EVENT_SIZE 를 넘으면 여러 이벤트로 분할 전송한다.
+    // online-mode entry 들은 기존처럼 인라인 처리 (실제 전송 없음).
+    // 수신 완료 시점에 checkCompletePullCreate() 가 호출된다.
     private boolean proceedPullCreateMap() {
         if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.proceedPullCreateMap() called..");
 
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
-        Set<String> keys = pullCreateMap.keySet();
         CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
         String serverName = interInfo.getDefaultServerInfo().getServerName();
 
@@ -502,25 +502,85 @@ public class CMFileSyncManager extends CMServiceManager {
             return true;
         }
 
+        // online / offline 분리
+        List<Path> offlineRelPathList = new ArrayList<>();
         boolean sendResult = true;
-        for (String relPathStr : keys) {
+        for (String relPathStr : pullCreateMap.keySet()) {
             Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
-            boolean isOnlinePath = isOnlineMode(absPath);
-            if (isOnlinePath) {
-                sendResult &= proceedOnlinePullCreateEntry(relPathStr, pullCreateMap.get(relPathStr), serverName);
+            if (isOnlineMode(absPath)) {
+                boolean ret = proceedOnlinePullCreateEntry(relPathStr, pullCreateMap.get(relPathStr), serverName);
+                sendResult &= ret;
+                if (!ret)
+                    System.err.println("CMFileSyncManager.proceedPullCreateMap(), online failed for: " + relPathStr);
             } else {
-                sendResult &= CMFileTransferManager.requestPermitForPullFile(relPathStr, serverName);
+                offlineRelPathList.add(Path.of(relPathStr));
             }
-            if (!sendResult)
-                System.err.println("CMFileSyncManager.proceedPullCreateMap(), failed for: " + relPathStr);
+        }
+
+        // offline entry 가 있으면 REQUEST_PULL_CREATES 이벤트로 분할 전송
+        if (!offlineRelPathList.isEmpty()) {
+            sendResult &= sendRequestPullCreates(offlineRelPathList, serverName, interInfo, syncInfo);
         }
 
         return sendResult;
     }
 
+    // offline pull-create 대상 경로 리스트를 MAX_EVENT_SIZE 기준 chunk 로 분할해
+    // REQUEST_PULL_CREATES 이벤트를 반복 전송한다.
+    // CMFileSyncGenerator.requestTransferOfNewFiles() 의 분할 패턴과 동일.
+    private boolean sendRequestPullCreates(List<Path> relPathList, String serverName,
+                                           CMInteractionInfo interInfo, CMFileSyncInfo syncInfo) {
+        String initiatorName = interInfo.getMyself().getName();
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+
+        int numRequestsCompleted = 0;
+        while (numRequestsCompleted < relPathList.size()) {
+            CMFileSyncEventRequestPullCreates fse = new CMFileSyncEventRequestPullCreates();
+            fse.setInitiatorName(initiatorName);
+            fse.setInitiatorUuid(initiatorUuid);
+            fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+            int curByteNum = fse.getByteNum();
+            List<Path> chunk = new ArrayList<>();
+            int numRequestedFiles = 0;
+            while (numRequestsCompleted < relPathList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                Path path = relPathList.get(numRequestsCompleted);
+                curByteNum += CMInfo.STRING_LEN_BYTES_LEN + path.toString().getBytes().length;
+                if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                    chunk.add(path);
+                    numRequestedFiles++;
+                    numRequestsCompleted++;
+                } else {
+                    break;
+                }
+            }
+            // chunk 가 비어있는데 진행이 안 되면 단일 경로가 MAX_EVENT_SIZE 를 초과한 경우.
+            // 무한루프 방지를 위해 강제로 1개 담아 보내고 실패 처리한다.
+            if (chunk.isEmpty()) {
+                System.err.println("CMFileSyncManager.sendRequestPullCreates(), single path exceeds MAX_EVENT_SIZE: "
+                        + relPathList.get(numRequestsCompleted));
+                return false;
+            }
+            fse.setNumRequestedFiles(numRequestedFiles);
+            fse.setRequestedFileList(chunk);
+
+            boolean ret = CMEventManager.unicastEvent(fse, serverName, null);
+            if (!ret) {
+                System.err.println("CMFileSyncManager.sendRequestPullCreates(), send error: " + fse);
+                return false;
+            }
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("sent REQUEST_PULL_CREATES event = " + fse);
+            }
+        }
+        return true;
+    }
+
     // called by client on file-receive completion; finds the matching pullCreateMap entry by
-    // file name, marks it completed, updates the in-memory client-index, then sends
-    // COMPLETE_PULL_CREATE to the server (file sender).
+    // file name, moves the received file from transferedFileHome to FileSyncHome/<relPath>
+    // (preserving subdirectories), marks it completed, updates the in-memory client-index,
+    // then sends COMPLETE_PULL_CREATE to the server (file sender).
     // NOTE: matching is by file name suffix — a future improvement should carry the full
     // relative path in CMFileEvent to avoid ambiguity across subdirectories.
     public boolean checkCompletePullCreate(CMFileEvent fe) {
@@ -548,15 +608,34 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
-        // mark entry completed
+        // 수신된 파일을 transferedFileHome/<fileName> 에서 FileSyncHome/<relPath> 로 이동.
+        // 서버측 pushFile() 은 sync home 의 절대경로를 보내지만, 클라 수신측은
+        // transferedFileHome 평면 구조에 파일명만 저장하므로 (CMFileTransferManager.java:2170-2173)
+        // 여기서 sync home 의 상대경로 위치로 옮긴다.
         CMFileSyncClientEntry entry = pullCreateMap.get(foundKey);
+        String relPathStr = entry.getPath();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path srcPath = confInfo.getTransferedFileHome().resolve(fileName).toAbsolutePath().normalize();
+        Path dstPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+        try {
+            Path parentDir = dstPath.getParent();
+            if (parentDir != null && Files.notExists(parentDir)) {
+                Files.createDirectories(parentDir);
+            }
+            Files.move(srcPath, dstPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePullCreate(), move failed: "
+                    + srcPath + " -> " + dstPath);
+            e.printStackTrace();
+            return false;
+        }
+
+        // mark entry completed
         entry.setCompleted(true);
 
         // update in-memory client-index with current mtime
-        String relPathStr = entry.getPath();
-        Path absPath = getClientSyncHome().resolve(relPathStr);
         try {
-            long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            long curMtime = syncInfo.currentMtimeSecOrMinusOne(dstPath);
             syncInfo.setLastSyncedMtime(relPathStr, curMtime);
         } catch (IOException e) {
             e.printStackTrace();

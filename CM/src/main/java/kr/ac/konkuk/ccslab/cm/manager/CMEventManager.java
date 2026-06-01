@@ -292,6 +292,10 @@ public class CMEventManager {
 						CMFileSyncEventCompletePullSyncAck completePullSyncAck =
 								new CMFileSyncEventCompletePullSyncAck(buf);
 						return completePullSyncAck;
+					case CMFileSyncEvent.REQUEST_PULL_CREATES:
+						CMFileSyncEventRequestPullCreates reqPullCreates =
+								new CMFileSyncEventRequestPullCreates(buf);
+						return reqPullCreates;
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);

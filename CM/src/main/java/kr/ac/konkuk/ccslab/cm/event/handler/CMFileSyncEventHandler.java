@@ -91,6 +91,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.COMPLETE_PULL_MODIFY -> processResult = processCOMPLETE_PULL_MODIFY(fse);
             case CMFileSyncEvent.COMPLETE_PULL_SYNC -> processResult = processCOMPLETE_PULL_SYNC(fse);
             case CMFileSyncEvent.COMPLETE_PULL_SYNC_ACK -> processResult = processCOMPLETE_PULL_SYNC_ACK(fse);
+            case CMFileSyncEvent.REQUEST_PULL_CREATES -> processResult = processREQUEST_PULL_CREATES(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3262,6 +3263,58 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // The next sync task will be conducted at the CMFileTransferManager,
         // when the transmission of each requested file completes
         // by moving the transferred file to the server sync home.
+
+        return sendResult;
+    }
+
+    // called at the server: pull-sync 의 CREATE 대상 파일들을 클라이언트로 push 한다.
+    private boolean processREQUEST_PULL_CREATES(CMFileSyncEvent fse) {
+        CMFileSyncEventRequestPullCreates fse_rpc = (CMFileSyncEventRequestPullCreates) fse;
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processREQUEST_PULL_CREATES() called..");
+            System.out.println("event = " + fse_rpc);
+        }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncEventHandler.processREQUEST_PULL_CREATES(), system type is not SERVER!");
+            return false;
+        }
+
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        String initiatorName = fse_rpc.getInitiatorName();
+        UUID initiatorUuid = fse_rpc.getInitiatorUuid();
+
+        List<Path> requestedFileList = fse_rpc.getRequestedFileList();
+        if (requestedFileList == null || requestedFileList.isEmpty()) {
+            System.err.println("CMFileSyncEventHandler.processREQUEST_PULL_CREATES(), requestedFileList is empty.");
+            return false;
+        }
+
+        // initiator 의 서버측 sync home 기준으로 경로를 조립한다.
+        Path serverSyncHome = syncManager.getServerSyncHome(initiatorName).toAbsolutePath().normalize();
+
+        boolean sendResult = true;
+        for (Path relPath : requestedFileList) {
+            Path absPath = serverSyncHome.resolve(relPath).toAbsolutePath().normalize();
+            // path traversal 방어: 조립 결과가 sync home 하위가 아니면 거부
+            if (!absPath.startsWith(serverSyncHome)) {
+                System.err.println("CMFileSyncEventHandler.processREQUEST_PULL_CREATES(), path traversal rejected: "
+                        + relPath);
+                sendResult = false;
+                continue;
+            }
+            if (!Files.exists(absPath)) {
+                System.err.println("CMFileSyncEventHandler.processREQUEST_PULL_CREATES(), file not found: " + absPath);
+                sendResult = false;
+                continue;
+            }
+            if (!CMFileTransferManager.pushFile(absPath.toString(), initiatorName, initiatorUuid)) {
+                System.err.println("CMFileSyncEventHandler.processREQUEST_PULL_CREATES(), pushFile failed: " + absPath);
+                sendResult = false;
+            }
+        }
 
         return sendResult;
     }
