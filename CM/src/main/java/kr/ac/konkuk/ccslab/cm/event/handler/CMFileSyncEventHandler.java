@@ -247,12 +247,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             // error: server cursor < client cursor -> recover with full push sync
             System.err.println("CMFileSyncEventHandler.processSTART_PULL_SYNC_ACK(), server cursor("
                     + serverCursor + ") < client cursor; starting full push sync.");
+            // PULL -> FULL_SYNC 전이: startFullPushSync() 의 진행중 가드를 통과시키기 위해 NONE 으로 리셋
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
             result = syncManager.startFullPushSync();
         } else if(returnCode == 0) {
             // no sync history on the server -> full push sync
             if(CMInfo._CM_DEBUG) {
                 System.out.println("no sync history on the server; starting full push sync.");
             }
+            // PULL -> FULL_SYNC 전이: startFullPushSync() 의 진행중 가드를 통과시키기 위해 NONE 으로 리셋
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
             result = syncManager.startFullPushSync();
         } else if(returnCode == 1) {
             // client is already up to date -> end the sync session
