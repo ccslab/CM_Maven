@@ -75,3 +75,14 @@ Event Layer:        CMEvent → CMSessionEvent, CMFileEvent, CMUserEvent,
 ## Active Development
 
 The `feature/concurrent-login/*` branches add multi-device login support using UUIDs to identify individual device connections per user. `CMMember` was refactored to use `Hashtable<String, List<CMUser>>` for this.
+
+### File Sync: implementation divergences from design doc 10-2
+
+The bidirectional file sync (`docs/10-2_...` design doc; `docs/` is gitignored / local-only) is being implemented incrementally. Pull sync is done; push sync is next. During pull debugging, **client-side sync metadata was added that the 10-2 doc does not describe** — account for these when implementing push (push completion must update the base snapshot with mtime **and** size, consistent with the items below):
+
+- **`m_lastSyncedSizeMap`** (`CMFileSyncInfo`): the doc's client base snapshot had only `lastSyncedMtimeMap` (relPath→mtime); implementation adds a size map (relPath→bytes) plus the combined setter `setLastSynced(relPath, mtime, size)`. Strengthens the WatchService self-event filter from mtime-only to mtime+size.
+- **`CMFileSyncClientEntry.serverMtime`** field: in the doc `serverMtime` is only a local var in compare logic; implementation adds it as a PULL-only field, excluded from marshall/unmarshall (not transmitted), used for client-local decisions.
+- **`m_pendingPullDeletePaths`** (`CMFileSyncInfo`): not in the doc; guards against pull-deleted files bouncing back as phantom DELETE self-events in the WatchService.
+- The base-snapshot persistence DTO gained a `fileSizes` field (companion to the size map; nullable for backward compat).
+
+Note: the index/persistence layer (`CMFileSyncIndex*`, `CMFileSyncJacksonSnapshotStore`) belongs to a *separate* design doc, not these divergences. Also, pull CREATE was switched from the doc's `requestPermitForPullFile` (client pulls) approach to a server-push approach (`REQUEST_PULL_CREATES` event + server `pushFile` + client-side `Files.move`) — a protocol change, not a metadata change.
