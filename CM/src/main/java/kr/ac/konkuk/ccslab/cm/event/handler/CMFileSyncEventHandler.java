@@ -92,6 +92,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.COMPLETE_PULL_SYNC -> processResult = processCOMPLETE_PULL_SYNC(fse);
             case CMFileSyncEvent.COMPLETE_PULL_SYNC_ACK -> processResult = processCOMPLETE_PULL_SYNC_ACK(fse);
             case CMFileSyncEvent.REQUEST_PULL_CREATES -> processResult = processREQUEST_PULL_CREATES(fse);
+            case CMFileSyncEvent.START_PUSH_ENTRY_LIST -> processResult = processSTART_PUSH_ENTRY_LIST(fse);
+            case CMFileSyncEvent.START_PUSH_ENTRY_LIST_ACK -> processResult = processSTART_PUSH_ENTRY_LIST_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3330,6 +3332,183 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return sendResult;
+    }
+
+    // called at the server
+    private boolean processSTART_PUSH_ENTRY_LIST(CMFileSyncEvent fse) {
+        CMFileSyncEventStartPushEntryList fse_spel = (CMFileSyncEventStartPushEntryList) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST() called..");
+            System.out.println("fse_spel = " + fse_spel);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        String initiatorName = fse_spel.getInitiatorName();
+        UUID initiatorUuid = fse_spel.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_spel.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        int numTotalFiles = fse_spel.getNumTotalFiles();
+        int returnCode = 1;
+
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST(), not a SERVER.");
+            return false;
+        }
+
+        Path serverSyncHome = syncManager.getServerSyncHome(initiatorName);
+        if (Files.notExists(serverSyncHome)) {
+            try {
+                Files.createDirectories(serverSyncHome);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+        if (pushStateTable.containsKey(stateKey)) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST(), " +
+                    "push session already in progress for stateKey = " + stateKey);
+            returnCode = 0;
+        }
+
+        if (returnCode == 1) {
+            Map<String, CMFileSyncClientEntry> pushStateMap = new Hashtable<>();
+            pushStateTable.put(stateKey, pushStateMap);
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("registered new pushStateMap for stateKey = " + stateKey
+                        + ", numTotalFiles = " + numTotalFiles);
+            }
+        }
+
+        CMFileSyncEventStartPushEntryListAck ackEvent = new CMFileSyncEventStartPushEntryListAck();
+        ackEvent.setInitiatorName(initiatorName);
+        ackEvent.setInitiatorUuid(initiatorUuid);
+        ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        ackEvent.setNumTotalFiles(numTotalFiles);
+        ackEvent.setReturnCode(returnCode);
+
+        boolean sendResult = CMEventManager.unicastEvent(ackEvent, initiatorName, initiatorUuid);
+        if (!sendResult) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST(), failed to send ACK.");
+            if (returnCode == 1) {
+                pushStateTable.remove(stateKey);
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    // called at the client
+    private boolean processSTART_PUSH_ENTRY_LIST_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventStartPushEntryListAck fse_ack = (CMFileSyncEventStartPushEntryListAck) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST_ACK() called..");
+            System.out.println("fse_ack = " + fse_ack);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        String initiatorName = fse_ack.getInitiatorName();
+        UUID initiatorUuid = fse_ack.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_ack.getInitiatorDeviceUuid();
+        int returnCode = fse_ack.getReturnCode();
+        int numTotalFiles = fse_ack.getNumTotalFiles();
+
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST_ACK(), not a CLIENT.");
+            return false;
+        }
+
+        if (returnCode == 0) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST_ACK(), " +
+                    "server rejected push session start. abort.");
+            syncInfo.setPushEntryList(null);
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return false;
+        }
+
+        List<CMFileSyncClientEntry> pushEntryList = syncInfo.getPushEntryList();
+        if (pushEntryList == null) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST_ACK(), " +
+                    "pushEntryList is null. unexpected.");
+            return false;
+        }
+
+        if (numTotalFiles != pushEntryList.size()) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST_ACK(), " +
+                    "numTotalFiles mismatch: ack=" + numTotalFiles + ", local=" + pushEntryList.size());
+            return false;
+        }
+
+        CMFileSyncEventPushEntries fse_pe = new CMFileSyncEventPushEntries();
+        fse_pe.setInitiatorName(initiatorName);
+        fse_pe.setInitiatorUuid(initiatorUuid);
+        fse_pe.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_pe.setNumFilesCompleted(0);
+        setPushNumFilesAndEntryList(fse_pe, 0);
+
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+        boolean sendResult = CMEventManager.unicastEvent(fse_pe, serverName, null);
+        if (!sendResult) {
+            System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST_ACK(), " +
+                    "failed to send first PUSH_ENTRIES.");
+            return false;
+        }
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("first PUSH_ENTRIES sent. numFiles = " + fse_pe.getNumFiles());
+        }
+
+        return true;
+    }
+
+    // called at the client
+    private CMFileSyncEventPushEntries setPushNumFilesAndEntryList(CMFileSyncEventPushEntries fse_pe,
+                                                                   int startListIndex) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.setPushNumFilesAndEntryList() called..");
+            System.out.println("startListIndex = " + startListIndex);
+        }
+        int curByteNum = fse_pe.getByteNum();
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<CMFileSyncClientEntry> pushEntryList = syncInfo.getPushEntryList();
+        List<CMFileSyncClientEntry> subList = new ArrayList<>();
+        int index = startListIndex;
+        int numFiles = 0;
+
+        while (curByteNum < CMInfo.MAX_EVENT_SIZE && index < pushEntryList.size()) {
+            CMFileSyncClientEntry entry = pushEntryList.get(index);
+            // CMFileSyncClientEntry serialized size (serverMtime excluded — PULL-only)
+            int entryByteNum = CMInfo.STRING_LEN_BYTES_LEN
+                    + entry.getPath().getBytes().length
+                    + Long.BYTES          // size
+                    + Long.BYTES          // curMtime
+                    + Long.BYTES          // baseMtime
+                    + Integer.BYTES       // opHint (CMFileSyncOp ordinal)
+                    + Byte.BYTES;         // isCompleted
+            if (curByteNum + entryByteNum < CMInfo.MAX_EVENT_SIZE) {
+                subList.add(entry);
+                curByteNum += entryByteNum;
+                numFiles++;
+                index++;
+            } else {
+                break;
+            }
+        }
+
+        fse_pe.setNumFiles(numFiles);
+        if (subList.isEmpty()) {
+            System.err.println("CMFileSyncEventHandler.setPushNumFilesAndEntryList(), subList is empty.");
+        } else {
+            fse_pe.setPushEntryList(subList);
+        }
+        return fse_pe;
     }
 
     // called at the server
