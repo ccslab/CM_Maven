@@ -12,6 +12,7 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
     private long baseMtime;         // 마지막 동기화 시점 mtime (epoch seconds, -1이면 없음)
     private CMFileSyncOp opHint;    // CREATE/MODIFY/DELETE/UNKNOWN
     private boolean isCompleted;    // 동기화 완료 여부
+    private boolean isDirectory;    // true이면 디렉토리, false이면 파일
     private long serverMtime;       // 서버측 mtime (epoch seconds, -1이면 미설정; PULL 전용, 전송 제외)
 
     public CMFileSyncClientEntry() {
@@ -21,6 +22,7 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
         baseMtime = -1;
         opHint = CMFileSyncOp.UNKNOWN;
         isCompleted = false;
+        isDirectory = false;
         serverMtime = -1;
     }
 
@@ -78,6 +80,15 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
         return this;
     }
 
+    public boolean isDirectory() {
+        return isDirectory;
+    }
+
+    public CMFileSyncClientEntry setDirectory(boolean directory) {
+        this.isDirectory = directory;
+        return this;
+    }
+
     public long getServerMtime() {
         return serverMtime;
     }
@@ -101,6 +112,7 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
                 ", baseMtime=" + baseMtime +
                 ", opHint=" + opHint +
                 ", isCompleted=" + isCompleted +
+                ", isDirectory=" + isDirectory +
                 ", serverMtime=" + serverMtime +
                 '}';
     }
@@ -116,11 +128,12 @@ public class CMFileSyncClientEntry implements Comparable<CMFileSyncClientEntry> 
                 entry.getBaseMtime() == baseMtime &&
                 entry.getOpHint() == opHint &&
                 entry.isCompleted() == isCompleted &&
+                entry.isDirectory() == isDirectory &&
                 entry.getServerMtime() == serverMtime;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(path, size, curMtime, baseMtime, opHint, isCompleted, serverMtime);
+        return Objects.hash(path, size, curMtime, baseMtime, opHint, isCompleted, isDirectory, serverMtime);
     }
 }

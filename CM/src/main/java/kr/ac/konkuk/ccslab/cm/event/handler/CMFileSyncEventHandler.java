@@ -3496,7 +3496,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     + Long.BYTES          // curMtime
                     + Long.BYTES          // baseMtime
                     + Integer.BYTES       // opHint (CMFileSyncOp ordinal)
-                    + Byte.BYTES;         // isCompleted
+                    + Byte.BYTES          // isCompleted
+                    + Byte.BYTES;         // isDirectory
             if (curByteNum + entryByteNum < CMInfo.MAX_EVENT_SIZE) {
                 subList.add(entry);
                 curByteNum += entryByteNum;

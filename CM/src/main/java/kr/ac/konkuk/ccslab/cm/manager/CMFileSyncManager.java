@@ -295,7 +295,14 @@ public class CMFileSyncManager extends CMServiceManager {
             }
             result &= dResult;
         }
-        // TODO: CREATE/MODIFY 호출 연결 — proceedPushCreateEntries / proceedPushModifyEntries는 별도 단계
+        if (!createEntries.isEmpty()) {
+            boolean cResult = proceedPushCreateEntries(stateKey, initiatorUuid, createEntries);
+            if (!cResult) {
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), failed in proceedPushCreateEntries.");
+            }
+            result &= cResult;
+        }
+        // TODO: MODIFY 호출 연결 — proceedPushModifyEntries는 별도 단계
         return result;
     }
 
@@ -320,6 +327,136 @@ public class CMFileSyncManager extends CMServiceManager {
         // TODO: changelog append, cursor 갱신, indexRepository.flushSnapshot,
         //       pushStateTable.remove(stateKey), COMPLETE_PUSH_SYNC 송신
         return true;
+    }
+
+    // Server-side CREATE trigger.
+    // - Directory entries: synchronously created on the server's sync home + in-memory server-index
+    //   updated + pushStateMap.isCompleted=true + a COMPLETE_PUSH_CREATE event sent (one per dir).
+    // - File entries: a REQUEST_NEW_FILES batch is sent to the client (MAX_EVENT_SIZE-bounded).
+    //   The actual file receipt, server-index update, isCompleted marking, and COMPLETE_PUSH_CREATE
+    //   send happen later in the server's processEND_FILE_TRANSFER PUSH-CREATE branch (separate step).
+    // If only directories were in createEntries and the session is now fully complete, the
+    // completion transaction is entered at the end.
+    public boolean proceedPushCreateEntries(CMFileSyncStateKey stateKey, UUID initiatorUuid,
+                                            List<CMFileSyncClientEntry> createEntries) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushCreateEntries() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid
+                    + ", createEntries.size = " + createEntries.size());
+        }
+
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+        Path serverSyncHome = getServerSyncHome(initiatorName);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncIndexRepository indexRepository =
+                syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                    + "pushStateMap not found for stateKey: " + stateKey);
+            return false;
+        }
+
+        boolean result = true;
+        long now = System.currentTimeMillis() / 1000L;
+
+        // (1) 디렉토리/파일 entry 분리 (pushStateMap 가드 동시 수행)
+        List<CMFileSyncClientEntry> dirEntries = new ArrayList<>();
+        List<CMFileSyncClientEntry> fileEntries = new ArrayList<>();
+        for (CMFileSyncClientEntry entry : createEntries) {
+            if (pushStateMap.get(entry.getPath()) == null) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "entry not found in pushStateMap: " + entry.getPath());
+                result = false;
+                continue;
+            }
+            if (entry.isDirectory()) {
+                dirEntries.add(entry);
+            } else {
+                fileEntries.add(entry);
+            }
+        }
+
+        // (2) 디렉토리 entry → 서버측 동기 처리 (deferred-commit: 파일 영속화는 completePushSync)
+        boolean anyDirectoryCompleted = false;
+        for (CMFileSyncClientEntry entry : dirEntries) {
+            String relPathStr = entry.getPath();
+            Path absPath = serverSyncHome.resolve(relPathStr).toAbsolutePath().normalize();
+            try {
+                Files.createDirectories(absPath);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "error creating directory: " + absPath);
+                e.printStackTrace();
+                result = false;
+                continue;
+            }
+            if (CMInfo._CM_DEBUG) System.out.println("created directory: " + absPath);
+
+            long newChangeId = indexRepository.lastChangeId() + 1L;
+            indexRepository.applyCreateOrModify(relPathStr, true, null, now, 0L, newChangeId);
+            pushStateMap.get(relPathStr).setCompleted(true);
+            anyDirectoryCompleted = true;
+
+            CMFileSyncEventCompletePushCreate fse_cpc = new CMFileSyncEventCompletePushCreate();
+            fse_cpc.setInitiatorName(initiatorName);
+            fse_cpc.setInitiatorUuid(initiatorUuid);
+            fse_cpc.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            fse_cpc.setCreatedPath(relPathStr);
+            if (!CMEventManager.unicastEvent(fse_cpc, initiatorName, initiatorUuid)) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "failed to send COMPLETE_PUSH_CREATE for dir: " + relPathStr);
+                result = false;
+                // 디렉토리는 이미 isCompleted=true로 마킹됨 → 세션 진전 유지
+            }
+        }
+
+        // (3) 파일 entry → REQUEST_NEW_FILES batch 송신
+        //     (full sync requestTransferOfNewFiles 패턴 차용)
+        int numRequestsCompleted = 0;
+        while (numRequestsCompleted < fileEntries.size()) {
+            CMFileSyncEventRequestNewFiles fse_rnf = new CMFileSyncEventRequestNewFiles();
+            fse_rnf.setInitiatorName(initiatorName);
+            fse_rnf.setInitiatorUuid(initiatorUuid);
+            fse_rnf.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+            int curByteNum = fse_rnf.getByteNum();
+            List<Path> requestedFileList = new ArrayList<>();
+            int numRequestedFiles = 0;
+
+            while (numRequestsCompleted < fileEntries.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                Path relPath = Paths.get(fileEntries.get(numRequestsCompleted).getPath());
+                curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relPath.toString().getBytes().length;
+                if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                    requestedFileList.add(relPath);
+                    numRequestedFiles++;
+                    numRequestsCompleted++;
+                } else {
+                    break;
+                }
+            }
+            fse_rnf.setNumRequestedFiles(numRequestedFiles);
+            fse_rnf.setRequestedFileList(requestedFileList);
+
+            if (!CMEventManager.unicastEvent(fse_rnf, initiatorName, initiatorUuid)) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "failed to send REQUEST_NEW_FILES.");
+                return false;
+            }
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("sent REQUEST_NEW_FILES: numRequestedFiles=" + numRequestedFiles);
+            }
+        }
+
+        // (4) 디렉토리만으로 세션 완료 가능 케이스 체크
+        // (createEntries가 모두 디렉토리이고 DELETE도 모두 완료된 케이스)
+        if (anyDirectoryCompleted && isCompletePushSync(pushStateMap)) {
+            boolean completeResult = completePushSync(stateKey, initiatorUuid);
+            result &= completeResult;
+        }
+
+        return result;
     }
 
     // Server-side DELETE handler: deletes the file on disk and updates the in-memory server-index
@@ -534,7 +671,8 @@ public class CMFileSyncManager extends CMServiceManager {
                     clientEntry.setPath(relPathStr)
                             .setCurMtime(curMtime)
                             .setBaseMtime(baseMtime)
-                            .setOpHint(baseMtime == -1 ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY);
+                            .setOpHint(baseMtime == -1 ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY)
+                            .setDirectory(Files.isDirectory(absPath));
                     pendingPushMap.put(relPathStr, clientEntry);
                     if (CMInfo._CM_DEBUG)
                         System.out.println("pendingPushMap added: key = " + relPathStr + ", value = " + clientEntry);
@@ -620,7 +758,8 @@ public class CMFileSyncManager extends CMServiceManager {
                 .setSize(entry.getSize())
                 .setCurMtime(entry.getCurMtime())
                 .setBaseMtime(-1L)
-                .setOpHint(CMFileSyncOp.CREATE);
+                .setOpHint(CMFileSyncOp.CREATE)
+                .setDirectory(Files.isDirectory(conflictAbsPath));
         renamedEntry.setCompleted(false);
 
         // (8) pendingPushMap에 추가

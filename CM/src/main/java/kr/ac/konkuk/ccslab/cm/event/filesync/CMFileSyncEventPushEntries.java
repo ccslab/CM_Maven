@@ -66,6 +66,8 @@ public class CMFileSyncEventPushEntries extends CMFileSyncEvent {
                 byteNum += Integer.BYTES;
                 // isCompleted (as byte)
                 byteNum += Byte.BYTES;
+                // isDirectory (as byte)
+                byteNum += Byte.BYTES;
             }
         }
         return byteNum;
@@ -89,6 +91,7 @@ public class CMFileSyncEventPushEntries extends CMFileSyncEvent {
                 CMFileSyncOp op = entry.getOpHint();
                 m_bytes.putInt(op == null ? CMFileSyncOp.UNKNOWN.ordinal() : op.ordinal());
                 m_bytes.put((byte) (entry.isCompleted() ? 1 : 0));
+                m_bytes.put((byte) (entry.isDirectory() ? 1 : 0));
             }
         } else {
             m_bytes.putInt(0);
@@ -112,7 +115,8 @@ public class CMFileSyncEventPushEntries extends CMFileSyncEvent {
                         .setCurMtime(msg.getLong())
                         .setBaseMtime(msg.getLong())
                         .setOpHint(ordinalToOp(msg.getInt()))
-                        .setCompleted(msg.get() != 0);
+                        .setCompleted(msg.get() != 0)
+                        .setDirectory(msg.get() != 0);
                 // serverMtime stays at its default (-1): PULL-only, not transmitted
                 pushEntryList.add(entry);
             }
