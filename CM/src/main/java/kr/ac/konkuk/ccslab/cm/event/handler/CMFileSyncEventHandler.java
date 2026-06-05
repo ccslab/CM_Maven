@@ -99,6 +99,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.END_PUSH_ENTRY_LIST -> processResult = processEND_PUSH_ENTRY_LIST(fse);
             case CMFileSyncEvent.END_PUSH_ENTRY_LIST_ACK -> processResult = processEND_PUSH_ENTRY_LIST_ACK(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_DELETE -> processResult = processCOMPLETE_PUSH_DELETE(fse);
+            case CMFileSyncEvent.COMPLETE_PUSH_CREATE -> processResult = processCOMPLETE_PUSH_CREATE(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3842,6 +3843,66 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // 본 핸들러는 client-index 갱신까지만 책임. 세션 완료/cursor 갱신/pushEntryList 정리는
         // processCOMPLETE_PUSH_SYNC에서 일괄 처리.
+        return true;
+    }
+
+    // called at the client
+    private boolean processCOMPLETE_PUSH_CREATE(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePushCreate fse_cpc = (CMFileSyncEventCompletePushCreate) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PUSH_CREATE() called..");
+            System.out.println("fse_cpc = " + fse_cpc);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMUser myself = interInfo.getMyself();
+        String initiatorName = fse_cpc.getInitiatorName();
+        UUID initiatorUuid = fse_cpc.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_cpc.getInitiatorDeviceUuid();
+        String createdPath = fse_cpc.getCreatedPath();
+
+        // initiator 검증
+        if (!myself.getName().equals(initiatorName)
+                || !myself.getUuid().equals(initiatorUuid)
+                || !syncInfo.getDeviceUuid().equals(initiatorDeviceUuid)) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_CREATE(), initiator mismatch: "
+                    + "name=" + initiatorName + ", uuid=" + initiatorUuid
+                    + ", deviceUuid=" + initiatorDeviceUuid);
+            return false;
+        }
+
+        // syncProgress 가드
+        if (syncInfo.getSyncProgress() != CMFileSyncProgress.PUSH) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_CREATE(), stale event: "
+                    + "syncProgress = " + syncInfo.getSyncProgress());
+            return false;
+        }
+
+        // pendingPushMap에서 createdPath entry 조회 (curMtime/size 획득용)
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        CMFileSyncClientEntry entry = (pendingPushMap != null) ? pendingPushMap.get(createdPath) : null;
+        if (entry == null) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_CREATE(), "
+                    + "createdPath not found in pendingPushMap: " + createdPath);
+            return false;
+        }
+
+        // 인메모리 client-index에 createdPath 메타 정보 추가.
+        // CLAUDE.md divergence: mtime + size 통합 setter로 양쪽 일관 갱신.
+        Long prevMtime = syncInfo.getLastSyncedMtimeMap().get(createdPath);
+        syncInfo.setLastSynced(createdPath, entry.getCurMtime(), entry.getSize());
+        if (CMInfo._CM_DEBUG) {
+            if (prevMtime != null) {
+                System.out.println("warning: createdPath already in lastSyncedMtimeMap: " + createdPath
+                        + " (prev mtime = " + prevMtime + ", overwritten with " + entry.getCurMtime() + ")");
+            } else {
+                System.out.println("added to lastSynced maps: " + createdPath
+                        + " (curMtime = " + entry.getCurMtime() + ", size = " + entry.getSize() + ")");
+            }
+        }
+
+        // 세션 완료 판정/cursor 갱신/pendingPushMap·pushEntryList 정리는 processCOMPLETE_PUSH_SYNC에서.
         return true;
     }
 
