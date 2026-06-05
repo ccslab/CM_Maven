@@ -243,6 +243,12 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid);
         }
 
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncManager.proceedPushStateMap(), not a SERVER.");
+            return false;
+        }
+
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
         if (pushStateMap == null) {
@@ -250,10 +256,47 @@ public class CMFileSyncManager extends CMServiceManager {
                     + stateKey);
             return false;
         }
+        if (pushStateMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pushStateMap is empty. nothing to proceed.");
+            return true;
+        }
 
-        // TODO: op별 처리 호출 — proceedPushDeleteEntries / proceedPushCreateEntries / proceedPushModifyEntries
-        // (별도 단계에서 하나씩 구현)
-        return true;
+        // 단순 opHint 기반 분류. 풀 트리아지(classifyEntriesForPush — 서버 파일/server-index/클라 메타 3자 비교 +
+        // 충돌 rename)는 별도 단계에서 본 분류를 대체할 예정.
+        List<CMFileSyncClientEntry> deleteEntries = new ArrayList<>();
+        List<CMFileSyncClientEntry> createEntries = new ArrayList<>();
+        List<CMFileSyncClientEntry> modifyEntries = new ArrayList<>();
+        for (CMFileSyncClientEntry entry : pushStateMap.values()) {
+            CMFileSyncOp op = entry.getOpHint();
+            if (op == CMFileSyncOp.DELETE) {
+                deleteEntries.add(entry);
+            } else if (op == CMFileSyncOp.CREATE) {
+                createEntries.add(entry);
+            } else if (op == CMFileSyncOp.MODIFY) {
+                modifyEntries.add(entry);
+            } else {
+                // UNKNOWN 등은 풀 트리아지 단계에서 결정될 분기. 현재는 skip + 로그.
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), unclassified opHint for path = "
+                        + entry.getPath() + ", op = " + op);
+            }
+        }
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("classification: DELETE=" + deleteEntries.size()
+                    + ", CREATE=" + createEntries.size()
+                    + ", MODIFY=" + modifyEntries.size());
+        }
+
+        boolean result = true;
+        if (!deleteEntries.isEmpty()) {
+            boolean dResult = proceedPushDeleteEntries(stateKey, initiatorUuid, deleteEntries);
+            if (!dResult) {
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), failed in proceedPushDeleteEntries.");
+            }
+            result &= dResult;
+        }
+        // TODO: CREATE/MODIFY 호출 연결 — proceedPushCreateEntries / proceedPushModifyEntries는 별도 단계
+        return result;
     }
 
     // All entries marked isCompleted == true. Mirrors isCompletePullSync.
