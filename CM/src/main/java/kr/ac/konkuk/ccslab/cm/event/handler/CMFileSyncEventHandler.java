@@ -98,6 +98,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.PUSH_ENTRIES_ACK -> processResult = processPUSH_ENTRIES_ACK(fse);
             case CMFileSyncEvent.END_PUSH_ENTRY_LIST -> processResult = processEND_PUSH_ENTRY_LIST(fse);
             case CMFileSyncEvent.END_PUSH_ENTRY_LIST_ACK -> processResult = processEND_PUSH_ENTRY_LIST_ACK(fse);
+            case CMFileSyncEvent.COMPLETE_PUSH_DELETE -> processResult = processCOMPLETE_PUSH_DELETE(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3777,6 +3778,69 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("entry list phase completed. waiting for op events. "
                     + "numFilesCompleted = " + numFilesCompleted);
         }
+        return true;
+    }
+
+    // called at the client
+    private boolean processCOMPLETE_PUSH_DELETE(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePushDelete fse_cpd = (CMFileSyncEventCompletePushDelete) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PUSH_DELETE() called..");
+            System.out.println("fse_cpd = " + fse_cpd);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMUser myself = interInfo.getMyself();
+        String initiatorName = fse_cpd.getInitiatorName();
+        UUID initiatorUuid = fse_cpd.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_cpd.getInitiatorDeviceUuid();
+        List<String> deletedPathList = fse_cpd.getDeletedPathList();
+
+        // initiator 검증 (본 클라가 보낸 push 세션의 통보인지)
+        if (!myself.getName().equals(initiatorName)
+                || !myself.getUuid().equals(initiatorUuid)
+                || !syncInfo.getDeviceUuid().equals(initiatorDeviceUuid)) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_DELETE(), initiator mismatch: "
+                    + "name=" + initiatorName + ", uuid=" + initiatorUuid
+                    + ", deviceUuid=" + initiatorDeviceUuid);
+            return false;
+        }
+
+        // syncProgress 가드 (PUSH 세션 진행 중이어야 정상 통보)
+        if (syncInfo.getSyncProgress() != CMFileSyncProgress.PUSH) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_DELETE(), stale event: "
+                    + "syncProgress = " + syncInfo.getSyncProgress());
+            return false;
+        }
+
+        if (deletedPathList == null || deletedPathList.isEmpty()) {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("deletedPathList is empty. nothing to update.");
+            }
+            return true;
+        }
+
+        // 인메모리 client-index에서 path 메타 정보 제거.
+        // CLAUDE.md divergence: lastSyncedMtimeMap 외에 lastSyncedSizeMap도 함께 정리해야
+        // WatchService self-event 필터(mtime+size)가 일관 유지됨.
+        Map<String, Long> lastSyncedMtimeMap = syncInfo.getLastSyncedMtimeMap();
+        Map<String, Long> lastSyncedSizeMap = syncInfo.getLastSyncedSizeMap();
+        for (String deletedPath : deletedPathList) {
+            Long prevMtime = lastSyncedMtimeMap.remove(deletedPath);
+            lastSyncedSizeMap.remove(deletedPath);
+            if (CMInfo._CM_DEBUG) {
+                if (prevMtime == null) {
+                    System.out.println("path not in lastSyncedMtimeMap (already gone): " + deletedPath);
+                } else {
+                    System.out.println("removed from lastSynced maps: " + deletedPath
+                            + " (prev mtime = " + prevMtime + ")");
+                }
+            }
+        }
+
+        // 본 핸들러는 client-index 갱신까지만 책임. 세션 완료/cursor 갱신/pushEntryList 정리는
+        // processCOMPLETE_PUSH_SYNC에서 일괄 처리.
         return true;
     }
 
