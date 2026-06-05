@@ -9,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncJacksonSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPullModifyState;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPushModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
@@ -16,6 +17,7 @@ import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPushGenerator;
 import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
@@ -112,6 +114,14 @@ public class CMFileSyncInfo {
     // [NEW] 4 client: pull sync MODIFY용 block-checksum generator 스레드
     private CMFileSyncPullGenerator pullGenerator;
 
+    // [NEW] 4 server: incremental PUSH MODIFY 전용. 동시 진행되는 클라이언트별 PushGenerator 보관.
+    // key: CMUserLoginKey(initiatorName, initiatorUuid) — full-sync syncGeneratorMap과 동일 키 정책.
+    // pushStateTable(stateKey-keyed)이 op 완료 truth, 본 Map이 MODIFY 진행 자료(채널·체크섬 배열 등)를 담당.
+    private Map<CMUserLoginKey, CMFileSyncPushGenerator> pushGeneratorMap;
+    // [NEW] 4 client: incremental PUSH MODIFY용 source-side holder (CMFileSyncPullModifyState의 거울 짝).
+    // 클라이언트는 동시 PUSH 세션 1개 전제이므로 단일 필드. 첫 START_FILE_BLOCK_CHECKSUM 수신 시 lazy 생성.
+    private CMFileSyncPushModifyState pushModifyState;
+
     // [NEW] 동기화 제외 대상 glob 패턴 (OS 자동 생성 파일, 임시 파일, conflict 보존 파일 등).
     // 향후 cm-client.conf / cm-server.conf 에서 추가 패턴을 머지하도록 확장 예정.
     // 주의: "-conflict-*" 는 의도적으로 제외. conflict-rename 파일은 사용자 데이터 보존용
@@ -165,6 +175,10 @@ public class CMFileSyncInfo {
         pullModifyMap = new HashMap<>();    // 4 client
         pendingPushMap = new HashMap<>();   // 4 client
         pullGenerator = null;              // 4 client
+
+        // [NEW] push sync 관련 필드 초기화
+        pushGeneratorMap = new Hashtable<>(); // 4 server
+        pushModifyState = null;               // 4 client (lazy 생성)
 
         CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
         if (confInfo.getSystemType().equals("SERVER")) {
@@ -414,6 +428,20 @@ public class CMFileSyncInfo {
 
     public void setPullGenerator(CMFileSyncPullGenerator pullGenerator) {
         this.pullGenerator = pullGenerator;
+    }
+
+    // [NEW] 4 server: pushGeneratorMap getter (no setter — Map 객체 자체 교체 없음)
+    public Map<CMUserLoginKey, CMFileSyncPushGenerator> getPushGeneratorMap() {
+        return pushGeneratorMap;
+    }
+
+    // [NEW] 4 client: pushModifyState getter/setter (정리 시점에 null 설정 필요하여 setter 보유)
+    public CMFileSyncPushModifyState getPushModifyState() {
+        return pushModifyState;
+    }
+
+    public void setPushModifyState(CMFileSyncPushModifyState pushModifyState) {
+        this.pushModifyState = pushModifyState;
     }
 
     // [NEW] 4 client: lastSyncedMtimeMap getter / convenience methods
