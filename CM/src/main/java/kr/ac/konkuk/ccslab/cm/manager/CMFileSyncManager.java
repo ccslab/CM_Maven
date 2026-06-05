@@ -3,6 +3,8 @@ package kr.ac.konkuk.ccslab.cm.manager;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
@@ -252,6 +254,130 @@ public class CMFileSyncManager extends CMServiceManager {
         // TODO: op별 처리 호출 — proceedPushDeleteEntries / proceedPushCreateEntries / proceedPushModifyEntries
         // (별도 단계에서 하나씩 구현)
         return true;
+    }
+
+    // All entries marked isCompleted == true. Mirrors isCompletePullSync.
+    public boolean isCompletePushSync(Map<String, CMFileSyncClientEntry> pushStateMap) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.isCompletePushSync() called..");
+        if (pushStateMap == null || pushStateMap.isEmpty()) return false;
+        for (CMFileSyncClientEntry entry : pushStateMap.values()) {
+            if (!entry.isCompleted()) return false;
+        }
+        return true;
+    }
+
+    // PUSH 세션 종료 트랜잭션 (changelog append + cursor 갱신 + flushSnapshot + COMPLETE_PUSH_SYNC 송신).
+    // 별도 단계에서 본 구현 채울 예정 — 현재는 호출부 컴파일만 통과시키는 껍데기.
+    public boolean completePushSync(CMFileSyncStateKey stateKey, UUID initiatorUuid) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.completePushSync() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid);
+        }
+        // TODO: changelog append, cursor 갱신, indexRepository.flushSnapshot,
+        //       pushStateTable.remove(stateKey), COMPLETE_PUSH_SYNC 송신
+        return true;
+    }
+
+    // Server-side DELETE handler: deletes the file on disk and updates the in-memory server-index
+    // tombstone synchronously, then notifies the client with COMPLETE_PUSH_DELETE (split if needed).
+    // Each processed entry is marked isCompleted=true in pushStateMap.
+    // Persistence (changelog/cursor/snapshot) is deferred to completePushSync — same deferred-commit
+    // policy as proceedConflictedServerEntry.
+    public boolean proceedPushDeleteEntries(CMFileSyncStateKey stateKey, UUID initiatorUuid,
+                                            List<CMFileSyncClientEntry> deleteEntries) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushDeleteEntries() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid
+                    + ", deleteEntries.size = " + deleteEntries.size());
+        }
+
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+        Path serverSyncHome = getServerSyncHome(initiatorName);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncIndexRepository indexRepository =
+                syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                    + "pushStateMap not found for stateKey: " + stateKey);
+            return false;
+        }
+
+        List<String> deletedPathList = new ArrayList<>();
+        boolean result = true;
+        long now = System.currentTimeMillis() / 1000L;
+
+        // (1) entry별 디스크 삭제 + 인메모리 tombstone + isCompleted 마킹
+        for (CMFileSyncClientEntry entry : deleteEntries) {
+            String relPathStr = entry.getPath();
+            Path absPath = serverSyncHome.resolve(relPathStr).toAbsolutePath().normalize();
+
+            // 삭제 시점에는 디스크 파일이 이미 사라질 수 있어 인덱스를 truth로 사용
+            CMFileSyncIndexEntry indexEntry = indexRepository.readEntry(relPathStr);
+            boolean isDirectory = (indexEntry != null) && indexEntry.isDirectory();
+
+            try {
+                Files.deleteIfExists(absPath);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                        + "error deleting file: " + absPath);
+                e.printStackTrace();
+                result = false;
+                // isCompleted 미마킹 → 세션은 미완료 상태 유지
+                continue;
+            }
+            if (CMInfo._CM_DEBUG) System.out.println("deleted: " + absPath);
+
+            // applyDelete 내부에서 Math.max(lastChangeId, ...)로 in-memory cursor 자동 전진
+            long newChangeId = indexRepository.lastChangeId() + 1L;
+            indexRepository.applyDelete(relPathStr, isDirectory, newChangeId, now);
+
+            CMFileSyncClientEntry pushEntry = pushStateMap.get(relPathStr);
+            if (pushEntry != null) {
+                pushEntry.setCompleted(true);
+            } else {
+                System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                        + "entry not found in pushStateMap: " + relPathStr);
+                // 에러 출력 후 계속 진행 (processCOMPLETE_PULL_DELETE 정책과 동일)
+            }
+            deletedPathList.add(relPathStr);
+        }
+
+        // (2) COMPLETE_PUSH_DELETE 송신 — byte 한도 초과 시 분할
+        if (!deletedPathList.isEmpty()) {
+            int listIndex = 0;
+            while (listIndex < deletedPathList.size()) {
+                CMFileSyncEventCompletePushDelete fse_cpd = new CMFileSyncEventCompletePushDelete();
+                fse_cpd.setInitiatorName(initiatorName);
+                fse_cpd.setInitiatorUuid(initiatorUuid);
+                fse_cpd.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+                List<String> subList = createSubStringListForEvent(fse_cpd.getByteNum(),
+                        deletedPathList, listIndex);
+                listIndex += subList.size();
+                fse_cpd.setDeletedPathList(subList);
+
+                boolean sendResult = CMEventManager.unicastEvent(fse_cpd, initiatorName, initiatorUuid);
+                if (!sendResult) {
+                    System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                            + "failed to send COMPLETE_PUSH_DELETE: subList.size = " + subList.size());
+                    return false;
+                }
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("sent COMPLETE_PUSH_DELETE: subList.size = " + subList.size());
+                }
+            }
+        }
+
+        // (3) 세션 전체 완료 시 종료 트랜잭션 진입
+        if (isCompletePushSync(pushStateMap)) {
+            boolean completeResult = completePushSync(stateKey, initiatorUuid);
+            result &= completeResult;
+        }
+
+        return result;
     }
 
     // called by client; compares the received serverEntryList against the local clientPathList
