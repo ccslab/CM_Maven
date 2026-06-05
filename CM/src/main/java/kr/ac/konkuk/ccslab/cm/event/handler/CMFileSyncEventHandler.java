@@ -97,6 +97,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.PUSH_ENTRIES -> processResult = processPUSH_ENTRIES(fse);
             case CMFileSyncEvent.PUSH_ENTRIES_ACK -> processResult = processPUSH_ENTRIES_ACK(fse);
             case CMFileSyncEvent.END_PUSH_ENTRY_LIST -> processResult = processEND_PUSH_ENTRY_LIST(fse);
+            case CMFileSyncEvent.END_PUSH_ENTRY_LIST_ACK -> processResult = processEND_PUSH_ENTRY_LIST_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3736,6 +3737,46 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
+        return true;
+    }
+
+    // called at the client
+    private boolean processEND_PUSH_ENTRY_LIST_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventEndPushEntryListAck fse_epela = (CMFileSyncEventEndPushEntryListAck) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST_ACK() called..");
+            System.out.println("fse_epela = " + fse_epela);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        int returnCode = fse_epela.getReturnCode();
+        int numFilesCompleted = fse_epela.getNumFilesCompleted();
+
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST_ACK(), not a CLIENT.");
+            return false;
+        }
+
+        if (returnCode == 0) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST_ACK(), " +
+                    "server reported entry count mismatch. abort push session. " +
+                    "numFilesCompleted = " + numFilesCompleted);
+            // 서버측은 processEND_PUSH_ENTRY_LIST에서 pushStateTable.remove로 이미 정리됨.
+            // 클라는 자기 스냅샷만 롤백.
+            syncInfo.setPushEntryList(null);
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return false;
+        } else if (returnCode != 1) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST_ACK(), " +
+                    "invalid returnCode: " + returnCode);
+            return false;
+        }
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("entry list phase completed. waiting for op events. "
+                    + "numFilesCompleted = " + numFilesCompleted);
+        }
         return true;
     }
 
