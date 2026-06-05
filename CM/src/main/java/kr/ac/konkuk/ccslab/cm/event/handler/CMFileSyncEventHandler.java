@@ -95,6 +95,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.START_PUSH_ENTRY_LIST -> processResult = processSTART_PUSH_ENTRY_LIST(fse);
             case CMFileSyncEvent.START_PUSH_ENTRY_LIST_ACK -> processResult = processSTART_PUSH_ENTRY_LIST_ACK(fse);
             case CMFileSyncEvent.PUSH_ENTRIES -> processResult = processPUSH_ENTRIES(fse);
+            case CMFileSyncEvent.PUSH_ENTRIES_ACK -> processResult = processPUSH_ENTRIES_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3588,6 +3589,85 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return returnCode == 1;
+    }
+
+    // called at the client
+    private boolean processPUSH_ENTRIES_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventPushEntriesAck fse_ack = (CMFileSyncEventPushEntriesAck) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processPUSH_ENTRIES_ACK() called..");
+            System.out.println("fse_ack = " + fse_ack);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        int returnCode = fse_ack.getReturnCode();
+        int numFilesCompleted = fse_ack.getNumFilesCompleted();
+
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES_ACK(), not a CLIENT.");
+            return false;
+        }
+
+        if (returnCode == 0) {
+            System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES_ACK(), " +
+                    "server reported failure. abort push session.");
+            syncInfo.setPushEntryList(null);
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return false;
+        }
+
+        List<CMFileSyncClientEntry> pushEntryList = syncInfo.getPushEntryList();
+        if (pushEntryList == null) {
+            System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES_ACK(), " +
+                    "pushEntryList is null. unexpected.");
+            return false;
+        }
+        int pushEntryListSize = pushEntryList.size();
+
+        boolean sendResult;
+        if (numFilesCompleted < pushEntryListSize) {
+            sendResult = sendNextPushEntries(fse_ack);
+        } else if (numFilesCompleted == pushEntryListSize) {
+            sendResult = sendEND_PUSH_ENTRY_LIST(fse_ack);
+        } else {
+            System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES_ACK(), " +
+                    "numFilesCompleted (" + numFilesCompleted + ") > pushEntryList size ("
+                    + pushEntryListSize + ").");
+            return false;
+        }
+
+        return sendResult;
+    }
+
+    // called at the client
+    private boolean sendNextPushEntries(CMFileSyncEventPushEntriesAck fse_ack) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.sendNextPushEntries() called..");
+        }
+        CMFileSyncEventPushEntries newfse = new CMFileSyncEventPushEntries();
+        newfse.setInitiatorName(fse_ack.getInitiatorName());
+        newfse.setInitiatorUuid(fse_ack.getInitiatorUuid());
+        newfse.setInitiatorDeviceUuid(fse_ack.getInitiatorDeviceUuid());
+        newfse.setNumFilesCompleted(fse_ack.getNumFilesCompleted());
+        int startListIndex = fse_ack.getNumFilesCompleted();
+        setPushNumFilesAndEntryList(newfse, startListIndex);
+
+        return CMEventManager.unicastEvent(newfse, fse_ack.getSender(), fse_ack.getSenderUuid());
+    }
+
+    // called at the client
+    private boolean sendEND_PUSH_ENTRY_LIST(CMFileSyncEventPushEntriesAck fse_ack) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.sendEND_PUSH_ENTRY_LIST() called..");
+        }
+        CMFileSyncEventEndPushEntryList newfse = new CMFileSyncEventEndPushEntryList();
+        newfse.setInitiatorName(fse_ack.getInitiatorName());
+        newfse.setInitiatorUuid(fse_ack.getInitiatorUuid());
+        newfse.setInitiatorDeviceUuid(fse_ack.getInitiatorDeviceUuid());
+        newfse.setNumFilesCompleted(fse_ack.getNumFilesCompleted());
+
+        return CMEventManager.unicastEvent(newfse, fse_ack.getSender(), fse_ack.getSenderUuid());
     }
 
     // called at the server
