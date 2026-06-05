@@ -114,6 +114,14 @@ public class CMFileSyncInfo {
     // [NEW] 4 client: pull sync MODIFY용 block-checksum generator 스레드
     private CMFileSyncPullGenerator pullGenerator;
 
+    // [NEW] 4 client: incremental PUSH 송신용 entry 스냅샷 (pendingPushMap 또는 watch service 후보 맵에서 생성).
+    // PULL의 serverEntryList(클라가 수신)와 대칭으로, 클라가 서버로 보낼 entry list.
+    private List<CMFileSyncClientEntry> pushEntryList;
+    // [NEW] 4 server: push sync의 완료 여부 상태를 확인하기 위한 map (PULL의 pullStateTable과 동일 구조).
+    // 서버가 PUSH_ENTRIES 수신 시 stateKey별로 누적 저장, op별 처리 완료 시 isCompleted=true,
+    // 모든 entry 완료 시 COMPLETE_PUSH_SYNC 송신 트리거.
+    private Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable;
+
     // [NEW] 4 server: incremental PUSH MODIFY 전용. 동시 진행되는 클라이언트별 PushGenerator 보관.
     // key: CMUserLoginKey(initiatorName, initiatorUuid) — full-sync syncGeneratorMap과 동일 키 정책.
     // pushStateTable(stateKey-keyed)이 op 완료 truth, 본 Map이 MODIFY 진행 자료(채널·체크섬 배열 등)를 담당.
@@ -177,6 +185,8 @@ public class CMFileSyncInfo {
         pullGenerator = null;              // 4 client
 
         // [NEW] push sync 관련 필드 초기화
+        pushEntryList = null;                 // 4 client (push 세션 시작 시 스냅샷 생성)
+        pushStateTable = new HashMap<>();     // 4 server
         pushGeneratorMap = new Hashtable<>(); // 4 server
         pushModifyState = null;               // 4 client (lazy 생성)
 
@@ -428,6 +438,20 @@ public class CMFileSyncInfo {
 
     public void setPullGenerator(CMFileSyncPullGenerator pullGenerator) {
         this.pullGenerator = pullGenerator;
+    }
+
+    // [NEW] 4 client: pushEntryList getter/setter (push 세션 시작 시 스냅샷 설정)
+    public List<CMFileSyncClientEntry> getPushEntryList() {
+        return pushEntryList;
+    }
+
+    public void setPushEntryList(List<CMFileSyncClientEntry> pushEntryList) {
+        this.pushEntryList = pushEntryList;
+    }
+
+    // [NEW] 4 server: pushStateTable getter (no setter — pullStateTable과 동일 정책)
+    public Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> getPushStateTable() {
+        return pushStateTable;
     }
 
     // [NEW] 4 server: pushGeneratorMap getter (no setter — Map 객체 자체 교체 없음)
