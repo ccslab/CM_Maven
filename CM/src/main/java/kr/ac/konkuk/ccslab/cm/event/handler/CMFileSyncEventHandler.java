@@ -3879,26 +3879,39 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        // pendingPushMap에서 createdPath entry 조회 (curMtime/size 획득용)
+        // pendingPushMap에 createdPath이 존재하는지 sanity check (정상 흐름 보장 — entry 값은 사용 안 함)
         Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
-        CMFileSyncClientEntry entry = (pendingPushMap != null) ? pendingPushMap.get(createdPath) : null;
-        if (entry == null) {
+        if (pendingPushMap == null || !pendingPushMap.containsKey(createdPath)) {
             System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_CREATE(), "
                     + "createdPath not found in pendingPushMap: " + createdPath);
             return false;
         }
 
-        // 인메모리 client-index에 createdPath 메타 정보 추가.
-        // CLAUDE.md divergence: mtime + size 통합 setter로 양쪽 일관 갱신.
+        // 인메모리 client-index 갱신은 PULL의 checkCompletePullCreate 패턴과 일관하게
+        // 현재 디스크 측정값을 truth로 사용 (self-event 필터가 디스크 현재 상태와 비교하므로
+        // lastSyncedMap도 동일 출처여야 정확. 디렉토리 size는 OS dirent 값으로 일관 측정).
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        Path clientSyncHome = syncManager.getClientSyncHome();
+        Path absPath = clientSyncHome.resolve(createdPath).toAbsolutePath().normalize();
+        long curMtime;
+        long curSize;
+        try {
+            curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            curSize = syncInfo.currentSizeOrMinusOne(absPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         Long prevMtime = syncInfo.getLastSyncedMtimeMap().get(createdPath);
-        syncInfo.setLastSynced(createdPath, entry.getCurMtime(), entry.getSize());
+        syncInfo.setLastSynced(createdPath, curMtime, curSize);
         if (CMInfo._CM_DEBUG) {
             if (prevMtime != null) {
                 System.out.println("warning: createdPath already in lastSyncedMtimeMap: " + createdPath
-                        + " (prev mtime = " + prevMtime + ", overwritten with " + entry.getCurMtime() + ")");
+                        + " (prev mtime = " + prevMtime + ", overwritten with " + curMtime + ")");
             } else {
                 System.out.println("added to lastSynced maps: " + createdPath
-                        + " (curMtime = " + entry.getCurMtime() + ", size = " + entry.getSize() + ")");
+                        + " (curMtime = " + curMtime + ", size = " + curSize + ")");
             }
         }
 
