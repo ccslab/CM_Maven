@@ -94,6 +94,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.REQUEST_PULL_CREATES -> processResult = processREQUEST_PULL_CREATES(fse);
             case CMFileSyncEvent.START_PUSH_ENTRY_LIST -> processResult = processSTART_PUSH_ENTRY_LIST(fse);
             case CMFileSyncEvent.START_PUSH_ENTRY_LIST_ACK -> processResult = processSTART_PUSH_ENTRY_LIST_ACK(fse);
+            case CMFileSyncEvent.PUSH_ENTRIES -> processResult = processPUSH_ENTRIES(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3509,6 +3510,84 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             fse_pe.setPushEntryList(subList);
         }
         return fse_pe;
+    }
+
+    // called at the server
+    private boolean processPUSH_ENTRIES(CMFileSyncEvent fse) {
+        CMFileSyncEventPushEntries fse_pe = (CMFileSyncEventPushEntries) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processPUSH_ENTRIES() called..");
+            System.out.println("fse_pe = " + fse_pe);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        String initiatorName = fse_pe.getInitiatorName();
+        UUID initiatorUuid = fse_pe.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_pe.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        int numFiles = fse_pe.getNumFiles();
+        int prevNumFilesCompleted = fse_pe.getNumFilesCompleted();
+        List<CMFileSyncClientEntry> receivedEntryList = fse_pe.getPushEntryList();
+        int returnCode = 1;
+        int numFilesCompleted = prevNumFilesCompleted;
+
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES(), not a SERVER.");
+            return false;
+        }
+
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+        Map<String, CMFileSyncClientEntry> pushStateMap = pushStateTable.get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES(), " +
+                    "pushStateMap is null for stateKey = " + stateKey);
+            returnCode = 0;
+        }
+
+        if (returnCode == 1) {
+            if (receivedEntryList == null || receivedEntryList.isEmpty()) {
+                System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES(), " +
+                        "receivedEntryList is null or empty.");
+                returnCode = 0;
+            } else if (receivedEntryList.size() != numFiles) {
+                System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES(), numFiles mismatch: " +
+                        "event.numFiles = " + numFiles + ", actualSize = " + receivedEntryList.size());
+                returnCode = 0;
+            } else {
+                for (CMFileSyncClientEntry entry : receivedEntryList) {
+                    String relPath = entry.getPath();
+                    if (pushStateMap.containsKey(relPath)) {
+                        // 정상 흐름에서는 도달 불가 (caller pushEntryList는 Map.values() 스냅샷이라 unique 보장).
+                        // 마지막 값으로 overwrite하여 진행, 송신측 진단을 위한 로그만 남김.
+                        System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES(), " +
+                                "duplicate path in push session: " + relPath);
+                    }
+                    pushStateMap.put(relPath, entry);
+                }
+                numFilesCompleted = prevNumFilesCompleted + numFiles;
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("pushStateMap updated. size = " + pushStateMap.size()
+                            + ", numFilesCompleted = " + numFilesCompleted);
+                }
+            }
+        }
+
+        CMFileSyncEventPushEntriesAck ackEvent = new CMFileSyncEventPushEntriesAck();
+        ackEvent.setInitiatorName(initiatorName);
+        ackEvent.setInitiatorUuid(initiatorUuid);
+        ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        ackEvent.setNumFilesCompleted(numFilesCompleted);
+        ackEvent.setNumFiles(numFiles);
+        ackEvent.setReturnCode(returnCode);
+
+        boolean sendResult = CMEventManager.unicastEvent(ackEvent, fse_pe.getSender(), fse_pe.getSenderUuid());
+        if (!sendResult) {
+            System.err.println("CMFileSyncEventHandler.processPUSH_ENTRIES(), failed to send PUSH_ENTRIES_ACK.");
+            return false;
+        }
+
+        return returnCode == 1;
     }
 
     // called at the server
