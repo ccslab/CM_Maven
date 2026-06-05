@@ -861,12 +861,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // if pendingPushMap is non-empty, kick off push sync
         Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
         if(!pendingPushMap.isEmpty()) {
+            // caller sets syncProgress=PUSH before proceedPendingPushMap() (which does not set it)
             syncInfo.setSyncProgress(CMFileSyncProgress.PUSH);
-            // TODO: syncManager.proceedPendingPushMap() is defined in the design doc (line 8693)
-            //  but not yet implemented. Push sync will be wired up in a later step.
-            System.out.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
-                    + "pendingPushMap is non-empty (size=" + pendingPushMap.size()
-                    + "); push sync will be initiated when proceedPendingPushMap() is implemented.");
+            boolean pushStarted = syncManager.proceedPendingPushMap();
+            if(!pushStarted) {
+                // PULL itself completed successfully; a push-start failure is not a PULL failure.
+                // proceedPendingPushMap() already rolled back its own snapshot, so reset the
+                // session state to NONE to avoid getting stuck in PUSH.
+                System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                        + "failed to start push sync; resetting sync session state to NONE.");
+                syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            }
         }
 
         return true;
