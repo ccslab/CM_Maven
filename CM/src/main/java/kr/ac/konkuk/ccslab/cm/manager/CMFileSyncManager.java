@@ -665,10 +665,12 @@ public class CMFileSyncManager extends CMServiceManager {
 
                 long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
                 long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+                long curSize = syncInfo.currentSizeOrMinusOne(absPath);
 
                 if (curMtime > baseMtime) {
                     CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
                     clientEntry.setPath(relPathStr)
+                            .setSize(curSize)
                             .setCurMtime(curMtime)
                             .setBaseMtime(baseMtime)
                             .setOpHint(baseMtime == -1 ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY)
@@ -753,9 +755,21 @@ public class CMFileSyncManager extends CMServiceManager {
         // (7) renamed entry 새로 생성 (원본 entry 불변 유지)
         String conflictRelPathStr = clientSyncHome.relativize(conflictAbsPath)
                 .toString().replace('\\', '/');
+        // size는 원본 entry의 서버 측 truth가 아닌 클라 conflict 파일의 디스크 truth 사용
+        // (MODIFY/DELETE conflict는 정의상 클라 측 수정이 있어 두 값이 다를 수 있음).
+        // 측정 실패 시 원본 size로 fallback (rename은 이미 성공했으므로 데이터 보존 우선).
+        long renamedSize;
+        try {
+            renamedSize = syncInfo.currentSizeOrMinusOne(conflictAbsPath);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedConflictedClientEntry(), "
+                    + "error reading size of " + conflictAbsPath + ", falling back to original entry size.");
+            e.printStackTrace();
+            renamedSize = entry.getSize();
+        }
         CMFileSyncClientEntry renamedEntry = new CMFileSyncClientEntry();
         renamedEntry.setPath(conflictRelPathStr)
-                .setSize(entry.getSize())
+                .setSize(renamedSize)
                 .setCurMtime(entry.getCurMtime())
                 .setBaseMtime(-1L)
                 .setOpHint(CMFileSyncOp.CREATE)
