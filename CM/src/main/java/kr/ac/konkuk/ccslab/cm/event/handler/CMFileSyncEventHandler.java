@@ -96,6 +96,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.START_PUSH_ENTRY_LIST_ACK -> processResult = processSTART_PUSH_ENTRY_LIST_ACK(fse);
             case CMFileSyncEvent.PUSH_ENTRIES -> processResult = processPUSH_ENTRIES(fse);
             case CMFileSyncEvent.PUSH_ENTRIES_ACK -> processResult = processPUSH_ENTRIES_ACK(fse);
+            case CMFileSyncEvent.END_PUSH_ENTRY_LIST -> processResult = processEND_PUSH_ENTRY_LIST(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3668,6 +3669,74 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         newfse.setNumFilesCompleted(fse_ack.getNumFilesCompleted());
 
         return CMEventManager.unicastEvent(newfse, fse_ack.getSender(), fse_ack.getSenderUuid());
+    }
+
+    // called at the server
+    private boolean processEND_PUSH_ENTRY_LIST(CMFileSyncEvent fse) {
+        CMFileSyncEventEndPushEntryList fse_epel = (CMFileSyncEventEndPushEntryList) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST() called..");
+            System.out.println("fse_epel = " + fse_epel);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        String initiatorName = fse_epel.getInitiatorName();
+        UUID initiatorUuid = fse_epel.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_epel.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        int numFilesCompleted = fse_epel.getNumFilesCompleted();
+        int returnCode = 1;
+
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST(), not a SERVER.");
+            return false;
+        }
+
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+        Map<String, CMFileSyncClientEntry> pushStateMap = pushStateTable.get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST(), " +
+                    "pushStateMap is null for stateKey = " + stateKey);
+            returnCode = 0;
+        } else if (pushStateMap.size() != numFilesCompleted) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST(), entry count mismatch: " +
+                    "pushStateMap.size = " + pushStateMap.size()
+                    + ", event.numFilesCompleted = " + numFilesCompleted);
+            returnCode = 0;
+        }
+
+        // ACK 송신을 op별 처리 시작보다 먼저 수행 (PULL 패턴과 일관, op별 비동기 처리 지연 방지)
+        CMFileSyncEventEndPushEntryListAck ackEvent = new CMFileSyncEventEndPushEntryListAck();
+        ackEvent.setInitiatorName(initiatorName);
+        ackEvent.setInitiatorUuid(initiatorUuid);
+        ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        ackEvent.setNumFilesCompleted(numFilesCompleted);
+        ackEvent.setReturnCode(returnCode);
+
+        boolean sendResult = CMEventManager.unicastEvent(ackEvent, fse_epel.getSender(), fse_epel.getSenderUuid());
+        if (!sendResult) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST(), failed to send ACK.");
+            return false;
+        }
+
+        if (returnCode == 0) {
+            // 검증 실패: stale state 누적 방지를 위해 즉시 세션 폐기 (자동 회복성 우선)
+            if (pushStateMap != null) {
+                pushStateTable.remove(stateKey);
+            }
+            return false;
+        }
+
+        boolean result = syncManager.proceedPushStateMap(stateKey, initiatorUuid);
+        if (!result) {
+            System.err.println("CMFileSyncEventHandler.processEND_PUSH_ENTRY_LIST(), " +
+                    "failed to proceed pushStateMap for stateKey = " + stateKey);
+            return false;
+        }
+
+        return true;
     }
 
     // called at the server

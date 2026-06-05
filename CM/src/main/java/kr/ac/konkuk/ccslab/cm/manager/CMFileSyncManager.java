@@ -232,6 +232,28 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // Server-side entry point for op-by-op processing of pushStateTable[stateKey].
+    // Called from processEND_PUSH_ENTRY_LIST after the entry-count verification passes.
+    // Internal op-specific helpers (DELETE → CREATE → MODIFY) are implemented incrementally.
+    public boolean proceedPushStateMap(CMFileSyncStateKey stateKey, UUID initiatorUuid) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushStateMap() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushStateMap(), pushStateMap is null for stateKey = "
+                    + stateKey);
+            return false;
+        }
+
+        // TODO: op별 처리 호출 — proceedPushDeleteEntries / proceedPushCreateEntries / proceedPushModifyEntries
+        // (별도 단계에서 하나씩 구현)
+        return true;
+    }
+
     // called by client; compares the received serverEntryList against the local clientPathList
     // and classifies each entry into the pull maps (delete/create/modify) or the pending push map.
     public boolean compareServerAndClientEntriesForPullSync() {
