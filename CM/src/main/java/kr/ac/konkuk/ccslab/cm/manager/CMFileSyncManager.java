@@ -162,6 +162,76 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // Entry point for incremental PUSH: snapshots the client's pendingPushMap (files the client
+    // holds newer info for after a PULL) into pushEntryList and starts the push session by sending
+    // START_PUSH_ENTRY_LIST to the server. Returns once the session is initiated (START sent);
+    // entry-body transfer, per-op processing and session completion are driven by event handlers
+    // on both sides.
+    // Called from processCOMPLETE_PULL_SYNC after the PULL session is fully cleaned up and
+    // pendingPushMap is non-empty. A future file-watcher trigger (startPushSync()) will call this
+    // (or a derived helper) as well.
+    // syncProgress=PUSH is NOT set here — the caller sets it before calling (mirrors the PULL-
+    // completion branch). Runs on the single event-processing thread, so no synchronization.
+    public boolean proceedPendingPushMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPendingPushMap() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // only the client can start a push sync
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.proceedPendingPushMap(), system type is not CLIENT!");
+            return false;
+        }
+
+        // defensive empty-map guard (normal callers already check; keeps standalone calls safe,
+        // e.g. a future file-watcher trigger). empty => nothing to push = already in sync.
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        if (pendingPushMap == null || pendingPushMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pendingPushMap is empty. nothing to push.");
+            return true;
+        }
+
+        // guard against starting a second push session while one is already in progress
+        if (syncInfo.getPushEntryList() != null) {
+            System.err.println("CMFileSyncManager.proceedPendingPushMap(), pushEntryList already exists; "
+                    + "another push session in progress. skip.");
+            return false;
+        }
+
+        // snapshot pendingPushMap.values() into pushEntryList and store it.
+        // pendingPushMap itself is NOT cleared here — it is the retry truth, kept until the push
+        // session commits (processCOMPLETE_PUSH_SYNC). Being a snapshot, entries added to
+        // pendingPushMap by a file-watcher mid-session do not affect this session.
+        List<CMFileSyncClientEntry> pushEntryList = new ArrayList<>(pendingPushMap.values());
+        syncInfo.setPushEntryList(pushEntryList);
+        if (CMInfo._CM_DEBUG)
+            System.out.println("pushEntryList snapshot created. size = " + pushEntryList.size());
+
+        // create and send START_PUSH_ENTRY_LIST
+        CMFileSyncEventStartPushEntryList fse_spel = new CMFileSyncEventStartPushEntryList();
+        fse_spel.setInitiatorName(interInfo.getMyself().getName());
+        fse_spel.setInitiatorUuid(interInfo.getMyself().getUuid());
+        fse_spel.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_spel.setNumTotalFiles(pushEntryList.size());
+
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+        boolean sendResult = CMEventManager.unicastEvent(fse_spel, serverName, null);
+        if (!sendResult) {
+            System.err.println("CMFileSyncManager.proceedPendingPushMap(), failed to send START_PUSH_ENTRY_LIST.");
+            // send failed => roll back the snapshot so the next attempt isn't blocked by the guard
+            syncInfo.setPushEntryList(null);
+            return false;
+        }
+        if (CMInfo._CM_DEBUG)
+            System.out.println("START_PUSH_ENTRY_LIST sent. numTotalFiles = " + pushEntryList.size());
+
+        return true;
+    }
+
     // called by client; compares the received serverEntryList against the local clientPathList
     // and classifies each entry into the pull maps (delete/create/modify) or the pending push map.
     public boolean compareServerAndClientEntriesForPullSync() {
