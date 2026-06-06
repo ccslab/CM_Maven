@@ -2989,21 +2989,99 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
     }
 
-    // called at the server (full push sync): sends source block checksums back to the client
+    // called at the server. Full-sync(initial push) + incremental PUSH MODIFY 양쪽 모두 진입.
+    // 10-2 doc 15891~16126 F-2: pushGeneratorMap.get(loginKey) != null 분기 우선 처리 후,
+    // 아니면 기존 full-sync 분기로 fall-through.
     private boolean processSTART_FILE_BLOCK_CHECKSUM_ACK_AtServer(CMFileSyncEventStartFileBlockChecksumAck startAckEvent) {
         if(CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncEventHandler.processSTART_FILE_BLOCK_CHECKSUM_ACK_AtServer() called..");
 
-        // get CMFileSyncGenerator reference
         String initiatorName = startAckEvent.getInitiatorName();
         UUID initiatorUuid = startAckEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = startAckEvent.getInitiatorDeviceUuid();
+        int fileEntryIndex = startAckEvent.getFileEntryIndex();
         CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // [F-2 PUSH 분기] pushGeneratorMap.get(loginKey) != null 이면 PUSH 컨텍스트
+        CMFileSyncPushGenerator pushGen = syncInfo.getPushGeneratorMap().get(loginKey);
+        if (pushGen != null) {
+            // (i) returnCode 검증 — full-sync에는 없는 PUSH 전용 방어 (doc 15930~15939).
+            //     dispatcher가 returnCode==0은 이미 abort했지만 !=1까지 엄격 체크.
+            int returnCode = startAckEvent.getReturnCode();
+            if (returnCode != 1) {
+                System.err.println("processSTART_FILE_BLOCK_CHECKSUM_ACK PUSH branch: "
+                        + "client reported START_ACK failure for fileEntryIndex=" + fileEntryIndex);
+                return false;
+            }
+
+            CMFileSyncBlockChecksum[] pushChecksumArray =
+                    pushGen.getBlockChecksumArrayMap().get(fileEntryIndex);
+            if (pushChecksumArray == null) {
+                System.err.println("processSTART_FILE_BLOCK_CHECKSUM_ACK PUSH branch: "
+                        + "blockChecksumArrayMap missing for fileEntryIndex=" + fileEntryIndex);
+                return false;
+            }
+            // server-owned source-of-truth — event echo가 아니라 generator state에서 직접 획득 (doc 15953~15960)
+            int pushBlockSize = pushGen.getBlockSizeOfBasisFileMap().get(fileEntryIndex);
+            int pushTotalNumBlocks = pushChecksumArray.length;
+
+            // (ii) FILE_BLOCK_CHECKSUM batch 송신 — full-sync 분할 정책과 동일
+            int pushCurIndex = 0;
+            while (pushCurIndex < pushChecksumArray.length) {
+                CMFileSyncEventFileBlockChecksum fse_fbc = new CMFileSyncEventFileBlockChecksum();
+                fse_fbc.setInitiatorName(initiatorName);
+                fse_fbc.setInitiatorUuid(initiatorUuid);
+                fse_fbc.setInitiatorDeviceUuid(initiatorDeviceUuid);
+                fse_fbc.setFileEntryIndex(fileEntryIndex);
+                fse_fbc.setTotalNumBlocks(pushTotalNumBlocks);
+                fse_fbc.setStartBlockIndex(pushCurIndex);
+
+                int remainingEventBytes = CMInfo.MAX_EVENT_SIZE - fse_fbc.getByteNum();
+                int checksumBytes = Integer.BYTES * 3 + CMInfo.STRONG_CHECKSUM_LEN;
+                int numCurrentBlocks = remainingEventBytes / checksumBytes;
+                if (pushCurIndex + numCurrentBlocks > pushChecksumArray.length) {
+                    numCurrentBlocks = pushChecksumArray.length - pushCurIndex;
+                }
+                fse_fbc.setNumCurrentBlocks(numCurrentBlocks);
+                CMFileSyncBlockChecksum[] partialChecksumArray =
+                        Arrays.copyOfRange(pushChecksumArray, pushCurIndex, pushCurIndex + numCurrentBlocks);
+                fse_fbc.setChecksumArray(partialChecksumArray);
+
+                if (!CMEventManager.unicastEvent(fse_fbc, initiatorName, initiatorUuid)) {
+                    System.err.println("processSTART_FILE_BLOCK_CHECKSUM_ACK PUSH branch: "
+                            + "send FILE_BLOCK_CHECKSUM error.");
+                    return false;
+                }
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("sent FILE_BLOCK_CHECKSUM: fileEntryIndex=" + fileEntryIndex
+                            + ", startBlockIndex=" + pushCurIndex
+                            + ", numCurrentBlocks=" + numCurrentBlocks);
+                }
+                pushCurIndex += numCurrentBlocks;
+            }
+
+            // (iii) END_FILE_BLOCK_CHECKSUM 송신
+            CMFileSyncEventEndFileBlockChecksum fse_efbc = new CMFileSyncEventEndFileBlockChecksum();
+            fse_efbc.setInitiatorName(initiatorName);
+            fse_efbc.setInitiatorUuid(initiatorUuid);
+            fse_efbc.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            fse_efbc.setFileEntryIndex(fileEntryIndex);
+            fse_efbc.setTotalNumBlocks(pushTotalNumBlocks);
+            fse_efbc.setBlockSize(pushBlockSize);
+            if (!CMEventManager.unicastEvent(fse_efbc, initiatorName, initiatorUuid)) {
+                System.err.println("processSTART_FILE_BLOCK_CHECKSUM_ACK PUSH branch: "
+                        + "send END_FILE_BLOCK_CHECKSUM error.");
+                return false;
+            }
+            return true;
+        }
+
+        // [기존 full-sync 분기]
         CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
 
         // get the block checksum array of the file
-        int fileEntryIndex = startAckEvent.getFileEntryIndex();
         CMFileSyncBlockChecksum[] checksumArray = syncGenerator.getBlockChecksumArrayMap()
                 .get(fileEntryIndex);
         Objects.requireNonNull(checksumArray);
