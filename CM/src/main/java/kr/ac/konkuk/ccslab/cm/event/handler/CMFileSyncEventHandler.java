@@ -2849,14 +2849,62 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
     }
 
-    // called at the client (full push sync): fills the basis file block checksum array
+    // called at the client. Full-sync(initial push) + incremental PUSH MODIFY 양쪽 모두 진입.
+    // 10-2 doc 15348~15428 F-3: syncProgress == PUSH 분기 우선 처리 후, 아니면 기존 full-sync 로직.
     private boolean processFILE_BLOCK_CHECKSUM_AtClient(CMFileSyncEventFileBlockChecksum fileBlockChecksumEvent) {
         if(CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncEventHandler.processFILE_BLOCK_CHECKSUM_AtClient() called..");
 
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // [F-3 PUSH 분기]
+        // 진입 조건: syncProgress == PUSH + 이벤트의 initiator 3종이 본 클라와 일치.
+        // 책임: 수신한 sub-array를 pushModifyState.blockChecksumArrayMap[fileEntryIndex]의
+        //      startBlockIndex 위치에 System.arraycopy로 누적. ACK 없음 (full-sync도 동일).
+        if (syncInfo.getSyncProgress() == CMFileSyncProgress.PUSH) {
+            CMUser myself = CMInteractionInfo.getInstance().getMyself();
+            String initiatorName = fileBlockChecksumEvent.getInitiatorName();
+            UUID initiatorUuid = fileBlockChecksumEvent.getInitiatorUuid();
+            UUID initiatorDeviceUuid = fileBlockChecksumEvent.getInitiatorDeviceUuid();
+            if (!myself.getName().equals(initiatorName)
+                    || !myself.getUuid().equals(initiatorUuid)
+                    || !syncInfo.getDeviceUuid().equals(initiatorDeviceUuid)) {
+                System.err.println("processFILE_BLOCK_CHECKSUM PUSH branch: initiator mismatch: "
+                        + "name=" + initiatorName + ", uuid=" + initiatorUuid
+                        + ", deviceUuid=" + initiatorDeviceUuid);
+                return false;
+            }
+
+            int fileEntryIndex = fileBlockChecksumEvent.getFileEntryIndex();
+            int startBlockIndex = fileBlockChecksumEvent.getStartBlockIndex();
+            int numCurrentBlocks = fileBlockChecksumEvent.getNumCurrentBlocks();
+            CMFileSyncBlockChecksum[] partialChecksumArray = fileBlockChecksumEvent.getChecksumArray();
+
+            CMFileSyncPushModifyState pushState = syncInfo.getPushModifyState();
+            if (pushState == null) {
+                System.err.println("processFILE_BLOCK_CHECKSUM PUSH branch: pushModifyState is null. ignoring.");
+                return false;
+            }
+            CMFileSyncBlockChecksum[] arr = pushState.getBlockChecksumArrayMap().get(fileEntryIndex);
+            if (arr == null) {
+                System.err.println("processFILE_BLOCK_CHECKSUM PUSH branch: "
+                        + "array slot missing for fileEntryIndex=" + fileEntryIndex);
+                return false;
+            }
+
+            // PullModifyState 동명 자료구조 2510~2522와 정확히 대칭, full-sync 1300~1302와 동일 패턴
+            System.arraycopy(partialChecksumArray, 0, arr, startBlockIndex, numCurrentBlocks);
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("FILE_BLOCK_CHECKSUM accumulated: fileEntryIndex=" + fileEntryIndex
+                        + ", startBlockIndex=" + startBlockIndex
+                        + ", count=" + numCurrentBlocks);
+            }
+            return true;
+        }
+
+        // [기존 full-sync 분기]
         // get checksum array with the file entry index as a key
-        Map<Integer, CMFileSyncBlockChecksum[]> checksumMap =
-                CMFileSyncInfo.getInstance().getBlockChecksumMap();
+        Map<Integer, CMFileSyncBlockChecksum[]> checksumMap = syncInfo.getBlockChecksumMap();
         Objects.requireNonNull(checksumMap);
         CMFileSyncBlockChecksum[] checksumArray = checksumMap.get(fileBlockChecksumEvent.getFileEntryIndex());
         Objects.requireNonNull(checksumArray);
