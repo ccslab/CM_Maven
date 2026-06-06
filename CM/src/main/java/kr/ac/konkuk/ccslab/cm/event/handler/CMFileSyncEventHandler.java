@@ -6,6 +6,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPullModifyState;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPushModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
@@ -3125,8 +3126,80 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
     }
 
-    // called at the client (full push sync): prepares to receive the basis file block checksums
+    // called at the client. Full-sync(initial push) + incremental PUSH MODIFY 양쪽 모두 진입.
+    // 10-2 doc 15207~15344 F-1: syncProgress == PUSH 분기 우선 처리 후, 아니면 기존 full-sync 로직.
     private boolean processSTART_FILE_BLOCK_CHECKSUM_AtClient(CMFileSyncEventStartFileBlockChecksum startChecksumEvent) {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // [F-1 PUSH 분기]
+        // 진입 조건: syncProgress == PUSH + 이벤트의 initiator 3종이 본 클라와 일치 (PUSH 세션 initiator는 클라 자기 자신).
+        // 책임: (i) 첫 START 도착 시 PushModifyState lazy 생성·등록
+        //      (ii) 이번 entry의 fileEntryIndex 자료 자리 마련 (blockChecksumArrayMap/blockSizeMap/
+        //           fileEntryIndexToRelativePathMap/isUpdateFileCompletedMap)
+        //      (iii) START_FILE_BLOCK_CHECKSUM_ACK 송신 (서버로).
+        if (syncInfo.getSyncProgress() == CMFileSyncProgress.PUSH) {
+            CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+            CMUser myself = interInfo.getMyself();
+            String initiatorName = startChecksumEvent.getInitiatorName();
+            UUID initiatorUuid = startChecksumEvent.getInitiatorUuid();
+            UUID initiatorDeviceUuid = startChecksumEvent.getInitiatorDeviceUuid();
+            if (!myself.getName().equals(initiatorName)
+                    || !myself.getUuid().equals(initiatorUuid)
+                    || !syncInfo.getDeviceUuid().equals(initiatorDeviceUuid)) {
+                System.err.println("processSTART_FILE_BLOCK_CHECKSUM PUSH branch: initiator mismatch: "
+                        + "name=" + initiatorName + ", uuid=" + initiatorUuid
+                        + ", deviceUuid=" + initiatorDeviceUuid);
+                return false;
+            }
+
+            int fileEntryIndex = startChecksumEvent.getFileEntryIndex();
+            int totalNumBlocks = startChecksumEvent.getTotalNumBlocks();
+            int blockSize = startChecksumEvent.getBlockSize();
+            String relPath = startChecksumEvent.getRelativePath();
+            if (relPath == null || relPath.isEmpty()) {
+                System.err.println("processSTART_FILE_BLOCK_CHECKSUM PUSH branch: "
+                        + "relativePath is empty for fileEntryIndex=" + fileEntryIndex);
+                return false;
+            }
+
+            // (i) lazy 생성 (정상 흐름에서는 직전 PUSH 세션이 processCOMPLETE_PUSH_SYNC에서 null 처리)
+            CMFileSyncPushModifyState pushState = syncInfo.getPushModifyState();
+            if (pushState == null) {
+                String serverName = interInfo.getDefaultServerInfo().getServerName();
+                pushState = new CMFileSyncPushModifyState(myself.getName(), myself.getUuid(),
+                        syncInfo.getDeviceUuid(), serverName);
+                syncInfo.setPushModifyState(pushState);
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("CMFileSyncPushModifyState lazy-created.");
+                }
+            }
+
+            // (ii) entry 자리 마련 — 빈 배열 자리만, 채움은 F-3에서
+            pushState.getBlockChecksumArrayMap().put(fileEntryIndex,
+                    new CMFileSyncBlockChecksum[totalNumBlocks]);
+            pushState.getBlockSizeMap().put(fileEntryIndex, blockSize);
+            pushState.getFileEntryIndexToRelativePathMap().put(fileEntryIndex, relPath);
+            pushState.getIsUpdateFileCompletedMap().put(relPath, false);
+
+            // (iii) START_FILE_BLOCK_CHECKSUM_ACK 송신 (서버로)
+            CMFileSyncEventStartFileBlockChecksumAck fse_ack = new CMFileSyncEventStartFileBlockChecksumAck();
+            fse_ack.setInitiatorName(pushState.getInitiatorName());
+            fse_ack.setInitiatorUuid(pushState.getInitiatorUuid());
+            fse_ack.setInitiatorDeviceUuid(pushState.getInitiatorDeviceUuid());
+            fse_ack.setFileEntryIndex(fileEntryIndex);
+            fse_ack.setTotalNumBlocks(totalNumBlocks);
+            fse_ack.setBlockSize(blockSize);
+            fse_ack.setReturnCode(1);
+            boolean sendResult = CMEventManager.unicastEvent(fse_ack, pushState.getServerName(), null);
+            if (!sendResult) {
+                System.err.println("processSTART_FILE_BLOCK_CHECKSUM PUSH branch: "
+                        + "send START_FILE_BLOCK_CHECKSUM_ACK error!");
+                return false;
+            }
+            return true;
+        }
+
+        // [기존 full-sync 분기]
         int fileIndex = startChecksumEvent.getFileEntryIndex();
         int totalNumBlocks = startChecksumEvent.getTotalNumBlocks();
         int returnCode = 1;
