@@ -3383,6 +3383,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if (returnCode == 1) {
             Map<String, CMFileSyncClientEntry> pushStateMap = new Hashtable<>();
             pushStateTable.put(stateKey, pushStateMap);
+            // 10-2 doc 11718~11723: pushOpRecordTable lifecycle = 세션 시작 시 빈 List 마련.
+            // 각 op 완료 분기에서 record add → completePushSync 일괄 append → ACK 시점 remove.
+            syncInfo.getPushOpRecordTable().put(stateKey, new ArrayList<>());
             if (CMInfo._CM_DEBUG) {
                 System.out.println("registered new pushStateMap for stateKey = " + stateKey
                         + ", numTotalFiles = " + numTotalFiles);
@@ -3401,6 +3404,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.err.println("CMFileSyncEventHandler.processSTART_PUSH_ENTRY_LIST(), failed to send ACK.");
             if (returnCode == 1) {
                 pushStateTable.remove(stateKey);
+                syncInfo.getPushOpRecordTable().remove(stateKey);
             }
             return false;
         }

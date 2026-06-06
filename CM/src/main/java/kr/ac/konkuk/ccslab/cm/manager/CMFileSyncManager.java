@@ -31,6 +31,7 @@ import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
@@ -427,6 +428,12 @@ public class CMFileSyncManager extends CMServiceManager {
                     + "pushStateMap not found for stateKey: " + stateKey);
             return false;
         }
+        List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
+        if (opRecords == null) {
+            System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                    + "pushOpRecordTable missing for stateKey: " + stateKey);
+            return false;
+        }
 
         boolean result = true;
         long now = System.currentTimeMillis() / 1000L;
@@ -466,6 +473,22 @@ public class CMFileSyncManager extends CMServiceManager {
 
             long newChangeId = indexRepository.lastChangeId() + 1L;
             indexRepository.applyCreateOrModify(relPathStr, true, null, now, 0L, newChangeId);
+
+            // 10-2 doc 12015~12016: 디렉토리 분기 applyCreateOrModify 직후 record add.
+            // 기존 CMFileSyncInfo.appendChangelog CREATE 호출 형태 미러 — 디렉토리는 contentHash=null, size=0L.
+            opRecords.add(new CMFileSyncChangeLogEntry()
+                    .setChangeId(newChangeId)
+                    .setUserName(initiatorName)
+                    .setOriginDeviceUuid(initiatorDeviceUuid)
+                    .setOp(CMFileSyncOp.CREATE)
+                    .setPath(relPathStr)
+                    .setDirectory(true)
+                    .setContentHash(null)
+                    .setMtime(now)
+                    .setSize(0L)
+                    .setTombstone(false)
+                    .setTs(OffsetDateTime.now()));
+
             pushStateMap.get(relPathStr).setCompleted(true);
             anyDirectoryCompleted = true;
 
@@ -554,6 +577,12 @@ public class CMFileSyncManager extends CMServiceManager {
                     + "pushStateMap not found for stateKey: " + stateKey);
             return false;
         }
+        List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
+        if (opRecords == null) {
+            System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                    + "pushOpRecordTable missing for stateKey: " + stateKey);
+            return false;
+        }
 
         List<String> deletedPathList = new ArrayList<>();
         boolean result = true;
@@ -583,6 +612,21 @@ public class CMFileSyncManager extends CMServiceManager {
             // applyDelete 내부에서 Math.max(lastChangeId, ...)로 in-memory cursor 자동 전진
             long newChangeId = indexRepository.lastChangeId() + 1L;
             indexRepository.applyDelete(relPathStr, isDirectory, newChangeId, now);
+
+            // 10-2 doc 12013: applyDelete 직후 record add. 영속화는 completePushSync에서 일괄.
+            // 기존 CMFileSyncInfo.appendChangelog DELETE 호출 형태(contentHash=null, mtime=now, size=0L) 미러.
+            opRecords.add(new CMFileSyncChangeLogEntry()
+                    .setChangeId(newChangeId)
+                    .setUserName(initiatorName)
+                    .setOriginDeviceUuid(initiatorDeviceUuid)
+                    .setOp(CMFileSyncOp.DELETE)
+                    .setPath(relPathStr)
+                    .setDirectory(isDirectory)
+                    .setContentHash(null)
+                    .setMtime(now)
+                    .setSize(0L)
+                    .setTombstone(true)
+                    .setTs(OffsetDateTime.now()));
 
             CMFileSyncClientEntry pushEntry = pushStateMap.get(relPathStr);
             if (pushEntry != null) {
