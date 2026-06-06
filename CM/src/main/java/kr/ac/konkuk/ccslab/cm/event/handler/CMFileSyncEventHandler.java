@@ -100,6 +100,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.END_PUSH_ENTRY_LIST_ACK -> processResult = processEND_PUSH_ENTRY_LIST_ACK(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_DELETE -> processResult = processCOMPLETE_PUSH_DELETE(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_CREATE -> processResult = processCOMPLETE_PUSH_CREATE(fse);
+            case CMFileSyncEvent.COMPLETE_PUSH_SYNC -> processResult = processCOMPLETE_PUSH_SYNC(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -3920,6 +3921,103 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // 세션 완료 판정/cursor 갱신/pendingPushMap·pushEntryList 정리는 processCOMPLETE_PUSH_SYNC에서.
+        return true;
+    }
+
+    // called at the client
+    // 10-2 doc 14539: PUSH 세션의 클라측 종단 핸들러.
+    // 책임 순서: (i) initiator/syncProgress 검증 → (ii) 개수 정합으로 returnCode 결정 →
+    //          (iii) COMPLETE_PUSH_SYNC_ACK 송신 → (iv) returnCode==0이면 cursor/cleanup skip →
+    //          (v) saveClientIndex (lastSyncedMtimeMap 영속화는 본 메소드가 유일 flush 지점) →
+    //          (vi) setCursor + saveClientCursor → (vii) pendingPushMap clear + pushEntryList null →
+    //          (viii) syncProgress = NONE.
+    private boolean processCOMPLETE_PUSH_SYNC(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePushSync fse_cps = (CMFileSyncEventCompletePushSync) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC() called..");
+            System.out.println("fse_cps = " + fse_cps);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMUser myself = interInfo.getMyself();
+        String initiatorName = fse_cps.getInitiatorName();
+        UUID initiatorUuid = fse_cps.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_cps.getInitiatorDeviceUuid();
+        int numFilesCompleted = fse_cps.getNumFilesCompleted();
+        long newServerCursor = fse_cps.getNewServerCursor();
+        int returnCode = 0;
+
+        // (i) initiator 검증
+        if (!myself.getName().equals(initiatorName)
+                || !myself.getUuid().equals(initiatorUuid)
+                || !syncInfo.getDeviceUuid().equals(initiatorDeviceUuid)) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC(), initiator mismatch: "
+                    + "name=" + initiatorName + ", uuid=" + initiatorUuid
+                    + ", deviceUuid=" + initiatorDeviceUuid);
+            return false;
+        }
+
+        // (i) syncProgress 가드 (stale 차단)
+        if (syncInfo.getSyncProgress() != CMFileSyncProgress.PUSH) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC(), stale event: "
+                    + "syncProgress = " + syncInfo.getSyncProgress());
+            return false;
+        }
+
+        // (ii) 개수 정합 검증 — mismatch 시 returnCode=0 유지 + 계속 진행 (PULL 정책과 일관, ACK는 echo)
+        List<CMFileSyncClientEntry> pushEntryList = syncInfo.getPushEntryList();
+        int snapshotSize = (pushEntryList == null) ? 0 : pushEntryList.size();
+        if (snapshotSize != numFilesCompleted) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC(), count mismatch: "
+                    + "numFilesCompleted = " + numFilesCompleted
+                    + ", pushEntryList.size = " + snapshotSize);
+        } else {
+            returnCode = 1;
+        }
+
+        // (iii) COMPLETE_PUSH_SYNC_ACK 송신 (returnCode 동행)
+        CMFileSyncEventCompletePushSyncAck ackEvent = new CMFileSyncEventCompletePushSyncAck();
+        ackEvent.setInitiatorName(initiatorName);
+        ackEvent.setInitiatorUuid(initiatorUuid);
+        ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        ackEvent.setNumFilesCompleted(numFilesCompleted);
+        ackEvent.setReturnCode(returnCode);
+        boolean sendResult = CMEventManager.unicastEvent(ackEvent, fse_cps.getSender(), fse_cps.getSenderUuid());
+        if (!sendResult) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC(), "
+                    + "failed to send COMPLETE_PUSH_SYNC_ACK.");
+            // 서버는 이미 commit 완료 → cursor 적용은 idempotent, 송신 실패와 무관하게 진행 (PULL 6640-6642 패턴).
+            // 단, returnCode==0이었던 경우는 진전 없음 → 즉시 false.
+            if (returnCode == 0) return false;
+        }
+
+        // (iv) returnCode==0 시 cursor 적용·정리 skip (검증 실패 → 다음 세션 cursor 비교로 자동 따라잡기)
+        if (returnCode == 0) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC(), "
+                    + "verification failed; skip cursor apply and cleanup.");
+            return false;
+        }
+
+        // (v) lastSyncedMtimeMap/lastSyncedSizeMap 영속화 (op별 핸들러 누적 결과를 본 메소드에서 1회 flush)
+        syncInfo.saveClientIndex(".", newServerCursor);
+
+        // (vi) cursor 적용 + 영속화
+        syncInfo.setCursor(newServerCursor);
+        syncInfo.saveClientCursor(".");
+
+        // (vii) PUSH 세션 truth 일괄 정리
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        if (pendingPushMap != null) pendingPushMap.clear();
+        syncInfo.setPushEntryList(null);
+
+        // (viii) syncProgress = NONE (세션 종료, ACK/cursor/cleanup 모두 끝난 뒤)
+        syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("PUSH session completed. newServerCursor = " + newServerCursor
+                    + ", numFilesCompleted = " + numFilesCompleted);
+        }
         return true;
     }
 
