@@ -23,6 +23,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPushGenerator;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import javax.xml.bind.DatatypeConverter;
@@ -101,6 +102,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.COMPLETE_PUSH_DELETE -> processResult = processCOMPLETE_PUSH_DELETE(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_CREATE -> processResult = processCOMPLETE_PUSH_CREATE(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_SYNC -> processResult = processCOMPLETE_PUSH_SYNC(fse);
+            case CMFileSyncEvent.COMPLETE_PUSH_SYNC_ACK -> processResult = processCOMPLETE_PUSH_SYNC_ACK(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -4019,6 +4021,88 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     + ", numFilesCompleted = " + numFilesCompleted);
         }
         return true;
+    }
+
+    // called at the server
+    // 10-2 doc 14907: PUSH 세션의 server-side 마지막 핸들러.
+    // 책임: returnCode 로깅 + pushStateTable/pushOpRecordTable 제거(completePushSync가 의도적으로 미정리한 부분)
+    //      + pushGeneratorMap 잔여 방어 cleanup (정상 흐름이라면 F-6에서 이미 정리).
+    // returnCode == 0이어도 정리는 진행(누수 방지 우선). 반환은 returnCode == 1 시에만 true.
+    private boolean processCOMPLETE_PUSH_SYNC_ACK(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePushSyncAck fse_cpsa = (CMFileSyncEventCompletePushSyncAck) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC_ACK() called..");
+            System.out.println("fse_cpsa = " + fse_cpsa);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        String initiatorName = fse_cpsa.getInitiatorName();
+        UUID initiatorUuid = fse_cpsa.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_cpsa.getInitiatorDeviceUuid();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+        int returnCode = fse_cpsa.getReturnCode();
+        int numFilesCompleted = fse_cpsa.getNumFilesCompleted();
+
+        // (1) returnCode 로깅 (PULL ACK 6749-6779 패턴)
+        if (returnCode == 0) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC_ACK(), "
+                    + "client reported push-sync completion failure. stateKey = " + stateKey
+                    + ", numFilesCompleted = " + numFilesCompleted);
+        } else if (returnCode == 1) {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("client reported push-sync completion success. stateKey = " + stateKey
+                        + ", numFilesCompleted = " + numFilesCompleted);
+            }
+        } else {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC_ACK(), "
+                    + "invalid returnCode: " + returnCode);
+        }
+
+        // (2) pushStateTable 정리 (completePushSync가 ACK 도달까지 의도적으로 보존한 자료)
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+        Map<String, CMFileSyncClientEntry> removedStateMap = pushStateTable.remove(stateKey);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("pushStateTable entry removed for stateKey = " + stateKey
+                    + ", removedStateMap size = "
+                    + (removedStateMap == null ? "null" : removedStateMap.size()));
+        }
+        if (removedStateMap == null) {
+            // 정상 흐름이라면 본 시점에 반드시 존재해야 함
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC_ACK(), "
+                    + "pushStateTable has no entry for stateKey = " + stateKey + " (unexpected).");
+        }
+
+        // (3) pushOpRecordTable 정리 (10-2 doc 11999 lifecycle 종착점)
+        Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> pushOpRecordTable = syncInfo.getPushOpRecordTable();
+        List<CMFileSyncChangeLogEntry> removedOpRecords = pushOpRecordTable.remove(stateKey);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("pushOpRecordTable entry removed for stateKey = " + stateKey
+                    + ", removedOpRecords size = "
+                    + (removedOpRecords == null ? "null" : removedOpRecords.size()));
+        }
+
+        // (4) pushGeneratorMap 방어적 잔여 검사·제거 (PullModifyState 정리 6781-6814 대칭)
+        // 정상 흐름이라면 F-6 핸들러가 마지막 entry 처리 직후 cleanupAll + remove를 수행했어야 함.
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        Map<CMUserLoginKey, CMFileSyncPushGenerator> pushGeneratorMap = syncInfo.getPushGeneratorMap();
+        CMFileSyncPushGenerator removedGen = pushGeneratorMap.remove(loginKey);
+        if (removedGen != null) {
+            removedGen.cleanupAll();
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("pushGenerator removed and cleaned up for loginKey = " + loginKey);
+            }
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_SYNC_ACK(), "
+                    + "pushGenerator was still present for loginKey = " + loginKey
+                    + " (defensive cleanup performed).");
+        } else {
+            // MODIFY 대상이 없었던 세션이거나 F-6에서 정상 정리됨
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("pushGenerator is null (no MODIFY entries or already cleaned). loginKey = "
+                        + loginKey);
+            }
+        }
+
+        return returnCode == 1;
     }
 
     // called at the server
