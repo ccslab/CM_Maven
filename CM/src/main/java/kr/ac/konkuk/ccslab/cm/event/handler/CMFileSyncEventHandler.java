@@ -1990,11 +1990,32 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
     }
 
-    // called at the client (full push sync): compare blocks against the basis file and send the ACK to the server
+    // called at the client. Full-sync(initial push) + incremental PUSH MODIFY 양쪽 모두 진입.
+    // 10-2 doc 15430~15816 F-4: syncProgress == PUSH 분기는 무거운 로직이라 별도 메소드로 분리.
     private boolean processEND_FILE_BLOCK_CHECKSUM_AtClient(CMFileSyncEventEndFileBlockChecksum endChecksumEvent) {
         if(CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_AtClient() called..");
 
+        // [F-4 PUSH 분기] PullModifyState ↔ PushModifyState 거울, full-sync compareFileBlocks와도 같은 알고리즘.
+        // 본 분기는 PULL의 _AtServer/_AtClient 분리와 같은 패턴으로 별도 메소드 호출.
+        CMFileSyncInfo syncInfoEntry = CMFileSyncInfo.getInstance();
+        if (syncInfoEntry.getSyncProgress() == CMFileSyncProgress.PUSH) {
+            CMUser myself = CMInteractionInfo.getInstance().getMyself();
+            String initiatorName = endChecksumEvent.getInitiatorName();
+            UUID initiatorUuid = endChecksumEvent.getInitiatorUuid();
+            UUID initiatorDeviceUuid = endChecksumEvent.getInitiatorDeviceUuid();
+            if (!myself.getName().equals(initiatorName)
+                    || !myself.getUuid().equals(initiatorUuid)
+                    || !syncInfoEntry.getDeviceUuid().equals(initiatorDeviceUuid)) {
+                System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: initiator mismatch: "
+                        + "name=" + initiatorName + ", uuid=" + initiatorUuid
+                        + ", deviceUuid=" + initiatorDeviceUuid);
+                return false;
+            }
+            return processEND_FILE_BLOCK_CHECKSUM_AtClient_PushBranch(endChecksumEvent);
+        }
+
+        // [기존 full-sync 분기]
         int fileEntryIndex = endChecksumEvent.getFileEntryIndex();
         int blockSize = endChecksumEvent.getBlockSize();
         CMInfo cmInfo = CMInfo.getInstance();
@@ -2037,6 +2058,234 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ret = CMEventManager.unicastEvent(ackEvent, endChecksumEvent.getSender(), endChecksumEvent.getSenderUuid());
         if(!ret) return false;
 
+        return true;
+    }
+
+    // 10-2 doc 15461~15758 F-4 PUSH 분기 본 처리.
+    // 책임 순서: (i) 배열 완전성 검증 → (ii) hashToBlockIndexMap 인라인 구축 →
+    //          (iii) source 파일 try-with-resources open → (iv) sliding-window 매칭 +
+    //          UPDATE_EXISTING_FILE batch 송신 → (v) END_FILE_BLOCK_CHECKSUM_ACK 송신 →
+    //          (vi) cleanupForFileEntry → (vii) isUpdateFileCompletedMap 마킹 + numUpdateFilesCompleted++.
+    // 매칭 루프 본문은 compareFileBlocksAtServer (PULL 서버 mirror) body 그대로 미러 — 데이터 출처만
+    // PushModifyState로 치환, receiver = pushState.getServerName()(uuid=null).
+    // TODO: 본 메소드와 compareFileBlocksAtServer의 공통 본문을 ModifyState 추상화 기반의
+    //       compareFileBlocksWithModifyState 헬퍼로 호이스팅하는 follow-up commit 예정.
+    private boolean processEND_FILE_BLOCK_CHECKSUM_AtClient_PushBranch(
+            CMFileSyncEventEndFileBlockChecksum fse_efbc) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_AtClient_PushBranch() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        int fileEntryIndex = fse_efbc.getFileEntryIndex();
+        CMFileSyncPushModifyState pushState = syncInfo.getPushModifyState();
+        if (pushState == null) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: pushModifyState is null.");
+            return false;
+        }
+        String relPath = pushState.getFileEntryIndexToRelativePathMap().get(fileEntryIndex);
+        Integer blockSizeBoxed = pushState.getBlockSizeMap().get(fileEntryIndex);
+        CMFileSyncBlockChecksum[] arr = pushState.getBlockChecksumArrayMap().get(fileEntryIndex);
+        if (relPath == null || blockSizeBoxed == null || arr == null) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: missing per-entry state for "
+                    + "fileEntryIndex=" + fileEntryIndex + " (relPath=" + relPath
+                    + ", blockSize=" + blockSizeBoxed + ", arr=" + (arr == null ? "null" : "ok") + ")");
+            return false;
+        }
+        int blockSize = blockSizeBoxed;
+
+        // (i) 배열 완전성 검증 — F-3 누락 검출
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == null) {
+                System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: incomplete checksum array "
+                        + "at index " + i + " for fileEntryIndex=" + fileEntryIndex);
+                return false;
+            }
+        }
+
+        // (ii) hash → block index 맵 인라인 구축 — makeHashToBlockIndexMapAtServer와 동일 로직.
+        // sort은 in-place(arr 자체 변경). matchBlockIndex는 .getBlockIndex()로 원본 위치를 보존하므로 안전.
+        Arrays.sort(arr, Comparator.comparingInt(CMFileSyncBlockChecksum::getWeakChecksum));
+        Map<Integer, Map<Short, Integer>> outerMap = pushState.getFileIndexToHashToBlockIndexMap();
+        Map<Short, Integer> hashToBlockIndexMap = new Hashtable<>();
+        outerMap.put(fileEntryIndex, hashToBlockIndexMap);
+        for (int i = 0; i < arr.length; i++) {
+            short hash = calculateHash(arr[i].getWeakChecksum());
+            if (hashToBlockIndexMap.containsKey(hash)) continue;
+            hashToBlockIndexMap.put(hash, i);
+        }
+
+        // (iii)+(iv) source 파일 채널 open + sliding-window 매칭 + UPDATE_EXISTING_FILE batch 송신
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncManager syncManager = Objects.requireNonNull(
+                cmInfo.getServiceManager(CMFileSyncManager.class));
+        Path clientSyncHome = syncManager.getClientSyncHome();
+        Path sourceFile = clientSyncHome.resolve(relPath).toAbsolutePath().normalize();
+        if (!Files.exists(sourceFile) || Files.isDirectory(sourceFile)) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: "
+                    + "source file missing or not a regular file: " + sourceFile);
+            return false;
+        }
+
+        // 송신 컨텍스트 — PUSH는 receiver=serverName/uuid=null, initiator는 pushState
+        String receiver = pushState.getServerName();
+        UUID receiverUuid = null;
+        String initiatorName = pushState.getInitiatorName();
+        UUID initiatorUuid = pushState.getInitiatorUuid();
+        UUID initiatorDeviceUuid = pushState.getInitiatorDeviceUuid();
+
+        MappedByteBuffer mappedBuffer = null;
+        ByteBuffer buffer = null;
+        ByteBuffer nonMatchBuffer = ByteBuffer.allocate(CMInfo.FILE_BLOCK_LEN);
+        boolean bBlockMatch;
+        int oldA;
+        int oldB;
+        byte oldStartByte;
+        byte newEndByte;
+        int[] weakChecksumABS = new int[3];
+        short hash;
+        int sortedBlockIndex;
+        int matchBlockIndex;
+
+        try (FileChannel channel = (FileChannel) Files.newByteChannel(sourceFile, StandardOpenOption.READ)) {
+            long mapStartPosition = 0;
+            long fileSize = channel.size();
+            while (mapStartPosition < fileSize) {
+                if (fileSize - mapStartPosition > Integer.MAX_VALUE) {
+                    mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, mapStartPosition, Integer.MAX_VALUE);
+                    mapStartPosition += Integer.MAX_VALUE;
+                } else {
+                    mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, mapStartPosition,
+                            fileSize - mapStartPosition);
+                    mapStartPosition += fileSize - mapStartPosition;
+                }
+                if (mappedBuffer == null) {
+                    System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: MappedByteBuffer is null!");
+                    return false;
+                }
+                bBlockMatch = true;
+
+                while (bBlockMatch && mappedBuffer.hasRemaining()
+                        || !bBlockMatch && mappedBuffer.remaining() >= blockSize) {
+                    if (bBlockMatch) {
+                        if (mappedBuffer.remaining() < blockSize) {
+                            buffer = mappedBuffer.slice(mappedBuffer.position(), mappedBuffer.remaining());
+                        } else {
+                            buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                        }
+                        weakChecksumABS = syncManager.calculateWeakChecksumElements(buffer);
+                        buffer.rewind();
+                    } else {
+                        buffer.clear();
+                        oldStartByte = buffer.get();
+                        buffer = mappedBuffer.slice(mappedBuffer.position(), blockSize);
+                        newEndByte = buffer.get(buffer.limit() - 1);
+                        oldA = weakChecksumABS[0];
+                        oldB = weakChecksumABS[1];
+                        weakChecksumABS = syncManager.updateWeakChecksum(oldA, oldB, oldStartByte, newEndByte, blockSize);
+                    }
+
+                    hash = calculateHash(weakChecksumABS[2]);
+                    sortedBlockIndex = Optional.ofNullable(hashToBlockIndexMap.get(hash)).orElse(-1);
+                    if (sortedBlockIndex >= 0) {
+                        matchBlockIndex = searchMatchBlockIndex(sortedBlockIndex, weakChecksumABS[2], arr,
+                                hash, buffer);
+                    } else {
+                        matchBlockIndex = -1;
+                    }
+
+                    if (matchBlockIndex >= 0) {
+                        bBlockMatch = true;
+                        boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                nonMatchBuffer, matchBlockIndex);
+                        if (!ret) return false;
+                        nonMatchBuffer.clear();
+
+                        if (mappedBuffer.remaining() < blockSize)
+                            mappedBuffer.position(mappedBuffer.position() + mappedBuffer.remaining());
+                        else
+                            mappedBuffer.position(mappedBuffer.position() + blockSize);
+                    } else {
+                        bBlockMatch = false;
+                        nonMatchBuffer.put(buffer.get(0));
+                        if (!nonMatchBuffer.hasRemaining()) {
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if (!ret) return false;
+                            nonMatchBuffer.clear();
+                        }
+                        mappedBuffer.position(mappedBuffer.position() + 1);
+                    }
+                }
+
+                // flush any non-matching bytes that remain at the end of this map window
+                if (!bBlockMatch) {
+                    buffer.position(1);
+                    while (buffer.hasRemaining()) {
+                        if (buffer.remaining() > nonMatchBuffer.remaining()) {
+                            int oldLimit = buffer.limit();
+                            buffer.limit(buffer.position() + nonMatchBuffer.remaining());
+                            nonMatchBuffer.put(buffer);
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if (!ret) return false;
+                            nonMatchBuffer.clear();
+                            buffer.limit(oldLimit);
+                        } else {
+                            nonMatchBuffer.put(buffer);
+                            boolean ret = sendUpdateExistingFileEvent(receiver, receiverUuid, initiatorName,
+                                    initiatorUuid, initiatorDeviceUuid, fileEntryIndex,
+                                    nonMatchBuffer, -1);
+                            if (!ret) return false;
+                            nonMatchBuffer.clear();
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: "
+                    + "source channel I/O error: " + e.getMessage());
+            return false;
+        } finally {
+            if (mappedBuffer != null)
+                syncManager.closeDirectBuffer(mappedBuffer);
+        }
+
+        // (v) END_FILE_BLOCK_CHECKSUM_ACK 송신 (서버로)
+        CMFileSyncEventEndFileBlockChecksumAck fse_efbc_ack = new CMFileSyncEventEndFileBlockChecksumAck();
+        fse_efbc_ack.setInitiatorName(initiatorName);
+        fse_efbc_ack.setInitiatorUuid(initiatorUuid);
+        fse_efbc_ack.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_efbc_ack.setFileEntryIndex(fileEntryIndex);
+        fse_efbc_ack.setTotalNumBlocks(arr.length);
+        fse_efbc_ack.setBlockSize(blockSize);
+        try {
+            fse_efbc_ack.setFileChecksum(CMUtil.md5(sourceFile));
+        } catch (IOException e) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: "
+                    + "failed to compute md5 of " + sourceFile);
+            e.printStackTrace();
+            return false;
+        }
+        fse_efbc_ack.setReturnCode(1);
+        if (!CMEventManager.unicastEvent(fse_efbc_ack, receiver, receiverUuid)) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM PUSH branch: "
+                    + "send END_FILE_BLOCK_CHECKSUM_ACK error!");
+            return false;
+        }
+
+        // (vi) per-entry 정리 — 인덱스 자료 제거. isUpdateFileCompletedMap은 보존 (전체 cleanup은 processCOMPLETE_PUSH_SYNC).
+        pushState.cleanupForFileEntry(fileEntryIndex);
+
+        // (vii) 완료 마킹
+        pushState.getIsUpdateFileCompletedMap().put(relPath, true);
+        pushState.incrementNumUpdateFilesCompleted();
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("PUSH MODIFY entry done at client: relPath=" + relPath
+                    + ", numUpdateFilesCompleted=" + pushState.getNumUpdateFilesCompleted());
+        }
         return true;
     }
 
