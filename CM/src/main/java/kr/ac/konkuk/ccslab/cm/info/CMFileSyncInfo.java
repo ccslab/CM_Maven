@@ -130,6 +130,11 @@ public class CMFileSyncInfo {
     // lifecycle: processSTART_PUSH_ENTRY_LIST 빈 리스트 마련 → 각 op 완료 분기 record add
     //            → completePushSync 일괄 appendChangelogBatch → COMPLETE_PUSH_SYNC_ACK 시점 remove.
     private Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> pushOpRecordTable;
+    // [NEW] 4 server: pushStateTable의 역방향 인덱스 (10-2 doc 10853~10888).
+    // (initiatorName, loginUuid) → CMFileSyncStateKey(initiatorName, initiatorDeviceUuid).
+    // checkCompletePushCreate가 파일 송신자의 loginKey만 알고 있을 때 O(1)로 stateKey 조회용.
+    // pushStateTable과 lifecycle 동기: START에서 put, COMPLETE_PUSH_SYNC_ACK에서 remove.
+    private Map<CMUserLoginKey, CMFileSyncStateKey> pushLoginKeyToStateKeyMap;
     // [NEW] 4 client: incremental PUSH MODIFY용 source-side holder (CMFileSyncPullModifyState의 거울 짝).
     // 클라이언트는 동시 PUSH 세션 1개 전제이므로 단일 필드. 첫 START_FILE_BLOCK_CHECKSUM 수신 시 lazy 생성.
     private CMFileSyncPushModifyState pushModifyState;
@@ -193,6 +198,7 @@ public class CMFileSyncInfo {
         pushStateTable = new HashMap<>();     // 4 server
         pushGeneratorMap = new Hashtable<>(); // 4 server
         pushOpRecordTable = new HashMap<>();  // 4 server
+        pushLoginKeyToStateKeyMap = new Hashtable<>(); // 4 server
         pushModifyState = null;               // 4 client (lazy 생성)
 
         CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -467,6 +473,11 @@ public class CMFileSyncInfo {
     // [NEW] 4 server: pushOpRecordTable getter (no setter — Map 객체 자체 교체 없음)
     public Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> getPushOpRecordTable() {
         return pushOpRecordTable;
+    }
+
+    // [NEW] 4 server: pushLoginKeyToStateKeyMap getter (no setter — Map 객체 자체 교체 없음)
+    public Map<CMUserLoginKey, CMFileSyncStateKey> getPushLoginKeyToStateKeyMap() {
+        return pushLoginKeyToStateKeyMap;
     }
 
     // [NEW] 4 client: pushModifyState getter/setter (정리 시점에 null 설정 필요하여 setter 보유)

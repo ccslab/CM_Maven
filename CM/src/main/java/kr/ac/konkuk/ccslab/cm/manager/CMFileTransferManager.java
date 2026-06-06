@@ -2669,6 +2669,8 @@ public class CMFileTransferManager {
 		if (confInfo.getSystemType().equals("SERVER")) {
 			// check if the transfer is for sync a new file
 			syncManager.checkNewTransferForSync(fe);
+			// check if the transfer is for incremental push-create (10-2 doc 12047~12061)
+			syncManager.checkCompletePushCreate(fe);
 		} else if (confInfo.getSystemType().equals("CLIENT")) {
 			// check if the transfer is for the file-sync local mode
 			syncManager.checkTransferForLocalMode(fe);
@@ -3145,23 +3147,29 @@ public class CMFileTransferManager {
 			CMEventManager.unicastEvent(feAck, fe.getFileSender(), fe.getFileSenderUuid());
 		}
 
-		if(bResult)
+		// 10-2 doc 12099~12114: bResult 가드 안에 모든 sync 완료 routines 통합.
+		// CHAN은 불완전 수신(bResult=false) 시에도 본 메소드에 진입하므로,
+		// 불완전 수신 파일을 push-create / pull-create 완료로 처리하지 않도록 방어.
+		if (bResult) {
 			CMSNSManager.checkCompleteRecvAttachedFiles(fe);
 
-		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
-		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-		if (confInfo.getSystemType().equals("SERVER")) {
-			// check if the transfer is for sync a new file
-			syncManager.checkNewTransferForSync(fe);
-		} else if (confInfo.getSystemType().equals("CLIENT")) {
-			// check if the transfer is for the file-sync local mode
-			syncManager.checkTransferForLocalMode(fe);
-			// check if the transfer is for pull-sync CREATE
-			syncManager.checkCompletePullCreate(fe);
-		} else {
-			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), "
-					+ "unknown system type: " + confInfo.getSystemType());
-			return false;
+			CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+			CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+			if (confInfo.getSystemType().equals("SERVER")) {
+				// check if the transfer is for sync a new file
+				syncManager.checkNewTransferForSync(fe);
+				// check if the transfer is for incremental push-create
+				syncManager.checkCompletePushCreate(fe);
+			} else if (confInfo.getSystemType().equals("CLIENT")) {
+				// check if the transfer is for the file-sync local mode
+				syncManager.checkTransferForLocalMode(fe);
+				// check if the transfer is for pull-sync CREATE
+				syncManager.checkCompletePullCreate(fe);
+			} else {
+				System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), "
+						+ "unknown system type: " + confInfo.getSystemType());
+				return false;
+			}
 		}
 
 		// check whether there is a remaining receiving file info or not

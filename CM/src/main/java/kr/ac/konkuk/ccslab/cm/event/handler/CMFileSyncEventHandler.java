@@ -3383,12 +3383,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             returnCode = 0;
         }
 
+        // loginKey는 ACK 송신 실패 cleanup에서도 참조 — try 블록 밖에서 선언
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+
         if (returnCode == 1) {
             Map<String, CMFileSyncClientEntry> pushStateMap = new Hashtable<>();
             pushStateTable.put(stateKey, pushStateMap);
             // 10-2 doc 11718~11723: pushOpRecordTable lifecycle = 세션 시작 시 빈 List 마련.
             // 각 op 완료 분기에서 record add → completePushSync 일괄 append → ACK 시점 remove.
             syncInfo.getPushOpRecordTable().put(stateKey, new ArrayList<>());
+            // 10-2 doc 10901~10927: 역방향 인덱스 등록 (loginKey → stateKey).
+            // checkCompletePushCreate가 fileSender의 loginKey만 알 때 O(1)로 stateKey 조회용.
+            syncInfo.getPushLoginKeyToStateKeyMap().put(loginKey, stateKey);
             if (CMInfo._CM_DEBUG) {
                 System.out.println("registered new pushStateMap for stateKey = " + stateKey
                         + ", numTotalFiles = " + numTotalFiles);
@@ -3408,6 +3414,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             if (returnCode == 1) {
                 pushStateTable.remove(stateKey);
                 syncInfo.getPushOpRecordTable().remove(stateKey);
+                syncInfo.getPushLoginKeyToStateKeyMap().remove(loginKey);
             }
             return false;
         }
@@ -4081,9 +4088,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                     + (removedOpRecords == null ? "null" : removedOpRecords.size()));
         }
 
-        // (4) pushGeneratorMap 방어적 잔여 검사·제거 (PullModifyState 정리 6781-6814 대칭)
-        // 정상 흐름이라면 F-6 핸들러가 마지막 entry 처리 직후 cleanupAll + remove를 수행했어야 함.
+        // (4) 역방향 인덱스 정리 (10-2 doc 10951~10972, pushStateTable과 lifecycle 동기)
         CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        syncInfo.getPushLoginKeyToStateKeyMap().remove(loginKey);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("pushLoginKeyToStateKeyMap entry removed for loginKey = " + loginKey);
+        }
+
+        // (5) pushGeneratorMap 방어적 잔여 검사·제거 (PullModifyState 정리 6781-6814 대칭)
+        // 정상 흐름이라면 F-6 핸들러가 마지막 entry 처리 직후 cleanupAll + remove를 수행했어야 함.
         Map<CMUserLoginKey, CMFileSyncPushGenerator> pushGeneratorMap = syncInfo.getPushGeneratorMap();
         CMFileSyncPushGenerator removedGen = pushGeneratorMap.remove(loginKey);
         if (removedGen != null) {

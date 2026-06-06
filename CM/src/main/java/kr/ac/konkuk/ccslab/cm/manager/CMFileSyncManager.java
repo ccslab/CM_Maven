@@ -18,6 +18,7 @@ import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
@@ -1602,6 +1603,139 @@ public class CMFileSyncManager extends CMServiceManager {
                     completeFileSync(loginKey);
                 }
             }
+        }
+    }
+
+    // 10-2 doc 10802~11218: 파일 전송 완료(END_FILE_TRANSFER / _CHAN) 시점에 incremental PUSH-CREATE 대상인지
+    // 판별 → 파일 이동 → 인메모리 server-index 갱신 → pushOpRecordTable record add (영속화는 completePushSync에서)
+    // → pushStateMap isCompleted 마킹 → COMPLETE_PUSH_CREATE 송신 → 세션 완료 체크.
+    // checkNewTransferForSync(full sync 신규 파일)와 대칭. 서로 다른 자료구조(syncGeneratorMap vs pushStateTable)
+    // 검사 → 상호 배타적, 같은 이벤트에서 양쪽 호출해도 한쪽만 동작.
+    public void checkCompletePushCreate(CMFileEvent fe) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.checkCompletePushCreate() called..");
+            System.out.println("file event = " + fe);
+        }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) return;
+
+        String fileSender = fe.getFileSender();
+        UUID fileSenderUuid = fe.getFileSenderUuid();
+        String fileName = fe.getFileName();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+        if (pushStateTable == null || pushStateTable.isEmpty()) return;
+
+        // loginKey로 stateKey 역방향 조회 (doc 11010~11024)
+        CMUserLoginKey loginKey = new CMUserLoginKey(fileSender, fileSenderUuid);
+        CMFileSyncStateKey matchedStateKey = syncInfo.getPushLoginKeyToStateKeyMap().get(loginKey);
+        if (matchedStateKey == null) {
+            // PUSH 세션 없음 → full sync 또는 무관한 전송
+            return;
+        }
+        Map<String, CMFileSyncClientEntry> matchedPushStateMap = pushStateTable.get(matchedStateKey);
+        if (matchedPushStateMap == null) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "pushStateMap not found for stateKey: " + matchedStateKey);
+            return;
+        }
+
+        // pushStateMap에서 fileName endsWith 매칭으로 relPathStr 탐색 (checkNewTransferForSync 동일 정책)
+        String matchedRelPathStr = null;
+        CMFileSyncClientEntry matchedEntry = null;
+        for (Map.Entry<String, CMFileSyncClientEntry> mapEntry : matchedPushStateMap.entrySet()) {
+            if (Paths.get(mapEntry.getKey()).endsWith(fileName)) {
+                matchedRelPathStr = mapEntry.getKey();
+                matchedEntry = mapEntry.getValue();
+                break;
+            }
+        }
+        if (matchedRelPathStr == null) {
+            // PUSH-CREATE 대상 아님
+            return;
+        }
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("PUSH-CREATE transfer detected: fileName=" + fileName
+                    + ", relPath=" + matchedRelPathStr);
+        }
+
+        // 수신 파일 이동: transferFileHome → serverSyncHome
+        Path transferFileHome = confInfo.getTransferedFileHome().resolve(fileSender);
+        Path serverSyncHome = getServerSyncHome(fileSender);
+        Path relPath = Paths.get(matchedRelPathStr);
+        Path absDestPath = serverSyncHome.resolve(relPath).toAbsolutePath().normalize();
+        try {
+            // 디렉토리 entry 처리 순서 보장이 없으므로 상위 디렉토리 방어적 생성
+            Files.createDirectories(absDestPath.getParent());
+            Files.move(transferFileHome.resolve(fileName), absDestPath,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to move file: " + fileName + " -> " + absDestPath);
+            e.printStackTrace();
+            return;
+        }
+
+        // 인메모리 server-index 갱신 (영속화는 completePushSync에서 일괄)
+        UUID initiatorDeviceUuid = matchedStateKey.initiatorDeviceUuid();
+        CMFileSyncIndexRepository indexRepository =
+                syncInfo.getIndexRegistry().getOrLoad(fileSender, initiatorDeviceUuid);
+        long newChangeId = indexRepository.lastChangeId() + 1L;
+        long mtimeSec;
+        long sizeBytes;
+        String md5Hex;
+        try {
+            mtimeSec = Files.getLastModifiedTime(absDestPath).toMillis() / 1000L;
+            sizeBytes = Files.size(absDestPath);
+            md5Hex = CMUtil.md5Hex(absDestPath);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to read file metadata: " + absDestPath);
+            e.printStackTrace();
+            return;
+        }
+        indexRepository.applyCreateOrModify(matchedRelPathStr, false, md5Hex, mtimeSec, sizeBytes, newChangeId);
+
+        // 10-2 doc 12015: 파일 CREATE 분기 record add. 영속화는 completePushSync.
+        List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(matchedStateKey);
+        if (opRecords != null) {
+            opRecords.add(new CMFileSyncChangeLogEntry()
+                    .setChangeId(newChangeId)
+                    .setUserName(fileSender)
+                    .setOriginDeviceUuid(initiatorDeviceUuid)
+                    .setOp(CMFileSyncOp.CREATE)
+                    .setPath(matchedRelPathStr)
+                    .setDirectory(false)
+                    .setContentHash(md5Hex)
+                    .setMtime(mtimeSec)
+                    .setSize(sizeBytes)
+                    .setTombstone(false)
+                    .setTs(OffsetDateTime.now()));
+        } else {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "pushOpRecordTable missing for stateKey: " + matchedStateKey);
+        }
+
+        // pushStateMap entry 완료 마킹
+        matchedEntry.setCompleted(true);
+
+        // COMPLETE_PUSH_CREATE 송신 (실패 시 로그만, 세션 완료 체크는 계속 — doc 11207~11210)
+        CMFileSyncEventCompletePushCreate fse_cpc = new CMFileSyncEventCompletePushCreate();
+        fse_cpc.setInitiatorName(fileSender);
+        fse_cpc.setInitiatorUuid(fileSenderUuid);
+        fse_cpc.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_cpc.setCreatedPath(matchedRelPathStr);
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpc, fileSender, fileSenderUuid);
+        if (!sendResult) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to send COMPLETE_PUSH_CREATE for: " + matchedRelPathStr);
+        }
+
+        // PUSH 세션 전체 완료 여부 체크
+        if (isCompletePushSync(matchedPushStateMap)) {
+            completePushSync(matchedStateKey, fileSenderUuid);
         }
     }
 
