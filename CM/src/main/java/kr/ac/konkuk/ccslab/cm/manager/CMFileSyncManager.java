@@ -17,6 +17,7 @@ import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPushGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
@@ -304,7 +305,13 @@ public class CMFileSyncManager extends CMServiceManager {
             }
             result &= cResult;
         }
-        // TODO: MODIFY 호출 연결 — proceedPushModifyEntries는 별도 단계
+        if (!modifyEntries.isEmpty()) {
+            boolean mResult = proceedPushModifyEntries(stateKey, initiatorUuid, modifyEntries);
+            if (!mResult) {
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), failed in proceedPushModifyEntries.");
+            }
+            result &= mResult;
+        }
         return result;
     }
 
@@ -551,6 +558,71 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return result;
+    }
+
+    // 10-2 doc 11259: PUSH 세션의 MODIFY 분기 진입점.
+    // 책임: SERVER 가드 → pushStateMap 존재성 검증 → pushGeneratorMap 중복 등록 검사 →
+    //      CMFileSyncPushGenerator 생성·등록 → ExecutorService 워커 위임 → 즉시 true 반환.
+    // 디스크 I/O 없음. 무거운 작업(블록 체크섬 계산 + START_FILE_BLOCK_CHECKSUM 송신)은
+    // 워커 스레드(CMFileSyncPushGenerator.run())에서. caller(proceedPushStateMap)가 modifyEntries 빈 가드.
+    // entry별 isCompleted 마킹·COMPLETE_PUSH_MODIFY 송신·세션 종료 진입은
+    // processEND_FILE_BLOCK_CHECKSUM_ACK PUSH 분기(F-6, 별도 단계) 책임.
+    public boolean proceedPushModifyEntries(CMFileSyncStateKey stateKey, UUID initiatorUuid,
+                                            List<CMFileSyncClientEntry> modifyEntries) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushModifyEntries() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid
+                    + ", modifyEntries.size = " + modifyEntries.size());
+        }
+
+        // (1) SERVER 가드
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncManager.proceedPushModifyEntries(), not a SERVER.");
+            return false;
+        }
+
+        // (2) pushStateMap 존재성 검증
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushModifyEntries(), "
+                    + "pushStateMap not found for stateKey: " + stateKey);
+            return false;
+        }
+
+        // (3) pushGeneratorMap 중복 등록 검사 (정상 흐름이라면 F-6에서 cleanup 완료, 잔재는 비정상 신호)
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        Map<CMUserLoginKey, CMFileSyncPushGenerator> pushGeneratorMap = syncInfo.getPushGeneratorMap();
+        if (pushGeneratorMap.containsKey(loginKey)) {
+            System.err.println("CMFileSyncManager.proceedPushModifyEntries(), "
+                    + "pushGenerator already exists for loginKey: " + loginKey);
+            return false;
+        }
+
+        // (4) PushGenerator 인스턴스 생성 (PullGenerator와 동일 패턴 — 분해 식별자)
+        CMFileSyncPushGenerator pushGenerator = new CMFileSyncPushGenerator(
+                initiatorName, initiatorUuid, initiatorDeviceUuid, modifyEntries);
+
+        // (5) loginKey로 등록
+        pushGeneratorMap.put(loginKey, pushGenerator);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncPushGenerator created and registered for loginKey = " + loginKey
+                    + ", modifyEntries.size = " + modifyEntries.size());
+        }
+
+        // (6) ExecutorService 워커에 위임 (이벤트 처리 스레드 비블로킹)
+        ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
+        es.submit(pushGenerator);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncPushGenerator submitted to ExecutorService.");
+        }
+
+        // (7) 트리거 성공 반환 — 본 메소드 반환 시점에 entry별 처리 결과 미확정.
+        //     실제 실패는 isCompleted 누락 → 세션 자동 미완료로 표면화.
+        return true;
     }
 
     // Server-side DELETE handler: deletes the file on disk and updates the in-memory server-index
