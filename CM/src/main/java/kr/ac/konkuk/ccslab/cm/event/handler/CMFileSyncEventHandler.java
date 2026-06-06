@@ -2150,6 +2150,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             long mapStartPosition = 0;
             long fileSize = channel.size();
             while (mapStartPosition < fileSize) {
+                // multi-window 시 이전 매핑을 즉시 release (>2GB 파일에서만 활성).
+                // finally의 close는 마지막 윈도우 처리 — pre-existing.
+                if (mappedBuffer != null) syncManager.closeDirectBuffer(mappedBuffer);
+
                 if (fileSize - mapStartPosition > Integer.MAX_VALUE) {
                     mappedBuffer = channel.map(FileChannel.MapMode.READ_ONLY, mapStartPosition, Integer.MAX_VALUE);
                     mapStartPosition += Integer.MAX_VALUE;
@@ -2443,6 +2447,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             int mapCount = 0;
             while(mapStartPosition < fileSize) {
 
+                // multi-window 시 이전 매핑을 즉시 release (>2GB 파일에서만 활성).
+                // finally의 close는 마지막 윈도우 처리 — pre-existing.
+                if(mappedBuffer != null) syncManager.closeDirectBuffer(mappedBuffer);
+
                 if(CMInfo._CM_DEBUG) {
                     System.out.println("==========================================");
                     System.out.println("mapCount = " + mapCount);
@@ -2701,6 +2709,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             long fileSize = channel.size();
             int mapCount = 0;
             while(mapStartPosition < fileSize) {
+
+                // multi-window 시 이전 매핑을 즉시 release (>2GB 파일에서만 활성).
+                // finally의 close는 마지막 윈도우 처리 — pre-existing.
+                if(mappedBuffer != null) syncManager.closeDirectBuffer(mappedBuffer);
 
                 if(CMInfo._CM_DEBUG) {
                     System.out.println("==========================================");
