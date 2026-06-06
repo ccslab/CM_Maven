@@ -318,15 +318,85 @@ public class CMFileSyncManager extends CMServiceManager {
     }
 
     // PUSH 세션 종료 트랜잭션 (changelog append + cursor 갱신 + flushSnapshot + COMPLETE_PUSH_SYNC 송신).
-    // 별도 단계에서 본 구현 채울 예정 — 현재는 호출부 컴파일만 통과시키는 껍데기.
+    // 호출 시점: 서버측, 각 op 완료 핸들러 안에서 isCompletePushSync(pushStateMap) == true 직후.
+    // pushStateTable.remove는 본 메소드 책임 아님 — COMPLETE_PUSH_SYNC_ACK 수신 시점에 정리.
+    // 이유: PUSH 트랜잭션의 truth는 서버 cursor. 클라가 newServerCursor 적용을 ACK로 확인할 때까지 세션 메타 보존.
     public boolean completePushSync(CMFileSyncStateKey stateKey, UUID initiatorUuid) {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncManager.completePushSync() called..");
             System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid);
         }
-        // TODO: changelog append, cursor 갱신, indexRepository.flushSnapshot,
-        //       pushStateTable.remove(stateKey), COMPLETE_PUSH_SYNC 송신
-        return true;
+
+        // (1) 시스템 타입 가드
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncManager.completePushSync(), not a SERVER.");
+            return false;
+        }
+
+        // (2) pushStateMap lookup — 제거 없이 lookup만 (ACK 핸들러가 정리)
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+        Map<String, CMFileSyncClientEntry> pushStateMap = pushStateTable.get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.completePushSync(), "
+                    + "pushStateMap not found for stateKey: " + stateKey);
+            return false;
+        }
+
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+
+        // (3) indexRepository 확보 (in-memory cursor truth)
+        CMFileSyncIndexRepository indexRepository = syncInfo.getIndexRegistry()
+                .getOrLoad(initiatorName, initiatorDeviceUuid);
+
+        // (4) 트랜잭션 commit: (i) batch changelog append, (ii) writeCursor, (iii) flushSnapshot
+        long newServerCursor;
+        try {
+            // (i) 누적된 op record 일괄 changelog append
+            List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
+            if (opRecords == null) {
+                System.err.println("CMFileSyncManager.completePushSync(), "
+                        + "pushOpRecordTable missing for stateKey: " + stateKey);
+                return false;
+            }
+            syncInfo.appendChangelogBatch(initiatorName, opRecords);
+
+            // (ii) cursor 파일 갱신 — 인메모리 lastChangeId는 op별 apply로 이미 누적된 최종값
+            newServerCursor = indexRepository.lastChangeId();
+            syncInfo.writeCursor(initiatorName, initiatorDeviceUuid, newServerCursor);
+
+            // (iii) snapshot 영속화
+            indexRepository.flushSnapshot();
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.completePushSync(), commit failed.");
+            e.printStackTrace();
+            // 영속화 실패 시 클라에 세션 완료 통보하지 않음. 인메모리 갱신은 그대로 두고 후속 재시도 정책 대상.
+            return false;
+        }
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("commit succeeded. newServerCursor = " + newServerCursor);
+        }
+
+        // (5) COMPLETE_PUSH_SYNC 송신
+        CMFileSyncEventCompletePushSync fse_cps = new CMFileSyncEventCompletePushSync();
+        fse_cps.setInitiatorName(initiatorName);
+        fse_cps.setInitiatorUuid(initiatorUuid);
+        fse_cps.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_cps.setNumFilesCompleted(pushStateMap.size());
+        fse_cps.setNewServerCursor(newServerCursor);
+
+        boolean sendResult = CMEventManager.unicastEvent(fse_cps, initiatorName, initiatorUuid);
+        if (!sendResult) {
+            System.err.println("CMFileSyncManager.completePushSync(), failed to send COMPLETE_PUSH_SYNC.");
+            // commit은 이미 성공. 다음 START_PULL_SYNC에서 cursor 비교로 클라가 자동 따라옴.
+        } else if (CMInfo._CM_DEBUG) {
+            System.out.println("COMPLETE_PUSH_SYNC sent. numFilesCompleted = " + pushStateMap.size()
+                    + ", newServerCursor = " + newServerCursor);
+        }
+        return sendResult;
     }
 
     // Server-side CREATE trigger.

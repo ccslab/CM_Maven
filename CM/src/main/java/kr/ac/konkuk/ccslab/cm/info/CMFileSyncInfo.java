@@ -126,6 +126,10 @@ public class CMFileSyncInfo {
     // key: CMUserLoginKey(initiatorName, initiatorUuid) — full-sync syncGeneratorMap과 동일 키 정책.
     // pushStateTable(stateKey-keyed)이 op 완료 truth, 본 Map이 MODIFY 진행 자료(채널·체크섬 배열 등)를 담당.
     private Map<CMUserLoginKey, CMFileSyncPushGenerator> pushGeneratorMap;
+    // [NEW] 4 server: PUSH 세션 동안 op record 누적용 (옵션 A, 10-2 doc 11716~11723).
+    // lifecycle: processSTART_PUSH_ENTRY_LIST 빈 리스트 마련 → 각 op 완료 분기 record add
+    //            → completePushSync 일괄 appendChangelogBatch → COMPLETE_PUSH_SYNC_ACK 시점 remove.
+    private Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> pushOpRecordTable;
     // [NEW] 4 client: incremental PUSH MODIFY용 source-side holder (CMFileSyncPullModifyState의 거울 짝).
     // 클라이언트는 동시 PUSH 세션 1개 전제이므로 단일 필드. 첫 START_FILE_BLOCK_CHECKSUM 수신 시 lazy 생성.
     private CMFileSyncPushModifyState pushModifyState;
@@ -188,6 +192,7 @@ public class CMFileSyncInfo {
         pushEntryList = null;                 // 4 client (push 세션 시작 시 스냅샷 생성)
         pushStateTable = new HashMap<>();     // 4 server
         pushGeneratorMap = new Hashtable<>(); // 4 server
+        pushOpRecordTable = new HashMap<>();  // 4 server
         pushModifyState = null;               // 4 client (lazy 생성)
 
         CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
@@ -457,6 +462,11 @@ public class CMFileSyncInfo {
     // [NEW] 4 server: pushGeneratorMap getter (no setter — Map 객체 자체 교체 없음)
     public Map<CMUserLoginKey, CMFileSyncPushGenerator> getPushGeneratorMap() {
         return pushGeneratorMap;
+    }
+
+    // [NEW] 4 server: pushOpRecordTable getter (no setter — Map 객체 자체 교체 없음)
+    public Map<CMFileSyncStateKey, List<CMFileSyncChangeLogEntry>> getPushOpRecordTable() {
+        return pushOpRecordTable;
     }
 
     // [NEW] 4 client: pushModifyState getter/setter (정리 시점에 null 설정 필요하여 setter 보유)
@@ -840,7 +850,9 @@ public class CMFileSyncInfo {
         repo.flushSnapshot();
     }
 
-    private void writeCursor(String initiatorName, UUID initiatorDeviceUuid, long changeId) throws IOException {
+    // PUSH 트랜잭션 commit(completePushSync)에서 외부 호출 가능하도록 public.
+    // 기존 op별 applyCreate/Modify/Delete 내부 호출도 그대로 동작.
+    public void writeCursor(String initiatorName, UUID initiatorDeviceUuid, long changeId) throws IOException {
         Path cursorFile = Path.of(".cm-settings", "file-sync", "server",
                 initiatorName, CMUUIDConverter.uuidToString(initiatorDeviceUuid), "cursor");
         Files.createDirectories(cursorFile.getParent());
@@ -912,6 +924,28 @@ public class CMFileSyncInfo {
         String logEntry = new ObjectMapper().writeValueAsString(entry);
 
         Files.writeString(logFile, logEntry + System.lineSeparator(),
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    }
+
+    /**
+     * PUSH 세션 종료 트랜잭션(completePushSync) 전용 batch changelog append.
+     * caller가 record 모든 필드(originDeviceUuid 포함)를 채운 상태로 전달 — 본 메소드는 순수 직렬화/write-through.
+     * 단일 파일 오픈으로 묶음 write (한 줄 단위 fsync 보장은 OS에 위임, 기존 appendChangelog와 동일).
+     * 빈 리스트는 no-op (정상 path).
+     * <br>doc 16840행 시그니처(name, deviceUuid, records) 대비 deviceUuid 파라미터 제거 — changelog 파일은
+     * user 단위(getServerChangelogDir(initiatorName))이고 per-record device 정보는 record 내부에서 옴.
+     */
+    public void appendChangelogBatch(String initiatorName,
+                                     List<CMFileSyncChangeLogEntry> records) throws IOException {
+        if (records == null || records.isEmpty()) return;
+        String today = LocalDate.now().toString();
+        Path logFile = getServerChangelogDir(initiatorName).resolve("changelog-" + today + ".jsonl");
+
+        StringBuilder sb = new StringBuilder();
+        for (CMFileSyncChangeLogEntry record : records) {
+            sb.append(record.toJsonString()).append(System.lineSeparator());
+        }
+        Files.writeString(logFile, sb.toString(),
                 StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 }
