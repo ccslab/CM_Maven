@@ -20,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteNewFile;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompletePullSync;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompletePushSync;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteUpdateFile;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventSkipUpdateFile;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartPullSyncAck;
@@ -275,6 +276,13 @@ public class CMClientEventHandler implements CMAppEventHandler {
 					System.out.println("동기화가 완료되었습니다. (pull "
 							+ cps.getNumFilesCompleted() + "개 파일)");
 				}
+				break;
+			case CMFileSyncEvent.COMPLETE_PUSH_SYNC:
+				// push sync 는 항상 동기화 체인의 마지막 단계 (standalone push 또는 pull→push chain).
+				// pull 의 pendingPushMap.isEmpty() 분기에서 미알림 처리한 케이스를 본 시점에서 알림.
+				CMFileSyncEventCompletePushSync cpsh = (CMFileSyncEventCompletePushSync) fse;
+				System.out.println("동기화가 완료되었습니다. (push "
+						+ cpsh.getNumFilesCompleted() + "개 파일)");
 				break;
 			default:
 				return;
