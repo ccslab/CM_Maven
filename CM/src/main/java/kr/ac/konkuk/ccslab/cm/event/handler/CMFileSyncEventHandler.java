@@ -4710,8 +4710,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // 책임: modifiedPath 에 대해 인메모리 client-index(lastSynced) 를 mtime+size 로 갱신 → server-index 와 정합.
     // 세션 완료 판정/cursor/pendingPushMap·pushEntryList 정리는 본 핸들러 책임 아님 → processCOMPLETE_PUSH_SYNC.
     // pushModifyState 도 건드리지 않음(entry 자료는 F-4 cleanupForFileEntry, 잔여는 COMPLETE_PUSH_SYNC cleanupAll).
-    // doc 은 lastSynced 출처로 pendingPushMap 스냅샷값을 명시하나, 형제 핸들러 processCOMPLETE_PUSH_CREATE 와
-    // 일관되게 디스크 재측정값을 truth 로 사용(self-event 필터가 디스크 현재 상태와 비교 → 동일 출처여야 정확).
+    // lastSynced 출처 = pendingPushMap 스냅샷값(doc 14302). 서버가 F-6 에서 basis mtime 을 entry.getCurMtime()
+    // 으로 설정 → server-index mtime = 스냅샷값이므로 client-index 도 같은 값을 써야 정합(본 핸들러 목적).
+    // 디스크 재측정 아님: push 중 클라가 같은 파일을 또 수정한 레이스에서 재측정은 그 수정을 self-event 로 걸러
+    // 누락시키나, 스냅샷은 최악이라도 다음 push 재동기화(안전). (형제 processCOMPLETE_PUSH_CREATE 의 디스크
+    // 재측정과는 출처가 다름 — CREATE 는 서버측 mtime 출처가 달라 별도 분석 대상.)
     private boolean processCOMPLETE_PUSH_MODIFY(CMFileSyncEvent fse) {
         CMFileSyncEventCompletePushModify fse_cpm = (CMFileSyncEventCompletePushModify) fse;
         if (CMInfo._CM_DEBUG) {
@@ -4744,27 +4747,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        // pendingPushMap에 modifiedPath이 존재하는지 sanity check (정상 흐름 보장)
+        // pendingPushMap 에서 modifiedPath entry 조회 (curMtime/size 획득용)
         Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
-        if (pendingPushMap == null || !pendingPushMap.containsKey(modifiedPath)) {
+        CMFileSyncClientEntry entry = (pendingPushMap != null) ? pendingPushMap.get(modifiedPath) : null;
+        if (entry == null) {
             System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_MODIFY(), "
                     + "modifiedPath not found in pendingPushMap: " + modifiedPath);
             return false;
         }
 
-        // 인메모리 client-index 갱신: 디스크 현재 측정값을 truth 로 (processCOMPLETE_PUSH_CREATE 와 동일 출처).
-        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
-        Path clientSyncHome = syncManager.getClientSyncHome();
-        Path absPath = clientSyncHome.resolve(modifiedPath).toAbsolutePath().normalize();
-        long curMtime;
-        long curSize;
-        try {
-            curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
-            curSize = syncInfo.currentSizeOrMinusOne(absPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+        // 인메모리 client-index 갱신: pendingPushMap 스냅샷값(= 서버가 F-6 에서 basis 에 적용한 값)을 truth 로.
+        long curMtime = entry.getCurMtime();
+        long curSize = entry.getSize();
 
         Long prevMtime = syncInfo.getLastSyncedMtimeMap().get(modifiedPath);
         syncInfo.setLastSynced(modifiedPath, curMtime, curSize);
