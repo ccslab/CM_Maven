@@ -767,6 +767,7 @@ public class CMFileSyncManager extends CMServiceManager {
         Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
         Map<String, CMFileSyncClientEntry> pullDeleteMap = syncInfo.getPullDeleteMap();
         Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        String serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
 
         try {
             // classify each server entry by op
@@ -782,8 +783,15 @@ public class CMFileSyncManager extends CMServiceManager {
                 Path absPath = clientSyncHome.resolve(relPath); // client absolute path
                 long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
                 long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+                long curSize = syncInfo.currentSizeOrMinusOne(absPath);
                 long serverMtime = serverEntry.getMtime();
                 boolean existsOnClient = clientPathList.contains(absPath);
+                boolean isDir = serverEntry.isDirectory();
+                // 클라 파일이 이미 서버 버전과 동일한가: 파일은 mtime+size, 디렉토리는 존재만으로 판정.
+                // index 유실(client-index.json 삭제)로 baseMtime 이 -1 이어도 "서버와 동일"을 인식해
+                // 불필요한 conflict-rename 을 막는다.
+                boolean matchesServer = existsOnClient
+                        && (isDir || (curMtime == serverMtime && curSize == serverEntry.getSize()));
 
                 CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
                 clientEntry.setPath(relPathStr)
@@ -793,6 +801,16 @@ public class CMFileSyncManager extends CMServiceManager {
                         .setServerMtime(serverMtime);
 
                 CMFileSyncOp op = serverEntry.getOp();
+
+                // 이미 서버와 동일(CREATE/MODIFY) → 전송 없이 lastSynced 재구축 + COMPLETE_PULL_* 송신으로 완료 마킹.
+                // (서버는 serverEntryList 전체로 pullStateMap 을 만들어 완료를 기다리므로, skip 만 하면 세션이 안 끝남.)
+                if (matchesServer && (op == CMFileSyncOp.CREATE || op == CMFileSyncOp.MODIFY)) {
+                    if (!proceedAlreadySyncedPullEntry(relPathStr, clientEntry, curSize, op, serverName)) {
+                        System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), "
+                                + "proceedAlreadySyncedPullEntry failed: " + relPathStr);
+                    }
+                    continue;
+                }
                 if (op == CMFileSyncOp.MODIFY) {
                     if (!existsOnClient || curMtime != baseMtime) {
                         // conflict: local file missing or locally modified since last sync
@@ -874,6 +892,49 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return true;
+    }
+
+    // 클라 파일이 이미 서버 버전과 동일할 때 호출: 데이터 전송 없이 client-index(lastSynced)를 재구축하고
+    // op 에 맞는 COMPLETE_PULL_CREATE/MODIFY 를 서버로 보내 pull 완료를 마킹한다.
+    // index 유실(client-index.json 삭제) 후 재동기화 시 동일 파일이 conflict-rename 되는 문제를 막는다.
+    // online-mode helper(proceedOnlinePull*Entry)의 "전송 없이 완료" 패턴과 동형 (단 online list 등록 없음,
+    // lastSynced 는 mtime+size 둘 다 기록). lastSynced mtime 은 entry.getCurMtime() 사용 — matchesServer 가
+    // 파일은 curMtime==serverMtime 을 보장하고 디렉토리는 디스크 mtime 이 정합값.
+    private boolean proceedAlreadySyncedPullEntry(String relPathStr, CMFileSyncClientEntry entry,
+                                                  long curSize, CMFileSyncOp op, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedAlreadySyncedPullEntry() called: " + relPathStr
+                    + ", op=" + op);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String myName = interInfo.getMyself().getName();
+        UUID myUuid = interInfo.getMyself().getUuid();
+        UUID myDeviceUuid = syncInfo.getDeviceUuid();
+
+        // client-index(lastSynced) 재구축 (mtime+size)
+        syncInfo.setLastSynced(relPathStr, entry.getCurMtime(), curSize);
+        entry.setCompleted(true);
+
+        boolean sendResult;
+        if (op == CMFileSyncOp.CREATE) {
+            CMFileSyncEventCompletePullCreate fse = new CMFileSyncEventCompletePullCreate();
+            fse.setInitiatorName(myName);
+            fse.setInitiatorUuid(myUuid);
+            fse.setInitiatorDeviceUuid(myDeviceUuid);
+            fse.setCreatedPath(relPathStr);
+            sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+        } else {   // MODIFY
+            CMFileSyncEventCompletePullModify fse = new CMFileSyncEventCompletePullModify();
+            fse.setInitiatorName(myName);
+            fse.setInitiatorUuid(myUuid);
+            fse.setInitiatorDeviceUuid(myDeviceUuid);
+            fse.setModifiedPath(relPathStr);
+            sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+        }
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.proceedAlreadySyncedPullEntry(), send error for " + relPathStr);
+        return sendResult;
     }
 
     // called by client; marks a conflicting local file by renaming it with a
