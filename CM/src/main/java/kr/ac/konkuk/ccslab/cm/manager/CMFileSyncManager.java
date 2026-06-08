@@ -1245,11 +1245,22 @@ public class CMFileSyncManager extends CMServiceManager {
         // mark entry completed
         entry.setCompleted(true);
 
-        // update in-memory client-index with current mtime + size (for self-event filter)
+        // 서버 mtime을 수신 파일에 보존 + 인메모리 client-index 갱신 (self-event 필터용).
+        // 파일 전송은 mtime을 보존하지 않으므로(서버 = source of truth) 여기서 명시 적용 — pull-MODIFY(handler 1829)
+        // /online-CREATE(1465) 와 동일 출처. baseMtime(lastSynced)을 serverMtime 으로 맞춰야 분류의 DELETE 규칙
+        // (baseMtime == serverMtime)이 정상 동작 → pull-create 한 파일이 나중에 서버에서 삭제될 때 가짜 conflict 방지.
+        long serverMtime = entry.getServerMtime();
         try {
-            long curMtime = syncInfo.currentMtimeSecOrMinusOne(dstPath);
             long curSize = syncInfo.currentSizeOrMinusOne(dstPath);
-            syncInfo.setLastSynced(relPathStr, curMtime, curSize);
+            if (serverMtime > 0) {
+                Files.setLastModifiedTime(dstPath, FileTime.fromMillis(serverMtime * 1000L));
+                syncInfo.setLastSynced(relPathStr, serverMtime, curSize);
+            } else {
+                // serverMtime 비정상 → 보존 skip, 디스크 측정값으로 폴백(기존 동작)
+                System.err.println("CMFileSyncManager.checkCompletePullCreate(), invalid serverMtime for "
+                        + relPathStr + ": " + serverMtime + " — fallback to disk mtime");
+                syncInfo.setLastSynced(relPathStr, syncInfo.currentMtimeSecOrMinusOne(dstPath), curSize);
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return false;
