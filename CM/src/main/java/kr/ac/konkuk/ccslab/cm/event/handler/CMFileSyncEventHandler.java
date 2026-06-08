@@ -105,6 +105,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.END_PUSH_ENTRY_LIST_ACK -> processResult = processEND_PUSH_ENTRY_LIST_ACK(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_DELETE -> processResult = processCOMPLETE_PUSH_DELETE(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_CREATE -> processResult = processCOMPLETE_PUSH_CREATE(fse);
+            case CMFileSyncEvent.COMPLETE_PUSH_MODIFY -> processResult = processCOMPLETE_PUSH_MODIFY(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_SYNC -> processResult = processCOMPLETE_PUSH_SYNC(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_SYNC_ACK -> processResult = processCOMPLETE_PUSH_SYNC_ACK(fse);
             default -> {
@@ -4697,6 +4698,84 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             } else {
                 System.out.println("added to lastSynced maps: " + createdPath
                         + " (curMtime = " + curMtime + ", size = " + curSize + ")");
+            }
+        }
+
+        // 세션 완료 판정/cursor 갱신/pendingPushMap·pushEntryList 정리는 processCOMPLETE_PUSH_SYNC에서.
+        return true;
+    }
+
+    // called at the client
+    // 10-2 doc 14302: PUSH 대상 MODIFY 파일 1개를 서버가 reconstruction+commit 완료했다는 통보 수신.
+    // 책임: modifiedPath 에 대해 인메모리 client-index(lastSynced) 를 mtime+size 로 갱신 → server-index 와 정합.
+    // 세션 완료 판정/cursor/pendingPushMap·pushEntryList 정리는 본 핸들러 책임 아님 → processCOMPLETE_PUSH_SYNC.
+    // pushModifyState 도 건드리지 않음(entry 자료는 F-4 cleanupForFileEntry, 잔여는 COMPLETE_PUSH_SYNC cleanupAll).
+    // doc 은 lastSynced 출처로 pendingPushMap 스냅샷값을 명시하나, 형제 핸들러 processCOMPLETE_PUSH_CREATE 와
+    // 일관되게 디스크 재측정값을 truth 로 사용(self-event 필터가 디스크 현재 상태와 비교 → 동일 출처여야 정확).
+    private boolean processCOMPLETE_PUSH_MODIFY(CMFileSyncEvent fse) {
+        CMFileSyncEventCompletePushModify fse_cpm = (CMFileSyncEventCompletePushModify) fse;
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processCOMPLETE_PUSH_MODIFY() called..");
+            System.out.println("fse_cpm = " + fse_cpm);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMUser myself = interInfo.getMyself();
+        String initiatorName = fse_cpm.getInitiatorName();
+        UUID initiatorUuid = fse_cpm.getInitiatorUuid();
+        UUID initiatorDeviceUuid = fse_cpm.getInitiatorDeviceUuid();
+        String modifiedPath = fse_cpm.getModifiedPath();
+
+        // initiator 검증 (본 클라가 보낸 push 세션의 통보인지 sanity check)
+        if (!myself.getName().equals(initiatorName)
+                || !myself.getUuid().equals(initiatorUuid)
+                || !syncInfo.getDeviceUuid().equals(initiatorDeviceUuid)) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_MODIFY(), initiator mismatch: "
+                    + "name=" + initiatorName + ", uuid=" + initiatorUuid
+                    + ", deviceUuid=" + initiatorDeviceUuid);
+            return false;
+        }
+
+        // syncProgress 가드
+        if (syncInfo.getSyncProgress() != CMFileSyncProgress.PUSH) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_MODIFY(), stale event: "
+                    + "syncProgress = " + syncInfo.getSyncProgress());
+            return false;
+        }
+
+        // pendingPushMap에 modifiedPath이 존재하는지 sanity check (정상 흐름 보장)
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        if (pendingPushMap == null || !pendingPushMap.containsKey(modifiedPath)) {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_MODIFY(), "
+                    + "modifiedPath not found in pendingPushMap: " + modifiedPath);
+            return false;
+        }
+
+        // 인메모리 client-index 갱신: 디스크 현재 측정값을 truth 로 (processCOMPLETE_PUSH_CREATE 와 동일 출처).
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        Path clientSyncHome = syncManager.getClientSyncHome();
+        Path absPath = clientSyncHome.resolve(modifiedPath).toAbsolutePath().normalize();
+        long curMtime;
+        long curSize;
+        try {
+            curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            curSize = syncInfo.currentSizeOrMinusOne(absPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        Long prevMtime = syncInfo.getLastSyncedMtimeMap().get(modifiedPath);
+        syncInfo.setLastSynced(modifiedPath, curMtime, curSize);
+        if (CMInfo._CM_DEBUG) {
+            // MODIFY 정상 케이스는 prev non-null(기존 항목 갱신). prev == null 이면 CREATE 누락 의심 → 경고.
+            if (prevMtime != null) {
+                System.out.println("updated lastSynced maps: " + modifiedPath
+                        + " (prev mtime = " + prevMtime + ", new mtime = " + curMtime + ", size = " + curSize + ")");
+            } else {
+                System.out.println("warning: modifiedPath not in lastSyncedMtimeMap before: " + modifiedPath
+                        + " (new mtime = " + curMtime + ", size = " + curSize + ")");
             }
         }
 
