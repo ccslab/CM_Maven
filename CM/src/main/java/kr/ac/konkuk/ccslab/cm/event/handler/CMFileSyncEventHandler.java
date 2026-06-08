@@ -5,6 +5,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncBlockChecksum;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPullModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPushModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
@@ -19,6 +20,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncOp;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileTransferManager;
@@ -36,6 +38,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -1413,6 +1416,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         UUID initiatorDeviceUuid = ackEvent.getInitiatorDeviceUuid();
         // get generator
         CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+
+        // [F-6 PUSH 분기] 증분 push 세션이면 pushGeneratorMap 에 loginKey 가 등록되어 있다.
+        // returnCode 검증은 dispatcher(processEND_FILE_BLOCK_CHECKSUM_ACK)에서 이미 수행됨.
+        CMFileSyncPushGenerator pushGen = syncInfo.getPushGeneratorMap().get(loginKey);
+        if(pushGen != null) {
+            return processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer_PushBranch(ackEvent, pushGen);
+        }
+
         CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
 
@@ -1542,6 +1553,192 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             if( syncManager.isCompleteFileSync(loginKey) ) {
                 // complete the file-sync task
                 syncManager.completeFileSync(loginKey);
+            }
+        }
+
+        return true;
+    }
+
+    // [F-6] PUSH MODIFY 종단 핸들러. 클라가 F-4(v)에서 송신한 END_FILE_BLOCK_CHECKSUM_ACK 수신 →
+    // temp→basis move + 인메모리 server-index 갱신 + changelog record add + pushStateMap 완료 마킹 +
+    // COMPLETE_PUSH_MODIFY 송신 + 마지막 entry면 cleanupAll/remove + 세션 완료 시 completePushSync 진입.
+    // full-sync 의 동일 핸들러와 같은 알고리즘 — 데이터 출처만 PushGenerator/push 세션 자료구조로 치환.
+    // 거울: processEND_FILE_BLOCK_CHECKSUM_ACK_AtClient (PULL). changelog/index API 는 proceedPushCreate/Delete 와 동일.
+    private boolean processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer_PushBranch(
+            CMFileSyncEventEndFileBlockChecksumAck ackEvent, CMFileSyncPushGenerator pushGen) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer_PushBranch() called..");
+
+        CMInfo cmInfo = CMInfo.getInstance();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncManager syncManager = Objects.requireNonNull(cmInfo.getServiceManager(CMFileSyncManager.class));
+
+        String initiatorName = ackEvent.getInitiatorName();
+        UUID initiatorUuid = ackEvent.getInitiatorUuid();
+        UUID initiatorDeviceUuid = ackEvent.getInitiatorDeviceUuid();
+        int fileEntryIndex = ackEvent.getFileEntryIndex();
+
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+
+        // (i) basis/temp 경로 산출 (PUSH 전용 1단계 lookup: modifyEntries 가 직접 보유) + 클라 원본 mtime 확보
+        CMFileSyncClientEntry entry = pushGen.getModifyEntries().get(fileEntryIndex);
+        String relPath = entry.getPath();
+        long curMtime = entry.getCurMtime();   // 클라 원본 mtime (epoch seconds)
+        if(curMtime <= 0) {
+            System.err.println("PUSH MODIFY: invalid curMtime for relPath=" + relPath + ", curMtime=" + curMtime);
+            return false;
+        }
+        FileTime srcMtime = FileTime.fromMillis(curMtime * 1000L);
+        Path serverSyncHome = syncManager.getServerSyncHome(initiatorName);
+        Path basisFile = serverSyncHome.resolve(relPath).toAbsolutePath().normalize();
+        Path tempFile = syncManager.getTempPathOfBasisFile(basisFile);
+
+        // (ii) temp/basis 채널 close + map remove (가드 포함)
+        Map<Integer, SeekableByteChannel> writeChannelMap = pushGen.getTempFileChannelForWriteMap();
+        Map<Integer, SeekableByteChannel> readChannelMap = pushGen.getBasisFileChannelForReadMap();
+        SeekableByteChannel tempCh = writeChannelMap.get(fileEntryIndex);
+        SeekableByteChannel basisCh = readChannelMap.get(fileEntryIndex);
+        if(basisCh != null && basisCh.isOpen()) {
+            try { basisCh.close(); } catch (IOException e) { e.printStackTrace(); }
+            readChannelMap.remove(fileEntryIndex);
+        }
+        if(tempCh != null && tempCh.isOpen()) {
+            try { tempCh.close(); } catch (IOException e) { e.printStackTrace(); }
+            writeChannelMap.remove(fileEntryIndex);
+        }
+
+        if(tempCh != null && basisCh != null) {
+            // 일반 경로: delta 재조립으로 temp 파일이 만들어진 케이스 (full-sync 와 동일 가드)
+            // (iii) temp 파일 체크섬 검증
+            byte[] tempChecksum;
+            try {
+                tempChecksum = CMUtil.md5(tempFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            if(!Arrays.equals(tempChecksum, ackEvent.getFileChecksum())) {
+                System.err.println("PUSH MODIFY file checksum error for relPath=" + relPath);
+                System.err.println("temp md5  = " + DatatypeConverter.printHexBinary(tempChecksum));
+                System.err.println("event md5 = " + DatatypeConverter.printHexBinary(ackEvent.getFileChecksum()));
+                return false;
+            }
+            // (iv) temp 파일에 클라 원본 mtime 적용 (move 후 basis 가 클라 mtime 보존)
+            try {
+                Files.setLastModifiedTime(tempFile, srcMtime);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            // (v) temp → basis atomic move (ATOMIC_MOVE 미지원 환경 fallback 포함)
+            try {
+                Files.move(tempFile, basisFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ame) {
+                try {
+                    Files.move(tempFile, basisFile, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e2) {
+                    System.err.println("temp->basis move (fallback) failed: " + tempFile + " -> " + basisFile);
+                    e2.printStackTrace();
+                    return false;
+                }
+            } catch (IOException e) {
+                System.err.println("temp->basis move failed: " + tempFile + " -> " + basisFile);
+                e.printStackTrace();
+                return false;
+            }
+        } else {
+            // (vi) UPDATE_EXISTING_FILE 미도착(빈 파일/online) 케이스: temp 없음 → move 건너뛰고 basis mtime 만 갱신
+            try {
+                Files.setLastModifiedTime(basisFile, srcMtime);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // (vii) 인메모리 server-index 갱신 (영속화는 completePushSync 에서 일괄). 메타는 basis 파일에서 직접 측정.
+        long mtimeSec;
+        long sizeBytes;
+        String md5Hex;
+        try {
+            mtimeSec = Files.getLastModifiedTime(basisFile).toMillis() / 1000L;
+            sizeBytes = Files.size(basisFile);
+            md5Hex = CMUtil.md5Hex(basisFile);
+        } catch (IOException e) {
+            System.err.println("PUSH MODIFY: failed to read basis metadata: " + basisFile);
+            e.printStackTrace();
+            return false;
+        }
+        CMFileSyncIndexRepository indexRepository =
+                syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newChangeId = indexRepository.lastChangeId() + 1L;
+        indexRepository.applyCreateOrModify(relPath, false, md5Hex, mtimeSec, sizeBytes, newChangeId);
+
+        // (viii) changelog record add (CMFileSyncChangeLogEntry, MODIFY) — proceedPushCreate/Delete 와 동일 빌더 패턴
+        List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
+        if(opRecords != null) {
+            opRecords.add(new CMFileSyncChangeLogEntry()
+                    .setChangeId(newChangeId)
+                    .setUserName(initiatorName)
+                    .setOriginDeviceUuid(initiatorDeviceUuid)
+                    .setOp(CMFileSyncOp.MODIFY)
+                    .setPath(relPath)
+                    .setDirectory(false)
+                    .setContentHash(md5Hex)
+                    .setMtime(mtimeSec)
+                    .setSize(sizeBytes)
+                    .setTombstone(false)
+                    .setTs(OffsetDateTime.now()));
+        } else {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer_PushBranch(), "
+                    + "pushOpRecordTable missing for stateKey: " + stateKey);
+        }
+
+        // (ix) pushStateMap entry 완료 마킹
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if(pushStateMap == null) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer_PushBranch(), "
+                    + "pushStateMap is null for stateKey: " + stateKey);
+            return false;
+        }
+        CMFileSyncClientEntry stateEntry = pushStateMap.get(relPath);
+        if(stateEntry != null) stateEntry.setCompleted(true);
+
+        // (x) COMPLETE_PUSH_MODIFY 송신 (클라로). 송신 실패해도 commit 은 살리고 진행 — 다음 세션 cursor 비교로 회복.
+        CMFileSyncEventCompletePushModify fse_cpm = new CMFileSyncEventCompletePushModify();
+        fse_cpm.setInitiatorName(initiatorName);
+        fse_cpm.setInitiatorUuid(initiatorUuid);
+        fse_cpm.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_cpm.setModifiedPath(relPath);
+        if(!CMEventManager.unicastEvent(fse_cpm, initiatorName, initiatorUuid)) {
+            System.err.println("send COMPLETE_PUSH_MODIFY error for relPath=" + relPath);
+        }
+
+        // (xi) per-entry 정리 (채널은 (ii)에서 이미 정리됨 — 인덱스 기반 자료만 remove)
+        pushGen.cleanupForFileEntry(fileEntryIndex);
+
+        // (xii) 카운터 증분
+        pushGen.setNumUpdateFilesCompleted(pushGen.getNumUpdateFilesCompleted() + 1);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("PUSH MODIFY completed entry: relPath=" + relPath
+                    + ", numUpdateFilesCompleted=" + pushGen.getNumUpdateFilesCompleted());
+        }
+
+        // (xiii) 마지막 entry 판정 → cleanupAll + pushGeneratorMap remove
+        if(pushGen.getNumUpdateFilesCompleted() == pushGen.getModifyEntries().size()) {
+            pushGen.cleanupAll();
+            syncInfo.getPushGeneratorMap().remove(loginKey);
+            if(CMInfo._CM_DEBUG) {
+                System.out.println("PushGenerator cleanupAll + removed for loginKey=" + loginKey);
+            }
+        }
+
+        // (xiv) 세션 완료 판정 → completePushSync 진입 (단일 이벤트 스레드 모델에서 1회 보장)
+        if(syncManager.isCompletePushSync(pushStateMap)) {
+            boolean completeResult = syncManager.completePushSync(stateKey, initiatorUuid);
+            if(!completeResult) {
+                System.err.println("completePushSync failed for stateKey=" + stateKey);
             }
         }
 
