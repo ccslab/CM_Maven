@@ -135,6 +135,11 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
+        // 동기화 시작 시 디스크 메타(cursor, client-index)를 권위값으로 재적용한다.
+        // 실행 중 메타 파일을 삭제한 경우 메모리의 옛 cursor 가 남아 "이미 동기화됨"으로 오인하므로,
+        // reset-then-load 로 디스크 상태(없으면 fresh)를 메모리에 반영한다.
+        syncInfo.reloadClientMetaFromDisk(".");
+
         // create the START_PULL_SYNC event
         CMFileSyncEventStartPullSync fse = new CMFileSyncEventStartPullSync();
 

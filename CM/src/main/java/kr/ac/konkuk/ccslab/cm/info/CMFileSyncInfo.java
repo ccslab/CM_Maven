@@ -707,6 +707,24 @@ public class CMFileSyncInfo {
     }
 
     /**
+     * 동기화 시작 시 디스크의 클라이언트 메타(cursor, client-index)를 권위값으로 재적용한다.
+     * loadClientCursor/loadClientIndex 는 파일이 없으면 in-memory 를 보존하므로, 먼저 fresh 로 리셋한 뒤
+     * 로드한다. → 클라 실행 중 메타 파일을 삭제하고 재동기화할 때 메모리의 옛 cursor 때문에
+     * "이미 동기화됨"으로 오인하던 문제 방지(재시작 없이 반영).
+     *
+     * @param projectHome 프로젝트 홈 디렉토리
+     */
+    public void reloadClientMetaFromDisk(final String projectHome) {
+        // fresh 로 리셋 (파일이 삭제된 경우 stale in-memory 값을 버린다)
+        m_lCursor = -1;
+        m_lastSyncedMtimeMap.clear();
+        m_lastSyncedSizeMap.clear();
+        // 디스크에 파일이 있으면 복원
+        loadClientCursor(projectHome);
+        loadClientIndex(projectHome);
+    }
+
+    /**
      * 클라이언트 index 파일로 저장합니다.
      *
      * @param projectHome 프로젝트 홈 디렉토리
