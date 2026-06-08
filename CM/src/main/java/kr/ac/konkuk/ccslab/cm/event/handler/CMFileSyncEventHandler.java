@@ -4665,29 +4665,21 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
 
-        // pendingPushMap에 createdPath이 존재하는지 sanity check (정상 흐름 보장 — entry 값은 사용 안 함)
+        // pendingPushMap 에서 createdPath entry 조회 (curMtime/size 획득용)
         Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
-        if (pendingPushMap == null || !pendingPushMap.containsKey(createdPath)) {
+        CMFileSyncClientEntry entry = (pendingPushMap != null) ? pendingPushMap.get(createdPath) : null;
+        if (entry == null) {
             System.err.println("CMFileSyncEventHandler.processCOMPLETE_PUSH_CREATE(), "
                     + "createdPath not found in pendingPushMap: " + createdPath);
             return false;
         }
 
-        // 인메모리 client-index 갱신은 PULL의 checkCompletePullCreate 패턴과 일관하게
-        // 현재 디스크 측정값을 truth로 사용 (self-event 필터가 디스크 현재 상태와 비교하므로
-        // lastSyncedMap도 동일 출처여야 정확. 디렉토리 size는 OS dirent 값으로 일관 측정).
-        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
-        Path clientSyncHome = syncManager.getClientSyncHome();
-        Path absPath = clientSyncHome.resolve(createdPath).toAbsolutePath().normalize();
-        long curMtime;
-        long curSize;
-        try {
-            curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
-            curSize = syncInfo.currentSizeOrMinusOne(absPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+        // 인메모리 client-index 갱신: pendingPushMap 스냅샷값을 truth 로 (processCOMPLETE_PUSH_MODIFY 와 일관).
+        // 분류 단계(CMFileSyncManager:854-855)가 currentMtimeSecOrMinusOne/currentSizeOrMinusOne 으로 채웠으므로
+        // 스냅샷 = 디스크 재측정과 동일 측정법(디렉토리 size 도 동일). 차이는 측정 시점뿐 → push 중 재수정 레이스에서
+        // 디스크 재측정은 그 수정을 self-event 로 걸러 누락시키나 스냅샷은 최악이라도 다음 push 재동기화(안전).
+        long curMtime = entry.getCurMtime();
+        long curSize = entry.getSize();
 
         Long prevMtime = syncInfo.getLastSyncedMtimeMap().get(createdPath);
         syncInfo.setLastSynced(createdPath, curMtime, curSize);
