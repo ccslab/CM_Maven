@@ -136,6 +136,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         int returnCode;
         boolean isPullSync = false;
 
+        // 동기화 시작 시 해당 클라의 서버측 index/changelog 를 디스크 기준으로 재적용한다.
+        // getOrLoad 는 computeIfAbsent 로 repo 를 캐시하므로, 서버 실행 중 메타가 외부에서 삭제·변경돼도
+        // stale 캐시를 반환한다(클라측 reloadClientMetaFromDisk 와 대칭). flush 없이 캐시를 무효화 →
+        // 아래 getOrLoad 가 디스크에서 다시 warm-up.
+        syncInfo.getIndexRegistry().invalidate(initiatorName, initiatorDeviceUuid);
+
         // get the server-side cursor (last applied change id) for this client device
         long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid).lastChangeId();
 
