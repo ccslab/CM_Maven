@@ -1728,6 +1728,14 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // get the basis file path
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+
+        // [F-5 PUSH 분기] 증분 push 세션이면 pushGeneratorMap 에 loginKey 가 등록되어 있다.
+        // full-sync 의 syncGeneratorMap/CMFileSyncGenerator 와 데이터 출처가 다르므로 별도 메소드로 위임.
+        CMFileSyncPushGenerator pushGen = syncInfo.getPushGeneratorMap().get(loginKey);
+        if(pushGen != null) {
+            return processUPDATE_EXISTING_FILE_AtServer_PushBranch(updateEvent, pushGen, initiatorName, syncManager);
+        }
+
         CMFileSyncGenerator syncGenerator = syncInfo.getSyncGeneratorMap().get(loginKey);
         Objects.requireNonNull(syncGenerator);
         int fileEntryIndex = updateEvent.getFileEntryIndex();
@@ -1837,6 +1845,108 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // The file channels (readChannel and writeChannel) will be closed when END_FILE_BLOCK_CHECKSUM_ACK
         // event is received.
+        return true;
+    }
+
+    // [F-5] called at the server (incremental push sync): reconstruct the temp basis file from a delta chunk
+    // using CMFileSyncPushGenerator state. 한 이벤트가 리터럴(nonMatchBytes)과 매칭(matchBlockIndex)을 동시에
+    // 운반할 수 있으므로 (iii)→(iv)를 순서대로 모두 처리. 채널 close + temp→basis move + entry 종료 판정은 F-6.
+    // full-sync 의 processUPDATE_EXISTING_FILE_AtServer 와 같은 알고리즘 — 데이터 출처만 PushGenerator 로 치환.
+    private boolean processUPDATE_EXISTING_FILE_AtServer_PushBranch(CMFileSyncEventUpdateExistingFile updateEvent,
+            CMFileSyncPushGenerator pushGen, String initiatorName, CMFileSyncManager syncManager) {
+        if(CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncEventHandler.processUPDATE_EXISTING_FILE_AtServer_PushBranch() called..");
+
+        int fileEntryIndex = updateEvent.getFileEntryIndex();
+
+        // (i) basis 파일 경로 산출 (PUSH 전용 1단계 lookup: modifyEntries 가 직접 보유)
+        CMFileSyncClientEntry entry = pushGen.getModifyEntries().get(fileEntryIndex);
+        Path serverSyncHome = syncManager.getServerSyncHome(initiatorName);
+        Path basisFile = serverSyncHome.resolve(entry.getPath()).toAbsolutePath().normalize();
+        Path tempFile = syncManager.getTempPathOfBasisFile(basisFile);
+        if(CMInfo._CM_DEBUG) {
+            System.out.println("PUSH UPDATE: basisFile = " + basisFile + ", tempFile = " + tempFile);
+        }
+
+        // (ii) temp write 채널 lazy open (entry 첫 update 시점)
+        Map<Integer, SeekableByteChannel> writeChannelMap = pushGen.getTempFileChannelForWriteMap();
+        Objects.requireNonNull(writeChannelMap);
+        SeekableByteChannel writeChannel = writeChannelMap.get(fileEntryIndex);
+        if(writeChannel == null) {
+            try {
+                writeChannel = Files.newByteChannel(tempFile, StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            writeChannelMap.put(fileEntryIndex, writeChannel);
+        }
+
+        // (iii) non-match bytes(리터럴 chunk)가 있으면 먼저 temp 에 write
+        byte[] nonMatchBytes = updateEvent.getNonMatchBytes();
+        if(nonMatchBytes != null) {
+            ByteBuffer nonMatchBuffer = ByteBuffer.wrap(nonMatchBytes);
+            try {
+                int bytesWritten = writeChannel.write(nonMatchBuffer);
+                if(bytesWritten != nonMatchBytes.length) {
+                    System.err.println("bytes written to temp = " + bytesWritten
+                            + ", non-match bytes = " + nonMatchBytes.length);
+                    return false;
+                }
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("PUSH UPDATE: wrote non-match bytes, bytesWritten=" + bytesWritten
+                            + ", writeChannel.position=" + writeChannel.position());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // (iv) match block(매칭 chunk)이 있으면 basis read 채널 lazy open 후 해당 블록을 temp 에 write
+        int matchBlockIndex = updateEvent.getMatchBlockIndex();
+        if(matchBlockIndex > -1) {
+            Map<Integer, SeekableByteChannel> readChannelMap = pushGen.getBasisFileChannelForReadMap();
+            Objects.requireNonNull(readChannelMap);
+            SeekableByteChannel readChannel = readChannelMap.get(fileEntryIndex);
+            if(readChannel == null) {
+                try {
+                    readChannel = Files.newByteChannel(basisFile, StandardOpenOption.READ);
+                    readChannelMap.put(fileEntryIndex, readChannel);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+
+            int blockSize = pushGen.getBlockSizeOfBasisFileMap().get(fileEntryIndex);
+            ByteBuffer matchBuffer = ByteBuffer.allocate(blockSize);
+            try {
+                int readBytes = readChannel.position((long) blockSize * matchBlockIndex).read(matchBuffer);
+                matchBuffer.flip();
+                int writeBytes = writeChannel.write(matchBuffer);
+                if(CMInfo._CM_DEBUG) {
+                    System.out.println("PUSH UPDATE: wrote match block, blockSize=" + blockSize
+                            + ", matchBlockIndex=" + matchBlockIndex + ", readBytes=" + readBytes
+                            + ", writeBytes=" + writeBytes + ", writeChannel.position=" + writeChannel.position());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                // 채널 close + map 제거 후 false 반환 (full-sync 방어와 동일)
+                try {
+                    readChannel.close();
+                    writeChannel.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                readChannelMap.remove(fileEntryIndex);
+                writeChannelMap.remove(fileEntryIndex);
+                return false;
+            }
+        }
+
+        // 채널은 F-6 (END_FILE_BLOCK_CHECKSUM_ACK) 에서 일괄 close. entry 종료 판정도 F-6.
         return true;
     }
 
