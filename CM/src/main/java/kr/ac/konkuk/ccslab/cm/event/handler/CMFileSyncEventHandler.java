@@ -2101,22 +2101,26 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             }
         }
 
-        // (iv) match block(매칭 chunk)이 있으면 basis read 채널 lazy open 후 해당 블록을 temp 에 write
+        // (iv) basis read 채널 무조건 lazy open — full-sync(line 1987-2000)/PULL(line 2222-2234)과 동일 구조.
+        //      read 채널을 match 분기 안에서만 열면 순수-리터럴 MODIFY(매칭 0개) 시 basisCh==null 이 되어
+        //      F-6 의 (tempCh != null && basisCh != null) 가드가 빈파일 분기로 빠져 temp 가 orphan 으로 남는다.
+        //      UPDATE 가 왔으면(=writeChannel open) read 채널도 항상 열어 두 채널을 짝맞춘다.
+        Map<Integer, SeekableByteChannel> readChannelMap = pushGen.getBasisFileChannelForReadMap();
+        Objects.requireNonNull(readChannelMap);
+        SeekableByteChannel readChannel = readChannelMap.get(fileEntryIndex);
+        if(readChannel == null) {
+            try {
+                readChannel = Files.newByteChannel(basisFile, StandardOpenOption.READ);
+                readChannelMap.put(fileEntryIndex, readChannel);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        // (v) match block(매칭 chunk)이 있으면 basis 의 해당 블록을 read 하여 temp 에 write
         int matchBlockIndex = updateEvent.getMatchBlockIndex();
         if(matchBlockIndex > -1) {
-            Map<Integer, SeekableByteChannel> readChannelMap = pushGen.getBasisFileChannelForReadMap();
-            Objects.requireNonNull(readChannelMap);
-            SeekableByteChannel readChannel = readChannelMap.get(fileEntryIndex);
-            if(readChannel == null) {
-                try {
-                    readChannel = Files.newByteChannel(basisFile, StandardOpenOption.READ);
-                    readChannelMap.put(fileEntryIndex, readChannel);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
-
             int blockSize = pushGen.getBlockSizeOfBasisFileMap().get(fileEntryIndex);
             ByteBuffer matchBuffer = ByteBuffer.allocate(blockSize);
             try {
