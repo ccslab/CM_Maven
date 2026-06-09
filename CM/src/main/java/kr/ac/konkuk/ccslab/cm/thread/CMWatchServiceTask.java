@@ -14,12 +14,41 @@ import java.util.concurrent.TimeUnit;
 
 public class CMWatchServiceTask implements Runnable {
 
+    // DELETE grace period (단위: 사이클). 사이클 길이는 watchService.poll 의 500ms 와 같으므로
+    // 1 = 약 500ms 의 유예. cycle-split atomic save (DELETE → CREATE 가 두 사이클로 쪼개짐) 의
+    // 전반부 DELETE 를 흡수해 transient DELETE+CREATE 부풀음을 방지한다. 0 으로 두면 즉시
+    // 승격되지만 reconcile-then-enqueue 순서상 최소 1 사이클 지연은 항상 발생한다.
+    private static final long DELETE_GRACE_CYCLES = 1;
+
     private final Path syncPath;
     private final CMFileSyncManager syncManager;
     private final CMFileSyncInfo syncInfo;
     private final WatchService watchService;
     private final Map<WatchKey, Path> directoryMap;
     private final Map<WatchEvent.Kind<?>, List<Path>> detectedPathMap;
+
+    // grace 큐: relPath → PendingDelete. detectedPathMap 와 달리 사이클 간 보존된다.
+    // buildPushCandidateMap 단계 1 에서 reconcile (파일 부활 시 drop, grace 경과 + 파일 부재 시
+    // 확정 DELETE 로 승격) 하고, 단계 2 에서 DELETE 후보가 발견될 때 enqueue 한다.
+    // task 종료 시 잔여 항목은 폐기 — 다음 sync 시 scanLocalPushDeletes 가 lastSyncedMtimeMap 과
+    // 디스크를 비교해 동일한 DELETE 를 재감지하므로 데이터 누락은 없다.
+    private final Map<String, PendingDelete> pendingDeleteQueue;
+    private long cycleCounter;
+
+    private static final class PendingDelete {
+        final long firstDetectedCycle;
+        final long baseMtime;
+
+        PendingDelete(long firstDetectedCycle, long baseMtime) {
+            this.firstDetectedCycle = firstDetectedCycle;
+            this.baseMtime = baseMtime;
+        }
+
+        @Override
+        public String toString() {
+            return "PendingDelete{cycle=" + firstDetectedCycle + ", baseMtime=" + baseMtime + "}";
+        }
+    }
 
     public CMWatchServiceTask(Path syncPath) {
         this.syncPath = syncPath;
@@ -29,6 +58,8 @@ public class CMWatchServiceTask implements Runnable {
 
         directoryMap = new HashMap<>();
         detectedPathMap = new HashMap<>();
+        pendingDeleteQueue = new LinkedHashMap<>();
+        cycleCounter = 0L;
     }
 
     @Override
@@ -49,14 +80,15 @@ public class CMWatchServiceTask implements Runnable {
         while (true) {
             final WatchKey key;
             try {
-                if (detectedPathMap.isEmpty()) {
-                    // if there is no change-detected path in the previous monitoring
+                if (detectedPathMap.isEmpty() && pendingDeleteQueue.isEmpty()) {
+                    // 새 이벤트도 없고 grace 큐도 비었으면 무기한 대기
                     key = watchService.take();
                 } else {
-                    // if there is any change-detected path in the previous monitoring
+                    // 새 이벤트 누적 중이거나 grace 큐에 promotion 대기 중이면 500ms poll 유지
+                    // (큐만 비어 있지 않은 경우에도 다음 사이클에서 reconcile/promotion 을 해야 함)
                     key = watchService.poll(500, TimeUnit.MILLISECONDS);
                     if (key == null) {
-                        // if there is no more change-detected path
+                        cycleCounter++;
                         if (CMInfo._CM_DEBUG) {
                             detectedPathMap.forEach((eventKey, listValue) -> {
                                 System.out.println("key = " + eventKey);
@@ -67,24 +99,28 @@ public class CMWatchServiceTask implements Runnable {
                         // 경우는 push 대상이 아니다. 현재 mtime+size 가 lastSynced* 와 일치하면
                         // self-event 로 간주해서 제거한다.
                         filterSelfEvents();
-                        if (detectedPathMap.isEmpty()) {
-                            // 전부 self-event 였음 → push 트리거하지 않음
+                        // detectedPathMap 이 비어 있어도 grace 큐에 promotion 대상이 있을 수 있으므로
+                        // 항상 buildPushCandidateMap 을 호출한다.
+                        Map<String, CMFileSyncClientEntry> candidateMap = buildPushCandidateMap();
+                        // detectedPathMap 은 항상 비운다 (이번 사이클에서 이미 분류 완료). 큐는 사이클 간
+                        // 보존되며 자체적으로 reconcile/enqueue 로 lifecycle 관리.
+                        detectedPathMap.clear();
+
+                        if (candidateMap.isEmpty()) {
                             if (CMInfo._CM_DEBUG) {
-                                System.out.println("CMWatchServiceTask: all events filtered as self-events; "
-                                        + "skip startPushSync().");
+                                System.out.println("CMWatchServiceTask: candidateMap empty; "
+                                        + "pendingDeleteQueue size = " + pendingDeleteQueue.size());
                             }
-                            syncInfo.setFileChangeDetected(false);
+                            // 큐에 grace 대기 항목이 남아 있으면 외부 관찰자에게는 "변경 대기" 로 표시.
+                            // 다음 사이클에서 promotion 시도가 이어진다.
+                            syncInfo.setFileChangeDetected(!pendingDeleteQueue.isEmpty());
                             continue;
                         }
-                        // detectedPathMap → push 후보 맵 (1차 분류: CREATE/MODIFY/DELETE).
-                        Map<String, CMFileSyncClientEntry> candidateMap = buildPushCandidateMap();
-                        // start an incremental push session with the candidate snapshot.
+
                         boolean ret = syncManager.startPushSync(candidateMap);
-                        // clear the detectedPathMap regardless of success: on session-start failure
-                        // fileChangeDetected=true triggers a retry, and old events stay out of the
-                        // next cycle's classification.
-                        detectedPathMap.clear();
-                        syncInfo.setFileChangeDetected(!ret);
+                        // 세션 시작 실패면 retry 필요 (true). 성공이라도 큐에 잔여 grace 대기가 있으면
+                        // 또 사이클을 돌려야 하므로 true 유지.
+                        syncInfo.setFileChangeDetected(!ret || !pendingDeleteQueue.isEmpty());
                         continue; // restart monitoring
                     }
                 }
@@ -236,26 +272,65 @@ public class CMWatchServiceTask implements Runnable {
         detectedPathMap.entrySet().removeIf(e -> e.getValue().isEmpty());
     }
 
-    // detectedPathMap (WatchEvent.Kind → List<absPath>) 를 push 세션 1차 후보 맵
-    // (relPath → CMFileSyncClientEntry) 으로 변환한다. CMFileSyncManager.startPushSync()
-    // 의 입력으로 쓰인다.
+    // detectedPathMap (WatchEvent.Kind → List<absPath>) 와 pendingDeleteQueue 를 push 세션
+    // 1차 후보 맵 (relPath → CMFileSyncClientEntry) 으로 변환한다.
+    // CMFileSyncManager.startPushSync() 의 입력으로 쓰인다.
     //
-    // 분류 정책:
-    //   - 처리 순서를 CREATE → MODIFY → DELETE 로 고정해 같은 경로가 여러 kind 에 나타나면
-    //     뒤에 처리되는 쪽이 덮어쓰도록 한다. 결과적으로 같은 사이클 내 CREATE+DELETE / MODIFY+DELETE
-    //     중첩은 net DELETE 가 된다.
-    //   - DELETE 이벤트가 아닌데 디스크가 디렉터리면 스킵 (push 대상은 파일만).
-    //   - DELETE 이벤트이거나 CREATE/MODIFY 인데 디스크에 파일이 없으면 opHint = DELETE.
-    //     curMtime/size 를 -1/0 으로 강제 보정 (디스크 truth 와 일치시킴).
-    //   - 파일이 존재하면 baseMtime 으로 재분류한다 (WatchService 의 kind 보고와 무관):
-    //     baseMtime == -1 (base snapshot 에 없는 경로) → CREATE,
-    //     baseMtime != -1 (이미 동기화됐던 경로)        → MODIFY.
-    //     scanLocalPushCandidates 의 분류 기준과 동일.
+    // 단계 1: pendingDeleteQueue reconcile (이전 사이클까지 쌓인 grace 대기 DELETE 처리)
+    //   - 디스크에 파일이 다시 존재 → split MODIFY 의 후반부 도착으로 간주, 큐에서 drop.
+    //     이번 사이클의 CREATE/MODIFY 이벤트는 단계 2 에서 정상 MODIFY 로 분류됨
+    //     (baseMtime 유지 — DELETE 가 아직 push 되지 않았으므로 client-index 그대로).
+    //   - 파일 여전히 부재 + 사이클 age >= DELETE_GRACE_CYCLES → 확정 DELETE 로 result 적재 + 큐 drop.
+    //   - 그 외 → 큐에 유지 (다음 사이클 reconcile 에서 다시 평가).
+    //
+    // 단계 2: detectedPathMap 분류 (CREATE → MODIFY → DELETE 처리 순서)
+    //   - CREATE/MODIFY 이벤트인데 디스크가 디렉터리면 스킵 (push 대상은 파일만).
+    //     DELETE 는 디렉터리 여부 판단 불가 — 그대로 통과시키고 아래에서 DELETE 로 처리.
+    //   - DELETE 이벤트이거나 CREATE/MODIFY 인데 디스크에 파일이 없으면 → grace 큐에 enqueue.
+    //     같은 사이클의 CREATE/MODIFY 가 먼저 result 에 들어가 있으면 net DELETE 가 우선이므로
+    //     result 에서 제거. 단계 1 에서 promotion 된 path 와 충돌하면 promotion 결과 유지.
+    //     이미 큐에 있는 path 는 firstDetectedCycle 보존 (grace 연장 방지).
+    //   - 파일 존재 → baseMtime 으로 재분류: -1 (base snapshot 에 없는 경로) → CREATE,
+    //     != -1 (이미 동기화됐던 경로) → MODIFY. scanLocalPushCandidates 와 동일 기준.
     //
     // IOException 은 path 단위로 잡아 해당 entry 만 스킵한다.
     private Map<String, CMFileSyncClientEntry> buildPushCandidateMap() {
         Map<String, CMFileSyncClientEntry> result = new LinkedHashMap<>();
 
+        // ── 단계 1: pendingDeleteQueue reconcile ─────────────────────────
+        Iterator<Map.Entry<String, PendingDelete>> qit = pendingDeleteQueue.entrySet().iterator();
+        while (qit.hasNext()) {
+            Map.Entry<String, PendingDelete> qe = qit.next();
+            String relPath = qe.getKey();
+            PendingDelete pd = qe.getValue();
+            Path absPath = syncPath.resolve(relPath);
+
+            if (Files.exists(absPath)) {
+                // 파일 부활 → split DELETE/CREATE 의 후반부 도착으로 처리. 큐에서 drop.
+                if (CMInfo._CM_DEBUG)
+                    System.out.println("pendingDelete revived (file present): " + relPath
+                            + " " + pd);
+                qit.remove();
+                continue;
+            }
+
+            long age = cycleCounter - pd.firstDetectedCycle;
+            if (age >= DELETE_GRACE_CYCLES) {
+                CMFileSyncClientEntry entry = new CMFileSyncClientEntry()
+                        .setPath(relPath)
+                        .setCurMtime(-1L)
+                        .setBaseMtime(pd.baseMtime)
+                        .setSize(0L)
+                        .setOpHint(CMFileSyncOp.DELETE);
+                result.put(relPath, entry);
+                qit.remove();
+                if (CMInfo._CM_DEBUG)
+                    System.out.println("pendingDelete promoted (age=" + age + "): " + relPath);
+            }
+            // else: grace 미경과 — 큐에 유지하고 다음 사이클에서 재평가
+        }
+
+        // ── 단계 2: detectedPathMap 분류 ─────────────────────────────────
         WatchEvent.Kind<?>[] orderedKinds = {
                 StandardWatchEventKinds.ENTRY_CREATE,
                 StandardWatchEventKinds.ENTRY_MODIFY,
@@ -288,14 +363,29 @@ public class CMWatchServiceTask implements Runnable {
 
                 long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
 
-                CMFileSyncOp opHint;
                 if (kind == StandardWatchEventKinds.ENTRY_DELETE || !fileExists) {
-                    opHint = CMFileSyncOp.DELETE;
-                    curMtime = -1L;
-                    size = 0L;
-                } else {
-                    opHint = (baseMtime == -1L) ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY;
+                    // DELETE 후보 → 즉시 result 에 포함 X, grace 큐에 enqueue.
+                    // 단계 1 에서 promotion 된 항목과 충돌 시 (큐에서 끌어올린 후 DELETE 이벤트가
+                    // 또 도착) promotion 결과 유지.
+                    CMFileSyncClientEntry existing = result.get(relPathStr);
+                    if (existing != null && existing.getOpHint() == CMFileSyncOp.DELETE) {
+                        continue;
+                    }
+                    // 같은 사이클의 CREATE/MODIFY 가 먼저 result 에 들어간 경우 net DELETE 가 우선
+                    result.remove(relPathStr);
+                    // 중복 enqueue 방지 — 이미 큐에 있으면 firstDetectedCycle 보존 (grace 연장 방지)
+                    if (!pendingDeleteQueue.containsKey(relPathStr)) {
+                        pendingDeleteQueue.put(relPathStr,
+                                new PendingDelete(cycleCounter, baseMtime));
+                        if (CMInfo._CM_DEBUG)
+                            System.out.println("DELETE queued (grace, cycle=" + cycleCounter
+                                    + "): " + relPathStr);
+                    }
+                    continue;
                 }
+
+                // 파일 존재 → CREATE / MODIFY
+                CMFileSyncOp opHint = (baseMtime == -1L) ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY;
 
                 CMFileSyncClientEntry entry = new CMFileSyncClientEntry()
                         .setPath(relPathStr)
@@ -310,7 +400,8 @@ public class CMWatchServiceTask implements Runnable {
 
         if (CMInfo._CM_DEBUG) {
             System.out.println("CMWatchServiceTask.buildPushCandidateMap() result: size = "
-                    + result.size());
+                    + result.size() + ", pendingDeleteQueue size = " + pendingDeleteQueue.size()
+                    + " (cycle " + cycleCounter + ")");
             result.forEach((k, v) -> System.out.println("  " + k + " -> " + v));
         }
 
