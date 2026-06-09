@@ -282,11 +282,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
             result = syncManager.startFullPushSync();
         } else if(returnCode == 1) {
-            // client is already up to date -> end the sync session
+            // cursor matched -> nothing to PULL, but the client may still hold local files to PUSH.
+            // the server cursor only reflects server-applied changes, so a file added/edited locally
+            // after the last sync never shows up here; the pull flow that normally populates
+            // pendingPushMap is skipped. scan for local push candidates and start a push if any exist
+            // (startPushSyncForLocalChanges() sets syncProgress to PUSH or NONE as appropriate).
             if(CMInfo._CM_DEBUG) {
-                System.out.println("client is up to date with the server; nothing to sync.");
+                System.out.println("client cursor matches the server; checking for local push candidates.");
             }
-            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            result = syncManager.startPushSyncForLocalChanges();
         } else if(returnCode == 2) {
             // pull sync needed -> save the server cursor and wait for START_SERVER_ENTRY_LIST
             if(CMInfo._CM_DEBUG) {

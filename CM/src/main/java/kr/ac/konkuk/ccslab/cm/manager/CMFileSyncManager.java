@@ -867,35 +867,154 @@ public class CMFileSyncManager extends CMServiceManager {
 
             // pullModifyMap 대상을 제외한 client path 중 baseMtime보다 큰 curMtime인 파일을
             // pendingPushMap에 추가 (이 클라이언트에서 최신 수정된 파일들)
-            for (Path absPath : clientPathList) {
-                Path relPath = clientSyncHome.relativize(absPath);
-                String relPathStr = relPath.toString().replace('\\', '/');
-
-                if (pullModifyMap.containsKey(relPathStr)) continue;
-
-                long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
-                long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
-                long curSize = syncInfo.currentSizeOrMinusOne(absPath);
-
-                if (curMtime > baseMtime) {
-                    CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
-                    clientEntry.setPath(relPathStr)
-                            .setSize(curSize)
-                            .setCurMtime(curMtime)
-                            .setBaseMtime(baseMtime)
-                            .setOpHint(baseMtime == -1 ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY)
-                            .setDirectory(Files.isDirectory(absPath));
-                    pendingPushMap.put(relPathStr, clientEntry);
-                    if (CMInfo._CM_DEBUG)
-                        System.out.println("pendingPushMap added: key = " + relPathStr + ", value = " + clientEntry);
-                }
-            }
+            scanLocalPushCandidates(clientPathList, pullModifyMap.keySet());
         } catch (IOException e) {
             System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), I/O error!");
             e.printStackTrace();
             return false;
         }
 
+        return true;
+    }
+
+    // Scans the client sync home for local PUSH candidates — files whose current mtime is newer
+    // than the client base snapshot (lastSynced) — and adds each to pendingPushMap with a
+    // CREATE/MODIFY opHint (CREATE when baseMtime==-1, i.e. unknown to the base snapshot).
+    // excludePaths holds relPaths already handled by the pull flow (e.g. pullModifyMap keys) that
+    // must be skipped; pass an empty set for a standalone scan (the START_PULL_SYNC_ACK
+    // returnCode==1 path, where no pull runs). Returns the number of candidates added.
+    // mtime/size use the shared helpers, so a vanished/unreadable file yields -1 and is skipped.
+    public int scanLocalPushCandidates(List<Path> clientPathList, Set<String> excludePaths) throws IOException {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path clientSyncHome = getClientSyncHome();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        int numAdded = 0;
+
+        for (Path absPath : clientPathList) {
+            Path relPath = clientSyncHome.relativize(absPath);
+            String relPathStr = relPath.toString().replace('\\', '/');
+
+            if (excludePaths.contains(relPathStr)) continue;
+
+            long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
+            long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            long curSize = syncInfo.currentSizeOrMinusOne(absPath);
+
+            if (curMtime > baseMtime) {
+                CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
+                clientEntry.setPath(relPathStr)
+                        .setSize(curSize)
+                        .setCurMtime(curMtime)
+                        .setBaseMtime(baseMtime)
+                        .setOpHint(baseMtime == -1 ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY)
+                        .setDirectory(Files.isDirectory(absPath));
+                pendingPushMap.put(relPathStr, clientEntry);
+                numAdded++;
+                if (CMInfo._CM_DEBUG)
+                    System.out.println("pendingPushMap added: key = " + relPathStr + ", value = " + clientEntry);
+            }
+        }
+        return numAdded;
+    }
+
+    // Detects local DELETEs for PUSH: relPaths present in the client base snapshot (lastSynced) but
+    // no longer on disk. Adds each as a DELETE-opHint entry to pendingPushMap (size=0/curMtime=-1;
+    // isDirectory left false — the server uses its own index as the truth for dir-ness when applying
+    // the delete). Only safe to call when the server has no pending changes for this client
+    // (START_PULL_SYNC_ACK returnCode==1): then every local deletion is unambiguously client-
+    // originated. NOT used by the pull flow, where a missing local file may instead be a server
+    // CREATE/MODIFY to re-fetch (conflict) rather than a delete to push. existingRelPaths is the set
+    // of relPaths currently on disk (derived from clientPathList). Returns the number added.
+    public int scanLocalPushDeletes(Set<String> existingRelPaths) {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        int numAdded = 0;
+
+        // snapshot the keys: the base snapshot is read-only here, but copy defensively
+        for (String relPathStr : new ArrayList<>(syncInfo.getLastSyncedMtimeMap().keySet())) {
+            if (existingRelPaths.contains(relPathStr)) continue;   // still on disk -> not deleted
+            if (pendingPushMap.containsKey(relPathStr)) continue;  // already classified
+
+            CMFileSyncClientEntry entry = new CMFileSyncClientEntry();
+            entry.setPath(relPathStr)
+                    .setSize(0L)
+                    .setCurMtime(-1L)
+                    .setBaseMtime(syncInfo.getLastSyncedMtime(relPathStr))
+                    .setOpHint(CMFileSyncOp.DELETE)
+                    .setDirectory(false);
+            pendingPushMap.put(relPathStr, entry);
+            numAdded++;
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pendingPushMap DELETE added: key = " + relPathStr);
+        }
+        return numAdded;
+    }
+
+    // Standalone PUSH entry point used when the PULL flow is skipped because the server reports the
+    // client cursor already matches (START_PULL_SYNC_ACK returnCode==1): the cursor only reflects
+    // server-applied changes, so it never signals client-local additions/edits. This builds the
+    // current client path list and scans for local push candidates; if any exist it starts a push
+    // session (mirroring the push branch of processCOMPLETE_PULL_SYNC), otherwise it ends the
+    // session by setting syncProgress=NONE. Runs on the event-processing thread.
+    public boolean startPushSyncForLocalChanges() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.startPushSyncForLocalChanges() called..");
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), system type is not CLIENT!");
+            return false;
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // build the current client path list (same as the pull flow does after END_SERVER_ENTRY_LIST)
+        Path syncHome = getClientSyncHome();
+        List<Path> clientPathList = createPathList(syncHome);
+        if (clientPathList == null) {
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), clientPathList is null!");
+            return false;
+        }
+        syncInfo.setClientPathList(clientPathList);
+
+        // scan for local CREATE/MODIFY push candidates; no pull is running, so nothing to exclude
+        int numCandidates;
+        try {
+            numCandidates = scanLocalPushCandidates(clientPathList, Collections.emptySet());
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), I/O error during scan!");
+            e.printStackTrace();
+            return false;
+        }
+
+        // detect local DELETEs: base-snapshot paths no longer on disk. Safe here because returnCode==1
+        // means the server has no pending changes for this client, so any local deletion is
+        // unambiguously client-originated (no server CREATE/MODIFY to conflict with).
+        Path clientSyncHome = getClientSyncHome();
+        Set<String> existingRelPaths = new HashSet<>();
+        for (Path absPath : clientPathList) {
+            existingRelPaths.add(clientSyncHome.relativize(absPath).toString().replace('\\', '/'));
+        }
+        numCandidates += scanLocalPushDeletes(existingRelPaths);
+
+        // nothing to push -> the client really is in sync; end the session
+        if (numCandidates == 0) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("no local push candidates; nothing to sync.");
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return true;
+        }
+
+        // local changes exist -> start a push session (caller-set-PUSH convention as in the
+        // processCOMPLETE_PULL_SYNC push branch: set PUSH before proceedPendingPushMap()).
+        syncInfo.setSyncProgress(CMFileSyncProgress.PUSH);
+        boolean pushStarted = proceedPendingPushMap();
+        if (!pushStarted) {
+            // proceedPendingPushMap() rolls back its own snapshot on send failure; reset state here
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), proceedPendingPushMap failed!");
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return false;
+        }
         return true;
     }
 
