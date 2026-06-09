@@ -242,6 +242,68 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // WatchService-triggered PUSH entry point. Called from CMWatchServiceTask.run() after the 500ms
+    // quiet window with a candidateMap that classifies the detected paths into CREATE/MODIFY/DELETE
+    // (see CMWatchServiceTask.buildPushCandidateMap). Replaces the previous full-push trigger.
+    // synchronized: invoked on the WatchService thread; serializes against other entry points
+    // (startFullPushSync / startPullSync) on the same manager instance.
+    // Returns false when the session cannot be started (already in progress, send failure, etc.) —
+    // the caller interprets false as "unhandled changes remain" and sets fileChangeDetected=true so
+    // a future cycle retries.
+    public synchronized boolean startPushSync(Map<String, CMFileSyncClientEntry> candidateMap) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.startPushSync() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.startPushSync(), not a CLIENT.");
+            return false;
+        }
+
+        // Session-in-progress guard: any non-NONE syncProgress (FULL_SYNC / PULL / PUSH /
+        // ONLINE_MODE / LOCAL_MODE) blocks a new push start. Caller retries via fileChangeDetected.
+        if (syncInfo.getSyncProgress() != CMFileSyncProgress.NONE) {
+            System.err.println("CMFileSyncManager.startPushSync(), sync already in progress: "
+                    + syncInfo.getSyncProgress());
+            return false;
+        }
+
+        // Empty candidate map (all events filtered out, or none classified) — nothing to push.
+        if (candidateMap == null || candidateMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("CMFileSyncManager.startPushSync(), candidateMap is empty. "
+                        + "nothing to push.");
+            return true;
+        }
+
+        // Replace pendingPushMap with the candidate snapshot. WatchService-trigger push has no
+        // continuity with prior sessions: the current disk state after the 500ms quiet window is
+        // the truth, so stale leftovers from a failed previous trigger are overwritten.
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        pendingPushMap.clear();
+        pendingPushMap.putAll(candidateMap);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("pendingPushMap populated. size = " + pendingPushMap.size());
+            pendingPushMap.forEach((k, v) -> System.out.println("  " + k + " -> " + v));
+        }
+
+        // Officially open the PUSH session before delegating to the shared sender.
+        syncInfo.setSyncProgress(CMFileSyncProgress.PUSH);
+
+        boolean ret = proceedPendingPushMap();
+        if (!ret) {
+            // proceedPendingPushMap() already rolled back pushEntryList on send failure; restore
+            // syncProgress so the next watch-trigger can pass the guard.
+            System.err.println("CMFileSyncManager.startPushSync(), proceedPendingPushMap() failed. "
+                    + "rolling back syncProgress.");
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return false;
+        }
+        return true;
+    }
+
     // Server-side entry point for op-by-op processing of pushStateTable[stateKey].
     // Called from processEND_PUSH_ENTRY_LIST after the entry-count verification passes.
     // Internal op-specific helpers (DELETE → CREATE → MODIFY) are implemented incrementally.

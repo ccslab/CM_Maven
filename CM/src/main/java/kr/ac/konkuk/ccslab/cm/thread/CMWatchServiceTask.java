@@ -1,7 +1,9 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncOp;
 import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 
 import java.io.IOException;
@@ -69,18 +71,20 @@ public class CMWatchServiceTask implements Runnable {
                             // 전부 self-event 였음 → push 트리거하지 않음
                             if (CMInfo._CM_DEBUG) {
                                 System.out.println("CMWatchServiceTask: all events filtered as self-events; "
-                                        + "skip startFullPushSync().");
+                                        + "skip startPushSync().");
                             }
                             syncInfo.setFileChangeDetected(false);
                             continue;
                         }
-                        // start the file-sync task
-                        // TODO: 양방향 push 동기화(startPushSync) 구현 후 교체 예정
-                        boolean ret = syncManager.startFullPushSync();
-                        // clear the detectedPathMap
+                        // detectedPathMap → push 후보 맵 (1차 분류: CREATE/MODIFY/DELETE).
+                        Map<String, CMFileSyncClientEntry> candidateMap = buildPushCandidateMap();
+                        // start an incremental push session with the candidate snapshot.
+                        boolean ret = syncManager.startPushSync(candidateMap);
+                        // clear the detectedPathMap regardless of success: on session-start failure
+                        // fileChangeDetected=true triggers a retry, and old events stay out of the
+                        // next cycle's classification.
                         detectedPathMap.clear();
-                        if (!ret) syncInfo.setFileChangeDetected(true);
-                        else syncInfo.setFileChangeDetected(false);
+                        syncInfo.setFileChangeDetected(!ret);
                         continue; // restart monitoring
                     }
                 }
@@ -230,6 +234,87 @@ public class CMWatchServiceTask implements Runnable {
         }
         // 비어있는 kind 항목 정리
         detectedPathMap.entrySet().removeIf(e -> e.getValue().isEmpty());
+    }
+
+    // detectedPathMap (WatchEvent.Kind → List<absPath>) 를 push 세션 1차 후보 맵
+    // (relPath → CMFileSyncClientEntry) 으로 변환한다. CMFileSyncManager.startPushSync()
+    // 의 입력으로 쓰인다.
+    //
+    // 분류 정책:
+    //   - 처리 순서를 CREATE → MODIFY → DELETE 로 고정해 같은 경로가 여러 kind 에 나타나면
+    //     뒤에 처리되는 쪽이 덮어쓰도록 한다. 결과적으로 같은 사이클 내 CREATE+DELETE / MODIFY+DELETE
+    //     중첩은 net DELETE 가 된다.
+    //   - DELETE 이벤트가 아닌데 디스크가 디렉터리면 스킵 (push 대상은 파일만).
+    //   - DELETE 이벤트이거나 CREATE/MODIFY 인데 디스크에 파일이 없으면 opHint = DELETE.
+    //     curMtime/size 를 -1/0 으로 강제 보정 (디스크 truth 와 일치시킴).
+    //   - 파일이 존재하면 baseMtime 으로 재분류한다 (WatchService 의 kind 보고와 무관):
+    //     baseMtime == -1 (base snapshot 에 없는 경로) → CREATE,
+    //     baseMtime != -1 (이미 동기화됐던 경로)        → MODIFY.
+    //     scanLocalPushCandidates 의 분류 기준과 동일.
+    //
+    // IOException 은 path 단위로 잡아 해당 entry 만 스킵한다.
+    private Map<String, CMFileSyncClientEntry> buildPushCandidateMap() {
+        Map<String, CMFileSyncClientEntry> result = new LinkedHashMap<>();
+
+        WatchEvent.Kind<?>[] orderedKinds = {
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_MODIFY,
+                StandardWatchEventKinds.ENTRY_DELETE
+        };
+
+        for (WatchEvent.Kind<?> kind : orderedKinds) {
+            List<Path> pathList = detectedPathMap.get(kind);
+            if (pathList == null) continue;
+
+            for (Path absPath : pathList) {
+                // CREATE/MODIFY 인데 디스크가 디렉터리면 스킵. DELETE 는 디렉터리 여부 판단 불가
+                // (이미 사라졌을 수 있음) — 그대로 통과시키고 아래에서 DELETE 로 처리한다.
+                if (kind != StandardWatchEventKinds.ENTRY_DELETE && Files.isDirectory(absPath)) {
+                    continue;
+                }
+
+                String relPathStr = syncPath.relativize(absPath).toString().replace('\\', '/');
+
+                boolean fileExists = Files.exists(absPath);
+                long curMtime;
+                long size;
+                try {
+                    curMtime = fileExists ? Files.getLastModifiedTime(absPath).toMillis() / 1000 : -1L;
+                    size = fileExists ? Files.size(absPath) : 0L;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+
+                long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
+
+                CMFileSyncOp opHint;
+                if (kind == StandardWatchEventKinds.ENTRY_DELETE || !fileExists) {
+                    opHint = CMFileSyncOp.DELETE;
+                    curMtime = -1L;
+                    size = 0L;
+                } else {
+                    opHint = (baseMtime == -1L) ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY;
+                }
+
+                CMFileSyncClientEntry entry = new CMFileSyncClientEntry()
+                        .setPath(relPathStr)
+                        .setCurMtime(curMtime)
+                        .setBaseMtime(baseMtime)
+                        .setSize(size)
+                        .setOpHint(opHint);
+
+                result.put(relPathStr, entry);
+            }
+        }
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("CMWatchServiceTask.buildPushCandidateMap() result: size = "
+                    + result.size());
+            result.forEach((k, v) -> System.out.println("  " + k + " -> " + v));
+        }
+
+        return result;
     }
 
     private void registerPath(Path path) throws IOException {
