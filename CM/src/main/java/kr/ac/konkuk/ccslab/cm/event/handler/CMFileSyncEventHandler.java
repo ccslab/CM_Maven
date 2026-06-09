@@ -206,11 +206,24 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         List<CMFileSyncChangeLogEntry> changeLogEntries =
                 syncInfo.readChangeLogEntries(initiatorName, clientCursor, serverCursor);
 
-        // keep only the latest changelog entry per path (entries are in change-id order)
+        // Per-path dedup: keep first/last op in change-id order. Drop net no-ops — a path whose
+        // first op in the range is CREATE and last is DELETE was created *and* removed entirely
+        // within (clientCursor, serverCursor], so the client (at clientCursor) never saw it and
+        // can't act on it. Sending such a DELETE makes the client skip ("not on disk") without
+        // ack-ing, leaving pullStateMap[path].completed=false forever → server never sends
+        // COMPLETE_PULL_SYNC. Other transitions (MODIFY→DELETE, DELETE→CREATE, plain DELETE) are
+        // meaningful to the client and pass through with the latest op kept.
+        Map<String, CMFileSyncChangeLogEntry> firstEntryByPath = new HashMap<>();
         Map<String, CMFileSyncChangeLogEntry> latestEntryByPath = new LinkedHashMap<>();
         for(CMFileSyncChangeLogEntry entry : changeLogEntries) {
+            firstEntryByPath.putIfAbsent(entry.getPath(), entry);
             latestEntryByPath.put(entry.getPath(), entry);
         }
+        latestEntryByPath.entrySet().removeIf(e -> {
+            CMFileSyncOp firstOp = firstEntryByPath.get(e.getKey()).getOp();
+            CMFileSyncOp lastOp = e.getValue().getOp();
+            return firstOp == CMFileSyncOp.CREATE && lastOp == CMFileSyncOp.DELETE;
+        });
 
         // build the server entry list to send to the client and store it in the serverEntryMap
         List<CMFileSyncChangeLogEntry> serverEntryList = new ArrayList<>(latestEntryByPath.values());
