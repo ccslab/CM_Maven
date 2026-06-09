@@ -884,6 +884,24 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // reset sync session state
         syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
 
+        // fold client-originated DELETEs into the push: base-snapshot paths now missing from disk.
+        // safe here (unlike during the pull-phase scan) because PULL is fully complete — the server
+        // has sent every change it will, so a missing snapshot path can no longer be a not-yet-pulled
+        // server CREATE/MODIFY; it is unambiguously a local delete (server-applied DELETEs were
+        // already removed from the snapshot by processCOMPLETE_PULL_DELETE). rescan the disk fresh:
+        // clientPathList was just nulled and the pre-pull list is stale w.r.t. files created/deleted
+        // during this pull. this makes returnCode==2 symmetric with the returnCode==1 path.
+        List<Path> postPullPathList = syncManager.createPathList(syncManager.getClientSyncHome());
+        if(postPullPathList != null) {
+            int numDeletes = syncManager.addLocalPushDeletes(postPullPathList);
+            if(CMInfo._CM_DEBUG && numDeletes > 0)
+                System.out.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), folded "
+                        + numDeletes + " local DELETE(s) into pendingPushMap.");
+        } else {
+            System.err.println("CMFileSyncEventHandler.processCOMPLETE_PULL_SYNC(), "
+                    + "postPullPathList is null; skip local-delete detection.");
+        }
+
         // if pendingPushMap is non-empty, kick off push sync
         Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
         if(!pendingPushMap.isEmpty()) {

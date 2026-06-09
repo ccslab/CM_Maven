@@ -950,6 +950,20 @@ public class CMFileSyncManager extends CMServiceManager {
         return numAdded;
     }
 
+    // Derives the on-disk relPath set from clientPathList and folds client-originated DELETEs into
+    // pendingPushMap via scanLocalPushDeletes. Shared by the two safe call sites: the returnCode==1
+    // standalone path (startPushSyncForLocalChanges) and the post-PULL path (processCOMPLETE_PULL_SYNC).
+    // Both invoke it only once the server has no pending changes left to disambiguate, so a base-
+    // snapshot path missing from disk is unambiguously a local delete. Returns the number added.
+    public int addLocalPushDeletes(List<Path> clientPathList) {
+        Path clientSyncHome = getClientSyncHome();
+        Set<String> existingRelPaths = new HashSet<>();
+        for (Path absPath : clientPathList) {
+            existingRelPaths.add(clientSyncHome.relativize(absPath).toString().replace('\\', '/'));
+        }
+        return scanLocalPushDeletes(existingRelPaths);
+    }
+
     // Standalone PUSH entry point used when the PULL flow is skipped because the server reports the
     // client cursor already matches (START_PULL_SYNC_ACK returnCode==1): the cursor only reflects
     // server-applied changes, so it never signals client-local additions/edits. This builds the
@@ -990,12 +1004,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // detect local DELETEs: base-snapshot paths no longer on disk. Safe here because returnCode==1
         // means the server has no pending changes for this client, so any local deletion is
         // unambiguously client-originated (no server CREATE/MODIFY to conflict with).
-        Path clientSyncHome = getClientSyncHome();
-        Set<String> existingRelPaths = new HashSet<>();
-        for (Path absPath : clientPathList) {
-            existingRelPaths.add(clientSyncHome.relativize(absPath).toString().replace('\\', '/'));
-        }
-        numCandidates += scanLocalPushDeletes(existingRelPaths);
+        numCandidates += addLocalPushDeletes(clientPathList);
 
         // nothing to push -> the client really is in sync; end the session
         if (numCandidates == 0) {
