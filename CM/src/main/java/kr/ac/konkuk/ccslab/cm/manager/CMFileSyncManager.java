@@ -779,10 +779,14 @@ public class CMFileSyncManager extends CMServiceManager {
             for (CMFileSyncChangeLogEntry serverEntry : serverEntryList) {
                 String relPathStr = serverEntry.getPath();      // relative path (server & client)
                 Path relPath = Path.of(relPathStr);
-                // ignore 패턴 매칭 시 동기화 대상에서 제외 (.DS_Store 등)
+                // ignore 패턴 매칭 시 동기화 대상에서 제외 (.DS_Store 등).
+                // 현 정책에선 클라 createPathList 가 이미 ignore 필터링해 서버 changelog 에 들어가지 않으므로
+                // 정상 흐름에선 unreachable. 향후 per-user/per-device ignore 정책 확장(서로 다른 디바이스가
+                // 같은 path 를 다르게 ignore) 시 도달 가능하므로 ack 송신해 서버 hang 방지.
                 if (syncInfo.isIgnored(relPath)) {
                     if (CMInfo._CM_DEBUG)
                         System.out.println("ignored server entry: " + relPathStr);
+                    ackSkippedPullEntry(relPathStr, serverEntry.getOp(), serverName);
                     continue;
                 }
                 Path absPath = clientSyncHome.resolve(relPath); // client absolute path
@@ -823,6 +827,8 @@ public class CMFileSyncManager extends CMServiceManager {
                         if (!conflictResult) {
                             System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
                                     "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            // 클라가 처리 못 한 entry 라도 서버 pullStateMap 완료 마킹은 필요 (hang 방지).
+                            ackSkippedPullEntry(relPathStr, CMFileSyncOp.MODIFY, serverName);
                             continue;   // rename 실패 시 pullCreateMap에 추가하지 않고 건너뜀
                         }
                         pullCreateMap.put(relPathStr, clientEntry);
@@ -836,13 +842,17 @@ public class CMFileSyncManager extends CMServiceManager {
                         if (!conflictResult) {
                             System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
                                     "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            // 클라가 처리 못 한 entry 라도 서버 pullStateMap 완료 마킹은 필요 (hang 방지).
+                            ackSkippedPullEntry(relPathStr, CMFileSyncOp.CREATE, serverName);
                             continue;   // rename 실패 -> 기존 클라 파일 보호
                         }
                     }
                     pullCreateMap.put(relPathStr, clientEntry);
                 } else if (op == CMFileSyncOp.DELETE) {
                     if (!existsOnClient) {
-                        // 이미 없으므로 별도 동작 안함
+                        // 클라 디스크엔 이미 없음 (서버 dedup 이후엔 외부 수동 삭제 / 다중 디바이스 정합성 케이스).
+                        // 서버 pullStateMap 완료 마킹 위해 ack 만 송신.
+                        ackSkippedPullEntry(relPathStr, CMFileSyncOp.DELETE, serverName);
                     } else if (baseMtime == serverMtime && curMtime == serverMtime) {
                         // 마지막 동기화 이후 변경 없음 -> 안전하게 삭제 대상
                         pullDeleteMap.put(relPathStr, clientEntry);
@@ -852,7 +862,8 @@ public class CMFileSyncManager extends CMServiceManager {
                         if (!conflictResult) {
                             System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
                                     "failed to proceed conflict entry: " + relPathStr + ", skip.");
-                            // rename 실패 -> 삭제도, push도 하지 않음 (현상 유지)
+                            // rename 실패 -> 삭제도, push도 하지 않음 (현상 유지). 단, 서버 ack 는 필요.
+                            ackSkippedPullEntry(relPathStr, CMFileSyncOp.DELETE, serverName);
                         }
                     }
                 }
@@ -1025,6 +1036,61 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
         return true;
+    }
+
+    // compareServerAndClientEntriesForPullSync 의 모든 skip 분기(isIgnored / conflict-rename 실패 /
+    // DELETE-but-not-on-client) 에서 호출. 서버 pullStateMap[path] 는 entryList 진입 시점에 만들어져
+    // 클라 ack 없이는 영원히 completed=false 로 남아 COMPLETE_PULL_SYNC 가 트리거되지 않으므로,
+    // 처리 못 했더라도 op 에 맞는 COMPLETE_PULL_* 만 보내 세션을 풀어준다. proceedAlreadySyncedPullEntry
+    // 와 달리 lastSynced 는 절대 건드리지 않는다 — 이 분기들은 모두 "클라 디스크 상태가 서버와 다름"
+    // 또는 "동기화 대상이 아님" 이므로 base snapshot 에 들어가면 안 됨. DELETE 는 이벤트가 list-shaped 라
+    // 단일 path 를 1-원소 List 로 감싼다.
+    private boolean ackSkippedPullEntry(String relPathStr, CMFileSyncOp op, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.ackSkippedPullEntry() called: " + relPathStr
+                    + ", op=" + op);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String myName = interInfo.getMyself().getName();
+        UUID myUuid = interInfo.getMyself().getUuid();
+        UUID myDeviceUuid = syncInfo.getDeviceUuid();
+
+        boolean sendResult;
+        switch (op) {
+            case CREATE -> {
+                CMFileSyncEventCompletePullCreate fse = new CMFileSyncEventCompletePullCreate();
+                fse.setInitiatorName(myName);
+                fse.setInitiatorUuid(myUuid);
+                fse.setInitiatorDeviceUuid(myDeviceUuid);
+                fse.setCreatedPath(relPathStr);
+                sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+            }
+            case MODIFY -> {
+                CMFileSyncEventCompletePullModify fse = new CMFileSyncEventCompletePullModify();
+                fse.setInitiatorName(myName);
+                fse.setInitiatorUuid(myUuid);
+                fse.setInitiatorDeviceUuid(myDeviceUuid);
+                fse.setModifiedPath(relPathStr);
+                sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+            }
+            case DELETE -> {
+                CMFileSyncEventCompletePullDelete fse = new CMFileSyncEventCompletePullDelete();
+                fse.setInitiatorName(myName);
+                fse.setInitiatorUuid(myUuid);
+                fse.setInitiatorDeviceUuid(myDeviceUuid);
+                fse.setDeletedPathList(List.of(relPathStr));
+                sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+            }
+            default -> {
+                System.err.println("CMFileSyncManager.ackSkippedPullEntry(), unsupported op = "
+                        + op + " for " + relPathStr);
+                return false;
+            }
+        }
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.ackSkippedPullEntry(), send error for " + relPathStr);
+        return sendResult;
     }
 
     // 클라 파일이 이미 서버 버전과 동일할 때 호출: 데이터 전송 없이 client-index(lastSynced)를 재구축하고
