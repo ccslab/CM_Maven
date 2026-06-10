@@ -163,9 +163,25 @@ public class CMWatchServiceTask implements Runnable {
                 // get file name
                 final WatchEvent<Path> watchEventPath = (WatchEvent<Path>) watchEvent;
                 final Path filename = watchEventPath.context();
-                // process OVERFLOW event
-                if (kind == StandardWatchEventKinds.OVERFLOW)
+                // process OVERFLOW event — watcher 가 이 key 의 디렉토리에서 알 수 없는 만큼의
+                // 이벤트를 유실했다. 놓친 CREATE/MODIFY 를 복구하기 위해 해당 서브트리를
+                // 재등록(register 는 멱등 — 그 사이 새로 생긴 하위 디렉토리도 흡수)하고 기존
+                // 파일을 재적재한다. 이미 동기화된 파일은 filterSelfEvents 가 mtime+size 일치로
+                // 걸러내므로, 실험에서 흔한 대량 복사발 overflow 의 누락만 정확히 복구된다.
+                // (유실된 DELETE 복구는 lastSynced 인덱스 기반 full reconcile 백스톱이 필요 —
+                //  별도 작업. 여기서는 다루지 않는다.)
+                if (kind == StandardWatchEventKinds.OVERFLOW) {
+                    Path overflowed = directoryMap.get(key);
+                    if (overflowed != null) {
+                        try {
+                            registerTree(overflowed);
+                            enqueueExistingFilesUnder(overflowed);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                     continue;
+                }
                 // process CREATE event of a new sub-directory
                 final Path directory = directoryMap.get(key);
                 final Path child = directory.resolve(filename);
