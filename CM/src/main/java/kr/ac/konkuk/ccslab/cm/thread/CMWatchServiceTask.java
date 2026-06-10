@@ -157,6 +157,11 @@ public class CMWatchServiceTask implements Runnable {
                     if (Files.isDirectory(child)) {
                         try {
                             registerTree(child);
+                            // 등록 이전에 이미 디렉토리 안에 들어와 있던 파일들 — 폴더 통째
+                            // move/압축해제/git checkout 처럼 디렉토리와 내용이 원자적으로
+                            // 등장하면 그 파일들의 ENTRY_CREATE 는 영영 안 올 수 있으므로,
+                            // 등록 직후 직접 push 후보로 적재한다 (등록 레이스 보완).
+                            enqueueExistingFilesUnder(child);
                         } catch (IOException e) {
                             e.printStackTrace();
                             continue;
@@ -406,6 +411,44 @@ public class CMWatchServiceTask implements Runnable {
         }
 
         return result;
+    }
+
+    // 런타임에 새로 생성된 디렉토리(ENTRY_CREATE)가 등록 시점에 이미 품고 있던 파일들을
+    // detectedPathMap[ENTRY_CREATE] 에 직접 적재한다. registerTree 는 하위 디렉토리에 워치를
+    // 걸 뿐 기존 파일을 enqueue 하지 않으므로, 디렉토리와 내용이 사실상 원자적으로 등장하면
+    // (폴더 통째 move / 압축 해제 / git checkout) 내부 파일들의 CREATE 이벤트가 등록 이전에
+    // 지나가 영영 도착하지 않는 레이스가 생긴다 — 이를 보완한다. 디렉토리 자신은
+    // buildPushCandidateMap 에서 스킵되므로 일반 파일만 넣는다.
+    //
+    // 시작 시 전체 트리 등록(run() 의 registerTree(syncPath)) 에는 호출하지 않는다 — 동기화 홈
+    // 전체가 CREATE 로 잡혀 통째 push 되는 것을 막기 위함. 이미 동기화됐던 파일이 섞여 들어와도
+    // filterSelfEvents 가 mtime+size 일치로 걸러내므로 중복 push 는 발생하지 않는다.
+    // ignore 판정은 메인 루프와 동일하게 syncPath 기준 상대경로로 수행한다(syncPath ==
+    // clientSyncHome). 복사 진행 중 일시적으로 못 읽는 파일은 visitFileFailed 에서 스킵한다.
+    private void enqueueExistingFilesUnder(Path dir) throws IOException {
+        List<Path> createList = detectedPathMap.computeIfAbsent(
+                StandardWatchEventKinds.ENTRY_CREATE, k -> new ArrayList<>());
+        Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                if (!attrs.isRegularFile())
+                    return FileVisitResult.CONTINUE;
+                if (file.startsWith(syncPath) && syncInfo.isIgnored(syncPath.relativize(file)))
+                    return FileVisitResult.CONTINUE;
+                createList.add(file);
+                if (CMInfo._CM_DEBUG)
+                    System.out.println("enqueueExistingFilesUnder enqueued: " + file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                // 복사 진행 중 일시적으로 못 읽는 파일은 스킵 — 이후 이벤트/재스캔으로 다시 잡힌다.
+                if (CMInfo._CM_DEBUG)
+                    System.out.println("enqueueExistingFilesUnder skipped (visitFileFailed): " + file);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private void registerPath(Path path) throws IOException {
