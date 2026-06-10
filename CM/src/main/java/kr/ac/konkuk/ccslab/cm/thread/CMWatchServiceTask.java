@@ -33,6 +33,15 @@ public class CMWatchServiceTask implements Runnable {
     // task 종료 시 잔여 항목은 폐기 — 다음 sync 시 scanLocalPushDeletes 가 lastSyncedMtimeMap 과
     // 디스크를 비교해 동일한 DELETE 를 재감지하므로 데이터 누락은 없다.
     private final Map<String, PendingDelete> pendingDeleteQueue;
+
+    // 보류 push 버퍼: relPath → 이미 분류 완료된 CMFileSyncClientEntry. startPushSync 가 세션
+    // 진행 중이라 거절(false)했을 때, buildPushCandidateMap 이 만든 후보를 잃지 않도록 여기 보존한다.
+    // detectedPathMap 은 매 사이클 비워지고 pendingDeleteQueue 의 promotion 된 항목도 큐에서 빠지므로,
+    // 이 버퍼가 없으면 거절된 후보(CREATE/MODIFY/promoted DELETE)는 영구 유실된다(워치 트리거 push
+    // 에는 디스크 full-rescan 폴백이 없음). buildPushCandidateMap 단계 3 에서 현재 디스크 기준으로
+    // 재검증해 result 에 다시 합류시킨다. 버퍼 lifecycle (성공 시 clear / 거절 시 result 로 갱신) 은
+    // run() 이 소유한다. 이미 promotion 됐던 DELETE 는 grace 재연장 없이 즉시 재시도된다.
+    private final Map<String, CMFileSyncClientEntry> deferredPushMap;
     private long cycleCounter;
 
     private static final class PendingDelete {
@@ -59,6 +68,7 @@ public class CMWatchServiceTask implements Runnable {
         directoryMap = new HashMap<>();
         detectedPathMap = new HashMap<>();
         pendingDeleteQueue = new LinkedHashMap<>();
+        deferredPushMap = new LinkedHashMap<>();
         cycleCounter = 0L;
     }
 
@@ -80,12 +90,13 @@ public class CMWatchServiceTask implements Runnable {
         while (true) {
             final WatchKey key;
             try {
-                if (detectedPathMap.isEmpty() && pendingDeleteQueue.isEmpty()) {
-                    // 새 이벤트도 없고 grace 큐도 비었으면 무기한 대기
+                if (detectedPathMap.isEmpty() && pendingDeleteQueue.isEmpty()
+                        && deferredPushMap.isEmpty()) {
+                    // 새 이벤트도 없고 grace 큐/보류 버퍼도 비었으면 무기한 대기
                     key = watchService.take();
                 } else {
-                    // 새 이벤트 누적 중이거나 grace 큐에 promotion 대기 중이면 500ms poll 유지
-                    // (큐만 비어 있지 않은 경우에도 다음 사이클에서 reconcile/promotion 을 해야 함)
+                    // 새 이벤트 누적 중이거나 grace 큐 promotion 대기 / 보류 버퍼 재시도 대기 중이면
+                    // 500ms poll 유지 (세션이 풀리면 timeout 사이클에서 자동 재시도된다)
                     key = watchService.poll(500, TimeUnit.MILLISECONDS);
                     if (key == null) {
                         cycleCounter++;
@@ -111,6 +122,10 @@ public class CMWatchServiceTask implements Runnable {
                                 System.out.println("CMWatchServiceTask: candidateMap empty; "
                                         + "pendingDeleteQueue size = " + pendingDeleteQueue.size());
                             }
+                            // 단계 3 에서 deferred 의 옛 내용은 result(여기선 비어 있음)/grace 큐로
+                            // 모두 재표현됐다. 보낼 게 없으므로 버퍼를 비운다 — 잔여 actionable
+                            // 항목은 pendingDeleteQueue 가 보유한다.
+                            deferredPushMap.clear();
                             // 큐에 grace 대기 항목이 남아 있으면 외부 관찰자에게는 "변경 대기" 로 표시.
                             // 다음 사이클에서 promotion 시도가 이어진다.
                             syncInfo.setFileChangeDetected(!pendingDeleteQueue.isEmpty());
@@ -118,8 +133,16 @@ public class CMWatchServiceTask implements Runnable {
                         }
 
                         boolean ret = syncManager.startPushSync(candidateMap);
-                        // 세션 시작 실패면 retry 필요 (true). 성공이라도 큐에 잔여 grace 대기가 있으면
-                        // 또 사이클을 돌려야 하므로 true 유지.
+                        // 성공: candidateMap 이 세션 pendingPushMap 으로 넘어갔으니 버퍼 비움.
+                        // 거절(세션 진행 중): candidateMap 전체를 버퍼에 보존해 다음 사이클에 재시도
+                        // (detectedPathMap 은 이미 비워졌으므로 이 버퍼가 유일한 유실 방지 경로).
+                        deferredPushMap.clear();
+                        if (!ret) {
+                            deferredPushMap.putAll(candidateMap);
+                        }
+                        // retry 필요 조건: 시작 실패(거절 시 deferred 에 보존됨) 또는 grace 대기 잔여.
+                        // 거절이면 !ret 가 true 라 다음 사이클 poll 이 유지되고(83줄 대기 조건이
+                        // deferredPushMap 도 확인), 세션이 풀리면 timeout 사이클에서 재시도된다.
                         syncInfo.setFileChangeDetected(!ret || !pendingDeleteQueue.isEmpty());
                         continue; // restart monitoring
                     }
@@ -401,6 +424,65 @@ public class CMWatchServiceTask implements Runnable {
 
                 result.put(relPathStr, entry);
             }
+        }
+
+        // ── 단계 3: deferredPushMap 재투입 (이전 사이클 startPushSync 거절분) ──────
+        // 세션 진행 중 거절로 보류됐던 후보를 현재 디스크 기준으로 재검증해 result 에 합류시킨다.
+        // 이번 사이클 신선한 이벤트로 이미 처리된 path (result 또는 grace 큐) 는 신선한 쪽이 우선.
+        // 버퍼 자체는 여기서 비우지 않는다 — lifecycle 은 run() 이 소유한다.
+        for (CMFileSyncClientEntry deferred : deferredPushMap.values()) {
+            String relPathStr = deferred.getPath();
+            if (result.containsKey(relPathStr) || pendingDeleteQueue.containsKey(relPathStr)) {
+                continue;   // 신선한 분류 우선
+            }
+            Path absPath = syncPath.resolve(relPathStr);
+
+            if (!Files.exists(absPath)) {
+                if (deferred.getOpHint() == CMFileSyncOp.DELETE) {
+                    // 이미 promotion 됐던 DELETE — grace 재연장 없이 즉시 재시도.
+                    result.put(relPathStr, deferred);
+                } else {
+                    // 보류된 CREATE/MODIFY 의 파일이 그 사이 삭제됨 (드문 엣지: push 전 삭제).
+                    // 새 DELETE 로 grace 큐에 enqueue. 중복 enqueue 방지.
+                    if (!pendingDeleteQueue.containsKey(relPathStr)) {
+                        pendingDeleteQueue.put(relPathStr, new PendingDelete(cycleCounter,
+                                syncInfo.getLastSyncedMtime(relPathStr)));
+                        if (CMInfo._CM_DEBUG)
+                            System.out.println("deferred CREATE/MODIFY vanished -> DELETE queued: "
+                                    + relPathStr);
+                    }
+                }
+                continue;
+            }
+
+            // 파일 존재 → 현재 디스크 기준 CREATE/MODIFY 재분류 (stale mtime/size 방지).
+            if (Files.isDirectory(absPath)) continue;   // 디렉터리화됐으면 스킵
+            long curMtime;
+            long size;
+            try {
+                curMtime = Files.getLastModifiedTime(absPath).toMillis() / 1000;
+                size = Files.size(absPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
+            // self-event 가드: 현재 mtime+size 가 base snapshot 과 동일하면 push 불필요
+            // (보류 중 다른 세션(PULL 등)이 동일 내용으로 갱신했거나 변경이 무효화된 경우).
+            // detectedPathMap 경로의 filterSelfEvents 와 동일한 의미를 deferred 에도 적용한다.
+            long lastMtime = syncInfo.getLastSyncedMtime(relPathStr);
+            long lastSize = syncInfo.getLastSyncedSize(relPathStr);
+            if (lastMtime >= 0 && lastSize >= 0 && curMtime == lastMtime && size == lastSize) {
+                if (CMInfo._CM_DEBUG)
+                    System.out.println("deferred self-event dropped: " + relPathStr);
+                continue;
+            }
+            CMFileSyncOp opHint = (lastMtime == -1L) ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY;
+            result.put(relPathStr, new CMFileSyncClientEntry()
+                    .setPath(relPathStr)
+                    .setCurMtime(curMtime)
+                    .setBaseMtime(lastMtime)
+                    .setSize(size)
+                    .setOpHint(opHint));
         }
 
         if (CMInfo._CM_DEBUG) {
