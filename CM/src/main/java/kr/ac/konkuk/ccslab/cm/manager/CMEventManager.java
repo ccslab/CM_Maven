@@ -318,6 +318,8 @@ public class CMEventManager {
 						return new CMFileSyncEventCompletePushSync(buf);
 					case CMFileSyncEvent.COMPLETE_PUSH_SYNC_ACK:
 						return new CMFileSyncEventCompletePushSyncAck(buf);
+					case CMFileSyncEvent.SYNC_NEEDED_NOTIFY:
+						return new CMFileSyncEventSyncNeededNotify(buf);
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);

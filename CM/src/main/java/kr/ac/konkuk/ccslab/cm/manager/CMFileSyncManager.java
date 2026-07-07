@@ -6,6 +6,8 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
@@ -472,7 +474,46 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("COMPLETE_PUSH_SYNC sent. numFilesCompleted = " + pushStateMap.size()
                     + ", newServerCursor = " + newServerCursor);
         }
+
+        // (6) [10-3] fan-out: 같은 사용자의 다른 온라인 디바이스에 SYNC_NEEDED_NOTIFY 통지(3.2).
+        // commit 이 권위 상태이므로 COMPLETE_PUSH_SYNC 응답/ACK 와 순서 무관(원자성 불요). 통지는 힌트이며
+        // 전파 정합성은 수신측 pull(clientCursor <-> changelogHead)이 보장하므로 유실/중복은 안전하다.
+        // 라우팅: origin(A)의 session UUID 제외 나머지 로그인 세션에 unicast(3.1). Phase 4 에서 이 fan-out
+        // 앞에 push 세션 lease release 가 추가된다.
+        notifySyncNeededToOtherDevices(initiatorName, initiatorUuid, initiatorDeviceUuid, newServerCursor);
+
         return sendResult;
+    }
+
+    // [10-3] push commit 후 같은 사용자의 다른 온라인 디바이스에 변경 통지를 fan-out 한다(3.1, 3.2).
+    // origin 은 event.initiatorUuid(=A 의 login session UUID)로 식별해 제외한다. 통지 이벤트의 공통 헤더
+    // initiator* 는 "cause = A"로 채운다(송신자는 서버지만 의미상 원인은 A). changelogHead 는 이번 commit
+    // 으로 확정된 새 head(= newServerCursor).
+    private void notifySyncNeededToOtherDevices(String initiatorName, UUID initiatorUuid,
+                                                UUID initiatorDeviceUuid, long changelogHead) {
+        CMMember loginUsers = CMInteractionInfo.getInstance().getLoginUsers();
+        List<CMUser> userLogins = loginUsers.findMemberList(initiatorName);
+        if (userLogins == null || userLogins.isEmpty()) return;
+
+        for (CMUser login : userLogins) {
+            // login session UUID 비교로 변경 디바이스(A) 자신 제외. 드물게 같은 device 의 다른 session 에
+            // 통지가 가더라도 수신측 pull 이 rc 1(no-op)로 귀결되어 정합성에 영향 없다(3.1).
+            if (login.getUuid() != null && login.getUuid().equals(initiatorUuid)) continue;
+
+            CMFileSyncEventSyncNeededNotify notify = new CMFileSyncEventSyncNeededNotify();
+            notify.setInitiatorName(initiatorName);
+            notify.setInitiatorUuid(initiatorUuid);
+            notify.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            notify.setChangelogHead(changelogHead);
+
+            if (!CMEventManager.unicastEvent(notify, initiatorName, login.getUuid())) {
+                System.err.println("CMFileSyncManager.notifySyncNeededToOtherDevices(), "
+                        + "failed to send SYNC_NEEDED_NOTIFY to session: " + login.getUuid());
+            } else if (CMInfo._CM_DEBUG) {
+                System.out.println("SYNC_NEEDED_NOTIFY sent to session " + login.getUuid()
+                        + ", changelogHead = " + changelogHead);
+            }
+        }
     }
 
     // Server-side CREATE trigger.
