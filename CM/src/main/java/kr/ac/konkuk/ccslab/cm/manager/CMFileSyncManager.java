@@ -1454,24 +1454,17 @@ public class CMFileSyncManager extends CMServiceManager {
             return true;
         }
 
-        // online / offline 분리
-        List<Path> offlineRelPathList = new ArrayList<>();
+        // [10-3] 4.2: pull CREATE 는 pull 종류(일반/전파)와 무관하게 항상 online 모드로 처리한다.
+        // 신규 파일은 수신 디바이스에 모드 설정이 없어 isOnlineMode 가 false 를 반환하지만, "신규=online"
+        // 정적 기본값을 적용해 데이터 전송 없이 online 엔트리로 생성한다(전송 비용 감소 — 상용 동기화 서비스 추세).
+        // 이 정책 하에서 기존 offline pull-create 경로(sendRequestPullCreates / REQUEST_PULL_CREATES)는
+        // CREATE 에서 더 이상 사용되지 않는다(서버 핸들러/이벤트는 잔존; 향후 활성도 기반 동적 승격은 8 후속).
         boolean sendResult = true;
         for (String relPathStr : pullCreateMap.keySet()) {
-            Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
-            if (isOnlineMode(absPath)) {
-                boolean ret = proceedOnlinePullCreateEntry(relPathStr, pullCreateMap.get(relPathStr), serverName);
-                sendResult &= ret;
-                if (!ret)
-                    System.err.println("CMFileSyncManager.proceedPullCreateMap(), online failed for: " + relPathStr);
-            } else {
-                offlineRelPathList.add(Path.of(relPathStr));
-            }
-        }
-
-        // offline entry 가 있으면 REQUEST_PULL_CREATES 이벤트로 분할 전송
-        if (!offlineRelPathList.isEmpty()) {
-            sendResult &= sendRequestPullCreates(offlineRelPathList, serverName, interInfo, syncInfo);
+            boolean ret = proceedOnlinePullCreateEntry(relPathStr, pullCreateMap.get(relPathStr), serverName);
+            sendResult &= ret;
+            if (!ret)
+                System.err.println("CMFileSyncManager.proceedPullCreateMap(), online failed for: " + relPathStr);
         }
 
         return sendResult;
