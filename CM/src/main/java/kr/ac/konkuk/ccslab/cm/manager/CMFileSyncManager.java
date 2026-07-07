@@ -546,7 +546,16 @@ public class CMFileSyncManager extends CMServiceManager {
             }
             if (CMInfo._CM_DEBUG) System.out.println("created directory: " + absPath);
 
-            long newChangeId = indexRepository.lastChangeId() + 1L;
+            long newChangeId;   // [10-3] 전역 할당 (dual-writer (i): 증분 push dir CREATE)
+            try {
+                newChangeId = syncInfo.allocateNextChangeId(initiatorName);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "failed to allocate changeId for dir: " + relPathStr);
+                e.printStackTrace();
+                result = false;
+                continue;
+            }
             indexRepository.applyCreateOrModify(relPathStr, true, null, now, 0L, newChangeId);
 
             // 10-2 doc 12015~12016: 디렉토리 분기 applyCreateOrModify 직후 record add.
@@ -750,7 +759,16 @@ public class CMFileSyncManager extends CMServiceManager {
             if (CMInfo._CM_DEBUG) System.out.println("deleted: " + absPath);
 
             // applyDelete 내부에서 Math.max(lastChangeId, ...)로 in-memory cursor 자동 전진
-            long newChangeId = indexRepository.lastChangeId() + 1L;
+            long newChangeId;   // [10-3] 전역 할당 (dual-writer (i): 증분 push DELETE)
+            try {
+                newChangeId = syncInfo.allocateNextChangeId(initiatorName);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                        + "failed to allocate changeId for: " + relPathStr);
+                e.printStackTrace();
+                result = false;
+                continue;
+            }
             indexRepository.applyDelete(relPathStr, isDirectory, newChangeId, now);
 
             // 10-2 doc 12013: applyDelete 직후 record add. 영속화는 completePushSync에서 일괄.
@@ -2087,7 +2105,15 @@ public class CMFileSyncManager extends CMServiceManager {
         UUID initiatorDeviceUuid = matchedStateKey.initiatorDeviceUuid();
         CMFileSyncIndexRepository indexRepository =
                 syncInfo.getIndexRegistry().getOrLoad(fileSender, initiatorDeviceUuid);
-        long newChangeId = indexRepository.lastChangeId() + 1L;
+        long newChangeId;   // [10-3] 전역 할당 (dual-writer (i): 증분 push file CREATE)
+        try {
+            newChangeId = syncInfo.allocateNextChangeId(fileSender);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to allocate changeId for: " + matchedRelPathStr);
+            e.printStackTrace();
+            return;
+        }
         long mtimeSec;
         long sizeBytes;
         String md5Hex;

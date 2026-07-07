@@ -142,22 +142,24 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // 아래 getOrLoad 가 디스크에서 다시 warm-up.
         syncInfo.getIndexRegistry().invalidate(initiatorName, initiatorDeviceUuid);
 
-        // get the server-side cursor (last applied change id) for this client device
-        long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid).lastChangeId();
+        // [10-3] 2단계 cursor: pull 판정 권위값은 per-device repo cursor가 아니라 per-user 전역 changelogHead.
+        // A가 push하면 changelogHead가 전진하므로 B의 clientCursor(<head)가 rc 2로 분류되어 peer 변경을 받는다.
+        // (기존 per-device lastChangeId 판정은 A의 push가 B repo에 반영되지 않아 B가 rc 1(no-op)에 갇히는 버그.)
+        long changelogHead = syncInfo.getChangelogHead(initiatorName);
 
-        // decide the return code by comparing the client cursor with the server cursor
-        if(lastChangeId == 0) {
-            // no sync history on the server -> client should perform full push sync
+        // decide the return code by comparing the client cursor with the global changelog head (2.5)
+        if(changelogHead == 0) {
+            // 사용자 전역 무이력 -> 최초 디바이스. 전체 push(startFullPushSync)로 서버 seed.
             returnCode = 0;
-        } else if(lastChangeId == clientCursor) {
-            // client is already up to date
+        } else if(clientCursor == changelogHead) {
+            // 최신 -> pull 없음 (로컬 변경은 이후 push).
             returnCode = 1;
-        } else if(lastChangeId > clientCursor) {
-            // client is behind -> pull sync needed
+        } else if(clientCursor < changelogHead) {
+            // 뒤처짐 -> pull 필요. 갓 합류한 추가 디바이스(clientCursor == -1 < head)도 자연히 여기로 분류.
             returnCode = 2;
             isPullSync = true;
         } else {
-            // server cursor < client cursor -> error, full push sync needed
+            // clientCursor > changelogHead -> 오류. 전체 push로 복구.
             returnCode = -1;
         }
 
@@ -169,7 +171,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         ackEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
         // 나머지 필드 설정
         ackEvent.setReturnCode(returnCode);
-        ackEvent.setServerCursor(lastChangeId);
+        ackEvent.setServerCursor(changelogHead);
 
         boolean sendResult = CMEventManager.unicastEvent(ackEvent, initiatorName, initiatorUuid);
         if(!sendResult) {
@@ -179,7 +181,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         // if pull sync is needed, start sending the server changelog entry list to the client
         if(isPullSync) {
-            sendResult = startServerEntryList(clientCursor, lastChangeId, initiatorName, initiatorUuid,
+            sendResult = startServerEntryList(clientCursor, changelogHead, initiatorName, initiatorUuid,
                     initiatorDeviceUuid);
             if(!sendResult) {
                 System.err.println("CMFileSyncEventHandler.processSTART_PULL_SYNC(), startServerEntryList error!");
@@ -1714,7 +1716,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
         CMFileSyncIndexRepository indexRepository =
                 syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
-        long newChangeId = indexRepository.lastChangeId() + 1L;
+        long newChangeId;   // [10-3] 전역 할당 (dual-writer (i): 증분 push MODIFY)
+        try {
+            newChangeId = syncInfo.allocateNextChangeId(initiatorName);
+        } catch (IOException e) {
+            System.err.println("processEND_FILE_BLOCK_CHECKSUM_ACK_AtServer_PushBranch(), "
+                    + "failed to allocate changeId for: " + relPath);
+            e.printStackTrace();
+            return false;
+        }
         indexRepository.applyCreateOrModify(relPath, false, md5Hex, mtimeSec, sizeBytes, newChangeId);
 
         // (viii) changelog record add (CMFileSyncChangeLogEntry, MODIFY) — proceedPushCreate/Delete 와 동일 빌더 패턴

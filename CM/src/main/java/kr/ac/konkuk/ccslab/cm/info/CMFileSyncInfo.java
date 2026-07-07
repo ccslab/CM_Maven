@@ -79,6 +79,12 @@ public class CMFileSyncInfo {
     // [NEW] 4 server: in-memory index registry
     private CMFileSyncIndexRegistry indexRegistry;
 
+    // [NEW 10-3] 4 server: per-user 전역 changelog head (2단계 cursor 모델의 전역 레벨).
+    // 값 = 사용자 공유 changelog의 max changeId. (a) changeId allocator, (b) pull 비교 기준값 겸함.
+    // key = initiatorName. 영속화 경로: .cm-settings/file-sync/server/<name>/changelogHead
+    // (per-device cursor와 같은 계층, deviceUuid 없음). warm-up = changelog max(2.2).
+    private final Map<String, Long> changelogHeadMap = new ConcurrentHashMap<>();
+
     // [NEW] 4 client: 파일 동기화 커서 (서버 ChangeLog 상의 마지막 처리 위치, -1 = 미동기화)
     private long m_lCursor;
     // [NEW] 4 client: 클라이언트 베이스 스냅샷 path -> lastSyncedMtime (sec)
@@ -752,7 +758,7 @@ public class CMFileSyncInfo {
      */
     public void applyCreate(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
         CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
-        long newChangeId = repo.lastChangeId() + 1;
+        long newChangeId = allocateNextChangeId(initiatorName);   // [10-3] 전역 할당 (dual-writer (ii): full-push)
 
         CMFileSyncManager syncManager = CMInfo.getInstance()
                 .getServiceManager(CMFileSyncManager.class);
@@ -788,7 +794,7 @@ public class CMFileSyncInfo {
                                 Path path, boolean isDirectory, String contentHash,
                                 long mtimeEpochSec, long sizeBytes) throws IOException {
         CMFileSyncIndexRepository repo = indexRegistry.getOrLoad(initiatorName, initiatorDeviceUuid);
-        long newChangeId = repo.lastChangeId() + 1;
+        long newChangeId = allocateNextChangeId(initiatorName);   // [10-3] 전역 할당 (dual-writer (ii): full-push)
         String pathStr = path.toString().replace('\\', '/');
 
         repo.applyCreateOrModify(pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
@@ -802,7 +808,7 @@ public class CMFileSyncInfo {
      */
     public void applyModify(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
         CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
-        long newChangeId = repo.lastChangeId() + 1;
+        long newChangeId = allocateNextChangeId(initiatorName);   // [10-3] 전역 할당 (dual-writer (ii): full-push)
 
         CMFileSyncManager syncManager = CMInfo.getInstance()
                 .getServiceManager(CMFileSyncManager.class);
@@ -838,7 +844,7 @@ public class CMFileSyncInfo {
                                 Path path, boolean isDirectory, String contentHash,
                                 long mtimeEpochSec, long sizeBytes) throws IOException {
         CMFileSyncIndexRepository repo = indexRegistry.getOrLoad(initiatorName, initiatorDeviceUuid);
-        long newChangeId = repo.lastChangeId() + 1;
+        long newChangeId = allocateNextChangeId(initiatorName);   // [10-3] 전역 할당 (dual-writer (ii): full-push)
         String pathStr = path.toString().replace('\\', '/');
 
         repo.applyCreateOrModify(pathStr, isDirectory, contentHash, mtimeEpochSec, sizeBytes, newChangeId);
@@ -852,7 +858,7 @@ public class CMFileSyncInfo {
      */
     public void applyDelete(String initiatorName, UUID initiatorDeviceUuid, Path path) throws IOException {
         CMFileSyncIndexRepository repo = getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
-        long newChangeId = repo.lastChangeId() + 1;
+        long newChangeId = allocateNextChangeId(initiatorName);   // [10-3] 전역 할당 (dual-writer (ii): full-push)
 
         CMFileSyncManager syncManager = CMInfo.getInstance()
                 .getServiceManager(CMFileSyncManager.class);
@@ -892,6 +898,83 @@ public class CMFileSyncInfo {
     // [NEW] 4 server: changelog 디렉토리 경로 (initiatorName 기준, 모든 디바이스 공용)
     private Path getServerChangelogDir(String initiatorName) {
         return Path.of(".cm-settings", "file-sync", "server", initiatorName);
+    }
+
+    // [NEW 10-3] 4 server: per-user 전역 changelog head 영속화 파일 (device cursor와 같은 계층, deviceUuid 없음).
+    private Path getServerChangelogHeadFile(String initiatorName) {
+        return getServerChangelogDir(initiatorName).resolve("changelogHead");
+    }
+
+    /**
+     * [NEW 10-3] per-user 전역 changelog head를 반환합니다(2.2).
+     * 값의 의미 = 사용자 공유 changelog의 max changeId. pull 비교의 기준값이자 changeId allocator 기준.
+     * 첫 접근 시 메모리 캐시가 없으면 디스크(changelogHead 파일)에서 warm-up하며, 파일이 없으면
+     * changelog 전체의 max changeId를 하한으로 삼는다(per-device cursor의 max가 아님).
+     * 이력이 전혀 없으면 0.
+     */
+    public synchronized long getChangelogHead(String initiatorName) {
+        Long cached = changelogHeadMap.get(initiatorName);
+        if (cached != null) return cached;
+        long head = warmUpChangelogHead(initiatorName);
+        changelogHeadMap.put(initiatorName, head);
+        return head;
+    }
+
+    /**
+     * [NEW 10-3] 전역 head를 1 증가시켜 반환하고 즉시 영속화합니다(2.2, 2.3).
+     * per-user push 세션 락(Phase 4) 안에서만 호출되어야 한다.
+     * 반환값이 곧 새 changeId. 전역 단조 시퀀스이므로 디바이스와 무관하게 충돌 없이 할당된다.
+     */
+    public synchronized long allocateNextChangeId(String initiatorName) throws IOException {
+        long next = getChangelogHead(initiatorName) + 1L;
+        changelogHeadMap.put(initiatorName, next);
+        persistChangelogHead(initiatorName, next);
+        return next;
+    }
+
+    // [NEW 10-3] changelogHead warm-up: 파일이 있으면 그 값, 없으면 changelog max를 하한으로.
+    private long warmUpChangelogHead(String initiatorName) {
+        Path headFile = getServerChangelogHeadFile(initiatorName);
+        if (Files.isRegularFile(headFile)) {
+            try {
+                String s = Files.readString(headFile).trim();
+                if (!s.isEmpty()) return Long.parseLong(s);
+            } catch (IOException | NumberFormatException e) {
+                System.err.println("CMFileSyncInfo.warmUpChangelogHead(), failed to read head file: "
+                        + e.getMessage());
+            }
+        }
+        // 파일 없음/손상 → changelog 전체 max를 하한으로 초기화. 전역 할당으로 새로 발급되는 id가
+        // 기존 changelog max보다 작으면 충돌하므로 반드시 max를 하한으로 삼는다(2.2).
+        return computeChangelogMax(initiatorName);
+    }
+
+    // [NEW 10-3] 사용자 changelog 전체에서 max changeId를 스캔(이력 없으면 0).
+    private long computeChangelogMax(String initiatorName) {
+        long max = 0L;
+        Path logDir = getServerChangelogDir(initiatorName);
+        if (!Files.isDirectory(logDir)) return 0L;
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(logDir, "changelog-*.jsonl")) {
+            for (Path logFile : stream) {
+                for (String line : Files.readAllLines(logFile)) {
+                    if (line.isBlank()) continue;
+                    long changeId = CMFileSyncChangeLogEntry.fromJsonString(line).getChangeId();
+                    if (changeId > max) max = changeId;
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncInfo.computeChangelogMax(), failed to scan changelog: "
+                    + e.getMessage());
+        }
+        return max;
+    }
+
+    // [NEW 10-3] 전역 head를 changelogHead 파일에 write-through.
+    private void persistChangelogHead(String initiatorName, long head) throws IOException {
+        Path headFile = getServerChangelogHeadFile(initiatorName);
+        Files.createDirectories(headFile.getParent());
+        Files.writeString(headFile, Long.toString(head),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     /**
