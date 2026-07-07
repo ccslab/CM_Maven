@@ -108,6 +108,7 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             case CMFileSyncEvent.COMPLETE_PUSH_MODIFY -> processResult = processCOMPLETE_PUSH_MODIFY(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_SYNC -> processResult = processCOMPLETE_PUSH_SYNC(fse);
             case CMFileSyncEvent.COMPLETE_PUSH_SYNC_ACK -> processResult = processCOMPLETE_PUSH_SYNC_ACK(fse);
+            case CMFileSyncEvent.SYNC_NEEDED_NOTIFY -> processResult = processSYNC_NEEDED_NOTIFY(fse);
             default -> {
                 System.err.println("CMFileSyncEventHandler::processEvent(), invalid event id(" + eventId + ")!");
                 return false;
@@ -115,6 +116,47 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         return processResult;
+    }
+
+    // [10-3] called at the client: 서버가 보낸 변경 통지(wake-up)를 받아 전파 pull 을 시작한다(3.4).
+    // 통지는 힌트이며, 실제 정합성은 startPullSync 의 clientCursor <-> changelogHead 비교가 보장한다.
+    private boolean processSYNC_NEEDED_NOTIFY(CMFileSyncEvent fse) {
+        CMFileSyncEventSyncNeededNotify notify = (CMFileSyncEventSyncNeededNotify) fse;
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncEventHandler.processSYNC_NEEDED_NOTIFY() called..");
+            System.out.println("notify = " + notify);
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // 동기화 진행 중이면 통지를 무시한다. 진행 중 세션이 끝나면 그 세션의 완료 경로(COMPLETE_PULL_SYNC 등)
+        // 에서 로컬 변경이 재-push 로 fold 되거나 다음 통지/주기 pull 로 회복되므로 유실은 안전하다.
+        if (syncInfo.getSyncProgress() != CMFileSyncProgress.NONE) {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("sync in progress (" + syncInfo.getSyncProgress()
+                        + "), ignoring SYNC_NEEDED_NOTIFY.");
+            }
+            return true;
+        }
+
+        // 조기 종료(선택): 통지 head 가 현재 cursor 이하이면 이미 최신 → pull 생략. 생략하지 않아도
+        // startPullSync 가 returnCode 1(no-op)로 귀결되어 안전하다(3.4).
+        if (notify.getChangelogHead() <= syncInfo.getCursor()) {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("already up to date (head=" + notify.getChangelogHead()
+                        + " <= cursor=" + syncInfo.getCursor() + "), skip pull.");
+            }
+            return true;
+        }
+
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        boolean ret = syncManager.startPullSync();
+        if (!ret) {
+            System.err.println("CMFileSyncEventHandler.processSYNC_NEEDED_NOTIFY(), startPullSync failed.");
+            return false;
+        }
+        return true;
     }
 
     // called at the server
