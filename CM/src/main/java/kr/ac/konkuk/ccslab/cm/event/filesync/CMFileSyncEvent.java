@@ -382,6 +382,14 @@ public abstract class CMFileSyncEvent extends CMEvent {
     // Fields: int numFilesCompleted, int returnCode
     public static final int COMPLETE_PUSH_SYNC_ACK = 52;
 
+    /**
+     * event ID of the CMFileSyncEventSyncNeededNotify class.
+     */
+    // [NEW 10-3] 서버 -> 온라인 디바이스. push commit 으로 changelog 에 변경이 생겼으니 pull 하라는 wake-up.
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid (cause = push 를 수행한 클라 A)
+    // Fields: long changelogHead (통지 시점 전역 head; 수신측 빠른 비교용, 권위는 아님)
+    public static final int SYNC_NEEDED_NOTIFY = 53;
+
     // ----------------------------------------------------------------
     // [NEW] FileSync common header fields (event initiator identity)
     // Used by both client-initiated and server-initiated events
