@@ -5436,7 +5436,16 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         else
             numFileEntries = fileEntryList.size();
 
-        if (numFileEntries == numFilesCompleted) {
+        // [10-3] full-push 세션 개시 지점 = per-user push lease 획득(§2.6 (ii)). full-push 는
+        // START_PUSH_ENTRY_LIST 를 거치지 않으므로 여기서 증분 push 와 같은 lease 로 직렬화해야, full-push 와
+        // 다른 device 의 증분 push 가 공유 changelog 에 비직렬 기록하는 일을 막는다.
+        boolean leaseAcquired = syncInfo.tryAcquirePushLease(initiatorName, stateKey);
+        if (!leaseAcquired) {
+            returnCode = 2;     // busy: 다른 device 가 lease 보유 중
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("full-push lease busy for stateKey = " + stateKey + " -> returnCode 2 (busy)");
+            }
+        } else if (numFileEntries == numFilesCompleted) {
             returnCode = 1;
         } else {
             returnCode = 0;
@@ -5456,10 +5465,20 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         boolean result = CMEventManager.unicastEvent(fseAck, initiatorName, initiatorUuid);
         if (!result) {
             System.err.println("send END_FILE_LIST_ACK error!");
+            // [10-3] 이 호출에서 lease 를 획득했다면 세션이 시작되지 못했으므로 즉시 해제(누수 방지).
+            if (leaseAcquired) {
+                syncInfo.releasePushLease(initiatorName, stateKey);
+            }
             return false;
         }
 
-        // start CMFileSyncGeneratorTask
+        // [10-3] busy(2)면 Generator 를 시작하지 않는다. 클라는 SYNC_NEEDED_NOTIFY 또는 fallback timer 로
+        // 따라잡은 뒤 재시도한다. lease 는 이 세션에서 획득하지 못했으므로 해제할 것도 없다.
+        if (returnCode == 2) {
+            return true;
+        }
+
+        // start CMFileSyncGeneratorTask (lease 획득됨 — 세션 종료 시 completeFileSync 가 release)
         CMFileSyncGenerator fileSyncGenerator =
                 new CMFileSyncGenerator(initiatorName, initiatorUuid, initiatorDeviceUuid);
         ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
@@ -5477,6 +5496,17 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.processEND_FILE_LIST_ACK() called..");
             System.out.println("fse = " + fse_efla);
+        }
+
+        // [10-3] busy(2): full-push 개시가 다른 device 의 push lease 때문에 거절됨(§2.6 (ii)). 증분 push busy 와
+        // 동일하게 syncProgress 를 리셋하고, SYNC_NEEDED_NOTIFY(주 트리거) 또는 fallback timer 로 재시도한다.
+        if (fse_efla.getReturnCode() == 2) {
+            CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("full-push rejected as busy (returnCode 2); scheduling fallback pull retry.");
+            }
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            scheduleBusyRetryPull();
         }
 
         return true;

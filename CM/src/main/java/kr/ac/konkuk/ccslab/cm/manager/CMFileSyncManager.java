@@ -2545,12 +2545,25 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("initiatorName = " + initiatorName);
             System.out.println("initiatorUuid = " + initiatorUuid);
         }
-        // send the file-sync completion event
-        boolean result = true;
-        result = sendCompleteFileSync(loginKey);
-        if (!result) return false;
-        deleteFileSyncInfo(loginKey);
-        return true;
+        // [10-3] full-push 세션 종료 = per-user push lease 해제 지점(§2.6 (ii)). deviceUuid 는 generator 에서
+        // 얻어 stateKey 를 구성하고, 정상/실패 무관하게 finally 에서 해제한다(deleteFileSyncInfo 가 generator 를
+        // 제거하므로 반드시 그 전에 캡처).
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator gen = syncInfo.getSyncGeneratorMap().get(loginKey);
+        CMFileSyncStateKey leaseKey = (gen != null)
+                ? new CMFileSyncStateKey(initiatorName, gen.getInitiatorDeviceUuid())
+                : null;
+        try {
+            // send the file-sync completion event
+            boolean result = sendCompleteFileSync(loginKey);
+            if (!result) return false;
+            deleteFileSyncInfo(loginKey);
+            return true;
+        } finally {
+            if (leaseKey != null) {
+                syncInfo.releasePushLease(initiatorName, leaseKey);
+            }
+        }
     }
 
     // called by the server
