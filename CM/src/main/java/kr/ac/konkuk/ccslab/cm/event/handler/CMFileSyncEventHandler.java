@@ -19,6 +19,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileType;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncOp;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
@@ -129,6 +130,18 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // [10-3] 이 클라가 동기화를 시작하지 않았으면(currentMode == OFF) notify 를 무시한다.
+        // fan-out 은 login session UUID 기준이라 같은 사용자로 로그인만 하고 동기화를 켜지 않은 세션에도
+        // 도달할 수 있는데, 그런 세션은 pull 을 시작해서는 안 된다. currentMode 는 "동기화를 켰는가"(OFF/
+        // MANUAL/AUTO) 축이라 "세션이 진행 중인가"(syncProgress) 축과 직교한다. 여기서 즉시 반환하므로
+        // 아래 busy 타이머 취소도 건너뛴다(동기화를 안 켠 클라는 busy 재시도 타이머 자체가 없다).
+        if (syncInfo.getCurrentMode() == CMFileSyncMode.OFF) {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("file-sync not started (currentMode OFF), ignoring SYNC_NEEDED_NOTIFY.");
+            }
+            return true;
+        }
 
         // [10-3] notify 가 주 트리거이므로, 대기 중인 busy fallback 타이머는 여기서 취소한다(§2.6).
         // notify 가 먼저 온 정상 경로 → 이 pull 이 로컬 변경을 재-push 로 fold 하므로 fallback 불필요.
