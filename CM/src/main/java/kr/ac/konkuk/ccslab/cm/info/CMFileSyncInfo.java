@@ -9,6 +9,7 @@ import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncJacksonSnapshotStore;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPullModifyState;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPushLease;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncPushModifyState;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
@@ -84,6 +85,10 @@ public class CMFileSyncInfo {
     // key = initiatorName. 영속화 경로: .cm-settings/file-sync/server/<name>/changelogHead
     // (per-device cursor와 같은 계층, deviceUuid 없음). warm-up = changelog max(2.2).
     private final Map<String, Long> changelogHeadMap = new ConcurrentHashMap<>();
+
+    // [NEW 10-3] 4 server: per-user push 세션 소유권(lease) 보관 맵(§2.6.1). key = initiatorName.
+    // 한 사용자의 push 세션을 하나로 직렬화 — 다른 디바이스 push 는 tryAcquire 실패로 busy 거절된다.
+    private final Map<String, CMFileSyncPushLease> userPushLeases = new ConcurrentHashMap<>();
 
     // [NEW] 4 client: 파일 동기화 커서 (서버 ChangeLog 상의 마지막 처리 위치, -1 = 미동기화)
     private long m_lCursor;
@@ -975,6 +980,44 @@ public class CMFileSyncInfo {
         Files.createDirectories(headFile.getParent());
         Files.writeString(headFile, Long.toString(head),
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    /**
+     * [NEW 10-3] per-user push 세션 소유권(lease) 획득 시도(§2.6.1).
+     * 사용자별 원자 구간(CHM.compute)에서 판정한다:
+     * <ul>
+     *   <li>slot 비어있음 OR (now - acquiredAt) > timeout(죽은 owner lazy 회수) → 획득 성공.</li>
+     *   <li>lease.owner == stateKey → 같은 세션 재획득(멱등). 성공. keep-alive 없음이라 timestamp 는 갱신하지 않는다.</li>
+     *   <li>그 외(만료 전 다른 owner) → 실패(호출부가 busy 로 거절).</li>
+     * </ul>
+     * timeout 은 FILE_SYNC_PUSH_LEASE_TIMEOUT(초). 회수는 별도 sweeper 없이 이 tryAcquire 시점 lazy 판정으로만.
+     * @return 획득(또는 멱등 재획득) 성공 여부
+     */
+    public boolean tryAcquirePushLease(String initiatorName, CMFileSyncStateKey stateKey) {
+        long timeoutMillis = CMConfigurationInfo.getInstance().getFileSyncPushLeaseTimeout() * 1000L;
+        long now = System.currentTimeMillis();
+        CMFileSyncPushLease result = userPushLeases.compute(initiatorName, (name, existing) -> {
+            if (existing == null || (now - existing.acquiredAtMillis()) > timeoutMillis) {
+                // 비었거나 만료 → 새 owner 로 획득(만료 시 죽은 owner lease 를 회수하며 교체)
+                return new CMFileSyncPushLease(stateKey, now);
+            }
+            // 만료 전: 같은 owner 면 멱등 유지, 다른 owner 면 그대로 유지(획득 실패)
+            return existing;
+        });
+        return result.owner().equals(stateKey);
+    }
+
+    /**
+     * [NEW 10-3] push 세션 소유권 해제(§2.6.1). 현재 lease.owner == stateKey 일 때만 제거한다.
+     * 다른 owner 의 lease(만료 후 다른 세션이 이미 획득한 경우 등)는 건드리지 않는다.
+     */
+    public void releasePushLease(String initiatorName, CMFileSyncStateKey stateKey) {
+        userPushLeases.compute(initiatorName, (name, existing) -> {
+            if (existing != null && existing.owner().equals(stateKey)) {
+                return null;    // 소유자 일치 → 제거
+            }
+            return existing;    // 없음/다른 소유자 → 유지
+        });
     }
 
     /**

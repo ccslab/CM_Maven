@@ -81,7 +81,12 @@ public class CMConfigurator {
 		
 		// keep-alive time
 		confInfo.setKeepAliveTime(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "KEEP_ALIVE_TIME")));
-		
+
+		// [10-3] per-user push 세션 lease timeout (seconds). 서버·클라 공통(§2.6). 키가 없으면 기본 300 유지.
+		String strPushLeaseTimeout = CMConfigurator.getConfiguration(strConfFilePath, "FILE_SYNC_PUSH_LEASE_TIMEOUT");
+		if(strPushLeaseTimeout != null && !strPushLeaseTimeout.isBlank())
+			confInfo.setFileSyncPushLeaseTimeout(Long.parseLong(strPushLeaseTimeout.trim()));
+
 		if( confInfo.getSystemType().equals("SERVER") )
 		{
 			//confInfo.setMyAddress(CMConfigurator.getConfiguration(fName, "MY_ADDR"));
