@@ -4251,6 +4251,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // loginKey는 ACK 송신 실패 cleanup에서도 참조 — try 블록 밖에서 선언
         CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
 
+        // [10-3] 중복 세션(0)이 아니면 per-user push 세션 lease 획득 시도(§2.6). 다른 device 가 보유 중이면
+        // busy(2)로 거절 — 클라는 SYNC_NEEDED_NOTIFY 또는 fallback timer 로 따라잡은 뒤 재시도한다.
+        boolean leaseAcquired = false;
+        if (returnCode == 1) {
+            leaseAcquired = syncInfo.tryAcquirePushLease(initiatorName, stateKey);
+            if (!leaseAcquired) {
+                returnCode = 2;
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("push lease busy for stateKey = " + stateKey + " -> returnCode 2 (busy)");
+                }
+            }
+        }
+
         if (returnCode == 1) {
             Map<String, CMFileSyncClientEntry> pushStateMap = new Hashtable<>();
             pushStateTable.put(stateKey, pushStateMap);
@@ -4280,6 +4293,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 pushStateTable.remove(stateKey);
                 syncInfo.getPushOpRecordTable().remove(stateKey);
                 syncInfo.getPushLoginKeyToStateKeyMap().remove(loginKey);
+            }
+            // [10-3] 이 호출에서 lease 를 획득했다면 세션이 시작되지 못했으므로 즉시 해제(누수 방지).
+            if (leaseAcquired) {
+                syncInfo.releasePushLease(initiatorName, stateKey);
             }
             return false;
         }
@@ -5043,6 +5060,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                         + loginKey);
             }
         }
+
+        // (6) [10-3] push 세션 lease backstop release. 정상 흐름에서는 completePushSync 의 finally 가 이미
+        // 해제했으므로 여기선 소유자 불일치 no-op 이지만, 누수 방지용 최종 안전망(§2.6).
+        syncInfo.releasePushLease(initiatorName, stateKey);
 
         return returnCode == 1;
     }

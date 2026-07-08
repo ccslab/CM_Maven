@@ -12,7 +12,9 @@ import java.util.Objects;
  */
 public class CMFileSyncEventStartPushEntryListAck extends CMFileSyncEvent {
     private int numTotalFiles;  // number of total files
-    private int returnCode;     // return code
+    // return code: 1 = OK(세션 등록), 0 = 같은 device 중복 세션 거절,
+    //              [10-3] 2 = busy(다른 device 가 per-user push lease 보유 중, §2.6 busy-bounce)
+    private int returnCode;
 
     public CMFileSyncEventStartPushEntryListAck() {
         m_nID = CMFileSyncEvent.START_PUSH_ENTRY_LIST_ACK;

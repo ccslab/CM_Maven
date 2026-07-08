@@ -412,75 +412,85 @@ public class CMFileSyncManager extends CMServiceManager {
             return false;
         }
 
-        // (2) pushStateMap lookup — 제거 없이 lookup만 (ACK 핸들러가 정리)
+        // (2) syncInfo + initiator 식별 (finally 의 lease release 에서 참조하므로 try 밖에서 확보)
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
-        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
-        Map<String, CMFileSyncClientEntry> pushStateMap = pushStateTable.get(stateKey);
-        if (pushStateMap == null) {
-            System.err.println("CMFileSyncManager.completePushSync(), "
-                    + "pushStateMap not found for stateKey: " + stateKey);
-            return false;
-        }
-
         String initiatorName = stateKey.initiatorName();
         UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
 
-        // (3) indexRepository 확보 (in-memory cursor truth)
-        CMFileSyncIndexRepository indexRepository = syncInfo.getIndexRegistry()
-                .getOrLoad(initiatorName, initiatorDeviceUuid);
+        long newServerCursor = -1;
+        boolean committed = false;      // commit 성공 여부 (fan-out 게이트)
+        boolean sendResult = false;     // COMPLETE_PUSH_SYNC 송신 결과 (반환값)
 
-        // (4) 트랜잭션 commit: (i) batch changelog append, (ii) writeCursor, (iii) flushSnapshot
-        long newServerCursor;
+        // [10-3] push 세션 lease 는 이 시점(commit 핸들러 도달)까지 보유 중. 정상/예외/early-return 무관하게
+        // finally 에서 반드시 해제해 commit 실패 stall 을 timeout 없이 즉시 회수한다(§2.6). fan-out 은 release 이후.
         try {
-            // (i) 누적된 op record 일괄 changelog append
+            // (2') pushStateMap lookup — 제거 없이 lookup만 (ACK 핸들러가 정리)
+            Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+            Map<String, CMFileSyncClientEntry> pushStateMap = pushStateTable.get(stateKey);
+            if (pushStateMap == null) {
+                System.err.println("CMFileSyncManager.completePushSync(), "
+                        + "pushStateMap not found for stateKey: " + stateKey);
+                return false;
+            }
+
+            // (3) indexRepository 확보 (in-memory cursor truth)
+            CMFileSyncIndexRepository indexRepository = syncInfo.getIndexRegistry()
+                    .getOrLoad(initiatorName, initiatorDeviceUuid);
+
+            // (4) 트랜잭션 commit: (i) batch changelog append, (ii) writeCursor, (iii) flushSnapshot
             List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
             if (opRecords == null) {
                 System.err.println("CMFileSyncManager.completePushSync(), "
                         + "pushOpRecordTable missing for stateKey: " + stateKey);
                 return false;
             }
-            syncInfo.appendChangelogBatch(initiatorName, opRecords);
+            try {
+                // (i) 누적된 op record 일괄 changelog append
+                syncInfo.appendChangelogBatch(initiatorName, opRecords);
+                // (ii) cursor 파일 갱신 — 인메모리 lastChangeId는 op별 apply로 이미 누적된 최종값
+                newServerCursor = indexRepository.lastChangeId();
+                syncInfo.writeCursor(initiatorName, initiatorDeviceUuid, newServerCursor);
+                // (iii) snapshot 영속화
+                indexRepository.flushSnapshot();
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.completePushSync(), commit failed.");
+                e.printStackTrace();
+                // 영속화 실패 시 클라에 세션 완료 통보하지 않음. 인메모리 갱신은 그대로 두고 후속 재시도 정책 대상.
+                return false;
+            }
+            committed = true;   // COMPLETE_PUSH_SYNC 송신이 실패해도 commit 은 권위 → fan-out 수행
 
-            // (ii) cursor 파일 갱신 — 인메모리 lastChangeId는 op별 apply로 이미 누적된 최종값
-            newServerCursor = indexRepository.lastChangeId();
-            syncInfo.writeCursor(initiatorName, initiatorDeviceUuid, newServerCursor);
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("commit succeeded. newServerCursor = " + newServerCursor);
+            }
 
-            // (iii) snapshot 영속화
-            indexRepository.flushSnapshot();
-        } catch (IOException e) {
-            System.err.println("CMFileSyncManager.completePushSync(), commit failed.");
-            e.printStackTrace();
-            // 영속화 실패 시 클라에 세션 완료 통보하지 않음. 인메모리 갱신은 그대로 두고 후속 재시도 정책 대상.
-            return false;
+            // (5) COMPLETE_PUSH_SYNC 송신
+            CMFileSyncEventCompletePushSync fse_cps = new CMFileSyncEventCompletePushSync();
+            fse_cps.setInitiatorName(initiatorName);
+            fse_cps.setInitiatorUuid(initiatorUuid);
+            fse_cps.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            fse_cps.setNumFilesCompleted(pushStateMap.size());
+            fse_cps.setNewServerCursor(newServerCursor);
+
+            sendResult = CMEventManager.unicastEvent(fse_cps, initiatorName, initiatorUuid);
+            if (!sendResult) {
+                System.err.println("CMFileSyncManager.completePushSync(), failed to send COMPLETE_PUSH_SYNC.");
+                // commit은 이미 성공. 다음 START_PULL_SYNC에서 cursor 비교로 클라가 자동 따라옴.
+            } else if (CMInfo._CM_DEBUG) {
+                System.out.println("COMPLETE_PUSH_SYNC sent. numFilesCompleted = " + pushStateMap.size()
+                        + ", newServerCursor = " + newServerCursor);
+            }
+        } finally {
+            // [10-3] 정상/예외/early-return 무관하게 lease 해제(§2.6). 소유자가 아니면 no-op.
+            syncInfo.releasePushLease(initiatorName, stateKey);
         }
 
-        if (CMInfo._CM_DEBUG) {
-            System.out.println("commit succeeded. newServerCursor = " + newServerCursor);
+        // (6) [10-3] fan-out: release 이후 · commit 성공 시에만(§3.2). 같은 사용자의 다른 온라인 디바이스에
+        // SYNC_NEEDED_NOTIFY 통지(3.1). commit 이 권위 상태이므로 COMPLETE_PUSH_SYNC 응답/ACK 와 순서 무관.
+        // 통지는 힌트이며 전파 정합성은 수신측 pull(clientCursor <-> changelogHead)이 보장(유실/중복 안전).
+        if (committed) {
+            notifySyncNeededToOtherDevices(initiatorName, initiatorUuid, initiatorDeviceUuid, newServerCursor);
         }
-
-        // (5) COMPLETE_PUSH_SYNC 송신
-        CMFileSyncEventCompletePushSync fse_cps = new CMFileSyncEventCompletePushSync();
-        fse_cps.setInitiatorName(initiatorName);
-        fse_cps.setInitiatorUuid(initiatorUuid);
-        fse_cps.setInitiatorDeviceUuid(initiatorDeviceUuid);
-        fse_cps.setNumFilesCompleted(pushStateMap.size());
-        fse_cps.setNewServerCursor(newServerCursor);
-
-        boolean sendResult = CMEventManager.unicastEvent(fse_cps, initiatorName, initiatorUuid);
-        if (!sendResult) {
-            System.err.println("CMFileSyncManager.completePushSync(), failed to send COMPLETE_PUSH_SYNC.");
-            // commit은 이미 성공. 다음 START_PULL_SYNC에서 cursor 비교로 클라가 자동 따라옴.
-        } else if (CMInfo._CM_DEBUG) {
-            System.out.println("COMPLETE_PUSH_SYNC sent. numFilesCompleted = " + pushStateMap.size()
-                    + ", newServerCursor = " + newServerCursor);
-        }
-
-        // (6) [10-3] fan-out: 같은 사용자의 다른 온라인 디바이스에 SYNC_NEEDED_NOTIFY 통지(3.2).
-        // commit 이 권위 상태이므로 COMPLETE_PUSH_SYNC 응답/ACK 와 순서 무관(원자성 불요). 통지는 힌트이며
-        // 전파 정합성은 수신측 pull(clientCursor <-> changelogHead)이 보장하므로 유실/중복은 안전하다.
-        // 라우팅: origin(A)의 session UUID 제외 나머지 로그인 세션에 unicast(3.1). Phase 4 에서 이 fan-out
-        // 앞에 push 세션 lease release 가 추가된다.
-        notifySyncNeededToOtherDevices(initiatorName, initiatorUuid, initiatorDeviceUuid, newServerCursor);
 
         return sendResult;
     }
