@@ -174,6 +174,31 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // [10-3] called at the client: busy 로 push 가 거절됐을 때의 fallback pull 재시도 타이머 예약(§2.6).
+    // FILE_SYNC_PUSH_LEASE_TIMEOUT(초) 뒤 startPullSync() 를 1회 실행한다. SYNC_NEEDED_NOTIFY 가 먼저 오면
+    // processSYNC_NEEDED_NOTIFY 가 이 타이머를 취소한다. 발화 시의 pull 재시도가 죽은 owner lease 의
+    // lazy 회수(다음 tryAcquire) 트리거도 겸한다. 기존 대기 타이머는 취소 후 재예약(중복 방지).
+    public void scheduleBusyRetryPull() {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        long timeoutSec = CMConfigurationInfo.getInstance().getFileSyncPushLeaseTimeout();
+
+        syncInfo.cancelBusyRetryFuture();
+        ScheduledExecutorService ses = CMThreadInfo.getInstance().getScheduledExecutorService();
+        ScheduledFuture<?> future = ses.schedule(() -> {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("=== busy fallback timer fired -> startPullSync()");
+            }
+            if (!startPullSync()) {
+                System.err.println("CMFileSyncManager.scheduleBusyRetryPull(), fallback startPullSync failed.");
+            }
+        }, timeoutSec, TimeUnit.SECONDS);
+        syncInfo.setBusyRetryFuture(future);
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("busy fallback pull scheduled in " + timeoutSec + "s.");
+        }
+    }
+
     // Entry point for incremental PUSH: snapshots the client's pendingPushMap (files the client
     // holds newer info for after a PULL) into pushEntryList and starts the push session by sending
     // START_PUSH_ENTRY_LIST to the server. Returns once the session is initiated (START sent);
