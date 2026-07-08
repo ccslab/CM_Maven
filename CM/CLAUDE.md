@@ -80,4 +80,11 @@ The `feature/concurrent-login/*` branches add multi-device login support using U
 
 Single-device bidirectional sync (pull + push) is **implemented** — for those parts the **code is the source of truth**. The 10-2 design doc is being retired; rationale for non-obvious sync metadata (e.g. `CMFileSyncClientEntry.serverMtime` being PULL-only/not transmitted, `m_lastSyncedSizeMap`, `m_pendingPullDeletePaths` for WatchService self-event filtering) lives in code comments, not here.
 
-The active work is **multi-device sync (10-3)**: propagating one device's changes to the same user's other devices. Its authoritative spec is the local-only `docs/10-3_*.md` design doc (`docs/` is gitignored). Read that doc before doing 10-3 work; the doc may drift from code as implementation proceeds, so for implemented parts the code wins.
+**Multi-device sync (10-3) core implementation is complete** — propagating one device's changes to the same user's other devices. Its authoritative spec is the local-only `docs/10-3_*.md` design doc (`docs/` is gitignored); for implemented parts the code wins. Delivered in four phases (see `10-3 Phase N` commit labels):
+
+- **Phase 1** — `changelogHead` 2-level cursor: per-user global changeId allocator + pull comparison (`clientCursor` vs `changelogHead`), replacing the per-device cursor that never propagated peer changes.
+- **Phase 2** — pull CREATE always-online policy (no data transfer for new/propagated files).
+- **Phase 3** — `SYNC_NEEDED_NOTIFY`: server fan-out after push commit → other online devices pull.
+- **Phase 4** — per-user push session lease + busy-bounce: serializes concurrent pushes (both incremental and full-push writers share one lease), busy retry via notify (primary) or fallback timer, lazy timeout reclaim.
+
+Remaining work is **integration testing** (running server + ≥2 clients): 2-device catch-up, notify propagation, and concurrent-push serialization/self-convergence are not covered by JUnit.
