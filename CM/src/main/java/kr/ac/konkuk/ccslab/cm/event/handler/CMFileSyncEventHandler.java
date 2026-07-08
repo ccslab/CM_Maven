@@ -42,6 +42,9 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class CMFileSyncEventHandler extends CMEventHandler {
 
@@ -130,6 +133,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
 
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
 
+        // [10-3] notify 가 주 트리거이므로, 대기 중인 busy fallback 타이머는 여기서 취소한다(§2.6).
+        // notify 가 먼저 온 정상 경로 → 이 pull 이 로컬 변경을 재-push 로 fold 하므로 fallback 불필요.
+        syncInfo.cancelBusyRetryFuture();
+
         // 동기화 진행 중이면 통지를 무시한다. 진행 중 세션이 끝나면 그 세션의 완료 경로(COMPLETE_PULL_SYNC 등)
         // 에서 로컬 변경이 재-push 로 fold 되거나 다음 통지/주기 pull 로 회복되므로 유실은 안전하다.
         if (syncInfo.getSyncProgress() != CMFileSyncProgress.NONE) {
@@ -157,6 +164,32 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             return false;
         }
         return true;
+    }
+
+    // [10-3] called at the client: busy 로 push 가 거절됐을 때의 fallback pull 재시도 타이머 예약(§2.6).
+    // FILE_SYNC_PUSH_LEASE_TIMEOUT(초) 뒤 startPullSync() 를 1회 실행한다. SYNC_NEEDED_NOTIFY 가 먼저 오면
+    // processSYNC_NEEDED_NOTIFY 가 이 타이머를 취소한다. 발화 시의 pull 재시도가 죽은 owner lease 의
+    // lazy 회수(다음 tryAcquire) 트리거도 겸한다. 기존 대기 타이머는 취소 후 재예약(중복 방지).
+    private void scheduleBusyRetryPull() {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        long timeoutSec = CMConfigurationInfo.getInstance().getFileSyncPushLeaseTimeout();
+
+        syncInfo.cancelBusyRetryFuture();
+        ScheduledExecutorService ses = CMThreadInfo.getInstance().getScheduledExecutorService();
+        ScheduledFuture<?> future = ses.schedule(() -> {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("=== busy fallback timer fired -> startPullSync()");
+            }
+            CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+            if (!syncManager.startPullSync()) {
+                System.err.println("CMFileSyncEventHandler.scheduleBusyRetryPull(), fallback startPullSync failed.");
+            }
+        }, timeoutSec, TimeUnit.SECONDS);
+        syncInfo.setBusyRetryFuture(future);
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("busy fallback pull scheduled in " + timeoutSec + "s.");
+        }
     }
 
     // called at the server
@@ -4331,6 +4364,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             syncInfo.setPushEntryList(null);
             syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
             return false;
+        }
+
+        if (returnCode == 2) {
+            // [10-3] busy: 다른 device 가 per-user push lease 보유 중(§2.6). 즉시 pull 하면 owner 의 commit 전이라
+            // rc 1(no-op) → 재push → 또 busy 의 busy-spin 이 되므로 즉시 재시도 금지. syncProgress 를 되돌리고,
+            // SYNC_NEEDED_NOTIFY(주 트리거) 또는 fallback timer(먼저 오는 것)로 따라잡은 뒤 재시도한다.
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("push rejected as busy (returnCode 2); scheduling fallback pull retry.");
+            }
+            syncInfo.setPushEntryList(null);
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            scheduleBusyRetryPull();
+            return true;
         }
 
         List<CMFileSyncClientEntry> pushEntryList = syncInfo.getPushEntryList();

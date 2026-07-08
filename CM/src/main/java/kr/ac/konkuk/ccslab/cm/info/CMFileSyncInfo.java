@@ -74,6 +74,10 @@ public class CMFileSyncInfo {
 
     private ScheduledFuture<?> proactiveModeTaskFuture;
 
+    // [NEW 10-3] 4 client: busy(다른 device 가 push lease 보유)로 push 가 거절됐을 때, SYNC_NEEDED_NOTIFY 가
+    // 안 오는 경우(owner 사망/notify 유실)를 대비한 fallback pull 재시도 타이머(§2.6). notify 가 먼저 오면 취소된다.
+    private ScheduledFuture<?> busyRetryFuture;
+
     // [NEW] 4 client
     private UUID m_deviceUuid;
 
@@ -354,6 +358,24 @@ public class CMFileSyncInfo {
 
     public void setProactiveModeTaskFuture(ScheduledFuture<?> proactiveModeTaskFuture) {
         this.proactiveModeTaskFuture = proactiveModeTaskFuture;
+    }
+
+    // [NEW 10-3] 4 client: busy fallback pull 재시도 타이머 접근자(§2.6).
+    public ScheduledFuture<?> getBusyRetryFuture() {
+        return busyRetryFuture;
+    }
+
+    public void setBusyRetryFuture(ScheduledFuture<?> busyRetryFuture) {
+        this.busyRetryFuture = busyRetryFuture;
+    }
+
+    // [NEW 10-3] 4 client: 대기 중인 busy fallback 타이머가 있으면 취소한다(멱등). SYNC_NEEDED_NOTIFY 수신 시
+    // 또는 새 busy 예약 전에 호출 — 이미 발화/완료했으면 no-op.
+    public synchronized void cancelBusyRetryFuture() {
+        if (busyRetryFuture != null) {
+            busyRetryFuture.cancel(false);
+            busyRetryFuture = null;
+        }
     }
 
     public boolean isProactiveModeTaskDone() {
