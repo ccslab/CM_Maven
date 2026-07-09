@@ -1079,8 +1079,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("--- local mode files ---");
             //List<Path> onlineFiles = syncInfo.getOnlineModePathList();
             List<Path> onlineFiles = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
+            // getPathList()는 pull 전용 디바이스에서 null 일 수 있다(레거시 full-push 에서만 세팅). 이 디버그
+            // 출력이 NPE 를 던지면 아래의 syncProgress=NONE/WatchService 재시작까지 못 가 로컬 모드가 고착되므로 가드.
             List<Path> pathList = syncInfo.getPathList();
-            for(Path path : pathList) {
+            if (pathList != null) for(Path path : pathList) {
                 if(!Files.isDirectory(path)) {
                     if(!onlineFiles.contains(path)) {
                         System.out.println(path);

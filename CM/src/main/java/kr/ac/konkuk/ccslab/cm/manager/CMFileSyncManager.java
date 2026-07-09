@@ -3388,6 +3388,15 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
+    // 현재 sync-home 의 on-disk 파일 목록을 즉석 스캔해 반환한다(절대 null 아님).
+    // 모드 변환(로컬/온라인) 코드는 getPathList() 를 쓰면 안 된다 — 이 스냅샷은 레거시 full-push
+    // (startFullPushSync) 에서만 세팅되므로, full-push 를 한 적 없는 pull 전용 디바이스에서는 null 이다.
+    // 대신 이 헬퍼로 매번 현재 디스크 상태를 읽는다.
+    private List<Path> currentSyncHomePathList() {
+        List<Path> list = createPathList(getClientSyncHome());
+        return (list != null) ? list : Collections.emptyList();
+    }
+
     // called at the client
     public void checkTransferForLocalMode(CMFileEvent fe) {
         if (CMInfo._CM_DEBUG) {
@@ -3464,8 +3473,10 @@ public class CMFileSyncManager extends CMServiceManager {
         endEvent.setInitiatorUuid(fe.getFileReceiverUuid());
         endEvent.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
 
-        // filter only file type from the path list
-        List<Path> pathList = Objects.requireNonNull(syncInfo.getPathList());
+        // filter only file type from the path list.
+        // getPathList()(레거시 full-push 에서만 세팅)는 pull 전용 디바이스에서 null → requireNonNull 이
+        // NPE 를 던져 END_LOCAL_MODE_LIST 를 못 보내고 로컬 모드 전환이 미완료로 멈추던 버그. 즉석 스캔으로 대체.
+        List<Path> pathList = currentSyncHomePathList();
         List<Path> filteredPathList = pathList.stream()
                 .filter(path -> !Files.isDirectory(path))
                 .collect(Collectors.toList());
@@ -4178,7 +4189,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get local-mode file list
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Objects.requireNonNull(syncInfo);
-        List<Path> pathList = syncInfo.getPathList();
+        List<Path> pathList = currentSyncHomePathList();
         List<Path> onlineModePathList = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
         List<Path> localModePathList = pathList.stream()
                 .filter(p -> !Files.isDirectory(p))
@@ -4720,7 +4731,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // check if the sync-home directory is empty
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         final Path syncHome = getClientSyncHome();
-        if (!syncInfo.getPathList().isEmpty()) {
+        if (!currentSyncHomePathList().isEmpty()) {
             System.err.println("The sync home must be empty to start the file-access test!");
             return false;
         }
@@ -4828,7 +4839,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // check if the sync-home directory is empty
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         final Path syncHome = getClientSyncHome();
-        if (!syncInfo.getPathList().isEmpty()) {
+        if (!currentSyncHomePathList().isEmpty()) {
             System.err.println("The sync home must be empty to start the file-access test!");
             return false;
         }
@@ -4979,7 +4990,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         List<Path> onlineModeFiles = getOnlineModeFiles();
-        List<Path> pathList = syncInfo.getPathList();
+        List<Path> pathList = currentSyncHomePathList();
 
         List<Path> localModeFiles = pathList.stream()
                 .filter(p -> !Files.isDirectory(p))
