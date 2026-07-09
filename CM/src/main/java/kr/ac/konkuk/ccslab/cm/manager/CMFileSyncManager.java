@@ -1878,11 +1878,44 @@ public class CMFileSyncManager extends CMServiceManager {
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
-        // 온라인 모드 리스트에 추가
+        // online 모드 계약: 파일 데이터는 받지 않되 0바이트 placeholder 파일을 디스크에 만든다
+        // (기존 online 전환 processONLINE_MODE_LIST_ACK 가 원본을 truncate(0) 하는 것과 동형).
+        // placeholder 가 없으면 createPathList(디스크 스캔)에 잡히지 않아, 이후 push 단계의
+        // scanLocalPushDeletes 가 "base snapshot 엔 있는데 디스크엔 없음" → 로컬 삭제로 오판하고
+        // 그 DELETE 가 서버로 push 되어 원본이 지워진다.
+        long serverMtime = entry.getServerMtime();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+        long baseMtime;
+        try {
+            Path parentDir = absPath.getParent();
+            if (parentDir != null && Files.notExists(parentDir)) {
+                Files.createDirectories(parentDir);
+            }
+            // 0바이트 placeholder 생성 (이미 있으면 0으로 자름)
+            Files.newByteChannel(absPath, StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING).close();
+            // 서버 mtime 을 placeholder 에 보존 → lastSynced 와 일치 → WatchService self-event 필터가 걸러냄.
+            if (serverMtime > 0) {
+                Files.setLastModifiedTime(absPath, FileTime.fromMillis(serverMtime * 1000L));
+                baseMtime = serverMtime;
+            } else {
+                // serverMtime 비정상 → 보존 skip, 디스크 측정값으로 폴백 (checkCompletePullCreate 와 동일 정책)
+                System.err.println("CMFileSyncManager.proceedOnlinePullCreateEntry(), invalid serverMtime for "
+                        + relPathStr + ": " + serverMtime + " — fallback to disk mtime");
+                baseMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedOnlinePullCreateEntry(), placeholder create failed: " + absPath);
+            e.printStackTrace();
+            return false;
+        }
+
+        // 온라인 모드 리스트에 추가 (원본(실제) 크기 기록 — 나중에 local 모드 재요청 시 사용)
         addToOnlineList(relPathStr, entry.getSize());
 
-        // server mtime을 baseMtime으로 저장 (online 모드 변형: "file 없음 == baseMtime은 server mtime")
-        syncInfo.getLastSyncedMtimeMap().put(relPathStr, entry.getServerMtime());
+        // base snapshot(lastSynced)을 디스크 placeholder 상태(mtime=serverMtime, size=0)에 맞춘다.
+        // size=0 이어야 WatchService self-event 필터(mtime+size 동시 일치)와 push-candidate 판정이 정상 동작.
+        syncInfo.setLastSynced(relPathStr, baseMtime, 0L);
 
         // entry 완료 처리
         entry.setCompleted(true);
