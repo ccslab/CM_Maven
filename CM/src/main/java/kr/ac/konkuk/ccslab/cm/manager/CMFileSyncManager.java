@@ -1009,8 +1009,11 @@ public class CMFileSyncManager extends CMServiceManager {
                         // 클라 디스크엔 이미 없음 (서버 dedup 이후엔 외부 수동 삭제 / 다중 디바이스 정합성 케이스).
                         // 서버 pullStateMap 완료 마킹 위해 ack 만 송신.
                         ackSkippedPullEntry(relPathStr, CMFileSyncOp.DELETE, serverName);
-                    } else if (baseMtime == serverMtime && curMtime == serverMtime) {
-                        // 마지막 동기화 이후 변경 없음 -> 안전하게 삭제 대상
+                    } else if (curMtime == baseMtime) {
+                        // 마지막 동기화 이후 클라 로컬 변경 없음 -> 안전하게 삭제 대상.
+                        // NOTE: DELETE tombstone 의 serverMtime(serverEntry.getMtime())은 "삭제 시각"이라
+                        // 파일 content mtime 과 무관하므로 비교에 쓰면 안 된다 (항상 불일치 → 정상 전파
+                        // DELETE 가 전부 conflict 로 오판됨). 삭제 안전성은 curMtime==baseMtime 만으로 판정.
                         pullDeleteMap.put(relPathStr, clientEntry);
                     } else {
                         // 로컬에서 수정됨 -> conflict (삭제하지 않고 rename + push)
