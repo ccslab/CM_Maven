@@ -1730,8 +1730,9 @@ public class CMFileSyncManager extends CMServiceManager {
         return sendResult;
     }
 
-    // online-mode MODIFY helper: skips block-checksum flow; updates baseMtime to server mtime,
-    // marks entry completed, and sends COMPLETE_PULL_MODIFY to the server.
+    // online-mode MODIFY helper: skips block-checksum flow; keeps the 0바이트 placeholder on disk,
+    // resyncs the placeholder mtime + onlineModePathSizeMap size + base snapshot to the new server
+    // state, marks entry completed, and sends COMPLETE_PULL_MODIFY to the server.
     private boolean proceedOnlinePullModifyEntry(String relPathStr, CMFileSyncClientEntry entry, String serverName) {
         if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.proceedOnlinePullModifyEntry() called: " + relPathStr);
@@ -1739,8 +1740,38 @@ public class CMFileSyncManager extends CMServiceManager {
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
-        // server mtime을 baseMtime으로 저장
-        syncInfo.getLastSyncedMtimeMap().put(relPathStr, entry.getServerMtime());
+        // online 모드 MODIFY: 파일 데이터는 받지 않고 0바이트 placeholder 를 그대로 둔다.
+        // placeholder 는 online 진입 시점(pull CREATE / online 전환)에 이미 디스크에 존재하므로 새로 만들지 않되,
+        // (1) 디스크 placeholder 의 mtime 을 새 serverMtime 으로 갱신하고,
+        // (2) onlineModePathSizeMap 의 기록 크기를 새 서버 크기로 갱신해 정합을 유지한다.
+        long serverMtime = entry.getServerMtime();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+        long baseMtime;
+        try {
+            if (serverMtime > 0) {
+                // (1) 디스크 placeholder mtime 갱신 → lastSynced 와 일치 → WatchService self-event 필터가 걸러냄
+                if (Files.exists(absPath)) {
+                    Files.setLastModifiedTime(absPath, FileTime.fromMillis(serverMtime * 1000L));
+                }
+                baseMtime = serverMtime;
+            } else {
+                // serverMtime 비정상 → 보존 skip, 디스크 측정값으로 폴백 (pull CREATE 와 동일 정책)
+                System.err.println("CMFileSyncManager.proceedOnlinePullModifyEntry(), invalid serverMtime for "
+                        + relPathStr + ": " + serverMtime + " — fallback to disk mtime");
+                baseMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedOnlinePullModifyEntry(), placeholder mtime update failed: " + absPath);
+            e.printStackTrace();
+            return false;
+        }
+
+        // (2) onlineModePathSizeMap 기록 크기를 새 서버 크기로 갱신 (stale size 방지)
+        addToOnlineList(relPathStr, entry.getSize());
+
+        // base snapshot(lastSynced)을 디스크 placeholder(mtime=serverMtime, size=0)에 맞춘다.
+        // size=0 이어야 self-event 필터(mtime+size 동시 일치)와 push-candidate 판정이 정상 동작.
+        syncInfo.setLastSynced(relPathStr, baseMtime, 0L);
 
         // entry 완료 처리
         entry.setCompleted(true);
