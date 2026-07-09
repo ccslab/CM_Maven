@@ -1097,17 +1097,14 @@ public class CMFileSyncManager extends CMServiceManager {
         Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
         int numAdded = 0;
 
-        Path clientSyncHome = getClientSyncHome();
-
-        // snapshot the keys: the base snapshot is read-only here, but copy defensively
+        // snapshot the keys: the base snapshot is read-only here, but copy defensively.
+        // NOTE: online-mode placeholder(0바이트)도 정상 sync 상태에선 디스크에 존재하므로
+        // existingRelPaths 에 잡혀 아래에서 skip 된다. 디스크에 없는 online 경로는 "사용자가 삭제한
+        // 것"으로 보고 DELETE 로 전파한다 (상용 online-only 파일과 동일 의미). placeholder 가 항상
+        // 생성되는 것은 proceedOnlinePullCreateEntry/ModifyEntry 가 보장한다.
         for (String relPathStr : new ArrayList<>(syncInfo.getLastSyncedMtimeMap().keySet())) {
             if (existingRelPaths.contains(relPathStr)) continue;   // still on disk -> not deleted
             if (pendingPushMap.containsKey(relPathStr)) continue;  // already classified
-            // online-mode placeholder(0바이트)는 정상적으로 디스크에 존재해야 하지만, 만약 누락되어
-            // existingRelPaths 에 안 잡히더라도 "삭제"가 아니다 — online 진입 시 데이터 없이 등록된 상태.
-            // 방어적으로 online 경로는 DELETE 후보에서 제외한다 (원본 파일 서버 삭제 방지).
-            Path absPath = clientSyncHome.resolve(relPathStr).toAbsolutePath().normalize();
-            if (isOnlineMode(absPath)) continue;
 
             CMFileSyncClientEntry entry = new CMFileSyncClientEntry();
             entry.setPath(relPathStr)
