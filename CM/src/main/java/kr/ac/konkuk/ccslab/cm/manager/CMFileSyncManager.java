@@ -3461,6 +3461,18 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("remove error from the online-mode-map: " + headPath);
         }
 
+        // online→local: 디스크가 실콘텐츠로 채워졌으므로 lastSynced(디스크 표현 추적)의 size 도 실제 크기로
+        // 맞춘다. mtime 은 위에서 보존됐으므로 그대로. (online 시절 size=0 로 남아 디스크와 어긋나던 것 보강.)
+        try {
+            String relPathStr = getClientSyncHome().relativize(headPath).toString().replace('\\', '/');
+            long curMtime = syncInfo.currentMtimeSecOrMinusOne(headPath);
+            long curSize = syncInfo.currentSizeOrMinusOne(headPath);
+            if (curMtime >= 0 && curSize >= 0)
+                syncInfo.setLastSynced(relPathStr, curMtime, curSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         // check if the queue is not empty
         if (!localModeRequestQueue.isEmpty()) {
             System.out.println("Local-mode-request queue is not empty.");

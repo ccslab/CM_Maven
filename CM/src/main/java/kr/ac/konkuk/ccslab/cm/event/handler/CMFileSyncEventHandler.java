@@ -1414,6 +1414,15 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 }
 */
                 onlineModePathSizeMap.put(headPath, size);
+                // local→online: 디스크를 0바이트로 truncate 했으므로 lastSynced(디스크 표현 추적) size 도 0 으로
+                // 맞춘다. mtime 은 위에서 보존됐으므로 그대로. (실제 원본 크기는 onlineModePathSizeMap 이 보관.)
+                try {
+                    long curMtime = syncInfo.currentMtimeSecOrMinusOne(headPath);
+                    if (curMtime >= 0)
+                        syncInfo.setLastSynced(relativeHeadStr, curMtime, 0L);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 numCompletePath++;
             }
             else {
