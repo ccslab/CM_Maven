@@ -4767,11 +4767,19 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         // 인메모리 client-index에서 path 메타 정보 제거.
         // CLAUDE.md divergence: lastSyncedMtimeMap 외에 lastSyncedSizeMap도 함께 정리해야
         // WatchService self-event 필터(mtime+size)가 일관 유지됨.
+        CMFileSyncManager syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
         Map<String, Long> lastSyncedMtimeMap = syncInfo.getLastSyncedMtimeMap();
         Map<String, Long> lastSyncedSizeMap = syncInfo.getLastSyncedSizeMap();
         for (String deletedPath : deletedPathList) {
             Long prevMtime = lastSyncedMtimeMap.remove(deletedPath);
             lastSyncedSizeMap.remove(deletedPath);
+            // online 파일을 삭제한 경우 online-map 에도 남아있으므로 함께 정리한다. pull DELETE
+            // (proceedPullDeleteMap 의 removeFromOnlineList)와 대칭 — 이게 없으면 originating 디바이스의
+            // onlineModePathSizeMap 에 dangling 엔트리가 남고, saveOnlineModePathSizeMapToFile 이 디스크에
+            // 그대로 기록해 재시작 시 삭제된 파일의 online-map 엔트리가 되살아난다.
+            if (syncManager != null) {
+                syncManager.removeFromOnlineList(deletedPath);
+            }
             if (CMInfo._CM_DEBUG) {
                 if (prevMtime == null) {
                     System.out.println("path not in lastSyncedMtimeMap (already gone): " + deletedPath);
@@ -4780,6 +4788,11 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                             + " (prev mtime = " + prevMtime + ")");
                 }
             }
+        }
+        // online-map 정리 결과를 디스크에 즉시 반영 (재시작 후 dangling 엔트리 부활 방지).
+        // pull DELETE 는 COMPLETE_PULL_SYNC 에서 저장하지만, push 완료 경로에는 그 저장 지점이 없으므로 여기서 persist.
+        if (syncManager != null) {
+            syncManager.saveOnlineModePathSizeMapToFile();
         }
 
         // 본 핸들러는 client-index 갱신까지만 책임. 세션 완료/cursor 갱신/pushEntryList 정리는
