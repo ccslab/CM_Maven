@@ -2241,6 +2241,25 @@ public class CMFileSyncManager extends CMServiceManager {
             return;
         }
 
+        // 클라 원본 mtime 보존: CM 파일 전송은 mtime 을 보존하지 않아 수신 파일 mtime = 서버 수신 시각이다.
+        // 그대로 아래에서 changelog mtime 으로 기록하면 origin(클라A) 과 서버/pull 디바이스의 mtime 이 영구히
+        // 어긋난다. full-push CREATE(checkNewTransferForSync)/증분 push MODIFY 와 동일하게 클라 curMtime 을
+        // 디스크에 적용해, changelog mtime 이 origin 파일 시각으로 수렴하도록 한다(모든 디바이스 mtime 정합).
+        long clientMtimeSec = matchedEntry.getCurMtime();
+        if (clientMtimeSec > 0) {
+            try {
+                Files.setLastModifiedTime(absDestPath, FileTime.fromMillis(clientMtimeSec * 1000L));
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                        + "failed to set client mtime on: " + absDestPath);
+                e.printStackTrace();
+            }
+        } else {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "invalid client curMtime for " + matchedRelPathStr + ": " + clientMtimeSec
+                    + " — fallback to disk mtime");
+        }
+
         // 인메모리 server-index 갱신 (영속화는 completePushSync에서 일괄)
         UUID initiatorDeviceUuid = matchedStateKey.initiatorDeviceUuid();
         CMFileSyncIndexRepository indexRepository =
