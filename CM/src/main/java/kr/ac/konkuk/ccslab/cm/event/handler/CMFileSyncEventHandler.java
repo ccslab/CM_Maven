@@ -1991,6 +1991,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         }
 
         // mark this entry completed
+        // entry 는 pullModifyMap 의 값과 동일 참조(proceedPullModifyMap 이 map value 를 그대로 localModifyList 에
+        // 담아 generator 에 전달)이므로, 여기서 setCompleted 해야 processCOMPLETE_PULL_SYNC 의 pullModifyMap
+        // 완료 검사를 통과한다. online CREATE/MODIFY 경로(proceedOnlinePullCreate/ModifyEntry)와 대칭.
+        entry.setCompleted(true);
         pullGenerator.getIsUpdateFileCompletedMap().put(relativePath, true);
         pullGenerator.setNumUpdateFilesCompleted(pullGenerator.getNumUpdateFilesCompleted() + 1);
         if(CMInfo._CM_DEBUG) {
