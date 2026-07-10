@@ -159,10 +159,20 @@ public class CMFileSyncInfo {
     // 주의: "-conflict-*" 는 의도적으로 제외. conflict-rename 파일은 사용자 데이터 보존용
     // 백업이므로 다음 push sync 때 서버로 전송되어 다른 디바이스에서도 확인 가능해야 함.
     // .DS_Store 같은 OS 자동 재생성 파일은 ignore 로 충돌 자체를 차단하므로 무한 루프 위험 없음.
+    //
+    // "temp_*" (= CMInfo.TEMP_FILE_PREFIX + "*"): pull MODIFY 재구성용 임시파일.
+    //   getTempPathOfBasisFile() 이 sync-home 안(basisFile 형제 경로)에 만들었다가 rename 하는데,
+    //   이 rename 의 DELETE 이벤트가 WatchService 를 거쳐 서버로 spurious DELETE push 되어
+    //   changelog 를 오염시키고 다른 디바이스로 전파되던 버그를 여기서 차단한다.
+    //   부작용: "temp_" 로 시작하는 실제 사용자 파일도 동기화 제외됨. 이는 이미 존재하던
+    //   이름 충돌 위험(getTempPathOfBasisFile 이 "temp_" 를 예약 접두사로 사용)을 명시화한 것.
+    //   근본 수정(TODO): 재구성 임시파일을 sync-home 밖(예: .cm-settings 하위 임시 디렉터리)에서
+    //   생성하면 이 예약 접두사와 사용자 파일 충돌 위험 자체가 사라진다. 변경 범위가 커서 보류.
     private static final List<String> DEFAULT_IGNORED_GLOBS = List.of(
             ".DS_Store", "._*", ".Spotlight-V100", ".Trashes", ".fseventsd",
             "Thumbs.db", "desktop.ini",
-            "*.tmp", "*.swp"
+            "*.tmp", "*.swp",
+            CMInfo.TEMP_FILE_PREFIX + "*"
     );
     private final List<PathMatcher> ignoreMatchers = DEFAULT_IGNORED_GLOBS.stream()
             .map(g -> FileSystems.getDefault().getPathMatcher("glob:" + g))
