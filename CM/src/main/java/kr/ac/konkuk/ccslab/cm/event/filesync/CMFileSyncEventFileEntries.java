@@ -57,7 +57,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
             for (CMFileSyncEntry entry : initiatorPathEntryList) {
                 // Path pathRelativeToHome
                 byteNum += CMInfo.STRING_LEN_BYTES_LEN +
-                        entry.getPathRelativeToHome().toString().getBytes().length;
+                        entry.getPathRelativeToHome().toString().replace('\\', '/').getBytes().length;
                 // long size
                 byteNum += Long.BYTES;
                 // FileTime lastModifiedTime -> long type of milliseconds
@@ -81,7 +81,7 @@ public class CMFileSyncEventFileEntries extends CMFileSyncEvent {
             // fileEntryList
             for (CMFileSyncEntry entry : initiatorPathEntryList) {
                 // Path relativePathToHome
-                putStringToByteBuffer(entry.getPathRelativeToHome().toString());
+                putStringToByteBuffer(entry.getPathRelativeToHome().toString().replace('\\', '/'));
                 // long size
                 m_bytes.putLong(entry.getSize());
                 // FileTime lastModifiedTime (changed to long milliseconds)

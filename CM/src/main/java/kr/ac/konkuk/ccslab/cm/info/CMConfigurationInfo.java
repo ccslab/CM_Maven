@@ -88,6 +88,9 @@ public class CMConfigurationInfo {
 	private long fileSizeThreshold;
 	// file modification ratio threshold (for HYBRID mode of file-sync update) (0~1)
 	private double fileModRatioThreshold;
+	// [NEW 10-3] per-user push 세션 lease timeout (seconds). 서버측 lease lazy 회수(§2.6.1)와
+	// 클라측 busy 재시도 fallback 타이머(§2.6) 양쪽이 이 값을 공유한다.
+	private long fileSyncPushLeaseTimeout;
 	
 	private CMConfigurationInfo()
 	{
@@ -145,6 +148,7 @@ public class CMConfigurationInfo {
 		fileSyncUpdateMode = CMFileSyncUpdateMode.DELTA;
 		fileSizeThreshold = 0;
 		fileModRatioThreshold = 1;	// always DELTA
+		fileSyncPushLeaseTimeout = 300;	// [10-3] default 300s (conf 키 없거나 파싱 실패 시 하한)
 	}
 
 	// getInstance
@@ -714,6 +718,15 @@ public class CMConfigurationInfo {
 
 	public void setFileSyncUpdateMode(CMFileSyncUpdateMode fileSyncUpdateMode) {
 		this.fileSyncUpdateMode = fileSyncUpdateMode;
+	}
+
+	// [NEW 10-3] per-user push 세션 lease timeout (seconds).
+	public long getFileSyncPushLeaseTimeout() {
+		return fileSyncPushLeaseTimeout;
+	}
+
+	public void setFileSyncPushLeaseTimeout(long fileSyncPushLeaseTimeout) {
+		this.fileSyncPushLeaseTimeout = fileSyncPushLeaseTimeout;
 	}
 
 	public long getFileSizeThreshold() {

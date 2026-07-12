@@ -75,3 +75,20 @@ Event Layer:        CMEvent → CMSessionEvent, CMFileEvent, CMUserEvent,
 ## Active Development
 
 The `feature/concurrent-login/*` branches add multi-device login support using UUIDs to identify individual device connections per user. `CMMember` was refactored to use `Hashtable<String, List<CMUser>>` for this.
+
+### File Sync: multi-device bidirectional sync (10-3)
+
+Single-device bidirectional sync (pull + push) is **implemented** — for those parts the **code is the source of truth**. The 10-2 design doc is being retired; rationale for non-obvious sync metadata (e.g. `CMFileSyncClientEntry.serverMtime` being PULL-only/not transmitted, `m_lastSyncedSizeMap`, `m_pendingPullDeletePaths` for WatchService self-event filtering) lives in code comments, not here.
+
+**Multi-device sync (10-3) core implementation is complete** — propagating one device's changes to the same user's other devices. Its authoritative spec is the local-only `docs/10-3_*.md` design doc (`docs/` is gitignored); for implemented parts the code wins. Delivered in four phases (see `10-3 Phase N` commit labels):
+
+- **Phase 1** — `changelogHead` 2-level cursor: per-user global changeId allocator + pull comparison (`clientCursor` vs `changelogHead`), replacing the per-device cursor that never propagated peer changes.
+- **Phase 2** — pull CREATE always-online policy (no data transfer for new/propagated files).
+- **Phase 3** — `SYNC_NEEDED_NOTIFY`: server fan-out after push commit → other online devices pull.
+- **Phase 4** — per-user push session lease + busy-bounce: serializes concurrent pushes (both incremental and full-push writers share one lease), busy retry via notify (primary) or fallback timer, lazy timeout reclaim.
+
+Integration testing status (running server + ≥2 clients; not covered by JUnit):
+
+- **2-device catch-up** — **verified** (offline peer changes applied on re-login): CREATE (→online placeholder), MODIFY (local→rsync delta reconstruction; online→metadata-only online-map size update), DELETE (multi, online-map cleanup, self-event filtering), MODIFY→DELETE collapse to latest-per-path, and CREATE→DELETE net-zero omission.
+- **notify propagation** (`SYNC_NEEDED_NOTIFY`) — **verified**.
+- **concurrent-push serialization/self-convergence** (Phase 4 lease/busy-bounce) — **not yet exercised**; hard to trigger manually (requires two devices pushing simultaneously) and rare in practice, deferred to real-event observation.

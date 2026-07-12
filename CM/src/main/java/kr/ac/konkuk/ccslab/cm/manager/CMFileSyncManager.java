@@ -1,16 +1,27 @@
 package kr.ac.konkuk.ccslab.cm.manager;
 
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncChangeLogEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncClientEntry;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexEntry;
+import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncIndexRepository;
 import kr.ac.konkuk.ccslab.cm.entity.CMFileSyncStateKey;
+import kr.ac.konkuk.ccslab.cm.entity.CMMember;
+import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.*;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncMode;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncOp;
+import kr.ac.konkuk.ccslab.cm.info.enums.CMFileSyncProgress;
 import kr.ac.konkuk.ccslab.cm.info.enums.CMTestFileModType;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncProactiveModeTask;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPullGenerator;
+import kr.ac.konkuk.ccslab.cm.thread.CMFileSyncPushGenerator;
 import kr.ac.konkuk.ccslab.cm.thread.CMWatchServiceTask;
+import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
@@ -23,6 +34,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -46,11 +60,11 @@ public class CMFileSyncManager extends CMServiceManager {
                 .resolve(CMFileSyncInfo.SYNC_HOME).toAbsolutePath().normalize();
     }
 
-    // currently called by client
-    public synchronized boolean sync() {
+    // currently called by client; performs the initial full push synchronization
+    public synchronized boolean startFullPushSync() {
 
         if (CMInfo._CM_DEBUG)
-            System.out.println("=== CMFileSyncManager.startFileSync() called..");
+            System.out.println("=== CMFileSyncManager.startFullPushSync() called..");
 
         CMFileSyncInfo fsInfo = CMFileSyncInfo.getInstance();
 
@@ -58,8 +72,8 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("The file sync is in progress!");
             return false;
         } else {
-            // set syncInProgress to true.
-            fsInfo.setSyncInProgress(true);
+            // set sync progress to full (push) sync.
+            fsInfo.setSyncProgress(CMFileSyncProgress.FULL_SYNC);
         }
 
         // set file sync home.
@@ -75,6 +89,7 @@ public class CMFileSyncManager extends CMServiceManager {
 
         // create a path list in the sync-file-home.
         List<Path> pathList = createPathList(syncHome);
+        if (pathList == null) return false;
         // store the path list in the CMFileSyncInfo.
         fsInfo.setPathList(pathList);
 
@@ -99,11 +114,1862 @@ public class CMFileSyncManager extends CMServiceManager {
         // send the file list to the server
         boolean sendResult = sendFileList();
         if (!sendResult) {
-            System.err.println("CMFileSyncManager.startFileSync(), error to send the file list.");
+            System.err.println("CMFileSyncManager.startFullPushSync(), error to send the file list.");
             return false;
         }
 
         return true;
+    }
+
+    // called by client to start bidirectional synchronization:
+    // sends the client cursor to the server so it can decide pull vs. full-push.
+    public synchronized boolean startPullSync() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.startPullSync() called..");
+
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // only the client can start a pull sync
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.startPullSync(), system type is not CLIENT!");
+            return false;
+        }
+
+        // 동기화 시작 시 디스크 메타(cursor, client-index)를 권위값으로 재적용한다.
+        // 실행 중 메타 파일을 삭제한 경우 메모리의 옛 cursor 가 남아 "이미 동기화됨"으로 오인하므로,
+        // reset-then-load 로 디스크 상태(없으면 fresh)를 메모리에 반영한다.
+        syncInfo.reloadClientMetaFromDisk(".");
+
+        // create the START_PULL_SYNC event
+        CMFileSyncEventStartPullSync fse = new CMFileSyncEventStartPullSync();
+
+        // set common initiator fields
+        String initiatorName = interInfo.getMyself().getName();
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+        fse.setInitiatorName(initiatorName);
+        fse.setInitiatorUuid(initiatorUuid);
+        fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+        // set the client cursor (use the stored value if non-negative, otherwise 0)
+        long cursor = syncInfo.getCursor();
+        if (cursor < 0) cursor = 0;
+        fse.setCursor(cursor);
+
+        // send the event to the default server
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+        UUID serverUuid = null;
+        boolean result = CMEventManager.unicastEvent(fse, serverName, serverUuid);
+        if (!result) {
+            System.err.println("CMFileSyncManager.startPullSync(), send error!");
+            System.err.println(fse);
+            return false;
+        }
+
+        // change the sync session state to PULL
+        syncInfo.setSyncProgress(CMFileSyncProgress.PULL);
+
+        return true;
+    }
+
+    // [10-3] called at the client: busy 로 push 가 거절됐을 때의 fallback pull 재시도 타이머 예약(§2.6).
+    // FILE_SYNC_PUSH_LEASE_TIMEOUT(초) 뒤 startPullSync() 를 1회 실행한다. SYNC_NEEDED_NOTIFY 가 먼저 오면
+    // processSYNC_NEEDED_NOTIFY 가 이 타이머를 취소한다. 발화 시의 pull 재시도가 죽은 owner lease 의
+    // lazy 회수(다음 tryAcquire) 트리거도 겸한다. 기존 대기 타이머는 취소 후 재예약(중복 방지).
+    public void scheduleBusyRetryPull() {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        long timeoutSec = CMConfigurationInfo.getInstance().getFileSyncPushLeaseTimeout();
+
+        syncInfo.cancelBusyRetryFuture();
+        ScheduledExecutorService ses = CMThreadInfo.getInstance().getScheduledExecutorService();
+        ScheduledFuture<?> future = ses.schedule(() -> {
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("=== busy fallback timer fired -> startPullSync()");
+            }
+            if (!startPullSync()) {
+                System.err.println("CMFileSyncManager.scheduleBusyRetryPull(), fallback startPullSync failed.");
+            }
+        }, timeoutSec, TimeUnit.SECONDS);
+        syncInfo.setBusyRetryFuture(future);
+
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("busy fallback pull scheduled in " + timeoutSec + "s.");
+        }
+    }
+
+    // Entry point for incremental PUSH: snapshots the client's pendingPushMap (files the client
+    // holds newer info for after a PULL) into pushEntryList and starts the push session by sending
+    // START_PUSH_ENTRY_LIST to the server. Returns once the session is initiated (START sent);
+    // entry-body transfer, per-op processing and session completion are driven by event handlers
+    // on both sides.
+    // Called from processCOMPLETE_PULL_SYNC after the PULL session is fully cleaned up and
+    // pendingPushMap is non-empty. A future file-watcher trigger (startPushSync()) will call this
+    // (or a derived helper) as well.
+    // syncProgress=PUSH is NOT set here — the caller sets it before calling (mirrors the PULL-
+    // completion branch). Runs on the single event-processing thread, so no synchronization.
+    public boolean proceedPendingPushMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPendingPushMap() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // only the client can start a push sync
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.proceedPendingPushMap(), system type is not CLIENT!");
+            return false;
+        }
+
+        // defensive empty-map guard (normal callers already check; keeps standalone calls safe,
+        // e.g. a future file-watcher trigger). empty => nothing to push = already in sync.
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        if (pendingPushMap == null || pendingPushMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pendingPushMap is empty. nothing to push.");
+            return true;
+        }
+
+        // guard against starting a second push session while one is already in progress
+        if (syncInfo.getPushEntryList() != null) {
+            System.err.println("CMFileSyncManager.proceedPendingPushMap(), pushEntryList already exists; "
+                    + "another push session in progress. skip.");
+            return false;
+        }
+
+        // snapshot pendingPushMap.values() into pushEntryList and store it.
+        // pendingPushMap itself is NOT cleared here — it is the retry truth, kept until the push
+        // session commits (processCOMPLETE_PUSH_SYNC). Being a snapshot, entries added to
+        // pendingPushMap by a file-watcher mid-session do not affect this session.
+        List<CMFileSyncClientEntry> pushEntryList = new ArrayList<>(pendingPushMap.values());
+        syncInfo.setPushEntryList(pushEntryList);
+        if (CMInfo._CM_DEBUG)
+            System.out.println("pushEntryList snapshot created. size = " + pushEntryList.size());
+
+        // create and send START_PUSH_ENTRY_LIST
+        CMFileSyncEventStartPushEntryList fse_spel = new CMFileSyncEventStartPushEntryList();
+        fse_spel.setInitiatorName(interInfo.getMyself().getName());
+        fse_spel.setInitiatorUuid(interInfo.getMyself().getUuid());
+        fse_spel.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_spel.setNumTotalFiles(pushEntryList.size());
+
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+        boolean sendResult = CMEventManager.unicastEvent(fse_spel, serverName, null);
+        if (!sendResult) {
+            System.err.println("CMFileSyncManager.proceedPendingPushMap(), failed to send START_PUSH_ENTRY_LIST.");
+            // send failed => roll back the snapshot so the next attempt isn't blocked by the guard
+            syncInfo.setPushEntryList(null);
+            return false;
+        }
+        if (CMInfo._CM_DEBUG)
+            System.out.println("START_PUSH_ENTRY_LIST sent. numTotalFiles = " + pushEntryList.size());
+
+        return true;
+    }
+
+    // WatchService-triggered PUSH entry point. Called from CMWatchServiceTask.run() after the 500ms
+    // quiet window with a candidateMap that classifies the detected paths into CREATE/MODIFY/DELETE
+    // (see CMWatchServiceTask.buildPushCandidateMap). Replaces the previous full-push trigger.
+    // synchronized: invoked on the WatchService thread; serializes against other entry points
+    // (startFullPushSync / startPullSync) on the same manager instance.
+    // Returns false when the session cannot be started (already in progress, send failure, etc.) —
+    // the caller interprets false as "unhandled changes remain" and sets fileChangeDetected=true so
+    // a future cycle retries.
+    public synchronized boolean startPushSync(Map<String, CMFileSyncClientEntry> candidateMap) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.startPushSync() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.startPushSync(), not a CLIENT.");
+            return false;
+        }
+
+        // Session-in-progress guard: any non-NONE syncProgress (FULL_SYNC / PULL / PUSH /
+        // ONLINE_MODE / LOCAL_MODE) blocks a new push start. Caller retries via fileChangeDetected.
+        if (syncInfo.getSyncProgress() != CMFileSyncProgress.NONE) {
+            System.err.println("CMFileSyncManager.startPushSync(), sync already in progress: "
+                    + syncInfo.getSyncProgress());
+            return false;
+        }
+
+        // Empty candidate map (all events filtered out, or none classified) — nothing to push.
+        if (candidateMap == null || candidateMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("CMFileSyncManager.startPushSync(), candidateMap is empty. "
+                        + "nothing to push.");
+            return true;
+        }
+
+        // Replace pendingPushMap with the candidate snapshot. WatchService-trigger push has no
+        // continuity with prior sessions: the current disk state after the 500ms quiet window is
+        // the truth, so stale leftovers from a failed previous trigger are overwritten.
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        pendingPushMap.clear();
+        pendingPushMap.putAll(candidateMap);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("pendingPushMap populated. size = " + pendingPushMap.size());
+            pendingPushMap.forEach((k, v) -> System.out.println("  " + k + " -> " + v));
+        }
+
+        // Officially open the PUSH session before delegating to the shared sender.
+        syncInfo.setSyncProgress(CMFileSyncProgress.PUSH);
+
+        boolean ret = proceedPendingPushMap();
+        if (!ret) {
+            // proceedPendingPushMap() already rolled back pushEntryList on send failure; restore
+            // syncProgress so the next watch-trigger can pass the guard.
+            System.err.println("CMFileSyncManager.startPushSync(), proceedPendingPushMap() failed. "
+                    + "rolling back syncProgress.");
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return false;
+        }
+        return true;
+    }
+
+    // Server-side entry point for op-by-op processing of pushStateTable[stateKey].
+    // Called from processEND_PUSH_ENTRY_LIST after the entry-count verification passes.
+    // Internal op-specific helpers (DELETE → CREATE → MODIFY) are implemented incrementally.
+    public boolean proceedPushStateMap(CMFileSyncStateKey stateKey, UUID initiatorUuid) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushStateMap() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid);
+        }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncManager.proceedPushStateMap(), not a SERVER.");
+            return false;
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushStateMap(), pushStateMap is null for stateKey = "
+                    + stateKey);
+            return false;
+        }
+        if (pushStateMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pushStateMap is empty. nothing to proceed.");
+            return true;
+        }
+
+        // 단순 opHint 기반 분류. 풀 트리아지(classifyEntriesForPush — 서버 파일/server-index/클라 메타 3자 비교 +
+        // 충돌 rename)는 별도 단계에서 본 분류를 대체할 예정.
+        List<CMFileSyncClientEntry> deleteEntries = new ArrayList<>();
+        List<CMFileSyncClientEntry> createEntries = new ArrayList<>();
+        List<CMFileSyncClientEntry> modifyEntries = new ArrayList<>();
+        for (CMFileSyncClientEntry entry : pushStateMap.values()) {
+            CMFileSyncOp op = entry.getOpHint();
+            if (op == CMFileSyncOp.DELETE) {
+                deleteEntries.add(entry);
+            } else if (op == CMFileSyncOp.CREATE) {
+                createEntries.add(entry);
+            } else if (op == CMFileSyncOp.MODIFY) {
+                modifyEntries.add(entry);
+            } else {
+                // UNKNOWN 등은 풀 트리아지 단계에서 결정될 분기. 현재는 skip + 로그.
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), unclassified opHint for path = "
+                        + entry.getPath() + ", op = " + op);
+            }
+        }
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("classification: DELETE=" + deleteEntries.size()
+                    + ", CREATE=" + createEntries.size()
+                    + ", MODIFY=" + modifyEntries.size());
+        }
+
+        boolean result = true;
+        if (!deleteEntries.isEmpty()) {
+            boolean dResult = proceedPushDeleteEntries(stateKey, initiatorUuid, deleteEntries);
+            if (!dResult) {
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), failed in proceedPushDeleteEntries.");
+            }
+            result &= dResult;
+        }
+        if (!createEntries.isEmpty()) {
+            boolean cResult = proceedPushCreateEntries(stateKey, initiatorUuid, createEntries);
+            if (!cResult) {
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), failed in proceedPushCreateEntries.");
+            }
+            result &= cResult;
+        }
+        if (!modifyEntries.isEmpty()) {
+            boolean mResult = proceedPushModifyEntries(stateKey, initiatorUuid, modifyEntries);
+            if (!mResult) {
+                System.err.println("CMFileSyncManager.proceedPushStateMap(), failed in proceedPushModifyEntries.");
+            }
+            result &= mResult;
+        }
+        return result;
+    }
+
+    // All entries marked isCompleted == true. Mirrors isCompletePullSync.
+    public boolean isCompletePushSync(Map<String, CMFileSyncClientEntry> pushStateMap) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.isCompletePushSync() called..");
+        if (pushStateMap == null || pushStateMap.isEmpty()) return false;
+        for (CMFileSyncClientEntry entry : pushStateMap.values()) {
+            if (!entry.isCompleted()) return false;
+        }
+        return true;
+    }
+
+    // PUSH 세션 종료 트랜잭션 (changelog append + cursor 갱신 + flushSnapshot + COMPLETE_PUSH_SYNC 송신).
+    // 호출 시점: 서버측, 각 op 완료 핸들러 안에서 isCompletePushSync(pushStateMap) == true 직후.
+    // pushStateTable.remove는 본 메소드 책임 아님 — COMPLETE_PUSH_SYNC_ACK 수신 시점에 정리.
+    // 이유: PUSH 트랜잭션의 truth는 서버 cursor. 클라가 newServerCursor 적용을 ACK로 확인할 때까지 세션 메타 보존.
+    public boolean completePushSync(CMFileSyncStateKey stateKey, UUID initiatorUuid) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.completePushSync() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid);
+        }
+
+        // (1) 시스템 타입 가드
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncManager.completePushSync(), not a SERVER.");
+            return false;
+        }
+
+        // (2) syncInfo + initiator 식별 (finally 의 lease release 에서 참조하므로 try 밖에서 확보)
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+
+        long newServerCursor = -1;
+        boolean committed = false;      // commit 성공 여부 (fan-out 게이트)
+        boolean sendResult = false;     // COMPLETE_PUSH_SYNC 송신 결과 (반환값)
+
+        // [10-3] push 세션 lease 는 이 시점(commit 핸들러 도달)까지 보유 중. 정상/예외/early-return 무관하게
+        // finally 에서 반드시 해제해 commit 실패 stall 을 timeout 없이 즉시 회수한다(§2.6). fan-out 은 release 이후.
+        try {
+            // (2') pushStateMap lookup — 제거 없이 lookup만 (ACK 핸들러가 정리)
+            Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+            Map<String, CMFileSyncClientEntry> pushStateMap = pushStateTable.get(stateKey);
+            if (pushStateMap == null) {
+                System.err.println("CMFileSyncManager.completePushSync(), "
+                        + "pushStateMap not found for stateKey: " + stateKey);
+                return false;
+            }
+
+            // (3) indexRepository 확보 (in-memory cursor truth)
+            CMFileSyncIndexRepository indexRepository = syncInfo.getIndexRegistry()
+                    .getOrLoad(initiatorName, initiatorDeviceUuid);
+
+            // (4) 트랜잭션 commit: (i) batch changelog append, (ii) writeCursor, (iii) flushSnapshot
+            List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
+            if (opRecords == null) {
+                System.err.println("CMFileSyncManager.completePushSync(), "
+                        + "pushOpRecordTable missing for stateKey: " + stateKey);
+                return false;
+            }
+            try {
+                // (i) 누적된 op record 일괄 changelog append
+                syncInfo.appendChangelogBatch(initiatorName, opRecords);
+                // (ii) cursor 파일 갱신 — 인메모리 lastChangeId는 op별 apply로 이미 누적된 최종값
+                newServerCursor = indexRepository.lastChangeId();
+                syncInfo.writeCursor(initiatorName, initiatorDeviceUuid, newServerCursor);
+                // (iii) snapshot 영속화
+                indexRepository.flushSnapshot();
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.completePushSync(), commit failed.");
+                e.printStackTrace();
+                // 영속화 실패 시 클라에 세션 완료 통보하지 않음. 인메모리 갱신은 그대로 두고 후속 재시도 정책 대상.
+                return false;
+            }
+            committed = true;   // COMPLETE_PUSH_SYNC 송신이 실패해도 commit 은 권위 → fan-out 수행
+
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("commit succeeded. newServerCursor = " + newServerCursor);
+            }
+
+            // (5) COMPLETE_PUSH_SYNC 송신
+            CMFileSyncEventCompletePushSync fse_cps = new CMFileSyncEventCompletePushSync();
+            fse_cps.setInitiatorName(initiatorName);
+            fse_cps.setInitiatorUuid(initiatorUuid);
+            fse_cps.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            fse_cps.setNumFilesCompleted(pushStateMap.size());
+            fse_cps.setNewServerCursor(newServerCursor);
+
+            sendResult = CMEventManager.unicastEvent(fse_cps, initiatorName, initiatorUuid);
+            if (!sendResult) {
+                System.err.println("CMFileSyncManager.completePushSync(), failed to send COMPLETE_PUSH_SYNC.");
+                // commit은 이미 성공. 다음 START_PULL_SYNC에서 cursor 비교로 클라가 자동 따라옴.
+            } else if (CMInfo._CM_DEBUG) {
+                System.out.println("COMPLETE_PUSH_SYNC sent. numFilesCompleted = " + pushStateMap.size()
+                        + ", newServerCursor = " + newServerCursor);
+            }
+        } finally {
+            // [10-3] 정상/예외/early-return 무관하게 lease 해제(§2.6). 소유자가 아니면 no-op.
+            syncInfo.releasePushLease(initiatorName, stateKey);
+        }
+
+        // (6) [10-3] fan-out: release 이후 · commit 성공 시에만(§3.2). 같은 사용자의 다른 온라인 디바이스에
+        // SYNC_NEEDED_NOTIFY 통지(3.1). commit 이 권위 상태이므로 COMPLETE_PUSH_SYNC 응답/ACK 와 순서 무관.
+        // 통지는 힌트이며 전파 정합성은 수신측 pull(clientCursor <-> changelogHead)이 보장(유실/중복 안전).
+        if (committed) {
+            notifySyncNeededToOtherDevices(initiatorName, initiatorUuid, initiatorDeviceUuid, newServerCursor);
+        }
+
+        return sendResult;
+    }
+
+    // [10-3] push commit 후 같은 사용자의 다른 온라인 디바이스에 변경 통지를 fan-out 한다(3.1, 3.2).
+    // origin 은 event.initiatorUuid(=A 의 login session UUID)로 식별해 제외한다. 통지 이벤트의 공통 헤더
+    // initiator* 는 "cause = A"로 채운다(송신자는 서버지만 의미상 원인은 A). changelogHead 는 이번 commit
+    // 으로 확정된 새 head(= newServerCursor).
+    private void notifySyncNeededToOtherDevices(String initiatorName, UUID initiatorUuid,
+                                                UUID initiatorDeviceUuid, long changelogHead) {
+        CMMember loginUsers = CMInteractionInfo.getInstance().getLoginUsers();
+        List<CMUser> userLogins = loginUsers.findMemberList(initiatorName);
+        if (userLogins == null || userLogins.isEmpty()) return;
+
+        for (CMUser login : userLogins) {
+            // login session UUID 비교로 변경 디바이스(A) 자신 제외. 드물게 같은 device 의 다른 session 에
+            // 통지가 가더라도 수신측 pull 이 rc 1(no-op)로 귀결되어 정합성에 영향 없다(3.1).
+            if (login.getUuid() != null && login.getUuid().equals(initiatorUuid)) continue;
+
+            CMFileSyncEventSyncNeededNotify notify = new CMFileSyncEventSyncNeededNotify();
+            notify.setInitiatorName(initiatorName);
+            notify.setInitiatorUuid(initiatorUuid);
+            notify.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            notify.setChangelogHead(changelogHead);
+
+            if (!CMEventManager.unicastEvent(notify, initiatorName, login.getUuid())) {
+                System.err.println("CMFileSyncManager.notifySyncNeededToOtherDevices(), "
+                        + "failed to send SYNC_NEEDED_NOTIFY to session: " + login.getUuid());
+            } else if (CMInfo._CM_DEBUG) {
+                System.out.println("SYNC_NEEDED_NOTIFY sent to session " + login.getUuid()
+                        + ", changelogHead = " + changelogHead);
+            }
+        }
+    }
+
+    // Server-side CREATE trigger.
+    // - Directory entries: synchronously created on the server's sync home + in-memory server-index
+    //   updated + pushStateMap.isCompleted=true + a COMPLETE_PUSH_CREATE event sent (one per dir).
+    // - File entries: a REQUEST_NEW_FILES batch is sent to the client (MAX_EVENT_SIZE-bounded).
+    //   The actual file receipt, server-index update, isCompleted marking, and COMPLETE_PUSH_CREATE
+    //   send happen later in the server's processEND_FILE_TRANSFER PUSH-CREATE branch (separate step).
+    // If only directories were in createEntries and the session is now fully complete, the
+    // completion transaction is entered at the end.
+    public boolean proceedPushCreateEntries(CMFileSyncStateKey stateKey, UUID initiatorUuid,
+                                            List<CMFileSyncClientEntry> createEntries) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushCreateEntries() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid
+                    + ", createEntries.size = " + createEntries.size());
+        }
+
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+        Path serverSyncHome = getServerSyncHome(initiatorName);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncIndexRepository indexRepository =
+                syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                    + "pushStateMap not found for stateKey: " + stateKey);
+            return false;
+        }
+        List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
+        if (opRecords == null) {
+            System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                    + "pushOpRecordTable missing for stateKey: " + stateKey);
+            return false;
+        }
+
+        boolean result = true;
+        long now = System.currentTimeMillis() / 1000L;
+
+        // (1) 디렉토리/파일 entry 분리 (pushStateMap 가드 동시 수행)
+        List<CMFileSyncClientEntry> dirEntries = new ArrayList<>();
+        List<CMFileSyncClientEntry> fileEntries = new ArrayList<>();
+        for (CMFileSyncClientEntry entry : createEntries) {
+            if (pushStateMap.get(entry.getPath()) == null) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "entry not found in pushStateMap: " + entry.getPath());
+                result = false;
+                continue;
+            }
+            if (entry.isDirectory()) {
+                dirEntries.add(entry);
+            } else {
+                fileEntries.add(entry);
+            }
+        }
+
+        // (2) 디렉토리 entry → 서버측 동기 처리 (deferred-commit: 파일 영속화는 completePushSync)
+        boolean anyDirectoryCompleted = false;
+        for (CMFileSyncClientEntry entry : dirEntries) {
+            String relPathStr = entry.getPath();
+            Path absPath = serverSyncHome.resolve(relPathStr).toAbsolutePath().normalize();
+            try {
+                Files.createDirectories(absPath);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "error creating directory: " + absPath);
+                e.printStackTrace();
+                result = false;
+                continue;
+            }
+            if (CMInfo._CM_DEBUG) System.out.println("created directory: " + absPath);
+
+            long newChangeId;   // [10-3] 전역 할당 (dual-writer (i): 증분 push dir CREATE)
+            try {
+                newChangeId = syncInfo.allocateNextChangeId(initiatorName);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "failed to allocate changeId for dir: " + relPathStr);
+                e.printStackTrace();
+                result = false;
+                continue;
+            }
+            indexRepository.applyCreateOrModify(relPathStr, true, null, now, 0L, newChangeId);
+
+            // 10-2 doc 12015~12016: 디렉토리 분기 applyCreateOrModify 직후 record add.
+            // 기존 CMFileSyncInfo.appendChangelog CREATE 호출 형태 미러 — 디렉토리는 contentHash=null, size=0L.
+            opRecords.add(new CMFileSyncChangeLogEntry()
+                    .setChangeId(newChangeId)
+                    .setUserName(initiatorName)
+                    .setOriginDeviceUuid(initiatorDeviceUuid)
+                    .setOp(CMFileSyncOp.CREATE)
+                    .setPath(relPathStr)
+                    .setDirectory(true)
+                    .setContentHash(null)
+                    .setMtime(now)
+                    .setSize(0L)
+                    .setTombstone(false)
+                    .setTs(OffsetDateTime.now()));
+
+            pushStateMap.get(relPathStr).setCompleted(true);
+            anyDirectoryCompleted = true;
+
+            CMFileSyncEventCompletePushCreate fse_cpc = new CMFileSyncEventCompletePushCreate();
+            fse_cpc.setInitiatorName(initiatorName);
+            fse_cpc.setInitiatorUuid(initiatorUuid);
+            fse_cpc.setInitiatorDeviceUuid(initiatorDeviceUuid);
+            fse_cpc.setCreatedPath(relPathStr);
+            if (!CMEventManager.unicastEvent(fse_cpc, initiatorName, initiatorUuid)) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "failed to send COMPLETE_PUSH_CREATE for dir: " + relPathStr);
+                result = false;
+                // 디렉토리는 이미 isCompleted=true로 마킹됨 → 세션 진전 유지
+            }
+        }
+
+        // (3) 파일 entry → REQUEST_NEW_FILES batch 송신
+        //     (full sync requestTransferOfNewFiles 패턴 차용)
+        int numRequestsCompleted = 0;
+        while (numRequestsCompleted < fileEntries.size()) {
+            CMFileSyncEventRequestNewFiles fse_rnf = new CMFileSyncEventRequestNewFiles();
+            fse_rnf.setInitiatorName(initiatorName);
+            fse_rnf.setInitiatorUuid(initiatorUuid);
+            fse_rnf.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+            int curByteNum = fse_rnf.getByteNum();
+            List<Path> requestedFileList = new ArrayList<>();
+            int numRequestedFiles = 0;
+
+            while (numRequestsCompleted < fileEntries.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                Path relPath = Paths.get(fileEntries.get(numRequestsCompleted).getPath());
+                curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relPath.toString().getBytes().length;
+                if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                    requestedFileList.add(relPath);
+                    numRequestedFiles++;
+                    numRequestsCompleted++;
+                } else {
+                    break;
+                }
+            }
+            fse_rnf.setNumRequestedFiles(numRequestedFiles);
+            fse_rnf.setRequestedFileList(requestedFileList);
+
+            if (!CMEventManager.unicastEvent(fse_rnf, initiatorName, initiatorUuid)) {
+                System.err.println("CMFileSyncManager.proceedPushCreateEntries(), "
+                        + "failed to send REQUEST_NEW_FILES.");
+                return false;
+            }
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("sent REQUEST_NEW_FILES: numRequestedFiles=" + numRequestedFiles);
+            }
+        }
+
+        // (4) 디렉토리만으로 세션 완료 가능 케이스 체크
+        // (createEntries가 모두 디렉토리이고 DELETE도 모두 완료된 케이스)
+        if (anyDirectoryCompleted && isCompletePushSync(pushStateMap)) {
+            boolean completeResult = completePushSync(stateKey, initiatorUuid);
+            result &= completeResult;
+        }
+
+        return result;
+    }
+
+    // 10-2 doc 11259: PUSH 세션의 MODIFY 분기 진입점.
+    // 책임: SERVER 가드 → pushStateMap 존재성 검증 → pushGeneratorMap 중복 등록 검사 →
+    //      CMFileSyncPushGenerator 생성·등록 → ExecutorService 워커 위임 → 즉시 true 반환.
+    // 디스크 I/O 없음. 무거운 작업(블록 체크섬 계산 + START_FILE_BLOCK_CHECKSUM 송신)은
+    // 워커 스레드(CMFileSyncPushGenerator.run())에서. caller(proceedPushStateMap)가 modifyEntries 빈 가드.
+    // entry별 isCompleted 마킹·COMPLETE_PUSH_MODIFY 송신·세션 종료 진입은
+    // processEND_FILE_BLOCK_CHECKSUM_ACK PUSH 분기(F-6, 별도 단계) 책임.
+    public boolean proceedPushModifyEntries(CMFileSyncStateKey stateKey, UUID initiatorUuid,
+                                            List<CMFileSyncClientEntry> modifyEntries) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushModifyEntries() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid
+                    + ", modifyEntries.size = " + modifyEntries.size());
+        }
+
+        // (1) SERVER 가드
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) {
+            System.err.println("CMFileSyncManager.proceedPushModifyEntries(), not a SERVER.");
+            return false;
+        }
+
+        // (2) pushStateMap 존재성 검증
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushModifyEntries(), "
+                    + "pushStateMap not found for stateKey: " + stateKey);
+            return false;
+        }
+
+        // (3) pushGeneratorMap 중복 등록 검사 (정상 흐름이라면 F-6에서 cleanup 완료, 잔재는 비정상 신호)
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+        CMUserLoginKey loginKey = new CMUserLoginKey(initiatorName, initiatorUuid);
+        Map<CMUserLoginKey, CMFileSyncPushGenerator> pushGeneratorMap = syncInfo.getPushGeneratorMap();
+        if (pushGeneratorMap.containsKey(loginKey)) {
+            System.err.println("CMFileSyncManager.proceedPushModifyEntries(), "
+                    + "pushGenerator already exists for loginKey: " + loginKey);
+            return false;
+        }
+
+        // (4) PushGenerator 인스턴스 생성 (PullGenerator와 동일 패턴 — 분해 식별자)
+        CMFileSyncPushGenerator pushGenerator = new CMFileSyncPushGenerator(
+                initiatorName, initiatorUuid, initiatorDeviceUuid, modifyEntries);
+
+        // (5) loginKey로 등록
+        pushGeneratorMap.put(loginKey, pushGenerator);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncPushGenerator created and registered for loginKey = " + loginKey
+                    + ", modifyEntries.size = " + modifyEntries.size());
+        }
+
+        // (6) ExecutorService 워커에 위임 (이벤트 처리 스레드 비블로킹)
+        ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
+        es.submit(pushGenerator);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("CMFileSyncPushGenerator submitted to ExecutorService.");
+        }
+
+        // (7) 트리거 성공 반환 — 본 메소드 반환 시점에 entry별 처리 결과 미확정.
+        //     실제 실패는 isCompleted 누락 → 세션 자동 미완료로 표면화.
+        return true;
+    }
+
+    // Server-side DELETE handler: deletes the file on disk and updates the in-memory server-index
+    // tombstone synchronously, then notifies the client with COMPLETE_PUSH_DELETE (split if needed).
+    // Each processed entry is marked isCompleted=true in pushStateMap.
+    // Persistence (changelog/cursor/snapshot) is deferred to completePushSync — same deferred-commit
+    // policy as proceedConflictedServerEntry.
+    public boolean proceedPushDeleteEntries(CMFileSyncStateKey stateKey, UUID initiatorUuid,
+                                            List<CMFileSyncClientEntry> deleteEntries) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedPushDeleteEntries() called..");
+            System.out.println("stateKey = " + stateKey + ", initiatorUuid = " + initiatorUuid
+                    + ", deleteEntries.size = " + deleteEntries.size());
+        }
+
+        String initiatorName = stateKey.initiatorName();
+        UUID initiatorDeviceUuid = stateKey.initiatorDeviceUuid();
+        Path serverSyncHome = getServerSyncHome(initiatorName);
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncIndexRepository indexRepository =
+                syncInfo.getIndexRegistry().getOrLoad(initiatorName, initiatorDeviceUuid);
+        Map<String, CMFileSyncClientEntry> pushStateMap = syncInfo.getPushStateTable().get(stateKey);
+        if (pushStateMap == null) {
+            System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                    + "pushStateMap not found for stateKey: " + stateKey);
+            return false;
+        }
+        List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(stateKey);
+        if (opRecords == null) {
+            System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                    + "pushOpRecordTable missing for stateKey: " + stateKey);
+            return false;
+        }
+
+        List<String> deletedPathList = new ArrayList<>();
+        boolean result = true;
+        long now = System.currentTimeMillis() / 1000L;
+
+        // (1) entry별 디스크 삭제 + 인메모리 tombstone + isCompleted 마킹
+        for (CMFileSyncClientEntry entry : deleteEntries) {
+            String relPathStr = entry.getPath();
+            Path absPath = serverSyncHome.resolve(relPathStr).toAbsolutePath().normalize();
+
+            // 삭제 시점에는 디스크 파일이 이미 사라질 수 있어 인덱스를 truth로 사용
+            CMFileSyncIndexEntry indexEntry = indexRepository.readEntry(relPathStr);
+            boolean isDirectory = (indexEntry != null) && indexEntry.isDirectory();
+
+            try {
+                Files.deleteIfExists(absPath);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                        + "error deleting file: " + absPath);
+                e.printStackTrace();
+                result = false;
+                // isCompleted 미마킹 → 세션은 미완료 상태 유지
+                continue;
+            }
+            if (CMInfo._CM_DEBUG) System.out.println("deleted: " + absPath);
+
+            // applyDelete 내부에서 Math.max(lastChangeId, ...)로 in-memory cursor 자동 전진
+            long newChangeId;   // [10-3] 전역 할당 (dual-writer (i): 증분 push DELETE)
+            try {
+                newChangeId = syncInfo.allocateNextChangeId(initiatorName);
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                        + "failed to allocate changeId for: " + relPathStr);
+                e.printStackTrace();
+                result = false;
+                continue;
+            }
+            indexRepository.applyDelete(relPathStr, isDirectory, newChangeId, now);
+
+            // 10-2 doc 12013: applyDelete 직후 record add. 영속화는 completePushSync에서 일괄.
+            // 기존 CMFileSyncInfo.appendChangelog DELETE 호출 형태(contentHash=null, mtime=now, size=0L) 미러.
+            opRecords.add(new CMFileSyncChangeLogEntry()
+                    .setChangeId(newChangeId)
+                    .setUserName(initiatorName)
+                    .setOriginDeviceUuid(initiatorDeviceUuid)
+                    .setOp(CMFileSyncOp.DELETE)
+                    .setPath(relPathStr)
+                    .setDirectory(isDirectory)
+                    .setContentHash(null)
+                    .setMtime(now)
+                    .setSize(0L)
+                    .setTombstone(true)
+                    .setTs(OffsetDateTime.now()));
+
+            CMFileSyncClientEntry pushEntry = pushStateMap.get(relPathStr);
+            if (pushEntry != null) {
+                pushEntry.setCompleted(true);
+            } else {
+                System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                        + "entry not found in pushStateMap: " + relPathStr);
+                // 에러 출력 후 계속 진행 (processCOMPLETE_PULL_DELETE 정책과 동일)
+            }
+            deletedPathList.add(relPathStr);
+        }
+
+        // (2) COMPLETE_PUSH_DELETE 송신 — byte 한도 초과 시 분할
+        if (!deletedPathList.isEmpty()) {
+            int listIndex = 0;
+            while (listIndex < deletedPathList.size()) {
+                CMFileSyncEventCompletePushDelete fse_cpd = new CMFileSyncEventCompletePushDelete();
+                fse_cpd.setInitiatorName(initiatorName);
+                fse_cpd.setInitiatorUuid(initiatorUuid);
+                fse_cpd.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+                List<String> subList = createSubStringListForEvent(fse_cpd.getByteNum(),
+                        deletedPathList, listIndex);
+                listIndex += subList.size();
+                fse_cpd.setDeletedPathList(subList);
+
+                boolean sendResult = CMEventManager.unicastEvent(fse_cpd, initiatorName, initiatorUuid);
+                if (!sendResult) {
+                    System.err.println("CMFileSyncManager.proceedPushDeleteEntries(), "
+                            + "failed to send COMPLETE_PUSH_DELETE: subList.size = " + subList.size());
+                    return false;
+                }
+                if (CMInfo._CM_DEBUG) {
+                    System.out.println("sent COMPLETE_PUSH_DELETE: subList.size = " + subList.size());
+                }
+            }
+        }
+
+        // (3) 세션 전체 완료 시 종료 트랜잭션 진입
+        if (isCompletePushSync(pushStateMap)) {
+            boolean completeResult = completePushSync(stateKey, initiatorUuid);
+            result &= completeResult;
+        }
+
+        return result;
+    }
+
+    // called by client; compares the received serverEntryList against the local clientPathList
+    // and classifies each entry into the pull maps (delete/create/modify) or the pending push map.
+    public boolean compareServerAndClientEntriesForPullSync() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.compareServerAndClientEntriesForPullSync() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        List<CMFileSyncChangeLogEntry> serverEntryList = syncInfo.getServerEntryList();
+        List<Path> clientPathList = syncInfo.getClientPathList();
+        if (serverEntryList == null || clientPathList == null) {
+            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                    "serverEntryList or clientPathList is null!");
+            return false;
+        }
+
+        Path clientSyncHome = getClientSyncHome();
+        Map<String, CMFileSyncClientEntry> pullModifyMap = syncInfo.getPullModifyMap();
+        Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
+        Map<String, CMFileSyncClientEntry> pullDeleteMap = syncInfo.getPullDeleteMap();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        String serverName = CMInteractionInfo.getInstance().getDefaultServerInfo().getServerName();
+
+        try {
+            // classify each server entry by op
+            for (CMFileSyncChangeLogEntry serverEntry : serverEntryList) {
+                String relPathStr = serverEntry.getPath();      // relative path (server & client)
+                Path relPath = Path.of(relPathStr);
+                // ignore 패턴 매칭 시 동기화 대상에서 제외 (.DS_Store 등).
+                // 현 정책에선 클라 createPathList 가 이미 ignore 필터링해 서버 changelog 에 들어가지 않으므로
+                // 정상 흐름에선 unreachable. 향후 per-user/per-device ignore 정책 확장(서로 다른 디바이스가
+                // 같은 path 를 다르게 ignore) 시 도달 가능하므로 ack 송신해 서버 hang 방지.
+                if (syncInfo.isIgnored(relPath)) {
+                    if (CMInfo._CM_DEBUG)
+                        System.out.println("ignored server entry: " + relPathStr);
+                    ackSkippedPullEntry(relPathStr, serverEntry.getOp(), serverName);
+                    continue;
+                }
+                Path absPath = clientSyncHome.resolve(relPath); // client absolute path
+                long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
+                long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+                long curSize = syncInfo.currentSizeOrMinusOne(absPath);
+                long serverMtime = serverEntry.getMtime();
+                boolean existsOnClient = clientPathList.contains(absPath);
+                boolean isDir = serverEntry.isDirectory();
+                // 클라 파일이 이미 서버 버전과 동일한가: 파일은 mtime+size, 디렉토리는 존재만으로 판정.
+                // index 유실(client-index.json 삭제)로 baseMtime 이 -1 이어도 "서버와 동일"을 인식해
+                // 불필요한 conflict-rename 을 막는다.
+                boolean matchesServer = existsOnClient
+                        && (isDir || (curMtime == serverMtime && curSize == serverEntry.getSize()));
+
+                CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
+                clientEntry.setPath(relPathStr)
+                        .setSize(serverEntry.getSize())
+                        .setCurMtime(curMtime)
+                        .setBaseMtime(baseMtime)
+                        .setServerMtime(serverMtime);
+
+                CMFileSyncOp op = serverEntry.getOp();
+
+                // 이미 서버와 동일(CREATE/MODIFY) → 전송 없이 lastSynced 재구축 + COMPLETE_PULL_* 송신으로 완료 마킹.
+                // (서버는 serverEntryList 전체로 pullStateMap 을 만들어 완료를 기다리므로, skip 만 하면 세션이 안 끝남.)
+                if (matchesServer && (op == CMFileSyncOp.CREATE || op == CMFileSyncOp.MODIFY)) {
+                    if (!proceedAlreadySyncedPullEntry(relPathStr, clientEntry, curSize, op, serverName)) {
+                        System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), "
+                                + "proceedAlreadySyncedPullEntry failed: " + relPathStr);
+                    }
+                    continue;
+                }
+                if (op == CMFileSyncOp.MODIFY) {
+                    if (!existsOnClient || curMtime != baseMtime) {
+                        // conflict: local file missing or locally modified since last sync
+                        boolean conflictResult = proceedConflictedClientEntry(clientEntry);
+                        if (!conflictResult) {
+                            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                                    "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            // 클라가 처리 못 한 entry 라도 서버 pullStateMap 완료 마킹은 필요 (hang 방지).
+                            ackSkippedPullEntry(relPathStr, CMFileSyncOp.MODIFY, serverName);
+                            continue;   // rename 실패 시 pullCreateMap에 추가하지 않고 건너뜀
+                        }
+                        pullCreateMap.put(relPathStr, clientEntry);
+                    } else {
+                        pullModifyMap.put(relPathStr, clientEntry);
+                    }
+                } else if (op == CMFileSyncOp.CREATE) {
+                    if (existsOnClient) {
+                        // conflict: 기존 클라 파일 보호
+                        boolean conflictResult = proceedConflictedClientEntry(clientEntry);
+                        if (!conflictResult) {
+                            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                                    "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            // 클라가 처리 못 한 entry 라도 서버 pullStateMap 완료 마킹은 필요 (hang 방지).
+                            ackSkippedPullEntry(relPathStr, CMFileSyncOp.CREATE, serverName);
+                            continue;   // rename 실패 -> 기존 클라 파일 보호
+                        }
+                    }
+                    pullCreateMap.put(relPathStr, clientEntry);
+                } else if (op == CMFileSyncOp.DELETE) {
+                    if (!existsOnClient) {
+                        // 클라 디스크엔 이미 없음 (서버 dedup 이후엔 외부 수동 삭제 / 다중 디바이스 정합성 케이스).
+                        // 서버 pullStateMap 완료 마킹 위해 ack 만 송신.
+                        ackSkippedPullEntry(relPathStr, CMFileSyncOp.DELETE, serverName);
+                    } else if (curMtime == baseMtime) {
+                        // 마지막 동기화 이후 클라 로컬 변경 없음 -> 안전하게 삭제 대상.
+                        // NOTE: DELETE tombstone 의 serverMtime(serverEntry.getMtime())은 "삭제 시각"이라
+                        // 파일 content mtime 과 무관하므로 비교에 쓰면 안 된다 (항상 불일치 → 정상 전파
+                        // DELETE 가 전부 conflict 로 오판됨). 삭제 안전성은 curMtime==baseMtime 만으로 판정.
+                        pullDeleteMap.put(relPathStr, clientEntry);
+                    } else {
+                        // 로컬에서 수정됨 -> conflict (삭제하지 않고 rename + push)
+                        boolean conflictResult = proceedConflictedClientEntry(clientEntry);
+                        if (!conflictResult) {
+                            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), " +
+                                    "failed to proceed conflict entry: " + relPathStr + ", skip.");
+                            // rename 실패 -> 삭제도, push도 하지 않음 (현상 유지). 단, 서버 ack 는 필요.
+                            ackSkippedPullEntry(relPathStr, CMFileSyncOp.DELETE, serverName);
+                        }
+                    }
+                }
+            }
+
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("pullModifyMap = " + pullModifyMap);
+                System.out.println("pullCreateMap = " + pullCreateMap);
+                System.out.println("pullDeleteMap = " + pullDeleteMap);
+                System.out.println("pendingPushMap = " + pendingPushMap);
+            }
+
+            // pullModifyMap 대상을 제외한 client path 중 baseMtime보다 큰 curMtime인 파일을
+            // pendingPushMap에 추가 (이 클라이언트에서 최신 수정된 파일들)
+            scanLocalPushCandidates(clientPathList, pullModifyMap.keySet());
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.compareServerAndClientEntriesForPullSync(), I/O error!");
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    // Scans the client sync home for local PUSH candidates — files whose current mtime is newer
+    // than the client base snapshot (lastSynced) — and adds each to pendingPushMap with a
+    // CREATE/MODIFY opHint (CREATE when baseMtime==-1, i.e. unknown to the base snapshot).
+    // excludePaths holds relPaths already handled by the pull flow (e.g. pullModifyMap keys) that
+    // must be skipped; pass an empty set for a standalone scan (the START_PULL_SYNC_ACK
+    // returnCode==1 path, where no pull runs). Returns the number of candidates added.
+    // mtime/size use the shared helpers, so a vanished/unreadable file yields -1 and is skipped.
+    public int scanLocalPushCandidates(List<Path> clientPathList, Set<String> excludePaths) throws IOException {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path clientSyncHome = getClientSyncHome();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        int numAdded = 0;
+
+        for (Path absPath : clientPathList) {
+            Path relPath = clientSyncHome.relativize(absPath);
+            String relPathStr = relPath.toString().replace('\\', '/');
+
+            if (excludePaths.contains(relPathStr)) continue;
+
+            long baseMtime = syncInfo.getLastSyncedMtime(relPathStr);
+            long curMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            long curSize = syncInfo.currentSizeOrMinusOne(absPath);
+
+            if (curMtime > baseMtime) {
+                CMFileSyncClientEntry clientEntry = new CMFileSyncClientEntry();
+                clientEntry.setPath(relPathStr)
+                        .setSize(curSize)
+                        .setCurMtime(curMtime)
+                        .setBaseMtime(baseMtime)
+                        .setOpHint(baseMtime == -1 ? CMFileSyncOp.CREATE : CMFileSyncOp.MODIFY)
+                        .setDirectory(Files.isDirectory(absPath));
+                pendingPushMap.put(relPathStr, clientEntry);
+                numAdded++;
+                if (CMInfo._CM_DEBUG)
+                    System.out.println("pendingPushMap added: key = " + relPathStr + ", value = " + clientEntry);
+            }
+        }
+        return numAdded;
+    }
+
+    // Detects local DELETEs for PUSH: relPaths present in the client base snapshot (lastSynced) but
+    // no longer on disk. Adds each as a DELETE-opHint entry to pendingPushMap (size=0/curMtime=-1;
+    // isDirectory left false — the server uses its own index as the truth for dir-ness when applying
+    // the delete). Only safe to call when the server has no pending changes for this client
+    // (START_PULL_SYNC_ACK returnCode==1): then every local deletion is unambiguously client-
+    // originated. NOT used by the pull flow, where a missing local file may instead be a server
+    // CREATE/MODIFY to re-fetch (conflict) rather than a delete to push. existingRelPaths is the set
+    // of relPaths currently on disk (derived from clientPathList). Returns the number added.
+    public int scanLocalPushDeletes(Set<String> existingRelPaths) {
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        int numAdded = 0;
+
+        // snapshot the keys: the base snapshot is read-only here, but copy defensively.
+        // NOTE: online-mode placeholder(0바이트)도 정상 sync 상태에선 디스크에 존재하므로
+        // existingRelPaths 에 잡혀 아래에서 skip 된다. 디스크에 없는 online 경로는 "사용자가 삭제한
+        // 것"으로 보고 DELETE 로 전파한다 (상용 online-only 파일과 동일 의미). placeholder 가 항상
+        // 생성되는 것은 proceedOnlinePullCreateEntry/ModifyEntry 가 보장한다.
+        for (String relPathStr : new ArrayList<>(syncInfo.getLastSyncedMtimeMap().keySet())) {
+            if (existingRelPaths.contains(relPathStr)) continue;   // still on disk -> not deleted
+            if (pendingPushMap.containsKey(relPathStr)) continue;  // already classified
+
+            CMFileSyncClientEntry entry = new CMFileSyncClientEntry();
+            entry.setPath(relPathStr)
+                    .setSize(0L)
+                    .setCurMtime(-1L)
+                    .setBaseMtime(syncInfo.getLastSyncedMtime(relPathStr))
+                    .setOpHint(CMFileSyncOp.DELETE)
+                    .setDirectory(false);
+            pendingPushMap.put(relPathStr, entry);
+            numAdded++;
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pendingPushMap DELETE added: key = " + relPathStr);
+        }
+        return numAdded;
+    }
+
+    // Derives the on-disk relPath set from clientPathList and folds client-originated DELETEs into
+    // pendingPushMap via scanLocalPushDeletes. Shared by the two safe call sites: the returnCode==1
+    // standalone path (startPushSyncForLocalChanges) and the post-PULL path (processCOMPLETE_PULL_SYNC).
+    // Both invoke it only once the server has no pending changes left to disambiguate, so a base-
+    // snapshot path missing from disk is unambiguously a local delete. Returns the number added.
+    public int addLocalPushDeletes(List<Path> clientPathList) {
+        Path clientSyncHome = getClientSyncHome();
+        Set<String> existingRelPaths = new HashSet<>();
+        for (Path absPath : clientPathList) {
+            existingRelPaths.add(clientSyncHome.relativize(absPath).toString().replace('\\', '/'));
+        }
+        return scanLocalPushDeletes(existingRelPaths);
+    }
+
+    // Standalone PUSH entry point used when the PULL flow is skipped because the server reports the
+    // client cursor already matches (START_PULL_SYNC_ACK returnCode==1): the cursor only reflects
+    // server-applied changes, so it never signals client-local additions/edits. This builds the
+    // current client path list and scans for local push candidates; if any exist it starts a push
+    // session (mirroring the push branch of processCOMPLETE_PULL_SYNC), otherwise it ends the
+    // session by setting syncProgress=NONE. Runs on the event-processing thread.
+    public boolean startPushSyncForLocalChanges() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.startPushSyncForLocalChanges() called..");
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), system type is not CLIENT!");
+            return false;
+        }
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        // build the current client path list (same as the pull flow does after END_SERVER_ENTRY_LIST)
+        Path syncHome = getClientSyncHome();
+        List<Path> clientPathList = createPathList(syncHome);
+        if (clientPathList == null) {
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), clientPathList is null!");
+            return false;
+        }
+        syncInfo.setClientPathList(clientPathList);
+
+        // scan for local CREATE/MODIFY push candidates; no pull is running, so nothing to exclude
+        int numCandidates;
+        try {
+            numCandidates = scanLocalPushCandidates(clientPathList, Collections.emptySet());
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), I/O error during scan!");
+            e.printStackTrace();
+            return false;
+        }
+
+        // detect local DELETEs: base-snapshot paths no longer on disk. Safe here because returnCode==1
+        // means the server has no pending changes for this client, so any local deletion is
+        // unambiguously client-originated (no server CREATE/MODIFY to conflict with).
+        numCandidates += addLocalPushDeletes(clientPathList);
+
+        // nothing to push -> the client really is in sync; end the session
+        if (numCandidates == 0) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("no local push candidates; nothing to sync.");
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return true;
+        }
+
+        // local changes exist -> start a push session (caller-set-PUSH convention as in the
+        // processCOMPLETE_PULL_SYNC push branch: set PUSH before proceedPendingPushMap()).
+        syncInfo.setSyncProgress(CMFileSyncProgress.PUSH);
+        boolean pushStarted = proceedPendingPushMap();
+        if (!pushStarted) {
+            // proceedPendingPushMap() rolls back its own snapshot on send failure; reset state here
+            System.err.println("CMFileSyncManager.startPushSyncForLocalChanges(), proceedPendingPushMap failed!");
+            syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
+            return false;
+        }
+        return true;
+    }
+
+    // compareServerAndClientEntriesForPullSync 의 모든 skip 분기(isIgnored / conflict-rename 실패 /
+    // DELETE-but-not-on-client) 에서 호출. 서버 pullStateMap[path] 는 entryList 진입 시점에 만들어져
+    // 클라 ack 없이는 영원히 completed=false 로 남아 COMPLETE_PULL_SYNC 가 트리거되지 않으므로,
+    // 처리 못 했더라도 op 에 맞는 COMPLETE_PULL_* 만 보내 세션을 풀어준다. proceedAlreadySyncedPullEntry
+    // 와 달리 lastSynced 는 절대 건드리지 않는다 — 이 분기들은 모두 "클라 디스크 상태가 서버와 다름"
+    // 또는 "동기화 대상이 아님" 이므로 base snapshot 에 들어가면 안 됨. DELETE 는 이벤트가 list-shaped 라
+    // 단일 path 를 1-원소 List 로 감싼다.
+    private boolean ackSkippedPullEntry(String relPathStr, CMFileSyncOp op, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.ackSkippedPullEntry() called: " + relPathStr
+                    + ", op=" + op);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String myName = interInfo.getMyself().getName();
+        UUID myUuid = interInfo.getMyself().getUuid();
+        UUID myDeviceUuid = syncInfo.getDeviceUuid();
+
+        boolean sendResult;
+        switch (op) {
+            case CREATE -> {
+                CMFileSyncEventCompletePullCreate fse = new CMFileSyncEventCompletePullCreate();
+                fse.setInitiatorName(myName);
+                fse.setInitiatorUuid(myUuid);
+                fse.setInitiatorDeviceUuid(myDeviceUuid);
+                fse.setCreatedPath(relPathStr);
+                sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+            }
+            case MODIFY -> {
+                CMFileSyncEventCompletePullModify fse = new CMFileSyncEventCompletePullModify();
+                fse.setInitiatorName(myName);
+                fse.setInitiatorUuid(myUuid);
+                fse.setInitiatorDeviceUuid(myDeviceUuid);
+                fse.setModifiedPath(relPathStr);
+                sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+            }
+            case DELETE -> {
+                CMFileSyncEventCompletePullDelete fse = new CMFileSyncEventCompletePullDelete();
+                fse.setInitiatorName(myName);
+                fse.setInitiatorUuid(myUuid);
+                fse.setInitiatorDeviceUuid(myDeviceUuid);
+                fse.setDeletedPathList(List.of(relPathStr));
+                sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+            }
+            default -> {
+                System.err.println("CMFileSyncManager.ackSkippedPullEntry(), unsupported op = "
+                        + op + " for " + relPathStr);
+                return false;
+            }
+        }
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.ackSkippedPullEntry(), send error for " + relPathStr);
+        return sendResult;
+    }
+
+    // 클라 파일이 이미 서버 버전과 동일할 때 호출: 데이터 전송 없이 client-index(lastSynced)를 재구축하고
+    // op 에 맞는 COMPLETE_PULL_CREATE/MODIFY 를 서버로 보내 pull 완료를 마킹한다.
+    // index 유실(client-index.json 삭제) 후 재동기화 시 동일 파일이 conflict-rename 되는 문제를 막는다.
+    // online-mode helper(proceedOnlinePull*Entry)의 "전송 없이 완료" 패턴과 동형 (단 online list 등록 없음,
+    // lastSynced 는 mtime+size 둘 다 기록). lastSynced mtime 은 entry.getCurMtime() 사용 — matchesServer 가
+    // 파일은 curMtime==serverMtime 을 보장하고 디렉토리는 디스크 mtime 이 정합값.
+    private boolean proceedAlreadySyncedPullEntry(String relPathStr, CMFileSyncClientEntry entry,
+                                                  long curSize, CMFileSyncOp op, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedAlreadySyncedPullEntry() called: " + relPathStr
+                    + ", op=" + op);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String myName = interInfo.getMyself().getName();
+        UUID myUuid = interInfo.getMyself().getUuid();
+        UUID myDeviceUuid = syncInfo.getDeviceUuid();
+
+        // client-index(lastSynced) 재구축 (mtime+size)
+        syncInfo.setLastSynced(relPathStr, entry.getCurMtime(), curSize);
+        entry.setCompleted(true);
+
+        boolean sendResult;
+        if (op == CMFileSyncOp.CREATE) {
+            CMFileSyncEventCompletePullCreate fse = new CMFileSyncEventCompletePullCreate();
+            fse.setInitiatorName(myName);
+            fse.setInitiatorUuid(myUuid);
+            fse.setInitiatorDeviceUuid(myDeviceUuid);
+            fse.setCreatedPath(relPathStr);
+            sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+        } else {   // MODIFY
+            CMFileSyncEventCompletePullModify fse = new CMFileSyncEventCompletePullModify();
+            fse.setInitiatorName(myName);
+            fse.setInitiatorUuid(myUuid);
+            fse.setInitiatorDeviceUuid(myDeviceUuid);
+            fse.setModifiedPath(relPathStr);
+            sendResult = CMEventManager.unicastEvent(fse, serverName, null);
+        }
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.proceedAlreadySyncedPullEntry(), send error for " + relPathStr);
+        return sendResult;
+    }
+
+    // called by client; marks a conflicting local file by renaming it with a
+    // "-conflict-yyyyMMdd-HHmmss" suffix and queues the renamed file into pendingPushMap.
+    // The parameter entry may belong to another pull map, so a new CMFileSyncClientEntry
+    // is created for pendingPushMap to keep the original untouched.
+    private boolean proceedConflictedClientEntry(CMFileSyncClientEntry entry) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.proceedConflictedClientEntry() called..");
+            System.out.println("entry = " + entry);
+        }
+
+        // (1) 필요 변수 설정
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pendingPushMap = syncInfo.getPendingPushMap();
+        String relPathStr = entry.getPath();
+        Path clientSyncHome = getClientSyncHome();
+        Path absPath = clientSyncHome.resolve(relPathStr).toAbsolutePath().normalize();
+
+        // (2) conflict suffix 생성: "-conflict-yyyyMMdd-HHmmss"
+        String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+        String conflictSuffix = "-conflict-" + timestamp;
+
+        // (3) 새 파일명 생성 (확장자 앞에 suffix 삽입)
+        String originalFileName = absPath.getFileName().toString();
+        int dotIndex = originalFileName.lastIndexOf('.');
+        String stem = (dotIndex >= 0) ? originalFileName.substring(0, dotIndex) : originalFileName;
+        String ext = (dotIndex >= 0) ? originalFileName.substring(dotIndex) : "";
+
+        // (4) 파일명 255자 제한 방어
+        String baseConflictName = stem + conflictSuffix + ext;
+        if (baseConflictName.length() > 255) {
+            int excess = baseConflictName.length() - 255;
+            stem = stem.substring(0, Math.max(1, stem.length() - excess));
+            baseConflictName = stem + conflictSuffix + ext;
+        }
+
+        // (5) 중복 파일명 처리: 이미 존재하면 numbering
+        String conflictFileName = baseConflictName;
+        Path conflictAbsPath = absPath.resolveSibling(conflictFileName);
+        int count = 2;
+        while (Files.exists(conflictAbsPath)) {
+            conflictFileName = stem + conflictSuffix + "(" + count + ")" + ext;
+            conflictAbsPath = absPath.resolveSibling(conflictFileName);
+            count++;
+        }
+
+        // (6) 실제 파일 rename
+        if (!Files.exists(absPath)) {
+            // DELETE 충돌: 파일이 없으면 rename 불필요, pendingPushMap 추가도 스킵
+            if (CMInfo._CM_DEBUG)
+                System.out.println("file does not exist (DELETE conflict), skip rename: " + absPath);
+            return true;    // 처리할 파일이 없는 것이므로 정상 완료
+        }
+        try {
+            Files.move(absPath, conflictAbsPath);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedConflictedClientEntry(), " +
+                    "error renaming file: " + absPath + " -> " + conflictAbsPath);
+            e.printStackTrace();
+            return false;
+        }
+        if (CMInfo._CM_DEBUG)
+            System.out.println("renamed: " + absPath + " -> " + conflictAbsPath);
+
+        // (7) renamed entry 새로 생성 (원본 entry 불변 유지)
+        String conflictRelPathStr = clientSyncHome.relativize(conflictAbsPath)
+                .toString().replace('\\', '/');
+        // size는 원본 entry의 서버 측 truth가 아닌 클라 conflict 파일의 디스크 truth 사용
+        // (MODIFY/DELETE conflict는 정의상 클라 측 수정이 있어 두 값이 다를 수 있음).
+        // 측정 실패 시 원본 size로 fallback (rename은 이미 성공했으므로 데이터 보존 우선).
+        long renamedSize;
+        try {
+            renamedSize = syncInfo.currentSizeOrMinusOne(conflictAbsPath);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedConflictedClientEntry(), "
+                    + "error reading size of " + conflictAbsPath + ", falling back to original entry size.");
+            e.printStackTrace();
+            renamedSize = entry.getSize();
+        }
+        CMFileSyncClientEntry renamedEntry = new CMFileSyncClientEntry();
+        renamedEntry.setPath(conflictRelPathStr)
+                .setSize(renamedSize)
+                .setCurMtime(entry.getCurMtime())
+                .setBaseMtime(-1L)
+                .setOpHint(CMFileSyncOp.CREATE)
+                .setDirectory(Files.isDirectory(conflictAbsPath));
+        renamedEntry.setCompleted(false);
+
+        // (8) pendingPushMap에 추가
+        pendingPushMap.put(conflictRelPathStr, renamedEntry);
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("added to pendingPushMap: key = " + conflictRelPathStr);
+            System.out.println("renamedEntry = " + renamedEntry);
+        }
+
+        return true;
+    }
+
+    // called by client; processes the pull maps (delete/create/modify).
+    // Except for the delete map, processing here only *initiates* the work
+    // (e.g., starting a generator thread); completion happens elsewhere.
+    public boolean proceedPullMaps() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullMaps() called..");
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        boolean result;
+
+        // only the client processes pull maps
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.proceedPullMaps(), system type is not CLIENT!");
+            return false;
+        }
+
+        // pullDeleteMap 처리
+        result = proceedPullDeleteMap();
+        if (!result)
+            System.err.println("CMFileSyncManager.proceedPullMaps(), proceedPullDeleteMap() failed!");
+
+        // pullCreateMap 처리
+        result &= proceedPullCreateMap();
+        if (!result)
+            System.err.println("CMFileSyncManager.proceedPullMaps(), proceedPullCreateMap() failed!");
+
+        // pullModifyMap 처리
+        result &= proceedPullModifyMap();
+        if (!result)
+            System.err.println("CMFileSyncManager.proceedPullMaps(), proceedPullModifyMap() failed!");
+
+        return result;
+    }
+
+    // called by client; deletes the files registered in pullDeleteMap, marks each entry
+    // completed, removes their client-index metadata, then reports the deleted list to the
+    // server via COMPLETE_PULL_DELETE events (chunked if long).
+    private boolean proceedPullDeleteMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullDeleteMap() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pullDeleteMap = syncInfo.getPullDeleteMap();
+        Path syncHome = getClientSyncHome();
+        Map<String, Long> lastSyncedMtimeMap = syncInfo.getLastSyncedMtimeMap();
+        int numDeletedFiles = 0;
+        String myName = interInfo.getMyself().getName();
+        UUID myUuid = interInfo.getMyself().getUuid();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+
+        if (pullDeleteMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pullDeleteMap is empty, nothing to delete.");
+            return true;
+        }
+
+        Set<String> keys = pullDeleteMap.keySet();
+        for (String relPath : keys) {
+            Path absPath = syncHome.resolve(relPath).normalize();
+            try {
+                if (Files.exists(absPath)) {
+                    // WatchService 가 발생시킬 ENTRY_DELETE 이벤트가 self-event 임을 표시.
+                    // 반드시 Files.delete() 직전에 등록 (race 방지).
+                    syncInfo.addPendingPullDelete(relPath);
+                    Files.delete(absPath);
+                } else {
+                    // online 모드이거나 이미 외부에서 삭제된 경우 — 정상 처리
+                    // 이 경우 DELETE 이벤트가 안 나오므로 pendingPullDelete 등록하지 않음.
+                    if (CMInfo._CM_DEBUG)
+                        System.out.println("file does not exist locally, skip delete: " + absPath);
+                }
+                // online list에 등록되어 있으면 제거 (온라인 모드 리스트 파일 반영은 COMPLETE_PULL_SYNC 처리 때)
+                removeFromOnlineList(relPath);
+                // client entry 완료 처리
+                CMFileSyncClientEntry entry = pullDeleteMap.get(relPath);
+                entry.setCompleted(true);
+                numDeletedFiles++;
+                // client-index 인메모리 메타 정보 삭제 (mtime + size 모두)
+                lastSyncedMtimeMap.remove(relPath);
+                syncInfo.removeLastSyncedSize(relPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // pullDeleteMap의 모든 파일을 삭제했는지 확인
+        if (numDeletedFiles != keys.size()) {
+            System.err.println("CMFileSyncManager.proceedPullDeleteMap(), not all files deleted: "
+                    + numDeletedFiles + "/" + keys.size());
+            return false;
+        }
+
+        // COMPLETE_PULL_DELETE 이벤트 전송 루프 (긴 경우 나눠서 전송)
+        int listIndex = 0;
+        boolean sendResult;
+        List<String> deletedPathList = new ArrayList<>(keys);
+        while (listIndex < deletedPathList.size()) {
+            CMFileSyncEventCompletePullDelete fse_cpd = new CMFileSyncEventCompletePullDelete();
+            // 공통 필드 설정
+            fse_cpd.setInitiatorName(myName);
+            fse_cpd.setInitiatorUuid(myUuid);
+            fse_cpd.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+            // 이벤트에 넣을 string path 서브 리스트 구하기
+            List<String> subList = createSubStringListForEvent(fse_cpd.getByteNum(), deletedPathList, listIndex);
+            listIndex += subList.size();
+            // set the subList to the event
+            fse_cpd.setDeletedPathList(subList);
+            // send the event
+            sendResult = CMEventManager.unicastEvent(fse_cpd, serverName, null);
+            if (!sendResult) {
+                System.err.println("CMFileSyncManager.proceedPullDeleteMap(), send error: " + fse_cpd);
+                return false;
+            }
+            if (CMInfo._CM_DEBUG)
+                System.out.println("sent event = " + fse_cpd);
+        }
+
+        return true;
+    }
+
+    // called by client; pullCreateMap 의 offline 모드 entry 들을 모아 서버에 REQUEST_PULL_CREATES
+    // 이벤트를 전송한다. 서버가 자기 sync home 에서 직접 path 를 조립해 pushFile() 로 보낸다.
+    // 요청 파일 개수가 많아 MAX_EVENT_SIZE 를 넘으면 여러 이벤트로 분할 전송한다.
+    // online-mode entry 들은 기존처럼 인라인 처리 (실제 전송 없음).
+    // 수신 완료 시점에 checkCompletePullCreate() 가 호출된다.
+    private boolean proceedPullCreateMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullCreateMap() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+
+        if (pullCreateMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pullCreateMap is empty, nothing to create.");
+            return true;
+        }
+
+        // [10-3] 4.2: pull CREATE 는 pull 종류(일반/전파)와 무관하게 항상 online 모드로 처리한다.
+        // 신규 파일은 수신 디바이스에 모드 설정이 없어 isOnlineMode 가 false 를 반환하지만, "신규=online"
+        // 정적 기본값을 적용해 데이터 전송 없이 online 엔트리로 생성한다(전송 비용 감소 — 상용 동기화 서비스 추세).
+        // 이 정책 하에서 기존 offline pull-create 경로(sendRequestPullCreates / REQUEST_PULL_CREATES)는
+        // CREATE 에서 더 이상 사용되지 않는다(서버 핸들러/이벤트는 잔존; 향후 활성도 기반 동적 승격은 8 후속).
+        boolean sendResult = true;
+        for (String relPathStr : pullCreateMap.keySet()) {
+            boolean ret = proceedOnlinePullCreateEntry(relPathStr, pullCreateMap.get(relPathStr), serverName);
+            sendResult &= ret;
+            if (!ret)
+                System.err.println("CMFileSyncManager.proceedPullCreateMap(), online failed for: " + relPathStr);
+        }
+
+        return sendResult;
+    }
+
+    // offline pull-create 대상 경로 리스트를 MAX_EVENT_SIZE 기준 chunk 로 분할해
+    // REQUEST_PULL_CREATES 이벤트를 반복 전송한다.
+    // CMFileSyncGenerator.requestTransferOfNewFiles() 의 분할 패턴과 동일.
+    private boolean sendRequestPullCreates(List<Path> relPathList, String serverName,
+                                           CMInteractionInfo interInfo, CMFileSyncInfo syncInfo) {
+        String initiatorName = interInfo.getMyself().getName();
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+
+        int numRequestsCompleted = 0;
+        while (numRequestsCompleted < relPathList.size()) {
+            CMFileSyncEventRequestPullCreates fse = new CMFileSyncEventRequestPullCreates();
+            fse.setInitiatorName(initiatorName);
+            fse.setInitiatorUuid(initiatorUuid);
+            fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
+
+            int curByteNum = fse.getByteNum();
+            List<Path> chunk = new ArrayList<>();
+            int numRequestedFiles = 0;
+            while (numRequestsCompleted < relPathList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                Path path = relPathList.get(numRequestsCompleted);
+                curByteNum += CMInfo.STRING_LEN_BYTES_LEN + path.toString().getBytes().length;
+                if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
+                    chunk.add(path);
+                    numRequestedFiles++;
+                    numRequestsCompleted++;
+                } else {
+                    break;
+                }
+            }
+            // chunk 가 비어있는데 진행이 안 되면 단일 경로가 MAX_EVENT_SIZE 를 초과한 경우.
+            // 무한루프 방지를 위해 강제로 1개 담아 보내고 실패 처리한다.
+            if (chunk.isEmpty()) {
+                System.err.println("CMFileSyncManager.sendRequestPullCreates(), single path exceeds MAX_EVENT_SIZE: "
+                        + relPathList.get(numRequestsCompleted));
+                return false;
+            }
+            fse.setNumRequestedFiles(numRequestedFiles);
+            fse.setRequestedFileList(chunk);
+
+            boolean ret = CMEventManager.unicastEvent(fse, serverName, null);
+            if (!ret) {
+                System.err.println("CMFileSyncManager.sendRequestPullCreates(), send error: " + fse);
+                return false;
+            }
+            if (CMInfo._CM_DEBUG) {
+                System.out.println("sent REQUEST_PULL_CREATES event = " + fse);
+            }
+        }
+        return true;
+    }
+
+    // called by client on file-receive completion; finds the matching pullCreateMap entry by
+    // file name, moves the received file from transferedFileHome to FileSyncHome/<relPath>
+    // (preserving subdirectories), marks it completed, updates the in-memory client-index,
+    // then sends COMPLETE_PULL_CREATE to the server (file sender).
+    // NOTE: matching is by file name suffix — a future improvement should carry the full
+    // relative path in CMFileEvent to avoid ambiguity across subdirectories.
+    public boolean checkCompletePullCreate(CMFileEvent fe) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.checkCompletePullCreate() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        String fileName = fe.getFileName();
+        Map<String, CMFileSyncClientEntry> pullCreateMap = syncInfo.getPullCreateMap();
+
+        // pull sync not in progress — nothing to do
+        if (pullCreateMap.isEmpty()) return true;
+
+        // find the pullCreateMap key whose relative path ends with the received file name
+        String foundKey = null;
+        for (String relPath : pullCreateMap.keySet()) {
+            if (relPath.equals(fileName) || relPath.endsWith("/" + fileName)) {
+                foundKey = relPath;
+                break;
+            }
+        }
+        if (foundKey == null) {
+            System.err.println("CMFileSyncManager.checkCompletePullCreate(), "
+                    + "no pullCreateMap entry found for file: " + fileName);
+            return false;
+        }
+
+        // 수신된 파일을 transferedFileHome/<fileName> 에서 FileSyncHome/<relPath> 로 이동.
+        // 서버측 pushFile() 은 sync home 의 절대경로를 보내지만, 클라 수신측은
+        // transferedFileHome 평면 구조에 파일명만 저장하므로 (CMFileTransferManager.java:2170-2173)
+        // 여기서 sync home 의 상대경로 위치로 옮긴다.
+        CMFileSyncClientEntry entry = pullCreateMap.get(foundKey);
+        String relPathStr = entry.getPath();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        Path srcPath = confInfo.getTransferedFileHome().resolve(fileName).toAbsolutePath().normalize();
+        Path dstPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+        try {
+            Path parentDir = dstPath.getParent();
+            if (parentDir != null && Files.notExists(parentDir)) {
+                Files.createDirectories(parentDir);
+            }
+            Files.move(srcPath, dstPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePullCreate(), move failed: "
+                    + srcPath + " -> " + dstPath);
+            e.printStackTrace();
+            return false;
+        }
+
+        // mark entry completed
+        entry.setCompleted(true);
+
+        // 서버 mtime을 수신 파일에 보존 + 인메모리 client-index 갱신 (self-event 필터용).
+        // 파일 전송은 mtime을 보존하지 않으므로(서버 = source of truth) 여기서 명시 적용 — pull-MODIFY(handler 1829)
+        // /online-CREATE(1465) 와 동일 출처. baseMtime(lastSynced)을 serverMtime 으로 맞춰야 분류의 DELETE 규칙
+        // (baseMtime == serverMtime)이 정상 동작 → pull-create 한 파일이 나중에 서버에서 삭제될 때 가짜 conflict 방지.
+        long serverMtime = entry.getServerMtime();
+        try {
+            long curSize = syncInfo.currentSizeOrMinusOne(dstPath);
+            if (serverMtime > 0) {
+                Files.setLastModifiedTime(dstPath, FileTime.fromMillis(serverMtime * 1000L));
+                syncInfo.setLastSynced(relPathStr, serverMtime, curSize);
+            } else {
+                // serverMtime 비정상 → 보존 skip, 디스크 측정값으로 폴백(기존 동작)
+                System.err.println("CMFileSyncManager.checkCompletePullCreate(), invalid serverMtime for "
+                        + relPathStr + ": " + serverMtime + " — fallback to disk mtime");
+                syncInfo.setLastSynced(relPathStr, syncInfo.currentMtimeSecOrMinusOne(dstPath), curSize);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // send COMPLETE_PULL_CREATE to the server (file sender)
+        CMFileSyncEventCompletePullCreate fse_cpc = new CMFileSyncEventCompletePullCreate();
+        fse_cpc.setInitiatorName(fe.getFileReceiver());
+        fse_cpc.setInitiatorUuid(fe.getFileReceiverUuid());
+        fse_cpc.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_cpc.setCreatedPath(foundKey);
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpc, fe.getFileSender(), fe.getFileSenderUuid());
+        if (!sendResult) {
+            System.err.println("CMFileSyncManager.checkCompletePullCreate(), send error: " + fse_cpc);
+            return false;
+        }
+
+        return true;
+    }
+
+    // called by server; returns true only if every entry in the given pullStateMap is completed.
+    public boolean isCompletePullSync(Map<String, CMFileSyncClientEntry> pullStateMap) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.isCompletePullSync() called..");
+
+        boolean isCompleted = true;
+        for (CMFileSyncClientEntry entry : pullStateMap.values()) {
+            isCompleted &= entry.isCompleted();
+        }
+        return isCompleted;
+    }
+
+    // called by server; removes the pullStateMap for the given client from pullStateTable,
+    // then sends COMPLETE_PULL_SYNC to that client.
+    public boolean completePullSync(String initiatorName, UUID initiatorUuid, UUID initiatorDeviceUuid) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.completePullSync() called..");
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncStateKey stateKey = new CMFileSyncStateKey(initiatorName, initiatorDeviceUuid);
+
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pullStateTable = syncInfo.getPullStateTable();
+        Map<String, CMFileSyncClientEntry> pullStateMap = pullStateTable.remove(stateKey);
+        if (pullStateMap == null) {
+            System.err.println("CMFileSyncManager.completePullSync(), pullStateMap not found for: " + stateKey);
+            return false;
+        }
+
+        CMFileSyncEventCompletePullSync fse_cps = new CMFileSyncEventCompletePullSync();
+        fse_cps.setInitiatorName(initiatorName);
+        fse_cps.setInitiatorUuid(initiatorUuid);
+        fse_cps.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_cps.setNumFilesCompleted(pullStateMap.size());
+        boolean sendResult = CMEventManager.unicastEvent(fse_cps, initiatorName, initiatorUuid);
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.completePullSync(), send error: " + fse_cps);
+
+        return sendResult;
+    }
+
+    // online-mode MODIFY helper: skips block-checksum flow; keeps the 0바이트 placeholder on disk,
+    // resyncs the placeholder mtime + onlineModePathSizeMap size + base snapshot to the new server
+    // state, marks entry completed, and sends COMPLETE_PULL_MODIFY to the server.
+    private boolean proceedOnlinePullModifyEntry(String relPathStr, CMFileSyncClientEntry entry, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedOnlinePullModifyEntry() called: " + relPathStr);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // online 모드 MODIFY: 파일 데이터는 받지 않고 0바이트 placeholder 를 그대로 둔다.
+        // placeholder 는 online 진입 시점(pull CREATE / online 전환)에 이미 디스크에 존재하므로 새로 만들지 않되,
+        // (1) 디스크 placeholder 의 mtime 을 새 serverMtime 으로 갱신하고,
+        // (2) onlineModePathSizeMap 의 기록 크기를 새 서버 크기로 갱신해 정합을 유지한다.
+        long serverMtime = entry.getServerMtime();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+        long baseMtime;
+        try {
+            if (serverMtime > 0) {
+                // (1) 디스크 placeholder mtime 갱신 → lastSynced 와 일치 → WatchService self-event 필터가 걸러냄
+                if (Files.exists(absPath)) {
+                    Files.setLastModifiedTime(absPath, FileTime.fromMillis(serverMtime * 1000L));
+                }
+                baseMtime = serverMtime;
+            } else {
+                // serverMtime 비정상 → 보존 skip, 디스크 측정값으로 폴백 (pull CREATE 와 동일 정책)
+                System.err.println("CMFileSyncManager.proceedOnlinePullModifyEntry(), invalid serverMtime for "
+                        + relPathStr + ": " + serverMtime + " — fallback to disk mtime");
+                baseMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedOnlinePullModifyEntry(), placeholder mtime update failed: " + absPath);
+            e.printStackTrace();
+            return false;
+        }
+
+        // (2) onlineModePathSizeMap 기록 크기를 새 서버 크기로 갱신 (stale size 방지)
+        addToOnlineList(relPathStr, entry.getSize());
+
+        // base snapshot(lastSynced)을 디스크 placeholder(mtime=serverMtime, size=0)에 맞춘다.
+        // size=0 이어야 self-event 필터(mtime+size 동시 일치)와 push-candidate 판정이 정상 동작.
+        syncInfo.setLastSynced(relPathStr, baseMtime, 0L);
+
+        // entry 완료 처리
+        entry.setCompleted(true);
+
+        // COMPLETE_PULL_MODIFY 이벤트 생성 및 전송
+        CMFileSyncEventCompletePullModify fse_cpm = new CMFileSyncEventCompletePullModify();
+        fse_cpm.setInitiatorName(interInfo.getMyself().getName());
+        fse_cpm.setInitiatorUuid(interInfo.getMyself().getUuid());
+        fse_cpm.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_cpm.setModifiedPath(relPathStr);
+
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpm, serverName, null);
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.proceedOnlinePullModifyEntry(), send error: " + fse_cpm);
+
+        return sendResult;
+    }
+
+    private boolean proceedPullModifyMap() {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedPullModifyMap() called..");
+
+        // (1) 필요 변수
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // (2) system type 확인
+        if (!confInfo.getSystemType().equals("CLIENT")) {
+            System.err.println("CMFileSyncManager.proceedPullModifyMap(), not a CLIENT.");
+            return false;
+        }
+
+        // (3) pullModifyMap 비어있으면 즉시 true
+        Map<String, CMFileSyncClientEntry> pullModifyMap = syncInfo.getPullModifyMap();
+        if (pullModifyMap == null || pullModifyMap.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("pullModifyMap is empty. nothing to do.");
+            return true;
+        }
+
+        // (3.5) online/local 분리 처리
+        List<CMFileSyncClientEntry> localModifyList = new ArrayList<>();
+        boolean result = true;
+        String serverName = interInfo.getDefaultServerInfo().getServerName();
+
+        for (Map.Entry<String, CMFileSyncClientEntry> mapEntry : pullModifyMap.entrySet()) {
+            String relPathStr = mapEntry.getKey();
+            CMFileSyncClientEntry entry = mapEntry.getValue();
+            Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+            if (isOnlineMode(absPath)) {
+                result &= proceedOnlinePullModifyEntry(relPathStr, entry, serverName);
+            } else {
+                localModifyList.add(entry);
+            }
+        }
+
+        if (localModifyList.isEmpty()) {
+            if (CMInfo._CM_DEBUG)
+                System.out.println("no local-mode MODIFY entries -- skip pullGenerator.");
+            return result;
+        }
+
+        // (4) 이미 pullGenerator가 동작 중이면 중복 시작 방지
+        if (syncInfo.getPullGenerator() != null) {
+            System.err.println("pullGenerator already exists; skip.");
+            return false;
+        }
+
+        // (5) generator 생성에 필요한 정보 수집
+        String initiatorName = interInfo.getMyself().getName();
+        UUID initiatorUuid = interInfo.getMyself().getUuid();
+        UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
+
+        // (6) generator 생성 및 등록
+        CMFileSyncPullGenerator pullGen = new CMFileSyncPullGenerator(
+                initiatorName, initiatorUuid, initiatorDeviceUuid,
+                serverName, localModifyList);
+        syncInfo.setPullGenerator(pullGen);
+
+        // (7) executor에 submit
+        ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
+        es.submit(pullGen);
+
+        if (CMInfo._CM_DEBUG)
+            System.out.println("pullGenerator submitted with " + localModifyList.size() + " entries.");
+
+        return true;
+    }
+
+    // called by client; removes the given relative path from the online-mode-map.
+    // (the legacy online-mode list was replaced by onlineModePathSizeMap.)
+    public boolean removeFromOnlineList(String relPathStr) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.removeFromOnlineList() called: " + relPathStr);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+
+        // online-mode-map 갱신
+        Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        if (onlineModePathSizeMap != null) {
+            onlineModePathSizeMap.remove(absPath);
+        }
+
+        return true;
+    }
+
+    // called by client; adds the given relative path (with size) to the online-mode-map.
+    // (used for online-mode CREATE handling in pull sync.)
+    public boolean addToOnlineList(String relPathStr, long size) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.addToOnlineList() called: " + relPathStr + ", size=" + size);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+
+        // online-mode-map 갱신
+        Map<Path, Long> onlineModePathSizeMap = syncInfo.getOnlineModePathSizeMap();
+        if (onlineModePathSizeMap != null) {
+            onlineModePathSizeMap.put(absPath, size);
+        }
+
+        return true;
+    }
+
+    // online-mode CREATE helper: 파일 전송 없이 인메모리 client-index 업데이트 +
+    // isCompleted=true + COMPLETE_PULL_CREATE 송신.
+    // checkCompletePullCreate()는 실제 파일 수신을 트리거로 호출되므로 online 모드에서는
+    // 호출되지 않는다. 따라서 본 헬퍼가 그 책임을 직접 수행한다.
+    private boolean proceedOnlinePullCreateEntry(String relPathStr, CMFileSyncClientEntry entry, String serverName) {
+        if (CMInfo._CM_DEBUG)
+            System.out.println("=== CMFileSyncManager.proceedOnlinePullCreateEntry() called: " + relPathStr);
+
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+
+        // online 모드 계약: 파일 데이터는 받지 않되 0바이트 placeholder 파일을 디스크에 만든다
+        // (기존 online 전환 processONLINE_MODE_LIST_ACK 가 원본을 truncate(0) 하는 것과 동형).
+        // placeholder 가 없으면 createPathList(디스크 스캔)에 잡히지 않아, 이후 push 단계의
+        // scanLocalPushDeletes 가 "base snapshot 엔 있는데 디스크엔 없음" → 로컬 삭제로 오판하고
+        // 그 DELETE 가 서버로 push 되어 원본이 지워진다.
+        long serverMtime = entry.getServerMtime();
+        Path absPath = getClientSyncHome().resolve(relPathStr).toAbsolutePath().normalize();
+        long baseMtime;
+        try {
+            Path parentDir = absPath.getParent();
+            if (parentDir != null && Files.notExists(parentDir)) {
+                Files.createDirectories(parentDir);
+            }
+            // 0바이트 placeholder 생성 (이미 있으면 0으로 자름)
+            Files.newByteChannel(absPath, StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING).close();
+            // 서버 mtime 을 placeholder 에 보존 → lastSynced 와 일치 → WatchService self-event 필터가 걸러냄.
+            if (serverMtime > 0) {
+                Files.setLastModifiedTime(absPath, FileTime.fromMillis(serverMtime * 1000L));
+                baseMtime = serverMtime;
+            } else {
+                // serverMtime 비정상 → 보존 skip, 디스크 측정값으로 폴백 (checkCompletePullCreate 와 동일 정책)
+                System.err.println("CMFileSyncManager.proceedOnlinePullCreateEntry(), invalid serverMtime for "
+                        + relPathStr + ": " + serverMtime + " — fallback to disk mtime");
+                baseMtime = syncInfo.currentMtimeSecOrMinusOne(absPath);
+            }
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.proceedOnlinePullCreateEntry(), placeholder create failed: " + absPath);
+            e.printStackTrace();
+            return false;
+        }
+
+        // 온라인 모드 리스트에 추가 (원본(실제) 크기 기록 — 나중에 local 모드 재요청 시 사용)
+        addToOnlineList(relPathStr, entry.getSize());
+
+        // base snapshot(lastSynced)을 디스크 placeholder 상태(mtime=serverMtime, size=0)에 맞춘다.
+        // size=0 이어야 WatchService self-event 필터(mtime+size 동시 일치)와 push-candidate 판정이 정상 동작.
+        syncInfo.setLastSynced(relPathStr, baseMtime, 0L);
+
+        // entry 완료 처리
+        entry.setCompleted(true);
+
+        // COMPLETE_PULL_CREATE 이벤트 생성 및 전송
+        CMFileSyncEventCompletePullCreate fse_cpc = new CMFileSyncEventCompletePullCreate();
+        fse_cpc.setInitiatorName(interInfo.getMyself().getName());
+        fse_cpc.setInitiatorUuid(interInfo.getMyself().getUuid());
+        fse_cpc.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
+        fse_cpc.setCreatedPath(relPathStr);
+
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpc, serverName, null);
+        if (!sendResult)
+            System.err.println("CMFileSyncManager.proceedOnlinePullCreateEntry(), send error: " + fse_cpc);
+
+        return sendResult;
     }
 
     public List<Path> createPathList(Path syncHome) {
@@ -111,12 +1977,17 @@ public class CMFileSyncManager extends CMServiceManager {
         if (CMInfo._CM_DEBUG)
             System.out.println("=== CMFileSyncManager.createPathList() called..");
 
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        Path syncHomeNorm = syncHome.toAbsolutePath().normalize();
+
         List<Path> pathList;
         try {
             // change to absolute path -> sorted -> change to a list
             pathList = Files.walk(syncHome)
                     .filter(path -> !path.equals(syncHome))
                     .map(path -> path.toAbsolutePath().normalize())
+                    // ignore 패턴에 매칭되는 경로 제외 (.DS_Store 등 OS 자동 생성 파일)
+                    .filter(path -> !syncInfo.isIgnored(syncHomeNorm.relativize(path)))
                     .sorted()
                     .collect(Collectors.toList());
         } catch (IOException e) {
@@ -136,6 +2007,13 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return pathList;
+    }
+
+    private List<String> toRelativeStringList(List<Path> paths, Path basePath) {
+        List<Path> relativePaths = toRelativePathList(paths, basePath);
+        return relativePaths.stream()
+                .map(p -> p.toString().replace('\\', '/'))
+                .collect(Collectors.toList());
     }
 
     private List<Path> toRelativePathList(List<Path> paths, Path basePath) {
@@ -291,6 +2169,166 @@ public class CMFileSyncManager extends CMServiceManager {
         }
     }
 
+    // 10-2 doc 10802~11218: 파일 전송 완료(END_FILE_TRANSFER / _CHAN) 시점에 incremental PUSH-CREATE 대상인지
+    // 판별 → 파일 이동 → 인메모리 server-index 갱신 → pushOpRecordTable record add (영속화는 completePushSync에서)
+    // → pushStateMap isCompleted 마킹 → COMPLETE_PUSH_CREATE 송신 → 세션 완료 체크.
+    // checkNewTransferForSync(full sync 신규 파일)와 대칭. 서로 다른 자료구조(syncGeneratorMap vs pushStateTable)
+    // 검사 → 상호 배타적, 같은 이벤트에서 양쪽 호출해도 한쪽만 동작.
+    public void checkCompletePushCreate(CMFileEvent fe) {
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("=== CMFileSyncManager.checkCompletePushCreate() called..");
+            System.out.println("file event = " + fe);
+        }
+
+        CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+        if (!confInfo.getSystemType().equals("SERVER")) return;
+
+        String fileSender = fe.getFileSender();
+        UUID fileSenderUuid = fe.getFileSenderUuid();
+        String fileName = fe.getFileName();
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+
+        Map<CMFileSyncStateKey, Map<String, CMFileSyncClientEntry>> pushStateTable = syncInfo.getPushStateTable();
+        if (pushStateTable == null || pushStateTable.isEmpty()) return;
+
+        // loginKey로 stateKey 역방향 조회 (doc 11010~11024)
+        CMUserLoginKey loginKey = new CMUserLoginKey(fileSender, fileSenderUuid);
+        CMFileSyncStateKey matchedStateKey = syncInfo.getPushLoginKeyToStateKeyMap().get(loginKey);
+        if (matchedStateKey == null) {
+            // PUSH 세션 없음 → full sync 또는 무관한 전송
+            return;
+        }
+        Map<String, CMFileSyncClientEntry> matchedPushStateMap = pushStateTable.get(matchedStateKey);
+        if (matchedPushStateMap == null) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "pushStateMap not found for stateKey: " + matchedStateKey);
+            return;
+        }
+
+        // pushStateMap에서 fileName endsWith 매칭으로 relPathStr 탐색 (checkNewTransferForSync 동일 정책)
+        String matchedRelPathStr = null;
+        CMFileSyncClientEntry matchedEntry = null;
+        for (Map.Entry<String, CMFileSyncClientEntry> mapEntry : matchedPushStateMap.entrySet()) {
+            if (Paths.get(mapEntry.getKey()).endsWith(fileName)) {
+                matchedRelPathStr = mapEntry.getKey();
+                matchedEntry = mapEntry.getValue();
+                break;
+            }
+        }
+        if (matchedRelPathStr == null) {
+            // PUSH-CREATE 대상 아님
+            return;
+        }
+        if (CMInfo._CM_DEBUG) {
+            System.out.println("PUSH-CREATE transfer detected: fileName=" + fileName
+                    + ", relPath=" + matchedRelPathStr);
+        }
+
+        // 수신 파일 이동: transferFileHome → serverSyncHome
+        Path transferFileHome = confInfo.getTransferedFileHome().resolve(fileSender);
+        Path serverSyncHome = getServerSyncHome(fileSender);
+        Path relPath = Paths.get(matchedRelPathStr);
+        Path absDestPath = serverSyncHome.resolve(relPath).toAbsolutePath().normalize();
+        try {
+            // 디렉토리 entry 처리 순서 보장이 없으므로 상위 디렉토리 방어적 생성
+            Files.createDirectories(absDestPath.getParent());
+            Files.move(transferFileHome.resolve(fileName), absDestPath,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to move file: " + fileName + " -> " + absDestPath);
+            e.printStackTrace();
+            return;
+        }
+
+        // 클라 원본 mtime 보존: CM 파일 전송은 mtime 을 보존하지 않아 수신 파일 mtime = 서버 수신 시각이다.
+        // 그대로 아래에서 changelog mtime 으로 기록하면 origin(클라A) 과 서버/pull 디바이스의 mtime 이 영구히
+        // 어긋난다. full-push CREATE(checkNewTransferForSync)/증분 push MODIFY 와 동일하게 클라 curMtime 을
+        // 디스크에 적용해, changelog mtime 이 origin 파일 시각으로 수렴하도록 한다(모든 디바이스 mtime 정합).
+        long clientMtimeSec = matchedEntry.getCurMtime();
+        if (clientMtimeSec > 0) {
+            try {
+                Files.setLastModifiedTime(absDestPath, FileTime.fromMillis(clientMtimeSec * 1000L));
+            } catch (IOException e) {
+                System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                        + "failed to set client mtime on: " + absDestPath);
+                e.printStackTrace();
+            }
+        } else {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "invalid client curMtime for " + matchedRelPathStr + ": " + clientMtimeSec
+                    + " — fallback to disk mtime");
+        }
+
+        // 인메모리 server-index 갱신 (영속화는 completePushSync에서 일괄)
+        UUID initiatorDeviceUuid = matchedStateKey.initiatorDeviceUuid();
+        CMFileSyncIndexRepository indexRepository =
+                syncInfo.getIndexRegistry().getOrLoad(fileSender, initiatorDeviceUuid);
+        long newChangeId;   // [10-3] 전역 할당 (dual-writer (i): 증분 push file CREATE)
+        try {
+            newChangeId = syncInfo.allocateNextChangeId(fileSender);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to allocate changeId for: " + matchedRelPathStr);
+            e.printStackTrace();
+            return;
+        }
+        long mtimeSec;
+        long sizeBytes;
+        String md5Hex;
+        try {
+            mtimeSec = Files.getLastModifiedTime(absDestPath).toMillis() / 1000L;
+            sizeBytes = Files.size(absDestPath);
+            md5Hex = CMUtil.md5Hex(absDestPath);
+        } catch (IOException e) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to read file metadata: " + absDestPath);
+            e.printStackTrace();
+            return;
+        }
+        indexRepository.applyCreateOrModify(matchedRelPathStr, false, md5Hex, mtimeSec, sizeBytes, newChangeId);
+
+        // 10-2 doc 12015: 파일 CREATE 분기 record add. 영속화는 completePushSync.
+        List<CMFileSyncChangeLogEntry> opRecords = syncInfo.getPushOpRecordTable().get(matchedStateKey);
+        if (opRecords != null) {
+            opRecords.add(new CMFileSyncChangeLogEntry()
+                    .setChangeId(newChangeId)
+                    .setUserName(fileSender)
+                    .setOriginDeviceUuid(initiatorDeviceUuid)
+                    .setOp(CMFileSyncOp.CREATE)
+                    .setPath(matchedRelPathStr)
+                    .setDirectory(false)
+                    .setContentHash(md5Hex)
+                    .setMtime(mtimeSec)
+                    .setSize(sizeBytes)
+                    .setTombstone(false)
+                    .setTs(OffsetDateTime.now()));
+        } else {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "pushOpRecordTable missing for stateKey: " + matchedStateKey);
+        }
+
+        // pushStateMap entry 완료 마킹
+        matchedEntry.setCompleted(true);
+
+        // COMPLETE_PUSH_CREATE 송신 (실패 시 로그만, 세션 완료 체크는 계속 — doc 11207~11210)
+        CMFileSyncEventCompletePushCreate fse_cpc = new CMFileSyncEventCompletePushCreate();
+        fse_cpc.setInitiatorName(fileSender);
+        fse_cpc.setInitiatorUuid(fileSenderUuid);
+        fse_cpc.setInitiatorDeviceUuid(initiatorDeviceUuid);
+        fse_cpc.setCreatedPath(matchedRelPathStr);
+        boolean sendResult = CMEventManager.unicastEvent(fse_cpc, fileSender, fileSenderUuid);
+        if (!sendResult) {
+            System.err.println("CMFileSyncManager.checkCompletePushCreate(), "
+                    + "failed to send COMPLETE_PUSH_CREATE for: " + matchedRelPathStr);
+        }
+
+        // PUSH 세션 전체 완료 여부 체크
+        if (isCompletePushSync(matchedPushStateMap)) {
+            completePushSync(matchedStateKey, fileSenderUuid);
+        }
+    }
+
     // called by the server
     public boolean completeNewFileTransfer(CMUserLoginKey loginKey, Path path) {
         String initiatorName = loginKey.getUserName();
@@ -333,7 +2371,7 @@ public class CMFileSyncManager extends CMServiceManager {
         fse.setInitiatorUuid(initiatorUuid);
         fse.setInitiatorDeviceUuid(deviceUuid);
         // 나머지 필드 설정
-        fse.setCompletedPath(path);
+        fse.setCompletedPath(path.toString().replace('\\', '/'));
         fse.setCursor(lastChangeId);
 
         // send the event
@@ -384,7 +2422,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         Path relativePath = basisFile.subpath(syncHome.getNameCount(), basisFile.getNameCount());
         // set the relative path to the event
-        fse.setSkippedPath(relativePath);
+        fse.setSkippedPath(relativePath.toString().replace('\\', '/'));
 
         return CMEventManager.unicastEvent(fse, initiatorName, initiatorUuid);
     }
@@ -437,7 +2475,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
         Path relativePath = path.subpath(syncHome.getNameCount(), path.getNameCount());
         // set the relative path to the event
-        fse.setCompletedPath(relativePath);
+        fse.setCompletedPath(relativePath.toString().replace('\\', '/'));
         // cursor 구하기
         long lastChangeId = syncInfo.getIndexRegistry().getOrLoad(initiatorName, deviceUuid).lastChangeId();
         fse.setCursor(lastChangeId);
@@ -485,7 +2523,7 @@ public class CMFileSyncManager extends CMServiceManager {
         } else {
             syncHome = getClientSyncHome();
         }
-        List<Path> relativeDeletedPathList = toRelativePathList(deletedPathList, syncHome);
+        List<String> relativeDeletedPathList = toRelativeStringList(deletedPathList, syncHome);
         while (listIndex < relativeDeletedPathList.size()) {
             // 이벤트 객체 생성
             CMFileSyncEventCompleteDeleteFiles fse = new CMFileSyncEventCompleteDeleteFiles();
@@ -495,7 +2533,7 @@ public class CMFileSyncManager extends CMServiceManager {
             fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
             // 이벤트에 넣을 path 서브리스트 구하기
-            List<Path> subList = createSubPathListForEvent(fse.getByteNum(), relativeDeletedPathList, listIndex);
+            List<String> subList = createSubStringListForEvent(fse.getByteNum(), relativeDeletedPathList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the subList to the event
@@ -622,12 +2660,25 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("initiatorName = " + initiatorName);
             System.out.println("initiatorUuid = " + initiatorUuid);
         }
-        // send the file-sync completion event
-        boolean result = true;
-        result = sendCompleteFileSync(loginKey);
-        if (!result) return false;
-        deleteFileSyncInfo(loginKey);
-        return true;
+        // [10-3] full-push 세션 종료 = per-user push lease 해제 지점(§2.6 (ii)). deviceUuid 는 generator 에서
+        // 얻어 stateKey 를 구성하고, 정상/실패 무관하게 finally 에서 해제한다(deleteFileSyncInfo 가 generator 를
+        // 제거하므로 반드시 그 전에 캡처).
+        CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+        CMFileSyncGenerator gen = syncInfo.getSyncGeneratorMap().get(loginKey);
+        CMFileSyncStateKey leaseKey = (gen != null)
+                ? new CMFileSyncStateKey(initiatorName, gen.getInitiatorDeviceUuid())
+                : null;
+        try {
+            // send the file-sync completion event
+            boolean result = sendCompleteFileSync(loginKey);
+            if (!result) return false;
+            deleteFileSyncInfo(loginKey);
+            return true;
+        } finally {
+            if (leaseKey != null) {
+                syncInfo.releasePushLease(initiatorName, leaseKey);
+            }
+        }
     }
 
     // called by the server
@@ -1066,7 +3117,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // change the file-sync status
-        syncInfo.setSyncInProgress(true);
+        syncInfo.setSyncProgress(CMFileSyncProgress.ONLINE_MODE);
         // stop the watch service
         boolean ret = stopWatchService();
         if (!ret) {
@@ -1138,8 +3189,8 @@ public class CMFileSyncManager extends CMServiceManager {
         UUID initiatorUuid = interInfo.getMyself().getUuid();
         UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
         String serverName = interInfo.getDefaultServerInfo().getServerName();
-        // convert to relative path list
-        List<Path> relativeFileOnlyList = toRelativePathList(fileOnlyList, getClientSyncHome());
+        // convert to relative string list (forward-slash normalized for cross-OS transfer)
+        List<String> relativeFileOnlyList = toRelativeStringList(fileOnlyList, getClientSyncHome());
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
@@ -1152,7 +3203,7 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
             // get relative path list to be added to this event
-            List<Path> subList = createSubPathListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
+            List<String> subList = createSubStringListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the sublist to the event
@@ -1180,25 +3231,25 @@ public class CMFileSyncManager extends CMServiceManager {
         return true;
     }
 
-    private List<Path> createSubPathListForEvent(int initialByteNum, List<Path> relativePathList, int listIndex) {
+    private List<String> createSubStringListForEvent(int initialByteNum, List<String> relativeStringList, int listIndex) {
         if (CMInfo._CM_DEBUG) {
-            System.out.println("=== CMFileSyncManager.createSubPathListForEvent() called..");
+            System.out.println("=== CMFileSyncManager.createSubStringListForEvent() called..");
             System.out.println("initialByteNum = " + initialByteNum);
-            System.out.println("relativePathList = " + relativePathList);
+            System.out.println("relativeStringList = " + relativeStringList);
             System.out.println("listIndex = " + listIndex);
         }
 
         int curByteNum = initialByteNum;
-        List<Path> subList = new ArrayList<>();
+        List<String> subList = new ArrayList<>();
 
         boolean ret = false;
-        for (int i = listIndex; i < relativePathList.size(); i++) {
-            Path relativePath = relativePathList.get(i);
-            curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.toString().getBytes().length;
+        for (int i = listIndex; i < relativeStringList.size(); i++) {
+            String relativeStr = relativeStringList.get(i);
+            curByteNum += CMInfo.STRING_LEN_BYTES_LEN + relativeStr.getBytes().length;
             if (curByteNum < CMInfo.MAX_EVENT_SIZE) {
-                ret = subList.add(relativePath);
+                ret = subList.add(relativeStr);
                 if (!ret) {
-                    System.err.println("error to add " + relativePath);
+                    System.err.println("error to add " + relativeStr);
                     return null;
                 }
             } else {
@@ -1239,7 +3290,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         // change the file-sync status
-        syncInfo.setSyncInProgress(true);
+        syncInfo.setSyncProgress(CMFileSyncProgress.LOCAL_MODE);
         // stop the watch service
         boolean ret = stopWatchService();
         if (!ret) {
@@ -1314,8 +3365,8 @@ public class CMFileSyncManager extends CMServiceManager {
         UUID initiatorUuid = interInfo.getMyself().getUuid();
         UUID initiatorDeviceUuid = syncInfo.getDeviceUuid();
         String serverName = interInfo.getDefaultServerInfo().getServerName();
-        // convert to relative path list
-        List<Path> relativeFileOnlyList = toRelativePathList(fileOnlyList, getClientSyncHome());
+        // convert to relative string list (forward-slash normalized for cross-OS transfer)
+        List<String> relativeFileOnlyList = toRelativeStringList(fileOnlyList, getClientSyncHome());
         // event transmission loop
         int listIndex = 0;
         boolean sendResult = false;
@@ -1328,7 +3379,7 @@ public class CMFileSyncManager extends CMServiceManager {
             listEvent.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
             // get relative path list to be added to this event
-            List<Path> subList = createSubPathListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
+            List<String> subList = createSubStringListForEvent(listEvent.getByteNum(), relativeFileOnlyList, listIndex);
             // update the listIndex
             listIndex += subList.size();
             // set the sublist to the event
@@ -1354,6 +3405,15 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         return true;
+    }
+
+    // 현재 sync-home 의 on-disk 파일 목록을 즉석 스캔해 반환한다(절대 null 아님).
+    // 모드 변환(로컬/온라인) 코드는 getPathList() 를 쓰면 안 된다 — 이 스냅샷은 레거시 full-push
+    // (startFullPushSync) 에서만 세팅되므로, full-push 를 한 적 없는 pull 전용 디바이스에서는 null 이다.
+    // 대신 이 헬퍼로 매번 현재 디스크 상태를 읽는다.
+    private List<Path> currentSyncHomePathList() {
+        List<Path> list = createPathList(getClientSyncHome());
+        return (list != null) ? list : Collections.emptyList();
     }
 
     // called at the client
@@ -1420,6 +3480,18 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("remove error from the online-mode-map: " + headPath);
         }
 
+        // online→local: 디스크가 실콘텐츠로 채워졌으므로 lastSynced(디스크 표현 추적)의 size 도 실제 크기로
+        // 맞춘다. mtime 은 위에서 보존됐으므로 그대로. (online 시절 size=0 로 남아 디스크와 어긋나던 것 보강.)
+        try {
+            String relPathStr = getClientSyncHome().relativize(headPath).toString().replace('\\', '/');
+            long curMtime = syncInfo.currentMtimeSecOrMinusOne(headPath);
+            long curSize = syncInfo.currentSizeOrMinusOne(headPath);
+            if (curMtime >= 0 && curSize >= 0)
+                syncInfo.setLastSynced(relPathStr, curMtime, curSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         // check if the queue is not empty
         if (!localModeRequestQueue.isEmpty()) {
             System.out.println("Local-mode-request queue is not empty.");
@@ -1432,8 +3504,10 @@ public class CMFileSyncManager extends CMServiceManager {
         endEvent.setInitiatorUuid(fe.getFileReceiverUuid());
         endEvent.setInitiatorDeviceUuid(syncInfo.getDeviceUuid());
 
-        // filter only file type from the path list
-        List<Path> pathList = Objects.requireNonNull(syncInfo.getPathList());
+        // filter only file type from the path list.
+        // getPathList()(레거시 full-push 에서만 세팅)는 pull 전용 디바이스에서 null → requireNonNull 이
+        // NPE 를 던져 END_LOCAL_MODE_LIST 를 못 보내고 로컬 모드 전환이 미완료로 멈추던 버그. 즉석 스캔으로 대체.
+        List<Path> pathList = currentSyncHomePathList();
         List<Path> filteredPathList = pathList.stream()
                 .filter(path -> !Files.isDirectory(path))
                 .collect(Collectors.toList());
@@ -1516,8 +3590,8 @@ public class CMFileSyncManager extends CMServiceManager {
             syncInfo.setCurrentMode(CMFileSyncMode.MANUAL);
         }
 
-        // conduct file-sync task once
-        ret = sync();
+        // conduct file-sync task once (client starts bidirectional sync via pull handshake)
+        ret = startPullSync();
         if (!ret) {
             System.err.println("error starting file-sync!");
             return false;
@@ -1688,8 +3762,8 @@ public class CMFileSyncManager extends CMServiceManager {
             System.err.println("error to save the online-mode-path-list to file!");
         }
 
-        // set syncInProgress to false
-        syncInfo.setSyncInProgress(false);
+        // set sync progress to none
+        syncInfo.setSyncProgress(CMFileSyncProgress.NONE);
 
         // check file-sync mode
         if (syncInfo.getCurrentMode() == CMFileSyncMode.AUTO) {
@@ -2146,7 +4220,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // get local-mode file list
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         Objects.requireNonNull(syncInfo);
-        List<Path> pathList = syncInfo.getPathList();
+        List<Path> pathList = currentSyncHomePathList();
         List<Path> onlineModePathList = syncInfo.getOnlineModePathSizeMap().keySet().stream().toList();
         List<Path> localModePathList = pathList.stream()
                 .filter(p -> !Files.isDirectory(p))
@@ -2688,7 +4762,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // check if the sync-home directory is empty
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         final Path syncHome = getClientSyncHome();
-        if (!syncInfo.getPathList().isEmpty()) {
+        if (!currentSyncHomePathList().isEmpty()) {
             System.err.println("The sync home must be empty to start the file-access test!");
             return false;
         }
@@ -2796,7 +4870,7 @@ public class CMFileSyncManager extends CMServiceManager {
         // check if the sync-home directory is empty
         final CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
         final Path syncHome = getClientSyncHome();
-        if (!syncInfo.getPathList().isEmpty()) {
+        if (!currentSyncHomePathList().isEmpty()) {
             System.err.println("The sync home must be empty to start the file-access test!");
             return false;
         }
@@ -2947,7 +5021,7 @@ public class CMFileSyncManager extends CMServiceManager {
         }
 
         List<Path> onlineModeFiles = getOnlineModeFiles();
-        List<Path> pathList = syncInfo.getPathList();
+        List<Path> pathList = currentSyncHomePathList();
 
         List<Path> localModeFiles = pathList.stream()
                 .filter(p -> !Files.isDirectory(p))

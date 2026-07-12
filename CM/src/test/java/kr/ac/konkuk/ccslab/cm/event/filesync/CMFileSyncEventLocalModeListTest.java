@@ -4,7 +4,6 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,7 +17,7 @@ public class CMFileSyncEventLocalModeListTest {
         listEvent.setInitiatorName("ccslab");
         listEvent.setInitiatorUuid(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         listEvent.setInitiatorDeviceUuid(UUID.fromString("00000000-0000-0000-0000-000000000002"));
-        List<Path> pathList = List.of(Path.of("test1.txt"), Path.of("test2.txt"));
+        List<String> pathList = List.of("test1.txt", "test2.txt");
         listEvent.setRelativePathList(pathList);
         System.out.println("localModeListEvent = " + listEvent);
 

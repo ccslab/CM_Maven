@@ -13,7 +13,9 @@ import java.util.Objects;
 public class CMFileSyncEventEndFileListAck extends CMFileSyncEvent {
     // Fields: userName, numFilesCompleted, returnCode
     private int numFilesCompleted;  // number of files completed
-    private int returnCode;     // return code
+    // return code: 1 = OK(파일 수 일치), 0 = 파일 수 불일치,
+    //              [10-3] 2 = busy(다른 device 가 per-user push lease 보유 중, full-push 개시 거절, §2.6 (ii))
+    private int returnCode;
 
     public CMFileSyncEventEndFileListAck() {
         m_nID = CMFileSyncEvent.END_FILE_LIST_ACK;

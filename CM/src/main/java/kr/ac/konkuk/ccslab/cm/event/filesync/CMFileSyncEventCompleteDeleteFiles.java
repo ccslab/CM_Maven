@@ -3,8 +3,6 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +14,7 @@ import java.util.Objects;
  */
 public class CMFileSyncEventCompleteDeleteFiles extends CMFileSyncEvent {
     // Fields: deletedPathList, cursor
-    private List<Path> deletedPathList; // list of deleted file paths
+    private List<String> deletedPathList; // list of deleted file paths (forward-slash separated)
     private long cursor;                // updated lastChangeId to be applied on client side
 
     public CMFileSyncEventCompleteDeleteFiles() {
@@ -38,8 +36,8 @@ public class CMFileSyncEventCompleteDeleteFiles extends CMFileSyncEvent {
         byteNum += Integer.BYTES;
         // deletedPathList
         if (deletedPathList != null) {
-            for (Path path : deletedPathList) {
-                byteNum += CMInfo.STRING_LEN_BYTES_LEN + path.toString().getBytes().length;
+            for (String pathStr : deletedPathList) {
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + pathStr.getBytes().length;
             }
         }
         // cursor
@@ -52,9 +50,9 @@ public class CMFileSyncEventCompleteDeleteFiles extends CMFileSyncEvent {
         // number of elements of deletedPathList
         if (deletedPathList != null) {
             m_bytes.putInt(deletedPathList.size());
-            // deletedPathList
-            for (Path path : deletedPathList) {
-                putStringToByteBuffer(path.toString());
+            // deletedPathList (already normalized to forward slashes)
+            for (String pathStr : deletedPathList) {
+                putStringToByteBuffer(pathStr);
             }
         } else {
             m_bytes.putInt(0);
@@ -70,7 +68,7 @@ public class CMFileSyncEventCompleteDeleteFiles extends CMFileSyncEvent {
         if (numElements > 0) {
             deletedPathList = new ArrayList<>();
             for (int i = 0; i < numElements; i++) {
-                deletedPathList.add(Paths.get(getStringFromByteBuffer(msg)));
+                deletedPathList.add(getStringFromByteBuffer(msg));
             }
         }
         // cursor
@@ -114,11 +112,11 @@ public class CMFileSyncEventCompleteDeleteFiles extends CMFileSyncEvent {
      * gets the list of deleted file paths.
      * @return list of deleted file paths
      */
-    public List<Path> getDeletedPathList() {
+    public List<String> getDeletedPathList() {
         return deletedPathList;
     }
 
-    public void setDeletedPathList(List<Path> deletedPathList) {
+    public void setDeletedPathList(List<String> deletedPathList) {
         this.deletedPathList = deletedPathList;
     }
 

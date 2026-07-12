@@ -1,23 +1,30 @@
 package kr.ac.konkuk.ccslab.cm.event.filesync;
 
+import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
  * This class represents a CMFileSyncEvent with which the server notifies the client of
  * the start of sending block checksums of a file.
+ * <br>In pull sync the direction is reversed (CLIENT -&gt; SERVER); the client's
+ * CMFileSyncPullGenerator fills {@code relativePath} so the server can map fileEntryIndex
+ * to a path. It stays empty in the full push direction.
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventStartFileBlockChecksum extends CMFileSyncEvent {
     private int fileEntryIndex; // client file entry index
     private int totalNumBlocks; // total number of blocks of this file
     private int blockSize;      // block size
+    private String relativePath;    // sync-home-relative path ('/' separated); empty in full push
 
     public CMFileSyncEventStartFileBlockChecksum() {
         m_nID = CMFileSyncEvent.START_FILE_BLOCK_CHECKSUM;
         fileEntryIndex = 0;
         totalNumBlocks = 0;
         blockSize = 0;
+        relativePath = "";
     }
 
     public CMFileSyncEventStartFileBlockChecksum(ByteBuffer msg) {
@@ -35,6 +42,8 @@ public class CMFileSyncEventStartFileBlockChecksum extends CMFileSyncEvent {
         byteNum += Integer.BYTES;
         // blockSize
         byteNum += Integer.BYTES;
+        // relativePath
+        byteNum += CMInfo.STRING_LEN_BYTES_LEN + relativePath.getBytes().length;
         return byteNum;
     }
 
@@ -46,6 +55,8 @@ public class CMFileSyncEventStartFileBlockChecksum extends CMFileSyncEvent {
         m_bytes.putInt(totalNumBlocks);
         // blocksSize
         m_bytes.putInt(blockSize);
+        // relativePath
+        putStringToByteBuffer(relativePath);
     }
 
     @Override
@@ -56,6 +67,8 @@ public class CMFileSyncEventStartFileBlockChecksum extends CMFileSyncEvent {
         totalNumBlocks = msg.getInt();
         // blocksSize
         blockSize = msg.getInt();
+        // relativePath
+        relativePath = getStringFromByteBuffer(msg);
     }
 
     @Override
@@ -72,6 +85,7 @@ public class CMFileSyncEventStartFileBlockChecksum extends CMFileSyncEvent {
                 ", fileEntryIndex=" + fileEntryIndex +
                 ", totalNumBlocks=" + totalNumBlocks +
                 ", blockSize=" + blockSize +
+                ", relativePath='" + relativePath + '\'' +
                 '}';
     }
 
@@ -94,12 +108,13 @@ public class CMFileSyncEventStartFileBlockChecksum extends CMFileSyncEvent {
         CMFileSyncEventStartFileBlockChecksum that = (CMFileSyncEventStartFileBlockChecksum) o;
         return fileEntryIndex == that.fileEntryIndex &&
                 totalNumBlocks == that.totalNumBlocks &&
-                blockSize == that.blockSize;
+                blockSize == that.blockSize &&
+                Objects.equals(relativePath, that.relativePath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fileEntryIndex, totalNumBlocks, blockSize);
+        return Objects.hash(fileEntryIndex, totalNumBlocks, blockSize, relativePath);
     }
 
     /**
@@ -136,5 +151,17 @@ public class CMFileSyncEventStartFileBlockChecksum extends CMFileSyncEvent {
 
     public void setBlockSize(int blockSize) {
         this.blockSize = blockSize;
+    }
+
+    /**
+     * gets the sync-home-relative path of the target file ('/' separated).
+     * @return relative path; empty string in the full push direction
+     */
+    public String getRelativePath() {
+        return relativePath;
+    }
+
+    public void setRelativePath(String relativePath) {
+        this.relativePath = (relativePath == null ? "" : relativePath);
     }
 }

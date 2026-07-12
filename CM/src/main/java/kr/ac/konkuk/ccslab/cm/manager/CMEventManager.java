@@ -244,6 +244,82 @@ public class CMEventManager {
 					case CMFileSyncEvent.END_LOCAL_MODE_LIST_ACK:
 						CMFileSyncEventEndLocalModeListAck endLocalModeAck = new CMFileSyncEventEndLocalModeListAck(buf);
 						return endLocalModeAck;
+					case CMFileSyncEvent.START_PULL_SYNC:
+						CMFileSyncEventStartPullSync startPullSync = new CMFileSyncEventStartPullSync(buf);
+						return startPullSync;
+					case CMFileSyncEvent.START_PULL_SYNC_ACK:
+						CMFileSyncEventStartPullSyncAck startPullSyncAck = new CMFileSyncEventStartPullSyncAck(buf);
+						return startPullSyncAck;
+					case CMFileSyncEvent.START_SERVER_ENTRY_LIST:
+						CMFileSyncEventStartServerEntryList startServerEntryList =
+								new CMFileSyncEventStartServerEntryList(buf);
+						return startServerEntryList;
+					case CMFileSyncEvent.START_SERVER_ENTRY_LIST_ACK:
+						CMFileSyncEventStartServerEntryListAck startServerEntryListAck =
+								new CMFileSyncEventStartServerEntryListAck(buf);
+						return startServerEntryListAck;
+					case CMFileSyncEvent.SERVER_ENTRIES:
+						CMFileSyncEventServerEntries serverEntries = new CMFileSyncEventServerEntries(buf);
+						return serverEntries;
+					case CMFileSyncEvent.SERVER_ENTRIES_ACK:
+						CMFileSyncEventServerEntriesAck serverEntriesAck = new CMFileSyncEventServerEntriesAck(buf);
+						return serverEntriesAck;
+					case CMFileSyncEvent.END_SERVER_ENTRY_LIST:
+						CMFileSyncEventEndServerEntryList endServerEntryList =
+								new CMFileSyncEventEndServerEntryList(buf);
+						return endServerEntryList;
+					case CMFileSyncEvent.END_SERVER_ENTRY_LIST_ACK:
+						CMFileSyncEventEndServerEntryListAck endServerEntryListAck =
+								new CMFileSyncEventEndServerEntryListAck(buf);
+						return endServerEntryListAck;
+					case CMFileSyncEvent.COMPLETE_PULL_DELETE:
+						CMFileSyncEventCompletePullDelete completePullDelete =
+								new CMFileSyncEventCompletePullDelete(buf);
+						return completePullDelete;
+					case CMFileSyncEvent.COMPLETE_PULL_CREATE:
+						CMFileSyncEventCompletePullCreate completePullCreate =
+								new CMFileSyncEventCompletePullCreate(buf);
+						return completePullCreate;
+					case CMFileSyncEvent.COMPLETE_PULL_MODIFY:
+						CMFileSyncEventCompletePullModify completePullModify =
+								new CMFileSyncEventCompletePullModify(buf);
+						return completePullModify;
+					case CMFileSyncEvent.COMPLETE_PULL_SYNC:
+						CMFileSyncEventCompletePullSync completePullSync =
+								new CMFileSyncEventCompletePullSync(buf);
+						return completePullSync;
+					case CMFileSyncEvent.COMPLETE_PULL_SYNC_ACK:
+						CMFileSyncEventCompletePullSyncAck completePullSyncAck =
+								new CMFileSyncEventCompletePullSyncAck(buf);
+						return completePullSyncAck;
+					case CMFileSyncEvent.REQUEST_PULL_CREATES:
+						CMFileSyncEventRequestPullCreates reqPullCreates =
+								new CMFileSyncEventRequestPullCreates(buf);
+						return reqPullCreates;
+					case CMFileSyncEvent.START_PUSH_ENTRY_LIST:
+						return new CMFileSyncEventStartPushEntryList(buf);
+					case CMFileSyncEvent.START_PUSH_ENTRY_LIST_ACK:
+						return new CMFileSyncEventStartPushEntryListAck(buf);
+					case CMFileSyncEvent.PUSH_ENTRIES:
+						return new CMFileSyncEventPushEntries(buf);
+					case CMFileSyncEvent.PUSH_ENTRIES_ACK:
+						return new CMFileSyncEventPushEntriesAck(buf);
+					case CMFileSyncEvent.END_PUSH_ENTRY_LIST:
+						return new CMFileSyncEventEndPushEntryList(buf);
+					case CMFileSyncEvent.END_PUSH_ENTRY_LIST_ACK:
+						return new CMFileSyncEventEndPushEntryListAck(buf);
+					case CMFileSyncEvent.COMPLETE_PUSH_DELETE:
+						return new CMFileSyncEventCompletePushDelete(buf);
+					case CMFileSyncEvent.COMPLETE_PUSH_CREATE:
+						return new CMFileSyncEventCompletePushCreate(buf);
+					case CMFileSyncEvent.COMPLETE_PUSH_MODIFY:
+						return new CMFileSyncEventCompletePushModify(buf);
+					case CMFileSyncEvent.COMPLETE_PUSH_SYNC:
+						return new CMFileSyncEventCompletePushSync(buf);
+					case CMFileSyncEvent.COMPLETE_PUSH_SYNC_ACK:
+						return new CMFileSyncEventCompletePushSyncAck(buf);
+					case CMFileSyncEvent.SYNC_NEEDED_NOTIFY:
+						return new CMFileSyncEventSyncNeededNotify(buf);
 					default:
 						System.err.println("CMEventManager.unmarshallEvent(), unknown CMFileSyncEvent id: "
 								+eventID);

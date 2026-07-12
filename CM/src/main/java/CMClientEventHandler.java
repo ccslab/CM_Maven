@@ -19,9 +19,13 @@ import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteNewFile;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompletePullSync;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompletePushSync;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteUpdateFile;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventSkipUpdateFile;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartPullSyncAck;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
+import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPUBACK;
@@ -258,6 +262,27 @@ public class CMClientEventHandler implements CMAppEventHandler {
 					System.out.println("File-sync delay: "+elapsedTime+" ms.");
 					startTimeOfFileSync = 0;
 				}
+				break;
+			case CMFileSyncEvent.START_PULL_SYNC_ACK:
+				CMFileSyncEventStartPullSyncAck pullAck = (CMFileSyncEventStartPullSyncAck) fse;
+				if(pullAck.getReturnCode() == 1)
+					System.out.println("이미 서버와 동기화된 상태입니다.");
+				break;
+			case CMFileSyncEvent.COMPLETE_PULL_SYNC:
+				// pull sync 가 끝났고 pendingPushMap 도 비어있으면 (= 후속 push 없음) 전체 동기화 완료.
+				// pendingPushMap 이 비어있지 않으면 push 가 이어지므로 그쪽 완료 시점에 별도 알림.
+				CMFileSyncEventCompletePullSync cps = (CMFileSyncEventCompletePullSync) fse;
+				if(CMFileSyncInfo.getInstance().getPendingPushMap().isEmpty()) {
+					System.out.println("동기화가 완료되었습니다. (pull "
+							+ cps.getNumFilesCompleted() + "개 파일)");
+				}
+				break;
+			case CMFileSyncEvent.COMPLETE_PUSH_SYNC:
+				// push sync 는 항상 동기화 체인의 마지막 단계 (standalone push 또는 pull→push chain).
+				// pull 의 pendingPushMap.isEmpty() 분기에서 미알림 처리한 케이스를 본 시점에서 알림.
+				CMFileSyncEventCompletePushSync cpsh = (CMFileSyncEventCompletePushSync) fse;
+				System.out.println("동기화가 완료되었습니다. (push "
+						+ cpsh.getNumFilesCompleted() + "개 파일)");
 				break;
 			default:
 				return;

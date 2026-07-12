@@ -2232,6 +2232,24 @@ public class CMFileTransferManager {
 						return bForward;
 					}
 				}
+				else
+				{
+					// overwrite: RandomAccessFile("rw") does not truncate, so a stale
+					// same-named file left in the transfer home would keep its trailing
+					// bytes if the incoming file is shorter, corrupting the result.
+					// Truncate to start from a clean, empty file.
+					try {
+						writeFile.setLength(0);
+					} catch (IOException e) {
+						e.printStackTrace();
+						try {
+							writeFile.close();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+						return bForward;
+					}
+				}
 			}
 
 		} catch (FileNotFoundException e) {
@@ -2664,15 +2682,27 @@ public class CMFileTransferManager {
 
 		CMSNSManager.checkCompleteRecvAttachedFiles(fe);
 
-		// check if the transfer is for sync a new file
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-		syncManager.checkNewTransferForSync(fe);
-		// check if the transfer is for the file-sync local mode
-		syncManager.checkTransferForLocalMode(fe);
+		if (confInfo.getSystemType().equals("SERVER")) {
+			// check if the transfer is for sync a new file
+			syncManager.checkNewTransferForSync(fe);
+			// check if the transfer is for incremental push-create (10-2 doc 12047~12061)
+			syncManager.checkCompletePushCreate(fe);
+		} else if (confInfo.getSystemType().equals("CLIENT")) {
+			// check if the transfer is for the file-sync local mode
+			syncManager.checkTransferForLocalMode(fe);
+			// check if the transfer is for pull-sync CREATE
+			syncManager.checkCompletePullCreate(fe);
+		} else {
+			System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER(), "
+					+ "unknown system type: " + confInfo.getSystemType());
+			return false;
+		}
 
 		return bForward;
 	}
-	
+
 	private static boolean processEND_FILE_TRANSFER_ACK(CMFileEvent fe)
 	{
 		CMInfo cmInfo = CMInfo.getInstance();
@@ -3135,14 +3165,30 @@ public class CMFileTransferManager {
 			CMEventManager.unicastEvent(feAck, fe.getFileSender(), fe.getFileSenderUuid());
 		}
 
-		if(bResult)
+		// 10-2 doc 12099~12114: bResult 가드 안에 모든 sync 완료 routines 통합.
+		// CHAN은 불완전 수신(bResult=false) 시에도 본 메소드에 진입하므로,
+		// 불완전 수신 파일을 push-create / pull-create 완료로 처리하지 않도록 방어.
+		if (bResult) {
 			CMSNSManager.checkCompleteRecvAttachedFiles(fe);
 
-		// check if the transfer is for sync a new file
-		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
-		syncManager.checkNewTransferForSync(fe);
-		// check if the transfer is for the file-sync local mode
-		syncManager.checkTransferForLocalMode(fe);
+			CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+			CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
+			if (confInfo.getSystemType().equals("SERVER")) {
+				// check if the transfer is for sync a new file
+				syncManager.checkNewTransferForSync(fe);
+				// check if the transfer is for incremental push-create
+				syncManager.checkCompletePushCreate(fe);
+			} else if (confInfo.getSystemType().equals("CLIENT")) {
+				// check if the transfer is for the file-sync local mode
+				syncManager.checkTransferForLocalMode(fe);
+				// check if the transfer is for pull-sync CREATE
+				syncManager.checkCompletePullCreate(fe);
+			} else {
+				System.err.println("CMFileTransferManager.processEND_FILE_TRANSFER_CHAN(), "
+						+ "unknown system type: " + confInfo.getSystemType());
+				return false;
+			}
+		}
 
 		// check whether there is a remaining receiving file info or not
 		CMRecvFileInfo nextRecvInfo = fInfo.findRecvFileInfoNotStarted(fe.getFileSender(), fe.getFileSenderUuid());

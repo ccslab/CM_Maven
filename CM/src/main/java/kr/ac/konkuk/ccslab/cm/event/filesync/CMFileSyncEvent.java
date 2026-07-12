@@ -67,7 +67,7 @@ public abstract class CMFileSyncEvent extends CMEvent {
      * event ID of the CMFileSyncEventStartFileBlockChecksum class.
      */
     // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
-    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize
+    // Fields: int fileEntryIndex, int totalNumBlocks, int blockSize, String relativePath
     public static final int START_FILE_BLOCK_CHECKSUM = 8;
 
     /**
@@ -196,6 +196,199 @@ public abstract class CMFileSyncEvent extends CMEvent {
     // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
     // Fields: String requester, int numLocalModeFiles, int returnCode
     public static final int END_LOCAL_MODE_LIST_ACK = 27;
+
+    /**
+     * event ID of the CMFileSyncEventStartPullSync class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: long cursor
+    public static final int START_PULL_SYNC = 28;
+
+    /**
+     * event ID of the CMFileSyncEventStartPullSyncAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int returnCode, long serverCursor
+    public static final int START_PULL_SYNC_ACK = 29;
+
+    /**
+     * event ID of the CMFileSyncEventStartServerEntryList class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numTotalFiles
+    public static final int START_SERVER_ENTRY_LIST = 30;
+
+    /**
+     * event ID of the CMFileSyncEventStartServerEntryListAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numTotalFiles, int returnCode
+    public static final int START_SERVER_ENTRY_LIST_ACK = 31;
+
+    /**
+     * event ID of the CMFileSyncEventServerEntries class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int numFiles, List<CMFileSyncChangeLogEntry> serverEntryList
+    public static final int SERVER_ENTRIES = 32;
+
+    /**
+     * event ID of the CMFileSyncEventServerEntriesAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int numFiles, int returnCode
+    public static final int SERVER_ENTRIES_ACK = 33;
+
+    /**
+     * event ID of the CMFileSyncEventEndServerEntryList class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted
+    public static final int END_SERVER_ENTRY_LIST = 34;
+
+    /**
+     * event ID of the CMFileSyncEventEndServerEntryListAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int returnCode
+    public static final int END_SERVER_ENTRY_LIST_ACK = 35;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullDelete class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: List<String> deletedPathList
+    public static final int COMPLETE_PULL_DELETE = 36;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullCreate class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: String createdPath
+    public static final int COMPLETE_PULL_CREATE = 37;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullModify class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: String modifiedPath
+    public static final int COMPLETE_PULL_MODIFY = 38;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullSync class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted
+    public static final int COMPLETE_PULL_SYNC = 39;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePullSyncAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int returnCode
+    public static final int COMPLETE_PULL_SYNC_ACK = 40;
+
+    /**
+     * event ID of the CMFileSyncEventRequestPullCreates class.
+     * 클라이언트가 서버에 pull-sync CREATE 대상 파일들의 push 를 요청.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numRequestedFiles, List<Path> requestedFileList (relative to FileSyncHome)
+    public static final int REQUEST_PULL_CREATES = 41;
+
+    // ================================================================
+    // PUSH sync (incremental: after pull, or triggered by file watcher).
+    // Direction is the mirror image of the PULL entry-list exchange:
+    // the client sends its push candidate entries (pendingPushMap or
+    // watch-service candidate map) to the server. Session completion is
+    // decided by the SERVER (consistent with full-push and pull):
+    // server decides completion -> notifies client -> client ACKs.
+    // ================================================================
+
+    /**
+     * event ID of the CMFileSyncEventStartPushEntryList class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numTotalFiles
+    public static final int START_PUSH_ENTRY_LIST = 42;
+
+    /**
+     * event ID of the CMFileSyncEventStartPushEntryListAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numTotalFiles, int returnCode
+    public static final int START_PUSH_ENTRY_LIST_ACK = 43;
+
+    /**
+     * event ID of the CMFileSyncEventPushEntries class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int numFiles, List<CMFileSyncClientEntry> pushEntryList
+    public static final int PUSH_ENTRIES = 44;
+
+    /**
+     * event ID of the CMFileSyncEventPushEntriesAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int numFiles, int returnCode
+    public static final int PUSH_ENTRIES_ACK = 45;
+
+    /**
+     * event ID of the CMFileSyncEventEndPushEntryList class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted
+    public static final int END_PUSH_ENTRY_LIST = 46;
+
+    /**
+     * event ID of the CMFileSyncEventEndPushEntryListAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int returnCode
+    public static final int END_PUSH_ENTRY_LIST_ACK = 47;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePushDelete class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: List<String> deletedPathList
+    public static final int COMPLETE_PUSH_DELETE = 48;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePushCreate class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: String createdPath
+    public static final int COMPLETE_PUSH_CREATE = 49;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePushModify class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: String modifiedPath
+    public static final int COMPLETE_PUSH_MODIFY = 50;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePushSync class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, long newServerCursor
+    public static final int COMPLETE_PUSH_SYNC = 51;
+
+    /**
+     * event ID of the CMFileSyncEventCompletePushSyncAck class.
+     */
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid
+    // Fields: int numFilesCompleted, int returnCode
+    public static final int COMPLETE_PUSH_SYNC_ACK = 52;
+
+    /**
+     * event ID of the CMFileSyncEventSyncNeededNotify class.
+     */
+    // [NEW 10-3] 서버 -> 온라인 디바이스. push commit 으로 changelog 에 변경이 생겼으니 pull 하라는 wake-up.
+    // CommonHeader: initiatorName, initiatorUuid, initiatorDeviceUuid (cause = push 를 수행한 클라 A)
+    // Fields: long changelogHead (통지 시점 전역 head; 수신측 빠른 비교용, 권위는 아님)
+    public static final int SYNC_NEEDED_NOTIFY = 53;
 
     // ----------------------------------------------------------------
     // [NEW] FileSync common header fields (event initiator identity)

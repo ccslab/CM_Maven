@@ -34,4 +34,22 @@ public class CMFileSyncEventEndFileListAckTest {
 
         assertEquals(fsEvent, unmarshallEvent);
     }
+
+    // [10-3] busy(returnCode=2, full-push lease 거절) 값이 marshalling 왕복에서 보존되는지 확인.
+    @Test
+    public void marshallUnmarshallBusy() {
+        CMFileSyncEventEndFileListAck fsEvent = new CMFileSyncEventEndFileListAck();
+        fsEvent.setInitiatorName("ccslab");
+        fsEvent.setInitiatorUuid(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        fsEvent.setInitiatorDeviceUuid(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+        fsEvent.setNumFilesCompleted(0);
+        fsEvent.setReturnCode(2);
+
+        ByteBuffer byteBuffer = CMEventManager.marshallEvent(fsEvent);
+        CMFileSyncEventEndFileListAck unmarshallEvent =
+                (CMFileSyncEventEndFileListAck) CMEventManager.unmarshallEvent(byteBuffer);
+        assertNotNull(unmarshallEvent);
+        assertEquals(2, unmarshallEvent.getReturnCode());
+        assertEquals(fsEvent, unmarshallEvent);
+    }
 }
