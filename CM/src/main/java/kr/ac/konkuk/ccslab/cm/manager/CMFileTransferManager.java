@@ -2232,6 +2232,24 @@ public class CMFileTransferManager {
 						return bForward;
 					}
 				}
+				else
+				{
+					// overwrite: RandomAccessFile("rw") does not truncate, so a stale
+					// same-named file left in the transfer home would keep its trailing
+					// bytes if the incoming file is shorter, corrupting the result.
+					// Truncate to start from a clean, empty file.
+					try {
+						writeFile.setLength(0);
+					} catch (IOException e) {
+						e.printStackTrace();
+						try {
+							writeFile.close();
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+						return bForward;
+					}
+				}
 			}
 
 		} catch (FileNotFoundException e) {

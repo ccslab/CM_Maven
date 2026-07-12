@@ -1197,8 +1197,12 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             Path relativePath = Paths.get(parts[0], Arrays.copyOfRange(parts, 1, parts.length));
             // get the absolute path
             Path absPath = serverSyncHome.resolve(relativePath);
-            // start push-file
-            ret &= CMFileTransferManager.pushFile(absPath.toString(), initiatorName, initiatorUuid);
+            // start push-file — whole-file transfer, so force overwrite (never append).
+            // The client may hold a stale/placeholder file of the same name in its transfer
+            // home; FILE_DEFAULT would honor FILE_APPEND_SCHEME and append onto it, corrupting
+            // the reconstructed file. See CMFileTransferManager overwrite/truncate handling.
+            ret &= CMFileTransferManager.pushFile(absPath.toString(), initiatorName, initiatorUuid,
+                    CMInfo.FILE_OVERWRITE);
             if(!ret) {
                 System.err.println("push error: "+absPath);
                 return false;
@@ -4177,7 +4181,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
         boolean sendResult = true;
         for(Path path : requestedFileList) {
             Path syncPath = syncHome.resolve(path);   // adjust the path with the sync home
-            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, requesterUuid) )
+            // whole-file transfer → force overwrite (never append onto a stale same-named file)
+            if( !CMFileTransferManager.pushFile(syncPath.toString(), requesterName, requesterUuid,
+                    CMInfo.FILE_OVERWRITE) )
                 sendResult = false;
         }
 
@@ -4231,7 +4237,9 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 sendResult = false;
                 continue;
             }
-            if (!CMFileTransferManager.pushFile(absPath.toString(), initiatorName, initiatorUuid)) {
+            // whole-file transfer → force overwrite (never append onto a stale same-named file)
+            if (!CMFileTransferManager.pushFile(absPath.toString(), initiatorName, initiatorUuid,
+                    CMInfo.FILE_OVERWRITE)) {
                 System.err.println("CMFileSyncEventHandler.processREQUEST_PULL_CREATES(), pushFile failed: " + absPath);
                 sendResult = false;
             }
