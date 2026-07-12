@@ -87,4 +87,8 @@ Single-device bidirectional sync (pull + push) is **implemented** — for those 
 - **Phase 3** — `SYNC_NEEDED_NOTIFY`: server fan-out after push commit → other online devices pull.
 - **Phase 4** — per-user push session lease + busy-bounce: serializes concurrent pushes (both incremental and full-push writers share one lease), busy retry via notify (primary) or fallback timer, lazy timeout reclaim.
 
-Remaining work is **integration testing** (running server + ≥2 clients): 2-device catch-up, notify propagation, and concurrent-push serialization/self-convergence are not covered by JUnit.
+Integration testing status (running server + ≥2 clients; not covered by JUnit):
+
+- **2-device catch-up** — **verified** (offline peer changes applied on re-login): CREATE (→online placeholder), MODIFY (local→rsync delta reconstruction; online→metadata-only online-map size update), DELETE (multi, online-map cleanup, self-event filtering), MODIFY→DELETE collapse to latest-per-path, and CREATE→DELETE net-zero omission.
+- **notify propagation** (`SYNC_NEEDED_NOTIFY`) — **verified**.
+- **concurrent-push serialization/self-convergence** (Phase 4 lease/busy-bounce) — **not yet exercised**; hard to trigger manually (requires two devices pushing simultaneously) and rare in practice, deferred to real-event observation.
