@@ -172,6 +172,10 @@ public class CMFileSyncInfo {
             ".DS_Store", "._*", ".Spotlight-V100", ".Trashes", ".fseventsd",
             "Thumbs.db", "desktop.ini",
             "*.tmp", "*.swp",
+            // MS Office(Word/Excel/PowerPoint) 가 문서를 열 때 만드는 숨김 owner/lock 임시파일.
+            // 예: "~$p13-1.pptx". 문서 편집 중 계속 생성/삭제되어 changelog 를 오염시키고
+            // 다른 디바이스로 spurious CREATE/DELETE 가 전파되므로 동기화에서 제외.
+            "~$*",
             CMInfo.TEMP_FILE_PREFIX + "*"
     );
     private final List<PathMatcher> ignoreMatchers = DEFAULT_IGNORED_GLOBS.stream()
