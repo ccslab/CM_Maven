@@ -20,8 +20,12 @@ import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEventField;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEvent;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteNewFile;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompletePullSync;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompletePushSync;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventCompleteUpdateFile;
 import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventSkipUpdateFile;
+import kr.ac.konkuk.ccslab.cm.event.filesync.CMFileSyncEventStartPullSyncAck;
+import kr.ac.konkuk.ccslab.cm.info.CMFileSyncInfo;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEvent;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventCONNACK;
@@ -385,6 +389,27 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 					startTimeOfFileSync = 0;
 				}
 				break;
+			case CMFileSyncEvent.START_PULL_SYNC_ACK:
+				CMFileSyncEventStartPullSyncAck pullAck = (CMFileSyncEventStartPullSyncAck) fse;
+				if(pullAck.getReturnCode() == 1)
+					printMessage("이미 서버와 동기화된 상태입니다.\n");
+				break;
+			case CMFileSyncEvent.COMPLETE_PULL_SYNC:
+				// pull sync 가 끝났고 pendingPushMap 도 비어있으면 (= 후속 push 없음) 전체 동기화 완료.
+				// pendingPushMap 이 비어있지 않으면 push 가 이어지므로 그쪽 완료 시점에 별도 알림.
+				CMFileSyncEventCompletePullSync cps = (CMFileSyncEventCompletePullSync) fse;
+				if(CMFileSyncInfo.getInstance().getPendingPushMap().isEmpty()) {
+					printMessage("동기화가 완료되었습니다. (pull "
+							+ cps.getNumFilesCompleted() + "개 파일)\n");
+				}
+				break;
+			case CMFileSyncEvent.COMPLETE_PUSH_SYNC:
+				// push sync 는 항상 동기화 체인의 마지막 단계 (standalone push 또는 pull→push chain).
+				// pull 의 pendingPushMap.isEmpty() 분기에서 미알림 처리한 케이스를 본 시점에서 알림.
+				CMFileSyncEventCompletePushSync cpsh = (CMFileSyncEventCompletePushSync) fse;
+				printMessage("동기화가 완료되었습니다. (push "
+						+ cpsh.getNumFilesCompleted() + "개 파일)\n");
+				break;
 			default:
 				return;
 		}
@@ -410,7 +435,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			else
 			{
 				printMessage("This client successfully logs in to the default server.\n");
-				CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+				CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 				
 				// Change the title of the client window
 				m_client.setTitle("CM Client ["+interInfo.getMyself().getName()+"]");
@@ -527,7 +552,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			break;
 		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
 			m_client.printStyledMessage("Intentionally disconnected all channels from ["
-					+se.getChannelName()+"]!\n", "bold");
+					+se.getChannelName()+"], uuid["+se.getChannelUuid()+"]!\n", "bold");
 			m_client.setButtonsAccordingToClientState();
 			m_client.setTitle("CM Client");
 			break;
@@ -653,9 +678,10 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			System.out.println("Sending a dummy event to ("+strReceiver+")..");
 			
 			if(opt == CMInfo.CM_STREAM)
-				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, true);
+				m_clientStub.send(due, strReceiver, ue.getSenderUuid(), opt, nBlockingChannelKey, true);
 			else if(opt == CMInfo.CM_DATAGRAM)
-				m_clientStub.send(due, strReceiver, opt, nBlockingChannelKey, nRecvPort, true);
+				m_clientStub.send(due, strReceiver, ue.getSenderUuid(), opt, nBlockingChannelKey, nRecvPort,
+						true);
 			else
 				System.err.println("invalid sending option!: "+opt);
 		}
@@ -670,7 +696,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(222);
 			rue.setStringID("testReplySendRecv");
-			boolean ret = m_clientStub.send(rue, ue.getSender());
+			boolean ret = m_clientStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				printMessage("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
 			else
@@ -685,7 +711,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(223);
 			rue.setStringID("testReplyCastRecv");
-			boolean ret = m_clientStub.send(rue, ue.getSender());
+			boolean ret = m_clientStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				printMessage("Sent reply event: (id, "+rue.getID()+"), (sting id, "+rue.getStringID()+")\n");
 			else
@@ -750,7 +776,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processUserEvent_end_csc_ftp_session(CMUserEvent ue)
 	{
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		boolean bReturn = false;
@@ -813,7 +839,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	{
 		CMFileEvent fe = (CMFileEvent) cme;
 		CMConfigurationInfo confInfo = null;
-		CMFileTransferInfo fInfo = m_clientStub.getCMInfo().getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		int nOption = -1;
 		long lTotalDelay = 0;
 		long lTransferDelay = 0;
@@ -898,7 +924,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 				processFile(fe.getFileName());
 			if(m_bReqAttachedFile)
 			{
-				confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+				confInfo = CMConfigurationInfo.getInstance();
 				String strPath = confInfo.getTransferedFileHome().toString() + File.separator + fe.getFileName();
 				File file = new File(strPath);
 				try {
@@ -1002,7 +1028,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processFile(String strFile)
 	{
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strMergeName = null;
 
 		// add file name to list and increase index
@@ -1054,7 +1080,7 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processSNSEvent(CMEvent cme)
 	{
-		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		CMSNSEvent se = (CMSNSEvent) cme;
 		int i = 0;
@@ -1208,9 +1234,9 @@ public class CMWinClientEventHandler implements CMAppEventHandler{
 	
 	private void processCONTENT_DOWNLOAD_END(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nAttachScheme = confInfo.getAttachDownloadScheme();
-		CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Iterator<CMSNSContent> iter = null;
 		boolean bShowLink = true;

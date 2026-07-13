@@ -11,18 +11,18 @@ import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 
 public class CMRecvFileTask implements Runnable {
 
 	CMRecvFileInfo m_recvFileInfo;
-	CMInfo m_cmInfo;
-	
-	public CMRecvFileTask(CMRecvFileInfo recvFileInfo, CMInfo cmInfo)
+
+	public CMRecvFileTask(CMRecvFileInfo recvFileInfo)
 	{
 		m_recvFileInfo = recvFileInfo;
-		m_cmInfo = cmInfo;
 	}
 	
 	@Override
@@ -151,12 +151,12 @@ public class CMRecvFileTask implements Runnable {
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.ERR_RECV_FILE_CHAN);
 		fe.setFileSender(m_recvFileInfo.getFileSender());
-		fe.setFileReceiver(m_cmInfo.getInteractionInfo().getMyself().getName());
+		fe.setFileReceiver(CMInteractionInfo.getInstance().getMyself().getName());
 		fe.setFileName(m_recvFileInfo.getFileName());
 		fe.setContentID(m_recvFileInfo.getContentID());
 		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);
 		
-		CMBlockingEventQueue recvQueue = m_cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		CMBlockingEventQueue recvQueue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 		recvQueue.push(new CMMessage(byteBuf, null));		
 	}
 

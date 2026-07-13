@@ -4,6 +4,7 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -12,7 +13,9 @@ public class CMFileSyncEventStartFileListTest {
     public void marshallUnmarshall() {
         System.out.println("===== CMFileSyncEventStartFileListTest.marshallUnmarshall() called..");
         CMFileSyncEventStartFileList sfle = new CMFileSyncEventStartFileList();
-        sfle.setUserName("ccslab");
+        sfle.setInitiatorName("ccslab");
+        sfle.setInitiatorUuid(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        sfle.setInitiatorDeviceUuid(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         sfle.setNumTotalFiles(50);
         System.out.println("sfle = " + sfle);
 
@@ -21,10 +24,10 @@ public class CMFileSyncEventStartFileListTest {
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
-        String userName = unmarshallEvent.getUserName();
-        assertEquals(userName, "ccslab");
-        int numTotalFiles = unmarshallEvent.getNumTotalFiles();
-        assertEquals(numTotalFiles, 50);
+        assertEquals("ccslab", unmarshallEvent.getInitiatorName());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), unmarshallEvent.getInitiatorUuid());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000002"), unmarshallEvent.getInitiatorDeviceUuid());
+        assertEquals(50, unmarshallEvent.getNumTotalFiles());
 
         assertEquals(sfle, unmarshallEvent);
     }

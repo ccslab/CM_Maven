@@ -3,8 +3,6 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -15,12 +13,10 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventLocalModeList extends CMFileSyncEvent {
-    private String requester;
-    private List<Path> relativePathList;
+    private List<String> relativePathList; // forward-slash separated relative paths
 
     public CMFileSyncEventLocalModeList() {
         m_nID = CMFileSyncEvent.LOCAL_MODE_LIST;
-        requester = null;   // must not be null
         relativePathList = null;    // must not be null
     }
 
@@ -29,18 +25,24 @@ public class CMFileSyncEventLocalModeList extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getRequester() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setRequester(String name) { setInitiatorName(name); }
+
     @Override
     public int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // requester
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + requester.getBytes().length;
         // size of list
         byteNum += Integer.BYTES;
         // relativePathList (can be null by calling the method before setting a list)
         if(relativePathList != null) {
-            for (Path path : relativePathList) {
-                byteNum += CMInfo.STRING_LEN_BYTES_LEN + path.toString().getBytes().length;
+            for (String pathStr : relativePathList) {
+                byteNum += CMInfo.STRING_LEN_BYTES_LEN + pathStr.getBytes().length;
             }
         }
 
@@ -48,36 +50,34 @@ public class CMFileSyncEventLocalModeList extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // requester
-        putStringToByteBuffer(requester);
+    protected void marshallBodyCore() {
         // numCurrentFiles
         m_bytes.putInt(relativePathList.size());
-        // relativePathList
-        for (Path path : relativePathList) {
-            putStringToByteBuffer(path.toString());
+        // relativePathList (already normalized to forward slashes)
+        for (String pathStr : relativePathList) {
+            putStringToByteBuffer(pathStr);
         }
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         int listSize;
-        // requester
-        requester = getStringFromByteBuffer(msg);
         // list size
         listSize = msg.getInt();
         // relativePathList
         relativePathList = new ArrayList<>();
         for (int i = 0; i < listSize; i++) {
-            Path relativePath = Paths.get(getStringFromByteBuffer(msg));
-            relativePathList.add(relativePath);
+            relativePathList.add(getStringFromByteBuffer(msg));
         }
     }
 
     @Override
     public String toString() {
         return "CMFileSyncEventLocalModeList{" +
-                "requester='" + requester + '\'' +
+                "initiatorName='" + getInitiatorName() + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", relativePathList=" + relativePathList +
                 '}';
     }
@@ -88,36 +88,25 @@ public class CMFileSyncEventLocalModeList extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventLocalModeList that = (CMFileSyncEventLocalModeList) o;
-        return requester.equals(that.requester) && relativePathList.equals(that.relativePathList);
+        return getInitiatorName().equals(that.getInitiatorName()) && relativePathList.equals(that.relativePathList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requester, relativePathList);
+        return Objects.hash(getInitiatorName(), relativePathList);
     }
 
-    /**
-     * gets the requester (client) name.
-     * @return requester (client) name
-     */
-    public String getRequester() {
-        return requester;
-    }
-
-    public void setRequester(String requester) {
-        this.requester = requester;
-    }
 
     /**
      * gets the list of online mode file paths that will be changed to the local mode.
      * @return a list of online mode file paths
      * <br> The path is a relative path from the synchronization home directory.
      */
-    public List<Path> getRelativePathList() {
+    public List<String> getRelativePathList() {
         return relativePathList;
     }
 
-    public void setRelativePathList(List<Path> relativePathList) {
+    public void setRelativePathList(List<String> relativePathList) {
         this.relativePathList = relativePathList;
     }
 }

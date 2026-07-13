@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.io.*;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMEvent;
@@ -92,7 +93,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 	
 	private void processSessionEvent(CMEvent cme)
 	{
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSessionEvent se = (CMSessionEvent) cme;
 		switch(se.getID())
 		{
@@ -103,8 +104,8 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			{
 				// user authentication...
 				// CM DB must be used in the following authentication..
-				boolean ret = CMDBManager.authenticateUser(se.getUserName(), se.getPassword(), 
-						m_serverStub.getCMInfo());
+				boolean ret = CMDBManager.authenticateUser(se.getUserName(), se.getPassword()
+				);
 				if(!ret)
 				{
 					printMessage("["+se.getUserName()+"] authentication fails!\n");
@@ -161,7 +162,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			break;
 		case CMSessionEvent.INTENTIONALLY_DISCONNECT:
 			m_server.printStyledMessage("Intentionally disconnected all channels from ["
-					+se.getChannelName()+"]!\n", "bold");
+					+se.getChannelName()+"], uuid["+se.getChannelUuid()+"]!\n", "bold");
 			break;
 		default:
 			return;
@@ -231,7 +232,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				//System.out.println("Received user evnet 'testForward', id("+id+"), checkCount("+m_nCheckCount+")");
 				printMessage("Received user evnet 'testForward', id("+id+"), checkCount("+m_nCheckCount+")\n");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 		}
 		else if(ue.getStringID().equals("EndSim"))
@@ -260,7 +261,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				//System.out.println("Received user event 'testForwardDelay', id("+id+")");
 				printMessage("Received user event 'testForwardDelay', id("+id+")\n");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 		}
 		else if(ue.getStringID().equals("EndForwardDelay"))
@@ -271,7 +272,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 				//System.out.println("Received user event 'EndForwardDelay'");
 				printMessage("Received user event 'EndForwardDelay'\n");
 				strUser = ue.getEventField(CMInfo.CM_STR, "user");
-				m_serverStub.send(cme, strUser);
+				m_serverStub.send(cme, strUser, ue.getSenderUuid());
 			}
 			
 		}
@@ -287,7 +288,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			userEvent.setEventField(CMInfo.CM_INT, "chType", Integer.toString(nChType));
 			userEvent.setEventField(CMInfo.CM_INT, "chKey", Integer.toString(nChKey));
 			userEvent.setEventField(CMInfo.CM_INT, "recvPort", Integer.toString(nRecvPort));
-			m_serverStub.send(userEvent, strUser);
+			m_serverStub.send(userEvent, strUser, ue.getSenderUuid());
 			
 			printMessage("["+strUser+"] requested to receive a dummy event ");
 			
@@ -297,11 +298,12 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			if(nChType == CMInfo.CM_SOCKET_CHANNEL)
 			{
 				printMessage("with the blocking socket channel ("+nChKey+").\n");
-				sc = m_serverStub.getBlockSocketChannel(nChKey, strUser);
+				sc = m_serverStub.getBlockSocketChannel(nChKey, strUser, ue.getSenderUuid());
 				if(sc == null)
 				{
-					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, socket channel not found, key("
-							+nChKey+"), user("+strUser+")!");
+					System.err.println("CMWinServerEventHandler.processUserEvent(): reqRecv, " +
+							"socket channel not found, key("+nChKey+"), user("+strUser+"), uuid("
+							+ue.getSenderUuid()+")!");
 					return;
 				}
 				
@@ -346,7 +348,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			CMUserEvent rue = new CMUserEvent();
 			rue.setID(222);
 			rue.setStringID("testReplySendRecv");
-			boolean ret = m_serverStub.send(rue, ue.getSender());
+			boolean ret = m_serverStub.send(rue, ue.getSender(), ue.getSenderUuid());
 			if(ret)
 				printMessage("Sent reply event: (id, "+rue.getID()+"), (string id, "+rue.getStringID()+")\n");
 			else
@@ -415,7 +417,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 
 	private void processFileEvent(CMEvent cme)
 	{
-		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		long lTotalDelay = 0;
 		long lTransferDelay = 0;
 		boolean bRet = false;
@@ -482,7 +484,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			String strFile = fe.getFileName();
 			if(m_bDistFileProc)
 			{
-				processFile(fe.getFileSender(), strFile);
+				processFile(fe.getFileSender(), fe.getFileSenderUuid(), strFile);
 				m_bDistFileProc = false;
 			}
 			
@@ -544,7 +546,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 			ue.setEventField(CMInfo.CM_STR, "strFileReceiver", m_strFileReceiver);
 			ue.setEventField(CMInfo.CM_INT, "nNumFilesPerSession", 
 					Integer.toString(m_nTotalNumFilesPerSession));
-			bRet = m_serverStub.send(ue, m_strFileSender);
+			bRet = m_serverStub.send(ue, m_strFileSender, fe.getFileSenderUuid());
 			
 			if(!bRet)
 			{
@@ -564,9 +566,9 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		return;
 	}
 	
-	private void processFile(String strSender, String strFile)
+	private void processFile(String strFileSender, UUID fileSenderUuid, String strFile)
 	{
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strFullSrcFilePath = null;
 		String strModifiedFile = null;
 		FileInputStream fis = null;
@@ -577,11 +579,12 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 
 		// change the modified file name
 		strModifiedFile = "m-"+strFile;
-		strModifiedFile = confInfo.getTransferedFileHome().toString()+File.separator+strSender+
+		strModifiedFile = confInfo.getTransferedFileHome().toString()+File.separator+strFileSender+
 				File.separator+strModifiedFile;
 
 		// stylize the file
-		strFullSrcFilePath = confInfo.getTransferedFileHome().toString()+File.separator+strSender+File.separator+strFile;
+		strFullSrcFilePath = confInfo.getTransferedFileHome().toString()+File.separator+strFileSender
+				+File.separator+strFile;
 		File srcFile = new File(strFullSrcFilePath);
 		long lFileSize = srcFile.length();
 		long lRemainBytes = lFileSize;
@@ -636,9 +639,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 		printMessage("processing delay: "+(lEndTime-lStartTime)+" ms\n");
 
 		// send the modified file to the sender
-		CMFileTransferManager.pushFile(strModifiedFile, strSender, m_serverStub.getCMInfo());
-
-		return;
+		CMFileTransferManager.pushFile(strModifiedFile, strFileSender, fileSenderUuid);
 	}
 	
 	private void processSNSEvent(CMEvent cme)
@@ -686,7 +687,7 @@ public class CMWinServerEventHandler implements CMAppEventHandler {
 	
 	private void processMultiServerEvent(CMEvent cme)
 	{
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMMultiServerEvent mse = (CMMultiServerEvent) cme;
 		switch(mse.getID())
 		{

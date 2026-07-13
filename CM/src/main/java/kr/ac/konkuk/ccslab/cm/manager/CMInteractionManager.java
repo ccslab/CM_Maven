@@ -33,22 +33,24 @@ import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
+import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserInfo;
 import kr.ac.konkuk.ccslab.cm.thread.CMClientKeepAliveTask;
 
 import java.sql.*;
+import java.util.stream.Collectors;
 
 public class CMInteractionManager {
 
 	// initialize the interaction info object in cmInfo
-	public static boolean init(CMInfo cmInfo)
+	public static boolean init()
 	{
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		// initialize DB
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		if(confInfo.isDBUse() && CMConfigurator.isDServer(cmInfo))
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		if(confInfo.isDBUse() && CMConfigurator.isDServer())
 		{
-			CMDBManager.init(cmInfo);
+			CMDBManager.init();
 		}
 		
 		// check the system type
@@ -60,10 +62,10 @@ public class CMInteractionManager {
 		}
 		
 		// open a server socket channel in the case of a server
-		CMUser myself = cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		if(strSysType.equals("SERVER"))
 		{
-			if(CMConfigurator.isDServer(cmInfo))
+			if(CMConfigurator.isDServer())
 			{
 				myself.setName("SERVER");				
 			}
@@ -71,7 +73,7 @@ public class CMInteractionManager {
 			ServerSocketChannel ssc = null;
 			try {
 				ssc = (ServerSocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SERVER_CHANNEL, 
-						confInfo.getMyCurrentAddress(), confInfo.getMyPort(), cmInfo);
+						confInfo.getMyCurrentAddress(), confInfo.getMyPort());
 				commInfo.setNonBlockServerSocketChannel(ssc);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -81,9 +83,9 @@ public class CMInteractionManager {
 		}
 		
 		// open a stream socket channel in the case of a client or a server which is not a default server
-		if(strSysType.equals("CLIENT") || (strSysType.equals("SERVER") && !CMConfigurator.isDServer(cmInfo)))
+		if(strSysType.equals("CLIENT") || (strSysType.equals("SERVER") && !CMConfigurator.isDServer()))
 		{
-			boolean ret = connectDefaultServer(cmInfo);
+			boolean ret = connectDefaultServer();
 			if(!ret)
 			{
 				System.out.println("CMInteractionManager.init(), connection to the default server FAILED.");
@@ -95,7 +97,7 @@ public class CMInteractionManager {
 		DatagramChannel dc = null;
 		try {
 			dc = (DatagramChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_DATAGRAM_CHANNEL, 
-					confInfo.getMyCurrentAddress(), confInfo.getUDPPort(), cmInfo);
+					confInfo.getMyCurrentAddress(), confInfo.getUDPPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -104,13 +106,13 @@ public class CMInteractionManager {
 		commInfo.getNonBlockDatagramChannelInfo().addChannel(confInfo.getUDPPort(), dc);
 		
 		// set session info
-		createSession(cmInfo);
+		createSession();
 	
 		// initialize sessions
-		CMSessionManager.init(cmInfo);
+		CMSessionManager.init();
 		
 		// initialize file manager
-		CMFileTransferManager.init(cmInfo);
+		CMFileTransferManager.init();
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMInteractionManager.init(), succeeded.");
@@ -118,15 +120,15 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	public static void terminate(CMInfo cmInfo)
+	public static void terminate()
 	{
-		CMFileTransferManager.terminate(cmInfo);		
+		CMFileTransferManager.terminate();
 	}
 	
-	public static boolean connectDefaultServer(CMInfo cmInfo)
+	public static boolean connectDefaultServer()
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		SocketChannel sc = null;
 		CMServer dServer = null;
@@ -141,7 +143,7 @@ public class CMInteractionManager {
 		// connection establishment to the default server
 		try {
 			sc = (SocketChannel) CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-					confInfo.getServerAddress(), confInfo.getServerPort(), cmInfo);
+					confInfo.getServerAddress(), confInfo.getServerPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -168,12 +170,12 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	public static boolean disconnectFromDefaultServer(CMInfo cmInfo)
+	public static boolean disconnectFromDefaultServer()
 	{
 		// check user's state
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		if(myself.getState() == CMInfo.CM_INIT)
 		{
@@ -187,8 +189,8 @@ public class CMInteractionManager {
 		dsInfo.getBlockSocketChannelInfo().removeAllChannels();
 		
 		// remove all the ongoing file-transfer info about the default server
-		fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-		fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+		fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+		fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 		// remove all the ongoing sns related file-transfer info at the client
 		snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 		// remove all session info
@@ -205,10 +207,10 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	public static int getNumLoginServers(CMInfo cmInfo)
+	public static int getNumLoginServers()
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().contentEquals("CLIENT"))
 		{
@@ -231,9 +233,9 @@ public class CMInteractionManager {
 	}
 	
 	// connect to an additional server
-	public static boolean connectAddServer(String strName, CMInfo cmInfo)
+	public static boolean connectAddServer(String strName)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 
 		tserver = interInfo.findAddServer(strName);
@@ -253,7 +255,7 @@ public class CMInteractionManager {
 		SelectableChannel sc = null;
 		try {
 			sc = CMCommManager.openNonBlockChannel(CMInfo.CM_SOCKET_CHANNEL, tserver.getServerAddress(), 
-										tserver.getServerPort(), cmInfo);
+										tserver.getServerPort());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -281,10 +283,10 @@ public class CMInteractionManager {
 	}
 	
 	// disconnect from an additional server
-	public static boolean disconnectFromAddServer(String strName, CMInfo cmInfo)
+	public static boolean disconnectFromAddServer(String strName)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMServer tserver = interInfo.findAddServer(strName);
 		if( tserver == null )
 		{
@@ -304,8 +306,8 @@ public class CMInteractionManager {
 		tserver.getNonBlockSocketChannelInfo().removeAllChannels();
 		tserver.getBlockSocketChannelInfo().removeAllChannels();
 		// remove ongoing file-transfer information
-		fInfo.removeRecvFileList(tserver.getServerName());
-		fInfo.removeSendFileList(tserver.getServerName());
+		fInfo.removeRecvFileList(tserver.getServerName(), null);
+		fInfo.removeSendFileList(tserver.getServerName(), null);
 		// remove session information
 		tserver.getSessionList().removeAllElements();
 
@@ -321,28 +323,28 @@ public class CMInteractionManager {
 		return true;
 	}
 	
-	public synchronized static boolean disconnectBadNode(SocketChannel badSC, CMInfo cmInfo)
+	public synchronized static boolean disconnectBadNode(SocketChannel badSC)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().contentEquals("SERVER"))
-			return disconnectBadNodeByServer(badSC, cmInfo);
+			return disconnectBadNodeByServer(badSC);
 		else
-			return disconnectBadNodeByClient(badSC, cmInfo);
+			return disconnectBadNodeByClient(badSC);
 	}
 	
-	private static boolean disconnectBadNodeByServer(SocketChannel badSC, CMInfo cmInfo)
+	private static boolean disconnectBadNodeByServer(SocketChannel badSC)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
-		if(CMConfigurator.isDServer(cmInfo))
+		if(CMConfigurator.isDServer())
 		{
 			CMServer addServer = findAddServerWithSocketChannel(badSC, interInfo.getAddServerList());
 			if(addServer != null)
 			{
 				// The default server disconnects from the additional server
-				return disconnectBadAddServerByDefaultServer(addServer, cmInfo);
+				return disconnectBadAddServerByDefaultServer(addServer);
 			}
 		}
 		else
@@ -351,7 +353,7 @@ public class CMInteractionManager {
 			if(isChannelBelongsToServer(badSC, defServer))
 			{
 				// The additional server disconnects from the default server
-				return disconnectBadDefaultServerByAddServer(cmInfo);
+				return disconnectBadDefaultServerByAddServer();
 			}
 		}
 		
@@ -359,7 +361,7 @@ public class CMInteractionManager {
 		if(user != null)
 		{
 			// The server disconnects from the client
-			return disconnectBadClientByServer(user, cmInfo);
+			return disconnectBadClientByServer(user);
 		}
 		
 		CMUnknownChannelInfo unchInfo = commInfo.getUnknownChannelInfoList()
@@ -404,27 +406,27 @@ public class CMInteractionManager {
 		return false;
 	}
 	
-	public synchronized static boolean disconnectBadAddServerByDefaultServer(CMServer addServer, CMInfo cmInfo)
+	public synchronized static boolean disconnectBadAddServerByDefaultServer(CMServer addServer)
 	{
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		String strAddServerName = addServer.getServerName();
 		
 		// notify clients of the deregistration
 		CMMultiServerEvent mse = new CMMultiServerEvent();
 		mse.setID(CMMultiServerEvent.NOTIFY_SERVER_LEAVE);
 		mse.setServerName(addServer.getServerName());
-		CMEventManager.broadcastEvent(mse, cmInfo);
+		CMEventManager.broadcastEvent(mse);
 
 		// remove all socket channels
 		addServer.getNonBlockSocketChannelInfo().removeAllChannels();
 		addServer.getBlockSocketChannelInfo().removeAllChannels();
 		
 		// remove file-transfer info
-		fInfo.removeRecvFileList(addServer.getServerName());
-		fInfo.removeSendFileList(addServer.getServerName());
+		fInfo.removeRecvFileList(addServer.getServerName(), null);
+		fInfo.removeSendFileList(addServer.getServerName(), null);
 		
 		// remove add-server info
-		cmInfo.getInteractionInfo().removeAddServer(addServer.getServerName());
+		CMInteractionInfo.getInstance().removeAddServer(addServer.getServerName());
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -433,30 +435,31 @@ public class CMInteractionManager {
 		}
 		
 		// notify the app event handler
-		notifyAppEventHandlerOfIntentionalDisconnection(strAddServerName, cmInfo);
+		notifyAppEventHandlerOfIntentionalDisconnection(strAddServerName, null);
 		
 		return true;
 	}
 	
-	private static void notifyAppEventHandlerOfIntentionalDisconnection(String strChannelName, 
-			CMInfo cmInfo)
+	private static void notifyAppEventHandlerOfIntentionalDisconnection(String strChannelName, UUID channelUuid)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.INTENTIONALLY_DISCONNECT);
 		se.setChannelName(strChannelName);
+		se.setChannelUuid(channelUuid);
 		cmInfo.getAppEventHandler().processEvent(se);
 	}
 	
-	private static boolean disconnectBadDefaultServerByAddServer(CMInfo cmInfo)
+	private static boolean disconnectBadDefaultServerByAddServer()
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		defServer.getNonBlockSocketChannelInfo().removeAllChannels();
 		defServer.getBlockSocketChannelInfo().removeAllChannels();
 		
-		fInfo.removeRecvFileList(defServer.getServerName());
-		fInfo.removeSendFileList(defServer.getServerName());
+		fInfo.removeRecvFileList(defServer.getServerName(), null);
+		fInfo.removeSendFileList(defServer.getServerName(), null);
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -465,18 +468,20 @@ public class CMInteractionManager {
 		}
 
 		// notify the app event handler
-		notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), cmInfo);
+		notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), null);
 
 		return true;
 	}
 	
-	public synchronized static boolean disconnectBadClientByServer(CMUser user, CMInfo cmInfo)
+	public synchronized static boolean disconnectBadClientByServer(CMUser user)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		String strUser = user.getName();
+		UUID userUuid = user.getUuid();
 		
 		// send MQTT will event
 		CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
-		mqttManager.sendMqttWill(user.getName());
+		mqttManager.sendMqttWill(strUser);
 
 		SocketChannel sc = (SocketChannel)user.getNonBlockSocketChannelInfo().findChannel(0);
 		try {
@@ -488,29 +493,31 @@ public class CMInteractionManager {
 		// trigger the logout process
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.LOGOUT);
-		tse.setUserName(user.getName());
+		tse.setSender(strUser);
+		tse.setSenderUuid(userUuid);
+		tse.setUserName(strUser);
 		CMMessage msg = new CMMessage();
 		msg.m_buf = CMEventManager.marshallEvent(tse);
-		CMInteractionManager.processEvent(msg, cmInfo);
+		CMInteractionManager.processEvent(msg);
 		cmInfo.getAppEventHandler().processEvent(tse);
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMIntearctionManager.disconnectBadClientByServer()"
-					+"intentionally disconnected from client ("+strUser+").");
+					+"intentionally disconnected from client ("+strUser+"), uuid("+userUuid+").");
 		}
 
 		// notify the app event handler
-		notifyAppEventHandlerOfIntentionalDisconnection(strUser, cmInfo);
+		notifyAppEventHandlerOfIntentionalDisconnection(strUser, userUuid);
 
 		return true;
 	}
 	
-	private static boolean disconnectBadNodeByClient(SocketChannel badSC, CMInfo cmInfo)
+	private static boolean disconnectBadNodeByClient(SocketChannel badSC)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		boolean bRet = false;
 		
@@ -519,7 +526,7 @@ public class CMInteractionManager {
 			// ch belongs to the default server
 
 			CMChannelInfo<Integer> chInfo = defServer.getNonBlockSocketChannelInfo();
-			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			
 			// remove all non-blocking channels
 			chInfo.removeAllChannels();
@@ -530,8 +537,8 @@ public class CMInteractionManager {
 			// stop all the file-transfer threads
 			//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
 			// remove all the ongoing file-transfer info about the default server
-			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+			fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+			fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 			// remove all the ongoing sns related file-transfer info at the client
 			snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 			// remove all session info
@@ -547,12 +554,12 @@ public class CMInteractionManager {
 			}
 
 			// notify the app event handler
-			notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), cmInfo);
+			notifyAppEventHandlerOfIntentionalDisconnection(defServer.getServerName(), null);
 
 			// check and stop the scheduled keep-alive task
-			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
+			if(CMInteractionManager.getNumLoginServers() == 0)
 			{
-				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				if(future != null)
 				{
@@ -576,8 +583,8 @@ public class CMInteractionManager {
 			String strAddServer = addServer.getServerName();
 			addServer.getNonBlockSocketChannelInfo().removeAllChannels();
 			addServer.getBlockSocketChannelInfo().removeAllChannels();
-			fInfo.removeRecvFileList(addServer.getServerName());
-			fInfo.removeSendFileList(addServer.getServerName());
+			fInfo.removeRecvFileList(addServer.getServerName(), null);
+			fInfo.removeSendFileList(addServer.getServerName(), null);
 			addServer.getSessionList().removeAllElements();
 			addServer.setClientState(CMInfo.CM_INIT);
 			if(CMInfo._CM_DEBUG)
@@ -589,12 +596,12 @@ public class CMInteractionManager {
 			}
 			
 			// notify the app event handler
-			notifyAppEventHandlerOfIntentionalDisconnection(strAddServer, cmInfo);
+			notifyAppEventHandlerOfIntentionalDisconnection(strAddServer, null);
 
 			// check and stop the scheduled keep-alive task
-			if(CMInteractionManager.getNumLoginServers(cmInfo) == 0)
+			if(CMInteractionManager.getNumLoginServers() == 0)
 			{
-				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
+				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				future.cancel(true);
 				
@@ -646,7 +653,7 @@ public class CMInteractionManager {
 		}
 		
 		// check group member of this client
-		CMUser groupUser = findGroupMemberOfClientWithSocketChannel(badSC, cmInfo);
+		CMUser groupUser = findGroupMemberOfClientWithSocketChannel(badSC);
 		if(groupUser != null)
 		{
 			String strGroupUserName = groupUser.getName();
@@ -657,7 +664,7 @@ public class CMInteractionManager {
 			// remove file-transfer info
 
 			// notify the app event handler
-			notifyAppEventHandlerOfIntentionalDisconnection(strGroupUserName, cmInfo);
+			notifyAppEventHandlerOfIntentionalDisconnection(strGroupUserName, groupUser.getUuid());
 		}
 		
 		System.err.println("CMInteractionManager.disconnectBadNodeByClient(): "+badSC);
@@ -668,8 +675,9 @@ public class CMInteractionManager {
 	
 	/////////////////////////////////////////////////////////////////////////////////
 	
-	public static boolean processEvent(CMMessage msg, CMInfo cmInfo)
+	public static boolean processEvent(CMMessage msg)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bReturn = true;	// the flag of whether the event will be forwarded to the application or not
 		CMEvent cmEvent = null;
 
@@ -679,13 +687,13 @@ public class CMInteractionManager {
 		{
 			System.err.println("CMInteractionManager.processEvent(), unmarshalled event is null.");
 			if(msg.m_ch instanceof SocketChannel)
-				CMInteractionManager.disconnectBadNode((SocketChannel)msg.m_ch, cmInfo);
+				CMInteractionManager.disconnectBadNode((SocketChannel)msg.m_ch);
 			return false;
 		}
 		
 		// update the last event-transmission time of the sender
 		if(msg.m_ch instanceof SocketChannel)
-			updateLastEventTransTime(msg.m_ch, cmInfo);
+			updateLastEventTransTime(msg.m_ch);
 
 		if(CMInfo._CM_DEBUG_2)
 		{
@@ -702,9 +710,9 @@ public class CMInteractionManager {
 			// deliver msg to session manager
 
 			if(strHandlerGroup != null && !strHandlerGroup.equals(""))
-				CMGroupManager.processEvent(msg, cmInfo);
+				CMGroupManager.processEvent(msg);
 			else
-				CMSessionManager.processEvent(msg, cmInfo);
+				CMSessionManager.processEvent(msg);
 			
 			bProcessed = true;
 		}
@@ -714,19 +722,19 @@ public class CMInteractionManager {
 			switch(nEventType)
 			{
 			case CMInfo.CM_FILE_EVENT:
-				bReturn = CMFileTransferManager.processEvent(msg, cmInfo);
+				bReturn = CMFileTransferManager.processEvent(msg);
 				bProcessed = true;
 				break;
 			case CMInfo.CM_SNS_EVENT:
-				CMSNSManager.processEvent(msg, cmInfo);
+				CMSNSManager.processEvent(msg);
 				bProcessed = true;
 				break;
 			case CMInfo.CM_SESSION_EVENT:
-				bReturn = processSessionEvent(msg, cmInfo);
+				bReturn = processSessionEvent(msg);
 				bProcessed = true;
 				break;
 			case CMInfo.CM_MULTI_SERVER_EVENT:
-				processMultiServerEvent(msg, cmInfo);
+				processMultiServerEvent(msg);
 				bProcessed = true;
 				break;
 			case CMInfo.CM_DUMMY_EVENT:
@@ -745,13 +753,6 @@ public class CMInteractionManager {
 				break;
 			default:
 				bProcessed = false;
-				/*
-				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
-						+nEventType);
-				cmEvent = null;
-				return true;
-				*/
-				
 			}
 		}
 		
@@ -767,43 +768,37 @@ public class CMInteractionManager {
 			else {
 				System.err.println("CMInteractionManager.processEvent(), unknown event type: "
 						+cmEvent.getType());
-				cmEvent = null;
 				return true;
 			}
 			
 		}
 		
 		// distribution to other session members or group members, if required
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			if(msg.m_ch instanceof SocketChannel)
 			{
-				distributeEvent(cmEvent.getDistributionSession(), cmEvent.getDistributionGroup(), 
-						cmEvent, CMInfo.CM_STREAM, cmInfo);
+				distributeEvent(cmEvent.getDistributionSession(), cmEvent.getDistributionGroup(),
+						cmEvent.getDistributionUuid(), cmEvent, CMInfo.CM_STREAM);
 			}
 			else if(msg.m_ch instanceof DatagramChannel)
 			{
 				distributeEvent(cmEvent.getDistributionSession(), cmEvent.getDistributionGroup(),
-						cmEvent, CMInfo.CM_DATAGRAM, cmInfo);
+						cmEvent.getDistributionUuid(), cmEvent, CMInfo.CM_DATAGRAM);
 			}
 		}
 		
 		if(CMInfo._CM_DEBUG_2)
 			System.out.println("CMInteractionManager.processEvent() ends.");
-		
-		// clear event object (message object is cleared at the EventReceiver)
-		cmEvent = null;
-		
+
 		return bReturn;
 	}
 	
 	// find a user who connects with a socket channel in loginUsers.
 	public synchronized static CMUser findUserWithSocketChannel(SelectableChannel ch, CMMember loginUsers)
 	{
-		String strUserName = null;
 		boolean isBlock = false;
-		boolean bFound = false;
 		Integer returnKey = null;
 		
 		if(ch == null)
@@ -820,65 +815,37 @@ public class CMInteractionManager {
 		}
 		
 		isBlock = ch.isBlocking();
-		
-		Iterator<CMUser> iter = loginUsers.getAllMembers().iterator();
-		CMUser tuser = null;
-		while(iter.hasNext() && !bFound)
+
+		// [Modified] Changed from double while-loop (Iterator) to double for-each loop
+		// It improves readability and eliminates the need for 'bFound' flag.
+		// Iterate through all user lists in the hashtable (CMMember structure: Hashtable<String, List<CMUser>>)
+		for (List<CMUser> userList : loginUsers.getAllMembers().values())
 		{
-			tuser = iter.next();
-			if(isBlock)
-				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
-			else
-				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
-			
-			if(returnKey != null)
+			for (CMUser tuser : userList)
 			{
-				strUserName = tuser.getName();
-				bFound = true;
-				if(CMInfo._CM_DEBUG_2)
-					System.out.println("CMInteractionManager.findUserWithSocketChannel(), user("+strUserName+") found.");
+				if(isBlock)
+					returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+				else
+					returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+
+				if(returnKey != null)
+				{
+					if(CMInfo._CM_DEBUG_2) {
+						System.out.println("CMInteractionManager.findUserWithSocketChannel(), user("
+								+ tuser.getName() + "), uuid("+tuser.getUuid()+") found.");
+					}
+					return tuser; // Return immediately when found
+				}
 			}
 		}
-		
-		if(bFound)
-			return tuser;
-		else
-			return null;
+
+		return null; // Return null if not found after checking all users
 	}
 	
-	// find group member with the session name, group name, and member name (called only by the server)
-	public synchronized static CMUser findGroupMemberOfServer(String strSession, String strGroup, String strUser, CMInfo cmInfo)
+	// find my group member list (called only by the client)
+	public synchronized static List<CMUser> findGroupMemberOfClient(String strUser)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMSession session = interInfo.findSession(strSession);
-		if(session == null)
-		{
-			System.err.println("CMInteractionManager.findGroupMemberOfServer(), session("
-					+strSession+") not found!");
-			return null;
-		}
-		CMGroup group = session.findGroup(strGroup);
-		if(group == null)
-		{
-			System.err.println("CMInteractionManager.findGroupMemberOfServer(), group("
-					+strGroup+") not found!");
-			return null;
-		}
-		CMUser user = group.getGroupUsers().findMember(strUser);
-		if(user == null)
-		{
-			System.err.println("CMInteractionManager.findGroupMemberOfServer(, user("
-					+strUser+") not found!");
-			return null;
-		}
-		
-		return user;
-	}
-	
-	// find my group member (called only by the client)
-	public synchronized static CMUser findGroupMemberOfClient(String strUser, CMInfo cmInfo)
-	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strSession = interInfo.getMyself().getCurrentSession();
 		String strGroup = interInfo.getMyself().getCurrentGroup();
 		
@@ -896,27 +863,62 @@ public class CMInteractionManager {
 					+strGroup+") not found!");
 			return null;
 		}
-		CMUser user = group.getGroupUsers().findMember(strUser);
-		if(user == null)
+
+		List<CMUser> userList = group.getGroupUsers().findMemberList(strUser);
+
+		if(userList == null || userList.isEmpty())
 		{
 			System.err.println("CMInteractionManager.findGroupMemberOfClient(), user("
 					+strUser+") not found!");
 			return null;
 		}
-		
+
+		return userList;
+	}
+
+	public synchronized static CMUser findGroupMemberOfClient(String strUser, UUID uuid) {
+		// Modification: Use Singleton instance for CMInteractionInfo
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		String strSession = interInfo.getMyself().getCurrentSession();
+		String strGroup = interInfo.getMyself().getCurrentGroup();
+
+		CMSession session = interInfo.findSession(strSession);
+		if(session == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), session("
+					+strSession+") not found!");
+			return null;
+		}
+
+		CMGroup group = session.findGroup(strGroup);
+		if(group == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), group("
+					+strGroup+") not found!");
+			return null;
+		}
+
+		// Modification: Use findMember(strUser, uuid) to retrieve the specific login session
+		CMUser user = group.getGroupUsers().findMember(strUser, uuid);
+
+		if(user == null)
+		{
+			System.err.println("CMInteractionManager.findGroupMemberOfClient(), user("
+					+strUser+"), uuid("+uuid.toString()+") not found!");
+			return null;
+		}
+
 		return user;
 	}
 	
 	// find my group member with channel (called only by the client)
-	public synchronized static CMUser findGroupMemberOfClientWithSocketChannel(SelectableChannel ch, CMInfo cmInfo)
+	public synchronized static CMUser findGroupMemberOfClientWithSocketChannel(SelectableChannel ch)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strSession = interInfo.getMyself().getCurrentSession();
 		String strGroup = interInfo.getMyself().getCurrentGroup();
 		
-		String strUserName = null;
 		boolean isBlock = false;
-		boolean bFound = false;
 		Integer returnKey = null;
 		
 		CMSession session = interInfo.findSession(strSession);
@@ -935,39 +937,39 @@ public class CMInteractionManager {
 		}
 
 		isBlock = ch.isBlocking();
-		Iterator<CMUser> iter = group.getGroupUsers().getAllMembers().iterator();
-		CMUser tuser = null;
-		while(iter.hasNext() && !bFound)
+
+		// [Modified] Iteration logic changed due to CMMember structure change (Vector -> Hashtable<String, List<CMUser>>)
+		// Use double for-each loop for better readability
+		for(List<CMUser> userList : group.getGroupUsers().getAllMembers().values())
 		{
-			tuser = iter.next();
-			if(isBlock)
-				returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
-			else
-				returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
-			
-			if(returnKey != null)
+			for(CMUser tuser : userList)
 			{
-				strUserName = tuser.getName();
-				bFound = true;
-				if(CMInfo._CM_DEBUG_2)
+				if(isBlock)
+					returnKey = tuser.getBlockSocketChannelInfo().findChannelKey(ch);
+				else
+					returnKey = tuser.getNonBlockSocketChannelInfo().findChannelKey(ch);
+
+				if(returnKey != null)
 				{
-					System.out.println("CMInteractionManager."
-							+ "findGroupMemberOfClientWithSocketChannel(), user("
-							+strUserName+") found.");
+					if(CMInfo._CM_DEBUG_2)
+					{
+						System.out.println("CMInteractionManager."
+								+ "findGroupMemberOfClientWithSocketChannel(), user("
+								+tuser.getName()+"), uuid("+tuser.getUuid()+") found.");
+					}
+
+					return tuser; // Return immediately when found
 				}
 			}
 		}
-		
-		if(bFound)
-			return tuser;
-		else
-			return null;
+
+		return null; // Return null if not found after checking all group members
 	}
 	
 	// find (default or additional) server info
-	public synchronized static CMServer findServer(String strTarget, CMInfo cmInfo)
+	public synchronized static CMServer findServer(String strTarget)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		CMServer serverInfo = null;
 		
@@ -1038,6 +1040,76 @@ public class CMInteractionManager {
 		else
 			return null;
 	}
+
+	/*
+	 * [Added Method]
+	 * Returns the list of UUIDs for the target user.
+	 * If the target is a server, it returns null because the server does not have a UUID.
+	 * If the target is a client, it returns the list of UUIDs based on the system type and login status.
+	 */
+	public static List<UUID> findUuidList(String strTarget)
+	{
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		List<UUID> uuidList = new ArrayList<>();
+		CMUser myself = interInfo.getMyself();
+		boolean isServer = confInfo.getSystemType().equals("SERVER");
+
+		// [Modified] Check if the target is a server.
+		// Whether I am a server or a client, if the target is a server, return null.
+		// Servers do not manage their own UUIDs in this design.
+		boolean isTargetServer = false;
+
+		// 1. Check if the target is myself and I am a server
+		if (isServer && strTarget.equals(myself.getName()))
+		{
+			isTargetServer = true;
+		}
+		// 2. Check default server
+		else
+		{
+			CMServer serverInfo = interInfo.getDefaultServerInfo();
+			if (serverInfo != null && strTarget.equals(serverInfo.getServerName()))
+			{
+				isTargetServer = true;
+			}
+			// 3. Check additional servers
+			else if (interInfo.findAddServer(strTarget) != null)
+			{
+				isTargetServer = true;
+			}
+		}
+
+		// If target is a server, return null immediately.
+		if (isTargetServer)
+		{
+			return null;
+		}
+
+		// Process when the target is a client
+		List<CMUser> targetList;
+		if (isServer)
+		{
+			// Case: I am a server, and the target is a client.
+			// Find UUIDs from the login users.
+			targetList = interInfo.getLoginUsers().findMemberList(strTarget);
+		}
+		else
+		{
+			// Case: I am a client, and the target is a client (myself or another group member).
+			// If strTarget is equal to my name (client), the list has the other concurrent-login user with my name.
+			targetList = findGroupMemberOfClient(strTarget);
+		}
+
+		if (targetList != null && !targetList.isEmpty())
+		{
+			uuidList = targetList.stream()
+					.map(CMUser::getUuid)
+					.collect(Collectors.toList());
+		}
+
+		return uuidList;
+	}
 	
 	public synchronized static boolean isChannelBelongsToServer(SelectableChannel ch, CMServer server)
 	{
@@ -1083,10 +1155,10 @@ public class CMInteractionManager {
 	}
 	
 	// update the last event transmission time when CM sends an event
-	public synchronized static void updateMyLastEventTransTime(SelectableChannel ch, CMInfo cmInfo)
+	public synchronized static void updateMyLastEventTransTime(SelectableChannel ch)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		CMServer addServer = null;
@@ -1123,7 +1195,7 @@ public class CMInteractionManager {
 			
 			// if this server is not the default server, it checks whether ch belongs to 
 			// the default server
-			if(!CMConfigurator.isDServer(cmInfo))
+			if(!CMConfigurator.isDServer())
 			{
 				if(isChannelBelongsToServer(ch, defServer))
 				{
@@ -1178,11 +1250,11 @@ public class CMInteractionManager {
 	// private methods
 	
 	// update the last event transmission time when CM receives an event
-	private static void updateLastEventTransTime(SelectableChannel ch, CMInfo cmInfo)
+	private static void updateLastEventTransTime(SelectableChannel ch)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer defServer = interInfo.getDefaultServerInfo();
 		CMServer addServer = null;
 		
@@ -1232,7 +1304,7 @@ public class CMInteractionManager {
 			
 			// if this server is not the default server, it also check whether ch is for
 			// the default server
-			if(!CMConfigurator.isDServer(cmInfo))
+			if(!CMConfigurator.isDServer())
 			{
 				if(isChannelBelongsToServer(ch, defServer))
 				{
@@ -1278,10 +1350,10 @@ public class CMInteractionManager {
 		
 	}
 	
-	private static void createSession(CMInfo cmInfo)
+	private static void createSession()
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
@@ -1320,7 +1392,7 @@ public class CMInteractionManager {
 		}
 	}
 
-	private static boolean processSessionEvent(CMMessage msg, CMInfo cmInfo)
+	private static boolean processSessionEvent(CMMessage msg)
 	{
 		boolean bForward = true;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
@@ -1328,84 +1400,82 @@ public class CMInteractionManager {
 		switch(nEventID)
 		{
 		case CMSessionEvent.LOGIN:
-			bForward = processLOGIN(msg, cmInfo);
+			bForward = processLOGIN(msg);
 			break;
 		case CMSessionEvent.LOGIN_ACK:
-			processLOGIN_ACK(msg, cmInfo);
+			processLOGIN_ACK(msg);
 			break;
 		case CMSessionEvent.LOGOUT:
-			processLOGOUT(msg, cmInfo);
+			processLOGOUT(msg);
 			break;
 		case CMSessionEvent.SESSION_ADD_USER:
-			processSESSION_ADD_USER(msg, cmInfo);
+			processSESSION_ADD_USER(msg);
 			break;
 		case CMSessionEvent.SESSION_REMOVE_USER:
-			processSESSION_REMOVE_USER(msg, cmInfo);
+			processSESSION_REMOVE_USER(msg);
 			break;
 		case CMSessionEvent.CHANGE_SESSION:
-			processCHANGE_SESSION(msg, cmInfo);
+			processCHANGE_SESSION(msg);
 			break;
 		case CMSessionEvent.REQUEST_SESSION_INFO:
-			processREQUEST_SESSION_INFO(msg, cmInfo);
+			processREQUEST_SESSION_INFO(msg);
 			break;
 		case CMSessionEvent.RESPONSE_SESSION_INFO:
-			processRESPONSE_SESSION_INFO(msg, cmInfo);
+			processRESPONSE_SESSION_INFO(msg);
 			break;
 		case CMSessionEvent.SESSION_TALK:
-			processSESSION_TALK(msg, cmInfo);
+			processSESSION_TALK(msg);
 			break;
 		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL:
-			processADD_NONBLOCK_SOCKET_CHANNEL(msg, cmInfo);
+			processADD_NONBLOCK_SOCKET_CHANNEL(msg);
 			break;
 		case CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK:
-			processADD_NONBLOCK_SOCKET_CHANNEL_ACK(msg, cmInfo);
+			processADD_NONBLOCK_SOCKET_CHANNEL_ACK(msg);
 			break;
 		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL:
-			processADD_BLOCK_SOCKET_CHANNEL(msg, cmInfo);
+			processADD_BLOCK_SOCKET_CHANNEL(msg);
 			break;
 		case CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK:
-			processADD_BLOCK_SOCKET_CHANNEL_ACK(msg, cmInfo);
+			processADD_BLOCK_SOCKET_CHANNEL_ACK(msg);
 			break;
 		case CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL:
-			processREMOVE_BLOCK_SOCKET_CHANNEL(msg, cmInfo);
+			processREMOVE_BLOCK_SOCKET_CHANNEL(msg);
 			break;
 		case CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK:
-			processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(msg, cmInfo);
+			processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(msg);
 			break;
 		case CMSessionEvent.REGISTER_USER:
-			processREGISTER_USER(msg, cmInfo);
+			processREGISTER_USER(msg);
 			break;
 		case CMSessionEvent.REGISTER_USER_ACK:
-			processREGISTER_USER_ACK(se, cmInfo);
+			processREGISTER_USER_ACK(se);
 			break;
 		case CMSessionEvent.DEREGISTER_USER:
-			processDEREGISTER_USER(msg, cmInfo);
+			processDEREGISTER_USER(msg);
 			break;
 		case CMSessionEvent.DEREGISTER_USER_ACK:
-			processDEREGISTER_USER_ACK(se, cmInfo);
+			processDEREGISTER_USER_ACK(se);
 			break;
 		case CMSessionEvent.FIND_REGISTERED_USER:
-			processFIND_REGISTERED_USER(msg, cmInfo);
+			processFIND_REGISTERED_USER(msg);
 			break;
 		case CMSessionEvent.FIND_REGISTERED_USER_ACK:
-			processFIND_REGISTERED_USER_ACK(se, cmInfo);
+			processFIND_REGISTERED_USER_ACK(se);
 			break;
 		default:
 			System.out.println("CMInteractionManager.processSessionEvent(), unknown event ID: "
 					+nEventID);
-			se = null;
 			return false;
 		}
 		
-		se = null;
 		return bForward;
 	}
 
-	private static boolean processLOGIN(CMMessage msg, CMInfo cmInfo)
+	private static boolean processLOGIN(CMMessage msg)
 	{
 		boolean bForward = true;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMMember loginUsers = null;
 		
 		if(confInfo.getSystemType().equals("SERVER"))
@@ -1413,46 +1483,66 @@ public class CMInteractionManager {
 			// check if the user already has logged in or not
 			CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 			loginUsers = interInfo.getLoginUsers();
-			if(loginUsers.isMember(se.getUserName()))
+			boolean isLogin = isLoginUser(loginUsers, se);
+			if(isLogin)
 			{
 				// send LOGIN_ACK event saying that the user already has logged into the server
 				bForward = false;
 				if(CMInfo._CM_DEBUG)
 				{
 					System.err.println("CMInteractionManager.processLOGIN(), user("+
-							se.getUserName()+") already has logged into the server!");
+							se.getUserName()+") already has logged into the server " +
+							"in the multi-login-scheme("+ confInfo.getMultiLoginScheme()+")!");
 				}
 				
 				CMSessionEvent seAck = new CMSessionEvent();
 				seAck.setID(CMSessionEvent.LOGIN_ACK);
 				seAck.setValidUser(-1);	// already-logged user
-				CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);
+				CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
 			}
 			else
 			{
-				CMUser tuser = new CMUser();
+				////// Process new login user
 
+				// 1. Generate a new UUID for the login user
+				UUID uuid = UUID.randomUUID();
+
+				// 2. Create a temporary CMUser and set information (including UUID)
+				CMUser tuser = new CMUser();
 				tuser.setName(se.getUserName());
+				tuser.setUuid(uuid);
 				tuser.setPasswd(se.getPassword());
 				tuser.setHost(se.getHostAddress());
 				tuser.setUDPPort(se.getUDPPort());
 				tuser.setLastEventTransTime(System.currentTimeMillis());
 				tuser.setKeepAliveTime(confInfo.getKeepAliveTime());
-				
+				// Add the channel to the user information
 				tuser.getNonBlockSocketChannelInfo().addChannel(0, msg.m_ch);
+				// Add the user to the login users table
 				loginUsers.addMember(tuser);
-				
+
 				if(CMInfo._CM_DEBUG)
 				{
-					System.out.println("CMInteractionManager.processLOGIN(), add new user("+
-							se.getUserName()+"), # longin users("+loginUsers.getMemberNum()+").");
+					System.out.println("CMInteractionManager.processLOGIN(), add new user("+se.getUserName()
+							+"), uuid("+uuid+"), # longin users("+loginUsers.getMemberNum()+").");
 				}
 
-				if(!confInfo.isLoginScheme())
-					replyToLOGIN(se, 1, cmInfo);				
+				// 3. Set the UUID in the session event
+				se.setUuid(uuid);
+
+				// 4. Handle based on login scheme
+				if(confInfo.isLoginScheme()) {
+					// If login scheme is used, marshall the event (with UUID) back to the message buffer
+					// so that the server application can receive the UUID.
+					ByteBuffer buf = CMEventManager.marshallEvent(se);
+					msg.m_buf = buf;
+				}
+				else {
+					// If login scheme is not used, CM handles the login reply directly.
+					replyToLOGIN(se, 1);
+				}
 			}
 
-			se = null;
 			return bForward;
 		}
 		
@@ -1463,60 +1553,110 @@ public class CMInteractionManager {
 		return false;
 	}
 
-	public static boolean replyToLOGIN(CMSessionEvent se, int nValidUser, CMInfo cmInfo)
-	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
-		CMSessionEvent seAck = new CMSessionEvent();
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
-		boolean bRet = false;
-		
-		if(user == null)
-		{
-			System.out.println("CMInteractionManager.replyToLOGIN(), user("+se.getUserName()
-					+") not found.");
+	// [New Method] Check if the user has already logged in according to the multi-login scheme
+	private static boolean isLoginUser(CMMember members, CMSessionEvent se) {
+		if (members == null || se == null) {
+			System.err.println("CMInteractionManager.isLoginUser(), null argument!");
 			return false;
 		}
 
+		String userName = se.getUserName();
+		if (userName == null || userName.isEmpty()) {
+			System.err.println("CMInteractionManager.isLoginUser(), empty userName!");
+			return false;
+		}
+
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		int nMultiLoginScheme = confInfo.getMultiLoginScheme();
+
+		// 1. Common: Retrieve the list of current login users with the same name
+		List<CMUser> userList = members.findMemberList(userName);
+
+		// If there is no record, login is allowed in any scheme (not a duplicate)
+		if (userList == null || userList.isEmpty()) {
+			return false;
+		}
+
+		// 2. Check logic per scheme (Only 0 and 1 are supported)
+		switch (nMultiLoginScheme) {
+			case 0:
+				// Scheme 0: Only a single login is allowed.
+				// Since userList exists, it is unconditionally a duplicate login.
+				return true;
+
+			case 1:
+				// Scheme 1: Same ID + Different Host (IP) is allowed.
+				// If there is any record with the same host address, it is a duplicate (block).
+				return userList.stream()
+						.anyMatch(user -> user.getHost().equals(se.getHostAddress()));
+
+			default:
+				System.err.println("CMInteractionManager.isLoginUser(), Invalid multi-login-scheme: " + nMultiLoginScheme);
+				return false;
+		}
+	}
+
+	public static boolean replyToLOGIN(CMSessionEvent se, int nValidUser)
+	{
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
+		boolean bRet = false;
+
+		// get the UUID from the session event
+		UUID uuid = se.getUuid();
+		// find the user with the user name and the UUID
+		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName(), uuid);
+
+		if(user == null)
+		{
+			System.out.println("CMInteractionManager.replyToLOGIN(), user("+se.getUserName()
+					+"), uuid("+uuid+") not found!");
+			return false;
+		}
+
+		// create a LOGIN_ACK event
+		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.LOGIN_ACK);
-		seAck.setSender(interInfo.getMyself().getName());
-		seAck.setReceiver(se.getSender());
+		//seAck.setSender(interInfo.getMyself().getName());
+		//seAck.setReceiver(se.getSender());
 		seAck.setValidUser(nValidUser);
+		seAck.setUuid(uuid);	// set uuid of the login user
 		seAck.setCommArch(confInfo.getCommArch());
-		
-		if(confInfo.isFileTransferScheme())
-			seAck.setFileTransferScheme(1);
-		else
-			seAck.setFileTransferScheme(0);
-		
-		if(confInfo.isLoginScheme())
-			seAck.setLoginScheme(1);
-		else
-			seAck.setLoginScheme(0);
-		
-		if(confInfo.isSessionScheme())
-			seAck.setSessionScheme(1);
-		else
-			seAck.setSessionScheme(0);
-		
+
+		seAck.setFileTransferScheme(confInfo.isFileTransferScheme() ? 1 : 0);
+		seAck.setLoginScheme(confInfo.isLoginScheme() ? 1 : 0);
+		seAck.setMultiLoginScheme(confInfo.getMultiLoginScheme());
+		seAck.setSessionScheme(confInfo.isSessionScheme() ? 1 : 0);
 		seAck.setAttachDownloadScheme(confInfo.getAttachDownloadScheme());	// default value
-		
 		seAck.setUDPPort(confInfo.getUDPPort());
-		
-		bRet = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
-		seAck = null;
+
+		// find the default socket channel of the user
+		SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
+		if(sc != null) {
+			bRet = CMEventManager.unicastEvent(seAck, sc);
+		}
+		else {
+			System.err.println("CMInteractionManager.replyToLogin(), Socket channel not found for user ("
+				+ user.getName() + "), uuid(" + uuid + ")!");
+			return false;
+		}
 		
 		if(nValidUser == 1)
 		{
 			// set default scheme for attachment download
 			user.setAttachDownloadScheme(confInfo.getAttachDownloadScheme());
-			// set login date
-			user.setLastLoginDate(Calendar.getInstance());
+
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSUserInfo snsUserInfo = new CMSNSUserInfo();
+			snsInfo.getSNSUserInfoTable().put(user.getName(), snsUserInfo);
+			// Last Login Date 설정
+			snsUserInfo.setLastLoginDate(Calendar.getInstance());
+
 			if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 			{
 				// load history info for attachment access of this user
-				CMSNSManager.loadAccessHistory(user, cmInfo);
+				CMSNSManager.loadAccessHistory(user);
 			}
 			
 			// set last event transmission time
@@ -1530,7 +1670,6 @@ public class CMInteractionManager {
 			}
 			
 			// remove from unknown-channel list
-			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
 			CMList<CMUnknownChannelInfo> unknownChInfoList = commInfo.getUnknownChannelInfoList();
 			bRet = unknownChInfoList.removeElement(new CMUnknownChannelInfo(sc));
 			if(bRet && CMInfo._CM_DEBUG)
@@ -1547,25 +1686,25 @@ public class CMInteractionManager {
 			}
 
 			// send inhabitants who already logged on the system to the new user
-			distributeLoginUsers(user.getName(), cmInfo);
+			distributeLoginUsers(sc);
 			
 			// notify info. on new user who logged in
 			CMSessionEvent tse = new CMSessionEvent();
 			tse.setID(CMSessionEvent.SESSION_ADD_USER);
 			tse.setUserName(user.getName());
+			tse.setUuid(user.getUuid());
 			tse.setHostAddress(user.getHost());
 			tse.setSessionName(user.getCurrentSession());
-			CMEventManager.broadcastEvent(tse, cmInfo);
+			CMEventManager.broadcastEvent(tse);
 		}
 		else
 		{
 			// remove temporary user information
 			user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
 			user.getBlockSocketChannelInfo().removeAllChannels();
-			interInfo.getLoginUsers().removeMember(user.getName());
+			interInfo.getLoginUsers().removeMember(user);
 			
 			// update login failure count of this channel
-			SocketChannel sc = (SocketChannel) user.getNonBlockSocketChannelInfo().findChannel(0);
 			CMUnknownChannelInfo unchInfo = commInfo.getUnknownChannelInfoList()
 					.findElement(new CMUnknownChannelInfo(sc));
 			if(unchInfo == null)
@@ -1604,34 +1743,30 @@ public class CMInteractionManager {
 		return bRet;
 	}
 	
-	private static void distributeLoginUsers(String targetUser, CMInfo cmInfo)
+	private static void distributeLoginUsers(SocketChannel sc)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMSessionEvent tse = null;
-		CMUser loginUser = null;
-		
-		Iterator<CMUser> iterUser = interInfo.getLoginUsers().getAllMembers().iterator();
-		while(iterUser.hasNext())
-		{
-			loginUser = iterUser.next();
-			if(!targetUser.equals(loginUser.getName()))
-			{
-				tse = new CMSessionEvent();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMMember loginUsers = interInfo.getLoginUsers();
+
+		// iterate all the authorized users and send their info to the new user
+		for(List<CMUser> userList : loginUsers.getAllMembers().values()) {
+			for(CMUser user : userList) {
+				CMSessionEvent tse = new CMSessionEvent();
 				tse.setID(CMSessionEvent.SESSION_ADD_USER);
-				tse.setUserName(loginUser.getName());
-				tse.setHostAddress(loginUser.getHost());
-				tse.setSessionName(loginUser.getCurrentSession());
-				CMEventManager.unicastEvent(tse, targetUser, cmInfo);
-				tse = null;
+				tse.setUserName(user.getName());
+				tse.setUuid(user.getUuid());
+				tse.setHostAddress(user.getHost());
+				tse.setSessionName(user.getCurrentSession());
+				// send the event to the socket channel of the new user
+				CMEventManager.unicastEvent(tse, sc);
 			}
 		}
-		
 	}
 	
-	private static void processLOGIN_ACK(CMMessage msg, CMInfo cmInfo)
+	private static void processLOGIN_ACK(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		SocketChannel sc = null;
 		CMServer serverInfo = null;
 		
@@ -1639,211 +1774,196 @@ public class CMInteractionManager {
 			return;
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
+
+		// check authentication result
+		if(se.isValidUser() == 0)
+		{
+			System.err.println("CMInteractionManager.processLOGIN_ACK(), authentication failed!");
+			return;
+		}
+		else if(se.isValidUser() == -1)
+		{
+			System.err.println("CMInteractionManager.processLOGIN_ACK(), already logged in!");
+			return;
+		}
+
+		// set configuration info from the server
 		confInfo.setCommArch(se.getCommArch());
 		confInfo.setFileTransferScheme(se.isFileTransferScheme());
 		confInfo.setLoginScheme(se.isLoginScheme());
+		confInfo.setMultiLoginScheme(se.getMultiLoginScheme());
 		confInfo.setSessionScheme(se.isSessionScheme());
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
-		interInfo.getDefaultServerInfo().setServerName(se.getSender());
-		interInfo.getDefaultServerInfo().setServerUDPPort(se.getUDPPort());
-		
+
+		// set my info
+		CMUser myself = interInfo.getMyself();
+		// do not set my name because it is already set before sending LOGIN event
+		// myself.setName(se.getUserName());
+		// [New] set my UUID received from the server
+		myself.setUuid(se.getUuid());
+
+		// set default server info
+		serverInfo = interInfo.getDefaultServerInfo();
+		serverInfo.setServerName(se.getSender());
+		serverInfo.setServerUDPPort(se.getUDPPort());
+
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processLOGIN_ACK(), received.");
-			System.out.println("bValidUser("+se.isValidUser()+"), comm arch("+se.getCommArch()
-					+"), bFileTransferScheme("+se.isFileTransferScheme()+"), bLoginScheme("
-					+se.isLoginScheme()+"), bSessionScheme("+se.isSessionScheme()
-					+"), nAttachDwonloadScheme("+se.getAttachDownloadScheme()+"), server udp port("
-					+se.getUDPPort()+").");
+			System.out.println("user name("+se.getUserName()
+					+"), uuid("+se.getUuid()
+					+"), bValidUser("+se.isValidUser()
+					+"), comm arch("+se.getCommArch()
+					+"), bFileTransferScheme("+se.isFileTransferScheme()
+					+"), bLoginScheme("+se.isLoginScheme()
+					+"), nMultiLoginScheme("+se.getMultiLoginScheme()
+					+"), bSessionScheme("+se.isSessionScheme()
+					+"), nAttachDownloadScheme("+se.getAttachDownloadScheme()
+					+"), server udp port("+se.getUDPPort()+").");
 		}
-		
-		if(se.isValidUser() == 1)
+
+		// update client's state
+		myself.setState(CMInfo.CM_LOGIN);
+		// set client's attachment download scheme
+		myself.setAttachDownloadScheme(se.getAttachDownloadScheme());
+		// set client's keep-alive time
+		myself.setKeepAliveTime(confInfo.getKeepAliveTime());
+
+		// if the file transfer scheme is set, create a blocking TCP socket channel
+		serverInfo = interInfo.getDefaultServerInfo();
+		if(confInfo.isFileTransferScheme())
 		{
-			// update client's state
-			interInfo.getMyself().setState(CMInfo.CM_LOGIN);
-			// set client's attachment download scheme
-			interInfo.getMyself().setAttachDownloadScheme(se.getAttachDownloadScheme());
-			// set client's keep-alive time
-			interInfo.getMyself().setKeepAliveTime(confInfo.getKeepAliveTime());
-			// if the file trasnfer scheme is set, create a blocking TCP socket channel
-			serverInfo = interInfo.getDefaultServerInfo();
-			if(confInfo.isFileTransferScheme())
-			{
-				/*
-				scInfo = serverInfo.getBlockSocketChannelInfo();
-				try {
-					sc = (SocketChannel) CMCommManager.openBlockChannel(CMInfo.CM_SOCKET_CHANNEL, 
-							serverInfo.getServerAddress(), serverInfo.getServerPort(), cmInfo);
-				} catch (IOException e) {
-					e.printStackTrace();
-					return;
-				}
-				
-				if(sc == null)
-				{
-					System.err.println("CMInteractionMaanger.processLOGIN_ACK(), failed to create a blocking "
-							+ "TCP socket channel to the default server!");
-					return;
-				}
-				scInfo.addChannel(0, sc); // key for the default blocking TCP socket channel is 1
+			sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName(), null);
 
-				CMSessionEvent tse = new CMSessionEvent();
-				tse.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-				tse.setChannelName(interInfo.getMyself().getName());
-				tse.setChannelNum(0);
-				CMEventManager.unicastEvent(tse, serverInfo.getServerName(), CMInfo.CM_STREAM, 0, true, cmInfo);
-				se = null;
-				*/
-				
-				sc = CMCommManager.addBlockSocketChannel(0, serverInfo.getServerName(), cmInfo);
-
-				if(sc != null && CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
-							+ "the channel with the key(0) to the default server.");
-				}				
-			}
-			
-			// check whether the keep-alive scheduler should start or not
-			int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
-			if(nKeepAlive > 0 && getNumLoginServers(cmInfo) == 1)
+			if(sc != null && CMInfo._CM_DEBUG)
 			{
-				CMThreadInfo threadInfo = cmInfo.getThreadInfo();
-				ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
-				CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask(cmInfo);
-				ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask, 
-						nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
-				threadInfo.setScheduledFuture(future);
-				
-				if(CMInfo._CM_DEBUG)
-				{
-					System.out.println("CMInteractionManager.processLOGIN_ACK(), "
-							+"# logins("+getNumLoginServers(cmInfo)+"), start "
-							+"keep-alive task.");
-				}
-			}
-
-			// request session information if session scheme is not used.
-			if(!confInfo.isSessionScheme())
-			{
-				// set session name as default name (session1)
-				//CMSession tsession = interInfo.getSessionList().elementAt(0);
-				//tsession.setSessionName("session1");
-				
-				CMSessionEvent tse = new CMSessionEvent();
-				tse.setID(CMSessionEvent.JOIN_SESSION);
-				tse.setHandlerSession("session1");
-				tse.setUserName(interInfo.getMyself().getName());
-				tse.setSessionName("session1");
-				
-				CMEventManager.unicastEvent(tse, serverInfo.getServerName(), cmInfo);
-				interInfo.getMyself().setCurrentSession("session1");
-				tse = null;
+				System.out.println("CMInteractionManager.processLOGIN_ACK(),successfully requested to add "
+						+ "the channel with the key(0) to the default server.");
 			}
 		}
-		else
+
+		// check whether the keep-alive scheduler should start or not
+		int nKeepAlive = interInfo.getMyself().getKeepAliveTime();
+		if(nKeepAlive > 0 && getNumLoginServers() == 1)
 		{
-			System.out.println("CMInteractionManager.processLOGIN_ACK(), invalid user.");
+			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
+			ScheduledExecutorService ses = threadInfo.getScheduledExecutorService();
+			CMClientKeepAliveTask keepAliveTask = new CMClientKeepAliveTask();
+			ScheduledFuture<?> future = ses.scheduleAtFixedRate(keepAliveTask,
+					nKeepAlive/3, nKeepAlive/3, TimeUnit.SECONDS);
+			threadInfo.setScheduledFuture(future);
+
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMInteractionManager.processLOGIN_ACK(), "
+						+"# logins("+getNumLoginServers()+"), start "
+						+"keep-alive task.");
+			}
 		}
-		
-		se = null;
-		return;
+
+		// request session information if session scheme is not used.
+		if(!confInfo.isSessionScheme())
+		{
+			// set session name as default name (session1)
+			CMSessionEvent tse = new CMSessionEvent();
+			tse.setID(CMSessionEvent.JOIN_SESSION);
+			tse.setHandlerSession("session1");
+			tse.setUserName(interInfo.getMyself().getName());
+			tse.setSessionName("session1");
+
+			CMEventManager.unicastEvent(tse, serverInfo.getServerName());
+			myself.setCurrentSession("session1");
+		}
 	}
 	
-	private static void processSESSION_ADD_USER(CMMessage msg, CMInfo cmInfo)
+	private static void processSESSION_ADD_USER(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.println("CMInteractionManager.processSESSION_ADD_USER(), user("+se.getUserName()
-						+"), host("+se.getHostAddress()+"), session("+se.getSessionName()+").");
+				System.out.println("CMInteractionManager.processSESSION_ADD_USER(), user("
+						+se.getUserName() +"), uuid("+se.getUuid()+"), host("+se.getHostAddress()
+						+"), session("+se.getSessionName()+").");
 			}
 		}
-		se = null;
-		return;
 	}
 	
-	private static void processSESSION_REMOVE_USER(CMMessage msg, CMInfo cmInfo)
+	private static void processSESSION_REMOVE_USER(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.processSESSION_REMOVE_USER(), user("
-						+se.getUserName()+").");
+						+se.getUserName()+"), uuid("+se.getUuid()+").");
 			}
 		}
-		se = null;
-		return;
 	}
 	
-	private static void processCHANGE_SESSION(CMMessage msg, CMInfo cmInfo)
+	private static void processCHANGE_SESSION(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processCHANGE_SESSION(), user("+se.getUserName()
-					+"), session("+se.getSessionName()+").");
+					+"), uuid("+se.getUuid()+"), session("+se.getSessionName()+").");
 		}
 
 		if(confInfo.getSystemType().equals("SERVER"))	// Currently, this event is sent only to users (not servers) (not clear)
 		{
-			CMEventManager.broadcastEvent(se, cmInfo);
+			CMEventManager.broadcastEvent(se);
 		}
-		
-		se = null;
-		return;
 	}
 	
-	private static void processLOGOUT(CMMessage msg, CMInfo cmInfo)
+	private static void processLOGOUT(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processLOGOUT(), system type is not SERVER!");
 			return;
+		}
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		// find the user in the login user list
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
+		CMUser user = interInfo.getLoginUsers().findMember(se.getSender(), se.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processLOGOUT, user("+se.getUserName()
-					+") not found.");
+					+"), uuid("+se.getSenderUuid()+") not found!");
 			return;
 		}
 		
 		// stop all the file-transfer threads
-		//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();	// wrong
-		//if(CMInfo._CM_DEBUG)
-		//	System.out.println("CMInteractionManager.processLOGOUT(); # shutdown threads: "+ftList.size());
 		// remove all the ongoing file-transfer info with the user
-		fInfo.removeRecvFileList(user.getName());
-		fInfo.removeSendFileList(user.getName());
+		fInfo.removeRecvFileList(user.getName(), user.getUuid());
+		fInfo.removeSendFileList(user.getName(), user.getUuid());
 		// remove all the ongoing sns related file-transfer info about the user
-		snsInfo.getPrefetchMap().removePrefetchList(user.getName());
-		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName());
-		snsInfo.getSendSNSAttachHashtable().removeSNSAttachList(user.getName());
-		
+		snsInfo.getPrefetchMap().removePrefetchList(user.getName(), user.getUuid());
+		snsInfo.getRecvSNSAttachHashtable().removeSNSAttachList(user.getName(), user.getUuid());
+		snsInfo.getSendSNSAttachHashtable().removeSNSAttachList(user.getName(), user.getUuid());
+		// [신규 추가] 로그아웃 시 SNS 사용자 정보 테이블에서 엔트리 삭제
+		snsInfo.getSNSUserInfoTable().remove(user.getName());
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH && confInfo.isDBUse())
 		{
 			// save newly added or updated access history for the attachment of SNS content
-			CMSNSManager.saveAccessHistory(user, cmInfo);
+			CMSNSManager.saveAccessHistory(user);
 		}
 		
 		// leave session and group
-		CMSessionManager.leaveSession(user, cmInfo);
+		CMSessionManager.leaveSession(user);
 		
 		// close and remove all additional nonblocking socket channels of the user
 		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
@@ -1852,18 +1972,19 @@ public class CMInteractionManager {
 		// remove the user from login user list
 		//interInfo.getLoginUsers().removeMember(user);
 		//user = null;
-		interInfo.getLoginUsers().removeMemberObject(user);
+		interInfo.getLoginUsers().removeMember(user);
 		
 		// notify login users of the logout user
 		CMSessionEvent tse = new CMSessionEvent();
 		tse.setID(CMSessionEvent.SESSION_REMOVE_USER);
 		tse.setUserName(se.getUserName());
-		CMEventManager.broadcastEvent(tse, cmInfo);
+		tse.setUuid(user.getUuid());
+		CMEventManager.broadcastEvent(tse);
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processLOGOUT(), user("+se.getUserName()
-					+"), # login users("+interInfo.getLoginUsers().getMemberNum()+").");
+					+"), uuid("+se.getSenderUuid()+"), # login users("+interInfo.getLoginUsers().getMemberNum()+").");
 		}
 		
 		// move the default channel to the unknown-channel list
@@ -1890,15 +2011,12 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processLOGOUT(), the client channel is also closed.");
 		}
 		
-		se = null;
-		tse = null;
-		return;
 	}
 	
-	private static void processREQUEST_SESSION_INFO(CMMessage msg, CMInfo cmInfo)
+	private static void processREQUEST_SESSION_INFO(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
@@ -1906,18 +2024,16 @@ public class CMInteractionManager {
 		}
 		
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
-		if(!interInfo.getLoginUsers().isMember(se.getUserName()))
+		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName(), se.getSenderUuid());
+		if(user == null)
 		{
 			System.out.println("CMInteractinManager.processREQUEST_SESSION_INFO(), user("+se.getUserName()
-					+") not found in the login user list.");
-			se = null;
+					+"), uuid("+se.getSenderUuid()+") not found in the login user list.");
 			return;
 		}
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.RESPONSE_SESSION_INFO);
-		seAck.setSender(interInfo.getMyself().getName());
-		seAck.setReceiver(se.getSender());
 		seAck.setSessionNum(confInfo.getSessionNumber());
 		Iterator<CMSession> iterSession = interInfo.getSessionList().iterator();
 		while(iterSession.hasNext())
@@ -1927,18 +2043,15 @@ public class CMInteractionManager {
 									confInfo.getServerPort(), tsession.getSessionUsers().getMemberNum());
 			seAck.addSessionInfo(tInfo);
 		}
-		CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
 
 		seAck.removeAllGroupInfoObjects();
-		seAck = null;
-		se = null;
-		return;
 	}
 	
-	private static void processRESPONSE_SESSION_INFO(CMMessage msg, CMInfo cmInfo)
+	private static void processRESPONSE_SESSION_INFO(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		if(!confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -1974,16 +2087,15 @@ public class CMInteractionManager {
 			
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), tInfo.getPort(), tInfo.getUserNum());
+				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(),
+						tInfo.getPort(), tInfo.getUserNum());
 			}
 		}
 		
 		se.removeAllSessionInfoObjects();
-		se = null;
-		return;
 	}
 	
-	private static void processSESSION_TALK(CMMessage msg, CMInfo cmInfo)
+	private static void processSESSION_TALK(CMMessage msg)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1991,36 +2103,29 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processSESSION_TALK(), broadcasted by user("
 					+se.getUserName()+")");
 			System.out.println("chat: "+se.getTalk());
-			se = null;
 		}
-		
-		return;
 	}
 	
-	private static void processADD_NONBLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
+	private static void processADD_NONBLOCK_SOCKET_CHANNEL(CMMessage msg)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
 		int nChIndex = se.getChannelNum();
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(interInfo.getMyself().getName());
-		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChIndex);
 
-		CMUser user = interInfo.getLoginUsers().findMember(strChannelName);
+		CMUser user = interInfo.getLoginUsers().findMember(strChannelName, se.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL(), user("+strChannelName
-					+") not found in the login user list.");
+					+"), uuid("+se.getSenderUuid()+") not found in the login user list.");
 			seAck.setReturnCode(0);
-			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
-			seAck = null;
-			se = null;
+			CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
 			return;
 		}
 		boolean ret = user.getNonBlockSocketChannelInfo().addChannel(nChIndex, msg.m_ch);
@@ -2045,16 +2150,12 @@ public class CMInteractionManager {
 			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 		}
 		
-		CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);
-		
-		se = null;
-		seAck = null;
-		return;
+		CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch);
 	}
 	
-	private static void processADD_NONBLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
+	private static void processADD_NONBLOCK_SOCKET_CHANNEL_ACK(CMMessage msg)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		
@@ -2080,24 +2181,24 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_NONBLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
 					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
 		}
-				
-		se = null;
-		return;
 	}
 	
-	private static void processADD_BLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
+	private static void processADD_BLOCK_SOCKET_CHANNEL(CMMessage msg)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
+		UUID channelUuid = se.getChannelUuid();
 		int nChKey = se.getChannelNum();
 		String strMyName = interInfo.getMyself().getName();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		UUID myUuid = interInfo.getMyself().getUuid();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMUser user = null;
 		
 		// If this node is not the receiver of this event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && !Objects.equals(se.getReceiverUuid(), myUuid)))
 		{
 			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
 					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
@@ -2106,52 +2207,35 @@ public class CMInteractionManager {
 
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			user = interInfo.getLoginUsers().findMember(strChannelName);
+			//user = interInfo.getLoginUsers().findMember(strChannelName, se.getSenderUuid());
+			user = interInfo.getLoginUsers().findMember(strChannelName, channelUuid);
 			if(user == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(), "
-						+"user("+strChannelName+") not found in the login user list!");
+						+"user("+strChannelName+"), uuid("+channelUuid
+						+") not found in the login user list!");
 				
 				return;
 			}			
 		}
-		else
+		else	// CLIENT
 		{
-			/*
-			String strCurrentSession = interInfo.getMyself().getCurrentSession();
-			String strCurrentGroup = interInfo.getMyself().getCurrentGroup();
-			
-			CMSession session = interInfo.findSession(strCurrentSession);
-			if(session == null)
-			{
-				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"session("+strCurrentSession+") not found!");
-				return;
-			}
-			CMGroup group = session.findGroup(strCurrentGroup);
-			if(group == null)
-			{
-				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"group("+strCurrentGroup+") not found!");
-				return;
-			}
-			user = group.getGroupUsers().findMember(strChannelName);
-			*/
-			user = findGroupMemberOfClient(strChannelName, cmInfo);
+			//user = findGroupMemberOfClient(strChannelName, se.getSenderUuid());
+			user = findGroupMemberOfClient(strChannelName, channelUuid);
 			if(user == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL(),"
-						+"user("+strChannelName+") not found!");
+						+"user("+strChannelName+"), uuid("+channelUuid
+						+") not found in the group member table!");
 				return;
 			}
 		}
 		
 		CMSessionEvent seAck = new CMSessionEvent();
 		seAck.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(strMyName);
-		seAck.setReceiver(se.getSender());
 		seAck.setChannelName(interInfo.getMyself().getName());
 		seAck.setChannelNum(nChKey);
+		seAck.setChannelUuid(interInfo.getMyself().getUuid());
 
 		// The receiving channel is included in the Selector with the nonblocking mode.
 		// This channel must be taken out from the Selector and changed to the blocking mode.
@@ -2186,27 +2270,29 @@ public class CMInteractionManager {
 			e.printStackTrace();
 			
 			seAck.setReturnCode(0);
-			
-			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+			if(confInfo.getCommArch().contentEquals("CM_CS") &&
 					confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				// If this node is the client type, the requester is another client 
+				// If this node is the client type, the requester is another client
 				// and this reply event should be forwarded by the default server.
 				// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setSender(interInfo.getMyself().getName());
+				seAck.setSenderUuid(interInfo.getMyself().getUuid());
+				seAck.setReceiver(user.getName());
+				seAck.setReceiverUuid(user.getUuid());
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
-				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-						.getServerName(), cmInfo);
+				seAck.setDistributionUuid(channelUuid);
+				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 			}
 			else
 			{
-				CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);				
+				CMEventManager.unicastEvent(seAck, user.getName(), channelUuid);
 			}
-			seAck = null;
-			se = null;
 			return;
 		}
-		
+
 		boolean ret = user.getBlockSocketChannelInfo().addChannel(nChKey, msg.m_ch);
 		if(ret)
 			seAck.setReturnCode(1);
@@ -2229,62 +2315,67 @@ public class CMInteractionManager {
 			System.err.println("# unknown-channel list elements: "+unknownChInfoList.getSize());
 		}
 
-		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+		if(confInfo.getCommArch().contentEquals("CM_CS") &&
 				confInfo.getSystemType().contentEquals("CLIENT"))
 		{
-			// If this node is the client type, the requester is another client 
+			// If this node is the client type, the requester is another client
 			// and this reply event should be forwarded by the default server.
 			// The server never sends the ADD_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setSender(interInfo.getMyself().getName());
+			seAck.setSenderUuid(interInfo.getMyself().getUuid());
+			seAck.setReceiver(user.getName());
+			seAck.setReceiverUuid(user.getUuid());
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
-			ret = CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-					.getServerName(), cmInfo);
+			seAck.setDistributionUuid(channelUuid);
+			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 		}
 		else
 		{
-			ret = CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);			
+			CMEventManager.unicastEvent(seAck, user.getName(), channelUuid);
 		}
 		
-		se = null;
-		seAck = null;
-		return;
 	}
 	
-	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
+	private static void processADD_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
+		UUID myUuid = interInfo.getMyself().getUuid();
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
 		CMServer targetServer = null;
 		CMUser targetUser = null;
 		CMChannelInfo<Integer> scList = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannel = se.getChannelName();
+		UUID channelUuid = se.getChannelUuid();
 		int nChKey = se.getChannelNum();
 		CMSendFileInfo sfInfo = null;
 		
 		// If this node is not the receiver of this event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && !Objects.equals(myUuid, se.getReceiverUuid())))
 		{
 			System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
-					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+					+"receiver("+se.getReceiver()+") receiver uuid("+se.getReceiverUuid()+") is not me("
+					+strMyName+") my uuid("+myUuid+"!");
 			return;
 		}
 
 		// find the target node (server or client)
-		targetServer = findServer(strChannel, cmInfo);
+		targetServer = findServer(strChannel);
 		if(targetServer != null)
 		{
 			scList = targetServer.getBlockSocketChannelInfo();
 		}
 		else
 		{
-			targetUser = findGroupMemberOfClient(strChannel, cmInfo);
+			targetUser = findGroupMemberOfClient(strChannel, channelUuid);
 			if(targetUser == null)
 			{
 				System.err.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"target("+strChannel+") not found!");
+						+"target("+strChannel+"), uuid("+channelUuid+") not found!");
 				return;
 			}
 			scList = targetUser.getBlockSocketChannelInfo();
@@ -2293,7 +2384,7 @@ public class CMInteractionManager {
 		if(se.getReturnCode() == 0)
 		{
 			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK() failed to add channel,"
-					+"server("+strChannel+"), channel key("+nChKey+").");
+					+"name ("+strChannel+"), uuid( "+channelUuid+"), channel key("+nChKey+").");
 			
 			scList.removeChannel(nChKey);
 			return;
@@ -2301,147 +2392,124 @@ public class CMInteractionManager {
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for server("
-					+se.getChannelName()+") channel key("+se.getChannelNum()+").");
+			System.out.println("CMInteractionManager.processADD_BLOCK_SOCKET_CHANNEL_ACK(), succeeded for name("
+					+strChannel+"), uuid("+channelUuid+"), channel key("+se.getChannelNum()+").");
 			System.out.println("delay: "+(System.currentTimeMillis()-commInfo.getStartTime()));
 		}
 
 		// check whether there is sending file information that is not started to be sent
-		sfInfo = fInfo.findSendFileInfoNotStarted(strChannel);
-		if(sfInfo != null && (fInfo.findSendFileInfoOngoing(strChannel) == null))
+		sfInfo = fInfo.findSendFileInfoNotStarted(strChannel, channelUuid);
+		if(sfInfo != null && (fInfo.findSendFileInfoOngoing(strChannel, channelUuid) == null))
 		{
 			// set the dedicated channel to the sending file info
 			sfInfo.setSendChannel((SocketChannel)scList.findChannel(nChKey));
 			// resume the file-transfer by calling sendSTART_FILE_TRANSFER_CHAN() method
-			CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN(sfInfo, cmInfo);
+			CMFileTransferManager.sendSTART_FILE_TRANSFER_CHAN(sfInfo);
 		}
-		se = null;
-		return;
 	}
 	
-	private static void processREMOVE_BLOCK_SOCKET_CHANNEL(CMMessage msg, CMInfo cmInfo)
+	private static void processREMOVE_BLOCK_SOCKET_CHANNEL(CMMessage msg)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = null;
 		CMChannelInfo<Integer> scInfo = null;
 		SocketChannel sc = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		String strChannelName = se.getChannelName();
+		UUID channelUuid = se.getChannelUuid();
 		int nChKey = se.getChannelNum();
 		ByteBuffer recvBuf = null;
 		int nRecvBytes = -1;
 		String strMyName = interInfo.getMyself().getName();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		UUID myUuid = interInfo.getMyself().getUuid();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// If this node is not the receiver of the received event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && !Objects.equals(myUuid, se.getReceiverUuid())))
 		{
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL(), "
-					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+					+"receiver("+se.getReceiver()+"), uuid("+se.getReceiverUuid()+") is not me("+strMyName
+					+", "+myUuid+").");
 			return;
 		}
-		
-		CMSessionEvent seAck = new CMSessionEvent();
-		seAck.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
-		seAck.setSender(strMyName);
-		seAck.setReceiver(se.getSender());
-		seAck.setChannelName(strMyName);
-		seAck.setChannelNum(nChKey);
-		
+
 		if(confInfo.getSystemType().contentEquals("SERVER"))
 		{
-			user = interInfo.getLoginUsers().findMember(strChannelName);
-			if( user == null )
-			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), user("+strChannelName
-						+") not found!");
-				seAck.setReturnCode(0);			
-				CMEventManager.unicastEvent(seAck, (SocketChannel)msg.m_ch, cmInfo);				
-				seAck = null;
-				se = null;
-				return;
-			}			
+			user = interInfo.getLoginUsers().findMember(strChannelName, channelUuid);
 		}
 		else
 		{
-			String strCurrentSession = interInfo.getMyself().getCurrentSession();
-			String strCurrentGroup = interInfo.getMyself().getCurrentGroup();
-			
-			CMSession session = interInfo.findSession(strCurrentSession);
-			if(session == null)
-			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),"
-						+"session("+strCurrentSession+") not found!");
-				return;
-			}
-			CMGroup group = session.findGroup(strCurrentGroup);
-			if(group == null)
-			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),"
-						+"group("+strCurrentGroup+") not found!");
-				return;
-			}
-			user = group.getGroupUsers().findMember(strChannelName);
-			if(user == null)
-			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),"
-						+"user("+strChannelName+") not found in the current session("
-						+strCurrentSession+") and current group("+strCurrentGroup+")!");
-				return;
-			}
+			user = findGroupMemberOfClient(strChannelName, channelUuid);
 		}
-		
+
+		if(user == null)
+		{
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), user("
+					+strChannelName+"), uuid("+channelUuid+") not found!");
+			return;
+		}
+
+		CMSessionEvent seAck = new CMSessionEvent();
+		seAck.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK);
+		seAck.setChannelName(strMyName);
+		seAck.setChannelNum(nChKey);
+		seAck.setChannelUuid(interInfo.getMyself().getUuid());
+
 		scInfo = user.getBlockSocketChannelInfo();
 		sc = (SocketChannel) scInfo.findChannel(nChKey);
 		if(sc == null)
 		{
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(), channel not found! "
-					+"user("+strChannelName+"), channel key("+nChKey+")");
+					+"user("+strChannelName+"), uuid("+channelUuid+"), channel key("+nChKey+")");
 			seAck.setReturnCode(0);
-			
-			if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+			if(confInfo.getCommArch().contentEquals("CM_CS") &&
 					confInfo.getSystemType().contentEquals("CLIENT"))
 			{
-				// If this node is the client type, the requester is another client 
+				// If this node is the client type, the requester is another client
 				// and this reply event should be forwarded by the default server.
 				// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+				seAck.setSender(interInfo.getMyself().getName());
+				seAck.setSenderUuid(interInfo.getMyself().getUuid());
+				seAck.setReceiver(user.getName());
+				seAck.setReceiverUuid(user.getUuid());
 				seAck.setDistributionSession("CM_ONE_USER");
 				seAck.setDistributionGroup(user.getName());
-				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-						.getServerName(), cmInfo);
+				seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
+				CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 			}
 			else
 			{
-				CMEventManager.unicastEvent(seAck,  user.getName(), cmInfo);				
+				CMEventManager.unicastEvent(seAck,  user.getName(), channelUuid);
 			}
 
-			seAck = null;
-			se = null;
 			return;
 		}
-		
+
 		// found the blocking channel that will be disconnected
 		seAck.setReturnCode(1);	// ok
-		
-		if(confInfo.getCommArch().contentEquals("CM_CS") && 
+
+		if(confInfo.getCommArch().contentEquals("CM_CS") &&
 				confInfo.getSystemType().contentEquals("CLIENT"))
 		{
-			// If this node is the client type, the requester is another client 
+			// If this node is the client type, the requester is another client
 			// and this reply event should be forwarded by the default server.
 			// The server never sends the REMOVE_BLOCK_SOCKET_CHANNEL event to the client.
+			seAck.setSender(interInfo.getMyself().getName());
+			seAck.setSenderUuid(interInfo.getMyself().getUuid());
+			seAck.setReceiver(user.getName());
+			seAck.setReceiverUuid(user.getUuid());
 			seAck.setDistributionSession("CM_ONE_USER");
 			seAck.setDistributionGroup(user.getName());
-			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo()
-					.getServerName(), cmInfo);
+			seAck.setDistributionUuid(channelUuid);	// same as user.getUuid()
+			CMEventManager.unicastEvent(seAck, interInfo.getDefaultServerInfo().getServerName());
 		}
 		else
 		{
-			CMEventManager.unicastEvent(seAck, user.getName(), cmInfo);			
+			CMEventManager.unicastEvent(seAck, user.getName(), channelUuid);
 		}
 
-		seAck = null;
-		se = null;
-		
 		try {
 			recvBuf = ByteBuffer.allocate(Integer.BYTES);
 			System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL(),waiting for disconnection "
@@ -2464,58 +2532,46 @@ public class CMInteractionManager {
 		}
 		scInfo.removeChannel(nChKey);
 		
-		return;
 	}
 	
-	private static void processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg, CMInfo cmInfo)
+	private static void processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(CMMessage msg)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strMyName = interInfo.getMyself().getName();
+		UUID myUuid = interInfo.getMyself().getUuid();
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> scInfo = null;
 		SocketChannel sc = null;
 		CMSessionEvent se = new CMSessionEvent(msg.m_buf);
 		int nChKey = se.getChannelNum();
 		String strTarget = se.getChannelName();
+		UUID targetUuid = se.getChannelUuid();
 		boolean result = false;
 		
 		// If this node is not the receiver of the received event,
-		if(!se.getReceiver().contentEquals(strMyName))
+		if(!se.getReceiver().contentEquals(strMyName) ||
+				(se.getReceiverUuid() != null && !Objects.equals(myUuid, se.getReceiverUuid())))
 		{
 			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), "
-					+"receiver("+se.getReceiver()+") is not me("+strMyName+").");
+					+"receiver("+se.getReceiver()+"), uuid("+se.getReceiverUuid()+") is not me("+strMyName
+					+", "+myUuid+").");
 			return;
 		}
 
 		if(se.getReturnCode() == 1)
 		{
-			/*
-			if(strServer.equals(interInfo.getDefaultServerInfo().getServerName()))
-				serverInfo = interInfo.getDefaultServerInfo();
-			else
-				serverInfo = interInfo.findAddServer(strServer);
-				
-			if(serverInfo == null)
-			{
-				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-						+"server information not found: server("+strServer+"), channel key("+nChKey+")");
-					
-				return;
-			}
-			*/
-			serverInfo = CMInteractionManager.findServer(strTarget, cmInfo);
+			serverInfo = CMInteractionManager.findServer(strTarget);
 			if(serverInfo != null)
 			{
 				scInfo = serverInfo.getBlockSocketChannelInfo();
 			}
 			else
 			{
-				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, 
-						cmInfo);
+				CMUser targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, targetUuid);
 				if(targetUser == null)
 				{
 					System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-							+" target("+strTarget+") not found!");
+							+" target("+strTarget+"), uuid("+targetUuid+") not found!");
 					return;
 				}
 				scInfo = targetUser.getBlockSocketChannelInfo();
@@ -2528,8 +2584,7 @@ public class CMInteractionManager {
 			{
 				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
 						+"the socket channel not found: channel key("
-						+nChKey+"), target("+strTarget+")");
-				
+						+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 				return;
 			}
 			
@@ -2538,30 +2593,28 @@ public class CMInteractionManager {
 			{
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
-							+"succeeded : channel key("+nChKey+"), target("+strTarget+")");
+							+"succeeded : channel key("+nChKey+"), target("
+							+strTarget+"), uuid("+targetUuid+").");
 			}
 			else
 			{
 				System.err.println("CMInteractionManager.processREMOVE_BLOCK_SOCKET_CHANNEL_ACK(), "
 						+"failed to remove the channel : channel key("
-						+nChKey+"), target("+strTarget+")");
+						+nChKey+"), target("+strTarget+"), uuid("+targetUuid+").");
 			}
-			
-			return;
-		}
+		}	// return code = 1
 		else
 		{
-			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails to accept "
-					+" the removal request of the channel: key("
-					+nChKey+"), target("+strTarget+")");
-			return;			
+			System.err.println("CMInteractionManager.processREMOVE_BLOCK_CHANNEL_ACK(), the server fails " +
+					"to accept the removal request of the channel: key("+nChKey+"), target("+strTarget
+					+"), uuid("+targetUuid+")");
 		}
 			
 	}
 	
-	private static void processREGISTER_USER(CMMessage msg, CMInfo cmInfo)
+	private static void processREGISTER_USER(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strQuery = null;
 		ResultSet rs = null;
 		int ret = -1;
@@ -2575,7 +2628,7 @@ public class CMInteractionManager {
 		{
 			// find if the user name already exists or not
 			strQuery = "select * from  user_table where userName='"+se.getUserName()+"';";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 			try {
 				if( rs != null && rs.next() )
 				{
@@ -2586,13 +2639,13 @@ public class CMInteractionManager {
 				else
 				{
 					// insert a new user
-					ret = CMDBManager.queryInsertUser(se.getUserName(), se.getPassword(), cmInfo);
+					ret = CMDBManager.queryInsertUser(se.getUserName(), se.getPassword());
 					if( ret == 1 )	// not clear
 					{
 						// get the inserted creationTime from DB
 						strQuery = "select creationTime from user_table where userName='"
 								+se.getUserName()+"';";
-						rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+						rs = CMDBManager.sendSelectQuery(strQuery);
 						rs.next();
 						strCreationTime = rs.getString("creationTime");
 						nReturnCode = 1;
@@ -2601,7 +2654,7 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 
@@ -2617,14 +2670,10 @@ public class CMInteractionManager {
 		seAck.setReturnCode(nReturnCode);
 		seAck.setUserName(se.getUserName());
 		seAck.setCreationTime(strCreationTime);
-		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
-
-		se = null;
-		seAck = null;
-		return;
+		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
 	}
 
-	private static void processREGISTER_USER_ACK(CMSessionEvent se, CMInfo cmInfo)
+	private static void processREGISTER_USER_ACK(CMSessionEvent se)
 	{
 
 		if( se.getReturnCode() == 1 )
@@ -2642,13 +2691,11 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processREGISTER_USER_ACK(), FAILED for user("
 					+se.getUserName()+")!");
 		}
-		
-		return;
 	}
 	
-	private static void processDEREGISTER_USER(CMMessage msg, CMInfo cmInfo)
+	private static void processDEREGISTER_USER(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strQuery = null;
 		ResultSet rs = null;
 		int ret = -1;
@@ -2662,7 +2709,7 @@ public class CMInteractionManager {
 			// check the user authentication (if user name and password are correct or not)
 			strQuery = "select * from user_table where userName='"+se.getUserName()+"' and "
 					+"password=PASSWORD('"+se.getPassword()+"');";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 			try {
 				if( rs != null && !rs.next() )
 				{
@@ -2673,7 +2720,7 @@ public class CMInteractionManager {
 				else
 				{
 					// delete a user from DB
-					ret = CMDBManager.queryDeleteUser(se.getUserName(), cmInfo);
+					ret = CMDBManager.queryDeleteUser(se.getUserName());
 					if( ret == 1 ) // not clear
 					{
 						nReturnCode = 1;
@@ -2682,7 +2729,7 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 
@@ -2697,14 +2744,10 @@ public class CMInteractionManager {
 		seAck.setID(CMSessionEvent.DEREGISTER_USER_ACK);
 		seAck.setReturnCode(nReturnCode);
 		seAck.setUserName(se.getUserName());
-		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
-		
-		se = null;
-		seAck = null;
-		return;
+		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
 	}
 
-	private static void processDEREGISTER_USER_ACK(CMSessionEvent se, CMInfo cmInfo)
+	private static void processDEREGISTER_USER_ACK(CMSessionEvent se)
 	{
 		if( se.getReturnCode() == 1 )
 		{
@@ -2721,13 +2764,11 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processDEREGISTER_USER_ACK(), FAILED for user("
 					+se.getUserName()+")!");
 		}
-		
-		return;
 	}
 	
-	private static void processFIND_REGISTERED_USER(CMMessage msg, CMInfo cmInfo)
+	private static void processFIND_REGISTERED_USER(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strQuery = null;
 		ResultSet rs = null;
 		int nReturnCode = 0;
@@ -2741,7 +2782,7 @@ public class CMInteractionManager {
 
 			// make a search query
 			strQuery = "select * from user_table where userName='"+se.getUserName()+"';";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 
 			try {
 				if( rs != null && !rs.next() )
@@ -2761,7 +2802,7 @@ public class CMInteractionManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 		}
@@ -2777,14 +2818,10 @@ public class CMInteractionManager {
 		seAck.setReturnCode(nReturnCode);
 		seAck.setUserName(se.getUserName());
 		seAck.setCreationTime(strCreationTime);
-		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch, cmInfo);
-
-		se = null;
-		seAck = null;
-		return;
+		CMEventManager.unicastEvent(seAck, (SocketChannel) msg.m_ch);
 	}
 	
-	private static void processFIND_REGISTERED_USER_ACK(CMSessionEvent se, CMInfo cmInfo)
+	private static void processFIND_REGISTERED_USER_ACK(CMSessionEvent se)
 	{
 		if( se.getReturnCode() == 1 )
 		{
@@ -2800,98 +2837,93 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processFIND_REGISTERED_USER_ACK(), "
 					+ "failed for user("+se.getUserName()+")!");
 		}
-		return;
 	}
 	
-	private static void processMultiServerEvent(CMMessage msg, CMInfo cmInfo)
+	private static void processMultiServerEvent(CMMessage msg)
 	{
 		CMMultiServerEvent mse = new CMMultiServerEvent(msg.m_buf);
 		int nEventID = mse.getID();
 		switch(nEventID)
 		{
 		case CMMultiServerEvent.REQ_SERVER_REG:
-			processREQ_SERVER_REG(msg, cmInfo);
+			processREQ_SERVER_REG(msg);
 			break;
 		case CMMultiServerEvent.RES_SERVER_REG:
-			processRES_SERVER_REG(mse, cmInfo);
+			processRES_SERVER_REG(mse);
 			break;
 		case CMMultiServerEvent.REQ_SERVER_DEREG:
-			processREQ_SERVER_DEREG(mse, cmInfo);
+			processREQ_SERVER_DEREG(mse);
 			break;
 		case CMMultiServerEvent.RES_SERVER_DEREG:
-			processRES_SERVER_DEREG(mse, cmInfo);
+			processRES_SERVER_DEREG(mse);
 			break;
 		case CMMultiServerEvent.NOTIFY_SERVER_INFO:
-			processNOTIFY_SERVER_INFO(mse, cmInfo);
+			processNOTIFY_SERVER_INFO(mse);
 			break;
 		case CMMultiServerEvent.NOTIFY_SERVER_LEAVE:
-			processNOTIFY_SERVER_LEAVE(mse, cmInfo);
+			processNOTIFY_SERVER_LEAVE(mse);
 			break;
 		case CMMultiServerEvent.REQ_SERVER_INFO:
-			processREQ_SERVER_INFO(mse, cmInfo);
+			processREQ_SERVER_INFO(mse);
 			break;
 		case CMMultiServerEvent.ADD_LOGIN:
-			processADD_LOGIN(msg, cmInfo);
+			processADD_LOGIN(msg);
 			break;
 		case CMMultiServerEvent.ADD_LOGIN_ACK:
-			processADD_LOGIN_ACK(mse, cmInfo);
+			processADD_LOGIN_ACK(mse);
 			break;
 		case CMMultiServerEvent.ADD_LOGOUT:
-			processADD_LOGOUT(mse, cmInfo);
+			processADD_LOGOUT(mse);
 			break;
 		case CMMultiServerEvent.ADD_SESSION_ADD_USER:
-			processADD_SESSION_ADD_USER(mse, cmInfo);
+			processADD_SESSION_ADD_USER(mse);
 			break;
 		case CMMultiServerEvent.ADD_SESSION_REMOVE_USER:
-			processADD_SESSION_REMOVE_USER(mse, cmInfo);
+			processADD_SESSION_REMOVE_USER(mse);
 			break;
 		case CMMultiServerEvent.ADD_REQUEST_SESSION_INFO:
-			processADD_REQUEST_SESSION_INFO(mse, cmInfo);
+			processADD_REQUEST_SESSION_INFO(mse);
 			break;
 		case CMMultiServerEvent.ADD_RESPONSE_SESSION_INFO:
-			processADD_RESPONSE_SESSION_INFO(mse, cmInfo);
+			processADD_RESPONSE_SESSION_INFO(mse);
 			break;
 		case CMMultiServerEvent.ADD_JOIN_SESSION:
-			processADD_JOIN_SESSION(mse, cmInfo);
+			processADD_JOIN_SESSION(mse);
 			break;
 		case CMMultiServerEvent.ADD_JOIN_SESSION_ACK:
-			processADD_JOIN_SESSION_ACK(mse, cmInfo);
+			processADD_JOIN_SESSION_ACK(mse);
 			break;
 		case CMMultiServerEvent.ADD_LEAVE_SESSION:
-			processADD_LEAVE_SESSION(mse, cmInfo);
+			processADD_LEAVE_SESSION(mse);
 			break;
 		case CMMultiServerEvent.ADD_CHANGE_SESSION:
-			processADD_CHANGE_SESSION(mse, cmInfo);
+			processADD_CHANGE_SESSION(mse);
 			break;
 		case CMMultiServerEvent.ADD_JOIN_GROUP:
-			processADD_JOIN_GROUP(mse, cmInfo);
+			processADD_JOIN_GROUP(mse);
 			break;
 		case CMMultiServerEvent.ADD_GROUP_INHABITANT:
-			processADD_GROUP_INHABITANT(mse, cmInfo);
+			processADD_GROUP_INHABITANT(mse);
 			break;
 		case CMMultiServerEvent.ADD_NEW_GROUP_USER:
-			processADD_NEW_GROUP_USER(mse, cmInfo);
+			processADD_NEW_GROUP_USER(mse);
 			break;
 		default:
 			System.out.println("CMInteractionManager.processMultiServerEvent(), unknown event ID: "
 					+nEventID);
-			mse = null;
 			return;
 		}
-		
-		mse = null;
-		return;
 	}
 	
-	private static void processREQ_SERVER_REG(CMMessage msg, CMInfo cmInfo)
+	private static void processREQ_SERVER_REG(CMMessage msg)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		String strServerName = null;
 		String strServerAddress = null;
 		int nServerPort = -1;
 		int nServerUDPPort = -1;
 		boolean bRet = false;
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		CMMultiServerEvent mse = new CMMultiServerEvent(msg.m_buf);
 
@@ -2907,7 +2939,7 @@ public class CMInteractionManager {
 		if(nKeepAliveTime > 0)
 			server.setKeepAliveTime(nKeepAliveTime);
 		else
-			server.setKeepAliveTime(cmInfo.getConfigurationInfo().getKeepAliveTime());
+			server.setKeepAliveTime(CMConfigurationInfo.getInstance().getKeepAliveTime());
 		
 		server.setLastEventTransTime(System.currentTimeMillis());
 		bRet = interInfo.addAddServer(server);
@@ -2929,13 +2961,12 @@ public class CMInteractionManager {
 		// send response event
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
 		mseAck.setID( CMMultiServerEvent.RES_SERVER_REG );
-		mseAck.setSender(interInfo.getMyself().getName());
 		mseAck.setServerName( strServerName );
 		if(bRet)
 			mseAck.setReturnCode(1);
 		else
 			mseAck.setReturnCode(0);
-		CMEventManager.unicastEvent(mseAck, (SocketChannel) msg.m_ch, cmInfo);
+		CMEventManager.unicastEvent(mseAck, (SocketChannel) msg.m_ch);
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -2954,17 +2985,12 @@ public class CMInteractionManager {
 		mseAck.setID( CMMultiServerEvent.NOTIFY_SERVER_INFO );
 		mseAck.setServerNum(1);
 		mseAck.addServerInfo(sinfo);
-		CMEventManager.broadcastEvent(mseAck, cmInfo);
-
-		mse = null;
-		sinfo = null;
-		mseAck = null;
-		return;
+		CMEventManager.broadcastEvent(mseAck);
 	}
 	
-	private static void processRES_SERVER_REG(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processRES_SERVER_REG(CMMultiServerEvent mse)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		interInfo.getDefaultServerInfo().setServerName(mse.getSender());
 		
 		if(mse.getReturnCode() == 1)
@@ -2984,14 +3010,12 @@ public class CMInteractionManager {
 						+mse.getServerName()+") was not registered to the default server.");
 			}
 		}
-
-		return;
 	}
 	
-	private static void processREQ_SERVER_DEREG(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processREQ_SERVER_DEREG(CMMultiServerEvent mse)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 
 		// delete a server info
@@ -3009,7 +3033,7 @@ public class CMInteractionManager {
 			mseAck.setReturnCode(1);
 		else
 			mseAck.setReturnCode(0);
-		CMEventManager.unicastEvent(mseAck, serverName, cmInfo);
+		CMEventManager.unicastEvent(mseAck, serverName);
 		
 		if(bRet)
 		{
@@ -3038,14 +3062,11 @@ public class CMInteractionManager {
 			mseAck = new CMMultiServerEvent();
 			mseAck.setID(CMMultiServerEvent.NOTIFY_SERVER_LEAVE);
 			mseAck.setServerName(serverName);
-			CMEventManager.broadcastEvent(mseAck, cmInfo);
+			CMEventManager.broadcastEvent(mseAck);
 		}
-
-		mseAck = null;
-		return;
 	}
 
-	private static void processRES_SERVER_DEREG(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processRES_SERVER_DEREG(CMMultiServerEvent mse)
 	{
 		if(mse.getReturnCode() == 1)
 		{
@@ -3063,14 +3084,12 @@ public class CMInteractionManager {
 						+mse.getServerName()+") was not deregistered from the default server.");
 			}
 		}
-
-		return;
 	}
 	
-	private static void processNOTIFY_SERVER_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processNOTIFY_SERVER_INFO(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		//A client must receive this event
 		if( confInfo.getSystemType().equals("SERVER") )
@@ -3097,7 +3116,6 @@ public class CMInteractionManager {
 			{
 				System.out.println("CMInteractionManager.processNOTIFY_SERVER_INFO(), additional"
 						+"server ("+si.getServerName()+") already exists!");
-				continue;
 			}
 			else
 			{
@@ -3108,13 +3126,12 @@ public class CMInteractionManager {
 		}
 
 		mse.removeAllServerInfoObjects();
-		return;
 	}
 	
-	private static void processNOTIFY_SERVER_LEAVE(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processNOTIFY_SERVER_LEAVE(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		//A client must receive this event
 		if( confInfo.getSystemType().equals("SERVER") )
@@ -3134,13 +3151,11 @@ public class CMInteractionManager {
 		}
 		
 		interInfo.removeAddServer(serverName);
-
-		return;
 	}
 	
-	private static void processREQ_SERVER_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processREQ_SERVER_INFO(CMMultiServerEvent mse)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		// send the list of server info
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
@@ -3155,20 +3170,18 @@ public class CMInteractionManager {
 					tserver.getServerPort(), tserver.getServerUDPPort());
 			mseAck.addServerInfo(si);
 		}
-		CMEventManager.unicastEvent(mseAck, mse.getUserName(), cmInfo);
-
+		CMEventManager.unicastEvent(mseAck, mse.getUserName(), mse.getSenderUuid());
 		mseAck.removeAllServerInfoObjects();
-		mseAck = null;
-		return;
 	}
 	
-	private static void processADD_LOGIN(CMMessage msg, CMInfo cmInfo)
+	private static void processADD_LOGIN(CMMessage msg)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
+			System.err.println("CMInteractionManager.processADD_LOGIN(), system type is not SERVER!");
 			return;
 		}
 		
@@ -3178,6 +3191,7 @@ public class CMInteractionManager {
 
 		CMUser user = new CMUser();
 		user.setName(mse.getUserName());
+		user.setUuid(mse.getSenderUuid());
 		user.setPasswd(mse.getPassword());
 		user.setHost(mse.getHostAddress());
 		user.setUDPPort(mse.getUDPPort());
@@ -3188,22 +3202,19 @@ public class CMInteractionManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_LOGIN(), add new user("
-								+user.getName()+").");
+								+user.getName()+"), uuid("+user.getUuid()+").");
 		}
 
 		if( !confInfo.isLoginScheme() )
-			replyToADD_LOGIN(mse, 1, cmInfo);
-
-		mse = null;
-		return;
+			replyToADD_LOGIN(mse, 1);
 	}
 	
-	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, int nValidUser, CMInfo cmInfo)
+	public static boolean replyToADD_LOGIN(CMMultiServerEvent mse, int nValidUser)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
-		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
+		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		boolean bRet = false;
 		
 		CMMultiServerEvent mseAck = new CMMultiServerEvent();
@@ -3213,14 +3224,9 @@ public class CMInteractionManager {
 		{
 			mseAck.setValidUser(1);
 			mseAck.setCommArch(confInfo.getCommArch());
-			if(confInfo.isLoginScheme())
-				mseAck.setLoginScheme(1);
-			else
-				mseAck.setLoginScheme(0);
-			if(confInfo.isSessionScheme())
-				mseAck.setSessionScheme(1);
-			else
-				mseAck.setSessionScheme(0);
+			mseAck.setLoginScheme(confInfo.isLoginScheme() ? 1 : 0);
+			mseAck.setMultiLoginScheme(confInfo.isMultiLoginScheme() ? 1 : 0);
+			mseAck.setSessionScheme(confInfo.isSessionScheme() ? 1 : 0);
 			mseAck.setServerUDPPort(confInfo.getUDPPort());
 		}
 		else
@@ -3228,11 +3234,12 @@ public class CMInteractionManager {
 			mseAck.setValidUser(0);
 			mseAck.setCommArch("");
 			mseAck.setLoginScheme(-1);
+			mseAck.setMultiLoginScheme(-1);
 			mseAck.setSessionScheme(-1);
 			mseAck.setUDPPort(-1);
 		}
 		
-		bRet = CMEventManager.unicastEvent(mseAck, mse.getUserName(), cmInfo);
+		bRet = CMEventManager.unicastEvent(mseAck, mse.getUserName(), mse.getSenderUuid());
 
 		if(nValidUser == 1)
 		{
@@ -3264,63 +3271,59 @@ public class CMInteractionManager {
 			}
 			
 			// send inhabitants who already logged on the system
-			distributeAddLoginUsers(mse.getUserName(), cmInfo);
+			distributeAddLoginUsers(mse.getUserName(), mse.getSenderUuid());
 
 			// notify info. on new user who logged in
 			CMMultiServerEvent tmse = new CMMultiServerEvent();
 			tmse.setID(CMMultiServerEvent.ADD_SESSION_ADD_USER);
 			tmse.setServerName(mse.getServerName());
 			tmse.setUserName( mse.getUserName() );
+			tmse.setUuid(mse.getSenderUuid());
 			tmse.setHostAddress( mse.getHostAddress() );
 			tmse.setSessionName("?");
-			CMEventManager.broadcastEvent(tmse, cmInfo);
-			tmse = null;
+			CMEventManager.broadcastEvent(tmse);
 		}
 		else
 		{
 			user.getNonBlockSocketChannelInfo().removeAllChannels();
 			user.getBlockSocketChannelInfo().removeAllChannels();
-			interInfo.getLoginUsers().removeMember(mse.getUserName());
+			interInfo.getLoginUsers().removeMember(mse.getUserName(), mse.getSenderUuid());
 		}
-		
-		mseAck = null;
 		return bRet;
 	}
 	
-	private static void distributeAddLoginUsers(String strUser, CMInfo cmInfo)
+	private static void distributeAddLoginUsers(String strUser, UUID userUuid)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		Iterator<CMUser> iter = interInfo.getLoginUsers().getAllMembers().iterator();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMMultiServerEvent tmse = null;
-		
-		while(iter.hasNext())
-		{
-			CMUser tuser = iter.next();
-			if(!strUser.equals(tuser.getName()))
-			{
-				tmse = new CMMultiServerEvent();
-				tmse.setID(CMMultiServerEvent.ADD_SESSION_ADD_USER);
-				tmse.setServerName(interInfo.getMyself().getName());
-				tmse.setUserName(tuser.getName());
-				tmse.setHostAddress(tuser.getHost());
-				tmse.setSessionName(tuser.getCurrentSession());
-				CMEventManager.unicastEvent(tmse, strUser, cmInfo);
+
+		for(List<CMUser> userList : interInfo.getLoginUsers().getAllMembers().values()) {
+			for(CMUser tuser : userList) {
+				if(!Objects.equals(userUuid, tuser.getUuid()))
+				{
+					tmse = new CMMultiServerEvent();
+					tmse.setID(CMMultiServerEvent.ADD_SESSION_ADD_USER);
+					tmse.setServerName(interInfo.getMyself().getName());
+					tmse.setUserName(tuser.getName());
+					tmse.setUuid(tuser.getUuid());
+					tmse.setHostAddress(tuser.getHost());
+					tmse.setSessionName(tuser.getCurrentSession());
+					CMEventManager.unicastEvent(tmse, strUser, userUuid);
+				}
 			}
 		}
-
-		tmse = null;
-		return;
 	}
 	
-	private static void processADD_LOGIN_ACK(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_LOGIN_ACK(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMMultiServerEvent tmse = null;
 		
 		if(!confInfo.getSystemType().equals("CLIENT"))
 		{
+			System.err.println("CMInteractionManager.processADD_LOGIN_ACK(), system type is not CLIENT!");
 			return;
 		}
 		
@@ -3335,22 +3338,17 @@ public class CMInteractionManager {
 
 		// set other info on the server in the server info instance
 		tserver.setCommArch(mse.getCommArch());
-		if(mse.isLoginScheme() == 1)
-			tserver.setLoginScheme(true);
-		else
-			tserver.setLoginScheme(false);
-		if(mse.isSessionScheme() == 1)
-			tserver.setSessionScheme(true);
-		else
-			tserver.setSessionScheme(false);
+		tserver.setLoginScheme(mse.isLoginScheme() == 1 ? true : false);
+		tserver.setMultiLoginScheme(mse.isMultiLoginScheme() == 1 ? true : false);
+		tserver.setSessionScheme(mse.isSessionScheme() == 1 ? true : false);
 		tserver.setServerUDPPort(mse.getServerUDPPort());
 
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_LOGIN_ACK(),");
 			System.out.println("bValidUser("+mse.isValidUser()+"), commArch("+mse.getCommArch()
-					+"), bLoginScheme("+mse.isLoginScheme()+"), bSessionScheme("+mse.isSessionScheme()
-					+"), server udp port("+mse.getServerUDPPort()+").");
+					+"), bLoginScheme("+mse.isLoginScheme()+") bMultiLoginScheme("+mse.isMultiLoginScheme()
+					+"), bSessionScheme("+mse.isSessionScheme() +"), server udp port("+mse.getServerUDPPort()+").");
 		}
 
 		// update peer's state in the server info instance
@@ -3367,50 +3365,50 @@ public class CMInteractionManager {
 				tmse.setUserName( interInfo.getMyself().getName() );
 				tmse.setSessionName("session1");	// default session name
 
-				CMEventManager.unicastEvent(tmse, mse.getServerName(), cmInfo);
+				CMEventManager.unicastEvent(tmse, mse.getServerName());
 				tserver.setCurrentSessionName("session1");
-				tmse = null;
 			}
 		}
 		else
 		{
 			System.out.println("CMInteractionManager.processADD_LOGIN_ACK(), invalid user.");
 		}
-
-		return;
 	}
 	
-	private static void processADD_SESSION_ADD_USER(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_SESSION_ADD_USER(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
-		if(!confInfo.getSystemType().equals("CLIENT"))
+		if(!confInfo.getSystemType().equals("CLIENT")) {
+			System.err.println("CMInteractionManager.processADD_SESSION_ADD_USER(), system type is not CLIENT!");
 			return;
+		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_SESSION_ADD_USER(), nothing to do at CM");
-			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()+"), host("
-					+mse.getHostAddress()+"), session("+mse.getSessionName()+").");
+			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()
+					+"), uuid("+mse.getUuid()+"), host("+mse.getHostAddress()+"), session("+mse.getSessionName()+").");
 		}
-		return;
 	}
 	
-	private static void processADD_LOGOUT(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_LOGOUT(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = cmInfo.getCommInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		boolean bRet = false;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_LOGOUT(), system type is not SERVER!");
 			return;
+		}
 		
-		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processADD_LOGOUT(), user("
-					+mse.getUserName()+") not found in the login user list!");
+					+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") not found in the login user list!");
 			return;
 		}
 		
@@ -3420,19 +3418,20 @@ public class CMInteractionManager {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMInteractionManager.processADD_LOGOUT(), user("
-						+mse.getUserName()+") should leave session("+user.getCurrentSession()+").");
+						+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") should leave session("
+						+user.getCurrentSession()+").");
 			}
-			CMSessionManager.leaveSession(user, cmInfo);
+			CMSessionManager.leaveSession(user);
 		}
 		
 		user.getNonBlockSocketChannelInfo().removeAllAddedChannels(0); // main channel remained
 		user.getBlockSocketChannelInfo().removeAllChannels();
-		interInfo.getLoginUsers().removeMemberObject(mse.getUserName());
+		interInfo.getLoginUsers().removeMember(mse.getUserName(), mse.getSenderUuid());
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_LOGOUT(), user("
-					+mse.getUserName()+") removed from the login user list, member num(" 
+			System.out.println("CMInteractionManager.processADD_LOGOUT(), user("+mse.getUserName()+"), uuid("
+					+mse.getSenderUuid()+") removed from the login user list, member num("
 					+interInfo.getLoginUsers().getMemberNum()+").");
 		}
 
@@ -3440,9 +3439,10 @@ public class CMInteractionManager {
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
 		tmse.setID(CMMultiServerEvent.ADD_SESSION_REMOVE_USER);
 		tmse.setServerName(mse.getServerName());
-		tmse.setUserName( mse.getUserName() );
+		tmse.setUserName(mse.getUserName());
+		tmse.setUuid(mse.getSenderUuid());
 
-		CMEventManager.broadcastEvent(tmse, cmInfo);
+		CMEventManager.broadcastEvent(tmse);
 
 		// move the default channel to the unknown-channel list
 		CMList<CMUnknownChannelInfo> unchInfoList = commInfo.getUnknownChannelInfoList();
@@ -3467,39 +3467,40 @@ public class CMInteractionManager {
 		{
 			System.out.println("CMInteractionManager.processADD_LOGOUT(), the client channel is also closed.");
 		}
-
-		tmse = null;
-		return;
 	}
 	
-	private static void processADD_SESSION_REMOVE_USER(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_SESSION_REMOVE_USER(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
-		if(!confInfo.getSystemType().equals("CLIENT"))
+		if(!confInfo.getSystemType().equals("CLIENT")) {
+			System.err.println("CMInteractionManager.processADD_SESSION_REMOVE_USER(), system type is not CLIENT!");
 			return;
+		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMInteractionManager.processADD_SESSION_REMOVE_USER(), nothing to do at CM");
-			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()+").");
+			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()+"), uuid("
+					+mse.getUuid()+").");
 		}
-		return;
 	}
 	
-	private static void processADD_REQUEST_SESSION_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_REQUEST_SESSION_INFO(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_REQUEST_SESSION_INFO(), system type is not SERVER!");
 			return;
+		}
 		
-		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName()); 
+		CMUser user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if( user == null )
 		{
-			System.out.println("CMInteractionManager.processADD_REQUEST_SESSION_INFO(), "
-					+ "user("+mse.getUserName()+") not found in the login user list!");
+			System.out.println("CMInteractionManager.processADD_REQUEST_SESSION_INFO(), user("
+					+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") not found in the login user list!");
 			return;
 		}
 		
@@ -3519,21 +3520,20 @@ public class CMInteractionManager {
 			si.setUserNum(session.getSessionUsers().getMemberNum());
 			tmse.addSessionInfo(si);
 		}
-		CMEventManager.unicastEvent(tmse, mse.getUserName(), cmInfo);
-
+		CMEventManager.unicastEvent(tmse, mse.getUserName(), mse.getSenderUuid());
 		tmse.removeAllSessionInfoObjects();
-		tmse = null;
-		return;
 	}
 	
-	private static void processADD_RESPONSE_SESSION_INFO(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_RESPONSE_SESSION_INFO(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer server = null;
 		
-		if(!confInfo.getSystemType().equals("CLIENT"))
+		if(!confInfo.getSystemType().equals("CLIENT")) {
+			System.err.println("CMInteractionManager.processADD_RESPONSE_SESSION_INFO(), system type is not CLIENT!");
 			return;
+		}
 		
 		// find server info of the client
 		server = interInfo.findAddServer(mse.getServerName());
@@ -3572,31 +3572,33 @@ public class CMInteractionManager {
 			
 			if(CMInfo._CM_DEBUG)
 			{
-				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(), tInfo.getPort(), tInfo.getUserNum());
+				System.out.format("%-20s%-20s%-10d%-10d%n", tInfo.getSessionName(), tInfo.getAddress(),
+						tInfo.getPort(), tInfo.getUserNum());
 			}
 		}
 		
 		mse.removeAllSessionInfoObjects();
-		return;
 	}
 	
-	private static void processADD_JOIN_SESSION(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_JOIN_SESSION(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser user = null;
 		CMSession session = null;
 		CMGroup group = null;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_JOIN_SESSION(), system type is not SERVER!");
 			return;
+		}
 		
 		// find login user info
-		user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), user("
-					+mse.getUserName()+") not found in the login user list of server("
+			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), user("+mse.getUserName()
+					+"), uuid("+mse.getSenderUuid()+") not found in the login user list of server("
 					+mse.getServerName()+").");
 			return;
 		}
@@ -3604,8 +3606,8 @@ public class CMInteractionManager {
 		session = interInfo.findSession(mse.getSessionName());
 		if(session == null)
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), session("
-					+mse.getSessionName()+") not found, user("+mse.getUserName()+"), server("
+			System.out.println("CMInteractionManager.processADD_JOIN_SESSION(), session("+mse.getSessionName()
+					+") not found, user("+mse.getUserName()+"), uuid("+mse.getSenderUuid()+"), server("
 					+mse.getServerName()+").");
 			return;
 		}
@@ -3623,32 +3625,32 @@ public class CMInteractionManager {
 		user.setCurrentGroup(group.getGroupName());
 		
 		// request join process to the SM
-		CMSessionManager.addJoinSession(user, cmInfo);
+		CMSessionManager.addJoinSession(user);
 
 		// notify that a user changes session to all other users
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
 		tmse.setID(CMMultiServerEvent.ADD_CHANGE_SESSION);
 		tmse.setServerName( mse.getServerName() );
 		tmse.setUserName( mse.getUserName() );
+		tmse.setUuid( mse.getSenderUuid() );
 		tmse.setSessionName( mse.getSessionName() );
 
-		CMEventManager.broadcastEvent(tmse, cmInfo);
-
-		tmse = null;
-		return;
+		CMEventManager.broadcastEvent(tmse);
 	}
 	
-	private static void processADD_JOIN_SESSION_ACK(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_JOIN_SESSION_ACK(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 		CMServer server = null;
 		CMSession session = null;
 		CMGroup group = null;
 		
-		if(!confInfo.getSystemType().equals("CLIENT"))
+		if(!confInfo.getSystemType().equals("CLIENT")) {
+			System.err.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), system type is not CLIENT!");
 			return;
+		}
 		
 		server = interInfo.findAddServer(mse.getServerName());
 		if(server == null)
@@ -3658,10 +3660,9 @@ public class CMInteractionManager {
 			return;
 		}
 		
-		if( mse.getGroupInfoList().size() < 1 )
+		if(mse.getGroupInfoList().isEmpty())
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), group info "
-					+ "empty.");
+			System.out.println("CMInteractionManager.processADD_JOIN_SESSION_ACK(), group info list is empty.");
 			return;
 		}
 		
@@ -3687,7 +3688,7 @@ public class CMInteractionManager {
 		// set current group name of the server
 		server.setCurrentGroupName( group.getGroupName() );
 		// initialize current group
-		CMGroupManager.init(session.getSessionName(), group.getGroupName(), cmInfo);
+		CMGroupManager.init(session.getSessionName(), group.getGroupName());
 		// update client state of the server
 		server.setClientState(CMInfo.CM_SESSION_JOIN);
 
@@ -3701,21 +3702,20 @@ public class CMInteractionManager {
 		tmse.setSessionName( server.getCurrentSessionName() );
 		tmse.setGroupName( server.getCurrentGroupName() );
 
-		CMEventManager.unicastEvent(tmse, mse.getServerName(), cmInfo);
-
-		tmse = null;
-		return;
+		CMEventManager.unicastEvent(tmse, mse.getServerName());
 	}
 	
-	private static void processADD_LEAVE_SESSION(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_LEAVE_SESSION(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		CMUser user = null;
 		
-		if(!confInfo.getSystemType().equals("SERVER"))
+		if(!confInfo.getSystemType().equals("SERVER")) {
+			System.err.println("CMInteractionManager.processADD_LEAVE_SESSION(), system type is not SERVER");
 			return;
+		}
 		
 		// find a session
 		session = interInfo.findSession(mse.getSessionName());
@@ -3728,32 +3728,28 @@ public class CMInteractionManager {
 		}
 		
 		// find a session user
-		user = session.getSessionUsers().findMember(mse.getUserName());
+		user = session.getSessionUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
-			System.out.println("CMIntractionManager.processADD_LEAVE_SESSION(), user("
-					+mse.getUserName()+") not found in session("+session.getSessionName()
+			System.out.println("CMIntractionManager.processADD_LEAVE_SESSION(), user("+mse.getUserName()
+					+"), uuid("+mse.getSenderUuid()+") not found in session("+session.getSessionName()
 					+") of this server("+interInfo.getMyself().getName()+")!");
 			return;
 		}
 		
-		CMSessionManager.addLeaveSession(user, cmInfo);
+		CMSessionManager.addLeaveSession(user);
 		
 		// notify login users of the session leave
 		CMMultiServerEvent tmse = new CMMultiServerEvent();
 		tmse.setID(CMMultiServerEvent.ADD_CHANGE_SESSION);
 		tmse.setServerName(interInfo.getMyself().getName());
 		tmse.setUserName(user.getName());
+		tmse.setUuid(user.getUuid());	// same as mse.getSenderUuid()
 		tmse.setSessionName("");
-		CMEventManager.broadcastEvent(tmse, cmInfo);
-		
-		//// do not send LEAVE_SESSION_ACK (?)
-
-		tmse = null;
-		return;
+		CMEventManager.broadcastEvent(tmse);
 	}
 	
-	private static void processADD_CHANGE_SESSION(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_CHANGE_SESSION(CMMultiServerEvent mse)
 	{
 		// nothing to do with this event here
 		if(CMInfo._CM_DEBUG)
@@ -3761,14 +3757,13 @@ public class CMInteractionManager {
 			System.out.println("CMInteractionManager.processADD_CHANGE_SESSION(), nothing to do "
 					+"in the CM.");
 			System.out.println("server("+mse.getServerName()+"), user("+mse.getUserName()+
-					"), session("+mse.getSessionName()+").");
+					"), uuid("+mse.getUuid()+"), session("+mse.getSessionName()+").");
 		}
-		return;
 	}
 	
-	private static void processADD_JOIN_GROUP(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_JOIN_GROUP(CMMultiServerEvent mse)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = null;
 		CMGroup group = null;
 		CMUser user = null;
@@ -3790,11 +3785,11 @@ public class CMInteractionManager {
 			return;
 		}
 		// find a user
-		user = interInfo.getLoginUsers().findMember(mse.getUserName());
+		user = interInfo.getLoginUsers().findMember(mse.getUserName(), mse.getSenderUuid());
 		if(user == null)
 		{
 			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), user("
-					+mse.getUserName()+") not found in the login user list.");
+					+mse.getUserName()+"), uuid("+mse.getSenderUuid()+") not found in the login user list.");
 			return;
 		}
 		user.setCurrentGroup(mse.getGroupName());
@@ -3802,32 +3797,28 @@ public class CMInteractionManager {
 		if(!ret)
 		{
 			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), fail to add user("
-					+user.getName()+") to group("+group.getGroupName()+") of session("
+					+user.getName()+"), uuid("+user.getUuid()+") to group("+group.getGroupName()+") of session("
 					+session.getSessionName()+").");
 			return;
 		}
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), add user("
-					+mse.getUserName()+") to group("+group.getGroupName()+") of session("
-					+session.getSessionName()+"), # group users("
-					+group.getGroupUsers().getMemberNum()+").");
+			System.out.println("CMInteractionManager.processADD_JOIN_GROUP(), add user("+mse.getUserName()
+					+"), uuid("+mse.getSenderUuid()+") to group("+group.getGroupName()+") of session("
+					+session.getSessionName()+"), # group users("+group.getGroupUsers().getMemberNum()+").");
 		}
 
 		// send the new user existing group member information
-		CMGroupManager.addDistributeGroupUsers(user, cmInfo);
-		
+		CMGroupManager.addDistributeGroupUsers(user);
 		// send group members the new user information
-		CMGroupManager.addNotifyGroupUsersOfNewUser(user, cmInfo);
-
-		return;
+		CMGroupManager.addNotifyGroupUsersOfNewUser(user);
 	}
 	
-	private static void processADD_GROUP_INHABITANT(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_GROUP_INHABITANT(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMSession tsession = null;
 		CMGroup tgroup = null;
@@ -3869,17 +3860,18 @@ public class CMInteractionManager {
 		}
 
 		CMUser myself = interInfo.getMyself();
-		if(myself.getName().equals(mse.getUserName()))
+		if(myself.getName().equals(mse.getUserName()) && Objects.equals(myself.getUuid(), mse.getUuid()))
 		{
 			System.out.println("CMInteractionManager.processADD_GROUP_INHABITANT(), user("
-					+mse.getUserName()+") is myself. group("+tgroup.getGroupName()+"), session("
-					+tsession.getSessionName()+"), server("+tserver.getServerName()+").");
+					+mse.getUserName()+"), uuid("+mse.getUuid()+") is myself. group("+tgroup.getGroupName()
+					+"), session("+tsession.getSessionName()+"), server("+tserver.getServerName()+").");
 			return;
 		}
 		
 		// add the existing group member to the group of session of the server
 		CMUser user = new CMUser();
 		user.setName(mse.getUserName());
+		user.setUuid(mse.getUuid());
 		user.setHost(mse.getHostAddress());
 		user.setUDPPort(mse.getUDPPort());
 		user.setCurrentSession(mse.getSessionName());
@@ -3889,19 +3881,16 @@ public class CMInteractionManager {
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_GROUP_INHABITANT(), user("
-					+user.getName()+"), host("+user.getHost()+"), udpport("+user.getUDPPort()
-					+"), current session("+user.getCurrentSession()+"), current group("
-					+user.getCurrentGroup()+").");
+			System.out.println("CMInteractionManager.processADD_GROUP_INHABITANT(), user("+user.getName()
+					+"), uuid("+user.getUuid()+"), host("+user.getHost()+"), udpport("+user.getUDPPort()
+					+"), current session("+user.getCurrentSession()+"), current group("+user.getCurrentGroup()+").");
 		}
-		
-		return;
 	}
 	
-	private static void processADD_NEW_GROUP_USER(CMMultiServerEvent mse, CMInfo cmInfo)
+	private static void processADD_NEW_GROUP_USER(CMMultiServerEvent mse)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMSession tsession = null;
 		CMGroup tgroup = null;
@@ -3943,10 +3932,10 @@ public class CMInteractionManager {
 		}
 
 		CMUser myself = interInfo.getMyself();
-		if(myself.getName().equals(mse.getUserName()))
+		if(myself.getName().equals(mse.getUserName()) && Objects.equals(myself.getUuid(), mse.getUuid()))
 		{
-			System.out.println("CMInteractionManager.processADD_NEW_GROUP_USER, user("
-					+mse.getUserName()+") is myself. group("+tgroup.getGroupName()+"), session("
+			System.out.println("CMInteractionManager.processADD_NEW_GROUP_USER, user("+mse.getUserName()
+					+"), uuid("+mse.getUuid()+") is myself. group("+tgroup.getGroupName()+"), session("
 					+tsession.getSessionName()+"), server("+tserver.getServerName()+").");
 			return;
 		}
@@ -3954,6 +3943,7 @@ public class CMInteractionManager {
 		// add the existing group member to the group of session of the server
 		CMUser user = new CMUser();
 		user.setName(mse.getUserName());
+		user.setUuid(mse.getUuid());
 		user.setHost(mse.getHostAddress());
 		user.setUDPPort(mse.getUDPPort());
 		user.setCurrentSession(mse.getSessionName());
@@ -3963,83 +3953,103 @@ public class CMInteractionManager {
 
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMInteractionManager.processADD_NEW_GROUP_USER(), user("
-					+user.getName()+"), host("+user.getHost()+"), udpport("+user.getUDPPort()
-					+"), current session("+user.getCurrentSession()+"), current group("
-					+user.getCurrentGroup()+").");
+			System.out.println("CMInteractionManager.processADD_NEW_GROUP_USER(), user("+user.getName()+"), uuid("
+					+user.getUuid()+"), host("+user.getHost()+"), udpport("+user.getUDPPort()+"), current session("
+					+user.getCurrentSession()+"), current group("+user.getCurrentGroup()+").");
 		}
-		
-		return;
 	}
 
 	// distribute an event to members according to session/group specifier in the event header
-	private static void distributeEvent(String strDistSession, String strDistGroup, CMEvent cme, int opt, CMInfo cmInfo)
+	private static void distributeEvent(String strDistSession, String strDistGroup, UUID distUuid, CMEvent cme,
+										int opt)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser tuser = null;
+		List<CMUser> tuserList = null;
 		CMSession tSession = null;
 		CMMember tMember = null;
 		CMGroup tGroup = null;
-		
-		if(strDistSession != null && !strDistSession.equals(""))
+
+		// [Added] Check if strDistSession is null or empty
+		if(strDistSession == null || strDistSession.isEmpty())
 		{
-			if(strDistSession.equals("CM_ONE_USER"))	// distribute to one user
+			System.err.println("CMInteractionManager.distributeEvent(), strDistSession is null or empty!");
+			return;
+		}
+
+		// Case 1: Target is a single user (CM_ONE_USER)
+		if(strDistSession.equals("CM_ONE_USER"))
+		{
+			// [Modified] Check if distUuid is provided
+			if( distUuid == null )
 			{
-				tuser = interInfo.getLoginUsers().findMember(strDistGroup);
-				if(tuser == null)
+				// If UUID is null, send to all login devices of the target user
+				tuserList = interInfo.getLoginUsers().findMemberList(strDistGroup);
+				if(tuserList == null || tuserList.isEmpty())
 				{
-					System.out.println("CMInteractionManager.distributeEvent(), target user("
-							+strDistGroup+") not found.");
-					return;
-				}
-				CMEventManager.unicastEvent(cme, strDistGroup, opt, cmInfo);
-			}
-			else if(strDistSession.equals("CM_ALL_SESSION")) // distribute to all session members
-			{
-				Iterator<CMSession> iterSession = interInfo.getSessionList().iterator();
-				while(iterSession.hasNext())
-				{
-					tSession = iterSession.next();
-					tMember = tSession.getSessionUsers();
-					CMEventManager.castEvent(cme, tMember, opt, cmInfo);
-				}
-			}
-			else
-			{
-				tSession = interInfo.findSession(strDistSession);
-				if(tSession == null)
-				{
-					System.out.println("CMInteractionManager.distributeEvent(), session("
-							+strDistSession+") not found.");
+					System.err.println("CMInteractionManager.distributeEvent(), the list of target user("
+							+strDistGroup+") not found or empty!");
 					return;
 				}
 
-				if(strDistGroup.equals("CM_ALL_GROUP"))	// distribute to all group members of a session
+				// Send to all devices (handled by CMEventManager or requires iteration depending on implementation)
+				CMEventManager.unicastEvent(cme, strDistGroup, opt);
+			}
+			else
+			{
+				// If UUID is not null, send to the specific device matching the UUID
+				tuser = interInfo.getLoginUsers().findMember(strDistGroup, distUuid);
+				if( tuser == null )
 				{
-					Iterator<CMGroup> iterGroup = tSession.getGroupList().iterator();
-					while(iterGroup.hasNext())
-					{
-						tGroup = iterGroup.next();
-						tMember = tGroup.getGroupUsers();
-						CMEventManager.castEvent(cme, tMember, opt, cmInfo);
-					}
+					System.err.println("CMInteractionManager.distributeEvent(), target user("+strDistGroup
+							+") with UUID("+distUuid+") not found!");
+					return;
 				}
-				else	// distribute to specific group members
-				{
-					tGroup = tSession.findGroup(strDistGroup);
-					if(tGroup == null)
-					{
-						System.out.println("CMInteractionManager.distributeEvent(), group("
-								+strDistGroup+") not found.");
-						return;
-					}
-					tMember = tGroup.getGroupUsers();
-					CMEventManager.castEvent(cme, tMember, opt, cmInfo);
-				}
+
+				// [Modified] Send event to the specific user/device
+				CMEventManager.unicastEvent(cme, strDistGroup, distUuid, opt);
 			}
 		}
-		
-		return;
+		// Case 2: Broadcast to all connected nodes (session=null, group=null)
+		else if(strDistSession.equals("CM_ALL_SESSION"))
+		{
+			// [Modified] Use broadcastEvent instead of castEvent for clarity and efficiency
+			CMEventManager.broadcastEvent(cme, opt);
+		}
+		// Case 3: cast to a specific session and group
+		else
+		{
+			tSession = interInfo.findSession(strDistSession);
+			if(tSession == null)
+			{
+				System.out.println("CMInteractionManager.distributeEvent(), session("
+						+strDistSession+") not found.");
+				return;
+			}
+
+			if(strDistGroup.equals("CM_ALL_GROUP"))	// distribute to all group members of a session
+			{
+				Iterator<CMGroup> iterGroup = tSession.getGroupList().iterator();
+				while(iterGroup.hasNext())
+				{
+					tGroup = iterGroup.next();
+					tMember = tGroup.getGroupUsers();
+					CMEventManager.castEvent(cme, tMember, opt);
+				}
+			}
+			else	// distribute to specific group members
+			{
+				tGroup = tSession.findGroup(strDistGroup);
+				if(tGroup == null)
+				{
+					System.out.println("CMInteractionManager.distributeEvent(), group("
+							+strDistGroup+") not found.");
+					return;
+				}
+				tMember = tGroup.getGroupUsers();
+				CMEventManager.castEvent(cme, tMember, opt);
+			}
+		}
 	}
 	
 }

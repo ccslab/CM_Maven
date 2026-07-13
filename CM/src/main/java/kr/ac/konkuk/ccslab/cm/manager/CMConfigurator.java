@@ -15,9 +15,9 @@ public class CMConfigurator {
 	
 	// initialize field values of server configuration or client configuration.
 	// set field values of the given configuration file to the CMConfigurationInfo object.
-	public static boolean init(String strConfFilePath, CMInfo cmInfo)
+	public static boolean init(String strConfFilePath)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		List<String> myAddressList = null;
 		
 		File confFile = new File(strConfFilePath);
@@ -81,7 +81,12 @@ public class CMConfigurator {
 		
 		// keep-alive time
 		confInfo.setKeepAliveTime(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "KEEP_ALIVE_TIME")));
-		
+
+		// [10-3] per-user push 세션 lease timeout (seconds). 서버·클라 공통(§2.6). 키가 없으면 기본 300 유지.
+		String strPushLeaseTimeout = CMConfigurator.getConfiguration(strConfFilePath, "FILE_SYNC_PUSH_LEASE_TIMEOUT");
+		if(strPushLeaseTimeout != null && !strPushLeaseTimeout.isBlank())
+			confInfo.setFileSyncPushLeaseTimeout(Long.parseLong(strPushLeaseTimeout.trim()));
+
 		if( confInfo.getSystemType().equals("SERVER") )
 		{
 			//confInfo.setMyAddress(CMConfigurator.getConfiguration(fName, "MY_ADDR"));
@@ -89,6 +94,7 @@ public class CMConfigurator {
 			confInfo.setCommArch(CMConfigurator.getConfiguration(strConfFilePath, "COMM_ARCH"));
 			confInfo.setFileTransferScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "FILE_TRANSFER_SCHEME")));
 			confInfo.setLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "LOGIN_SCHEME")));
+			confInfo.setMultiLoginScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MULTI_LOGIN_SCHEME")));
 			confInfo.setMaxLoginFailure(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "MAX_LOGIN_FAILURE")));
 			confInfo.setSessionScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "SESSION_SCHEME")));
 			confInfo.setDownloadScheme(Integer.parseInt(CMConfigurator.getConfiguration(strConfFilePath, "DOWNLOAD_SCHEME")));
@@ -185,6 +191,7 @@ public class CMConfigurator {
 				System.out.println("COMM_ARCH: "+confInfo.getCommArch());
 				System.out.println("FILE_TRANSFER_SCHEME: "+confInfo.isFileTransferScheme());
 				System.out.println("LOGIN_SCHEME: "+confInfo.isLoginScheme());
+				System.out.println("MULTI_LOGIN_SCHEME: "+confInfo.isMultiLoginScheme());
 				System.out.println("MAX_LOGIN_FAILURE: "+confInfo.getMaxLoginFailure());
 				System.out.println("SESSION_SCHEME: "+confInfo.isSessionScheme());
 				System.out.println("DOWNLOAD_SCHEME: "+confInfo.isDownloadScheme());
@@ -221,7 +228,7 @@ public class CMConfigurator {
 				System.out.println("FILE_SIZE_THRESHOLD: "+confInfo.getFileSizeThreshold());
 				System.out.println("FILE_MOD_RATIO_THRESHOLD: "+confInfo.getFileModRatioThreshold());
 
-				if( CMConfigurator.isDServer(cmInfo) )
+				if( CMConfigurator.isDServer() )
 					System.out.println("This server is a default server!!");
 				else
 					System.out.println("This server is NOT a default server!!");
@@ -431,9 +438,9 @@ public class CMConfigurator {
 	}
 
 	// check whether the server info in the CMConfigurationInfo object is the default server or not.
-	public synchronized static boolean isDServer(CMInfo cmInfo)
+	public synchronized static boolean isDServer()
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		boolean ret = false;
 		String strServerAddress = confInfo.getServerAddress();
 		int nServerPort = confInfo.getServerPort();

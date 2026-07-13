@@ -165,25 +165,5 @@ public class CMSession extends CMSessionInfo {
 		
 		return tGroup;
 	}
-	
-	public synchronized CMGroup findGroupWithUserName(String strUserName)
-	{
-		CMGroup tGroup = null;
-		boolean bFound = false;
-		Iterator<CMGroup> iter = m_groupList.iterator();
-		
-		while(iter.hasNext() && !bFound)
-		{
-			tGroup = iter.next();
-			if(tGroup.getGroupUsers().isMember(strUserName))
-			{
-				bFound = true;
-			}
-		}
-		
-		if(!bFound)
-			tGroup = null;
-		
-		return tGroup;
-	}
+
 }

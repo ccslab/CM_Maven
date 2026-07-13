@@ -132,18 +132,6 @@ public class CMInfo {
 	// directory name to maintain internal files
 	public static final String SETTINGS_DIR = ".cm-settings";
 
-	// repository
-	private CMConfigurationInfo m_confInfo;
-	private CMSNSInfo m_snsInfo;
-	private CMFileTransferInfo m_fileTransferInfo;
-	private CMDBInfo m_dbInfo;
-	private CMCommInfo m_commInfo;
-	private CMEventInfo m_eventInfo;
-	private CMInteractionInfo m_interactionInfo;
-	private CMThreadInfo m_threadInfo;
-	private CMMqttInfo m_mqttInfo;
-	private CMFileSyncInfo m_fileSyncInfo;
-	
 	// CM service manager table
 	private Hashtable<Class<? extends CMServiceManager>, Object> serviceManagerHashtable;
 	// CM event handler hash table
@@ -153,25 +141,25 @@ public class CMInfo {
 	private CMAppEventHandler m_appEventHandler;
 	// status info
 	private boolean m_bStarted;
+
+	// instance
+	private static CMInfo instance;
 	
-	public CMInfo()
+	private CMInfo()
 	{
-		m_confInfo = new CMConfigurationInfo();
-		m_snsInfo = new CMSNSInfo();
-		m_fileTransferInfo = new CMFileTransferInfo();
-		m_dbInfo = new CMDBInfo();
-		m_commInfo = new CMCommInfo();
-		m_eventInfo = new CMEventInfo();
-		m_interactionInfo = new CMInteractionInfo();
-		m_threadInfo = new CMThreadInfo();
-		m_mqttInfo = new CMMqttInfo();
-		m_fileSyncInfo = new CMFileSyncInfo();
-		
 		serviceManagerHashtable = new Hashtable<>();
 		m_eventHandlerHashtable = new Hashtable<Integer, CMEventHandler>();
 		
 		m_appEventHandler = null;
 		m_bStarted = false;
+	}
+
+	// getInstance()
+	public static synchronized CMInfo getInstance() {
+		if(instance == null) {
+			instance = new CMInfo();
+		}
+		return instance;
 	}
 
 	public synchronized <T extends CMServiceManager> void addServiceManager(Class<T> type, T manager) {
@@ -182,54 +170,7 @@ public class CMInfo {
 		T manager = type.cast(serviceManagerHashtable.get(type));
 		return manager;
 	}
-	
-	public synchronized CMConfigurationInfo getConfigurationInfo()
-	{
-		return m_confInfo;
-	}
-	
-	public synchronized CMSNSInfo getSNSInfo()
-	{
-		return m_snsInfo;
-	}
-	
-	public synchronized CMFileTransferInfo getFileTransferInfo()
-	{
-		return m_fileTransferInfo;
-	}
-	
-	public synchronized CMDBInfo getDBInfo()
-	{
-		return m_dbInfo;
-	}
-	
-	public synchronized CMCommInfo getCommInfo()
-	{
-		return m_commInfo;
-	}
-	
-	public synchronized CMEventInfo getEventInfo()
-	{
-		return m_eventInfo;
-	}
-	
-	public synchronized CMInteractionInfo getInteractionInfo()
-	{
-		return m_interactionInfo;
-	}
-	
-	public synchronized CMThreadInfo getThreadInfo()
-	{
-		return m_threadInfo;
-	}
-	
-	public synchronized CMMqttInfo getMqttInfo()
-	{
-		return m_mqttInfo;
-	}
 
-	public synchronized CMFileSyncInfo getFileSyncInfo() { return m_fileSyncInfo; }
-	
 	public synchronized Hashtable<Integer, CMEventHandler> getEventHandlerHashtable()
 	{
 		return m_eventHandlerHashtable;

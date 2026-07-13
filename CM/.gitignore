@@ -1,4 +1,5 @@
 # CM
+docs/
 client-file-path/
 server-file-path/
 .cm-settings/
@@ -11,9 +12,10 @@ bin/
 /target/
 # OS
 .DS_Store
-../.DS_Store
 # Intellij
 .idea/
 *.iml
 *.iws
+# Claude Code
+.claude/
 

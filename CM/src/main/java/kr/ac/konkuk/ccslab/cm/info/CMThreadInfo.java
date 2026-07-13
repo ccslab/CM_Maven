@@ -3,17 +3,27 @@ package kr.ac.konkuk.ccslab.cm.info;
 import java.util.concurrent.*;
 
 public class CMThreadInfo {
+	private static CMThreadInfo instance;
+
 	private ExecutorService executorService;
 	private ScheduledExecutorService scheduledExecutorService;
 	private ScheduledFuture<?> scheduledFuture;
 	private long eventReceiverId;
 
-	public CMThreadInfo()
+	private CMThreadInfo()
 	{
 		executorService = null;
 		scheduledExecutorService = null;
 		scheduledFuture = null;
 		eventReceiverId = -1;
+	}
+
+	// getInstance()
+	public static synchronized CMThreadInfo getInstance() {
+		if(instance == null) {
+			instance = new CMThreadInfo();
+		}
+		return instance;
 	}
 
 	///// set/get methods

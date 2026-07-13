@@ -2,6 +2,8 @@ package kr.ac.konkuk.ccslab.cm.entity;
 
 import java.io.RandomAccessFile;
 import java.nio.channels.SocketChannel;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.Future;
 
 public class CMRecvFileInfo extends CMTransFileInfo {
@@ -35,8 +37,10 @@ public class CMRecvFileInfo extends CMTransFileInfo {
 		
 		CMRecvFileInfo rfInfo = (CMRecvFileInfo) o;
 		String strSenderName = rfInfo.getFileSender();
+		// [Modified] Check sender UUID in equality check
+		UUID senderUuid = rfInfo.getFileSenderUuid();
 		
-		if(strSenderName.equals(m_strFileSender))
+		if(strSenderName.equals(m_strFileSender) && Objects.equals(senderUuid, m_fileSenderUuid))
 			return true;
 		return false;
 	}

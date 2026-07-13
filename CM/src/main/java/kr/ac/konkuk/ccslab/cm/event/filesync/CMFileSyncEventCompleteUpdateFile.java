@@ -3,8 +3,6 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -13,14 +11,14 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
-    // Fields: userName, completedPath
-    private String userName;    // user name
-    private Path completedPath;     // completed path
+    // Fields: userName, completedPath, cursor
+    private String completedPath;     // completed path
+    private long cursor;            // updated lastChangeId to be applied on client side
 
     public CMFileSyncEventCompleteUpdateFile() {
         m_nID = CMFileSyncEvent.COMPLETE_UPDATE_FILE;
-        userName = null;
         completedPath = null;
+        cursor = -1;
     }
 
     public CMFileSyncEventCompleteUpdateFile(ByteBuffer msg) {
@@ -28,31 +26,39 @@ public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getUserName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setUserName(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // userName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
         // completedPath
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + completedPath.toString().getBytes().length;
+        byteNum += CMInfo.STRING_LEN_BYTES_LEN + completedPath.getBytes().length;
+        // cursor
+        byteNum += Long.BYTES;
         return byteNum;
     }
 
     @Override
-    protected void marshallBody() {
-        // userName
-        putStringToByteBuffer(userName);
+    protected void marshallBodyCore() {
         // completedPath
-        putStringToByteBuffer(completedPath.toString());
+        putStringToByteBuffer(completedPath);
+        // cursor
+        m_bytes.putLong(cursor);
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // userName
-        userName = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // completedPath
-        completedPath = Paths.get(getStringFromByteBuffer(msg));
+        completedPath = getStringFromByteBuffer(msg);
+        // cursor
+        cursor = msg.getLong();
     }
 
     @Override
@@ -60,11 +66,15 @@ public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
         return "CMFileSyncEventCompleteUpdateFile{" +
                 "m_nType=" + m_nType +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nID=" + m_nID +
                 ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", completedPath=" + completedPath +
+                ", cursor=" + cursor +
                 '}';
     }
 
@@ -84,35 +94,38 @@ public class CMFileSyncEventCompleteUpdateFile extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventCompleteUpdateFile that = (CMFileSyncEventCompleteUpdateFile) o;
-        return userName.equals(that.userName) && completedPath.equals(that.completedPath);
+        return cursor == that.cursor &&
+                getInitiatorName().equals(that.getInitiatorName()) &&
+                completedPath.equals(that.completedPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, completedPath);
+        return Objects.hash(getInitiatorName(), completedPath, cursor);
     }
 
-    /**
-     * gets the target user (client) name.
-     * @return user (client) name
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     /**
      * gets the path of the update file.
      * @return path of the updated file
      */
-    public Path getCompletedPath() {
+    public String getCompletedPath() {
         return completedPath;
     }
 
-    public void setCompletedPath(Path completedPath) {
+    public void setCompletedPath(String completedPath) {
         this.completedPath = completedPath;
+    }
+
+    /**
+     * gets the updated lastChangeId to be applied on the client side.
+     * @return updated lastChangeId (cursor)
+     */
+    public long getCursor() {
+        return cursor;
+    }
+
+    public void setCursor(long cursor) {
+        this.cursor = cursor;
     }
 }

@@ -34,6 +34,7 @@ import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 import kr.ac.konkuk.ccslab.cm.thread.CMOpenChannelTask;
 import kr.ac.konkuk.ccslab.cm.thread.CMRemoveChannelTask;
+import kr.ac.konkuk.ccslab.cm.util.CMDeviceUuidManager;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 /**
@@ -81,7 +82,7 @@ public class CMClientStub extends CMStub {
 	public boolean setTransferedFileHome(Path dir)
 	{
 		// to set in the CMConfigurationInfo class.
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setTransferedFileHome(dir);
 		// to set in the CM configuration file.
 		boolean bRet = false;
@@ -107,10 +108,11 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean setServerAddress(String strAddress)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = false;
 		
 		// check the current CM state
-		if(m_cmInfo.isStarted())
+		if(cmInfo.isStarted())
 		{
 			System.err.println("CMClientStub.setServerAddress(), CM already has started!");
 			return false;
@@ -152,10 +154,11 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean setServerPort(int nPort)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = false;
 		
 		// check the current CM state
-		if(m_cmInfo.isStarted())
+		if(cmInfo.isStarted())
 		{
 			System.err.println("CMClientStub.setServerPort(), CM already has started!");
 			return false;
@@ -223,56 +226,21 @@ public class CMClientStub extends CMStub {
 	public boolean startCM()
 	{
 		super.init();	// initialize CMStub
-		
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRet = false;
-		
-		/*
-		if(m_cmInfo.isStarted())
-		{
-			System.err.println("CMClientStub.startCM(), already started!");
-			return false;
-		}
-
-		// Korean encoding
-		System.setProperty("file.encoding", "UTF-8");
-		Field charset;
-		try {
-			charset = Charset.class.getDeclaredField("defaultCharset");
-			charset.setAccessible(true);
-			try {
-				charset.set(null, null);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		} catch (NoSuchFieldException | SecurityException e1) {
-			e1.printStackTrace();
-		}
-
-		// create an executor service object
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
-		ExecutorService es = threadInfo.getExecutorService();
-		int nAvailableProcessors = Runtime.getRuntime().availableProcessors();
-		es = Executors.newFixedThreadPool(nAvailableProcessors);
-		threadInfo.setExecutorService(es);
-		if(CMInfo._CM_DEBUG)
-		{
-			System.out.println("CMClientStub.startCM(), executor service created; # available processors("
-					+nAvailableProcessors+").");
-		}
-		*/
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
 		// initialize CMConfigurator
-		String strConfPath = m_cmInfo.getConfigurationInfo().getConfFileHome().resolve("cm-client.conf").toString();
+		String strConfPath = CMConfigurationInfo.getInstance().getConfFileHome().resolve("cm-client.conf").toString();
 		
 		Callable<Boolean> task = new Callable<Boolean>() {
 			@Override
 			public Boolean call()
 			{
-				boolean ret = CMConfigurator.init(strConfPath, m_cmInfo);
+				boolean ret = CMConfigurator.init(strConfPath);
 				return ret;
 			}
 		};
@@ -293,7 +261,7 @@ public class CMClientStub extends CMStub {
 			@Override
 			public Boolean call()
 			{
-				boolean ret = CMInteractionManager.init(m_cmInfo);
+				boolean ret = CMInteractionManager.init();
 				return ret;
 			}
 		};
@@ -312,16 +280,31 @@ public class CMClientStub extends CMStub {
 		//////////
 
 		// start processing, sending, and receiving threads
-		CMEventManager.startReceivingEvent(m_cmInfo);
-		CMCommManager.startReceivingMessage(m_cmInfo);
-		CMCommManager.startSendingMessage(m_cmInfo);
+		CMEventManager.startReceivingEvent();
+		CMCommManager.startReceivingMessage();
+		CMCommManager.startSendingMessage();
 		
-		m_cmInfo.setStarted(true);
-		
+		cmInfo.setStarted(true);
+
+		// [NEW] CM 홈 기준 device_uuid 확보(생성/복구 포함)
+		final UUID devUuid = CMDeviceUuidManager.getOrCreateDeviceUuid();
+		CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
+		syncInfo.setDeviceUuid(devUuid);
+
+		// load client-side cursor and client-index for file sync
+		syncInfo.loadClientCursor(".");
+		syncInfo.loadClientIndex(".");
+
+		if(CMInfo._CM_DEBUG) {
+			System.out.println("[CM] deviceUuid=" + devUuid.toString().substring(0, 8) + "…");
+			System.out.println("[CM] cursor=" + syncInfo.getCursor()
+					+ ", client-index entries=" + syncInfo.getLastSyncedMtimeMap().size());
+		}
+
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMClientStub.startCM(), succeeded.");
-		
-		return true;
+
+		return bRet;
 	}
 	
 	/**
@@ -334,14 +317,7 @@ public class CMClientStub extends CMStub {
 	public void terminateCM()
 	{
 		disconnectFromServer();
-		
 		super.terminateCM();
-
-		/*
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
-		ExecutorService es = threadInfo.getExecutorService();
-		es.shutdown();	// need to check
-		*/
 
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMClientStub.terminateCM(), succeeded.");
@@ -363,8 +339,9 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		// If CM has been terminated, it must start and this task includes the connection task as well.
-		if(!m_cmInfo.isStarted())
+		if(!cmInfo.isStarted())
 		{
 			return startCM();
 		}
@@ -376,12 +353,12 @@ public class CMClientStub extends CMStub {
 			@Override
 			public Boolean call()
 			{
-				Boolean bRet = CMInteractionManager.connectDefaultServer(m_cmInfo);
+				Boolean bRet = CMInteractionManager.connectDefaultServer();
 				return bRet;
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -409,6 +386,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean disconnectFromServer()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 		
@@ -416,12 +394,12 @@ public class CMClientStub extends CMStub {
 			@Override
 			public Boolean call()
 			{
-				Boolean bRet = CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+				Boolean bRet = CMInteractionManager.disconnectFromDefaultServer();
 				return bRet;
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -471,7 +449,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean loginCM(String strUserName, String strPassword)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		boolean bRequestResult = false;
 		String strEncPassword = null;
 		
@@ -517,7 +495,7 @@ public class CMClientStub extends CMStub {
 		myself.setUDPPort(nMyUDPPort);
 		
 		// send the event
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRequestResult = send(se, strDefServer);
 		se = null;
@@ -544,10 +522,10 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMSessionEvent syncLoginCM(String strUserName, String strPassword)
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMSessionEvent loginAckEvent = null;
 		boolean bRequestResult = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		
 		bRequestResult = loginCM(strUserName, strPassword);
@@ -555,7 +533,7 @@ public class CMClientStub extends CMStub {
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.LOGIN_ACK, 
-				strDefServer);
+				strDefServer, null);
 		synchronized(eventSync)
 		{
 			try {
@@ -586,7 +564,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean logoutCM()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bRequestResult = false;
 		
 		// check state of the local user
@@ -600,7 +578,7 @@ public class CMClientStub extends CMStub {
 		}
 		
 		// terminate current group info (multicast channel, group member, Membership key)
-		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup(), m_cmInfo);
+		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup());
 
 		// close and remove all additional channels to the default server
 		interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().removeAllAddedChannels(0);
@@ -623,9 +601,9 @@ public class CMClientStub extends CMStub {
 			System.err.println("["+myself.getName()+"] failed the logout request!");
 
 		// check and stop the scheduled keep-alive task
-		if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
+		if(CMInteractionManager.getNumLoginServers() == 0)
 		{
-			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 			if(future != null){
 				future.cancel(true);
@@ -637,7 +615,6 @@ public class CMClientStub extends CMStub {
 			}
 		}
 		
-		se = null;
 		return bRequestResult;
 	}
 	
@@ -679,7 +656,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSessionEvent.REQUEST_SESSION_INFO);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRequestResult = send(se, strDefServer);
 		
@@ -703,10 +680,10 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMSessionEvent syncRequestSessionInfo()
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		boolean bRequestResult = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		
 		bRequestResult = requestSessionInfo();
@@ -714,7 +691,7 @@ public class CMClientStub extends CMStub {
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, 
-				CMSessionEvent.RESPONSE_SESSION_INFO, strDefServer);
+				CMSessionEvent.RESPONSE_SESSION_INFO, strDefServer, null);
 		synchronized(eventSync)
 		{
 			try {
@@ -788,7 +765,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean joinSession(String sname)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
 		
 		// check local state
@@ -841,10 +818,10 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMSessionEvent syncJoinSession(String sname)
 	{
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		boolean bRequestResult = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		
 		bRequestResult = joinSession(sname);
@@ -852,7 +829,7 @@ public class CMClientStub extends CMStub {
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.JOIN_SESSION_ACK, 
-				strDefServer);
+				strDefServer, null);
 		synchronized(eventSync)
 		{
 			try {
@@ -894,6 +871,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean leaveSession()
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		boolean bRequestResult = false;
 		CMUser myself = getMyself();
 		// check local state
@@ -910,7 +888,7 @@ public class CMClientStub extends CMStub {
 		}
 		
 		// terminate current group info (multicast channel, group member, Membership key)
-		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup(), m_cmInfo);
+		CMGroupManager.terminate(myself.getCurrentSession(), myself.getCurrentGroup());
 		
 		// send the leave request to the default server
 		CMSessionEvent se = new CMSessionEvent();
@@ -919,7 +897,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(myself.getName());
 		se.setSessionName(myself.getCurrentSession());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		bRequestResult = send(se, strDefServer);
 		
@@ -943,10 +921,21 @@ public class CMClientStub extends CMStub {
 	 * the rotation axis and the rotation angle.  
 	 * @param pq - the new position and orientation of the client
 	 * @see CMPosition
+	 * @deprecated This method is no longer supported because the position member in CMUser has been removed.
+	 * This method will be removed in a future release.
 	 */
 	// send position info to the group members
 	public void sendUserPosition(CMPosition pq)
 	{
+		// [Modification] The position member (m_pq) in CMUser has been removed.
+		// Therefore, this method can no longer update the user's position or send valid events based on it.
+		// A warning log is added to notify the developer.
+
+		System.err.println("CMClientStub.sendUserPosition() is deprecated and does nothing due to " +
+				"the removal of position info in CMUser.");
+
+		/* // The following original logic is removed:
+
 		CMUser myself = getMyself();
 		// check user's local state
 		if(myself.getState() != CMInfo.CM_SESSION_JOIN)
@@ -965,13 +954,15 @@ public class CMClientStub extends CMStub {
 		ie.setUserName(myself.getName());
 		ie.setPosition(pq);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(ie, strDefServer);
 		
 		// update user's current pq
 		myself.setPosition(pq);
 		return;
+
+		*/
 	}
 	
 	/**
@@ -1090,7 +1081,8 @@ public class CMClientStub extends CMStub {
 	 */
 	public void changeGroup(String gName)
 	{
-		CMGroupManager.changeGroup(gName, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMGroupManager.changeGroup(gName);
 		return;
 	}
 	
@@ -1123,6 +1115,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean addNonBlockSocketChannel(int nChKey, String strServer)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMServer serverInfo = null;
 		SocketChannel sc = null;
 		CMChannelInfo<Integer> scInfo = null;
@@ -1133,7 +1126,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strServer, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.addNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1153,8 +1146,8 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), false);
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			sc = (SocketChannel) future.get();
@@ -1215,10 +1208,11 @@ public class CMClientStub extends CMStub {
 	 */
 	public SocketChannel syncAddNonBlockSocketChannel(int nChKey, String strServer)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMServer serverInfo = null;
 		SocketChannel sc = null;
 		CMChannelInfo<Integer> scInfo = null;
-		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
@@ -1229,7 +1223,7 @@ public class CMClientStub extends CMStub {
 			return null;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strServer, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.syncAddNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1249,8 +1243,8 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				serverInfo.getServerAddress(), serverInfo.getServerPort(), false, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+				serverInfo.getServerAddress(), serverInfo.getServerPort(), false);
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			sc = (SocketChannel) future.get();
@@ -1274,7 +1268,8 @@ public class CMClientStub extends CMStub {
 		scInfo.addChannel(nChKey, sc);
 
 		eventSync.init();
-		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK, strServer);
+		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL_ACK,
+				strServer, null);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_NONBLOCK_SOCKET_CHANNEL);
@@ -1346,6 +1341,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean removeNonBlockSocketChannel(int nChKey, String strServer)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> scInfo = null;
 		boolean result = false;
@@ -1356,7 +1352,7 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strServer, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strServer);
 		if(serverInfo == null)
 		{
 			System.err.println("CMClientStub.removeNonBlockSocketChannel(), server("+strServer+") not found.");
@@ -1368,7 +1364,7 @@ public class CMClientStub extends CMStub {
 		////////// for Android client where network-related methods must be called in a separate thread
 		////////// rather than the MainActivity thread
 
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
 		try {
 			result = future.get();
@@ -1428,14 +1424,14 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean addBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer serverInfo = null;
-		CMUser targetUser = null;
 		SocketChannel sc = null;
-		String strTargetSSCAddress = null;
-		int nTargetSSCPort = -1;
-		CMChannelInfo<Integer> scInfo = null;
+		List<CMUser> targetUserList = null;
+		List<String> targetSSCAddressList = new ArrayList<>();
+		List<Integer> targetSSCPortList = new ArrayList<>();
+		List<CMChannelInfo<Integer>> scInfoList = new ArrayList<>();
 		boolean bRet = false;
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
@@ -1446,73 +1442,96 @@ public class CMClientStub extends CMStub {
 		
 		commInfo.setStartTime(System.currentTimeMillis());
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if( serverInfo != null )
 		{
-			scInfo = serverInfo.getBlockSocketChannelInfo();
-			strTargetSSCAddress = serverInfo.getServerAddress();
-			nTargetSSCPort = serverInfo.getServerPort();			
+			scInfoList.add(serverInfo.getBlockSocketChannelInfo());
+			targetSSCAddressList.add(serverInfo.getServerAddress());
+			targetSSCPortList.add(serverInfo.getServerPort());
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, m_cmInfo);
-			if(targetUser == null)
+			// [Modified] If target is client, find all login members (devices)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null || targetUserList.isEmpty())
 			{
-				System.err.println("CMClientStub.addBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+				System.err.println("CMClientStub.addBlockSocketChannel(), the list of target user("
+						+strTarget+") not found or empty!");
 				return false;
 			}
-			
-			scInfo = targetUser.getBlockSocketChannelInfo();
-			strTargetSSCAddress = targetUser.getHost();
-			nTargetSSCPort = targetUser.getSSCPort();
-		}		
-	
-		sc = (SocketChannel) scInfo.findChannel(nChKey);
-		if(sc != null)
-		{
-			System.err.println("CMClientStub.addBlockSocketChannel(), channel key("
-					+nChKey+") to the target("+strTarget+") already exists!");
-			return false;
-		}
-		
-		////////// for Android client where network-related methods must be called in a separate thread
-		////////// rather than the MainActivity thread
-		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				strTargetSSCAddress, nTargetSSCPort, true, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
-		Future<SelectableChannel> future = es.submit(task);
-		try {
-			sc = (SocketChannel) future.get();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-		//////////
-		
-		if(sc == null)
-		{
-			System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("
-					+nChKey+"), target("+strTarget+")");
-			return false;
-		}
-		scInfo.addChannel(nChKey, sc);
-		
-		CMSessionEvent se = new CMSessionEvent();
-		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-		se.setSender(interInfo.getMyself().getName());
-		se.setReceiver(strTarget);
-		se.setChannelName(getMyself().getName());
-		se.setChannelNum(nChKey);
-		//send(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		bRet = CMEventManager.unicastEvent(se, strTarget, CMInfo.CM_STREAM, nChKey, true, m_cmInfo);
-		se = null;
 
-		if(bRet && CMInfo._CM_DEBUG)
+			// [Modified] Add all found users' info to lists
+			for(CMUser targetUser : targetUserList)
+			{
+				scInfoList.add(targetUser.getBlockSocketChannelInfo());
+				targetSSCAddressList.add(targetUser.getHost());
+				targetSSCPortList.add(targetUser.getSSCPort());
+			}
+		}
+
+		// [Modified] Iterate through all targets (server or multiple client devices)
+		for(int i = 0; i < scInfoList.size(); i++)
 		{
-			System.out.println("CMClientStub.addBlockSocketChannel(),successfully requested to add the channel "
-					+ "with the key("+nChKey+") to the target("+strTarget+")");
+			CMUser targetUser = null;
+			if(targetUserList != null) targetUser = targetUserList.get(i);
+
+			CMChannelInfo<Integer> scInfo = scInfoList.get(i);
+			String strTargetSSCAddress = targetSSCAddressList.get(i);
+			int nTargetSSCPort = targetSSCPortList.get(i);
+
+			sc = (SocketChannel) scInfo.findChannel(nChKey);
+			if(sc != null)
+			{
+				System.err.println("CMClientStub.addBlockSocketChannel(), channel key("
+						+nChKey+") already exists.");
+				continue; // [Modified] Continue to next target instead of returning false
+			}
+
+			// [Modified] Use ExecutorService for channel opening task
+			CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
+					strTargetSSCAddress, nTargetSSCPort, true);
+			ExecutorService es = CMThreadInfo.getInstance().getExecutorService(); // [Modified] Singleton access
+			Future<SelectableChannel> future = es.submit(task);
+			try {
+				sc = (SocketChannel) future.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
+
+			if(sc == null)
+			{
+				System.err.println("CMClientStub.addBlockSocketChannel(), failed!: key("
+						+nChKey+"), target("+strTarget+")");
+				continue;
+			}
+
+			scInfo.addChannel(nChKey, sc);
+
+			CMSessionEvent se = new CMSessionEvent();
+			se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
+			se.setChannelName(interInfo.getMyself().getName());
+			se.setChannelNum(nChKey);
+       		// [Modified] Set channel UUID to my UUID [cite: 51]
+			se.setChannelUuid(interInfo.getMyself().getUuid());
+
+			// [Modified] Determine target UUID
+			UUID targetUuid = null;
+			if(targetUser != null) targetUuid = targetUser.getUuid();
+
+        	// [Modified] Send Unicast Event with target UUID [cite: 53]
+			// se.setSender() and se.setReceiver() are omitted (set in unicastEvent)
+			bRet = CMEventManager.unicastEvent(se, strTarget, targetUuid, CMInfo.CM_STREAM,
+					nChKey, 0, true);
+
+			if(bRet)
+			{
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMClientStub.addBlockSocketChannel(), successfully requested to add "
+							+ "the channel with the key("+nChKey+") to the target("+strTarget+")"
+							+ (targetUuid != null ? ", uuid("+targetUuid+")" : "") );
+				}
+			}
 		}
 				
 		return true;				
@@ -1536,15 +1555,18 @@ public class CMClientStub extends CMStub {
 	 */
 	public SocketChannel syncAddBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		CMServer serverInfo = null;
-		CMUser targetUser = null;
 		SocketChannel sc = null;
 		String strTargetSSCAddress = null;
 		int nTargetSSCPort = -1;
+
+		List<CMUser> targetUserList = null;
+		CMUser targetUser = null;
+		UUID targetUuid = null;
+
 		CMChannelInfo<Integer> scInfo = null;
-		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
@@ -1557,7 +1579,7 @@ public class CMClientStub extends CMStub {
 		
 		commInfo.setStartTime(System.currentTimeMillis());
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if( serverInfo != null )
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();
@@ -1566,14 +1588,27 @@ public class CMClientStub extends CMStub {
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, m_cmInfo);
-			if(targetUser == null)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null  || targetUserList.isEmpty())
 			{
 				System.err.println("CMClientStub.syncAddBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+						+strTarget+") list not found!");
 				return null;
 			}
-			
+
+			// [Modified] Check if the target user has multiple active logins
+			// Synchronous addition is not supported for multiple logins
+			if(targetUserList.size() > 1)
+			{
+				System.err.println("CMClientStub.syncAddBlockSocketChannel(), cannot synchronously add "
+						+ "a blocking socket channel to target user("+strTarget+") while the user has "
+						+ "multiple active logins!");
+				return null;
+			}
+
+			// [Modified] Proceed with the single target device
+			targetUser = targetUserList.get(0);
+			targetUuid = targetUser.getUuid();
 			scInfo = targetUser.getBlockSocketChannelInfo();
 			strTargetSSCAddress = targetUser.getHost();
 			nTargetSSCPort = targetUser.getSSCPort();
@@ -1582,8 +1617,8 @@ public class CMClientStub extends CMStub {
 		sc = (SocketChannel) scInfo.findChannel(nChKey);
 		if(sc != null)
 		{
-			System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("
-					+nChKey+") to the target("+strTarget+") already exists!");
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), channel key("+nChKey
+					+") to the target("+strTarget+"), target uuid("+targetUuid+") already exists!");
 			return null;
 		}
 		
@@ -1591,8 +1626,8 @@ public class CMClientStub extends CMStub {
 		////////// rather than the MainActivity thread
 		
 		CMOpenChannelTask task = new CMOpenChannelTask(CMInfo.CM_SOCKET_CHANNEL,
-				strTargetSSCAddress, nTargetSSCPort, true, m_cmInfo);
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+				strTargetSSCAddress, nTargetSSCPort, true);
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<SelectableChannel> future = es.submit(task);
 		try {
 			sc = (SocketChannel) future.get();
@@ -1607,64 +1642,48 @@ public class CMClientStub extends CMStub {
 		if(sc == null)
 		{
 			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed!: key("
-					+nChKey+"), target("+strTarget+")");
+					+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 			return null;
 		}
 		scInfo.addChannel(nChKey, sc);
 
+		// [Modified] Use CMEventSynchronizer with UUID
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, 
-				CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK, strTarget);			
+				CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL_ACK, strTarget, targetUuid);
 
 		CMSessionEvent se = new CMSessionEvent();
 		se.setID(CMSessionEvent.ADD_BLOCK_SOCKET_CHANNEL);
-		se.setSender(interInfo.getMyself().getName());
-		se.setReceiver(strTarget);
 		se.setChannelName(getMyself().getName());
 		se.setChannelNum(nChKey);
-		//boolean bRequestResult = send(se, strTarget, CMInfo.CM_STREAM, nChKey, true);
-		
+		se.setChannelUuid(getMyself().getUuid());
+
 		// The ADD_BLOCK_SOCKET_CHANNEL event is directly sent to the target node 
 		// so that the target can be informed which channel should be changed its mode 
 		// from non-blocking to blocking mode.
-		boolean bRequestResult = CMEventManager.unicastEvent(se, strTarget, 
-				CMInfo.CM_STREAM, nChKey, true, m_cmInfo);
-		if(!bRequestResult)
+		boolean bRequestResult = CMEventManager.unicastEvent(se, strTarget, targetUuid,
+				CMInfo.CM_STREAM, nChKey, 0, true);
+		if(!bRequestResult) {
+			// [Modified] Reset waited event on failure
+			eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, -1, null, null);
 			return null;
-		
-		se = null;
+		}
 
+		// wait for the ack event
 		synchronized(eventSync)
 		{
 			try {
-				eventSync.wait(30000);  // timeout 30s
+				eventSync.wait(20000);  // timeout 20s
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
 		}
 
-		nReturnCode = replyEvent.getReturnCode();
-		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
+		replyEvent = (CMSessionEvent) eventSync.getReplyEvent();
+		if(replyEvent == null)
 		{
-			if(CMInfo._CM_DEBUG)
-			{
-				System.out.println("CMClientStub.syncAddBlockSocketChannel(), "
-						+ "successfully add the channel info at the target("+strTarget
-						+"), key("+nChKey+")");
-			}
-		}
-		else if(nReturnCode == 0) // failed to add the new channel info (key, channel) at the server
-		{
-			System.err.println("CMClientStub.syncAddBlockSocketChannel(), "
-					+ "failed to add the channel info at the target("+strTarget
-					+"), key("+nChKey+")");
-			sc = null;	// the new socket channel is closed and removed at the CMInteractionManager
-		}
-		else
-		{
-			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed: "
-					+ "return code("+nReturnCode+")");
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed to receive the ack event!");
+			// remove the temporary channel
 			////////// for Android client where network-related methods must be called in a separate thread
 			////////// rather than the MainActivity thread
 			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
@@ -1675,11 +1694,49 @@ public class CMClientStub extends CMStub {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
-			
-			//scInfo.removeChannel(nChKey);
 			//////////
-			
-			sc = null;
+			return null;
+		}
+
+		// [Modified] Check return code from reply event
+		nReturnCode = replyEvent.getReturnCode();
+		boolean isFailed = false;
+		if(nReturnCode == 1) // successfully add the new channel info (key, channel) at the server
+		{
+			if(CMInfo._CM_DEBUG)
+			{
+				System.out.println("CMClientStub.syncAddBlockSocketChannel(), "
+						+ "successfully add the channel info at the target("+strTarget
+						+"), uuid("+targetUuid+"), key("+nChKey+")");
+			}
+		}
+		else if(nReturnCode == 0) // failed to add the new channel info (key, channel) at the server
+		{
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), "
+					+ "failed to add the channel info at the target("+strTarget
+					+"), uuid("+targetUuid+"), key("+nChKey+")");
+			isFailed = true;
+		}
+		else {
+			System.err.println("CMClientStub.syncAddBlockSocketChannel(), failed: "
+					+ "return code("+nReturnCode+")");
+			isFailed = true;
+		}
+
+		if(isFailed)
+		{
+			////////// for Android client where network-related methods must be called in a separate thread
+			////////// rather than the MainActivity thread
+			Future<Boolean> futureRemoveChannel = es.submit(new CMRemoveChannelTask(scInfo, nChKey));
+			try {
+				futureRemoveChannel.get();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			}
+			//////////
+			return null;
 		}
 
 		return sc;		
@@ -1707,13 +1764,13 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean removeBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
-		CMUser targetUser = null;
-		CMChannelInfo<Integer> scInfo = null;
-		boolean result = false;
-		SocketChannel sc = null;
-		CMSessionEvent se = null;
+		// [Modified] List for target users (to support multiple logins) [cite: 78]
+		List<CMUser> targetUserList = null;
+		// [Modified] List for channel info (to support multiple logins) [cite: 78]
+		List<CMChannelInfo<Integer>> scInfoList = new ArrayList<>();
+		boolean result = true;
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
 		{
@@ -1721,41 +1778,80 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if(serverInfo != null)
 		{
-			scInfo = serverInfo.getBlockSocketChannelInfo();			
+			// Target is a server
+			scInfoList.add(serverInfo.getBlockSocketChannelInfo());
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, m_cmInfo);
-			if(targetUser == null)
+			// Target is a client (find all login devices)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null || targetUserList.isEmpty())
 			{
 				System.err.println("CMClientStub.removeBlockSocketChannel(), target user("
-						+strTarget+") not found!");
+						+strTarget+") list not found!");
 				return false;
 			}
-			
-			scInfo = targetUser.getBlockSocketChannelInfo();		
+
+			// Add block socket channel info of all login devices
+			for(CMUser targetUser : targetUserList)
+			{
+				scInfoList.add(targetUser.getBlockSocketChannelInfo());
+			}
 		}
-				
-		sc = (SocketChannel) scInfo.findChannel(nChKey);
-		if(sc == null)
+
+		// [Modified] Iterate through the list of targets [cite: 83]
+		for(int i = 0; i < scInfoList.size(); i++)
 		{
-			System.err.println("CMClientStub.removeBlockSocketChannel(), "
-					+ "socket channel not found! key("+nChKey+"), target("+strTarget+").");
-			return false;
+			CMUser targetUser = null;
+			UUID targetUuid = null;
+
+			// [Modified] Get target UUID if it's a client [cite: 84]
+			if(targetUserList != null)
+			{
+				targetUser = targetUserList.get(i);
+				targetUuid = targetUser.getUuid();
+			}
+
+			CMChannelInfo<Integer> scInfo = scInfoList.get(i);
+			SocketChannel sc = (SocketChannel) scInfo.findChannel(nChKey);
+
+			// [Modified] Check if the socket channel exists [cite: 85, 86]
+			if(sc == null)
+			{
+				System.err.println("CMClientStub.removeBlockSocketChannel(), socket channel not found! Key("
+						+nChKey+"), target("+strTarget+"), target uuid("+targetUuid+").");
+				continue;
+			}
+
+			// [Modified] Send REMOVE_BLOCK_SOCKET_CHANNEL event with UUID [cite: 102]
+			CMSessionEvent se = new CMSessionEvent();
+			se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
+			se.setChannelName(interInfo.getMyself().getName());
+			se.setChannelNum(nChKey);
+			// [Modified] Set Channel UUID (Myself) [cite: 102]
+			se.setChannelUuid(interInfo.getMyself().getUuid());
+
+			// [Modified] Send event with target UUID (unicastEvent handles sender/receiver setup) [cite: 102]
+			boolean bRet = send(se, strTarget, targetUuid);
+			result &= bRet;
+
+			if(bRet) {
+				if(CMInfo._CM_DEBUG)
+				{
+					System.out.println("CMClientStub.removeBlockSocketChannel(), succeeded. key("+nChKey
+							+"), target ("+strTarget+"), target uuid("+targetUuid+").");
+				}
+			}
+			else {
+				System.err.println("CMClientStub.removeBlockSocketChannel(), failed to send event! key("
+						+nChKey+"), target ("+strTarget+"), target uuid("+targetUuid+").");
+			}
 		}
-		
-		se = new CMSessionEvent();
-		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
-		se.setChannelNum(nChKey);
-		se.setChannelName(interInfo.getMyself().getName());
-		result = send(se, strTarget);	// send the event with the default nonblocking socket channel
-		se = null;
-		
+
 		// The channel will be closed and removed after the client receives the ACK event at the event handler.
-		
 		return result;
 	}
 	
@@ -1780,14 +1876,16 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean syncRemoveBlockSocketChannel(int nChKey, String strTarget)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer serverInfo = null;
 		CMUser targetUser = null;
+		UUID targetUuid = null;
+		List<CMUser> targetUserList = null;
 		CMChannelInfo<Integer> scInfo = null;
 		boolean result = false;
 		SocketChannel sc = null;
 		CMSessionEvent se = null;
-		CMEventInfo eInfo = m_cmInfo.getEventInfo();
+		CMEventInfo eInfo = CMEventInfo.getInstance();
 		CMEventSynchronizer eventSync = eInfo.getEventSynchronizer();
 		CMSessionEvent replyEvent = null;
 		int nReturnCode = -1;
@@ -1798,21 +1896,34 @@ public class CMClientStub extends CMStub {
 			return false;
 		}
 		
-		serverInfo = CMInteractionManager.findServer(strTarget, m_cmInfo);
+		serverInfo = CMInteractionManager.findServer(strTarget);
 		if(serverInfo != null)
 		{
 			scInfo = serverInfo.getBlockSocketChannelInfo();			
 		}
 		else
 		{
-			targetUser = CMInteractionManager.findGroupMemberOfClient(strTarget, m_cmInfo);
-			if(targetUser == null)
+			targetUserList = CMInteractionManager.findGroupMemberOfClient(strTarget);
+			if(targetUserList == null || targetUserList.isEmpty())
 			{
 				System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), target user("
 						+strTarget+") not found!");
 				return false;
 			}
-			
+
+			// Check if the target user has multiple login devices.
+			// The synchronous removal of a blocking socket channel is not supported
+			// if the target user has multiple login devices.
+			if(targetUserList.size() > 1)
+			{
+				System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), cannot synchronously "
+						+ "remove a blocking socket channel from target user("+strTarget
+						+") while the user has multiple active logins!");
+				return false;
+			}
+
+			targetUser = targetUserList.get(0);
+			targetUuid = targetUser.getUuid();
 			scInfo = targetUser.getBlockSocketChannelInfo();			
 		}
 				
@@ -1820,23 +1931,22 @@ public class CMClientStub extends CMStub {
 		if(sc == null)
 		{
 			System.err.println("CMClientStub.syncRemoveBlockSocketChannel(), socket channel not found! key("
-					+nChKey+"), server ("+strTarget+").");
+					+nChKey+"), target("+strTarget+"), target uuid("+targetUuid+")!");
 			return false;
 		}
 
 		eventSync.init();
 		eventSync.setWaitedEvent(CMInfo.CM_SESSION_EVENT, 
-				CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK, strTarget);
+				CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL_ACK, strTarget, targetUuid);
 		
 		se = new CMSessionEvent();
 		se.setID(CMSessionEvent.REMOVE_BLOCK_SOCKET_CHANNEL);
 		se.setChannelNum(nChKey);
 		se.setChannelName(interInfo.getMyself().getName());
-		result = send(se, strTarget);	// send the event with the default nonblocking socket channel
+		se.setChannelUuid(interInfo.getMyself().getUuid());
+		result = send(se, strTarget, targetUuid);
 		if(!result)
 			return false;
-		
-		se = null;
 		
 		synchronized(eventSync)
 		{
@@ -1854,13 +1964,13 @@ public class CMClientStub extends CMStub {
 			if(CMInfo._CM_DEBUG)
 			{
 				System.out.println("CMClientStub.syncRemoveBlockSocketChannel(), successfully removed the channel "
-						+ "info at the server: "+"key("+nChKey+"), server("+strTarget+")");
+						+ "info at the target: "+"key("+nChKey+"), target("+strTarget+"), uuid("+targetUuid+").");
 			}
 		}
 		else if(nReturnCode == 0) // failed to remove the new channel info (key, channel) at the server
 		{
 			System.err.println("CMClientStub.syncRemoveBlockSocketChannel(),failed to remove the channel info "
-					+ "at the server: key("+nChKey+"), server("+strTarget+")");
+					+ "at the target: key("+nChKey+"), target("+strTarget+"), uuid("+targetUuid+")!");
 			result = false;
 		}
 		else
@@ -1890,7 +2000,7 @@ public class CMClientStub extends CMStub {
 		SocketChannel sc = null;
 		CMServer serverInfo = null;
 		CMChannelInfo<Integer> chInfo = null;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 
 		if(getMyself().getState() == CMInfo.CM_INIT || getMyself().getState() == CMInfo.CM_CONNECT)
@@ -1901,11 +2011,11 @@ public class CMClientStub extends CMStub {
 		
 		if(strServerName.equals(strDefServer))
 		{
-			serverInfo = m_cmInfo.getInteractionInfo().getDefaultServerInfo();
+			serverInfo = CMInteractionInfo.getInstance().getDefaultServerInfo();
 		}
 		else
 		{
-			serverInfo = m_cmInfo.getInteractionInfo().findAddServer(strServerName);
+			serverInfo = CMInteractionInfo.getInstance().findAddServer(strServerName);
 			if(serverInfo == null)
 			{
 				System.err.println("CMClientStub.getBlockSocketChannel(), additional server info not found! : "
@@ -2059,7 +2169,7 @@ public class CMClientStub extends CMStub {
 		se.setWriterName(strWriter);
 		se.setContentOffset(nOffset);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -2081,7 +2191,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public void requestNextSNSContent()
 	{
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
 		int nOffset = snsInfo.getLastlyReqOffset();
@@ -2110,7 +2220,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public void requestPreviousSNSContent()
 	{
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		// get the saved data
 		String strWriter = snsInfo.getLastlyReqWriter();
 		int nOffset = snsInfo.getLastlyReqOffset();
@@ -2118,7 +2228,7 @@ public class CMClientStub extends CMStub {
 		
 		// update next content offset
 		nOffset = nOffset-nDownContentNum;
-		//if(nOffset < 0) nOffset = 0;
+		if(nOffset < 0) nOffset = 0;
 		
 		// request SNS content
 		requestSNSContent(strWriter, nOffset);
@@ -2220,7 +2330,7 @@ public class CMClientStub extends CMStub {
 			}
 			
 			// store the file path list in the CMSNSInfo class (CMSNSAttach object)
-			CMSNSInfo sInfo = m_cmInfo.getSNSInfo();
+			CMSNSInfo sInfo = CMSNSInfo.getInstance();
 			CMSNSAttach sendAttach = sInfo.getSendSNSAttach();
 			sendAttach.setFilePathList(filePathList);
 			
@@ -2238,7 +2348,7 @@ public class CMClientStub extends CMStub {
 			se.setFileNameList(fileNameList);
 		}
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -2313,7 +2423,7 @@ public class CMClientStub extends CMStub {
 		String strThumbnail = strFileName.substring(0, index) + "-thumbnail"
 				+ strFileName.substring(index, strFileName.length());
 		// search for content ID and writer name
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Vector<CMSNSContent> contentVector = contentList.getContentList();
 		Iterator<CMSNSContent> iter = contentVector.iterator();
@@ -2366,7 +2476,7 @@ public class CMClientStub extends CMStub {
 		se.setWriterName(strWriterName);
 		se.setFileName(strFileName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -2429,7 +2539,7 @@ public class CMClientStub extends CMStub {
 		String strThumbnail = strFileName.substring(0, index) + "-thumbnail"
 				+ strFileName.substring(index, strFileName.length());
 		// search for content ID and writer name
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
 		Vector<CMSNSContent> contentVector = contentList.getContentList();
 		Iterator<CMSNSContent> iter = contentVector.iterator();
@@ -2482,7 +2592,7 @@ public class CMClientStub extends CMStub {
 		se.setWriterName(strWriterName);
 		se.setFileName(strFileName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -2557,7 +2667,7 @@ public class CMClientStub extends CMStub {
 		mse.setID(CMMultiServerEvent.REQ_SERVER_INFO);
 		mse.setUserName( myself.getName() );
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send( mse, strDefServer );
 
@@ -2582,11 +2692,12 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean connectToServer(String strServerName)
 	{
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		CMInfo cmInfo = CMInfo.getInstance();
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 
 		// If CM has been terminated, it must start first.
-		if(!m_cmInfo.isStarted())
+		if(!cmInfo.isStarted())
 		{
 			if(strServerName.equals(strDefServer))
 				return startCM();
@@ -2608,16 +2719,16 @@ public class CMClientStub extends CMStub {
 				Boolean ret = false;
 				if( strServerName.equals(strDefServer) )	// if a default server
 				{
-					ret = CMInteractionManager.connectDefaultServer(m_cmInfo);
+					ret = CMInteractionManager.connectDefaultServer();
 					return ret;
 				}
 				
-				ret = CMInteractionManager.connectAddServer(strServerName, m_cmInfo);
+				ret = CMInteractionManager.connectAddServer(strServerName);
 				return ret;
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -2645,7 +2756,8 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean disconnectFromServer(String strServerName)
 	{
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		CMInfo cmInfo = CMInfo.getInstance();
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 
 		////////// for Android client where network-related methods must be called in a separate thread
@@ -2658,16 +2770,16 @@ public class CMClientStub extends CMStub {
 				Boolean ret = false;
 				if( strServerName.equals(strDefServer) )	// if a default server
 				{
-					ret = CMInteractionManager.disconnectFromDefaultServer(m_cmInfo);
+					ret = CMInteractionManager.disconnectFromDefaultServer();
 					return ret;
 				}
 
-				ret = CMInteractionManager.disconnectFromAddServer(strServerName, m_cmInfo);
+				ret = CMInteractionManager.disconnectFromAddServer(strServerName);
 				return ret;
 			}
 		};
 		
-		ExecutorService es = m_cmInfo.getThreadInfo().getExecutorService();
+		ExecutorService es = CMThreadInfo.getInstance().getExecutorService();
 		Future<Boolean> future = es.submit(task);
 		boolean bRet = false;
 		try {
@@ -2704,8 +2816,8 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean loginCM(String strServer, String strUser, String strPasswd)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		CMServer tserver = null;
 		String myAddress = null;
 		int myUDPPort = -1;
@@ -2791,7 +2903,8 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean logoutCM(String strServer)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bResult = false;
 		
 		// if a server is the default server, call the original function.
@@ -2840,9 +2953,9 @@ public class CMClientStub extends CMStub {
 			tserver.setClientState(CMInfo.CM_CONNECT);
 
 		// check and stop the scheduled keep-alive task
-		if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
+		if(CMInteractionManager.getNumLoginServers() == 0)
 		{
-			CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+			CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 			ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 			future.cancel(true);
 			
@@ -2876,12 +2989,12 @@ public class CMClientStub extends CMStub {
 	// requests available session information of a designated server
 	public boolean requestSessionInfo(String strServerName)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		boolean bResult = false;
 
 		// if a server is the default server, call the original function
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		if( strServerName.equals(strDefServer) )
 		{
@@ -2945,7 +3058,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean joinSession(String strServer, String strSession)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		CMSession tsession = null;
 		boolean bResult = false;
@@ -3026,7 +3139,8 @@ public class CMClientStub extends CMStub {
 	 */
 	public boolean leaveSession(String strServer)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer tserver = null;
 		boolean bResult = false;
 		
@@ -3062,7 +3176,7 @@ public class CMClientStub extends CMStub {
 		}
 
 		// terminate current group info (multicast channel, group member, Membership key)
-		CMGroupManager.terminate(tserver.getCurrentSessionName(), tserver.getCurrentGroupName(), m_cmInfo);
+		CMGroupManager.terminate(tserver.getCurrentSessionName(), tserver.getCurrentGroupName());
 
 		// make and send event
 		CMMultiServerEvent mse = new CMMultiServerEvent();
@@ -3119,7 +3233,7 @@ public class CMClientStub extends CMStub {
 		se.setPassword(strEncPasswd);
 
 		// send the request (a default server will send back REGISTER_USER_ACK event)
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -3166,7 +3280,7 @@ public class CMClientStub extends CMStub {
 		se.setPassword(strEncPasswd);
 
 		// send the request (a default server will send back DEREGISTER_USER_ACK event)
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -3209,7 +3323,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(strName);
 
 		// send the request (a default server will send back FIND_REGISTERED_USER_ACK event)
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 
@@ -3230,7 +3344,7 @@ public class CMClientStub extends CMStub {
 	 */
 	public CMMember getGroupMembers()
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMUser myself = interInfo.getMyself();
 
 		// check if the user is connected to a default server
@@ -3325,7 +3439,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3389,7 +3503,7 @@ public class CMClientStub extends CMStub {
 		se.setUserName(getMyself().getName());
 		se.setFriendName(strFriendName);
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3472,7 +3586,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSNSEvent.REQUEST_FRIEND_LIST);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3505,7 +3619,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3538,7 +3652,7 @@ public class CMClientStub extends CMStub {
 		se.setID(CMSNSEvent.REQUEST_BI_FRIEND_LIST);
 		se.setUserName(getMyself().getName());
 		
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		send(se, strDefServer);
 		
@@ -3562,7 +3676,7 @@ public class CMClientStub extends CMStub {
 	public String getCurrentChannelInfo()
 	{
 		StringBuffer sb = new StringBuffer();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMServer defaultServer = interInfo.getDefaultServerInfo();
 		String strChInfo = null;
 		
@@ -3640,24 +3754,23 @@ public class CMClientStub extends CMStub {
 					
 					// add socket channel of group members
 					CMMember groupMember = curGroup.getGroupUsers();
-					Vector<CMUser> groupVector = groupMember.getAllMembers();
-					Iterator<CMUser> iter = groupVector.iterator();
-					while(iter.hasNext())
-					{
-						CMUser groupUser = iter.next();
-						strChInfo = groupUser.getNonBlockSocketChannelInfo().toString();
-						if(strChInfo != null)
-						{
-							sb.append("--- non-blocking socket channel of group user("
-									+groupUser.getName()+")\n");
-							sb.append(strChInfo);
-						}
-						strChInfo = groupUser.getBlockSocketChannelInfo().toString();
-						if(strChInfo != null)
-						{
-							sb.append("--- blocking socket channel of group user("
-									+groupUser.getName()+")\n");
-							sb.append(strChInfo);
+					Hashtable<String, List<CMUser>> groupTable = groupMember.getAllMembers();
+					for(List<CMUser> userList : groupTable.values()) {
+						for(CMUser user : userList) {
+							strChInfo = user.getNonBlockSocketChannelInfo().toString();
+							if(strChInfo != null)
+							{
+								sb.append("--- non-blocking socket channel of group user("
+										+user.getName()+"), uuid("+user.getUuid()+")\n");
+								sb.append(strChInfo);
+							}
+							strChInfo = user.getBlockSocketChannelInfo().toString();
+							if(strChInfo != null)
+							{
+								sb.append("--- blocking socket channel of group user("
+										+user.getName()+"), uuid("+user.getUuid()+")\n");
+								sb.append(strChInfo);
+							}
 						}
 					}
 				}
@@ -3709,13 +3822,14 @@ public class CMClientStub extends CMStub {
 			System.out.println("mode = " + mode);
 		}
 		// check the system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3728,7 +3842,7 @@ public class CMClientStub extends CMStub {
 		}
 
 		// call CMFileSyncManager.startFileSync()
-		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
 		Objects.requireNonNull(syncManager);
 		boolean ret = syncManager.startFileSync(mode);
 		if(!ret) {
@@ -3754,13 +3868,14 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.stopFileSync() called..");
 		}
 		// check the system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3768,7 +3883,7 @@ public class CMClientStub extends CMStub {
 		}
 
 		// stop file-sync
-		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
 		Objects.requireNonNull(syncManager);
 		boolean ret = syncManager.stopFileSync();
 		if(!ret) {
@@ -3810,13 +3925,14 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.requestFileSyncOnlineMode() called..");
 		}
 		// check system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3832,7 +3948,7 @@ public class CMClientStub extends CMStub {
 		List<Path> pathList = Arrays.stream(files).map(File::toPath).collect(Collectors.toList());
 
 		// call API of CMFileSyncManager
-		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
 		Objects.requireNonNull(syncManager);
 		boolean ret = syncManager.requestOnlineMode(pathList);
 		if(!ret) {
@@ -3869,13 +3985,14 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.requestFileSyncLocalMode() called..");
 		}
 		// check system type
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("The system type is SERVER!");
 			return false;
 		}
 		// check the login state
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You must log in to the default server!");
@@ -3891,7 +4008,7 @@ public class CMClientStub extends CMStub {
 		List<Path> pathList = Arrays.stream(files).map(File::toPath).collect(Collectors.toList());
 
 		// call API of CMFileSyncManager
-		CMFileSyncManager syncManager = m_cmInfo.getServiceManager(CMFileSyncManager.class);
+		CMFileSyncManager syncManager = cmInfo.getServiceManager(CMFileSyncManager.class);
 		Objects.requireNonNull(syncManager);
 		boolean ret = syncManager.requestLocalMode(pathList);
 		if(!ret) {
@@ -3917,12 +4034,12 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getOnlineModeFiles() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");
@@ -3948,12 +4065,12 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getLocalModeFiles() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");
@@ -3981,19 +4098,19 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getCurrentFileSyncMode() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");
 			return null;
 		}
 
-		CMFileSyncInfo syncInfo = Objects.requireNonNull(m_cmInfo.getFileSyncInfo());
+		CMFileSyncInfo syncInfo = Objects.requireNonNull(CMFileSyncInfo.getInstance());
 		return syncInfo.getCurrentMode();
 	}
 
@@ -4019,12 +4136,12 @@ public class CMClientStub extends CMStub {
 			System.out.println("=== CMClientStub.getFileSyncHome() called..");
 		}
 
-		CMConfigurationInfo confInfo = Objects.requireNonNull(m_cmInfo.getConfigurationInfo());
+		CMConfigurationInfo confInfo = Objects.requireNonNull(CMConfigurationInfo.getInstance());
 		if(confInfo.getSystemType().equals("SERVER")) {
 			System.err.println("System type is SERVER!");
 			return null;
 		}
-		CMUser myself = Objects.requireNonNull(m_cmInfo.getInteractionInfo().getMyself());
+		CMUser myself = Objects.requireNonNull(CMInteractionInfo.getInstance().getMyself());
 		int state = myself.getState();
 		if(state == CMInfo.CM_INIT || state == CMInfo.CM_CONNECT) {
 			System.err.println("You should log in to the default server!");

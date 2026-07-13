@@ -14,11 +14,10 @@ public class CMFileSyncProactiveModeTask implements Runnable {
     final private CMFileSyncInfo syncInfo;
     final private CMConfigurationInfo confInfo;
 
-    public CMFileSyncProactiveModeTask(CMFileSyncManager syncManager, CMFileSyncInfo syncInfo,
-                                       CMConfigurationInfo confInfo) {
-        this.syncManager = syncManager;
-        this.syncInfo = syncInfo;
-        this.confInfo = confInfo;
+    public CMFileSyncProactiveModeTask() {
+        this.syncManager = CMInfo.getInstance().getServiceManager(CMFileSyncManager.class);
+        this.syncInfo = CMFileSyncInfo.getInstance();
+        this.confInfo = CMConfigurationInfo.getInstance();
     }
 
     @Override

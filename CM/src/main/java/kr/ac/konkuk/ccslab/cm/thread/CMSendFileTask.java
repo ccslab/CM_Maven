@@ -6,11 +6,13 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
 import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMFileEvent;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 //import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
@@ -21,13 +23,11 @@ public class CMSendFileTask implements Runnable {
 
 	CMSendFileInfo m_sendFileInfo;
 	CMBlockingEventQueue m_sendQueue;
-	CMInfo m_cmInfo;
-	
-	public CMSendFileTask(CMSendFileInfo sendFileInfo, CMInfo cmInfo)
+
+	public CMSendFileTask(CMSendFileInfo sendFileInfo)
 	{
 		m_sendFileInfo = sendFileInfo;
-		m_cmInfo = cmInfo;
-		m_sendQueue = cmInfo.getCommInfo().getSendBlockingEventQueue();
+		m_sendQueue = CMCommInfo.getInstance().getSendBlockingEventQueue();
 	}
 	
 	@Override
@@ -43,7 +43,7 @@ public class CMSendFileTask implements Runnable {
 		ByteBuffer buf = ByteBuffer.allocateDirect(CMInfo.FILE_BLOCK_LEN);
 		CMFileEvent fe = null;
 		boolean bInterrupted = false;
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 
 		// open the file
 		try {
@@ -143,7 +143,8 @@ public class CMSendFileTask implements Runnable {
 		{
 			if(lSentSize > lFileSize)
 			{
-				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getFileReceiver()+") already has "
+				System.err.println("CMSendFileTask.run(); the receiver("+m_sendFileInfo.getFileReceiver()
+						+"), receiver uuid("+m_sendFileInfo.getFileReceiverUuid()+") already has "
 						+ "a bigger size file("+m_sendFileInfo.getFileName()+"); sender size("+lFileSize
 						+ "), receiver size("+lSentSize+")");
 			}
@@ -152,25 +153,30 @@ public class CMSendFileTask implements Runnable {
 			fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_CHAN);			
 			fe.setFileSender(m_sendFileInfo.getFileSender());
+			fe.setFileSenderUuid(m_sendFileInfo.getFileSenderUuid());
 			fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
+			fe.setFileReceiverUuid(m_sendFileInfo.getFileReceiverUuid());
 			fe.setFileName(m_sendFileInfo.getFileName());
 			fe.setFileSize(m_sendFileInfo.getFileSize());
 			fe.setContentID(m_sendFileInfo.getContentID());
-			
-			if(CMFileTransferManager.isP2PFileTransfer(fe, m_cmInfo))
+
+			if(CMFileTransferManager.isP2PFileTransfer(fe))
 			{
 				if(CMInfo._CM_DEBUG)
 				{
 					System.out.println("CMSendFileTask.run(), isP2PFileTransfer() "
 							+ "returns true.");
 				}
+				// Sender/Receiver is set by unicastEvent if not specified
 				// set event sender and receiver
-				fe.setSender(interInfo.getMyself().getName());
 				String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-				fe.setReceiver(strDefServer);
 				// set distribution fields
 				fe.setDistributionSession("CM_ONE_USER");
 				fe.setDistributionGroup(m_sendFileInfo.getFileReceiver());
+				fe.setDistributionUuid(m_sendFileInfo.getFileReceiverUuid());
+
+				// Target is the default server
+				CMEventManager.unicastEvent(fe, strDefServer);
 			}
 			else
 			{
@@ -179,20 +185,16 @@ public class CMSendFileTask implements Runnable {
 					System.out.println("CMSendFileTask.run(), isP2PFileTransfer() "
 							+ "returns false.");
 				}
-				// set event sender and receiver
-				fe.setSender(interInfo.getMyself().getName()); // event sender
-				fe.setReceiver(m_sendFileInfo.getFileReceiver()); // event receiver
+				// Sender/Receiver is set by unicastEvent if not specified
+				// Use the method that accepts UUID to support multi-device delivery if needed (or specific target)
+				CMEventManager.unicastEvent(fe, m_sendFileInfo.getFileReceiver(), m_sendFileInfo.getFileReceiverUuid());
 			}
 			
-			CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
-			m_sendQueue.push(msg);
-			//CMCommManager.sendMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
-			//fe = null;
+			/*CMMessage msg = new CMMessage(CMEventManager.marshallEvent(fe), m_sendFileInfo.getDefaultChannel());
+			m_sendQueue.push(msg);*/
 		}
 
 		closeRandomAccessFile(raf);
-		
-		return;
 	}
 	
 	private void closeRandomAccessFile(RandomAccessFile raf)
@@ -206,15 +208,25 @@ public class CMSendFileTask implements Runnable {
 	
 	private void sendErrorToProcThread()
 	{
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		String strMyName = interInfo.getMyself().getName();  // added
+		UUID myUuid = interInfo.getMyself().getUuid();  // added
+
 		CMFileEvent fe = new CMFileEvent();
 		fe.setID(CMFileEvent.ERR_SEND_FILE_CHAN);
-		fe.setFileSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+		fe.setSender(strMyName);  // added
+		fe.setSenderUuid(myUuid);  // added
+		fe.setReceiver(strMyName);  // added
+		fe.setReceiverUuid(myUuid);  // added
+		fe.setFileSender(strMyName);
+		fe.setFileSenderUuid(myUuid); // added
 		fe.setFileReceiver(m_sendFileInfo.getFileReceiver());
+		fe.setFileReceiverUuid(m_sendFileInfo.getFileReceiverUuid()); // added
 		fe.setFileName(m_sendFileInfo.getFileName());
 		fe.setContentID(m_sendFileInfo.getContentID());
 		ByteBuffer byteBuf = CMEventManager.marshallEvent(fe);
 		
-		CMBlockingEventQueue recvQueue = m_cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		CMBlockingEventQueue recvQueue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 		recvQueue.push(new CMMessage(byteBuf, null));
 	}
 

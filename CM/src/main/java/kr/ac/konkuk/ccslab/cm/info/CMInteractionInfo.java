@@ -7,26 +7,31 @@ import kr.ac.konkuk.ccslab.cm.entity.CMSession;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 
 public class CMInteractionInfo {
+	private static CMInteractionInfo instance;
+
 	private CMMember m_loginUsers;
 	private Vector<CMSession> m_sessionList;
 	private CMUser m_myself;
 	private CMServer m_defaultServerInfo;		// default server info
 	private Vector<CMServer> m_addServerList;	// additional server info
 	
-	public CMInteractionInfo()
+	private CMInteractionInfo()
 	{
 		m_loginUsers = new CMMember();
 		m_sessionList = new Vector<CMSession>();
 		m_myself = new CMUser();
 		m_defaultServerInfo = new CMServer();
 		m_addServerList = new Vector<CMServer>();
-/*
-		CMUser tuser = new CMUser();
-		tuser.setName("mlim");
-		m_loginUsers.addMember(tuser);
-*/		
 	}
-	
+
+	// getInstance()
+	public static synchronized CMInteractionInfo getInstance() {
+		if(instance == null) {
+			instance = new CMInteractionInfo();
+		}
+		return instance;
+	}
+
 	// get methods
 	public synchronized CMMember getLoginUsers()
 	{
@@ -162,28 +167,7 @@ public class CMInteractionInfo {
 		
 		return tSession;
 	}
-	
-	public synchronized CMSession findSessionWithUserName(String strUserName)
-	{
-		CMSession tSession = null;
-		boolean bFound = false;
-		Iterator<CMSession> iter = m_sessionList.iterator();
-		
-		while(iter.hasNext() && !bFound)
-		{
-			tSession = iter.next();
-			if(tSession.getSessionUsers().isMember(strUserName))
-			{
-				bFound = true;
-			}
-		}
-		
-		if(!bFound)
-			tSession = null;
-		
-		return tSession;
-	}
-	
+
 	//////////////////////////////////////////////////////////
 	// membership management of additional server info
 

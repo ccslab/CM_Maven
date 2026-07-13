@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import org.apache.commons.math3.distribution.*;
 
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
@@ -463,7 +464,7 @@ public class CMSNSUserAccessSimulator {
 	public boolean writeRecentAccHistoryToDB(CMInfo cmInfo)
 	{
 		boolean bRet = true;
-		int nPrefInterval = cmInfo.getConfigurationInfo().getAttachAccessInterval();
+		int nPrefInterval = CMConfigurationInfo.getInstance().getAttachAccessInterval();
 		Calendar startDate = null;
 		int nIndex = -1;
 		ArrayList<CMSNSAttachAccessHistory> historyList = null;
@@ -501,14 +502,14 @@ public class CMSNSUserAccessSimulator {
 				+dateFormat.format(historyList.get(nIndex).getDate().getTime()));
 		
 		// truncate the user access history table of CMDB
-		CMDBManager.queryTruncateAccessHistoryTable(cmInfo);
+		CMDBManager.queryTruncateAccessHistoryTable();
 		// write access histories to CMDB
 		System.out.println("start to write access history to CMDB");
 		for(int i = nIndex; i < historyList.size() && nRet == 1; i++)
 		{
 			CMSNSAttachAccessHistory history = historyList.get(i);
 			nRet = CMDBManager.queryInsertAccessHistory(history.getUserName(), history.getDate(), 
-					history.getWriterName(), history.getAccessCount(), cmInfo);
+					history.getWriterName(), history.getAccessCount());
 			
 			System.out.println("date("+dateFormat.format(history.getDate().getTime())
 					+"), user("+history.getUserName()+"), writer("+history.getWriterName()+"), access count("

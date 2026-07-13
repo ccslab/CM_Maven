@@ -12,16 +12,15 @@ import kr.ac.konkuk.ccslab.cm.info.CMDBInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistory;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
 
 public class CMDBManager {
 	
 	// initialize DB url
-	public static void init(CMInfo cmInfo)
+	public static void init()
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		
 		// this will load the MySQL driver, each DB has its own driver
 		try {
@@ -39,12 +38,12 @@ public class CMDBManager {
 	}
 	
 	// connect DB
-	public static boolean connectDB(CMInfo cmInfo)
+	public static boolean connectDB()
 	{
 		Connection connect = null;
 		Statement st = null;
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String url = dbInfo.getDBURL();
 		String user = confInfo.getDBUser();
 		String pass = confInfo.getDBPass();
@@ -76,9 +75,9 @@ public class CMDBManager {
 	}
 	
 	// close DB
-	public static void closeDB(CMInfo cmInfo)
+	public static void closeDB()
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		Connection connect = dbInfo.getConnection();
 		Statement st = dbInfo.getStatement();
 		
@@ -116,12 +115,12 @@ public class CMDBManager {
 	
 	// send SELECT query
 	// The caller of this method should close the ResultSet object after it completes to use!
-	public static ResultSet sendSelectQuery(String strQuery, CMInfo cmInfo)
+	public static ResultSet sendSelectQuery(String strQuery)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		ResultSet rs = null;
 		
-		if(!connectDB(cmInfo))
+		if(!connectDB())
 			return null;
 		
 		try {
@@ -139,17 +138,17 @@ public class CMDBManager {
 	
 	// send data manipulation query (INSERT, UPDATE, DELETE, etc..)
 	// and close the DB
-	public static int sendUpdateQuery(String strQuery, CMInfo cmInfo)
+	public static int sendUpdateQuery(String strQuery)
 	{
-		return sendUpdateQuery(strQuery, cmInfo, true);
+		return sendUpdateQuery(strQuery, true);
 	}
 	
-	public static int sendUpdateQuery(String strQuery, CMInfo cmInfo, boolean bCloseDB)
+	public static int sendUpdateQuery(String strQuery, boolean bCloseDB)
 	{
-		CMDBInfo dbInfo = cmInfo.getDBInfo();
+		CMDBInfo dbInfo = CMDBInfo.getInstance();
 		int ret = -1;
 		
-		if(!connectDB(cmInfo))
+		if(!connectDB())
 			return -1;
 		
 		try {
@@ -159,7 +158,7 @@ public class CMDBManager {
 		}
 		
 		if(bCloseDB) {
-			closeDB(cmInfo);			
+			closeDB();
 		}
 		
 		return ret;
@@ -168,11 +167,11 @@ public class CMDBManager {
 	//////////////////////////////////////////////////////// user_table management
 	//	row: seqNum, userName, password, creationTime
 
-	public static int queryInsertUser(String name, String password, CMInfo cmInfo)
+	public static int queryInsertUser(String name, String password)
 	{
 		String strQuery = "insert into user_table (userName, password, creationTime) values ('"
 							+name+"', PASSWORD('"+password+"'), NOW());";
-		int ret = sendUpdateQuery(strQuery, cmInfo);
+		int ret = sendUpdateQuery(strQuery);
 		
 		if(ret == -1)
 		{
@@ -187,19 +186,19 @@ public class CMDBManager {
 	}
 	
 	// authenticate user with a user name and password
-	public static boolean authenticateUser(String strUserName, String strPassword, CMInfo cmInfo)
+	public static boolean authenticateUser(String strUserName, String strPassword)
 	{
 		boolean bValidUser = false;
 		String strQuery = "select * from user_table where userName='"+strUserName
 				+"' and password=PASSWORD('"+strPassword+"');";
-		ResultSet rs = sendSelectQuery(strQuery, cmInfo);
+		ResultSet rs = sendSelectQuery(strQuery);
 		try {
 			if(rs != null && rs.next())
 				bValidUser = true;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 		
@@ -209,7 +208,7 @@ public class CMDBManager {
 	// not yet called
 	// Send a query to retrieve 'num' user rows from 'index' and store the result
 	// If 'index'== 0 and 'num' == -1, all the rows are retrieved
-	public static ResultSet queryGetUsers(int index, int num, CMInfo cmInfo)
+	public static ResultSet queryGetUsers(int index, int num)
 	{
 		String strQuery = null;
 		ResultSet rs = null;
@@ -218,7 +217,7 @@ public class CMDBManager {
 		else
 			strQuery = "select * from user_table limit "+index+", "+num+";";
 
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMDBManager.queryGetUsers(), end.");
@@ -230,7 +229,7 @@ public class CMDBManager {
 	// Currently only field which can be updated is password.
 	// Password must be an input with PASSWORD() macro.
 	// All the updated fields are String type because they are given as a query string
-	public static int queryUpdateUser(String name, String fieldName, String value, CMInfo cmInfo)
+	public static int queryUpdateUser(String name, String fieldName, String value)
 	{
 		String strQuery = null;
 		if( fieldName.equals("password") )
@@ -242,7 +241,7 @@ public class CMDBManager {
 		{
 			strQuery = "update user_table set "+fieldName+"='"+value+"' where userName='"+name+"';";
 		}
-		int ret = sendUpdateQuery(strQuery, cmInfo);
+		int ret = sendUpdateQuery(strQuery);
 		
 		if(ret == -1)
 		{
@@ -256,11 +255,11 @@ public class CMDBManager {
 		return ret;
 	}
 
-	public static int queryDeleteUser(String name, CMInfo cmInfo)
+	public static int queryDeleteUser(String name)
 	{
 		ResultSet rs = null;
 		String strQuery = "select seqNum from user_table where userName='"+name+"';";
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 		int nSeqNum = -1;
 		try {
 			if(rs != null && rs.next())
@@ -276,12 +275,12 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 		
 		strQuery = "delete from user_table where seqNum="+nSeqNum+";";
-		int ret = sendUpdateQuery(strQuery, cmInfo);
+		int ret = sendUpdateQuery(strQuery);
 		
 		if(ret == -1)
 		{
@@ -296,9 +295,9 @@ public class CMDBManager {
 	}
 
 	// not yet called
-	public static void queryTruncateUserTable(CMInfo cmInfo)
+	public static void queryTruncateUserTable()
 	{
-		sendUpdateQuery("truncate table user_table;", cmInfo);
+		sendUpdateQuery("truncate table user_table;");
 		
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMDBManager.queryTruncateUserTable(), end.");
@@ -309,7 +308,7 @@ public class CMDBManager {
 	//row: seqNum, creationTime, userName, textMessage, numAttachedFiles, replyOf, levelOfDisclosure
 
 	public static int queryInsertSNSContent(String userName, String text, int nNumAttachedFiles,
-											int nReplyOf, int nLevelOfDisclosure, CMInfo cmInfo)
+											int nReplyOf, int nLevelOfDisclosure)
 	{
 		int ret = -1;
 		String strQuery = "insert into sns_content_table (creationTime, userName, textMessage, "
@@ -317,7 +316,7 @@ public class CMDBManager {
 				+text+"', "+nNumAttachedFiles+", "+nReplyOf+", "+nLevelOfDisclosure+");";
 		// does not close DB after insertion because last_insert_id() need to be called 
 		// before the close !!
-		ret = sendUpdateQuery(strQuery, cmInfo, false);
+		ret = sendUpdateQuery(strQuery, false);
 		if(ret == -1)
 		{
 			System.out.println("CMDBManager.queryInsertSNSContent(), error for user("+userName+").");
@@ -337,7 +336,7 @@ public class CMDBManager {
 	// send a query to retrieve 'num' contents from 'index' in decsending order of seqNum, 
 	// and store the result.
 	// Regardless of a writer and the level of disclosure of content
-	public static ResultSet queryGetSNSContent(int index, int num, CMInfo cmInfo)
+	public static ResultSet queryGetSNSContent(int index, int num)
 	{
 		String strQuery = null;
 		ResultSet rs = null;
@@ -352,7 +351,7 @@ public class CMDBManager {
 						+num+";";
 		}
 		
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -366,7 +365,7 @@ public class CMDBManager {
 	// strWriter: a name of a content writer
 	// index: offset (starting with 0) in the list of found content set (it must be equal to or greater than 0)
 	// num: the number of content to be retrieved
-	public static CMSNSContentList queryGetSNSContent(String strRequester, String strWriter, int index, int num, CMInfo cmInfo)
+	public static CMSNSContentList queryGetSNSContent(String strRequester, String strWriter, int index, int num)
 	{
 		String strQuery = null;
 		ResultSet rs = null;
@@ -438,7 +437,7 @@ public class CMDBManager {
 					+ "order by seqNum desc limit "+ index + ", " + num + ";";
 		}
 
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 		if(rs != null)
 			contentList = new CMSNSContentList();
 		
@@ -459,7 +458,7 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 		
@@ -476,12 +475,12 @@ public class CMDBManager {
 	// not yet called
 	// Fields that are updatable are textMessage and attachedFilePath.
 	// All the updated fields are char* type because they are given as a query string
-	public static int queryUpdateSNSContent(int seqNum, String fieldName, String value, CMInfo cmInfo)
+	public static int queryUpdateSNSContent(int seqNum, String fieldName, String value)
 	{
 		int ret = -1;
 		String strQuery = "update sns_content_table set "+fieldName+"='"+value+"' where seqNum="
 							+seqNum+";";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 		if( ret == -1 )
 		{
 			System.out.println("CMDBManager.queryUpdateSNSContent(), error for seqNum("+seqNum+").");
@@ -496,11 +495,11 @@ public class CMDBManager {
 	}
 
 	//not yet called
-	public static int queryDeleteSNSContent(int seqNum, CMInfo cmInfo)
+	public static int queryDeleteSNSContent(int seqNum)
 	{
 		int ret = -1;
 		String strQuery = "delete from sns_content_table where seqNum="+seqNum+";";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 		if(ret == -1)
 		{
 			System.out.println("CMDBManager.queryDeleteSNSContent(), error for seqNum("+seqNum+").");
@@ -549,9 +548,9 @@ public class CMDBManager {
 	}
 
 	// not yet called
-	public static void queryTruncateSNSContentTable(CMInfo cmInfo)
+	public static void queryTruncateSNSContentTable()
 	{
-		sendUpdateQuery("truncate table sns_content_table;", cmInfo);
+		sendUpdateQuery("truncate table sns_content_table;");
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -563,12 +562,12 @@ public class CMDBManager {
 	/////////////////////////////////////////////////////////////// attached_file_table management
 	// row: seqNum, contentID, filePath, fileName
 	
-	public static int queryInsertSNSAttachedFile(int nContentID, String strFilePath, String strFileName, CMInfo cmInfo)
+	public static int queryInsertSNSAttachedFile(int nContentID, String strFilePath, String strFileName)
 	{
 		int ret = -1;
 		String strQuery = "insert into attached_file_table (contentID, filePath, fileName) "
 				+ "values ("+nContentID+", '"+strFilePath+"', '"+strFileName+"');";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 		if(ret == -1)
 		{
 			System.out.println("CMDBManager.queryInsertSNSAttachedFile(), error for content ("+nContentID+").");
@@ -585,14 +584,14 @@ public class CMDBManager {
 	}
 
 	// get the list of attached files of a specific content
-	public static ArrayList<String> queryGetSNSAttachedFile(int nContentID, CMInfo cmInfo)
+	public static ArrayList<String> queryGetSNSAttachedFile(int nContentID)
 	{
 		ArrayList<String> attachList = null;
 		String strQuery = null;
 		ResultSet rs = null;
 		strQuery = "select * from attached_file_table where contentID="+nContentID+";";
 
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 		if(rs != null)
 			attachList = new ArrayList<String>();
 		
@@ -604,7 +603,7 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 		
@@ -617,11 +616,11 @@ public class CMDBManager {
 	// not yet called
 	// Columns that can be updated are contentID, filePath and fileName.
 	// All the updated fields are String type because they are given as a query string
-	public static int queryUpdateSNSAttachedFile(int seqNum, String fieldName, String value, CMInfo cmInfo)
+	public static int queryUpdateSNSAttachedFile(int seqNum, String fieldName, String value)
 	{
 		int ret = -1;
 		String strQuery = "update attached_file_table set "+fieldName+"='"+value+"' where seqNum="+seqNum+";";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 		if( ret == -1 )
 		{
 			System.out.println("CMDBManager.queryUpdateSNSAttachedFile(), error for seqNum("+seqNum+").");
@@ -637,11 +636,11 @@ public class CMDBManager {
 	}
 
 	// not yet called
-	public static int queryDeleteSNSAttachedFile(int seqNum, CMInfo cmInfo)
+	public static int queryDeleteSNSAttachedFile(int seqNum)
 	{
 		int ret = -1;
 		String strQuery = "delete from attached_file_table where seqNum="+seqNum+";";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 		if(ret == -1)
 		{
 			System.out.println("CMDBManager.queryDeleteSNSAttachedFile(), error for seqNum("+seqNum+").");
@@ -684,9 +683,9 @@ public class CMDBManager {
 	}
 
 	// not yet called
-	public static void queryTruncateSNSAttachedFileTable(CMInfo cmInfo)
+	public static void queryTruncateSNSAttachedFileTable()
 	{
-		sendUpdateQuery("truncate table attached_file_table;", cmInfo);
+		sendUpdateQuery("truncate table attached_file_table;");
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -698,11 +697,11 @@ public class CMDBManager {
 	////////////////////////////////////////////////////////////////////////////
 	
 	// not yet called
-	public static long sendRowNumQuery(String table, CMInfo cmInfo)
+	public static long sendRowNumQuery(String table)
 	{
 		long num = -1;
 		String strQuery = "select count(*) from "+table;
-		ResultSet rs = sendSelectQuery(strQuery, cmInfo);
+		ResultSet rs = sendSelectQuery(strQuery);
 
 		try {
 			if(rs.next())
@@ -717,7 +716,7 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 
@@ -732,11 +731,11 @@ public class CMDBManager {
 	//////////////////////////////////////////////////////////friend_table management
 	//row: userName, friendName
 
-	public static int queryInsertFriend(String strUserName, String strFriendName, CMInfo cmInfo)
+	public static int queryInsertFriend(String strUserName, String strFriendName)
 	{
 		String strQuery = "insert into friend_table (userName, friendName) values ('"
 				+strUserName+"', '"+strFriendName+"');";
-		int ret = sendUpdateQuery(strQuery, cmInfo);
+		int ret = sendUpdateQuery(strQuery);
 
 		if(ret == -1)
 		{
@@ -750,12 +749,12 @@ public class CMDBManager {
 		return ret;
 	}
 	
-	public static int queryDeleteFriend(String strUserName, String strFriendName, CMInfo cmInfo)
+	public static int queryDeleteFriend(String strUserName, String strFriendName)
 	{
 		int ret = -1;
 		String strQuery = "delete from friend_table where userName='"+strUserName+"' and "
 				+"friendName='"+strFriendName+"';";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 
 		if(ret == -1)
 		{
@@ -770,13 +769,13 @@ public class CMDBManager {
 	}
 	
 	// get the list of users whom 'strUserName' added as friends
-	public static ArrayList<String> queryGetFriendsList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> queryGetFriendsList(String strUserName)
 	{
 		ResultSet rs = null;
 		ArrayList<String> myFriendList = null;
 		String strQuery = "select * from friend_table where userName='"+strUserName+"';";
 
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 		if(rs != null)
 			myFriendList = new ArrayList<String>();
 		
@@ -788,7 +787,7 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 
@@ -798,13 +797,13 @@ public class CMDBManager {
 		return myFriendList;
 	}
 	// get the list of users who added 'strUserName' as a friend
-	public static ArrayList<String> queryGetRequestersList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> queryGetRequestersList(String strUserName)
 	{
 		ResultSet rs = null;
 		ArrayList<String> candidateList = null;
 		String strQuery = "select * from friend_table where friendName='"+strUserName+"';";
 		
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 		if(rs != null)
 			candidateList = new ArrayList<String>();
 		
@@ -815,7 +814,7 @@ public class CMDBManager {
 		} catch(SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 		
@@ -829,14 +828,14 @@ public class CMDBManager {
 	//	row: userName, date, writerName, accessCount
 	
 	public static int queryInsertAccessHistory(String strUserName, Calendar date, String strWriterName, 
-			int nAccessCount, CMInfo cmInfo)
+			int nAccessCount)
 	{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String strDate = dateFormat.format(date.getTime());
 		
 		String strQuery = "insert into sns_attach_access_history_table (userName, date, writerName, accessCount) "
 				+ "values ('"+strUserName+"', '"+strDate+"', '"+strWriterName+"', "+nAccessCount+");";
-		int ret = sendUpdateQuery(strQuery, cmInfo);
+		int ret = sendUpdateQuery(strQuery);
 
 		if(ret == -1)
 		{
@@ -852,8 +851,7 @@ public class CMDBManager {
 	}
 	
 	// not yet called
-	public static int queryDeleteAccessHistory(String strUserName, Calendar date, String strWriterName, 
-			CMInfo cmInfo)
+	public static int queryDeleteAccessHistory(String strUserName, Calendar date, String strWriterName)
 	{
 		int ret = -1;
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -861,7 +859,7 @@ public class CMDBManager {
 		
 		String strQuery = "delete from sns_attach_access_history_table where userName='"+strUserName+"' and "
 				+"date='"+strDate+"' and writerName='"+strWriterName+"';";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 
 		if(ret == -1)
 		{
@@ -877,7 +875,7 @@ public class CMDBManager {
 	
 	// To update an accessCount which is an only updatable field.
 	public static int queryUpdateAccessCount(String strUserName, Calendar date, 
-			String strWriterName, int nAccessCount, CMInfo cmInfo)
+			String strWriterName, int nAccessCount)
 	{
 		int ret = -1;
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -885,7 +883,7 @@ public class CMDBManager {
 
 		String strQuery = "update sns_attach_access_history_table set accessCount="+nAccessCount+" where userName='"
 				+strUserName+"' and date='"+strDate+"' and writerName='"+strWriterName+"';";
-		ret = sendUpdateQuery(strQuery, cmInfo);
+		ret = sendUpdateQuery(strQuery);
 		if( ret == -1 )
 		{
 			System.err.println("CMDBManager.queryUpdateAccessCount(), error for userName("+strUserName
@@ -903,7 +901,7 @@ public class CMDBManager {
 
 	// get the list of access history of a user in the range of two dates
 	public static CMSNSAttachAccessHistoryList queryGetAccessHistory(String strUserName, Calendar startDate, Calendar endDate, 
-			String strWriterName, CMInfo cmInfo)
+			String strWriterName)
 	{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String strStartDate = dateFormat.format(startDate.getTime());
@@ -928,7 +926,7 @@ public class CMDBManager {
 		if(CMInfo._CM_DEBUG)
 			System.out.println("CMDBManager.queryGetAccessHistory(), start.");
 
-		rs = sendSelectQuery(strQuery, cmInfo);
+		rs = sendSelectQuery(strQuery);
 		
 		CMSNSAttachAccessHistoryList historyList = null;
 		if(rs != null)
@@ -960,7 +958,7 @@ public class CMDBManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			CMDBManager.closeDB(cmInfo);
+			CMDBManager.closeDB();
 			CMDBManager.closeRS(rs);
 		}
 
@@ -970,9 +968,9 @@ public class CMDBManager {
 		return historyList;
 	}
 
-	public static void queryTruncateAccessHistoryTable(CMInfo cmInfo)
+	public static void queryTruncateAccessHistoryTable()
 	{
-		sendUpdateQuery("truncate table sns_attach_access_history_table;", cmInfo);
+		sendUpdateQuery("truncate table sns_attach_access_history_table;");
 		
 		if(CMInfo._CM_DEBUG)
 		{

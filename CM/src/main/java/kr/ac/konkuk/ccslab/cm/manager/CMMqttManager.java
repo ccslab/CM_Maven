@@ -3,7 +3,6 @@ package kr.ac.konkuk.ccslab.cm.manager;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.Vector;
-import java.util.PrimitiveIterator.OfDouble;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
@@ -20,6 +19,7 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 
 /**
@@ -35,9 +35,9 @@ import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
  */
 public class CMMqttManager extends CMServiceManager {
 
-	public CMMqttManager(CMInfo cmInfo)
+	public CMMqttManager()
 	{
-		super(cmInfo);
+		super();
 		m_nType = CMInfo.CM_MQTT_MANAGER;
 	}
 	
@@ -76,15 +76,15 @@ public class CMMqttManager extends CMServiceManager {
 			byte willQoS, boolean bWillFlag, boolean bCleanSession)
 	{
 		// client -> server
-		// check if the client has logged in to the default server.
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.connect(), the system type is SERVER!");
 			return false;
 		}
-		
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+
+		// check if the client has logged in to the default server.
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -92,7 +92,15 @@ public class CMMqttManager extends CMServiceManager {
 					+ "server!");
 			return false;
 		}
-		
+
+		// [Safety Guard] Check Multi-login Scheme
+		// 0: Single Login (Allowed), 1: Multi-login (Blocked for MQTT)
+		if (confInfo.isMultiLoginScheme()) {
+			System.err.println("CMMqttManager.connect(), MQTT service is disabled in Multi-login mode (scheme "
+					+ confInfo.isMultiLoginScheme() + ").");
+			return false;
+		}
+
 		// make CONNECT event
 		CMMqttEventCONNECT conEvent = new CMMqttEventCONNECT();
 		// set CM event header
@@ -113,7 +121,7 @@ public class CMMqttManager extends CMServiceManager {
 		conEvent.setPassword(myself.getPasswd());
 		
 		// process the clean-session flag
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession mqttSession = mqttInfo.getMqttSession();
 		if(mqttSession == null)
 		{
@@ -133,10 +141,11 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// send CONNECT event
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		boolean bRet = false;
-		bRet = CMEventManager.unicastEvent(conEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(conEvent, strDefServer);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -210,7 +219,7 @@ public class CMMqttManager extends CMServiceManager {
 	{
 		// client -> server or server -> client
 		boolean bRet = false;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
 		if(strSysType.equals("SERVER"))
 			bRet = publishFromServer(strTopic, strMsg, qos, bDupFlag, bRetainFlag);
@@ -226,7 +235,7 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		
 		// check whether the client is a log-in user.
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		if(myself.getState() == CMInfo.CM_INIT || myself.getState() == CMInfo.CM_CONNECT)
 		{
 			System.err.println("CMMqttManager.publishFromClient(): "
@@ -236,7 +245,7 @@ public class CMMqttManager extends CMServiceManager {
 
 		// to get session information
 		CMMqttSession session = null;
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		session = mqttInfo.getMqttSession();
 		
 		if(session == null)
@@ -269,9 +278,10 @@ public class CMMqttManager extends CMServiceManager {
 		pubEvent.setAppMessage(strMsg);
 		
 		// send PUBLISH event
-		String strReceiver = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strReceiver = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(pubEvent,strReceiver);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.publishFromClient(), sent "
@@ -311,7 +321,7 @@ public class CMMqttManager extends CMServiceManager {
 		// server -> client
 		
 		// find subscribers and send the PUBLISH event
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable =	mqttInfo.getMqttSessionHashtable();
 		Set<String> keys = sessionHashtable.keySet();
 		for(String key : keys)
@@ -375,7 +385,7 @@ public class CMMqttManager extends CMServiceManager {
 		// make PUBLISH event
 		CMMqttEventPUBLISH pubEvent = new CMMqttEventPUBLISH();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		pubEvent.setSender(myself.getName());
 		// set fixed header
 		pubEvent.setDupFlag(bDupFlag);
@@ -409,8 +419,9 @@ public class CMMqttManager extends CMServiceManager {
 				return false;				
 			}
 		}
-			
-		bRet = CMEventManager.unicastEvent(pubEvent, strClient, m_cmInfo);
+
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(pubEvent, strClient);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.publishFromServerToOneClient(), sent ("
@@ -471,7 +482,8 @@ public class CMMqttManager extends CMServiceManager {
 		boolean bRet = false;
 		for(CMMqttEvent pendingEvent : session.getPendingTransPublishList().getList())
 		{
-			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver, m_cmInfo);
+			CMInfo cmInfo = CMInfo.getInstance();
+			bRet = CMEventManager.unicastEvent(pendingEvent, strReceiver);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.sendAndClearPendingTransEvents(), error: receiver ("
@@ -507,8 +519,9 @@ public class CMMqttManager extends CMServiceManager {
 		{
 			// set DUP flag
 			unackEvent.setDupFlag(true);
-			
-			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver, m_cmInfo);
+
+			CMInfo cmInfo = CMInfo.getInstance();
+			bRet = CMEventManager.unicastEvent(unackEvent, strReceiver);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.resendSentUnAckPublish(), error: "
@@ -546,7 +559,7 @@ public class CMMqttManager extends CMServiceManager {
 			int nPacketID = unackEvent.getPacketID();
 			// make a corresponding PUBREL event
 			CMMqttEventPUBREL relEvent =  new CMMqttEventPUBREL();
-			CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+			CMUser myself = CMInteractionInfo.getInstance().getMyself();
 			// set sender (CM event header)
 			relEvent.setSender(myself.getName());
 			// set fixed header in the CMMqttEventPUBREL constructor
@@ -554,7 +567,8 @@ public class CMMqttManager extends CMServiceManager {
 			relEvent.setPacketID(nPacketID);
 
 			// send the PUBREL event
-			bRet = CMEventManager.unicastEvent(relEvent, strReceiver, m_cmInfo);
+			CMInfo cmInfo = CMInfo.getInstance();
+			bRet = CMEventManager.unicastEvent(relEvent, strReceiver);
 			if(!bRet)
 			{
 				System.err.println("CMMqttManager.resendSentUnAckPubrel(), error: "
@@ -629,7 +643,7 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean subscribe(CMList<CMMqttTopicQoS> topicQoSList)
 	{
 		// to check the CM system type
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.subscribe(), the system type is SERVER!");
@@ -637,7 +651,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// to check if the user completes to log in to the default server, or not
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -655,7 +669,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// temporarily store the requested topic/qos list at the client session
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -676,9 +690,10 @@ public class CMMqttManager extends CMServiceManager {
 		subEvent.setTopicQoSList(topicQoSList);
 				
 		boolean bRet = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(subEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(subEvent, strDefServer);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttManager.subscribe(), sent "+subEvent.toString());
@@ -716,7 +731,7 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean unsubscribe(CMList<String> topicList)
 	{
 		// to check the CM system type
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.unsubscribe(), the system type is SERVER!");
@@ -724,7 +739,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// to check if the user completes to log in to the default server, or not
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -741,7 +756,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// remove the local topic filters matched with the requested topics
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -774,9 +789,10 @@ public class CMMqttManager extends CMServiceManager {
 		unsubEvent.setTopicList(topicList);
 		
 		boolean bRet = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(unsubEvent, strDefServer);
 
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -810,7 +826,7 @@ public class CMMqttManager extends CMServiceManager {
 	public boolean disconnect()
 	{
 		// to check the CM system type
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.disconnect(), the system type is SERVER!");
@@ -818,7 +834,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		// to check if the user completes to log in to the default server, or not
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		int nState = myself.getState();
 		if(nState == CMInfo.CM_INIT || nState == CMInfo.CM_CONNECT)
 		{
@@ -828,7 +844,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 
 		// get the client session
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -847,9 +863,10 @@ public class CMMqttManager extends CMServiceManager {
 		// set fixed header in DISCONNECT constructor
 		
 		boolean bRet = false;
-		String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(disconEvent, strDefServer);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -873,14 +890,14 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getMySessionInfo()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getMySessionInfo(), the system type is SERVER!");
 			return null;
 		}
 		
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -901,14 +918,14 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getSessionInfo(String strUserName)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getSessionInfo(), the system type is not SERVER!");
 			return null;
 		}
 		
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUserName);
 		if(session == null)
 		{
@@ -930,7 +947,7 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getAllSessionInfo()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getAllSessionInfo(), the system type is not SERVER!");
@@ -938,7 +955,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		StringBuffer strBuf = new StringBuffer();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		strBuf.append("# All MQTT session list: "+sessionHashtable.size()+"\n");
 		for(String strUser : sessionHashtable.keySet())
@@ -958,7 +975,7 @@ public class CMMqttManager extends CMServiceManager {
 	 */
 	public String getAllRetainInfo()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(!confInfo.getSystemType().equals("SERVER"))
 		{
 			System.err.println("CMMqttManager.getAllRetainInfo(), the system type is not SERVER!");
@@ -966,7 +983,7 @@ public class CMMqttManager extends CMServiceManager {
 		}
 		
 		StringBuffer strBuf = new StringBuffer();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = mqttInfo.getMqttRetainHashtable();
 		strBuf.append("# All MQTT retained events: "+retainHashtable.size()+"\n");
 		for(String strTopic : retainHashtable.keySet())
@@ -981,13 +998,14 @@ public class CMMqttManager extends CMServiceManager {
 	// send MQTT will event if the disconnected client has will information
 	public boolean sendMqttWill(String strUser)
 	{
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUser);
 		if(session == null) return false;
 		CMMqttWill mqttWill = session.getMqttWill();
 		if(mqttWill == null) return false;
-		
-		CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
+
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
 		boolean bRet = false;
 		bRet = mqttManager.publish(mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
 				mqttWill.getWillQoS());

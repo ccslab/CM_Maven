@@ -1,7 +1,6 @@
 package kr.ac.konkuk.ccslab.cm.event.handler;
 
 import java.util.Hashtable;
-import java.util.Set;
 import java.util.Vector;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
@@ -27,10 +26,10 @@ import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBACK;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventUNSUBSCRIBE;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMDBManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 
 /**
@@ -41,9 +40,9 @@ import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
  */
 public class CMMqttEventHandler extends CMEventHandler {
 
-	public CMMqttEventHandler(CMInfo cmInfo)
+	public CMMqttEventHandler()
 	{
-		super(cmInfo);
+		super();
 		m_nType = CMInfo.CM_MQTT_EVENT_HANDLER;
 	}
 	
@@ -110,9 +109,9 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// initialization
 		CMMqttEventCONNECT conEvent = (CMMqttEventCONNECT)event;
 		String strClient = conEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttEventCONNACK ackEvent = new CMMqttEventCONNACK();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		boolean bConnAckFlag = false;
 		byte returnCode = 0;	// connection success
 		boolean bRet = false;
@@ -132,7 +131,8 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			ackEvent.setSender(myself.getName());
 			ackEvent.setReturnCode((byte)6);
-			bRet = CMEventManager.unicastEvent(ackEvent, strClient, m_cmInfo);
+			CMInfo cmInfo = CMInfo.getInstance();
+			bRet = CMEventManager.unicastEvent(ackEvent, strClient);
 			return bRet;
 		}
 		
@@ -178,7 +178,8 @@ public class CMMqttEventHandler extends CMEventHandler {
 		ackEvent.setSender(myself.getName());
 		ackEvent.setConnAckFlag(bConnAckFlag);
 		ackEvent.setReturnCode(returnCode);
-		bRet = CMEventManager.unicastEvent(ackEvent, strClient, m_cmInfo);
+		CMInfo cmInfo = CMInfo.getInstance();
+		bRet = CMEventManager.unicastEvent(ackEvent, strClient);
 		
 		if(bRet && CMInfo._CM_DEBUG)
 		{
@@ -193,7 +194,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 
 		// to get CMMqttManager
-		CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
+		CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
 		if(mqttManager == null)
 		{
 			System.err.println("CMMqttEventHandler.processCONNECT(), CMMqttManager is null!");
@@ -332,8 +333,8 @@ public class CMMqttEventHandler extends CMEventHandler {
 			return 4;
 		}
 		// authenticate user name and password
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		if( confInfo.isLoginScheme() && !CMDBManager.authenticateUser(strUserName, strPassword, m_cmInfo) )
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		if( confInfo.isLoginScheme() && !CMDBManager.authenticateUser(strUserName, strPassword) )
 		{
 			System.err.println("CMMqttEventHandler.validateCONNECT(), user authentication failed! "
 					+"user("+strUserName+"), password("+strPassword+")");
@@ -355,7 +356,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// if the MQTT connect request is successful,
 		if(connackEvent.getReturnCode() == (byte)0)
 		{
-			CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+			CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 			CMMqttSession session = mqttInfo.getMqttSession();
 			if(session == null)
 			{
@@ -363,7 +364,8 @@ public class CMMqttEventHandler extends CMEventHandler {
 				return false;
 			}
 
-			CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
+			CMInfo cmInfo = CMInfo.getInstance();
+			CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
 			
 			// resent all sent-unack-pubrel events to the server
 			boolean bRet = mqttManager.resendSentUnAckPubrel(connackEvent.getSender(), 
@@ -432,12 +434,13 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		// if CM is server, it forwards the event to the subscribers
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getSystemType().equals("SERVER"))
 		{
 			if(!bDuplicate)
 			{
-				CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
+				CMInfo cmInfo = CMInfo.getInstance();
+				CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
 				// DUP flag = false, RETAIN flag = false
 				mqttManager.publish(pubEvent.getTopicName(), 
 						pubEvent.getAppMessage(), pubEvent.getQoS(), false, false);				
@@ -456,7 +459,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	private void processRetainEvent(CMMqttEventPUBLISH pubEvent)
 	{
 		// get retain-event hash table
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = 
 				mqttInfo.getMqttRetainHashtable();
 		CMMqttEventPUBLISH oldEvent = null;
@@ -483,7 +486,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		{
 			// change the PUBLISH event before retain it
 			// The server will send the retained event
-			pubEvent.setSender(m_cmInfo.getInteractionInfo().getMyself().getName());
+			pubEvent.setSender(CMInteractionInfo.getInstance().getMyself().getName());
 			// DUP flag is reset
 			pubEvent.setDupFlag(false);
 			// retain the PUBLISH event about the topic
@@ -511,9 +514,9 @@ public class CMMqttEventHandler extends CMEventHandler {
 	{
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		if(strSysType.equals("CLIENT"))
 		{
 			session = mqttInfo.getMqttSession();
@@ -544,9 +547,9 @@ public class CMMqttEventHandler extends CMEventHandler {
 	{
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		if(strSysType.equals("CLIENT"))
 		{
 			session = mqttInfo.getMqttSession();
@@ -581,7 +584,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// initialize PUBACK event
 		CMMqttEventPUBACK pubackEvent = new CMMqttEventPUBACK();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		pubackEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEVentPUBACK constructor
 		// set variable header
@@ -590,7 +593,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// send ack to the PUBLISH sender
 		boolean bRet = false;
 		String strPubSender = pubEvent.getSender();
-		bRet = CMEventManager.unicastEvent(pubackEvent, strPubSender, m_cmInfo);
+		bRet = CMEventManager.unicastEvent(pubackEvent, strPubSender);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.sendPUBACK(): Ok "+pubackEvent.toString());
@@ -609,7 +612,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// initialize PUBREC event
 		CMMqttEventPUBREC recEvent = new CMMqttEventPUBREC();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		recEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEventPUBREC constructor
 		// set variable header
@@ -618,7 +621,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// send to the PUBLISH sender
 		boolean bRet = false;
 		String strPubSender = pubEvent.getSender();
-		bRet = CMEventManager.unicastEvent(recEvent, strPubSender, m_cmInfo);
+		bRet = CMEventManager.unicastEvent(recEvent, strPubSender);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.sendPUBREC(): Ok "+recEvent.toString());
@@ -644,9 +647,9 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -700,9 +703,9 @@ public class CMMqttEventHandler extends CMEventHandler {
 
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -757,14 +760,14 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// make and send PUBREL event
 		CMMqttEventPUBREL relEvent =  new CMMqttEventPUBREL();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		// set sender (CM event header)
 		relEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEventPUBREL constructor
 		// set variable header
 		relEvent.setPacketID(nPacketID);
-		
-		bRet = CMEventManager.unicastEvent(relEvent, recEvent.getSender(), m_cmInfo);
+
+		bRet = CMEventManager.unicastEvent(relEvent, recEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBREC(), sent "
@@ -792,9 +795,9 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -835,14 +838,14 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to make and send PUBCOMP event
 		CMMqttEventPUBCOMP compEvent = new CMMqttEventPUBCOMP();
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		// set sender (in CM event header)
 		compEvent.setSender(myself.getName());
 		// set fixed header in the CMMqttEventPUBCOMP constructor
 		// set variable header
 		compEvent.setPacketID(nPacketID);
-		
-		bRet = CMEventManager.unicastEvent(compEvent, relEvent.getSender(), m_cmInfo);
+
+		bRet = CMEventManager.unicastEvent(compEvent, relEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPUBREL(), sent "
@@ -870,9 +873,9 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get session information
 		CMMqttSession session = null;
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strSysType = confInfo.getSystemType();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		
 		if(strSysType.equals("CLIENT"))
 		{
@@ -933,7 +936,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get client session information
 		String strClient = subEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		CMMqttSession session = sessionHashtable.get(strClient);
 		if(session == null)
@@ -946,7 +949,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// make SUBACK event
 		CMMqttEventSUBACK ackEvent = new CMMqttEventSUBACK();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		ackEvent.setSender(myself.getName());
 		// set fixed header in the SUBACK constructor
 		// set variable header
@@ -975,7 +978,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		// send SUBACK event
-		boolean bRet = CMEventManager.unicastEvent(ackEvent, subEvent.getSender(), m_cmInfo);
+		boolean bRet = CMEventManager.unicastEvent(ackEvent, subEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processSUBSCRIBE(), sent "
@@ -997,7 +1000,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 	private void sendRetainedEvents(String strClient, CMList<CMMqttTopicQoS> topicQoSList)
 	{
 		// get retain event list
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttEventPUBLISH> retainHashtable = mqttInfo.getMqttRetainHashtable();
 		// get client session
 		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strClient);
@@ -1008,7 +1011,8 @@ public class CMMqttEventHandler extends CMEventHandler {
 			return;
 		}
 		// get mqtt manager
-		CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
 		for(String strTopic : retainHashtable.keySet())
 		{
 			CMMqttEventPUBLISH retainEvent = retainHashtable.get(strTopic);
@@ -1033,7 +1037,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		// add approved subscription to the subscription list
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		CMMqttSession session = mqttInfo.getMqttSession();
 		if(session == null)
 		{
@@ -1089,7 +1093,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get client session information
 		String strClient = unsubEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		CMMqttSession session = sessionHashtable.get(strClient);
 		if(session == null)
@@ -1113,14 +1117,14 @@ public class CMMqttEventHandler extends CMEventHandler {
 		// make and send UNSUBACK event
 		CMMqttEventUNSUBACK unsubAckEvent = new CMMqttEventUNSUBACK();
 		// set sender (in CM event header)
-		CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+		CMUser myself = CMInteractionInfo.getInstance().getMyself();
 		unsubAckEvent.setSender(myself.getName());
 		// set fixed header in the UNSUBACK constructor
 		// set variable header
 		unsubAckEvent.setPacketID(unsubEvent.getPacketID());
 		
 		boolean bRet = false;
-		bRet = CMEventManager.unicastEvent(unsubAckEvent, strClient, m_cmInfo);
+		bRet = CMEventManager.unicastEvent(unsubAckEvent, strClient);
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processUNSUBSCRIBE(), sent "
@@ -1157,10 +1161,10 @@ public class CMMqttEventHandler extends CMEventHandler {
 		}
 		
 		CMMqttEventPINGRESP resPingEvent = new CMMqttEventPINGRESP();
-		String strMyName = m_cmInfo.getInteractionInfo().getMyself().getName();
+		String strMyName = CMInteractionInfo.getInstance().getMyself().getName();
 		resPingEvent.setSender(strMyName);
-		
-		boolean bRet = CMEventManager.unicastEvent(resPingEvent, reqPingEvent.getSender(), m_cmInfo);
+
+		boolean bRet = CMEventManager.unicastEvent(resPingEvent, reqPingEvent.getSender());
 		if(bRet && CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMMqttEventHandler.processPINGREQ(), sent PINGRESP to ("
@@ -1197,7 +1201,7 @@ public class CMMqttEventHandler extends CMEventHandler {
 		
 		// to get client session information
 		String strClient = disconEvent.getSender();
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
+		CMMqttInfo mqttInfo = CMMqttInfo.getInstance();
 		Hashtable<String, CMMqttSession> sessionHashtable = mqttInfo.getMqttSessionHashtable();
 		CMMqttSession session = sessionHashtable.get(strClient);
 		if(session == null)

@@ -4,26 +4,33 @@ import java.util.*;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMObject;
+import kr.ac.konkuk.ccslab.cm.entity.CMUserLoginKey;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 public class CMSNSAttachHashtable extends CMObject {
-	//private HashMap<String, CMSNSAttachList> m_attachMap;
-	private Hashtable<String, CMSNSAttachList> m_attachHashtable; // key is the requester name
+
+	// [Modification] Key: CMUserLoginKey (User Name + UUID), Value: CMSNSAttachList
+	private Hashtable<CMUserLoginKey, CMSNSAttachList> m_attachHashtable;
+	//private Hashtable<String, CMSNSAttachList> m_attachHashtable; // key is the requester name
 	
 	public CMSNSAttachHashtable()
 	{
-		//m_attachMap = new HashMap<String, CMSNSAttachList>();
-		m_attachHashtable = new Hashtable<String, CMSNSAttachList>();
+		//m_attachHashtable = new Hashtable<String, CMSNSAttachList>();
+		m_attachHashtable = new Hashtable<>();
 	}
 	
-	public CMSNSAttachList findSNSAttachList(String strUserName)
+	public CMSNSAttachList findSNSAttachList(String strUserName, UUID uuid)
 	{
-		//CMSNSAttachList attachList = m_attachMap.get(strUserName);
-		CMSNSAttachList attachList = m_attachHashtable.get(strUserName);
-		return attachList;
+		if(strUserName == null) {
+			System.err.println("CMSNSAttachHashtable.findSNSAttachList(), the user name is null!");
+			return null;
+		}
+
+		CMUserLoginKey key = new CMUserLoginKey(strUserName, uuid);
+		return m_attachHashtable.get(key);
 	}
 
-	public boolean addSNSAttachList(String strUserName, CMSNSAttachList attachList)
+	public boolean addSNSAttachList(String strUserName, UUID uuid, CMSNSAttachList attachList)
 	{
 		// check if parameters are null or not
 		if(strUserName == null)
@@ -36,44 +43,49 @@ public class CMSNSAttachHashtable extends CMObject {
 			System.err.println("CMSNSAttachHashtable.addSNSAttachList(), the attach list is null!");
 			return false;
 		}
-		
+
+		CMUserLoginKey key = new CMUserLoginKey(strUserName, uuid);
+
 		// check if the key already exists or not
-		//if(m_attachMap.containsKey(strUserName))
-		if(m_attachHashtable.containsKey(strUserName))
+		if(m_attachHashtable.containsKey(key))
 		{
-			System.err.println("CMSNSAttachHashtable.addSNSAttachList(), the key("+strUserName+") already exists!");
+			System.err.println("CMSNSAttachHashtable.addSNSAttachList(), the key("+key+") already exists!");
 			return false;
 		}
 		
-		//m_attachMap.put(strUserName, attachList);
-		m_attachHashtable.put(strUserName, attachList);
+		m_attachHashtable.put(key, attachList);
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSNSAttachHashtable.addSNSAttachList(), succeeded for user("+strUserName+").");
+			System.out.println("CMSNSAttachHashtable.addSNSAttachList(), succeeded for key("+key+").");
 		}
 		
 		return true;
 	}
 	
-	public boolean removeSNSAttachList(String strUserName)
+	public boolean removeSNSAttachList(String strUserName, UUID uuid)
 	{
-		//CMSNSAttachList attachList = null;
-		
-		//if(!m_attachMap.containsKey(strUserName))
-		if(!m_attachHashtable.containsKey(strUserName))
+		if(strUserName == null) {
+			System.err.println("CMSNSAttachHashtable.removeSNSAttachList(), the user name is null!");
+			return false;
+		}
+
+		CMUserLoginKey key = new CMUserLoginKey(strUserName, uuid);
+
+		// check if the key already exists or not
+		if(!m_attachHashtable.containsKey(key))
 		{
 			if(CMInfo._CM_DEBUG)
-				System.err.println("CMSNSAttachHashtable.removeSNSAttachList(), key("+strUserName+") not found!");
+				System.err.println("CMSNSAttachHashtable.removeSNSAttachList(), key("+key+") not found!");
 			return false;
 		}
 		
 		//m_attachMap.remove(strUserName);
-		m_attachHashtable.remove(strUserName);
+		m_attachHashtable.remove(key);
 		
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSNSAttachHashtable.removeSNSAttachList(), succeeded for key("+strUserName+").");
+			System.out.println("CMSNSAttachHashtable.removeSNSAttachList(), succeeded for key("+key+").");
 		}
 		
 		return true;

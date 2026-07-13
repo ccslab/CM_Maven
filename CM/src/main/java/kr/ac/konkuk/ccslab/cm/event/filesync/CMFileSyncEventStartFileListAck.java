@@ -11,13 +11,11 @@ import java.util.Objects;
  * @author CCSLab, Konkuk University
  */
 public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
-    private String userName;    // user name
     private int numTotalFiles;  // number of total files
     private int returnCode;     // return code
 
     public CMFileSyncEventStartFileListAck() {
         m_nID = CMFileSyncEvent.START_FILE_LIST_ACK;
-        userName = null;
         numTotalFiles = 0;
         returnCode = -1;
     }
@@ -27,12 +25,18 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getUserName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setUserName(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // userName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
         // numTotalFiles
         byteNum += Integer.BYTES;
         // returnCode
@@ -41,9 +45,7 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void marshallBody() {
-        // userName
-        putStringToByteBuffer(userName);
+    protected void marshallBodyCore() {
         // numTotalFiles
         m_bytes.putInt(numTotalFiles);
         // returnCode
@@ -51,9 +53,7 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // userName
-        userName = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // numTotalFiles
         numTotalFiles = msg.getInt();
         // returnCode
@@ -66,9 +66,12 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
                 "m_nType=" + m_nType +
                 ", m_nID=" + m_nID +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", numTotalFiles=" + numTotalFiles +
                 ", returnCode=" + returnCode +
                 '}';
@@ -91,25 +94,14 @@ public class CMFileSyncEventStartFileListAck extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventStartFileListAck that = (CMFileSyncEventStartFileListAck) o;
-        return numTotalFiles == that.numTotalFiles && returnCode == that.returnCode && userName.equals(that.userName);
+        return numTotalFiles == that.numTotalFiles && returnCode == that.returnCode && getInitiatorName().equals(that.getInitiatorName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, numTotalFiles, returnCode);
+        return Objects.hash(getInitiatorName(), numTotalFiles, returnCode);
     }
 
-    /**
-     * gets the user (client) name.
-     * @return user (client) name
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     /**
      * gets the total number of file entries to be synchronized.

@@ -4,8 +4,8 @@ import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -14,17 +14,22 @@ public class CMFileSyncEventLocalModeListAckTest {
     public void marshallUnmarshall() {
         System.out.println("===== CMFileSyncEventLocalModeListAckTest.marshallUnmarshall() called..");
         CMFileSyncEventLocalModeListAck listAckEvent = new CMFileSyncEventLocalModeListAck();
-        listAckEvent.setRequester("ccslab");
-        List<Path> pathList = List.of(Path.of("test1.txt"), Path.of("test2.txt"));
+        listAckEvent.setInitiatorName("ccslab");
+        listAckEvent.setInitiatorUuid(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        listAckEvent.setInitiatorDeviceUuid(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+        List<String> pathList = List.of("test1.txt", "test2.txt");
         listAckEvent.setRelativePathList(pathList);
         listAckEvent.setReturnCode(1);
-        System.out.println("onlineModeListEvent = " + listAckEvent);
+        System.out.println("localModeListAckEvent = " + listAckEvent);
 
         ByteBuffer buffer = CMEventManager.marshallEvent(listAckEvent);
         CMFileSyncEventLocalModeListAck unmarhsallEvent =
                 (CMFileSyncEventLocalModeListAck) CMEventManager.unmarshallEvent(buffer);
         assertNotNull(unmarhsallEvent);
         System.out.println("unmarhsallEvent = " + unmarhsallEvent);
+        assertEquals("ccslab", unmarhsallEvent.getInitiatorName());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), unmarhsallEvent.getInitiatorUuid());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000002"), unmarhsallEvent.getInitiatorDeviceUuid());
         assertEquals(listAckEvent, unmarhsallEvent);
     }
 

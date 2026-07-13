@@ -9,6 +9,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class CMConfigurationInfo {
+
+	private static CMConfigurationInfo instance;
+
 	private Path m_confFileHome;
 	
 	private int m_nMulticastPort;
@@ -21,6 +24,7 @@ public class CMConfigurationInfo {
 	private String m_strSystemType;
 	private String m_strCommArch;
 	private int m_bLoginScheme;
+	private int m_nMultiLoginScheme;
 	private int m_nMaxLoginFailure;
 	private int m_nKeepAliveTime;
 	private int m_bSessionScheme;
@@ -84,8 +88,11 @@ public class CMConfigurationInfo {
 	private long fileSizeThreshold;
 	// file modification ratio threshold (for HYBRID mode of file-sync update) (0~1)
 	private double fileModRatioThreshold;
+	// [NEW 10-3] per-user push 세션 lease timeout (seconds). 서버측 lease lazy 회수(§2.6.1)와
+	// 클라측 busy 재시도 fallback 타이머(§2.6) 양쪽이 이 값을 공유한다.
+	private long fileSyncPushLeaseTimeout;
 	
-	public CMConfigurationInfo()
+	private CMConfigurationInfo()
 	{
 		m_confFileHome = Paths.get(".");
 		m_strSystemType = "";
@@ -100,6 +107,7 @@ public class CMConfigurationInfo {
 		m_strMulticastAddress = "";
 		m_nSessionNumber = 0;
 		m_bLoginScheme = 0;
+		m_nMultiLoginScheme = 0;
 		m_nMaxLoginFailure = 0;
 		m_nKeepAliveTime = 0;
 		m_bSessionScheme = 0;
@@ -140,6 +148,15 @@ public class CMConfigurationInfo {
 		fileSyncUpdateMode = CMFileSyncUpdateMode.DELTA;
 		fileSizeThreshold = 0;
 		fileModRatioThreshold = 1;	// always DELTA
+		fileSyncPushLeaseTimeout = 300;	// [10-3] default 300s (conf 키 없거나 파싱 실패 시 하한)
+	}
+
+	// getInstance
+	public static synchronized CMConfigurationInfo getInstance() {
+		if(instance == null) {
+			instance = new CMConfigurationInfo();
+		}
+		return instance;
 	}
 
 	// set/get methods
@@ -266,7 +283,23 @@ public class CMConfigurationInfo {
 		
 		return bScheme;
 	}
-	
+
+	public synchronized void setMultiLoginScheme(int m_nMultiLoginScheme) {
+		this.m_nMultiLoginScheme = m_nMultiLoginScheme;
+	}
+
+	public synchronized int getMultiLoginScheme() {
+		return m_nMultiLoginScheme;
+	}
+
+	public synchronized boolean isMultiLoginScheme() {
+		boolean bScheme = false;
+		if(m_nMultiLoginScheme == 0)
+			bScheme = false;
+		else bScheme = true;
+		return bScheme;
+	}
+
 	public synchronized void setMaxLoginFailure(int nCount)
 	{
 		m_nMaxLoginFailure = nCount;
@@ -685,6 +718,15 @@ public class CMConfigurationInfo {
 
 	public void setFileSyncUpdateMode(CMFileSyncUpdateMode fileSyncUpdateMode) {
 		this.fileSyncUpdateMode = fileSyncUpdateMode;
+	}
+
+	// [NEW 10-3] per-user push 세션 lease timeout (seconds).
+	public long getFileSyncPushLeaseTimeout() {
+		return fileSyncPushLeaseTimeout;
+	}
+
+	public void setFileSyncPushLeaseTimeout(long fileSyncPushLeaseTimeout) {
+		this.fileSyncPushLeaseTimeout = fileSyncPushLeaseTimeout;
 	}
 
 	public long getFileSizeThreshold() {

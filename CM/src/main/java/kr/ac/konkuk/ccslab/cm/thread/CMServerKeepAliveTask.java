@@ -1,7 +1,9 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 
 import java.io.IOException;
+import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,26 +14,28 @@ import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
 import kr.ac.konkuk.ccslab.cm.event.mqttevent.CMMqttEventPINGREQ;
+import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
+import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 
 public class CMServerKeepAliveTask implements Runnable {
 
-	private CMInfo m_cmInfo;
 	private static final Logger LOG = Logger.getLogger(CMServerKeepAliveTask.class.getName());
 	
-	public CMServerKeepAliveTask(CMInfo cmInfo)
+	public CMServerKeepAliveTask()
 	{
-		m_cmInfo = cmInfo;
+
 	}
 	
 	@Override
 	public void run()
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getLogLevel() == 0)
 			LOG.setLevel(Level.SEVERE);
 
@@ -41,8 +45,16 @@ public class CMServerKeepAliveTask implements Runnable {
 		int i = 0;
 		
 		// for each login user
-		CMMember loginMembers = m_cmInfo.getInteractionInfo().getLoginUsers();
-		Vector<CMUser> loginUsersVector = loginMembers.getAllMembers();
+		CMMember loginMembers = CMInteractionInfo.getInstance().getLoginUsers();
+		// [Modified] CMMember now manages users with Hashtable<String, List<CMUser>>.
+		// To safely iterate and remove users (which modifies the underlying collection),
+		// we first copy all users into a temporary Vector.
+		Hashtable<String, List<CMUser>> loginUsersHashtable = loginMembers.getAllMembers();
+		Vector<CMUser> loginUsersVector = new Vector<>();
+		for(List<CMUser> list : loginUsersHashtable.values()) {
+			loginUsersVector.addAll(list);
+		}
+		// Iterate in reverse order to safely handle removals (same rationale as original code)
 		for(i = loginUsersVector.size()-1; i >= 0; i--)
 		{
 			CMUser user = loginUsersVector.elementAt(i);
@@ -53,8 +65,8 @@ public class CMServerKeepAliveTask implements Runnable {
 				LOG.info("for user("+user.getName()+"), elapsed time("
 						+(lElapsedTime/1000.0)+"), keep-alive time*1.5("
 						+(nKeepAliveTime*1.5)+").");
-				
-				CMInteractionManager.disconnectBadClientByServer(user, m_cmInfo);
+				// This method will remove the user from the original loginMembers
+				CMInteractionManager.disconnectBadClientByServer(user);
 
 				LOG.info("disconnect user("+user.getName()+"), # login users: "
 						+loginUsersVector.size());
@@ -62,7 +74,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		}
 		
 		// for each unknown channel
-		CMList<CMUnknownChannelInfo> unchList = m_cmInfo.getCommInfo()
+		CMList<CMUnknownChannelInfo> unchList = CMCommInfo.getInstance()
 				.getUnknownChannelInfoList();
 		Vector<CMUnknownChannelInfo> unchVector = unchList.getList();
 		Iterator<CMUnknownChannelInfo> iter = unchVector.iterator();
@@ -70,7 +82,7 @@ public class CMServerKeepAliveTask implements Runnable {
 		{
 			CMUnknownChannelInfo unch = iter.next();
 			lElapsedTime = lCurTime - unch.getLastEventTransTime();
-			nKeepAliveTime = m_cmInfo.getConfigurationInfo().getKeepAliveTime();
+			nKeepAliveTime = CMConfigurationInfo.getInstance().getKeepAliveTime();
 			if(lElapsedTime/1000.0 > nKeepAliveTime*1.5)
 			{
 				LOG.info("for unknown-channel, elapsed time("+(lElapsedTime/1000.0)
@@ -91,10 +103,10 @@ public class CMServerKeepAliveTask implements Runnable {
 		}
 		
 		// process of the default server
-		if(CMConfigurator.isDServer(m_cmInfo))
+		if(CMConfigurator.isDServer())
 		{
 			// for each additional server
-			Vector<CMServer> addServerVector = m_cmInfo.getInteractionInfo()
+			Vector<CMServer> addServerVector = CMInteractionInfo.getInstance()
 					.getAddServerList();
 			for(i = addServerVector.size()-1; i >= 0; i--)
 			{
@@ -109,8 +121,8 @@ public class CMServerKeepAliveTask implements Runnable {
 							+"elapsed time("+(lElapsedTime/1000.0)+"), keep-alive time("
 							+nKeepAliveTime+").");
 
-					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer, 
-							m_cmInfo);
+					CMInteractionManager.disconnectBadAddServerByDefaultServer(addServer
+					);
 					
 					LOG.info("disconnected add-server("+addServer.getServerName()+").\n"
 							+"# add-servers: "+addServerVector.size());
@@ -119,15 +131,15 @@ public class CMServerKeepAliveTask implements Runnable {
 		}
 		else	// process of an additional server
 		{
-			CMUser myself = m_cmInfo.getInteractionInfo().getMyself();
+			CMUser myself = CMInteractionInfo.getInstance().getMyself();
 			if(myself.getState() >= CMInfo.CM_LOGIN)
 			{
-				String strDefServer = m_cmInfo.getInteractionInfo().getDefaultServerInfo()
+				String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 						.getServerName();
 				long lMyLastEventTransTime = myself.getMyLastEventTransTimeHashtable()
 						.get(strDefServer);
 				lElapsedTime = lCurTime - lMyLastEventTransTime;
-				nKeepAliveTime = m_cmInfo.getConfigurationInfo().getKeepAliveTime();
+				nKeepAliveTime = CMConfigurationInfo.getInstance().getKeepAliveTime();
 				
 				if(lElapsedTime/1000.0 > nKeepAliveTime)
 				{
@@ -138,7 +150,7 @@ public class CMServerKeepAliveTask implements Runnable {
 
 					CMMqttEventPINGREQ reqPingEvent = new CMMqttEventPINGREQ();
 					reqPingEvent.setSender(myself.getName());
-					CMEventManager.unicastEvent(reqPingEvent, strDefServer, m_cmInfo);
+					CMEventManager.unicastEvent(reqPingEvent, strDefServer);
 				}
 			}
 		} // else

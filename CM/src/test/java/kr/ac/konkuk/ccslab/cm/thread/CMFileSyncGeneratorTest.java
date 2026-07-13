@@ -7,25 +7,30 @@ import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
 public class CMFileSyncGeneratorTest {
 
     private CMInfo cmInfo;
-    private String userName;
+    private String initiatorName;
+    private UUID initiatorUuid;
+    private UUID initiatorDeviceUuid;
 
     @Before
     public void setUp() {
         System.out.println("===== called setUp()..");
-        cmInfo = new CMInfo();
-        userName = "ccslab";
+        cmInfo = CMInfo.getInstance();
+        initiatorName = "ccslab";
+        initiatorUuid = UUID.randomUUID();
+        initiatorDeviceUuid = UUID.randomUUID();
     }
 
     @Test
     public void calculateBlockSize() {
         System.out.println("===== called calculateBlockSize()..");
-        CMFileSyncGenerator syncGenerator = new CMFileSyncGenerator(userName, cmInfo);
+        CMFileSyncGenerator syncGenerator = new CMFileSyncGenerator(initiatorName, initiatorUuid, initiatorDeviceUuid);
         try {
             Method method = syncGenerator.getClass().getDeclaredMethod("calculateBlockSize", long.class);
             method.setAccessible(true);

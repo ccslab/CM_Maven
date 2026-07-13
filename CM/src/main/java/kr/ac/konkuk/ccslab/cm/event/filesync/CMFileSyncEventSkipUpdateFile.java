@@ -3,8 +3,6 @@ package kr.ac.konkuk.ccslab.cm.event.filesync;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -14,12 +12,10 @@ import java.util.Objects;
  */
 public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
     // Fields: userName, skippedPath
-    private String userName;    // user name
-    private Path skippedPath;     // skipped path
+    private String skippedPath;     // skipped path
 
     public CMFileSyncEventSkipUpdateFile() {
         m_nID = CMFileSyncEvent.SKIP_UPDATE_FILE;
-        userName = null;
         skippedPath = null;
     }
 
@@ -28,31 +24,33 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
         unmarshall(msg);
     }
 
+    /** @deprecated Use {@link #getInitiatorName()} instead. */
+    @Deprecated
+    public String getUserName() { return getInitiatorName(); }
+
+    /** @deprecated Use {@link #setInitiatorName(String)} instead. */
+    @Deprecated
+    public void setUserName(String name) { setInitiatorName(name); }
+
     @Override
     protected int getByteNum() {
         int byteNum;
         byteNum = super.getByteNum();
-        // userName
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + userName.getBytes().length;
         // skippedPath
-        byteNum += CMInfo.STRING_LEN_BYTES_LEN + skippedPath.toString().getBytes().length;
+        byteNum += CMInfo.STRING_LEN_BYTES_LEN + skippedPath.getBytes().length;
         return byteNum;
     }
 
     @Override
-    protected void marshallBody() {
-        // userName
-        putStringToByteBuffer(userName);
+    protected void marshallBodyCore() {
         // completedPath
-        putStringToByteBuffer(skippedPath.toString());
+        putStringToByteBuffer(skippedPath);
     }
 
     @Override
-    protected void unmarshallBody(ByteBuffer msg) {
-        // userName
-        userName = getStringFromByteBuffer(msg);
+    protected void unmarshallBodyCore(ByteBuffer msg) {
         // completedPath
-        skippedPath = Paths.get(getStringFromByteBuffer(msg));
+        skippedPath = getStringFromByteBuffer(msg);
     }
 
     @Override
@@ -60,10 +58,13 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
         return "CMFileSyncEventSkipUpdateFile{" +
                 "m_nType=" + m_nType +
                 ", m_strSender='" + m_strSender + '\'' +
+                ", m_senderUuid=" + m_senderUuid +
                 ", m_strReceiver='" + m_strReceiver + '\'' +
+                ", m_receiverUuid=" + m_receiverUuid +
+                ", m_distributionUuid=" + m_distributionUuid +
                 ", m_nID=" + m_nID +
                 ", m_nByteNum=" + m_nByteNum +
-                ", userName='" + userName + '\'' +
+                ", initiatorName='" + getInitiatorName() + '\'' +
                 ", skippedPath=" + skippedPath +
                 '}';
     }
@@ -84,36 +85,25 @@ public class CMFileSyncEventSkipUpdateFile extends CMFileSyncEvent {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         CMFileSyncEventSkipUpdateFile that = (CMFileSyncEventSkipUpdateFile) o;
-        return userName.equals(that.userName) && skippedPath.equals(that.skippedPath);
+        return getInitiatorName().equals(that.getInitiatorName()) && skippedPath.equals(that.skippedPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, skippedPath);
+        return Objects.hash(getInitiatorName(), skippedPath);
     }
 
-    /**
-     * gets the user (client) name.
-     * @return user (client) name
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     /**
      * gets the file path that does not need to be synchronized.
      * @return a skipped file path
      * <br>The path is a relative path from the synchronization home directory.
      */
-    public Path getSkippedPath() {
+    public String getSkippedPath() {
         return skippedPath;
     }
 
-    public void setSkippedPath(Path skippedPath) {
+    public void setSkippedPath(String skippedPath) {
         this.skippedPath = skippedPath;
     }
 }

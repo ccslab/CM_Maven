@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -16,7 +17,9 @@ public class CMFileSyncEventRequestNewFilesTest {
     public void marshallUnmarshall() {
         System.out.println("===== CMFileSyncEventRequestNewFilesTest.marshallUnmarshall() called..");
         CMFileSyncEventRequestNewFiles fse = new CMFileSyncEventRequestNewFiles();
-        fse.setRequesterName("ccslab");
+        fse.setInitiatorName("ccslab");
+        fse.setInitiatorUuid(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        fse.setInitiatorDeviceUuid(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         fse.setNumRequestedFiles(5);
         // requested list is null
         fse.setRequestedFileList(null);
@@ -29,10 +32,8 @@ public class CMFileSyncEventRequestNewFilesTest {
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
-        String requesterName = unmarshallEvent.getRequesterName();
-        assertEquals(requesterName, "ccslab");
-        int numRequestedFiles = unmarshallEvent.getNumRequestedFiles();
-        assertEquals(numRequestedFiles, 5);
+        assertEquals("ccslab", unmarshallEvent.getInitiatorName());
+        assertEquals(5, unmarshallEvent.getNumRequestedFiles());
         List<Path> unmarshallRequestedFileList;
         assertNull(unmarshallEvent.getRequestedFileList());
 
@@ -48,13 +49,13 @@ public class CMFileSyncEventRequestNewFilesTest {
         assertNotNull(unmarshallEvent);
         System.out.println("unmarshallEvent = " + unmarshallEvent);
 
-        requesterName = unmarshallEvent.getRequesterName();
-        assertEquals(requesterName, "ccslab");
-        numRequestedFiles = unmarshallEvent.getNumRequestedFiles();
-        assertEquals(numRequestedFiles, 5);
+        assertEquals("ccslab", unmarshallEvent.getInitiatorName());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), unmarshallEvent.getInitiatorUuid());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000002"), unmarshallEvent.getInitiatorDeviceUuid());
+        assertEquals(5, unmarshallEvent.getNumRequestedFiles());
         unmarshallRequestedFileList = unmarshallEvent.getRequestedFileList();
-        assertEquals(unmarshallRequestedFileList.get(0), Paths.get("testFile1.txt"));
-        assertEquals(unmarshallRequestedFileList.get(1), Paths.get("subdir/testFile2.txt"));
+        assertEquals(Paths.get("testFile1.txt"), unmarshallRequestedFileList.get(0));
+        assertEquals(Paths.get("subdir/testFile2.txt"), unmarshallRequestedFileList.get(1));
 
         assertEquals(fse, unmarshallEvent);
     }

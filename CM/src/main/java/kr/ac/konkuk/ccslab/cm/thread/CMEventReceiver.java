@@ -1,14 +1,11 @@
 package kr.ac.konkuk.ccslab.cm.thread;
 import java.nio.channels.*;
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
 import kr.ac.konkuk.ccslab.cm.entity.CMChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMList;
 import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
-import kr.ac.konkuk.ccslab.cm.entity.CMMqttSession;
-import kr.ac.konkuk.ccslab.cm.entity.CMMqttWill;
 import kr.ac.konkuk.ccslab.cm.entity.CMServer;
 import kr.ac.konkuk.ccslab.cm.entity.CMUnknownChannelInfo;
 import kr.ac.konkuk.ccslab.cm.entity.CMUser;
@@ -20,14 +17,7 @@ import kr.ac.konkuk.ccslab.cm.event.CMMultiServerEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMSessionEvent;
 import kr.ac.konkuk.ccslab.cm.event.CMUserEvent;
 import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMMqttInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMThreadInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
 import kr.ac.konkuk.ccslab.cm.manager.CMEventManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
@@ -35,12 +25,10 @@ import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 
 public class CMEventReceiver implements Runnable {
 	private CMBlockingEventQueue m_queue;
-	private CMInfo m_cmInfo;
-	
-	public CMEventReceiver(CMInfo cmInfo)
+
+	public CMEventReceiver()
 	{
-		m_cmInfo = cmInfo;
-		m_queue = cmInfo.getCommInfo().getRecvBlockingEventQueue();
+		m_queue = CMCommInfo.getInstance().getRecvBlockingEventQueue();
 	}
 
 	@Override
@@ -48,9 +36,10 @@ public class CMEventReceiver implements Runnable {
 	{
 		CMMessage msg = null;
 		boolean bForwardToApp = true;
-		CMEventSynchronizer eventSync = m_cmInfo.getEventInfo().getEventSynchronizer();
+		CMEventSynchronizer eventSync = CMEventInfo.getInstance().getEventSynchronizer();
 
-		CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 		Objects.requireNonNull(threadInfo);
 		long threadId = Thread.currentThread().getId();
 		threadInfo.setEventReceiverId(threadId);
@@ -73,13 +62,6 @@ public class CMEventReceiver implements Runnable {
 			
 			if(msg.m_buf == null)
 			{
-				/*
-				String strUserName = CMEventManager.findUserWithChannel(msg.m_ch, m_cmInfo.getInteractionInfo().getLoginUsers());
-				if(strUserName == null)
-					System.out.println("CMEventReceiver.run(), user not found.");
-				else
-					System.out.println("CMEventRecevier.run(), user: "+strUserName);
-				*/
 				if(CMInfo._CM_DEBUG_2)
 					System.out.println("CMEventRecevier.run(), ByteBuffer is null.");
 				
@@ -88,7 +70,7 @@ public class CMEventReceiver implements Runnable {
 			}
 			
 			// deliver msg to interaction manager
-			bForwardToApp = CMInteractionManager.processEvent(msg, m_cmInfo);
+			bForwardToApp = CMInteractionManager.processEvent(msg);
 
 			// check whether the main thread is waiting for an event
 			CMEvent cme = CMEventManager.unmarshallEvent(msg.m_buf);
@@ -100,6 +82,7 @@ public class CMEventReceiver implements Runnable {
 
 			if(eventSync.isWaiting() && !cme.getSender().isEmpty() && 
 					cme.getSender().equals(eventSync.getWaitedReceiver()) &&
+					Objects.equals(cme.getSenderUuid(), eventSync.getWaitedReceiverUuid()) &&
 					cme.getType() == eventSync.getWaitedEventType() && 
 					cme.getID() == eventSync.getWaitedEventID())
 			{
@@ -110,7 +93,7 @@ public class CMEventReceiver implements Runnable {
 					eventSync.notify();
 				}
 				// initialize waited event info
-				eventSync.setWaitedEvent(-1, -1, null);
+				eventSync.setWaitedEvent(-1, -1, null, null);
 			}
 			else if(eventSync.isWaiting() && 
 					eventSync.getWaitedEventType() == cme.getType() &&
@@ -125,7 +108,7 @@ public class CMEventReceiver implements Runnable {
 					{
 						eventSync.notify();
 						// initialize waited event info
-						eventSync.setWaitedEvent(-1, -1, null);
+						eventSync.setWaitedEvent(-1, -1, null, null);
 						eventSync.setMinNumWaitedEvents(0);
 					}
 				}
@@ -135,7 +118,7 @@ public class CMEventReceiver implements Runnable {
 				if(bForwardToApp)
 				{
 					// deliver msg to stub module
-					CMAppEventHandler appEventHandler = m_cmInfo.getAppEventHandler();
+					CMAppEventHandler appEventHandler = cmInfo.getAppEventHandler();
 					if(appEventHandler == null)
 						System.err.println("CMEventReceiver.run(), CMAppEventHandler is null!");
 					else
@@ -163,9 +146,10 @@ public class CMEventReceiver implements Runnable {
 	// handle unexpected disconnection with the server or the client
 	private void processUnexpectedDisconnection(SelectableChannel ch)
 	{
-		CMConfigurationInfo confInfo = m_cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		CMCommInfo commInfo = m_cmInfo.getCommInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
@@ -200,9 +184,9 @@ public class CMEventReceiver implements Runnable {
 			
 			if(user != null)
 			{
-				processDisconnectionFromClientAtServer(user.getName(), ch);
+				processDisconnectionFromClientAtServer(user, ch);
 			}
-			else if(CMConfigurator.isDServer(m_cmInfo))
+			else if(CMConfigurator.isDServer())
 			{
 				processDisconnectionFromAddServerAtDefaultServer(ch);
 			}
@@ -217,14 +201,15 @@ public class CMEventReceiver implements Runnable {
 	
 	private void processDisconnectionFromServerAtClient(SelectableChannel ch)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMChannelInfo<Integer> chInfo = null;
 		Integer chKey = null;
 		Iterator<CMServer> iterAddServer = null;
 		boolean bFound = false;
 		CMServer tserver = null;
-		CMFileTransferInfo fInfo = m_cmInfo.getFileTransferInfo();
-		CMSNSInfo snsInfo = m_cmInfo.getSNSInfo();		
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		
 		// find channel from default server
 		chInfo = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo();
@@ -248,8 +233,8 @@ public class CMEventReceiver implements Runnable {
 				{
 					chInfo.removeAllChannels();
 					tserver.getBlockSocketChannelInfo().removeAllChannels();
-					fInfo.removeRecvFileList(tserver.getServerName());
-					fInfo.removeSendFileList(tserver.getServerName());
+					fInfo.removeRecvFileList(tserver.getServerName(), null);
+					fInfo.removeSendFileList(tserver.getServerName(), null);
 					tserver.getSessionList().removeAllElements();
 					tserver.setClientState(CMInfo.CM_INIT);
 				}
@@ -262,7 +247,7 @@ public class CMEventReceiver implements Runnable {
 				se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
 				se.setChannelName(tserver.getServerName());
 				se.setChannelNum(chKey);
-				m_cmInfo.getAppEventHandler().processEvent(se);
+				cmInfo.getAppEventHandler().processEvent(se);
 			}				
 		}
 		else	// default channel
@@ -278,8 +263,8 @@ public class CMEventReceiver implements Runnable {
 				// stop all the file-transfer threads
 				//List<Runnable> ftList = fInfo.getExecutorService().shutdownNow();
 				// remove all the ongoing file-transfer info about the default server
-				fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName());
-				fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName());
+				fInfo.removeRecvFileList(interInfo.getDefaultServerInfo().getServerName(), null);
+				fInfo.removeSendFileList(interInfo.getDefaultServerInfo().getServerName(), null);
 				// remove all the ongoing sns related file-transfer info at the client
 				snsInfo.getRecvSNSAttachList().removeAllSNSAttach();
 				// remove all session info
@@ -302,12 +287,12 @@ public class CMEventReceiver implements Runnable {
 			se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
 			se.setChannelName(strDefServer);
 			se.setChannelNum(chKey);
-			m_cmInfo.getAppEventHandler().processEvent(se);
+			cmInfo.getAppEventHandler().processEvent(se);
 			
 			// check and stop the scheduled keep-alive task
-			if(CMInteractionManager.getNumLoginServers(m_cmInfo) == 0)
+			if(CMInteractionManager.getNumLoginServers() == 0)
 			{
-				CMThreadInfo threadInfo = m_cmInfo.getThreadInfo();
+				CMThreadInfo threadInfo = CMThreadInfo.getInstance();
 				ScheduledFuture<?> future = threadInfo.getScheduledFuture();
 				if(future != null)
 				{
@@ -325,12 +310,11 @@ public class CMEventReceiver implements Runnable {
 
 	}
 	
-	private void processDisconnectionFromClientAtServer(String strUser, SelectableChannel ch)
+	private void processDisconnectionFromClientAtServer(CMUser user, SelectableChannel ch)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
-		Integer chKey = null;
+		CMInfo cmInfo = CMInfo.getInstance();
+		Integer chKey;
 
-		CMUser user = interInfo.getLoginUsers().findMember(strUser);
 		// find channel index
 		chKey = user.getNonBlockSocketChannelInfo().findChannelKey(ch);
 		if(chKey == null)
@@ -341,18 +325,19 @@ public class CMEventReceiver implements Runnable {
 		else if(chKey.intValue() == 0)
 		{
 			// send MQTT will event
-			CMMqttManager mqttManager = m_cmInfo.getServiceManager(CMMqttManager.class);
-			mqttManager.sendMqttWill(strUser);
+			CMMqttManager mqttManager = cmInfo.getServiceManager(CMMqttManager.class);
+			mqttManager.sendMqttWill(user.getName());
 			
 			// if the removed channel is default channel (#ch:0), process logout of the user
 			CMSessionEvent tse = new CMSessionEvent();
 			tse.setID(CMSessionEvent.LOGOUT);
+			tse.setSender(user.getName());
+			tse.setSenderUuid(user.getUuid());
 			tse.setUserName(user.getName());
 			CMMessage msg = new CMMessage();
 			msg.m_buf = CMEventManager.marshallEvent(tse);
-			CMInteractionManager.processEvent(msg, m_cmInfo);
-			m_cmInfo.getAppEventHandler().processEvent(tse);
-			tse = null;
+			CMInteractionManager.processEvent(msg);
+			cmInfo.getAppEventHandler().processEvent(tse);
 			msg.m_buf = null;
 		}
 		else if(chKey.intValue() > 0)
@@ -364,8 +349,9 @@ public class CMEventReceiver implements Runnable {
 	
 	private void processDisconnectionFromAddServerAtDefaultServer(SelectableChannel ch)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		Iterator<CMServer> iterAddServer = null;
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		boolean bFound = false;
 		CMChannelInfo<Integer> chInfo = null;
 		Integer chKey = null;
@@ -390,7 +376,7 @@ public class CMEventReceiver implements Runnable {
 				CMMultiServerEvent mse = new CMMultiServerEvent();
 				mse.setID(CMMultiServerEvent.NOTIFY_SERVER_LEAVE);
 				mse.setServerName(tserver.getServerName());
-				CMEventManager.broadcastEvent(mse, m_cmInfo);
+				CMEventManager.broadcastEvent(mse);
 
 				chInfo.removeAllChannels();
 				interInfo.removeAddServer(tserver.getServerName());
@@ -403,7 +389,7 @@ public class CMEventReceiver implements Runnable {
 			se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
 			se.setChannelName(tserver.getServerName());
 			se.setChannelNum(chKey);
-			m_cmInfo.getAppEventHandler().processEvent(se);
+			cmInfo.getAppEventHandler().processEvent(se);
 
 		}
 
@@ -411,7 +397,8 @@ public class CMEventReceiver implements Runnable {
 	
 	private void processDisconnectionFromDefaultServerAtAddServer(SelectableChannel ch)
 	{
-		CMInteractionInfo interInfo = m_cmInfo.getInteractionInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMChannelInfo<Integer> chInfo = null;
 		Integer chKey = null;
 
@@ -441,26 +428,7 @@ public class CMEventReceiver implements Runnable {
 		se.setID(CMSessionEvent.UNEXPECTED_SERVER_DISCONNECTION);
 		se.setChannelName(interInfo.getDefaultServerInfo().getServerName());
 		se.setChannelNum(chKey);
-		m_cmInfo.getAppEventHandler().processEvent(se);
-
+		cmInfo.getAppEventHandler().processEvent(se);
 	}
 
-	/*
-	// send MQTT will event if the disconnected client has will information
-	private boolean sendMqttWill(String strUser)
-	{
-		CMMqttInfo mqttInfo = m_cmInfo.getMqttInfo();
-		CMMqttSession session = mqttInfo.getMqttSessionHashtable().get(strUser);
-		if(session == null) return false;
-		CMMqttWill mqttWill = session.getMqttWill();
-		if(mqttWill == null) return false;
-		
-		CMMqttManager mqttManager = (CMMqttManager)m_cmInfo.getServiceManagerHashtable()
-				.get(CMInfo.CM_MQTT_MANAGER);
-		boolean bRet = false;
-		bRet = mqttManager.publish(mqttWill.getWillTopic(), mqttWill.getWillMessage(), 
-				mqttWill.getWillQoS());
-		return bRet;
-	}
-	*/
 }

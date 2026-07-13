@@ -1,0 +1,31 @@
+# 기본: 모든 텍스트 파일을 LF로 정규화
+* text=auto eol=lf
+
+# Java 소스
+*.java text eol=lf
+*.class binary
+
+# Maven
+*.xml text eol=lf
+pom.xml text eol=lf
+
+# 설정 파일
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+
+# 스크립트
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 바이너리 (변환 안 함)
+*.jar binary
+*.war binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary

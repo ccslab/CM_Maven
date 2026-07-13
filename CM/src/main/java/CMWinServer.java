@@ -16,28 +16,17 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
-import kr.ac.konkuk.ccslab.cm.entity.CMGroup;
-import kr.ac.konkuk.ccslab.cm.entity.CMList;
-import kr.ac.konkuk.ccslab.cm.entity.CMMember;
-import kr.ac.konkuk.ccslab.cm.entity.CMMessage;
-import kr.ac.konkuk.ccslab.cm.entity.CMRecvFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMSendFileInfo;
-import kr.ac.konkuk.ccslab.cm.entity.CMServer;
-import kr.ac.konkuk.ccslab.cm.entity.CMSession;
-import kr.ac.konkuk.ccslab.cm.entity.CMUser;
+import kr.ac.konkuk.ccslab.cm.entity.*;
 import kr.ac.konkuk.ccslab.cm.event.CMBlockingEventQueue;
 import kr.ac.konkuk.ccslab.cm.event.CMDummyEvent;
-import kr.ac.konkuk.ccslab.cm.info.CMCommInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMConfigurationInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInfo;
-import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
+import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.manager.CMCommManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMConfigurator;
-import kr.ac.konkuk.ccslab.cm.manager.CMFileSyncManager;
+import kr.ac.konkuk.ccslab.cm.manager.CMInteractionManager;
 import kr.ac.konkuk.ccslab.cm.manager.CMMqttManager;
 import kr.ac.konkuk.ccslab.cm.sns.CMSNSUserAccessSimulator;
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
+import kr.ac.konkuk.ccslab.cm.util.CMUUIDConverter;
 
 public class CMWinServer extends JFrame {
 
@@ -188,7 +177,7 @@ public class CMWinServer extends JFrame {
 		JMenuItem showAllConfMenuItem = new JMenuItem("show all configurations");
 		showAllConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(showAllConfMenuItem);
-		JMenuItem changeConfMenuItem = new JMenuItem("change configuration");
+		JMenuItem changeConfMenuItem = new JMenuItem("edit configuration file");
 		changeConfMenuItem.addActionListener(menuListener);
 		infoSubMenu.add(changeConfMenuItem);
 		JMenuItem showThreadInfoItem = new JMenuItem("show thread information");
@@ -422,7 +411,7 @@ public class CMWinServer extends JFrame {
 		printMessage("1: show session information, 2: show group information\n");
 		printMessage("3: test input network throughput, 4: test output network throughput\n");
 		printMessage("5: show current channels, 6: show login users\n");
-		printMessage("7: show all configurations, 8: change configuration\n");
+		printMessage("7: show all configurations, 8: edit configuration file\n");
 		printMessage("9: show current thread information\n");
 		printMessage("---------------------------------- Event Transmission\n");
 		printMessage("10: send CMDummyEvent\n");
@@ -451,7 +440,7 @@ public class CMWinServer extends JFrame {
 	public void updateTitle()
 	{
 		CMUser myself = m_serverStub.getMyself();
-		if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
+		if(CMConfigurator.isDServer())
 		{
 			setTitle("CM Default Server [\""+myself.getName()+"\"]");
 		}
@@ -599,7 +588,7 @@ public class CMWinServer extends JFrame {
 		printMessage(String.format("%-20s%-20s%-10s%-10s%n", "session name", "session addr", "port", "#users"));
 		printMessage("------------------------------------------------------\n");
 		
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		Iterator<CMSession> iter = interInfo.getSessionList().iterator();
 		while(iter.hasNext())
 		{
@@ -621,7 +610,7 @@ public class CMWinServer extends JFrame {
 			return;
 		}
 		
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMSession session = interInfo.findSession(strSessionName);
 		if(session == null)
 		{
@@ -699,7 +688,7 @@ public class CMWinServer extends JFrame {
 			printMessage("File owner is empty!\n");
 			return;
 		}
-		
+
 		switch(fAppendBox.getSelectedIndex())
 		{
 		case 0:
@@ -712,8 +701,36 @@ public class CMWinServer extends JFrame {
 			byteFileAppendMode = CMInfo.FILE_APPEND;
 			break;
 		}
-		
-		bReturn = m_serverStub.requestFile(strFileName, strFileOwner, byteFileAppendMode);
+
+		// UUID selection for multi-device login
+		UUID fileOwnerUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strFileOwner);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileOwnerUuid = uuidList.get(0);
+			}
+			else
+			{
+				Object[] uuidOptions = new Object[uuidList.size() + 1];
+				uuidOptions[0] = "(all devices)";
+				for(int i = 0; i < uuidList.size(); i++)
+					uuidOptions[i + 1] = uuidList.get(i);
+				Object selected = JOptionPane.showInputDialog(null,
+						"File owner [" + strFileOwner + "] has multiple devices.\nSelect target device UUID:",
+						"Multiple Devices Found", JOptionPane.QUESTION_MESSAGE, null,
+						uuidOptions, uuidOptions[0]);
+				if(selected == null) return;
+				if(selected instanceof UUID)
+					fileOwnerUuid = (UUID) selected;
+			}
+		}
+
+		if(fileOwnerUuid != null)
+			bReturn = m_serverStub.requestFile(strFileName, strFileOwner, fileOwnerUuid, byteFileAppendMode);
+		else
+			bReturn = m_serverStub.requestFile(strFileName, strFileOwner, byteFileAppendMode);
 				
 		if(!bReturn)
 			printMessage("Request file error! file("+strFileName+"), owner("+strFileOwner+").\n");
@@ -754,7 +771,7 @@ public class CMWinServer extends JFrame {
 			printMessage("File receiver is empty!\n");
 			return;
 		}
-		
+
 		switch(fAppendBox.getSelectedIndex())
 		{
 		case 0:
@@ -767,10 +784,35 @@ public class CMWinServer extends JFrame {
 			byteFileAppendMode = CMInfo.FILE_APPEND;
 			break;
 		}
-		
+
+		// UUID selection for multi-device login
+		UUID fileReceiverUuid = null;
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strReceiver);
+		if(uuidList != null && !uuidList.isEmpty())
+		{
+			if(uuidList.size() == 1)
+			{
+				fileReceiverUuid = uuidList.get(0);
+			}
+			else
+			{
+				Object[] uuidOptions = new Object[uuidList.size() + 1];
+				uuidOptions[0] = "(all devices)";
+				for(int i = 0; i < uuidList.size(); i++)
+					uuidOptions[i + 1] = uuidList.get(i);
+				Object selected = JOptionPane.showInputDialog(null,
+						"File receiver [" + strReceiver + "] has multiple devices.\nSelect target device UUID:",
+						"Multiple Devices Found", JOptionPane.QUESTION_MESSAGE, null,
+						uuidOptions, uuidOptions[0]);
+				if(selected == null) return;
+				if(selected instanceof UUID)
+					fileReceiverUuid = (UUID) selected;
+			}
+		}
+
 		JFileChooser fc = new JFileChooser();
 		fc.setMultiSelectionEnabled(true);
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		File curDir = new File(confInfo.getTransferedFileHome().toString());
 		fc.setCurrentDirectory(curDir);
 		int fcRet = fc.showOpenDialog(this);
@@ -780,7 +822,10 @@ public class CMWinServer extends JFrame {
 		for(int i=0; i < files.length; i++)
 		{
 			strFilePath = files[i].getPath();
-			bReturn = m_serverStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
+			if(fileReceiverUuid != null)
+				bReturn = m_serverStub.pushFile(strFilePath, strReceiver, fileReceiverUuid, byteFileAppendMode);
+			else
+				bReturn = m_serverStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
 			if(!bReturn)
 			{
 				printMessage("push file error! file("+strFilePath+"), receiver("
@@ -837,24 +882,32 @@ public class CMWinServer extends JFrame {
 
 	public void printSendRecvFileInfo()
 	{
-		CMFileTransferInfo fInfo = m_serverStub.getCMInfo().getFileTransferInfo();
-		Hashtable<String, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
-		Hashtable<String, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
-		Set<String> sendKeySet = sendHashtable.keySet();
-		Set<String> recvKeySet = recvHashtable.keySet();
-		
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
+		// [Modification]: The key type of file transfer hashtables has been changed
+		// from String to CMUserLoginKey to support multi-device login.
+		Hashtable<CMUserLoginKey, CMList<CMSendFileInfo>> sendHashtable = fInfo.getSendFileHashtable();
+		Hashtable<CMUserLoginKey, CMList<CMRecvFileInfo>> recvHashtable = fInfo.getRecvFileHashtable();
+
+		// [Modification]: Key set type changed to CMUserLoginKey.
+		Set<CMUserLoginKey> sendKeySet = sendHashtable.keySet();
+		Set<CMUserLoginKey> recvKeySet = recvHashtable.keySet();
+
 		printMessage("==== sending file info\n");
-		for(String receiver : sendKeySet)
+		for(CMUserLoginKey receiverKey : new ArrayList<>(sendKeySet))
 		{
-			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiver);
-			printMessage(sendList+"\n");
+			CMList<CMSendFileInfo> sendList = sendHashtable.get(receiverKey);
+			if(sendList == null) continue;
+			printMessage("Receiver: " + receiverKey + "\n");
+			printMessage(sendList + "\n");
 		}
 
 		printMessage("==== receiving file info\n");
-		for(String sender : recvKeySet)
+		for(CMUserLoginKey senderKey : new ArrayList<>(recvKeySet))
 		{
-			CMList<CMRecvFileInfo> recvList = recvHashtable.get(sender);
-			printMessage(recvList+"\n");
+			CMList<CMRecvFileInfo> recvList = recvHashtable.get(senderKey);
+			if(recvList == null) continue;
+			printMessage("Sender: " + senderKey + "\n");
+			printMessage(recvList + "\n");
 		}
 	}
 
@@ -924,7 +977,7 @@ public class CMWinServer extends JFrame {
 					+"] is set to ["+lodBox.getItemAt(nScheme)+"].\n");
 			if(strUserName.isEmpty())
 				strUserName = null;
-			m_serverStub.setAttachDownloadScheme(strUserName, nScheme);
+			m_serverStub.setAttachDownloadScheme(strUserName, null, nScheme);
 		}
 		
 		return;
@@ -1192,6 +1245,7 @@ public class CMWinServer extends JFrame {
 	public void measureInputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		printMessage("========== test input network throughput\n");
 		
@@ -1199,16 +1253,48 @@ public class CMWinServer extends JFrame {
 		if(strTarget == null || strTarget.equals("")) 
 			return;
 
-		speed = m_serverStub.measureInputThroughput(strTarget);
+		// [Modified] Check for multiple login instances of the target user
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] Multi-login case: prompt user to select a specific UUID
+			Object[] possibilities = uuidList.toArray();
+			targetUuid = (UUID) JOptionPane.showInputDialog(
+					null,
+					"Select target device (UUID):",
+					"Multiple Devices Found",
+					JOptionPane.QUESTION_MESSAGE,
+					null,
+					possibilities,
+					possibilities[0]);
+
+			if(targetUuid == null) return; // User cancelled the selection
+		}
+
+		speed = m_serverStub.measureInputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			printMessage("Test failed!\n");
 		else
-			printMessage(String.format("Input network throughput from [%s] : %.2f MBps%n", strTarget, speed));
+		{
+			// [Modified] Use CMUUIDConverter for consistent string representation in logs
+			String strUuid = CMUUIDConverter.uuidToString(targetUuid);
+			printMessage(String.format("Input network throughput from [%s] (UUID: %s) : %.2f MBps%n",
+					strTarget, strUuid, speed));
+		}
 	}
 	
 	public void measureOutputThroughput()
 	{
 		String strTarget = null;
+		UUID targetUuid = null;
 		double speed = -1; // MBps
 		printMessage("========== test output network throughput\n");
 		
@@ -1216,11 +1302,42 @@ public class CMWinServer extends JFrame {
 		if(strTarget == null || strTarget.equals("")) 
 			return;
 
-		speed = m_serverStub.measureOutputThroughput(strTarget);
+		// [Modified] Handle multi-device environment via CMInteractionManager
+		List<UUID> uuidList = CMInteractionManager.findUuidList(strTarget);
+		if(uuidList == null || uuidList.isEmpty())
+		{
+			targetUuid = null;
+		}
+		else if(uuidList.size() == 1)
+		{
+			targetUuid = uuidList.get(0);
+		}
+		else
+		{
+			// [Modified] UI interaction for choosing one from multiple UUIDs
+			Object[] possibilities = uuidList.toArray();
+			targetUuid = (UUID) JOptionPane.showInputDialog(
+					null,
+					"Select target device (UUID):",
+					"Multiple Devices Found",
+					JOptionPane.QUESTION_MESSAGE,
+					null,
+					possibilities,
+					possibilities[0]);
+
+			if(targetUuid == null) return;
+		}
+
+		speed = m_serverStub.measureOutputThroughput(strTarget, targetUuid);
 		if(speed == -1)
 			printMessage("Test failed!\n");
 		else
-			printMessage(String.format("Output network throughput to [%s] : %.2f MBps%n", strTarget, speed));
+		{
+			// [Modified] Use CMUUIDConverter for standardized output
+			String strUuid = CMUUIDConverter.uuidToString(targetUuid);
+			printMessage(String.format("Output network throughput to [%s] (UUID: %s) : %.2f MBps%n",
+					strTarget, strUuid, speed));
+		}
 	}
 	
 	public void addChannel()
@@ -1696,18 +1813,20 @@ public class CMWinServer extends JFrame {
 		}
 		
 		printMessage("Currently ["+loginUsers.getMemberNum()+"] users are online.\n");
-		Vector<CMUser> loginUserVector = loginUsers.getAllMembers();
-		Iterator<CMUser> iter = loginUserVector.iterator();
+		// The member table is changed from Vector to Hashtable<String, List<CMUser>> to support multiple logins (UUIDs).
+		// The return type of getAllMembers() is updated accordingly.
+		Hashtable<String, List<CMUser>> loginUserTable = loginUsers.getAllMembers();
 		int nPrintCount = 0;
-		while(iter.hasNext())
-		{
-			CMUser user = iter.next();
-			printMessage(user.getName()+" ");
-			nPrintCount++;
-			if((nPrintCount % 10) == 0)
-			{
-				printMessage("\n");
-				nPrintCount = 0;
+		// Iterate through the values (List<CMUser>) of the Hashtable, and then iterate through each CMUser in the list.
+		for(List<CMUser> userList : loginUserTable.values()) {
+			for (CMUser user : userList) {
+				printMessage(user.getName()+" ");
+				nPrintCount++;
+				if((nPrintCount % 10) == 0)
+				{
+					printMessage("\n");
+					nPrintCount = 0;
+				}
 			}
 		}
 	}
@@ -1727,7 +1846,7 @@ public class CMWinServer extends JFrame {
 			printMessage(strFieldValuePair[0]+" = "+strFieldValuePair[1]+"\n");
 		}
 		printMessage("------- conf info not in the "+confPath.toString()+"\n");
-		CMConfigurationInfo confInfo = m_serverStub.getCMInfo().getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		printMessage("Local address list: ");
 		for(String addr : confInfo.getMyAddressList()) {
 			printMessage(addr+" ");
@@ -1740,7 +1859,7 @@ public class CMWinServer extends JFrame {
 		boolean bRet = false;
 		String strField = null;
 		String strValue = null;
-		printMessage("========== change configuration\n");
+		printMessage("========== edit configuration file\n");
 		Path confPath = m_serverStub.getConfigurationHome().resolve("cm-server.conf");
 		
 		JTextField fieldTextField = new JTextField();
@@ -1749,7 +1868,7 @@ public class CMWinServer extends JFrame {
 			"Field Name:", fieldTextField,
 			"Value:", valueTextField
 		};
-		int nRet = JOptionPane.showConfirmDialog(null, msg, "Change Configuration", JOptionPane.OK_CANCEL_OPTION);
+		int nRet = JOptionPane.showConfirmDialog(null, msg, "Edit Configuration File", JOptionPane.OK_CANCEL_OPTION);
 		if(nRet != JOptionPane.OK_OPTION) return;
 		strField = fieldTextField.getText().trim();
 		strValue = valueTextField.getText().trim();
@@ -1822,23 +1941,47 @@ public class CMWinServer extends JFrame {
 	
 	public void sendEventWithWrongByteNum()
 	{
-		printMessage("========== send a CMDummyEvent with wrong # bytes to a client\n");
+		printMessage("========== send a CMDummyEvent with wrong # bytes to a target\n");
 		
-		CMCommInfo commInfo = m_serverStub.getCMInfo().getCommInfo();
-		CMInteractionInfo interInfo = m_serverStub.getCMInfo().getInteractionInfo();
+		CMCommInfo commInfo = CMCommInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		CMBlockingEventQueue sendQueue = commInfo.getSendBlockingEventQueue();
 		
 		String strTarget = JOptionPane.showInputDialog("target client or server name: ").trim();
+
+		// [Modification Start]
+		// Prepare the event first to send it to multiple targets (devices) if necessary.
+		CMDummyEvent due = new CMDummyEvent();
+		ByteBuffer buf = due.marshall();
+		buf.clear();
+		buf.putInt(-1).clear();
+
+		// 1. Try to find the user list (for multiple logins)
+		List<CMUser> userList = interInfo.getLoginUsers().findMemberList(strTarget);
+
+		if(userList != null && !userList.isEmpty())
+		{
+			// Iterate over all active sessions (devices) of the user
+			for(CMUser user : userList)
+			{
+				SelectableChannel ch = user.getNonBlockSocketChannelInfo().findChannel(0);
+				if(ch != null)
+				{
+					CMMessage msg = new CMMessage(buf, ch);
+					sendQueue.push(msg);
+				}
+			}
+			// Completed sending to the user(s). Return to avoid executing server logic.
+			return;
+		}
+		// [Modification End]
+
+		// 2. If not a user, check if it is a server
 		SelectableChannel ch = null;
-		CMUser user = interInfo.getLoginUsers().findMember(strTarget);
 		CMServer server = null;
 		
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
-		if(user != null)
-		{
-			ch = user.getNonBlockSocketChannelInfo().findChannel(0);
-		}
-		else if(strTarget.contentEquals(strDefServer))
+		if(strTarget.contentEquals(strDefServer))
 		{
 			ch = interInfo.getDefaultServerInfo().getNonBlockSocketChannelInfo().findChannel(0);
 		}
@@ -1854,14 +1997,11 @@ public class CMWinServer extends JFrame {
 				return;
 			}
 		}
-		
-		CMDummyEvent due = new CMDummyEvent();
-		ByteBuffer buf = due.marshall();
-		buf.clear();
-		buf.putInt(-1).clear();
-		CMMessage msg = new CMMessage(buf, ch);
-		sendQueue.push(msg);
 
+		if(ch != null) {
+			CMMessage msg = new CMMessage(buf, ch);
+			sendQueue.push(msg);
+		}
 	}
 	
 	public void sendEventWithWrongEventType()
@@ -1969,7 +2109,7 @@ public class CMWinServer extends JFrame {
 					button.setText("Stop Server CM");
 				}
 				// check if default server or not
-				if(CMConfigurator.isDServer(m_serverStub.getCMInfo()))
+				if(CMConfigurator.isDServer())
 				{
 					setTitle("CM Default Server (\"SERVER\")");
 				}
@@ -2032,7 +2172,7 @@ public class CMWinServer extends JFrame {
 			case "show all configurations":
 				printConfigurations();
 				break;
-			case "change configuration":
+			case "edit configuration file":
 				changeConfiguration();
 				break;
 			case "show thread information":
@@ -2126,7 +2266,7 @@ public class CMWinServer extends JFrame {
 	}
 
 	private void printThreadInfo() {
-		String threadInfo = m_serverStub.getThreadInfo();
+		String threadInfo = CMThreadInfo.getInstance().toString();
 		printMessage(threadInfo);
 	}
 

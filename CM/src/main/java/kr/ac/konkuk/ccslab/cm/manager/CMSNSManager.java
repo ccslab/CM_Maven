@@ -14,15 +14,7 @@ import kr.ac.konkuk.ccslab.cm.info.CMFileTransferInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMInteractionInfo;
 import kr.ac.konkuk.ccslab.cm.info.CMSNSInfo;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttach;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistory;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachAccessHistoryList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachHashtable;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSAttachList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSContent;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSContentList;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchHashMap;
-import kr.ac.konkuk.ccslab.cm.sns.CMSNSPrefetchList;
+import kr.ac.konkuk.ccslab.cm.sns.*;
 import kr.ac.konkuk.ccslab.cm.util.CMUtil;
 
 import java.text.*;
@@ -34,12 +26,13 @@ public class CMSNSManager {
 	private static final int MAX_CONTENT_NUM = 100;
 	
 	// get the list of users whom the user, 'strUserName', adds as his/her friends 
-	public static ArrayList<String> getFriendList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> getFriendList(String strUserName)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
-		if(!CMConfigurator.isDServer(cmInfo))
+		if(!CMConfigurator.isDServer())
 		{
 			System.err.println("CMSNSManager.getFriendList(), this is not the default server!");
 			return null;
@@ -53,18 +46,19 @@ public class CMSNSManager {
 		
 		ArrayList<String> friendList = null;
 		// get users whom I added as friends
-		friendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
+		friendList = CMDBManager.queryGetFriendsList(strUserName);
 
 		return friendList;
 	}
 	
 	// get the list of users who added the user, 'strUserName', as their friend, but the user has not add them yet
-	public static ArrayList<String> getFriendRequesterList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> getFriendRequesterList(String strUserName)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
-		if(!CMConfigurator.isDServer(cmInfo))
+		if(!CMConfigurator.isDServer())
 		{
 			System.err.println("CMSNSManager.getFriendRequesterList(), this is not the default server!");
 			return null;
@@ -81,10 +75,10 @@ public class CMSNSManager {
 		ArrayList<String> requesterList = null;
 		
 		// get users who added me as a friend
-		candidateList = CMDBManager.queryGetRequestersList(strUserName, cmInfo);
+		candidateList = CMDBManager.queryGetRequestersList(strUserName);
 		
 		// get users whom I added as friends
-		myFriendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
+		myFriendList = CMDBManager.queryGetFriendsList(strUserName);
 		
 		// If users in the list are not my friends, add them to a new list
 		// because current 'candidateList' includes users whom I added as friends as well.
@@ -108,12 +102,13 @@ public class CMSNSManager {
 	}
 	
 	// get the list of users who added the user, 'strUserName', as their friend, and the user added them as well
-	public static ArrayList<String> getBiFriendList(String strUserName, CMInfo cmInfo)
+	public static ArrayList<String> getBiFriendList(String strUserName)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		// Only the default server which connects to DB can get a friend list
-		if(!CMConfigurator.isDServer(cmInfo))
+		if(!CMConfigurator.isDServer())
 		{
 			System.err.println("CMSNSManager.getBiFriendList(), this is not the default server!");
 			return null;
@@ -130,9 +125,9 @@ public class CMSNSManager {
 		ArrayList<String> biFriendList = null;
 
 		// get users who added me as a friend
-		candidateList = CMDBManager.queryGetRequestersList(strUserName, cmInfo);		
+		candidateList = CMDBManager.queryGetRequestersList(strUserName);
 		// get users whom I added as friends
-		myFriendList = CMDBManager.queryGetFriendsList(strUserName, cmInfo);
+		myFriendList = CMDBManager.queryGetFriendsList(strUserName);
 		
 		// If users in the list are not my friends, add them to a new list
 		// because current 'candidateList' includes users whom I added as friends as well.
@@ -156,10 +151,11 @@ public class CMSNSManager {
 	}
 	
 	// check the completion of receiving attached file of SNS content
-	protected static void checkCompleteRecvAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
+	protected static void checkCompleteRecvAttachedFiles(CMFileEvent fe)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttachList attachList = null;
 		CMSNSAttach attach = null;
 		int nContentID = -1;
@@ -171,7 +167,7 @@ public class CMSNSManager {
 		{
 			// find attachment info to be received
 			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
-			attachList = attachHashtable.findSNSAttachList(fe.getFileSender());
+			attachList = attachHashtable.findSNSAttachList(fe.getFileSender(), fe.getFileSenderUuid());
 			if(attachList == null) return;
 			attach = attachList.findSNSAttach(fe.getContentID());
 			if(attach == null) return;
@@ -198,7 +194,7 @@ public class CMSNSManager {
 			
 			if(confInfo.isDBUse())
 			{
-				CMDBManager.queryInsertSNSAttachedFile(nContentID, strFilePath, strFileName, cmInfo);
+				CMDBManager.queryInsertSNSAttachedFile(nContentID, strFilePath, strFileName);
 			}
 			else
 			{
@@ -225,7 +221,7 @@ public class CMSNSManager {
 			se.setContentID(attach.getContentID());
 			se.setDate(attach.getCreationTime());
 			se.setUserName(attach.getRequesterName());
-			CMEventManager.unicastEvent(se, fe.getFileSender(), cmInfo);
+			CMEventManager.unicastEvent(se, fe.getFileSender(), fe.getFileSenderUuid());
 			se = null;
 			
 			// remove the completed attachment info
@@ -233,7 +229,7 @@ public class CMSNSManager {
 			attach = null;
 			if(attachList.getSNSAttachList().isEmpty())
 			{
-				attachHashtable.removeSNSAttachList(fe.getFileSender());
+				attachHashtable.removeSNSAttachList(fe.getFileSender(), fe.getFileSenderUuid());
 				attachList = null;
 			}
 
@@ -262,27 +258,29 @@ public class CMSNSManager {
 	
 	//////////////////// check the completion of sending attached file of SNS content
 	//////////////////// and check the completion of prefetching an attached file of SNS content
-	protected static void checkCompleteSendAttachedFiles(CMFileEvent fe, CMInfo cmInfo)
+	protected static void checkCompleteSendAttachedFiles(CMFileEvent fe)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		int nContentID = fe.getContentID();
 		String strFileName = fe.getFileName();
 		String strReceiverName = fe.getFileReceiver();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		UUID fileReceiverUuid = fe.getFileReceiverUuid();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		
 		if(confInfo.getSystemType().equals("CLIENT"))
 		{
-			checkClientCompleteSendAttachedFiles(nContentID, strFileName, cmInfo);
+			checkClientCompleteSendAttachedFiles(nContentID, strFileName);
 		}
 		else	// SERVER
 		{
-			checkServerCompleteSendAttachedFiles(strReceiverName, nContentID, strFileName, cmInfo);
+			checkServerCompleteSendAttachedFiles(strReceiverName, fileReceiverUuid, nContentID, strFileName);
 			
 			// check the completion of prefetching process
-			CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName);
+			CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+			CMUser user = interInfo.getLoginUsers().findMember(strReceiverName, fileReceiverUuid);
 			if(user != null && user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 			{
-				checkServerCompletePrefetch(strReceiverName, strFileName, cmInfo);
+				checkServerCompletePrefetch(strReceiverName, fileReceiverUuid, strFileName);
 			}			
 		}
 		return;
@@ -290,9 +288,9 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a client is completed to be transferred or not
 	// called when a client completes its file transfer
-	private static void checkClientCompleteSendAttachedFiles(int nContentID, String strFileName, CMInfo cmInfo)
+	private static void checkClientCompleteSendAttachedFiles(int nContentID, String strFileName)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach attach = null;
 		int nCompleted = 0;
 
@@ -309,16 +307,16 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be transferred or not
 	// called when a server completes its file transfer
-	private static void checkServerCompleteSendAttachedFiles(String strUserName, int nContentID, String strFileName, 
-			CMInfo cmInfo)
+	private static void checkServerCompleteSendAttachedFiles(String strUserName, UUID uuid, int nContentID,
+															 String strFileName)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach attach = null;
 		int nCompleted = 0;
 
 		// find and update the completed attachment info
 		CMSNSAttachHashtable attachHashtable = snsInfo.getSendSNSAttachHashtable();
-		CMSNSAttachList attachList = attachHashtable.findSNSAttachList(strUserName);
+		CMSNSAttachList attachList = attachHashtable.findSNSAttachList(strUserName, uuid);
 		if(attachList == null) return;
 		attach = attachList.findSNSAttach(nContentID);
 		if(attach == null) return;
@@ -341,11 +339,11 @@ public class CMSNSManager {
 			sevent.setNumContents( attachList.getNumContents() );
 
 			// send the end event
-			CMEventManager.unicastEvent(sevent, strUserName, cmInfo);
+			CMEventManager.unicastEvent(sevent, strUserName, uuid);
 			sevent = null;
 			
 			// remove the completed attachment list info
-			attachHashtable.removeSNSAttachList(strUserName);
+			attachHashtable.removeSNSAttachList(strUserName, uuid);
 			attachList = null;
 		}
 		
@@ -354,44 +352,44 @@ public class CMSNSManager {
 	
 	// check whether an attached file from a server is completed to be prefetched or not
 	// called when a server completes its file transfer
-	private static void checkServerCompletePrefetch(String strUserName, String strFileName, CMInfo cmInfo)
+	private static void checkServerCompletePrefetch(String strUserName, UUID uuid, String strFileName)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
-		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
+		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName, uuid);
 		if(prefetchList == null) return;
 		String strPath = prefetchList.findFilePath(strFileName);
 		if(strPath == null) return;
 		prefetchList.removeFilePath(strPath);
 		if(!prefetchList.getFilePathList().isEmpty()) return;
-		prefetchMap.removePrefetchList(strUserName);
+		prefetchMap.removePrefetchList(strUserName, uuid);
 		if(CMInfo._CM_DEBUG)
-			System.out.println("CMSNSManager.checkServerPrefetchCompletion(), "
-					+"prefetching for user("+strUserName+") completes.");
+			System.out.println("CMSNSManager.checkServerPrefetchCompletion(), prefetching for user("+strUserName
+					+"), uuid("+uuid+") completes.");
 		
 		// notify the user of the prefetching completion?
 		CMSNSEvent se = new CMSNSEvent();
 		se.setID(CMSNSEvent.PREFETCH_COMPLETED);
 		se.setUserName(strUserName);
-		CMEventManager.unicastEvent(se, strUserName, cmInfo);
+		CMEventManager.unicastEvent(se, strUserName, uuid);
 		se = null;
 		
 		return;
 	}
 	
 	// check whether the original files are currently being prefetched to the client or not
-	private static boolean isServerPrefetchOngoing(String strUserName, CMInfo cmInfo)
+	private static boolean isServerPrefetchOngoing(String strUserName, UUID uuid)
 	{
 		boolean bFound = false;
 		// find the prefetch list of the client
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSPrefetchHashMap  prefetchMap = snsInfo.getPrefetchMap();
-		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName);
+		CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(strUserName, uuid);
 		if(prefetchList == null) return false;
 		
 		// find the ongoing file sending info
-		CMFileTransferInfo fInfo = cmInfo.getFileTransferInfo();
-		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName);
+		CMFileTransferInfo fInfo = CMFileTransferInfo.getInstance();
+		CMSendFileInfo sendFileInfo = fInfo.findSendFileInfoOngoing(strUserName, uuid);
 		if(sendFileInfo != null)
 		{
 			// check if the ongoing file is one of the prefetch list member
@@ -406,14 +404,21 @@ public class CMSNSManager {
 	}
 	
 	// load access history of this user from DB from a specified date to his/her last login date
-	public static void loadAccessHistory(CMUser user, CMInfo cmInfo)
+	public static void loadAccessHistory(CMUser user)
 	{
 		String strUserName = user.getName();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+		if( snsUserInfo == null ) {
+			System.err.println("CMSNSManager.loadAccessHistory(), sns user info not found for user("
+					+user.getName()+")!");
+			return;
+		}
 		
 		// set a starting and ending dates for loading access history 
-		Calendar endDate = user.getLastLoginDate();
+		Calendar endDate = snsUserInfo.getLastLoginDate();
 
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int amount = -(confInfo.getAttachAccessInterval()); // change to a negative number
 
 		Calendar startDate = Calendar.getInstance();
@@ -424,10 +429,10 @@ public class CMSNSManager {
 		
 		// load access history of the user from DB
 		CMSNSAttachAccessHistoryList historyList = null;
-		historyList = CMDBManager.queryGetAccessHistory(strUserName, startDate, endDate, null, cmInfo);
+		historyList = CMDBManager.queryGetAccessHistory(strUserName, startDate, endDate, null);
 		
 		// store history to the history list of the user
-		user.setAttachAccessHistoryList(historyList);
+		snsUserInfo.setSNSAttachAccessHistoryList(historyList);
 		
 		if(CMInfo._CM_DEBUG)
 		{
@@ -450,8 +455,9 @@ public class CMSNSManager {
 	}
 	
 	// save the updated or newly added access history in DB since the login date
-	public static void saveAccessHistory(CMUser user, CMInfo cmInfo)
+	public static void saveAccessHistory(CMUser user)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMSNSAttachAccessHistoryList historyList = null;
 		ArrayList<CMSNSAttachAccessHistory> arrayList = null;
 		String strUserName = null;
@@ -468,7 +474,14 @@ public class CMSNSManager {
 			return;
 		}
 
-		historyList = user.getAttachAccessHistoryList();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+		if( snsUserInfo == null ) {
+			System.err.println("CMSNSManager.saveAccessHistory(), sns user info not found for user("
+					+user.getName()+")!");
+			return;
+		}
+		historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 		arrayList = historyList.getAllAccessHistory();
 
 		for(int i = 0; i < arrayList.size(); i++)
@@ -482,7 +495,7 @@ public class CMSNSManager {
 			if(tempHistory.isAdded())
 			{				
 				// add new access history since login time
-				nRet = CMDBManager.queryInsertAccessHistory(strUserName, date, strWriterName, nAccessCount, cmInfo);
+				nRet = CMDBManager.queryInsertAccessHistory(strUserName, date, strWriterName, nAccessCount);
 				if(nRet == 1) // DB query succeeded
 				{
 					nAdded++;
@@ -491,7 +504,7 @@ public class CMSNSManager {
 			else if(tempHistory.isUpdated())
 			{
 				// update existing access history since login time
-				nRet = CMDBManager.queryUpdateAccessCount(strUserName, date, strWriterName, nAccessCount, cmInfo);
+				nRet = CMDBManager.queryUpdateAccessCount(strUserName, date, strWriterName, nAccessCount);
 				if(nRet == 1) // DB query succeeded
 				{
 					nUpdated++;
@@ -508,85 +521,85 @@ public class CMSNSManager {
 		return;
 	}
 	
-	public static void processEvent(CMMessage msg, CMInfo cmInfo)
+	public static void processEvent(CMMessage msg)
 	{
 		CMSNSEvent se = new CMSNSEvent(msg.m_buf);
 		switch(se.getID())
 		{
 		case CMSNSEvent.CONTENT_DOWNLOAD_REQUEST:	// c -> s
-			processCONTENT_DOWNLOAD_REQUEST(se, cmInfo);
+			processCONTENT_DOWNLOAD_REQUEST(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_RESPONSE:	// s -> c
-			processCONTENT_DOWNLOAD_RESPONSE(se, cmInfo);
+			processCONTENT_DOWNLOAD_RESPONSE(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_READY:		// c -> s
-			processCONTENT_DOWNLOAD_READY(se, cmInfo);
+			processCONTENT_DOWNLOAD_READY(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD:			// s -> c
-			processCONTENT_DOWNLOAD(se, cmInfo);
+			processCONTENT_DOWNLOAD(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END:		// s -> c
-			processCONTENT_DOWNLOAD_END(se, cmInfo);
+			processCONTENT_DOWNLOAD_END(se);
 			break;
 		case CMSNSEvent.CONTENT_DOWNLOAD_END_RESPONSE:	// c -> s
-			processCONTENT_DOWNLOAD_END_RESPONSE(se, cmInfo);
+			processCONTENT_DOWNLOAD_END_RESPONSE(se);
 			break;
 		case CMSNSEvent.CONTENT_UPLOAD_REQUEST:		// c -> s
-			processCONTENT_UPLOAD_REQUEST(se, cmInfo);
+			processCONTENT_UPLOAD_REQUEST(se);
 			break;
 		case CMSNSEvent.CONTENT_UPLOAD_RESPONSE:	// s -> c
-			processCONTENT_UPLOAD_RESPONSE(se, cmInfo);
+			processCONTENT_UPLOAD_RESPONSE(se);
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND:	// c -> s
-			processADD_NEW_FRIEND(se, cmInfo);
+			processADD_NEW_FRIEND(se);
 			break;
 		case CMSNSEvent.ADD_NEW_FRIEND_ACK:	// s -> c
-			processADD_NEW_FRIEND_ACK(se, cmInfo);
+			processADD_NEW_FRIEND_ACK(se);
 			break;
 		case CMSNSEvent.REMOVE_FRIEND:	// c -> s
-			processREMOVE_FRIEND(se, cmInfo);
+			processREMOVE_FRIEND(se);
 			break;
 		case CMSNSEvent.REMOVE_FRIEND_ACK:	// s -> c
-			processREMOVE_FRIEND_ACK(se, cmInfo);
+			processREMOVE_FRIEND_ACK(se);
 			break;
 		case CMSNSEvent.REQUEST_FRIEND_LIST:	// c -> s
-			processREQUEST_FRIEND_LIST(se, cmInfo);
+			processREQUEST_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.RESPONSE_FRIEND_LIST:	// s -> c
-			processRESPONSE_FRIEND_LIST(se, cmInfo);
+			processRESPONSE_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.REQUEST_FRIEND_REQUESTER_LIST:	// c -> s
-			processREQUEST_FRIEND_REQUESTER_LIST(se, cmInfo);
+			processREQUEST_FRIEND_REQUESTER_LIST(se);
 			break;
 		case CMSNSEvent.RESPONSE_FRIEND_REQUESTER_LIST:	// s -> c
-			processRESPONSE_FRIEND_REQUESTER_LIST(se, cmInfo);
+			processRESPONSE_FRIEND_REQUESTER_LIST(se);
 			break;
 		case CMSNSEvent.REQUEST_BI_FRIEND_LIST:	// c -> s
-			processREQUEST_BI_FRIEND_LIST(se, cmInfo);
+			processREQUEST_BI_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.RESPONSE_BI_FRIEND_LIST:	// s -> c
-			processRESPONSE_BI_FRIEND_LIST(se, cmInfo);
+			processRESPONSE_BI_FRIEND_LIST(se);
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILES:		// s <-> c
-			processREQUEST_ATTACHED_FILES(se, cmInfo);
+			processREQUEST_ATTACHED_FILES(se);
 			break;
 		case CMSNSEvent.ATTACHED_FILES_NOT_FOUND:	// s -> c
-			processATTACHED_FILES_NOT_FOUND(se, cmInfo);
+			processATTACHED_FILES_NOT_FOUND(se);
 			break;
 		case CMSNSEvent.REQUEST_ATTACHED_FILE:		// c -> s
-			processREQUEST_ATTACHED_FILE(se, cmInfo);
+			processREQUEST_ATTACHED_FILE(se);
 			break;
 		case CMSNSEvent.RESPONSE_ATTACHED_FILE:		// s -> c
-			processRESPONSE_ATTACHED_FILE(se, cmInfo);
+			processRESPONSE_ATTACHED_FILE(se);
 			break;
 		case CMSNSEvent.CHANGE_ATTACH_DOWNLOAD_SCHEME:	// s -> c
-			processCHANGE_ATTACH_DOWNLOAD_SCHEME(se, cmInfo);
+			processCHANGE_ATTACH_DOWNLOAD_SCHEME(se);
 			break;
 		case CMSNSEvent.ACCESS_ATTACHED_FILE:		// c -> s
-			processACCESS_ATTACHED_FILE(se, cmInfo);
+			processACCESS_ATTACHED_FILE(se);
 			break;
 		case CMSNSEvent.PREFETCH_COMPLETED:			// s -> c
-			processPREFETCH_COMPLETED(se, cmInfo);
+			processPREFETCH_COMPLETED(se);
 			break;
 		default:
 			System.out.println("CMSNSManager.processEvent(), unknown event ID("+se.getID()+").");
@@ -599,11 +612,11 @@ public class CMSNSManager {
 	}
 
 	// for server
-	private static void processCONTENT_DOWNLOAD_REQUEST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_REQUEST(CMSNSEvent se)
 	{
 		CMSNSEvent seAck = null;
 		int nReturnCode = -1;
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strUser = se.getUserName();
 
 		if(CMInfo._CM_DEBUG)
@@ -615,21 +628,21 @@ public class CMSNSManager {
 		// If the sns attachment download scheme is the prefetch mode, the incomplete prefetch should be canceled
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
-			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			
 			// check for the ongoing prefetch to the user, and cancel the prefetched file transfer
-			if(isServerPrefetchOngoing(strUser, cmInfo))
+			if(isServerPrefetchOngoing(strUser, se.getSenderUuid()))
 			{
 				if(CMInfo._CM_DEBUG)
 					System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_REQUEST(); previous prefetch ongoing "
-							+ "to the user("+strUser+")");
-				CMFileTransferManager.cancelPushFile(strUser, cmInfo);	// not clear
+							+ "to the user("+strUser+"), uuid("+se.getSenderUuid()+").");
+				CMFileTransferManager.cancelPushFile(strUser, se.getSenderUuid());
 			}
 			
 			// clear the prefetch list of the user
-			CMSNSPrefetchList prefetchList = snsInfo.getPrefetchMap().findPrefetchList(strUser);
+			CMSNSPrefetchList prefetchList = snsInfo.getPrefetchMap().findPrefetchList(strUser, se.getSenderUuid());
 			if(prefetchList != null)
-				snsInfo.getPrefetchMap().removePrefetchList(strUser);
+				snsInfo.getPrefetchMap().removePrefetchList(strUser, se.getSenderUuid());
 		}
 	
 		nReturnCode = 1;
@@ -650,14 +663,14 @@ public class CMSNSManager {
 		}
 	
 		// send the response event
-		CMEventManager.unicastEvent(seAck, strUser, cmInfo);
+		CMEventManager.unicastEvent(seAck, strUser, se.getSenderUuid());
 		
 		seAck = null;
 		return;
 	}
 	
 	// for client
-	private static void processCONTENT_DOWNLOAD_RESPONSE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_RESPONSE(CMSNSEvent se)
 	{
 		CMSNSEvent seAck = new CMSNSEvent();
 
@@ -669,9 +682,9 @@ public class CMSNSManager {
 		seAck.setServerTime( se.getServerTime() );
 
 		// send the ready event
-		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		CMEventManager.unicastEvent(seAck, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(seAck, strDefServer);
 
 		if(CMInfo._CM_DEBUG)
 		{
@@ -683,8 +696,9 @@ public class CMSNSManager {
 	}
 	
 	// for server
-	private static void processCONTENT_DOWNLOAD_READY(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_READY(CMSNSEvent se)
 	{
+		CMInfo cmInfo = CMInfo.getInstance();
 		CMSNSEvent sevent = null;
 		long lDelay = 0;
 		int nContNum = 0;
@@ -704,12 +718,13 @@ public class CMSNSManager {
 		Vector<CMSNSContent> contentVector = null;
 		int nForStart = -1;
 		int nForEnd = -1;
+		int nActualDownNum = 0;
 		
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nDefDownloadNum = confInfo.getDownloadNum();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName());
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMUser user = interInfo.getLoginUsers().findMember(se.getUserName(), se.getSenderUuid());
 		int nAttachDownloadScheme = user.getAttachDownloadScheme();
 
 		if(confInfo.isDownloadScheme())
@@ -791,12 +806,13 @@ public class CMSNSManager {
 			CMDBManager.queryGetSNSContent(nOffset, nContNum, cmInfo);
 			*/
 			
-			contentList = CMDBManager.queryGetSNSContent(se.getUserName(), se.getWriterName(), nOffset, nContNum, cmInfo);
+			contentList = CMDBManager.queryGetSNSContent(se.getUserName(), se.getWriterName(), nOffset, nContNum);
 			contentVector = contentList.getContentList();
 			snsInfo.setSNSContentList(contentList);
 
 			nForStart = 0;
 			nForEnd = contentList.getSNSContentNum();
+			nActualDownNum = contentList.getSNSContentNum();
 
 			// create and send content events
 			for(int i = nForStart; i < nForEnd; i++)
@@ -831,7 +847,7 @@ public class CMSNSManager {
 					
 					// get the names of attached files
 					ArrayList<String> attachFileList = null;
-					attachFileList = CMDBManager.queryGetSNSAttachedFile(nContID, cmInfo);
+					attachFileList = CMDBManager.queryGetSNSAttachedFile(nContID);
 					nameList = new ArrayList<String>();
 					pathList = new ArrayList<String>();
 					prefetchPathList = new ArrayList<String>();
@@ -866,7 +882,7 @@ public class CMSNSManager {
 											+ "call isPrefetchEnabled() for content("+nContID+").");
 								}
 								// check prefetch threshold (interest of a user in a writer)
-								if(isPrefetchEnabled(se.getUserName(), strWriter, cmInfo))
+								if(isPrefetchEnabled(se.getUserName(), se.getSenderUuid(), strWriter))
 								{
 									// add a file path to the prefetching list
 									// avoid duplicate path
@@ -899,7 +915,8 @@ public class CMSNSManager {
 						CMSNSAttach attach = new CMSNSAttach();
 						attach.setContentID(nContID);
 						attach.setFilePathList(pathList);
-						CMSNSAttachList attachList = sendAttachHashtable.findSNSAttachList(se.getUserName());
+						CMSNSAttachList attachList = sendAttachHashtable.findSNSAttachList(se.getUserName(),
+								se.getSenderUuid());
 						if(attachList != null)
 						{
 							attachList.addSNSAttach(attach);
@@ -910,20 +927,21 @@ public class CMSNSManager {
 							attachList.addSNSAttach(attach);
 							attachList.setContentDownloadEndEvent(se.getUserName(), se.getWriterName(), 
 									se.getContentOffset(), contentList.getSNSContentNum());
-							sendAttachHashtable.addSNSAttachList(se.getUserName(), attachList);
+							sendAttachHashtable.addSNSAttachList(se.getUserName(), se.getSenderUuid(), attachList);
 						}
 						
 						// save the prefetch list if current mode is the prefetch mode
 						if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH && !prefetchPathList.isEmpty())
 						{
 							CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
-							CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName());
+							CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName(),
+									se.getSenderUuid());
 							if(prefetchList == null)
 							{
 								prefetchList = new CMSNSPrefetchList();
 							}
 							prefetchList.addFilePathList(prefetchPathList);
-							prefetchMap.addPrefetchList(se.getUserName(), prefetchList);
+							prefetchMap.addPrefetchList(se.getUserName(), se.getSenderUuid(), prefetchList);
 						}
 					}
 				}
@@ -947,25 +965,23 @@ public class CMSNSManager {
 				}
 				*/
 		
-				CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
 				sevent = null;
 				nameList = null;
 			}
 		}
 		else	// if DB is not used,
 		{
-			//////////////////////////////////
-			////// not yet (Currently, only offset and number of content are considered!
-			
 			// if CM DB is not used (content list contains all the uploaded contents in ascending order of seqNum)
 			// adjust nContNum if it is greater than the real remaining number from the offset in the content list
 			if( nOffset > contentList.getSNSContentNum() )	// it means an error
 				nContNum = 0;
 			else if( nOffset + nContNum > contentList.getSNSContentNum() )
 				nContNum = contentList.getSNSContentNum() - nOffset;
-		
+
 			nForStart = contentList.getSNSContentNum() - nOffset -1;
 			nForEnd = contentList.getSNSContentNum() - (nOffset+nContNum) - 1;
+			nActualDownNum = nContNum;
 
 			// create and send content events
 			for(int i = nForStart; i > nForEnd; i--)
@@ -974,40 +990,128 @@ public class CMSNSManager {
 				sevent.setID(CMSNSEvent.CONTENT_DOWNLOAD);
 				sevent.setUserName( se.getUserName() );
 				sevent.setContentOffset( se.getContentOffset() );
-			
+
 				nContID = contentVector.elementAt(i).getContentID();
 				sevent.setContentID( nContID );
 				strDate = contentVector.elementAt(i).getDate();
 				sevent.setDate( strDate );
 				strWriter = contentVector.elementAt(i).getWriterName();
 				sevent.setWriterName( strWriter );
-				//strFileName = contentVector.elementAt(i).getAttachedFileName();
-				//if( strFileName != null )
-				//	sevent.setAttachedFileName( strFileName );
 				strMsg = contentVector.elementAt(i).getMessage();
 				sevent.setMessage( strMsg );
-					
-				// add estimated download delay of this content for simulation
-				/*
-				int maxDelta = ((int)lDelay/2)/3; // 30% of estimated one-way delay
-				int delta = 0;
-				if( maxDelta != 0 )
+				nNumAttachedFiles = contentVector.elementAt(i).getNumAttachedFiles();
+				sevent.setNumAttachedFiles(nNumAttachedFiles);
+				nReplyOf = contentVector.elementAt(i).getReplyOf();
+				sevent.setReplyOf(nReplyOf);
+				nLevelOfDisclosure = contentVector.elementAt(i).getLevelOfDisclosure();
+				sevent.setLevelOfDisclosure(nLevelOfDisclosure);
+
+				// if the content includes attached files,
+				if(nNumAttachedFiles > 0)
 				{
-					delta = rnd.nextInt(maxDelta); // 0 ~ maxDelta
+					bExistAttachment = true;
+
+					ArrayList<String> attachFileList = contentVector.elementAt(i).getFilePathList();
+					nameList = new ArrayList<String>();
+					pathList = new ArrayList<String>();
+					prefetchPathList = new ArrayList<String>();
+
+					for(int j = 0; attachFileList != null && j < attachFileList.size(); j++)
+					{
+						String strAttachPathFile = attachFileList.get(j);
+						boolean bOriginal = true;
+						boolean bThumbnail = false;
+						String strFilePath = strAttachPathFile.substring(0, strAttachPathFile.lastIndexOf(File.separator));
+						String strFileName = strAttachPathFile.substring(strAttachPathFile.lastIndexOf(File.separator)+1);
+						String strThumbnailName = null;
+						if(CMUtil.isImageFile(strFilePath+File.separator+strFileName))
+						{
+							// change the image file name to its thumbnail image name
+							int index = strFileName.lastIndexOf(".");
+							strThumbnailName = strFileName.substring(0, index)+"-thumbnail"
+								+strFileName.substring(index, strFileName.length());
+
+							if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PARTIAL)
+							{
+								bOriginal = false;
+								bThumbnail = true;
+							}
+							else if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH)
+							{
+								bOriginal = false;
+								bThumbnail = true;
+								if(CMInfo._CM_DEBUG)
+								{
+									System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_READY(), "
+											+ "call isPrefetchEnabled() for content("+nContID+").");
+								}
+								// check prefetch threshold (interest of a user in a writer)
+								if(isPrefetchEnabled(se.getUserName(), se.getSenderUuid(), strWriter))
+								{
+									// add a file path to the prefetching list
+									// avoid duplicate path
+									if(!prefetchPathList.contains(strFilePath+File.separator+strFileName))
+										prefetchPathList.add(strFilePath+File.separator+strFileName);
+								}
+							}
+						}
+
+						if(bOriginal)
+						{
+							nameList.add(strFileName);
+							pathList.add(strFilePath+File.separator+strFileName);
+						}
+						if(bThumbnail)
+						{
+							nameList.add(strThumbnailName);
+							pathList.add(strFilePath+File.separator+strThumbnailName);
+						}
+					}
+
+					// add the file name list to the CONTENT_DOWNLOAD event
+					sevent.setFileNameList(nameList);
+
+					if(nAttachDownloadScheme != CMInfo.SNS_ATTACH_NONE)
+					{
+						// add the attached file path to the attachMapToBeSent
+						CMSNSAttachHashtable sendAttachHashtable = snsInfo.getSendSNSAttachHashtable();
+						CMSNSAttach attach = new CMSNSAttach();
+						attach.setContentID(nContID);
+						attach.setFilePathList(pathList);
+						CMSNSAttachList attachList = sendAttachHashtable.findSNSAttachList(se.getUserName(),
+								se.getSenderUuid());
+						if(attachList != null)
+						{
+							attachList.addSNSAttach(attach);
+						}
+						else
+						{
+							attachList = new CMSNSAttachList();
+							attachList.addSNSAttach(attach);
+							attachList.setContentDownloadEndEvent(se.getUserName(), se.getWriterName(),
+									se.getContentOffset(), nActualDownNum);
+							sendAttachHashtable.addSNSAttachList(se.getUserName(), se.getSenderUuid(), attachList);
+						}
+
+						// save the prefetch list if current mode is the prefetch mode
+						if(nAttachDownloadScheme == CMInfo.SNS_ATTACH_PREFETCH && !prefetchPathList.isEmpty())
+						{
+							CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
+							CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName(),
+									se.getSenderUuid());
+							if(prefetchList == null)
+							{
+								prefetchList = new CMSNSPrefetchList();
+							}
+							prefetchList.addFilePathList(prefetchPathList);
+							prefetchMap.addPrefetchList(se.getUserName(), se.getSenderUuid(), prefetchList);
+						}
+					}
 				}
-				int incdec = rnd.nextInt(2);	// 0 or 1
-				if( incdec == 1 )
-				{
-					sevent.setEstDelay( (int)lDelay/2 + delta );
-				}
-				else
-				{
-					sevent.setEstDelay( (int)lDelay/2 - delta );
-				}
-				*/
-		
-				CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
+
+				CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
 				sevent = null;
+				nameList = null;
 			}
 		}
 
@@ -1019,10 +1123,10 @@ public class CMSNSManager {
 			sevent.setUserName( se.getUserName() );
 			sevent.setWriterName(se.getWriterName());
 			sevent.setContentOffset( se.getContentOffset() );
-			sevent.setNumContents( contentList.getSNSContentNum() );
+			sevent.setNumContents( nActualDownNum );
 
 			// send the end event
-			CMEventManager.unicastEvent(sevent, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(sevent, se.getUserName(), se.getSenderUuid());
 			sevent = null;
 		}
 		
@@ -1045,7 +1149,7 @@ public class CMSNSManager {
 	*/
 	
 	// check how much 'strUserName' has interest in 'strWriterName' in terms of access count during specified dates  
-	private static boolean isPrefetchEnabled(String strUserName, String strWriterName, CMInfo cmInfo)
+	private static boolean isPrefetchEnabled(String strUserName, UUID userUuid, String strWriterName)
 	{
 		boolean bEnable = false;
 		int nTotalAccessCount = 0;
@@ -1053,18 +1157,26 @@ public class CMSNSManager {
 		double dAccessRate = 0.0;
 		
 		// get prefetching threshold
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		double dThreshold = confInfo.getAttachPrefetchThreshold();
 		
 		// get access history of 'strUserName' during specified dates (already retrieved at the login time)
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMUser user = interInfo.getLoginUsers().findMember(strUserName);
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMUser user = interInfo.getLoginUsers().findMember(strUserName, userUuid);
 		if(user == null)
 		{
 			System.err.println("CMSNSManager.isPrefetchEnabled(), the requesting user is null!");
 			return false;
 		}
-		CMSNSAttachAccessHistoryList historyList = user.getAttachAccessHistoryList();
+
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+		if( snsUserInfo == null ) {
+			System.err.println("CMSNSManager.isPrefetchEnabled(), sns user info not found for user("
+					+user.getName()+"), uuid("+user.getUuid()+")!");
+			return false;
+		}
+		CMSNSAttachAccessHistoryList historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 		ArrayList<CMSNSAttachAccessHistory> historyArrayList = historyList.getAllAccessHistory();
 		// calculate access counts for 'strWriterName' and total access counts
 		for(int i = 0; i < historyArrayList.size(); i++)
@@ -1084,7 +1196,7 @@ public class CMSNSManager {
 		if(CMInfo._CM_DEBUG)
 		{
 			DecimalFormat df = new DecimalFormat("0.0#");
-			System.out.println("CMSNSManager.isPrefetchEnabled(), user("+strUserName+"), writer("
+			System.out.println("CMSNSManager.isPrefetchEnabled(), user("+strUserName+"), uuid("+userUuid+"), writer("
 					+strWriterName+"), accessCount("+nAccessCount+"), TotalCount("+nTotalAccessCount
 					+"), accessRate("+df.format(dAccessRate)+"), threshold("+dThreshold+").");
 			
@@ -1099,11 +1211,11 @@ public class CMSNSManager {
 	}
 	
 	// for client
-	private static void processCONTENT_DOWNLOAD(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD(CMSNSEvent se)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		String strDefServer = interInfo.getDefaultServerInfo().getServerName();
 		
 		if(se.getNumAttachedFiles() > 0 && confInfo.getAttachDownloadScheme() != CMInfo.SNS_ATTACH_NONE)
@@ -1123,14 +1235,14 @@ public class CMSNSManager {
 			seReq.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
 			seReq.setUserName(interInfo.getMyself().getName());
 			seReq.setContentID(se.getContentID());
-			CMEventManager.unicastEvent(seReq, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(seReq, strDefServer);
 		}
 	}
 	
 	// for client
-	private static void processCONTENT_DOWNLOAD_END(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_END(CMSNSEvent se)
 	{
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		int nReturnCode = -1;
 		
 		if(CMInfo._CM_DEBUG)
@@ -1165,30 +1277,30 @@ public class CMSNSManager {
 		sevent.setReturnCode( nReturnCode );	// 1 for ok, 0 for error
 
 		// send a response event
-		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
-		CMEventManager.unicastEvent(sevent, strDefServer, cmInfo);
+		CMEventManager.unicastEvent(sevent, strDefServer);
 
 		sevent = null;
 		return;
 	}
 	
-	private static void processCONTENT_DOWNLOAD_END_RESPONSE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_DOWNLOAD_END_RESPONSE(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
-			System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_END_RESPONSE(), requester("
-					+se.getUserName()+"), offset("+se.getContentOffset()+"), return code("
+			System.out.println("CMSNSManager.processCONTENT_DOWNLOAD_END_RESPONSE(), requester(" +se.getUserName()
+					+"), uuid("+se.getSenderUuid()+"), offset("+se.getContentOffset()+"), return code("
 					+se.getReturnCode()+").");
 		}
 		
 		// check whether prefetching starts or not
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		if(confInfo.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
-			CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 			CMSNSPrefetchHashMap prefetchMap = snsInfo.getPrefetchMap();
-			CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName());
+			CMSNSPrefetchList prefetchList = prefetchMap.findPrefetchList(se.getUserName(), se.getSenderUuid());
 			if(prefetchList == null) return;
 			ArrayList<String> preArrayList = prefetchList.getFilePathList();
 			if(CMInfo._CM_DEBUG)
@@ -1202,7 +1314,7 @@ public class CMSNSManager {
 			// start prefetching to the user
 			for(int i = 0; i < preArrayList.size(); i++)
 			{
-				CMFileTransferManager.pushFile(preArrayList.get(i), se.getUserName(), cmInfo);
+				CMFileTransferManager.pushFile(preArrayList.get(i), se.getUserName(), se.getSenderUuid());
 			}
 		}
 		
@@ -1210,12 +1322,13 @@ public class CMSNSManager {
 	}
 	
 	// for server
-	private static void processCONTENT_UPLOAD_REQUEST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_UPLOAD_REQUEST(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSContentList contentList = snsInfo.getSNSContentList();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		// initialize nReturnCode, seqNum and creationTime
 		int nReturnCode = 0;
@@ -1230,12 +1343,12 @@ public class CMSNSManager {
 		{
 			// insert sns content to DB
 			ret = CMDBManager.queryInsertSNSContent(se.getUserName(), se.getMessage(), se.getNumAttachedFiles(), 
-					se.getReplyOf(), se.getLevelOfDisclosure(), cmInfo);
+					se.getReplyOf(), se.getLevelOfDisclosure());
 			if( ret == 1 )
 			{
 				// get the last insert ID
 				String strQuery = "select last_insert_id() from sns_content_table;";
-				ResultSet rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+				ResultSet rs = CMDBManager.sendSelectQuery(strQuery);
 				try {
 					if(rs != null && rs.next())
 					{
@@ -1243,7 +1356,7 @@ public class CMSNSManager {
 					}
 					// get seq number, creation time from DB
 					strQuery = "select creationTime from sns_content_table where seqNum="+nSeqNum+";";
-					rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+					rs = CMDBManager.sendSelectQuery(strQuery);
 
 					if(rs != null && rs.next())
 					{
@@ -1260,7 +1373,7 @@ public class CMSNSManager {
 				} catch (SQLException e) {
 					e.printStackTrace();
 				} finally {
-					CMDBManager.closeDB(cmInfo);
+					CMDBManager.closeDB();
 					CMDBManager.closeRS(rs);
 				}
 			}
@@ -1285,7 +1398,7 @@ public class CMSNSManager {
 			// add the content to the content list only if the previous logic is successful
 			bRet = contentList.addSNSContent(nSeqNum, strCreationTime, se.getUserName(), se.getMessage()
 					, se.getNumAttachedFiles(), se.getReplyOf(), se.getLevelOfDisclosure()
-					, se.getFileNameList());
+					, null);
 		}
 
 		if(ret == 1 || bRet)	// Any case is correct
@@ -1300,7 +1413,7 @@ public class CMSNSManager {
 			tse.setContentID(nSeqNum);
 			tse.setDate(strCreationTime);
 			tse.setUserName(se.getUserName());
-			CMEventManager.unicastEvent(tse, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(tse, se.getUserName(), se.getSenderUuid());
 			tse = null;
 		}
 		else	// if there is attachment
@@ -1312,20 +1425,20 @@ public class CMSNSManager {
 			CMSNSAttachList attachList = new CMSNSAttachList();
 			attachList.addSNSAttach(attach);
 			CMSNSAttachHashtable attachHashtable = snsInfo.getRecvSNSAttachHashtable();
-			attachHashtable.addSNSAttachList(se.getUserName(), attachList);
+			attachHashtable.addSNSAttachList(se.getUserName(), se.getSenderUuid(), attachList);
 			/////////////// request for the attached files			
 			tse = new CMSNSEvent();
 			tse.setID(CMSNSEvent.REQUEST_ATTACHED_FILES);
 			tse.setUserName(interInfo.getMyself().getName());	// requester is default server
 			tse.setContentID(nSeqNum);
-			CMEventManager.unicastEvent(tse, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(tse, se.getUserName(), se.getSenderUuid());
 			tse = null;
 		}
 		
 		return;
 	}
 	
-	private static void processCONTENT_UPLOAD_RESPONSE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCONTENT_UPLOAD_RESPONSE(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1336,9 +1449,10 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processADD_NEW_FRIEND(CMSNSEvent se, CMInfo cmInfo)
+	private static void processADD_NEW_FRIEND(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nReturnCode = 0;	// 0: error, 1: succeeded
 		
 		// check if DB is used or not
@@ -1350,12 +1464,12 @@ public class CMSNSManager {
 			
 			// check if the friend is registered user or not
 			strQuery = "select * from user_table where userName='"+se.getFriendName()+"';";
-			rs = CMDBManager.sendSelectQuery(strQuery, cmInfo);
+			rs = CMDBManager.sendSelectQuery(strQuery);
 			try {
 				if(rs != null && rs.next())
 				{
 					// insert (user, friend)
-					ret = CMDBManager.queryInsertFriend(se.getUserName(), se.getFriendName(), cmInfo);
+					ret = CMDBManager.queryInsertFriend(se.getUserName(), se.getFriendName());
 					if(ret == 1) // not clear
 					{
 						nReturnCode = 1;
@@ -1369,7 +1483,7 @@ public class CMSNSManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			} finally {
-				CMDBManager.closeDB(cmInfo);
+				CMDBManager.closeDB();
 				CMDBManager.closeRS(rs);
 			}
 		}
@@ -1384,13 +1498,13 @@ public class CMSNSManager {
 		seAck.setUserName(se.getUserName());
 		seAck.setFriendName(se.getFriendName());
 		
-		CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 		
 		seAck = null;
 		return;
 	}
 	
-	private static void processADD_NEW_FRIEND_ACK(CMSNSEvent se, CMInfo cmInfo)
+	private static void processADD_NEW_FRIEND_ACK(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1401,9 +1515,10 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREMOVE_FRIEND(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREMOVE_FRIEND(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMInfo cmInfo = CMInfo.getInstance();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nReturnCode = 0;	// 0: error, 1: succeeded
 		
 		// check if DB is used or not
@@ -1411,7 +1526,7 @@ public class CMSNSManager {
 		{
 			int ret = -1;
 			
-			ret = CMDBManager.queryDeleteFriend(se.getUserName(), se.getFriendName(), cmInfo);
+			ret = CMDBManager.queryDeleteFriend(se.getUserName(), se.getFriendName());
 			if(ret == 1) // not clear
 			{
 				nReturnCode = 1;
@@ -1428,13 +1543,13 @@ public class CMSNSManager {
 		seAck.setUserName(se.getUserName());
 		seAck.setFriendName(se.getFriendName());
 		
-		CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+		CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 		
 		seAck = null;
 		return;
 	}
 	
-	private static void processREMOVE_FRIEND_ACK(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREMOVE_FRIEND_ACK(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1445,9 +1560,9 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_FRIEND_LIST(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		int nTotalNumFriends = 0;
 		ArrayList<String> friendList = null;
 		CMSNSEvent seAck = null;
@@ -1455,24 +1570,7 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			/*
-			CMDBInfo dbInfo = cmInfo.getDBInfo();
-			ResultSet rs = null;
-			// get users whom I added as friends
-			CMDBManager.queryGetFriendsList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					friendList.add(rs.getString("friendName"));
-					nTotalNumFriends++;
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			*/
-			friendList = CMSNSManager.getFriendList(se.getUserName(), cmInfo);
+			friendList = CMSNSManager.getFriendList(se.getUserName());
 			if(friendList != null)
 				nTotalNumFriends = friendList.size();
 			else
@@ -1489,7 +1587,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			
@@ -1506,7 +1604,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nTotalNumFriends);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+					CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 					seAck = null;
 					i = 0;
@@ -1521,7 +1619,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nTotalNumFriends);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 				seAck = null;
 			}
@@ -1537,7 +1635,7 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 			seAck = null;
 		}
 		
@@ -1545,7 +1643,7 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processRESPONSE_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_FRIEND_LIST(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1563,9 +1661,9 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_FRIEND_REQUESTER_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_FRIEND_REQUESTER_LIST(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		ArrayList<String> requesterList = new ArrayList<String>();
 		int nNumRequesters = 0;
 		CMSNSEvent seAck = null;
@@ -1573,55 +1671,7 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			/*
-			int nNumCandidates = 0;
-			ArrayList<String> candidateList = new ArrayList<String>();
-			ArrayList<String> myFriendList = new ArrayList<String>();
-
-			CMDBInfo dbInfo = cmInfo.getDBInfo();
-			ResultSet rs = null;
-			int i = 0;
-			
-			// get users who added me as a friend
-			CMDBManager.queryGetRequestersList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					candidateList.add(rs.getString("userName"));
-					nNumCandidates++;
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// get users whom I added as friends
-			CMDBManager.queryGetFriendsList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					myFriendList.add(rs.getString("friendName"));
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// If users in the list are not my friends, add them to a new list
-			// because current 'candidateList' includes users whom I added as friends as well. 
-			for(i = 0; i < nNumCandidates; i++)
-			{
-				String strUser = candidateList.get(i);
-				if(!myFriendList.contains(strUser))
-				{
-					requesterList.add(strUser);
-					nNumRequesters++;
-				}
-			}
-			*/
-			requesterList = CMSNSManager.getFriendRequesterList(se.getUserName(), cmInfo);
+			requesterList = CMSNSManager.getFriendRequesterList(se.getUserName());
 			if(requesterList != null)
 				nNumRequesters = requesterList.size();
 			else
@@ -1638,7 +1688,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			
@@ -1655,7 +1705,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nNumRequesters);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+					CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 					seAck = null;
 					i = 0;
@@ -1670,7 +1720,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nNumRequesters);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 				seAck = null;
 			}
@@ -1687,14 +1737,14 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 			seAck = null;
 		}
 
 		return;
 	}
 	
-	private static void processRESPONSE_FRIEND_REQUESTER_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_FRIEND_REQUESTER_LIST(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1712,9 +1762,9 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_BI_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_BI_FRIEND_LIST(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		ArrayList<String> biFriendList = new ArrayList<String>();
 		int nNumBiFriends = 0;
 		CMSNSEvent seAck = null;
@@ -1722,56 +1772,7 @@ public class CMSNSManager {
 		// check if DB is used or not
 		if(confInfo.isDBUse())
 		{
-			/*
-			int nNumCandidates = 0;
-			ArrayList<String> candidateList = new ArrayList<String>();
-			ArrayList<String> myFriendList = new ArrayList<String>();
-			ArrayList<String> requesterList = new ArrayList<String>();
-
-			CMDBInfo dbInfo = cmInfo.getDBInfo();
-			ResultSet rs = null;
-			int i = 0;
-			
-			// get users who added me as a friend
-			CMDBManager.queryGetRequestersList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					candidateList.add(rs.getString("userName"));
-					nNumCandidates++;
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// get users whom I added as friends
-			CMDBManager.queryGetFriendsList(se.getUserName(), cmInfo);
-			rs = dbInfo.getResultSet();
-			try {
-				while(rs.next())
-				{
-					myFriendList.add(rs.getString("friendName"));
-				}
-			} catch (SQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			
-			// If users in the list are not my friends, add them to a new list
-			// because current 'candidateList' includes users whom I added as friends as well. 
-			for(i = 0; i < nNumCandidates; i++)
-			{
-				String strUser = candidateList.get(i);
-				if(myFriendList.contains(strUser))
-				{
-					requesterList.add(strUser);
-					nNumBiFriends++;
-				}
-			}
-			*/
-			biFriendList = CMSNSManager.getBiFriendList(se.getUserName(), cmInfo);
+			biFriendList = CMSNSManager.getBiFriendList(se.getUserName());
 			if(biFriendList != null)
 				nNumBiFriends = biFriendList.size();
 			else
@@ -1788,7 +1789,7 @@ public class CMSNSManager {
 				seAck.setUserName(se.getUserName());
 				seAck.setTotalNumFriends(0);
 				seAck.setNumFriends(0);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			
@@ -1805,7 +1806,7 @@ public class CMSNSManager {
 					seAck.setTotalNumFriends(nNumBiFriends);
 					seAck.setNumFriends(i);
 					seAck.setFriendList(curList);
-					CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+					CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 					seAck = null;
 					i = 0;
@@ -1820,7 +1821,7 @@ public class CMSNSManager {
 				seAck.setTotalNumFriends(nNumBiFriends);
 				seAck.setNumFriends(i);
 				seAck.setFriendList(curList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 
 				seAck = null;
 			}
@@ -1837,14 +1838,14 @@ public class CMSNSManager {
 			seAck.setUserName(se.getUserName());
 			seAck.setTotalNumFriends(0);
 			seAck.setNumFriends(0);
-			CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+			CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 			seAck = null;
 		}
 
 		return;
 	}
 	
-	private static void processRESPONSE_BI_FRIEND_LIST(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_BI_FRIEND_LIST(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -1862,10 +1863,10 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_ATTACHED_FILES(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_ATTACHED_FILES(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
 		CMSNSAttach sendAttach = null;
 		CMSNSAttachList attachList = null;
 		CMSNSAttach attach = null;
@@ -1888,15 +1889,15 @@ public class CMSNSManager {
 			filePathList = sendAttach.getFilePathList();
 			for(i = 0; i < filePathList.size(); i++)
 			{				
-				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), CMInfo.FILE_DEFAULT, 
-						se.getContentID(), cmInfo);
+				CMFileTransferManager.pushFile(filePathList.get(i), se.getUserName(), se.getSenderUuid(),
+						CMInfo.FILE_DEFAULT, se.getContentID());
 			}
 		}
 		else if(confInfo.getSystemType().equals("SERVER"))
 		{
 			// find sendAttachHashtable
 			sendAttachHashtable = snsInfo.getSendSNSAttachHashtable();
-			attachList = sendAttachHashtable.findSNSAttachList(se.getUserName());
+			attachList = sendAttachHashtable.findSNSAttachList(se.getUserName(), se.getSenderUuid());
 			if(attachList == null)
 			{
 				System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILES(), attach list for user("
@@ -1930,10 +1931,9 @@ public class CMSNSManager {
 				}
 				else
 				{
-					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), CMInfo.FILE_DEFAULT, 
-							se.getContentID(), cmInfo);
+					CMFileTransferManager.pushFile(strFilePath, se.getUserName(), se.getSenderUuid(),
+							CMInfo.FILE_DEFAULT, se.getContentID());
 				}
-				file = null;
 			}
 			
 			if(naFileNameList.size() > 0)
@@ -1945,7 +1945,7 @@ public class CMSNSManager {
 				seAck.setContentID(se.getContentID());
 				seAck.setNumAttachedFiles(naFileNameList.size());
 				seAck.setFileNameList(naFileNameList);
-				CMEventManager.unicastEvent(seAck, se.getUserName(), cmInfo);
+				CMEventManager.unicastEvent(seAck, se.getUserName(), se.getSenderUuid());
 				seAck = null;
 			}
 			naFileNameList = null;
@@ -1956,11 +1956,11 @@ public class CMSNSManager {
 		}
 	}
 	
-	private static void processATTACHED_FILES_NOT_FOUND(CMSNSEvent se, CMInfo cmInfo)
+	private static void processATTACHED_FILES_NOT_FOUND(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMSNSInfo snsInfo = cmInfo.getSNSInfo();
-		String strDefServer = cmInfo.getInteractionInfo().getDefaultServerInfo()
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+		String strDefServer = CMInteractionInfo.getInstance().getDefaultServerInfo()
 				.getServerName();
 		CMSNSAttach attach = null;
 		CMSNSAttachList attachList = null;
@@ -1982,11 +1982,13 @@ public class CMSNSManager {
 			CMFileEvent fe = new CMFileEvent();
 			fe.setID(CMFileEvent.END_FILE_TRANSFER_ACK);
 			fe.setFileSender(strDefServer);
+			fe.setFileSenderUuid(null);	// server uuid is null.
 			fe.setFileReceiver(se.getUserName());
+			fe.setFileReceiverUuid(se.getReceiverUuid());
 			fe.setFileName(strFileNameList.get(i));
 			fe.setReturnCode(0);	// the file is not received
 			fe.setContentID(se.getContentID());
-			CMEventManager.unicastEvent(fe, strDefServer, cmInfo);
+			CMEventManager.unicastEvent(fe, strDefServer);
 			fe = null;
 		}
 		
@@ -2028,12 +2030,13 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processREQUEST_ATTACHED_FILE(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		String strRequester = se.getUserName();
+		UUID requesterUuid = se.getSenderUuid();
 		int nContentID = se.getContentID();
 		String strWriter = se.getWriterName();
 		String strFileName = se.getFileName();
@@ -2056,15 +2059,24 @@ public class CMSNSManager {
 					+"file("+strFilePath+") not found!");
 			nReturnCode = 0;
 			seAck.setReturnCode(nReturnCode);
-			CMEventManager.unicastEvent(seAck, strRequester, cmInfo);
-			seAck = null;
-			file = null;
+			CMEventManager.unicastEvent(seAck, strRequester, requesterUuid);
 			return;
 		}
 		
 		// check whether the requested file is the attachment of the given content ID or not
 		ArrayList<String> attachFileList = null;
-		attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID, cmInfo);
+		if(confInfo.isDBUse())
+		{
+			attachFileList = CMDBManager.queryGetSNSAttachedFile(nContentID);
+		}
+		else
+		{
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSContentList contentList = snsInfo.getSNSContentList();
+			CMSNSContent content = contentList.findSNSContent(nContentID);
+			if(content != null)
+				attachFileList = content.getFilePathList();
+		}
 		boolean bFound = false;
 		
 		for(int i = 0; attachFileList != null && i < attachFileList.size(); i++)
@@ -2081,23 +2093,29 @@ public class CMSNSManager {
 					+") is not the attachment of content ID("+nContentID+")!");
 			nReturnCode = 0;
 			seAck.setReturnCode(nReturnCode);
-			CMEventManager.unicastEvent(seAck, strRequester, cmInfo);
-			seAck = null;
-			file = null;
-			return;			
+			CMEventManager.unicastEvent(seAck, strRequester, requesterUuid);
+			return;
 		}
 
 		// check the prefetching mode
-		CMUser user = interInfo.getLoginUsers().findMember(strRequester);
+		CMUser user = interInfo.getLoginUsers().findMember(strRequester, requesterUuid);
 		if(user == null)
 		{
-			System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILE(), user("+strRequester+") is null!");
+			System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILE(), user("+strRequester+"), uuid("
+					+requesterUuid+") is null!");
 			return;
 		}
 		if(user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
 			Calendar date = Calendar.getInstance();
-			CMSNSAttachAccessHistoryList historyList = user.getAttachAccessHistoryList();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+			if( snsUserInfo == null ) {
+				System.err.println("CMSNSManager.processREQUEST_ATTACHED_FILE(), sns user info not found for user("
+						+user.getName()+")!");
+				return;
+			}
+			CMSNSAttachAccessHistoryList historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 			CMSNSAttachAccessHistory history = null;
 			history = historyList.findAccessHistory(strRequester, date, strWriter);
 			if(history != null)
@@ -2131,19 +2149,15 @@ public class CMSNSManager {
 		}
 		
 		// send the requested file
-		CMFileTransferManager.pushFile(strFilePath, strRequester, cmInfo);
+		CMFileTransferManager.pushFile(strFilePath, strRequester, requesterUuid);
 		
 		// send the response event
 		nReturnCode = 1;
 		seAck.setReturnCode(nReturnCode);
-		CMEventManager.unicastEvent(seAck, strRequester, cmInfo);
-		seAck = null;
-		file = null;
-		
-		return;
+		CMEventManager.unicastEvent(seAck, strRequester, requesterUuid);
 	}
 	
-	private static void processRESPONSE_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processRESPONSE_ATTACHED_FILE(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{
@@ -2155,13 +2169,10 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processCHANGE_ATTACH_DOWNLOAD_SCHEME(CMSNSEvent se, CMInfo cmInfo)
+	private static void processCHANGE_ATTACH_DOWNLOAD_SCHEME(CMSNSEvent se)
 	{
-		CMConfigurationInfo confInfo = cmInfo.getConfigurationInfo();
+		CMConfigurationInfo confInfo = CMConfigurationInfo.getInstance();
 		confInfo.setAttachDownloadScheme(se.getAttachDownloadScheme());
-		//CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
-		//CMUser myself = interInfo.getMyself();
-		//myself.setAttachDownloadScheme(se.getAttachDownloadScheme());
 		if(CMInfo._CM_DEBUG)
 		{
 			System.out.println("CMSNSManager.processEvent(), server changes the scheme for "
@@ -2170,26 +2181,35 @@ public class CMSNSManager {
 		return;
 	}
 	
-	private static void processACCESS_ATTACHED_FILE(CMSNSEvent se, CMInfo cmInfo)
+	private static void processACCESS_ATTACHED_FILE(CMSNSEvent se)
 	{
-		CMInteractionInfo interInfo = cmInfo.getInteractionInfo();
+		CMInteractionInfo interInfo = CMInteractionInfo.getInstance();
 		
 		String strRequester = se.getUserName();
+		UUID requesterUuid = se.getSenderUuid();
 		//int nContentID = se.getContentID();
 		String strWriter = se.getWriterName();
 		//String strFileName = se.getFileName();
 
 		// check the prefetching mode
-		CMUser user = interInfo.getLoginUsers().findMember(strRequester);
+		CMUser user = interInfo.getLoginUsers().findMember(strRequester, requesterUuid);
 		if(user == null)
 		{
-			System.err.println("CMSNSManager.processACCESS_ATTACHED_FILE(), user("+strRequester+") is null!");
+			System.err.println("CMSNSManager.processACCESS_ATTACHED_FILE(), user("+strRequester+"), uuid("
+					+requesterUuid+") is null!");
 			return;
 		}
 		if(user.getAttachDownloadScheme() == CMInfo.SNS_ATTACH_PREFETCH)
 		{
 			Calendar date = Calendar.getInstance();
-			CMSNSAttachAccessHistoryList historyList = user.getAttachAccessHistoryList();
+			CMSNSInfo snsInfo = CMSNSInfo.getInstance();
+			CMSNSUserInfo snsUserInfo = snsInfo.getSNSUserInfoTable().get(user.getName());
+			if( snsUserInfo == null ) {
+				System.err.println("CMSNSManager.processACCESS_ATTACHED_FILE(), sns user info not found for user("
+						+user.getName()+")!");
+				return;
+			}
+			CMSNSAttachAccessHistoryList historyList = snsUserInfo.getSNSAttachAccessHistoryList();
 			CMSNSAttachAccessHistory history = null;
 			history = historyList.findAccessHistory(strRequester, date, strWriter);
 			if(history != null)
@@ -2224,7 +2244,7 @@ public class CMSNSManager {
 
 	}
 	
-	private static void processPREFETCH_COMPLETED(CMSNSEvent se, CMInfo cmInfo)
+	private static void processPREFETCH_COMPLETED(CMSNSEvent se)
 	{
 		if(CMInfo._CM_DEBUG)
 		{

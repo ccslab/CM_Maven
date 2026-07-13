@@ -1,0 +1,94 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+CM (Communication Middleware) is a Java communication framework for distributed systems, developed at CCSLab, Konkuk University. It supports client-server (`CM_CS`) and peer-server (`CM_PS`) architectures with features including file transfer, file synchronization (rsync-like delta encoding), MQTT protocol, SNS, and multi-device concurrent login.
+
+- **Group ID**: `kr.ac.konkuk.ccslab`, **Artifact**: `CM`, **Version**: `3.0.0-SNAPSHOT`
+- **Java**: JDK 18
+- **Test Framework**: JUnit 4
+- **Dependencies**: commons-math3, mysql-connector-java, jaxb-api
+
+## Build Commands
+
+```bash
+mvn clean compile                          # Compile
+mvn clean test                             # Run all tests
+mvn test -Dtest=CMFileSyncEntryTest        # Run single test class
+mvn test -Dtest=CMFileSyncEntryTest#testEquals  # Run single test method
+mvn clean package                          # Build JARs (includes uber-JARs for CMWinServer/CMWinClient)
+```
+
+## Architecture
+
+### Layered Design
+
+Applications interact with CM through **Stub** classes, which delegate to **Manager** classes for service logic. Managers read/write global state via **Info** singletons. Communication is event-driven: **Event** objects are serialized to `ByteBuffer` and dispatched through event queues.
+
+```
+Application Layer:  CMServerStub / CMClientStub  (public API)
+        ↓
+Service Layer:      Managers (CMCommManager, CMSessionManager, CMEventManager,
+                    CMFileTransferManager, CMFileSyncManager, CMMqttManager, ...)
+        ↓
+State Layer:        Info singletons (CMInfo, CMCommInfo, CMInteractionInfo,
+                    CMConfigurationInfo, CMThreadInfo, CMFileTransferInfo, ...)
+        ↓
+Entity Layer:       CMUser, CMServer, CMSession, CMGroup, CMMember, CMChannelInfo, ...
+        ↓
+Event Layer:        CMEvent → CMSessionEvent, CMFileEvent, CMUserEvent,
+                    CMSNSEvent, CMMqttEvent, CMFileSyncEvent, ...
+```
+
+### Key Classes
+
+- **`CMStub`** (abstract) → **`CMServerStub`** / **`CMClientStub`**: Entry points for applications. Handles init, start/stop, send/receive events.
+- **`CMInfo`**: Central singleton holding constants, service manager registry, and event handler registry. Access via `CMInfo.getInstance()`.
+- **`CMEvent`**: Abstract base for all events. Subclasses implement `marshall()` / `unmarshall()` for `ByteBuffer` serialization. Events carry sender/receiver, session/group info.
+- **`CMUserEvent`**: Flexible user-defined events with typed fields (int, long, float, double, string, bytes).
+- **`CMUser`**: Represents a connected client. Supports UUID for multi-device login identification.
+- **`CMMember`**: Collection of users. In multi-login mode, maps `String → List<CMUser>` (one name, multiple device connections).
+- **Event Handlers** (`CMAppEventHandler` interface): Applications implement this to handle incoming events.
+
+### Communication
+
+- NIO-based non-blocking I/O: `SocketChannel` (TCP), `DatagramChannel` (UDP), `MulticastChannel`
+- Selector-based event loop with separate send/receive event queues
+- File transfer supports push/pull with append or overwrite modes
+
+### Configuration
+
+- `cm-server.conf` / `cm-client.conf`: Runtime configuration (system type, ports, login scheme, file paths, DB settings, etc.)
+- `cm-session*.conf`: Session/group definitions
+- Key parameters: `SYS_TYPE`, `COMM_ARCH`, `LOGIN_SCHEME`, `MULTI_LOGIN_SCHEME`, `FILE_SYNC_MODE`, `FILE_UPDATE_MODE`
+
+## Code Conventions
+
+- **Package structure**: `kr.ac.konkuk.ccslab.cm.{stub,entity,event,manager,info,thread,util,sns}`
+- **Member variable prefix**: `m_` with Hungarian notation — `m_strName` (String), `m_nPort` (int), `m_bConnected` (boolean), `m_lTimestamp` (long)
+- **Method naming**: `get`/`set` for accessors, `find` for lookups, `process` for event handlers, `marshall`/`unmarshall` for serialization
+- **Thread safety**: `synchronized` methods on shared data structures
+- **Error handling**: Returns `boolean` or `null` for failure; exceptions logged via `e.printStackTrace()`
+
+## Active Development
+
+The `feature/concurrent-login/*` branches add multi-device login support using UUIDs to identify individual device connections per user. `CMMember` was refactored to use `Hashtable<String, List<CMUser>>` for this.
+
+### File Sync: multi-device bidirectional sync (10-3)
+
+Single-device bidirectional sync (pull + push) is **implemented** — for those parts the **code is the source of truth**. The 10-2 design doc is being retired; rationale for non-obvious sync metadata (e.g. `CMFileSyncClientEntry.serverMtime` being PULL-only/not transmitted, `m_lastSyncedSizeMap`, `m_pendingPullDeletePaths` for WatchService self-event filtering) lives in code comments, not here.
+
+**Multi-device sync (10-3) core implementation is complete** — propagating one device's changes to the same user's other devices. Its authoritative spec is the local-only `docs/10-3_*.md` design doc (`docs/` is gitignored); for implemented parts the code wins. Delivered in four phases (see `10-3 Phase N` commit labels):
+
+- **Phase 1** — `changelogHead` 2-level cursor: per-user global changeId allocator + pull comparison (`clientCursor` vs `changelogHead`), replacing the per-device cursor that never propagated peer changes.
+- **Phase 2** — pull CREATE always-online policy (no data transfer for new/propagated files).
+- **Phase 3** — `SYNC_NEEDED_NOTIFY`: server fan-out after push commit → other online devices pull.
+- **Phase 4** — per-user push session lease + busy-bounce: serializes concurrent pushes (both incremental and full-push writers share one lease), busy retry via notify (primary) or fallback timer, lazy timeout reclaim.
+
+Integration testing status (running server + ≥2 clients; not covered by JUnit):
+
+- **2-device catch-up** — **verified** (offline peer changes applied on re-login): CREATE (→online placeholder), MODIFY (local→rsync delta reconstruction; online→metadata-only online-map size update), DELETE (multi, online-map cleanup, self-event filtering), MODIFY→DELETE collapse to latest-per-path, and CREATE→DELETE net-zero omission.
+- **notify propagation** (`SYNC_NEEDED_NOTIFY`) — **verified**.
+- **concurrent-push serialization/self-convergence** (Phase 4 lease/busy-bounce) — **not yet exercised**; hard to trigger manually (requires two devices pushing simultaneously) and rare in practice, deferred to real-event observation.
