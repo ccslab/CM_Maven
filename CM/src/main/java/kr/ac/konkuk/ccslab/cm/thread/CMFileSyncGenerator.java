@@ -548,7 +548,8 @@ public class CMFileSyncGenerator implements Runnable {
             fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
             //// set numRequestedFiles and requestedFileList
             // get the size of the remaining event fields
-            int curByteNum = fse.getByteNum();
+            // + SEND_HEADER_MARGIN: 전송 시 채워질 sender/receiver 헤더 예약(getByteNum 미포함)
+            int curByteNum = fse.getByteNum() + CMInfo.SEND_HEADER_MARGIN;
             List<Path> requestedFileList = new ArrayList<>();
             int numRequestedFiles = 0;
             while (numRequestsCompleted < newFileEntryList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {

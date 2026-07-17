@@ -450,7 +450,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the server
     private CMFileSyncEvent setServerNumFilesAndEntryList(CMFileSyncEventServerEntries fse_se, int startListIndex) {
         // current number of bytes except the entry list
-        int curByteNum = fse_se.getByteNum();
+        // + SEND_HEADER_MARGIN: getByteNum() 은 전송 시 채워질 sender/receiver 헤더를 미포함하므로 예약
+        int curByteNum = fse_se.getByteNum() + CMInfo.SEND_HEADER_MARGIN;
         if(CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.setServerNumFilesAndEntryList() called..");
             System.out.println("startListIndex = " + startListIndex);
@@ -3739,7 +3740,10 @@ public class CMFileSyncEventHandler extends CMEventHandler {
                 fse_fbc.setTotalNumBlocks(pushTotalNumBlocks);
                 fse_fbc.setStartBlockIndex(pushCurIndex);
 
-                int remainingEventBytes = CMInfo.MAX_EVENT_SIZE - fse_fbc.getByteNum();
+                // SEND_HEADER_MARGIN: getByteNum() 은 전송 시 unicastEvent 가 채우는 sender/receiver 헤더를
+                // 미포함하므로 그만큼 예약해 batch 가 MAX_EVENT_SIZE 를 넘지 않게 한다.
+                int remainingEventBytes =
+                        CMInfo.MAX_EVENT_SIZE - fse_fbc.getByteNum() - CMInfo.SEND_HEADER_MARGIN;
                 int checksumBytes = Integer.BYTES * 3 + CMInfo.STRONG_CHECKSUM_LEN;
                 int numCurrentBlocks = remainingEventBytes / checksumBytes;
                 if (pushCurIndex + numCurrentBlocks > pushChecksumArray.length) {
@@ -3807,8 +3811,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             checksumEvent.setTotalNumBlocks(totalNumBlocks);
             checksumEvent.setStartBlockIndex(curIndex);
 
-            // calculate the maximum number of checksum elements
-            remainingEventBytes = CMInfo.MAX_EVENT_SIZE - checksumEvent.getByteNum();
+            // calculate the maximum number of checksum elements (SEND_HEADER_MARGIN: 전송 시 채워질 헤더 예약)
+            remainingEventBytes = CMInfo.MAX_EVENT_SIZE - checksumEvent.getByteNum() - CMInfo.SEND_HEADER_MARGIN;
             checksumBytes = Integer.BYTES * 3;  // block index, weak checksum, length of array
             checksumBytes += CMInfo.STRONG_CHECKSUM_LEN;    // length of strong checksum
             numCurrentBlocks = remainingEventBytes / checksumBytes;
@@ -3896,8 +3900,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             checksumEvent.setTotalNumBlocks(totalNumBlocks);
             checksumEvent.setStartBlockIndex(curIndex);
 
-            // calculate the maximum number of checksum elements
-            remainingEventBytes = CMInfo.MAX_EVENT_SIZE - checksumEvent.getByteNum();
+            // calculate the maximum number of checksum elements (SEND_HEADER_MARGIN: 전송 시 채워질 헤더 예약)
+            remainingEventBytes = CMInfo.MAX_EVENT_SIZE - checksumEvent.getByteNum() - CMInfo.SEND_HEADER_MARGIN;
             checksumBytes = Integer.BYTES * 3;  // block index, weak checksum, length of array
             checksumBytes += CMInfo.STRONG_CHECKSUM_LEN;    // length of strong checksum
             numCurrentBlocks = remainingEventBytes / checksumBytes;
@@ -4429,7 +4433,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
             System.out.println("=== CMFileSyncEventHandler.setPushNumFilesAndEntryList() called..");
             System.out.println("startListIndex = " + startListIndex);
         }
-        int curByteNum = fse_pe.getByteNum();
+        // + SEND_HEADER_MARGIN: 전송 시 채워질 sender/receiver 헤더 예약(getByteNum 미포함)
+        int curByteNum = fse_pe.getByteNum() + CMInfo.SEND_HEADER_MARGIN;
 
         CMFileSyncInfo syncInfo = CMFileSyncInfo.getInstance();
         List<CMFileSyncClientEntry> pushEntryList = syncInfo.getPushEntryList();
@@ -5202,7 +5207,8 @@ public class CMFileSyncEventHandler extends CMEventHandler {
     // called at the client
     private CMFileSyncEvent setNumFilesAndEntryList(CMFileSyncEventFileEntries newfse, int startListIndex) {
         // get current number of bytes except the entry list
-        int curByteNum = newfse.getByteNum();
+        // + SEND_HEADER_MARGIN: 전송 시 채워질 sender/receiver 헤더 예약(getByteNum 미포함)
+        int curByteNum = newfse.getByteNum() + CMInfo.SEND_HEADER_MARGIN;
         if (CMInfo._CM_DEBUG) {
             System.out.println("=== CMFileSyncEventHandler.setNumFilesAndEntryList() called..");
             System.out.println("startListIndex = " + startListIndex);

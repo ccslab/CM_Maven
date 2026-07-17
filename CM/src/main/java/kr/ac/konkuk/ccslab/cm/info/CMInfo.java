@@ -25,6 +25,11 @@ public class CMInfo {
 	public static final int SO_SNDBUF_LEN = 8192;
 	public static final int SO_RCVBUF_LEN = 8192;
 	public static final int MAX_EVENT_SIZE = 8192;
+	// 이벤트 배치 크기 계산 시 예약할 헤더 여유분. getByteNum() 은 배치 산정 시점에 sender/receiver
+	// 이름과 uuid 문자열이 비어 있어(마셜 직전 unicastEvent 가 채움) 이 값들을 과소평가한다.
+	// 최대 과소평가 = len(sender명)+len(receiver명)+72(uuid 문자열 36B×2). 노드 이름이 길어도
+	// 안전하도록 512 로 예약한다(이름 ~220자/개까지 커버; 8192 대비 비용 무시 가능).
+	public static final int SEND_HEADER_MARGIN = 512;
 	public static final int MIN_EVENT_SIZE = 24;
 	public static final int STRING_LEN_BYTES_LEN = 2;
 	public static final int MQTT_ID_RANGE = 65536;

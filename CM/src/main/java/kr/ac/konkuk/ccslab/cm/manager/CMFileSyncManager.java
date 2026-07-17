@@ -674,7 +674,8 @@ public class CMFileSyncManager extends CMServiceManager {
             fse_rnf.setInitiatorUuid(initiatorUuid);
             fse_rnf.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
-            int curByteNum = fse_rnf.getByteNum();
+            // + SEND_HEADER_MARGIN: 전송 시 채워질 sender/receiver 헤더 예약(getByteNum 미포함)
+            int curByteNum = fse_rnf.getByteNum() + CMInfo.SEND_HEADER_MARGIN;
             List<Path> requestedFileList = new ArrayList<>();
             int numRequestedFiles = 0;
 
@@ -1569,7 +1570,8 @@ public class CMFileSyncManager extends CMServiceManager {
             fse.setInitiatorUuid(initiatorUuid);
             fse.setInitiatorDeviceUuid(initiatorDeviceUuid);
 
-            int curByteNum = fse.getByteNum();
+            // + SEND_HEADER_MARGIN: 전송 시 채워질 sender/receiver 헤더 예약(getByteNum 미포함)
+            int curByteNum = fse.getByteNum() + CMInfo.SEND_HEADER_MARGIN;
             List<Path> chunk = new ArrayList<>();
             int numRequestedFiles = 0;
             while (numRequestsCompleted < relPathList.size() && curByteNum < CMInfo.MAX_EVENT_SIZE) {
@@ -3239,7 +3241,9 @@ public class CMFileSyncManager extends CMServiceManager {
             System.out.println("listIndex = " + listIndex);
         }
 
-        int curByteNum = initialByteNum;
+        // + SEND_HEADER_MARGIN: initialByteNum(호출부의 event.getByteNum())은 전송 시 채워질
+        // sender/receiver 헤더를 미포함하므로 그만큼 예약한다.
+        int curByteNum = initialByteNum + CMInfo.SEND_HEADER_MARGIN;
         List<String> subList = new ArrayList<>();
 
         boolean ret = false;
